@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+  font-family: "Cinzel", "Times New Roman", serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #2d1b69 0%, #1a0b3a 50%, #0f051b 100%);
+  min-height: 100vh;
+  color: #2c1810;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* Ensure magical fonts load properly */
+* {
+  box-sizing: border-box;
+}
+
+/* Scrollbar styling for magical theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(139, 69, 19, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #daa520 0%, #b8860b 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+}
