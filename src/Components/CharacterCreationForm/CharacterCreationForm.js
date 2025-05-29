@@ -138,6 +138,7 @@ const CharacterCreationForm = ({ user }) => {
 
   useEffect(() => {
     rollAllStats();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
