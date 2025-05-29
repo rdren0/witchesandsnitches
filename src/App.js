@@ -309,8 +309,13 @@ function App() {
       setAuthLoading(true);
       console.log("Initiating Discord sign in...");
 
+      const redirectTo = window.location.origin;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
+        options: {
+          redirectTo: redirectTo,
+        },
       });
 
       if (error) {
