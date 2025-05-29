@@ -253,8 +253,7 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       } else if (isSuccess) {
         setSpellAttempts((prev) => {
           const currentAttempts = prev[spellName] || {};
-          const successCount =
-            Object.values(currentAttempts).filter(Boolean).length;
+
           const newAttempts = { ...currentAttempts };
 
           if (!newAttempts[1]) {

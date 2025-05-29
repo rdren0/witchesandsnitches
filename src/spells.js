@@ -211,21 +211,6 @@ export const spellsData = {
       "7th Level": [],
     },
   },
-  Healing: {
-    icon: "Heart",
-    color: "#ef4444",
-    description: "Restoration and medical magic",
-    levels: {
-      Cantrips: ["Anapneo*", "Rennervate"],
-      "1st Level": ["Episkey", "Ferula", "Reparifors"],
-      "2nd Level": ["Adversus Interitus R*"],
-      "3rd Level": ["Aculeo Sanentur*", "Animatem*", "Intus Sunt R*"],
-      "4th Level": ["Brackium Emendo"],
-      "5th Level": ["Pervivo*"],
-      "6th Level": ["Vulnera Sanentur*"],
-      "7th Level": [],
-    },
-  },
   Transfigurations: {
     icon: "BookOpen",
     color: "#10b981",
@@ -271,22 +256,6 @@ export const spellsData = {
       "3rd Level": ["Inanus Ictus*"],
       "4th Level": ["Titubo Ictus*"],
       "5th Level": ["Clario Maxima*"],
-    },
-  },
-
-  Healing: {
-    icon: "Heart",
-    color: "#ef4444",
-    description: "Restoration and medical magic",
-    levels: {
-      Cantrips: ["Anapneo*", "Rennervate"],
-      "1st Level": ["Episkey", "Ferula", "Reparifors"],
-      "2nd Level": ["Adversus Interitus R*"],
-      "3rd Level": ["Aculeo Sanentur*", "Animatem*", "Intus Sunt R*"],
-      "4th Level": ["Brackium Emendo"],
-      "5th Level": ["Pervivo*"],
-      "6th Level": ["Vulnera Sanentur*"],
-      "7th Level": [],
     },
   },
 };
