@@ -40,10 +40,8 @@ const SpellBook = ({ spellsData, supabase, user }) => {
     hasCriticalSuccess: false,
   });
 
-  // Get Discord user ID
   const discordUserId = user?.user_metadata?.provider_id;
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       closeAllMenus();
@@ -52,18 +50,18 @@ const SpellBook = ({ spellsData, supabase, user }) => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // Load characters from the character service
   useEffect(() => {
     if (discordUserId) {
       loadCharacters();
     }
+    // eslint-disable-next-line
   }, [discordUserId]);
 
-  // Load spell progress when character changes
   useEffect(() => {
     if (selectedCharacter && discordUserId) {
       loadSpellProgress();
     }
+    // eslint-disable-next-line
   }, [selectedCharacter, discordUserId]);
 
   const toggleMenu = (spellName) => {
@@ -99,7 +97,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
     if (!selectedCharacter || !discordUserId || !editingSpell) return;
 
     try {
-      // Update the database
       const { data: existingProgress, error: fetchError } = await supabase
         .from("character_spell_progress")
         .select("*")
@@ -123,7 +120,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       };
 
       if (existingProgress) {
-        // Update existing record
         const { error: updateError } = await supabase
           .from("character_spell_progress")
           .update(updateData)
@@ -135,7 +131,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
           return;
         }
       } else {
-        // Create new record
         const { error: insertError } = await supabase
           .from("character_spell_progress")
           .insert([
@@ -154,16 +149,13 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         }
       }
 
-      // Update local state
       const newAttempts = {};
       const successCount = updateData.successful_attempts;
 
       if (updateData.has_natural_twenty) {
-        // Natural 20 = both boxes checked
         newAttempts[1] = true;
         newAttempts[2] = true;
       } else {
-        // Regular attempts
         for (let i = 1; i <= successCount; i++) {
           newAttempts[i] = true;
         }
@@ -197,7 +189,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         discordUserId
       );
 
-      // Transform database format to component format
       const transformedCharacters = charactersData.map((char) => ({
         id: char.id,
         name: char.name,
@@ -208,7 +199,7 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         background: char.background,
         level: char.level,
         hitPoints: char.hit_points,
-        // Include other character data that might be useful for spell context
+
         abilityScores: char.ability_scores,
         magicModifiers: char.magic_modifiers || {
           divinations: 0,
@@ -221,7 +212,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
 
       setCharacters(transformedCharacters);
 
-      // Auto-select first character if none selected
       if (!selectedCharacter && transformedCharacters.length > 0) {
         setSelectedCharacter(transformedCharacters[0]);
       }
@@ -246,7 +236,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       const isNaturalTwenty = rollResult.total === 20;
       const isSuccess = rollResult.total >= 11 || isNaturalTwenty;
 
-      // Save attempt to database first (this saves both successful AND failed attempts)
       await saveSpellAttempt(
         spellName,
         subject,
@@ -255,23 +244,19 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         isNaturalTwenty
       );
 
-      // Update local state for immediate UI feedback
       if (isNaturalTwenty) {
-        // Natural 20 = immediate mastery (both checkboxes)
         setSpellAttempts((prev) => ({
           ...prev,
           [spellName]: { 1: true, 2: true },
         }));
         setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
       } else if (isSuccess) {
-        // Regular success - check the appropriate box
         setSpellAttempts((prev) => {
           const currentAttempts = prev[spellName] || {};
           const successCount =
             Object.values(currentAttempts).filter(Boolean).length;
           const newAttempts = { ...currentAttempts };
 
-          // Check the next available box (1st or 2nd)
           if (!newAttempts[1]) {
             newAttempts[1] = true;
           } else if (!newAttempts[2]) {
@@ -285,7 +270,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         });
       }
 
-      // Send to Discord
       await sendToDiscord(spellName, rollResult, isSuccess, isNaturalTwenty);
     } catch (error) {
       console.error("Error attempting spell:", error);
@@ -311,10 +295,10 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       Shield: Shield,
       Eye: Eye,
       Heart: Heart,
-      PawPrint: Squirrel, // Using Squirrel as closest match to PawPrint
+      PawPrint: Squirrel,
       Skull: Skull,
     };
-    return iconMap[iconName] || Star; // Default to Star instead of emoji
+    return iconMap[iconName] || Star;
   };
 
   const loadSpellProgress = async () => {
@@ -332,20 +316,17 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         return;
       }
 
-      // Convert to the format expected by the UI
       const formattedAttempts = {};
       const formattedCriticals = {};
 
       data?.forEach((progress) => {
         formattedAttempts[progress.spell_name] = {};
 
-        // If they got a natural 20, they're automatically mastered (both boxes checked)
         if (progress.has_natural_twenty) {
           formattedAttempts[progress.spell_name][1] = true;
           formattedAttempts[progress.spell_name][2] = true;
           formattedCriticals[progress.spell_name] = true;
         } else {
-          // Otherwise, check boxes based on successful attempts
           for (let i = 1; i <= Math.min(progress.successful_attempts, 2); i++) {
             formattedAttempts[progress.spell_name][i] = true;
           }
@@ -360,15 +341,13 @@ const SpellBook = ({ spellsData, supabase, user }) => {
   };
 
   const generateLevelColor = (baseColor, level) => {
-    // Convert hex to RGB
     const hex = baseColor.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
 
-    // Define background intensity multipliers for each level (lighter to more saturated)
     const levelIntensity = {
-      Cantrips: 0.1, // Very light background
+      Cantrips: 0.1,
       "1st Level": 0.15,
       "2nd Level": 0.2,
       "3rd Level": 0.25,
@@ -377,12 +356,11 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       "6th Level": 0.4,
       "7th Level": 0.45,
       "8th Level": 0.5,
-      "9th Level": 0.55, // Most saturated background
+      "9th Level": 0.55,
     };
 
     const bgIntensity = levelIntensity[level] || 0.25;
 
-    // Create background with increasing saturation
     const lightR = Math.round(
       r * bgIntensity + (255 - 255 * bgIntensity) * 0.9
     );
@@ -393,7 +371,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       b * bgIntensity + (255 - 255 * bgIntensity) * 0.9
     );
 
-    // Create border - slightly more saturated than background
     const borderIntensity = bgIntensity * 2;
     const borderR = Math.round(
       r * borderIntensity + (255 - 255 * borderIntensity) * 0.7
@@ -405,11 +382,10 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       b * borderIntensity + (255 - 255 * borderIntensity) * 0.7
     );
 
-    // Keep text color consistent - use the base subject color
     return {
       backgroundColor: `rgb(${lightR}, ${lightG}, ${lightB})`,
       borderColor: `rgb(${borderR}, ${borderG}, ${borderB})`,
-      color: baseColor, // Keep text color same as subject color
+      color: baseColor,
     };
   };
 
@@ -430,13 +406,13 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       selectedCharacter?.name || "Unknown"
     } Attempted: ${spellName}`;
     let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000; // Green for success, red for failure
+    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
     if (isNaturalTwenty) {
       title = `⭐ ${
         selectedCharacter?.name || "Unknown"
       } Attempted: ${spellName}`;
       resultText = `**${rollResult.total}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700; // Gold for natural 20
+      embedColor = 0xffd700;
     }
 
     const fields = [
@@ -452,7 +428,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       },
     ];
 
-    // Add character level and house info if available
     if (selectedCharacter?.level || selectedCharacter?.house) {
       fields.push({
         name: "Character",
@@ -504,7 +479,7 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       const { error } = await supabase.from("spell_attempts").insert([
         {
           character_id: selectedCharacter.id,
-          discord_user_id: discordUserId, // Include Discord user ID
+          discord_user_id: discordUserId,
           spell_name: spellName,
           spell_subject: subject,
           roll_result: rollResult,
@@ -518,7 +493,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         throw error;
       }
 
-      // Reload spell progress to reflect the new attempt
       await loadSpellProgress();
     } catch (error) {
       console.error("Error saving spell attempt:", error);
@@ -623,7 +597,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
     const isSpecial = spell.includes("*");
     const isAttempting = attemptingSpells[spell];
 
-    // Check if spell has been attempted (even if no successes)
     const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
 
     return (
@@ -632,7 +605,7 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         style={{
           ...styles.tableRow,
           ...(isMastered ? styles.tableRowMastered : {}),
-          ...(hasAttempts && !isMastered ? { backgroundColor: "#fef3c7" } : {}), // Light yellow for attempted but not mastered
+          ...(hasAttempts && !isMastered ? { backgroundColor: "#fef3c7" } : {}),
         }}
         onMouseEnter={(e) => {
           if (!isMastered) {
@@ -962,7 +935,7 @@ const SpellBook = ({ spellsData, supabase, user }) => {
                         setEditFormData((prev) => ({
                           ...prev,
                           hasCriticalSuccess: e.target.checked,
-                          // If marking as critical success, automatically set to mastery (2 attempts)
+
                           successfulAttempts: e.target.checked
                             ? 2
                             : prev.successfulAttempts,
@@ -1072,7 +1045,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
   const updateAttempts = async (spell, attemptNumber, checked) => {
     if (!selectedCharacter || !discordUserId) return;
 
-    // Don't allow unchecking if this spell was critically mastered (natural 20)
     if (criticalSuccesses[spell] && !checked) {
       alert("Cannot modify attempts for critically mastered spells!");
       return;
@@ -1089,9 +1061,7 @@ const SpellBook = ({ spellsData, supabase, user }) => {
       return newAttempts;
     });
 
-    // Update the database with the new attempt status
     try {
-      // First, check if a progress record exists
       const { data: existingProgress, error: fetchError } = await supabase
         .from("character_spell_progress")
         .select("*")
@@ -1105,7 +1075,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         return;
       }
 
-      // Don't update if this was a critical success
       if (existingProgress?.has_natural_twenty) {
         return;
       }
@@ -1116,7 +1085,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
         Object.values(updatedAttempts).filter(Boolean).length;
 
       if (existingProgress) {
-        // Update existing record
         const { error: updateError } = await supabase
           .from("character_spell_progress")
           .update({
@@ -1129,7 +1097,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
           console.error("Error updating spell progress:", updateError);
         }
       } else {
-        // Create new record
         const { error: insertError } = await supabase
           .from("character_spell_progress")
           .insert([
@@ -1241,7 +1208,6 @@ const SpellBook = ({ spellsData, supabase, user }) => {
   const totalSpells = getTotalSpells();
   const totalMastered = getTotalMastered();
 
-  // Authentication check
   if (!user || !discordUserId) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>

@@ -431,29 +431,29 @@ export const styles = {
     maxHeight: "450px",
     overflowY: "auto",
     padding: "20px",
-    // background: "#FEF3C7",
+
     borderRadius: "15px",
     border: "3px solid #F9FAFB",
     boxShadow: "inset 0 2px 6px rgba(245,158,11,0.1)",
   },
   featCard: {
-    background: "#FFFFFF", // Pure white background
+    background: "#FFFFFF",
     borderRadius: "15px",
     padding: "18px",
     transition: "all 0.3s ease",
     boxShadow:
       "0 6px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.8)",
-    border: "2px solid #F9FAFB", // Keep golden border
+    border: "2px solid #F9FAFB",
     position: "relative",
   },
   featCardSelected: {
-    background: "#F0FDF4", // Light green background (same as skills)
+    background: "#F0FDF4",
     borderRadius: "15px",
     padding: "18px",
     transition: "all 0.3s ease",
     boxShadow:
       "0 6px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.8)",
-    border: "2px solid #10B981", // Green border when selected
+    border: "2px solid #10B981",
     position: "relative",
   },
   featHeader: {
@@ -474,20 +474,9 @@ export const styles = {
     width: "20px",
     height: "20px",
     appearance: "none",
+    border: "2px solid #F59E0B",
     borderRadius: "4px",
-    backgroundColor: "#FFFFFF", // White background
-    cursor: "pointer",
-    position: "relative",
-    transition: "all 0.3s ease",
-    boxShadow: "inset 0 1px 3px rgba(245,158,11,0.2)",
-  },
-  featCheckbox: {
-    width: "20px",
-    height: "20px",
-    appearance: "none",
-    border: "2px solid #F59E0B", // Golden border by default
-    borderRadius: "4px",
-    backgroundColor: "#FFFFFF", // White background
+    backgroundColor: "#FFFFFF",
     cursor: "pointer",
     position: "relative",
     transition: "all 0.3s ease",
@@ -507,7 +496,7 @@ export const styles = {
     fontSize: "18px",
     fontWeight: "600",
     fontFamily: "'Cinzel', serif",
-    color: "#374151", // Default gray color
+    color: "#374151",
     textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
     transition: "color 0.3s ease",
   },
@@ -515,13 +504,13 @@ export const styles = {
     fontSize: "18px",
     fontWeight: "600",
     fontFamily: "'Cinzel', serif",
-    color: "#059669", // Green color when selected
+    color: "#059669",
     textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
     transition: "color 0.3s ease",
   },
   featPreview: {
     fontSize: "14px",
-    color: "#6B7280", // Default gray color
+    color: "#6B7280",
     lineHeight: "1.5",
     marginBottom: "10px",
     fontStyle: "italic",
@@ -530,7 +519,7 @@ export const styles = {
   },
   featPreviewSelected: {
     fontSize: "14px",
-    color: "#047857", // Darker green when selected
+    color: "#047857",
     lineHeight: "1.5",
     marginBottom: "10px",
     fontStyle: "italic",
@@ -539,13 +528,13 @@ export const styles = {
   },
   featDescription: {
     fontSize: "14px",
-    color: "#374151", // Default gray
+    color: "#374151",
     lineHeight: "1.6",
     padding: "16px",
-    background: "#F9FAFB", // Light gray background for description
+    background: "#F9FAFB",
     borderRadius: "10px",
     marginTop: "12px",
-    border: "2px solid #E5E7EB", // Gray border
+    border: "2px solid #E5E7EB",
     fontFamily: "'Times New Roman', serif",
     boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
   },
@@ -554,15 +543,15 @@ export const styles = {
     color: "#374151",
     lineHeight: "1.6",
     padding: "16px",
-    background: "#ECFDF5", // Light green background when selected
+    background: "#ECFDF5",
     borderRadius: "10px",
     marginTop: "12px",
-    border: "2px solid #10B981", // Green border when selected
+    border: "2px solid #10B981",
     fontFamily: "'Times New Roman', serif",
     boxShadow: "inset 0 2px 4px rgba(16,185,129,0.1)",
   },
   expandButton: {
-    background: "#FBBF24", // Golden color
+    background: "#FBBF24",
     border: "2px solid #F59E0B",
     borderRadius: "8px",
     width: "32px",

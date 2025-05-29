@@ -143,6 +143,7 @@ const CharacterCreationForm = ({ user }) => {
   useEffect(() => {
     if (discordUserId) {
       loadCharacters();
+      // eslint-disable-next-line
     }
   }, [discordUserId, loadCharacters]);
 
