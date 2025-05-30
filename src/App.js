@@ -192,6 +192,25 @@ const useStyles = () => {
       backgroundColor: "#fff",
       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       color: "#000",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      position: "relative",
+    },
+    featureCardHover: {
+      transform: "translateY(-2px)",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      borderColor: "#007bff",
+    },
+    cardButton: {
+      marginTop: "1rem",
+      padding: "0.75rem 1rem",
+      backgroundColor: "#007bff",
+      color: "white",
+      borderRadius: "0.25rem",
+      textAlign: "center",
+      fontWeight: "500",
+      fontSize: "14px",
+      transition: "background-color 0.2s",
     },
     errorMessage: {
       color: "#dc3545",
@@ -259,7 +278,7 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
         .select("id")
         .eq("username", trimmedValue)
         .neq("discord_user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (existingUser) {
         setError("Username is already taken");
@@ -348,8 +367,6 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
     </div>
   );
 };
-
-export default App;
 
 const AuthComponent = ({
   user,
@@ -442,9 +459,15 @@ const AuthComponent = ({
   );
 };
 
-const HomePage = ({ user, customUsername }) => {
+const HomePage = ({ user, customUsername, onTabChange }) => {
   const styles = useStyles();
   const displayName = customUsername || user?.user_metadata?.full_name;
+
+  const handleCardClick = (tab) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
 
   return (
     <div style={styles.homePage}>
@@ -459,14 +482,20 @@ const HomePage = ({ user, customUsername }) => {
           </p>
         )}
         <div style={styles.featureGrid}>
-          <div style={styles.featureCard}>
+          <div
+            style={styles.featureCard}
+            onClick={() => handleCardClick("character-creation")}
+          >
             <h3>Character Creation</h3>
             <p>
               Build and customize your D&D characters with our intuitive
               character creation tool.
             </p>
           </div>
-          <div style={styles.featureCard}>
+          <div
+            style={styles.featureCard}
+            onClick={() => handleCardClick("spellbook")}
+          >
             <h3>Spell Management</h3>
             <p>
               Browse, search, and organize spells for your spellcasting
@@ -550,11 +579,14 @@ function App() {
         .from("user_profiles")
         .select("username")
         .eq("discord_user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
-        setCustomUsername(data.username);
+        setCustomUsername(data.username || "");
+      } else if (error) {
+        console.error("Error loading custom username:", error);
       }
+      // If data is null, user has no profile yet - that's fine, keep empty username
     } catch (error) {
       console.error("Error loading custom username:", error);
     }
@@ -568,18 +600,20 @@ function App() {
         .from("user_profiles")
         .select("id")
         .eq("discord_user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (existingProfile) {
-        await supabase
+        const { error } = await supabase
           .from("user_profiles")
           .update({
             username: newUsername,
             updated_at: new Date().toISOString(),
           })
           .eq("discord_user_id", user.id);
+
+        if (error) throw error;
       } else {
-        await supabase.from("user_profiles").insert([
+        const { error } = await supabase.from("user_profiles").insert([
           {
             discord_user_id: user.id,
             username: newUsername,
@@ -587,6 +621,8 @@ function App() {
             avatar_url: user.user_metadata.avatar_url,
           },
         ]);
+
+        if (error) throw error;
       }
 
       setCustomUsername(newUsername);
@@ -653,7 +689,13 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <HomePage user={user} customUsername={customUsername} />;
+        return (
+          <HomePage
+            user={user}
+            customUsername={customUsername}
+            onTabChange={setActiveTab}
+          />
+        );
       case "character-creation":
         return (
           <ProtectedRoute user={user}>
@@ -675,7 +717,13 @@ function App() {
           </ProtectedRoute>
         );
       default:
-        return <HomePage user={user} customUsername={customUsername} />;
+        return (
+          <HomePage
+            user={user}
+            customUsername={customUsername}
+            onTabChange={setActiveTab}
+          />
+        );
     }
   };
 
@@ -733,3 +781,5 @@ function App() {
     </div>
   );
 }
+
+export default App;
