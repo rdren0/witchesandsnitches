@@ -625,12 +625,12 @@ export const SubjectCard = ({
 
     const embed = {
       title: title,
-      //   description: rollResult.output,
+      description: rollResult.output,
       color: embedColor,
       fields: fields,
       timestamp: new Date().toISOString(),
       footer: {
-        text: "Witches And Snitches - Enhanced Spellcasting",
+        text: "Witches And Snitches - Spellcasting",
       },
     };
 
@@ -732,7 +732,7 @@ export const SubjectCard = ({
             ...styles.tableRow,
             ...(isMastered ? styles.tableRowMastered : {}),
             ...(hasAttempts && !isMastered
-              ? { backgroundColor: "#fef3c7" }
+              ? { backgroundColor: "#f8fafc" }
               : {}),
           }}
           onMouseEnter={(e) => {
@@ -743,7 +743,7 @@ export const SubjectCard = ({
           onMouseLeave={(e) => {
             if (!isMastered) {
               e.target.style.backgroundColor = hasAttempts
-                ? "#fef3c7"
+                ? "#f8fafc"
                 : "transparent";
             }
           }}
