@@ -758,7 +758,7 @@ export const SubjectCard = ({
                     title="Special/Advanced Spell"
                   />
                 )}
-                {formattedDescription && (
+                {/* {formattedDescription && (
                   <button
                     onClick={() =>
                       setIsDescriptionExpanded(!isDescriptionExpanded)
@@ -780,7 +780,7 @@ export const SubjectCard = ({
                     <BookOpen size={12} />
                     {isDescriptionExpanded ? "Hide" : "Info"}
                   </button>
-                )}
+                )} */}
               </div>
 
               {hasCriticalSuccess && (

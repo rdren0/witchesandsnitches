@@ -1,232 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Edit3, Check, X, User } from "lucide-react";
 
-import { spellsData } from "./spells";
 import { createClient } from "@supabase/supabase-js";
-import SpellBook from "./Components/SpellBooks/SpellBook";
-import CharacterCreationForm from "./Components/CharacterCreationForm/CharacterCreationForm";
+import SpellBook from "../Components/SpellBooks/SpellBook";
+import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
+import { styles } from "./style";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
-const useStyles = () => {
-  return {
-    appContainer: {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    },
-    appHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "1rem",
-      backgroundColor: "#f8f9fa",
-      borderBottom: "1px solid #dee2e6",
-    },
-    tabNavigation: {
-      display: "flex",
-      gap: "0.5rem",
-    },
-    tabButton: {
-      padding: "0.5rem 1rem",
-      border: "1px solid #dee2e6",
-      borderRadius: "0.25rem",
-      backgroundColor: "#fff",
-      color: "#495057",
-      cursor: "pointer",
-      transition: "all 0.2s",
-      fontWeight: "500",
-    },
-    tabButtonActive: {
-      backgroundColor: "#007bff",
-      color: "#fff",
-      borderColor: "#007bff",
-    },
-    tabButtonHover: {
-      backgroundColor: "#e9ecef",
-      borderColor: "#adb5bd",
-    },
-    authSection: {
-      display: "flex",
-      alignItems: "center",
-      gap: "1rem",
-    },
-    userInfo: {
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-      position: "relative",
-    },
-    userAvatar: {
-      width: "32px",
-      height: "32px",
-      borderRadius: "50%",
-      border: "2px solid #007bff",
-    },
-    username: {
-      fontWeight: "500",
-      color: "#333",
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-    },
-    editButton: {
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      padding: "2px",
-      borderRadius: "3px",
-      color: "#6c757d",
-      transition: "color 0.2s",
-    },
-    editButtonHover: {
-      color: "#007bff",
-      backgroundColor: "#f8f9fa",
-    },
-    usernameEditor: {
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-    },
-    usernameInput: {
-      padding: "4px 8px",
-      border: "1px solid #dee2e6",
-      borderRadius: "4px",
-      fontSize: "14px",
-      width: "120px",
-    },
-    saveButton: {
-      background: "#28a745",
-      color: "white",
-      border: "none",
-      borderRadius: "3px",
-      padding: "4px 6px",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-    },
-    cancelButton: {
-      background: "#dc3545",
-      color: "white",
-      border: "none",
-      borderRadius: "3px",
-      padding: "4px 6px",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-    },
-    authButton: {
-      padding: "0.5rem 1rem",
-      border: "none",
-      borderRadius: "0.25rem",
-      fontWeight: "500",
-      cursor: "pointer",
-      transition: "background-color 0.2s",
-      minWidth: "120px",
-    },
-    authButtonDisabled: {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-    signinButton: {
-      backgroundColor: "#5865f2",
-      color: "white",
-    },
-    signinButtonHover: {
-      backgroundColor: "#4752c4",
-    },
-    signoutButton: {
-      backgroundColor: "#dc3545",
-      color: "white",
-    },
-    signoutButtonHover: {
-      backgroundColor: "#c82333",
-    },
-    authRequired: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "2rem",
-      textAlign: "center",
-      minHeight: "300px",
-    },
-    authRequiredH2: {
-      color: "#495057",
-      marginBottom: "1rem",
-    },
-    authRequiredP: {
-      color: "#6c757d",
-    },
-    loadingSpinner: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "100vh",
-      fontSize: "1.2rem",
-      color: "#6c757d",
-    },
-    tabContent: {
-      flex: 1,
-    },
-    homePage: {
-      padding: "2rem",
-    },
-    heroSection: {
-      textAlign: "center",
-      marginBottom: "3rem",
-      color: "#eee",
-    },
-    featureGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "1.5rem",
-      marginTop: "2rem",
-    },
-    featureCard: {
-      padding: "1.5rem",
-      border: "1px solid #dee2e6",
-      borderRadius: "0.5rem",
-      backgroundColor: "#fff",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      color: "#000",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      position: "relative",
-    },
-    featureCardHover: {
-      transform: "translateY(-2px)",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-      borderColor: "#007bff",
-    },
-    cardButton: {
-      marginTop: "1rem",
-      padding: "0.75rem 1rem",
-      backgroundColor: "#007bff",
-      color: "white",
-      borderRadius: "0.25rem",
-      textAlign: "center",
-      fontWeight: "500",
-      fontSize: "14px",
-      transition: "background-color 0.2s",
-    },
-    errorMessage: {
-      color: "#dc3545",
-      fontSize: "12px",
-      marginTop: "4px",
-    },
-    discordName: {
-      fontSize: "12px",
-      color: "#6c757d",
-      fontStyle: "italic",
-    },
-  };
-};
-
 const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
-  const styles = useStyles();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(customUsername || "");
   const [error, setError] = useState("");
@@ -376,8 +161,6 @@ const AuthComponent = ({
   onSignOut,
   isLoading,
 }) => {
-  const styles = useStyles();
-
   if (user) {
     return (
       <div style={styles.authSection}>
@@ -460,7 +243,6 @@ const AuthComponent = ({
 };
 
 const HomePage = ({ user, customUsername, onTabChange }) => {
-  const styles = useStyles();
   const displayName = customUsername || user?.user_metadata?.full_name;
 
   const handleCardClick = (tab) => {
@@ -506,8 +288,6 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
 };
 
 const ProtectedRoute = ({ user, children, fallback }) => {
-  const styles = useStyles();
-
   if (!user) {
     return (
       fallback || (
@@ -524,7 +304,6 @@ const ProtectedRoute = ({ user, children, fallback }) => {
 };
 
 function App() {
-  const styles = useStyles();
   const [activeTab, setActiveTab] = useState("home");
   const [user, setUser] = useState(null);
   const [customUsername, setCustomUsername] = useState("");
@@ -707,7 +486,6 @@ function App() {
           <ProtectedRoute user={user}>
             <SpellBook
               customUsername={customUsername}
-              spellsData={spellsData}
               supabase={supabase}
               user={user}
             />
