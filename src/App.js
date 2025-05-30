@@ -129,6 +129,7 @@ const useStyles = () => {
     heroSection: {
       textAlign: "center",
       marginBottom: "3rem",
+      color: "#eee",
     },
     featureGrid: {
       display: "grid",
@@ -142,6 +143,7 @@ const useStyles = () => {
       borderRadius: "0.5rem",
       backgroundColor: "#fff",
       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      color: "#000",
     },
   };
 };
