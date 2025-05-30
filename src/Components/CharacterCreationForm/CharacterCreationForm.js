@@ -596,7 +596,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
                   border: "2px solid #8B5CF6",
                 }}
               />
-              <span>
+              <span style={{ color: "#eee" }}>
                 Welcome, {customUsername ?? user.user_metadata.full_name}!
               </span>
             </div>
