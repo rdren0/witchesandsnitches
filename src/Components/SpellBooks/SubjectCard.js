@@ -518,82 +518,6 @@ export const SubjectCard = ({
     }
   };
 
-  const updateAttempts = async (spell, attemptNumber, checked) => {
-    if (!selectedCharacter || !discordUserId) return;
-
-    if (criticalSuccesses[spell] && !checked) {
-      alert("Cannot modify attempts for critically mastered spells!");
-      return;
-    }
-
-    setSpellAttempts((prev) => {
-      const newAttempts = {
-        ...prev,
-        [spell]: {
-          ...prev[spell],
-          [attemptNumber]: checked,
-        },
-      };
-      return newAttempts;
-    });
-
-    try {
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
-        .eq("spell_name", spell)
-        .single();
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching spell progress:", fetchError);
-        return;
-      }
-
-      if (existingProgress?.has_natural_twenty) {
-        return;
-      }
-
-      const currentAttempts = spellAttempts[spell] || {};
-      const updatedAttempts = { ...currentAttempts, [attemptNumber]: checked };
-      const successfulAttempts =
-        Object.values(updatedAttempts).filter(Boolean).length;
-
-      if (existingProgress) {
-        const { error: updateError } = await supabase
-          .from("spell_progress_summary")
-          .update({
-            successful_attempts: successfulAttempts,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingProgress.id);
-
-        if (updateError) {
-          console.error("Error updating spell progress:", updateError);
-        }
-      } else {
-        const { error: insertError } = await supabase
-          .from("spell_progress_summary")
-          .insert([
-            {
-              character_id: selectedCharacter.id,
-              discord_user_id: discordUserId,
-              spell_name: spell,
-              successful_attempts: successfulAttempts,
-              has_natural_twenty: false,
-            },
-          ]);
-
-        if (insertError) {
-          console.error("Error inserting spell progress:", insertError);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating spell progress:", error);
-    }
-  };
-
   const sendToDiscord = async (
     spellName,
     rollResult,
@@ -856,17 +780,37 @@ export const SubjectCard = ({
                 )}
               </div>
 
-              {isMastered && (
-                <span style={styles.masteredBadge}>
-                  {hasCriticalSuccess ? "Critically Mastered" : "Mastered"}
+              {hasCriticalSuccess && (
+                <span
+                  style={{
+                    ...styles.masteredBadge,
+                    backgroundColor: "#fbbf24",
+                    color: "#92400e",
+                    border: "none",
+                  }}
+                >
+                  Critically Mastered
+                </span>
+              )}
+              {isMastered && !hasCriticalSuccess && (
+                <span
+                  style={{
+                    ...styles.masteredBadge,
+                    backgroundColor: "#10b981",
+                    color: "white",
+                    border: "none",
+                  }}
+                >
+                  Mastered
                 </span>
               )}
               {hasAttempts && !isMastered && (
                 <span
                   style={{
                     ...styles.masteredBadge,
-                    backgroundColor: "#fbbf24",
-                    color: "#92400e",
+                    backgroundColor: "white",
+                    color: "#10b981",
+                    border: "2px solid #10b981",
                   }}
                 >
                   Attempted
@@ -918,13 +862,14 @@ export const SubjectCard = ({
               <label style={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={attempts[1] || false}
-                  onChange={(e) => updateAttempts(spell, 1, e.target.checked)}
-                  disabled={hasCriticalSuccess}
+                  checked={Boolean(attempts[1])}
+                  disabled={true}
+                  readOnly={true}
                   style={{
                     ...styles.checkbox,
                     accentColor: "#3b82f6",
-                    cursor: hasCriticalSuccess ? "not-allowed" : "pointer",
+                    cursor: "not-allowed",
+                    opacity: 0.8,
                   }}
                 />
                 <span style={styles.checkboxText}>1st</span>
@@ -932,13 +877,14 @@ export const SubjectCard = ({
               <label style={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={attempts[2] || false}
-                  onChange={(e) => updateAttempts(spell, 2, e.target.checked)}
-                  disabled={hasCriticalSuccess}
+                  checked={Boolean(attempts[2])}
+                  disabled={true}
+                  readOnly={true}
                   style={{
                     ...styles.checkbox,
                     accentColor: "#10b981",
-                    cursor: hasCriticalSuccess ? "not-allowed" : "pointer",
+                    cursor: "not-allowed",
+                    opacity: 0.8,
                   }}
                 />
                 <span style={styles.checkboxText}>2nd</span>
@@ -987,13 +933,16 @@ export const SubjectCard = ({
               }}
               onMouseEnter={(e) => {
                 if (!isMastered && !isAttempting && selectedCharacter) {
-                  Object.assign(e.target.style, styles.attemptButtonHover);
+                  e.target.style.backgroundColor = "#2563eb";
+                  e.target.style.transform = "translateY(-1px)";
+                  e.target.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isMastered && !isAttempting && selectedCharacter) {
                   e.target.style.backgroundColor = "#3b82f6";
                   e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "none";
                 }
               }}
             >

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   WandIcon,
-  DiceIcon,
   RotateIcon,
   SaveIcon,
   BookIcon,
@@ -193,6 +192,7 @@ const CharacterCreationForm = ({ user }) => {
 
   useEffect(() => {
     rollAllStats();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
