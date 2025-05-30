@@ -22,7 +22,7 @@ import {
 import { styles } from "./styles";
 import { characterService } from "../../services/characterService";
 
-const CharacterCreationForm = ({ user }) => {
+const CharacterCreationForm = ({ user, customUsername }) => {
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
@@ -596,7 +596,9 @@ const CharacterCreationForm = ({ user }) => {
                   border: "2px solid #8B5CF6",
                 }}
               />
-              <span>Welcome, {user.user_metadata.full_name}!</span>
+              <span>
+                Welcome, {customUsername ?? user.user_metadata.full_name}!
+              </span>
             </div>
           )}
         </div>

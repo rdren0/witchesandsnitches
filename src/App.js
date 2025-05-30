@@ -177,7 +177,7 @@ const useStyles = () => {
     heroSection: {
       textAlign: "center",
       marginBottom: "3rem",
-      color: "#333",
+      color: "#eee",
     },
     featureGrid: {
       display: "grid",
@@ -657,7 +657,10 @@ function App() {
       case "character-creation":
         return (
           <ProtectedRoute user={user}>
-            <CharacterCreationForm user={user} />
+            <CharacterCreationForm
+              user={user}
+              customUsername={customUsername}
+            />
           </ProtectedRoute>
         );
       case "spellbook":
