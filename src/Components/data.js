@@ -67,8 +67,7 @@ export const cardTitles = {
   "Grim-9th Level": false,
 };
 
-export // Data from the rulebook organized by school
-const housesBySchool = {
+export const housesBySchool = {
   "Hogwarts School of Witchcraft and Wizardry": [
     "Gryffindor",
     "Hufflepuff",
@@ -90,7 +89,6 @@ export const castingStyles = [
   "Vigor Caster",
 ];
 
-// Skills organized by casting style - each caster can pick 2 from their list (from rulebook)
 export const skillsByCastingStyle = {
   "Willpower Caster": [
     "Athletics",
@@ -205,20 +203,20 @@ export const backgrounds = [
 
 export const hpData = {
   "Willpower Caster": {
-    base: 10, // 1d10 at 1st level
-    avgPerLevel: 6, // 1d10 (or 6) per level after 1st
+    base: 10,
+    avgPerLevel: 6,
   },
   "Technique Caster": {
-    base: 6, // 1d6 at 1st level
-    avgPerLevel: 4, // 1d6 (or 4) per level after 1st
+    base: 6,
+    avgPerLevel: 4,
   },
   "Intellect Caster": {
-    base: 8, // 1d8 at 1st level
-    avgPerLevel: 5, // 1d8 (or 5) per level after 1st
+    base: 8,
+    avgPerLevel: 5,
   },
   "Vigor Caster": {
-    base: 12, // 1d12 at 1st level
-    avgPerLevel: 8, // 1d12 (or 8) per level after 1st
+    base: 12,
+    avgPerLevel: 8,
   },
 };
 
@@ -400,3 +398,26 @@ export const standardFeats = [
 ];
 
 export const castingStyleFeats = [];
+
+export const SCHOOL_TO_MODIFIER_MAP = {
+  charms: {
+    abilityScore: "dexterity",
+    wandModifier: "charms",
+  },
+  jhc: {
+    abilityScore: "charisma",
+    wandModifier: "jinxesHexesCurses",
+  },
+  transfiguration: {
+    abilityScore: "strength",
+    wandModifier: "transfiguration",
+  },
+  healing: {
+    abilityScore: "intelligence",
+    wandModifier: "healing",
+  },
+  divination: {
+    abilityScore: "wisdom",
+    wandModifier: "divinations",
+  },
+};

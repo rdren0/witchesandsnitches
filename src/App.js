@@ -309,12 +309,14 @@ function App() {
       setAuthLoading(true);
       console.log("Initiating Discord sign in...");
 
-      const redirectTo = window.location.origin;
+      const isLocalhost = window.location.hostname === "localhost";
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: {
-          redirectTo: redirectTo,
+          redirectTo: isLocalhost
+            ? "http://localhost:3000"
+            : "https://your-production-domain.com",
         },
       });
 
