@@ -113,17 +113,13 @@ const getSpellModifier = (spellName, subject, character) => {
   }
 
   let mapping = null;
-  let source = "none";
 
   if (INDIVIDUAL_SPELL_MODIFIERS[spellName]) {
     mapping = INDIVIDUAL_SPELL_MODIFIERS[spellName];
-    source = "individual";
   } else if (TRADITIONAL_SCHOOL_MAPPINGS[subject]) {
     mapping = TRADITIONAL_SCHOOL_MAPPINGS[subject];
-    source = "school";
   } else if (CATEGORY_DEFAULT_MAPPINGS[subject]) {
     mapping = CATEGORY_DEFAULT_MAPPINGS[subject];
-    source = "category";
   }
 
   if (!mapping) {
