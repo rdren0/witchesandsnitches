@@ -318,7 +318,9 @@ export const SubjectCard = ({
       const modifiedTotal = rollResult.total + totalModifier;
 
       const isNaturalTwenty = rollResult.total === 20;
-      const isSuccess = modifiedTotal >= 11 || isNaturalTwenty;
+      const isNaturalOne = rollResult.total === 1;
+      const isSuccess =
+        (modifiedTotal >= 11 || isNaturalTwenty) && !isNaturalOne;
 
       await saveSpellAttempt(
         spellName,
@@ -326,6 +328,7 @@ export const SubjectCard = ({
         rollResult.total,
         isSuccess,
         isNaturalTwenty,
+        isNaturalOne,
         totalModifier,
         modifiedTotal
       );
@@ -359,6 +362,7 @@ export const SubjectCard = ({
         rollResult,
         isSuccess,
         isNaturalTwenty,
+        isNaturalOne,
         totalModifier,
         modifiedTotal,
         subject
@@ -523,6 +527,7 @@ export const SubjectCard = ({
     rollResult,
     isSuccess,
     isNaturalTwenty = false,
+    isNaturalOne = false,
     totalModifier = 0,
     modifiedTotal = 0,
     subject = ""
@@ -546,6 +551,12 @@ export const SubjectCard = ({
       } Attempted: ${spellName}`;
       resultText = `**${rollResult.total}** - ⭐ CRITICALLY MASTERED!`;
       embedColor = 0xffd700;
+    } else if (isNaturalOne) {
+      title = `💥 ${
+        selectedCharacter?.name || "Unknown"
+      } Attempted: ${spellName}`;
+      resultText = `**${rollResult.total}** - 💥 CRITICAL FAILURE!`;
+      embedColor = 0x8b0000; // Dark red for critical failure
     }
 
     let rollDescription = `**Roll:** ${rollResult.total}`;
@@ -614,7 +625,7 @@ export const SubjectCard = ({
 
     const embed = {
       title: title,
-      description: rollResult.output,
+      //   description: rollResult.output,
       color: embedColor,
       fields: fields,
       timestamp: new Date().toISOString(),
@@ -644,6 +655,7 @@ export const SubjectCard = ({
     rollResult,
     isSuccess,
     isNaturalTwenty = false,
+    isNaturalOne = false,
     totalModifier = 0,
     modifiedTotal = 0
   ) => {
@@ -667,6 +679,7 @@ export const SubjectCard = ({
           total_modifier: totalModifier,
           is_success: isSuccess,
           is_natural_twenty: isNaturalTwenty,
+          is_natural_one: isNaturalOne,
 
           modifier_source: INDIVIDUAL_SPELL_MODIFIERS[spellName]
             ? "individual"
@@ -934,15 +947,11 @@ export const SubjectCard = ({
               onMouseEnter={(e) => {
                 if (!isMastered && !isAttempting && selectedCharacter) {
                   e.target.style.backgroundColor = "#2563eb";
-                  e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isMastered && !isAttempting && selectedCharacter) {
                   e.target.style.backgroundColor = "#3b82f6";
-                  e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "none";
                 }
               }}
             >
