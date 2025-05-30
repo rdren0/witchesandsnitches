@@ -611,18 +611,6 @@ export const SubjectCard = ({
       });
     }
 
-    if (selectedCharacter?.level || selectedCharacter?.house) {
-      fields.push({
-        name: "Character",
-        value: `${selectedCharacter?.name || "Unknown"}\nLevel ${
-          selectedCharacter.level || "?"
-        } ${selectedCharacter?.castingStyle || "Unknown Class"} • ${
-          selectedCharacter.house || "No House"
-        }`,
-        inline: true,
-      });
-    }
-
     const embed = {
       title: title,
       description: rollResult.output,
