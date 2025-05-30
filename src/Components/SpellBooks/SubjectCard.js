@@ -45,20 +45,21 @@ const getIcon = (iconName) => {
 };
 
 export const SubjectCard = ({
-  expandedSubjects,
-  subjectName,
-  subjectData,
-  setExpandedSubjects,
-  setExpandedSections,
-  expandedSections,
-  discordUserId,
-  setCriticalSuccesses,
   criticalSuccesses,
+  customUsername,
+  discordUserId,
+  expandedSections,
+  expandedSubjects,
   selectedCharacter,
-  supabase,
-  spellAttempts,
-  setSpellAttempts,
+  setCriticalSuccesses,
   setError,
+  setExpandedSections,
+  setExpandedSubjects,
+  setSpellAttempts,
+  spellAttempts,
+  subjectData,
+  subjectName,
+  supabase,
   user,
 }) => {
   const [attemptingSpells, setAttemptingSpells] = useState({});
@@ -579,7 +580,8 @@ export const SubjectCard = ({
       },
       {
         name: "Player",
-        value: user?.user_metadata?.full_name || "Unknown Player",
+        value:
+          customUsername ?? user?.user_metadata?.full_name ?? "Unknown Player",
         inline: true,
       },
     ];

@@ -7,7 +7,7 @@ import { SubjectCard } from "./SubjectCard";
 
 import { spellsData } from "./spells";
 
-const SpellBook = ({ supabase, user }) => {
+const SpellBook = ({ supabase, user, customUsername }) => {
   const [expandedSections, setExpandedSections] = useState({});
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [characters, setCharacters] = useState([]);
@@ -254,21 +254,22 @@ const SpellBook = ({ supabase, user }) => {
         {Object.entries(spellsData).map(
           ([subjectName, subjectData]) => (
             <SubjectCard
-              setExpandedSections={setExpandedSections}
-              expandedSubjects={expandedSubjects}
-              subjectName={subjectName}
-              subjectData={subjectData}
-              discordUserId={discordUserId}
-              setCriticalSuccesses={setCriticalSuccesses}
               criticalSuccesses={criticalSuccesses}
-              selectedCharacter={selectedCharacter}
+              customUsername={customUsername}
+              discordUserId={discordUserId}
               expandedSections={expandedSections}
-              supabase={supabase}
-              setExpandedSubjects={setExpandedSubjects}
+              expandedSubjects={expandedSubjects}
+              selectedCharacter={selectedCharacter}
+              setCriticalSuccesses={setCriticalSuccesses}
               setError={setError}
-              user={user}
-              spellAttempts={spellAttempts}
+              setExpandedSections={setExpandedSections}
+              setExpandedSubjects={setExpandedSubjects}
               setSpellAttempts={setSpellAttempts}
+              spellAttempts={spellAttempts}
+              subjectData={subjectData}
+              subjectName={subjectName}
+              supabase={supabase}
+              user={user}
             />
           )
           // renderSubjectCard(subjectName, subjectData)
