@@ -4,6 +4,7 @@ import { Edit3, Check, X, User } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import SpellBook from "../Components/SpellBooks/SpellBook";
 import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
+import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
 import { styles } from "./style";
 
 const supabase = createClient(
@@ -282,6 +283,15 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
             </p>
           </div>
         </div>
+        <div style={styles.featureGrid}>
+          <div
+            style={styles.featureCard}
+            onClick={() => handleCardClick("character-sheet")}
+          >
+            <h3>Character Sheet</h3>
+            <p>View Character Sheet.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -481,6 +491,16 @@ function App() {
             />
           </ProtectedRoute>
         );
+      case "character-sheet":
+        return (
+          <ProtectedRoute user={user}>
+            <CharacterSheet
+              customUsername={customUsername}
+              supabase={supabase}
+              user={user}
+            />
+          </ProtectedRoute>
+        );
       case "spellbook":
         return (
           <ProtectedRoute user={user}>
@@ -514,32 +534,39 @@ function App() {
     <div style={styles.appContainer}>
       <header style={styles.appHeader}>
         <nav style={styles.tabNavigation}>
-          {["home", "character-creation", "spellbook"].map((tab) => (
-            <button
-              key={tab}
-              style={{
-                ...styles.tabButton,
-                ...(activeTab === tab ? styles.tabButtonActive : {}),
-              }}
-              onClick={() => setActiveTab(tab)}
-              onMouseEnter={(e) => {
-                if (activeTab !== tab) {
-                  Object.assign(e.target.style, styles.tabButtonHover);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== tab) {
-                  Object.assign(e.target.style, styles.tabButton);
-                }
-              }}
-            >
-              {tab === "home"
-                ? "Home"
-                : tab === "character-creation"
-                ? "Character Creation"
-                : "SpellBook"}
-            </button>
-          ))}
+          {["home", "character-creation", "character-sheet", "spellbook"].map(
+            (tab) => {
+              const tabLabels = {
+                home: "Home",
+                "character-creation": "Character Creation",
+                "character-sheet": "Character Sheet",
+                spellbook: "SpellBook",
+              };
+
+              return (
+                <button
+                  key={tab}
+                  style={{
+                    ...styles.tabButton,
+                    ...(activeTab === tab ? styles.tabButtonActive : {}),
+                  }}
+                  onClick={() => setActiveTab(tab)}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== tab) {
+                      Object.assign(e.target.style, styles.tabButtonHover);
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== tab) {
+                      Object.assign(e.target.style, styles.tabButton);
+                    }
+                  }}
+                >
+                  {tabLabels[tab]}
+                </button>
+              );
+            }
+          )}
         </nav>
 
         <AuthComponent
