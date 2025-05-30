@@ -487,10 +487,7 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
             onClick={() => handleCardClick("character-creation")}
           >
             <h3>Character Creation</h3>
-            <p>
-              Build and customize your D&D characters with our intuitive
-              character creation tool.
-            </p>
+            <p>Build and customize your D&D characters.</p>
           </div>
           <div
             style={styles.featureCard}
