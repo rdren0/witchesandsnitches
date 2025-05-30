@@ -251,29 +251,26 @@ const SpellBook = ({ supabase, user, customUsername }) => {
         )}
       </div>
       <div style={styles.subjectsGrid}>
-        {Object.entries(spellsData).map(
-          ([subjectName, subjectData]) => (
-            <SubjectCard
-              criticalSuccesses={criticalSuccesses}
-              customUsername={customUsername}
-              discordUserId={discordUserId}
-              expandedSections={expandedSections}
-              expandedSubjects={expandedSubjects}
-              selectedCharacter={selectedCharacter}
-              setCriticalSuccesses={setCriticalSuccesses}
-              setError={setError}
-              setExpandedSections={setExpandedSections}
-              setExpandedSubjects={setExpandedSubjects}
-              setSpellAttempts={setSpellAttempts}
-              spellAttempts={spellAttempts}
-              subjectData={subjectData}
-              subjectName={subjectName}
-              supabase={supabase}
-              user={user}
-            />
-          )
-          // renderSubjectCard(subjectName, subjectData)
-        )}
+        {Object.entries(spellsData).map(([subjectName, subjectData]) => (
+          <SubjectCard
+            criticalSuccesses={criticalSuccesses}
+            customUsername={customUsername}
+            discordUserId={discordUserId}
+            expandedSections={expandedSections}
+            expandedSubjects={expandedSubjects}
+            selectedCharacter={selectedCharacter}
+            setCriticalSuccesses={setCriticalSuccesses}
+            setError={setError}
+            setExpandedSections={setExpandedSections}
+            setExpandedSubjects={setExpandedSubjects}
+            setSpellAttempts={setSpellAttempts}
+            spellAttempts={spellAttempts}
+            subjectData={subjectData}
+            subjectName={subjectName}
+            supabase={supabase}
+            user={user}
+          />
+        ))}
       </div>
     </div>
   );

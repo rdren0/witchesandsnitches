@@ -557,7 +557,7 @@ export const SubjectCard = ({
         selectedCharacter?.name || "Unknown"
       } Attempted: ${spellName}`;
       resultText = `**${rollResult.total}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000; // Dark red for critical failure
+      embedColor = 0x8b0000;
     }
 
     let rollDescription = `**Roll:** ${rollResult.total}`;

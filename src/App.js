@@ -11,7 +11,6 @@ const supabase = createClient(
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
-// Custom useStyles hook
 const useStyles = () => {
   return {
     appContainer: {
@@ -255,7 +254,6 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
     setError("");
 
     try {
-      // Check if username exists
       const { data: existingUser } = await supabase
         .from("user_profiles")
         .select("id")
@@ -535,13 +533,13 @@ function App() {
     };
   }, []);
 
-  // Load custom username when user changes
   useEffect(() => {
     if (user) {
       loadCustomUsername();
     } else {
       setCustomUsername("");
     }
+    // eslint-disable-next-line
   }, [user]);
 
   const loadCustomUsername = async () => {
