@@ -70,7 +70,7 @@ export const SubjectCard = ({
     successfulAttempts: 0,
     hasCriticalSuccess: false,
   });
-  const [isDescriptionExpanded, _setIsDescriptionExpanded] = useState(false);
+  // const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const getSubjectStats = (subject) => {
     const levels = spellsData[subject].levels;
     const totalSpells = Object.values(levels).reduce(
@@ -820,7 +820,7 @@ export const SubjectCard = ({
                 </span>
               )}
 
-              {/* Spell Description */}
+              {/* Spell Description
               {isDescriptionExpanded && formattedDescription && (
                 <div
                   style={{
@@ -857,7 +857,7 @@ export const SubjectCard = ({
                     {formattedDescription.details}
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </td>
           <td style={styles.tableCell}>
