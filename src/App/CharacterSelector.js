@@ -10,7 +10,6 @@ export const CharacterSelector = ({
 }) => {
   if (!user) return null;
 
-  // If only one character, display as text instead of dropdown
   const shouldShowDropdown = characters.length > 1;
   const singleCharacter = characters.length === 1 ? characters[0] : null;
 
@@ -62,7 +61,6 @@ export const CharacterSelector = ({
           </label>
 
           {shouldShowDropdown ? (
-            // Multiple characters - show dropdown
             <select
               value={selectedCharacter?.id?.toString() || ""}
               onChange={(e) => {
@@ -92,7 +90,6 @@ export const CharacterSelector = ({
               ))}
             </select>
           ) : singleCharacter ? (
-            // Single character - show as text
             <div
               style={{
                 padding: "8px 12px",
@@ -109,7 +106,6 @@ export const CharacterSelector = ({
               {formatCharacterDisplay(singleCharacter)}
             </div>
           ) : (
-            // Loading or no characters
             <div
               style={{
                 padding: "8px 12px",

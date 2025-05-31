@@ -14,12 +14,6 @@ const AbilityScores = ({ character, discordWebhookUrl }) => {
     opacity: isRolling ? 0.5 : 1,
   };
 
-  const hoverAbilityStyle = {
-    ...clickableAbilityStyle,
-    backgroundColor: "#e5e7eb",
-    transform: "scale(1.02)",
-  };
-
   const rollAbility = async (ability) => {
     if (isRolling) return;
 

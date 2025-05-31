@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Edit3, Check, X, User } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
@@ -331,46 +331,34 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false);
 
   const [characters, setCharacters] = useState([]);
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [charactersError, setCharactersError] = useState(null);
+  const [initialCharacterId, setInitialCharacterId] = useState(null);
+  const loadingRef = useRef(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      loadCustomUsername();
-      loadCharacters();
-    } else {
-      setCustomUsername("");
-      setCharacters([]);
-      setSelectedCharacter(null);
-      sessionStorage.removeItem("selectedCharacterId");
+  const getInitialSelectedCharacter = () => {
+    try {
+      const savedCharacterId = sessionStorage.getItem("selectedCharacterId");
+      if (savedCharacterId) {
+        setInitialCharacterId(savedCharacterId);
+        return { id: savedCharacterId };
+      }
+    } catch (error) {
+      console.error("Error reading from sessionStorage:", error);
     }
-    // eslint-disable-next-line
-  }, [user]);
+    return null;
+  };
+  const [selectedCharacter, setSelectedCharacter] = useState(
+    getInitialSelectedCharacter
+  );
 
-  const loadCharacters = async () => {
-    if (!discordUserId) return;
-
+  const loadCharacters = useCallback(async () => {
+    if (!discordUserId || loadingRef.current) {
+      return;
+    }
+    loadingRef.current = true;
     setCharactersLoading(true);
     setCharactersError(null);
 
@@ -410,12 +398,23 @@ function App() {
 
       setCharacters(sortedCharacters);
 
-      const savedCharacterId = sessionStorage.getItem("selectedCharacterId");
+      const savedCharacterId =
+        sessionStorage.getItem("selectedCharacterId") || initialCharacterId;
+
       let characterToSelect = null;
 
-      if (savedCharacterId) {
+      if (
+        selectedCharacter &&
+        sortedCharacters.find(
+          (c) => c.id.toString() === selectedCharacter.id.toString()
+        )
+      ) {
         characterToSelect = sortedCharacters.find(
-          (char) => char.id.toString() === savedCharacterId
+          (c) => c.id.toString() === selectedCharacter.id.toString()
+        );
+      } else if (savedCharacterId) {
+        characterToSelect = sortedCharacters.find(
+          (char) => char.id.toString() === savedCharacterId.toString()
         );
       }
 
@@ -423,20 +422,69 @@ function App() {
         characterToSelect = sortedCharacters[0];
       }
 
-      if (characterToSelect) {
+      if (
+        characterToSelect &&
+        (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
+      ) {
         setSelectedCharacter(characterToSelect);
         sessionStorage.setItem(
           "selectedCharacterId",
           characterToSelect.id.toString()
         );
+        setInitialCharacterId(null);
+      } else if (characterToSelect) {
+        sessionStorage.setItem(
+          "selectedCharacterId",
+          characterToSelect.id.toString()
+        );
+      } else {
+        console.log("❌ No character to select");
       }
     } catch (err) {
       setCharactersError("Failed to load characters: " + err.message);
       console.error("Error loading characters:", err);
     } finally {
       setCharactersLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [discordUserId, selectedCharacter, initialCharacterId]);
+
+  useEffect(() => {
+    if (discordUserId && characters.length === 0 && !charactersLoading) {
+      loadCharacters();
+    }
+  }, [discordUserId, loadCharacters, characters.length, charactersLoading]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadCustomUsername();
+      loadCharacters();
+    } else {
+      setCustomUsername("");
+      setCharacters([]);
+      setSelectedCharacter(null);
+      sessionStorage.removeItem("selectedCharacterId");
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   const refreshCharacters = () => {
     loadCharacters();
