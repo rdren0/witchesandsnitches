@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { User, Shield, Heart, Zap, Dice6, ChevronUp } from "lucide-react";
+import { rollDice } from "../../App/diceRoller";
 import { styles } from "./characterSheetStyles";
 import { Skills } from "./Skills";
-import { formatModifier, modifiers } from "./utils";
+import AbilityScores from "../AbilityScores/AbilityScores";
+import { modifiers } from "./utils";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
-const CharacterSheet = ({ user, customUsername, supabase, className = "" }) => {
+const CharacterSheet = ({ user, supabase, className = "" }) => {
   const discordUserId = user?.user_metadata?.provider_id;
 
   const [characters, setCharacters] = useState([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState("");
   const [character, setCharacter] = useState(null);
+  const [isRolling, setIsRolling] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [characterLoading, setCharacterLoading] = useState(false);
@@ -146,6 +149,111 @@ const CharacterSheet = ({ user, customUsername, supabase, className = "" }) => {
     });
 
     return skills;
+  };
+
+  const calculateSkillBonus = (skillName, abilityMod) => {
+    if (!character) return 0;
+    const isProficient = character.skills?.[skillName] || false;
+    const profBonus = isProficient ? character.proficiencyBonus : 0;
+    return abilityMod + profBonus;
+  };
+
+  const rollSkill = async (skill, abilityMod) => {
+    if (isRolling) return;
+
+    setIsRolling(true);
+
+    try {
+      const diceResult = rollDice();
+      const d20Roll = diceResult.total;
+      const skillBonus = calculateSkillBonus(skill.name, abilityMod);
+      const total = d20Roll + skillBonus;
+      const isProficient = character.skills?.[skill.name] || false;
+
+      const isCriticalSuccess = d20Roll === 20;
+      const isCriticalFailure = d20Roll === 1;
+
+      let embedColor = 0x6600cc;
+      let resultText = "";
+
+      if (isCriticalSuccess) {
+        embedColor = 0xffd700;
+        resultText = " - **CRITICAL SUCCESS!** 🎉";
+      } else if (isCriticalFailure) {
+        embedColor = 0xff0000;
+        resultText = " - **CRITICAL FAILURE!** 💥";
+      }
+
+      const message = {
+        embeds: [
+          {
+            title: `${character.name} Attempted: ${skill.displayName}${resultText}`,
+            description: `1d20: [${d20Roll}] = ${d20Roll}${
+              isCriticalSuccess
+                ? " (Natural 20!)"
+                : isCriticalFailure
+                ? " (Natural 1!)"
+                : ""
+            }`,
+            color: embedColor,
+            fields: [
+              {
+                name: "Roll Details",
+                value: `Roll: ${d20Roll} ${
+                  skillBonus >= 0 ? "+" : ""
+                }${skillBonus} = **${total}**${
+                  isCriticalSuccess
+                    ? "\n✨ **Exceptional success regardless of DC!**"
+                    : isCriticalFailure
+                    ? "\n💀 **Spectacular failure regardless of modifier!**"
+                    : ""
+                }${
+                  isProficient
+                    ? `\n🎯 **Proficient** (+${character.proficiencyBonus} bonus included)`
+                    : ""
+                }`,
+                inline: false,
+              },
+            ],
+            footer: {
+              text: `${
+                character.house
+              } - Skill Check • Today at ${new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}`,
+            },
+          },
+        ],
+      };
+
+      if (discordWebhookUrl) {
+        await fetch(discordWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(message),
+        });
+      } else {
+        const criticalText = isCriticalSuccess
+          ? " - CRITICAL SUCCESS!"
+          : isCriticalFailure
+          ? " - CRITICAL FAILURE!"
+          : "";
+        const profText = isProficient
+          ? ` (Proficient +${character.proficiencyBonus})`
+          : "";
+        alert(
+          `${skill.displayName} Check: d20(${d20Roll}) + ${skillBonus} = ${total}${criticalText}${profText}`
+        );
+      }
+    } catch (error) {
+      console.error("Error sending Discord message:", error);
+      alert("Failed to send roll to Discord");
+    } finally {
+      setIsRolling(false);
+    }
   };
 
   if (loading) {
@@ -284,36 +392,22 @@ const CharacterSheet = ({ user, customUsername, supabase, className = "" }) => {
             </div>
           </div>
 
-          <div style={styles.abilityCard}>
-            <h2 style={styles.abilityTitle}>Ability Scores</h2>
-            <div style={styles.abilityGrid}>
-              {[
-                { name: "Strength", key: "strength" },
-                { name: "Dexterity", key: "dexterity" },
-                { name: "Constitution", key: "constitution" },
-                { name: "Intelligence", key: "intelligence" },
-                { name: "Wisdom", key: "wisdom" },
-                { name: "Charisma", key: "charisma" },
-              ].map((ability) => (
-                <div key={ability.key} style={styles.abilityItem}>
-                  <span style={styles.abilityName}>{ability.name}</span>
-                  <div style={styles.abilityModifier}>
-                    {formatModifier(modifiers(character)[ability.key])}
-                  </div>
-                  <div style={styles.abilityScore}>
-                    {character[ability.key]}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <AbilityScores
+            character={character}
+            discordWebhookUrl={discordWebhookUrl}
+          />
+
           <Skills
             character={character}
             supabase={supabase}
             discordUserId={discordUserId}
             setCharacter={setCharacter}
             selectedCharacterId={selectedCharacterId}
+            rollSkill={rollSkill}
+            isRolling={isRolling}
+            modifiers={modifiers(character)}
           />
+
           <div style={styles.instructionsCard}>
             <div style={styles.instructionsGrid}>
               <div style={styles.instructionItem}>
@@ -333,7 +427,7 @@ const CharacterSheet = ({ user, customUsername, supabase, className = "" }) => {
               </div>
               <div style={styles.instructionItem}>
                 <Dice6 className="w-4 h-4 text-blue-500" />
-                <span>Click skill name to roll d20 + modifier</span>
+                <span>Click skill or ability name to roll d20 + modifier</span>
               </div>
               <div style={styles.instructionItem}>
                 <ChevronUp className="w-4 h-4 text-purple-500" />

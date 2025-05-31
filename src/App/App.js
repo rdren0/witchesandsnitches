@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Edit3, Check, X, User } from "lucide-react";
 
 import { createClient } from "@supabase/supabase-js";
-import SpellBook from "../Components/SpellBooks/SpellBook";
+import SpellBook from "../Components/SpellBook/SpellBook";
 import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
 import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
 import { styles } from "./style";
