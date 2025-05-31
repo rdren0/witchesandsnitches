@@ -24,7 +24,7 @@ import {
   spellsData,
   INDIVIDUAL_SPELL_MODIFIERS,
   TRADITIONAL_SCHOOL_MAPPINGS,
-  SPELL_DESCRIPTIONS,
+  // SPELL_DESCRIPTIONS,
 } from "./spells";
 import { getModifierInfo, getSpellModifier } from "./utils";
 
@@ -100,24 +100,25 @@ export const SubjectCard = ({
   const Icon = getIcon(subjectData.icon);
   const stats = getSubjectStats(subjectName);
   const isExpanded = expandedSubjects[subjectName];
-  const getSpellDescription = (spellName) => {
-    return SPELL_DESCRIPTIONS[spellName] || null;
-  };
+  // const getSpellDescription = (spellName) => {
+  //   return SPELL_DESCRIPTIONS[spellName] || null;
+  // };
 
-  const formatSpellDescription = (description) => {
-    if (!description) return null;
+  // const formatSpellDescription = (description) => {
+  //   if (!description) return null;
 
-    const lines = description.split("\n");
-    const spellName = lines[0];
-    const subtitle = lines[1] || "";
-    const details = lines.slice(2).join("\n").trim();
+  //   const lines = description.split("\n");
+  //   const spellName = lines[0];
+  //   const subtitle = lines[1] || "";
+  //   const details = lines.slice(2).join("\n").trim();
 
-    return {
-      name: spellName,
-      subtitle: subtitle,
-      details: details,
-    };
-  };
+  //   return {
+  //     name: spellName,
+  //     subtitle: subtitle,
+  //     details: details,
+  //   };
+  // };
+
   const rollDice = () => {
     const roller = new DiceRoller();
     const roll = roller.roll("1d20");
@@ -710,10 +711,10 @@ export const SubjectCard = ({
       const isSpecial = spell.includes("*");
       const isAttempting = attemptingSpells[spell];
       const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
-      const spellDescription = getSpellDescription(spell);
-      const formattedDescription = spellDescription
-        ? formatSpellDescription(spellDescription)
-        : null;
+      // const spellDescription = getSpellDescription(spell);
+      // const formattedDescription = spellDescription
+      //   ? formatSpellDescription(spellDescription)
+      //   : null;
 
       return (
         <tr
