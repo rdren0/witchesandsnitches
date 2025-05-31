@@ -161,8 +161,6 @@ export const Skills = ({
       const d20Roll = diceResult.total;
       const skillBonus = calculateSkillBonus(skill.name, abilityMod);
       const total = d20Roll + skillBonus;
-      const isProficient = character.skills?.[skill.name] || false;
-
       const isCriticalSuccess = d20Roll === 20;
       const isCriticalFailure = d20Roll === 1;
 
