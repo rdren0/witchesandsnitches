@@ -22,7 +22,13 @@ import {
 import { styles } from "./characterCreationStyles";
 import { characterService } from "../../services/characterService";
 
-const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
+const CharacterCreationForm = ({
+  user,
+  customUsername,
+  onCharacterSaved,
+  selectedCharacterId,
+  onSelectedCharacterReset,
+}) => {
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
@@ -582,7 +588,33 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
 
     try {
       await characterService.deleteCharacter(id, discordUserId);
-      setSavedCharacters((prev) => prev.filter((char) => char.id !== id));
+
+      const wasSelected =
+        selectedCharacterId && selectedCharacterId.toString() === id.toString();
+
+      const updatedCharacters = savedCharacters.filter(
+        (char) => char.id !== id
+      );
+      setSavedCharacters(updatedCharacters);
+
+      if (wasSelected) {
+        if (updatedCharacters.length > 0) {
+          const newSelectedCharacter = updatedCharacters[0];
+          sessionStorage.setItem(
+            "selectedCharacterId",
+            newSelectedCharacter.id.toString()
+          );
+
+          if (onSelectedCharacterReset) {
+            onSelectedCharacterReset(newSelectedCharacter);
+          }
+        } else {
+          sessionStorage.removeItem("selectedCharacterId");
+          if (onSelectedCharacterReset) {
+            onSelectedCharacterReset(null);
+          }
+        }
+      }
     } catch (err) {
       setError("Failed to delete character: " + err.message);
       console.error("Error deleting character:", err);

@@ -334,6 +334,7 @@ function App() {
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [charactersError, setCharactersError] = useState(null);
   const [initialCharacterId, setInitialCharacterId] = useState(null);
+
   const loadingRef = useRef(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
@@ -353,6 +354,15 @@ function App() {
   const [selectedCharacter, setSelectedCharacter] = useState(
     getInitialSelectedCharacter
   );
+
+  const resetSelectedCharacter = (newCharacter = null) => {
+    if (newCharacter) {
+      setSelectedCharacter(newCharacter);
+    } else {
+      setSelectedCharacter(null);
+      sessionStorage.removeItem("selectedCharacterId");
+    }
+  };
 
   const loadCharacters = useCallback(async () => {
     if (!discordUserId || loadingRef.current) {
@@ -485,10 +495,6 @@ function App() {
     }
     // eslint-disable-next-line
   }, [user]);
-
-  const refreshCharacters = () => {
-    loadCharacters();
-  };
 
   const handleCharacterChange = (character) => {
     setSelectedCharacter(character);
@@ -628,7 +634,11 @@ function App() {
             <CharacterCreationForm
               user={user}
               customUsername={customUsername}
-              onCharacterSaved={refreshCharacters}
+              onCharacterSaved={() => {
+                loadCharacters();
+              }}
+              selectedCharacterId={selectedCharacter?.id}
+              onSelectedCharacterReset={resetSelectedCharacter}
             />
           </ProtectedRoute>
         );
