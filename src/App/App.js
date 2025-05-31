@@ -240,14 +240,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
         )}
 
         <div style={styles.featureGrid}>
-          <div
-            style={styles.featureCard}
-            onClick={() => handleCardClick("character-creation")}
-          >
-            <h3>Character Creation</h3>
-            <p>Build and customize your D&D characters.</p>
-          </div>
-
           {!hasCharacters && (
             <div
               style={{
@@ -302,6 +294,14 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
             </div>
           </>
         )}
+        <hr style={{ border: "1px solid #eee", marginBottom: "16px" }} />
+        <div
+          style={styles.featureCard}
+          onClick={() => handleCardClick("character-creation")}
+        >
+          <h3>Character Creation</h3>
+          <p>Build and customize your D&D characters.</p>
+        </div>
       </div>
     </div>
   );

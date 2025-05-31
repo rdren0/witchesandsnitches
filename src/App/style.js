@@ -168,8 +168,6 @@ export const styles = {
   featureGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "1.5rem",
-    marginTop: "2rem",
   },
   featureCard: {
     padding: "1.5rem",
@@ -181,6 +179,7 @@ export const styles = {
     cursor: "pointer",
     transition: "all 0.3s ease",
     position: "relative",
+    margin: "8px",
   },
   featureCardHover: {
     transform: "translateY(-2px)",
