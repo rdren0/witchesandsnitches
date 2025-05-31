@@ -6,6 +6,7 @@ import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
 import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
 import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
+import { CharacterNotes } from "../Components/CharacterNotes/CharacterNotes";
 import { styles } from "./style";
 
 const supabase = createClient(
@@ -392,10 +393,10 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
         <div style={styles.featureGrid}>
           <div
             style={styles.featureCard}
-            onClick={() => handleCardClick("character-creation")}
+            onClick={() => handleCardClick("character-sheet")}
           >
-            <h3>Character Creation</h3>
-            <p>Build and customize your D&D characters.</p>
+            <h3>Character Sheet</h3>
+            <p>View Character Sheet.</p>
           </div>
           <div
             style={styles.featureCard}
@@ -411,10 +412,20 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
         <div style={styles.featureGrid}>
           <div
             style={styles.featureCard}
-            onClick={() => handleCardClick("character-sheet")}
+            onClick={() => handleCardClick("character-creation")}
           >
-            <h3>Character Sheet</h3>
-            <p>View Character Sheet.</p>
+            <h3>Character Creation</h3>
+            <p>Build and customize your D&D characters.</p>
+          </div>
+          <div
+            style={styles.featureCard}
+            onClick={() => handleCardClick("character-notes")}
+          >
+            <h3>Character Notes</h3>
+            <p>
+              Keep detailed notes about your character's story, relationships,
+              and development.
+            </p>
           </div>
         </div>
       </div>
@@ -483,7 +494,6 @@ function App() {
     // eslint-disable-next-line
   }, [user]);
 
-  // Shared character loading function
   const loadCharacters = async () => {
     if (!discordUserId) return;
 
@@ -533,7 +543,6 @@ function App() {
     }
   };
 
-  // Refresh characters when returning from character creation
   const refreshCharacters = () => {
     loadCharacters();
   };
@@ -690,6 +699,24 @@ function App() {
             />
           </ProtectedRoute>
         );
+      case "character-notes":
+        return (
+          <ProtectedRoute user={user}>
+            <CharacterSelector
+              user={user}
+              characters={characters}
+              selectedCharacter={selectedCharacter}
+              onCharacterChange={setSelectedCharacter}
+              isLoading={charactersLoading}
+              error={charactersError}
+            />
+            <CharacterNotes
+              user={user}
+              selectedCharacter={selectedCharacter}
+              supabase={supabase}
+            />
+          </ProtectedRoute>
+        );
       case "spellbook":
         return (
           <ProtectedRoute user={user}>
@@ -733,39 +760,44 @@ function App() {
     <div style={styles.appContainer}>
       <header style={styles.appHeader}>
         <nav style={styles.tabNavigation}>
-          {["home", "character-creation", "character-sheet", "spellbook"].map(
-            (tab) => {
-              const tabLabels = {
-                home: "Home",
-                "character-creation": "Character Creation",
-                "character-sheet": "Character Sheet",
-                spellbook: "SpellBook",
-              };
+          {[
+            "home",
+            "character-creation",
+            "character-sheet",
+            "spellbook",
+            "character-notes",
+          ].map((tab) => {
+            const tabLabels = {
+              home: "Home",
+              "character-creation": "Character Creation",
+              "character-sheet": "Character Sheet",
+              "character-notes": "Character Notes",
+              spellbook: "SpellBook",
+            };
 
-              return (
-                <button
-                  key={tab}
-                  style={{
-                    ...styles.tabButton,
-                    ...(activeTab === tab ? styles.tabButtonActive : {}),
-                  }}
-                  onClick={() => setActiveTab(tab)}
-                  onMouseEnter={(e) => {
-                    if (activeTab !== tab) {
-                      Object.assign(e.target.style, styles.tabButtonHover);
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeTab !== tab) {
-                      Object.assign(e.target.style, styles.tabButton);
-                    }
-                  }}
-                >
-                  {tabLabels[tab]}
-                </button>
-              );
-            }
-          )}
+            return (
+              <button
+                key={tab}
+                style={{
+                  ...styles.tabButton,
+                  ...(activeTab === tab ? styles.tabButtonActive : {}),
+                }}
+                onClick={() => setActiveTab(tab)}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab) {
+                    Object.assign(e.target.style, styles.tabButtonHover);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab) {
+                    Object.assign(e.target.style, styles.tabButton);
+                  }
+                }}
+              >
+                {tabLabels[tab]}
+              </button>
+            );
+          })}
         </nav>
 
         <AuthComponent
