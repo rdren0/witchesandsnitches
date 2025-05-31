@@ -218,12 +218,14 @@ const CharacterCreationForm = ({ user, customUsername }) => {
 
   useEffect(() => {
     rollAllStats();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     if (discordUserId) {
       loadCharacters();
     }
+    // eslint-disable-next-line
   }, [discordUserId, loadCharacters]);
 
   if (!user || !discordUserId) {
