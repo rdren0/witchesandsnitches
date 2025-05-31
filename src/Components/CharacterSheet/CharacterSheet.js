@@ -8,54 +8,24 @@ import { modifiers } from "./utils";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
-const CharacterSheet = ({ user, supabase, className = "" }) => {
+const CharacterSheet = ({
+  user,
+  supabase,
+  selectedCharacter,
+  characters,
+  className = "",
+}) => {
   const discordUserId = user?.user_metadata?.provider_id;
 
-  const [characters, setCharacters] = useState([]);
-  const [selectedCharacterId, setSelectedCharacterId] = useState("");
   const [character, setCharacter] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
 
-  const [loading, setLoading] = useState(true);
   const [characterLoading, setCharacterLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCharacters = async () => {
-      if (!discordUserId) {
-        setError("No user ID available");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("characters")
-          .select("id, name, house, casting_style, level")
-          .eq("discord_user_id", discordUserId)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        setCharacters(data || []);
-
-        if (data && data.length > 0) {
-          setSelectedCharacterId(data[0].id);
-        }
-      } catch (err) {
-        console.error("Error fetching characters:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCharacters();
-  }, [discordUserId, supabase]);
-
-  useEffect(() => {
-    const fetchCharacter = async () => {
-      if (!selectedCharacterId) {
+    const fetchCharacterDetails = async () => {
+      if (!selectedCharacter?.id) {
         setCharacter(null);
         return;
       }
@@ -67,7 +37,7 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
         const { data, error } = await supabase
           .from("characters")
           .select("*")
-          .eq("id", selectedCharacterId)
+          .eq("id", selectedCharacter.id)
           .eq("discord_user_id", discordUserId)
           .single();
 
@@ -81,6 +51,7 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
             background: data.background || "Unknown",
             bloodStatus: data.innate_heritage || "Unknown",
             wand: data.wand_type || "Unknown wand",
+            gameSession: data.game_session || "",
             strength: data.ability_scores?.strength || 10,
             dexterity: data.ability_scores?.dexterity || 10,
             constitution: data.ability_scores?.constitution || 10,
@@ -109,8 +80,8 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
       }
     };
 
-    fetchCharacter();
-  }, [selectedCharacterId, discordUserId, supabase]);
+    fetchCharacterDetails();
+  }, [selectedCharacter?.id, discordUserId, supabase]);
 
   const transformSkillProficiencies = (skillArray) => {
     const skillMap = {
@@ -256,22 +227,11 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loadingContainer}>
-          <h2>Loading Characters...</h2>
-          <p>Please wait while we fetch your characters.</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div style={styles.container}>
         <div style={styles.errorContainer}>
-          <h2>Error Loading Characters</h2>
+          <h2>Error Loading Character</h2>
           <p>{error}</p>
         </div>
       </div>
@@ -292,30 +252,22 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
     );
   }
 
-  return (
-    <div style={{ ...styles.container, ...{ className } }}>
-      <div style={styles.characterSelector}>
-        <h2 style={styles.selectorTitle}>
-          <User className="w-5 h-5" />
-          Select Character
-        </h2>
-        <div style={styles.selectContainer}>
-          <select
-            value={selectedCharacterId}
-            onChange={(e) => setSelectedCharacterId(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">Choose a character...</option>
-            {characters.map((char) => (
-              <option key={char.id} value={char.id}>
-                {char.name} ({char.house} - Level {char.level}{" "}
-                {char.casting_style})
-              </option>
-            ))}
-          </select>
+  if (!selectedCharacter) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.errorContainer}>
+          <h2>No Character Selected</h2>
+          <p>
+            Please select a character from the dropdown above to view their
+            sheet.
+          </p>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div style={{ ...styles.container, ...{ className } }}>
       {characterLoading && (
         <div style={styles.loadingContainer}>
           <h3>Loading Character Sheet...</h3>
@@ -354,6 +306,12 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
                     <span style={styles.label}>Heritage:</span>{" "}
                     {character.bloodStatus}
                   </div>
+                  {character.gameSession && (
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Game Session:</span>{" "}
+                      {character.gameSession}
+                    </div>
+                  )}
                   <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
                     <span style={styles.label}>Wand:</span> {character.wand}
                   </div>
@@ -402,7 +360,7 @@ const CharacterSheet = ({ user, supabase, className = "" }) => {
             supabase={supabase}
             discordUserId={discordUserId}
             setCharacter={setCharacter}
-            selectedCharacterId={selectedCharacterId}
+            selectedCharacterId={selectedCharacter.id}
             rollSkill={rollSkill}
             isRolling={isRolling}
             modifiers={modifiers(character)}

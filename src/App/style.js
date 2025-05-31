@@ -110,7 +110,7 @@ export const styles = {
     fontWeight: "500",
     cursor: "pointer",
     transition: "background-color 0.2s",
-    minWidth: "120px",
+    minWidth: "80px",
   },
   authButtonDisabled: {
     opacity: 0.6,

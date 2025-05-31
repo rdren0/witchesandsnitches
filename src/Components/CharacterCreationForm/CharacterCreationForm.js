@@ -22,7 +22,7 @@ import {
 import { styles } from "./characterCreationStyles";
 import { characterService } from "../../services/characterService";
 
-const CharacterCreationForm = ({ user, customUsername }) => {
+const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
@@ -53,6 +53,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
     },
   });
 
+  // Generate game session options
   const getGameSessionOptions = () => {
     const days = [
       "Monday",
@@ -192,7 +193,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
         subclass: char.subclass,
         innateHeritage: char.innate_heritage,
         background: char.background,
-        gameSession: char.game_session || "",
+        gameSession: char.game_session || "", // Handle new field
         standardFeats: char.standard_feats || [],
         skillProficiencies: char.skill_proficiencies || [],
         abilityScores: char.ability_scores,
@@ -424,7 +425,6 @@ const CharacterCreationForm = ({ user, customUsername }) => {
       ...character,
       hitPoints: calculateHitPoints(),
     };
-
     try {
       if (isEditing && editingId) {
         const updatedCharacter = await characterService.updateCharacter(
@@ -444,7 +444,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
                   subclass: updatedCharacter.subclass,
                   innateHeritage: updatedCharacter.innate_heritage,
                   background: updatedCharacter.background,
-                  gameSession: updatedCharacter.game_session || "",
+                  gameSession: updatedCharacter.game_session || "", // Handle new field
                   standardFeats: updatedCharacter.standard_feats || [],
                   skillProficiencies:
                     updatedCharacter.skill_proficiencies || [],
@@ -480,7 +480,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
           subclass: savedCharacter.subclass,
           innateHeritage: savedCharacter.innate_heritage,
           background: savedCharacter.background,
-          gameSession: savedCharacter.game_session || "",
+          gameSession: savedCharacter.game_session || "", // Handle new field
           standardFeats: savedCharacter.standard_feats || [],
           skillProficiencies: savedCharacter.skill_proficiencies || [],
           abilityScores: savedCharacter.ability_scores,
@@ -502,6 +502,10 @@ const CharacterCreationForm = ({ user, customUsername }) => {
       setCharacter(getInitialCharacterState());
       if (!isManualMode) {
         rollAllStats();
+      }
+
+      if (onCharacterSaved) {
+        onCharacterSaved();
       }
     } catch (err) {
       setError("Failed to save character: " + err.message);
@@ -1349,7 +1353,6 @@ const CharacterCreationForm = ({ user, customUsername }) => {
                           </div>
                         )}
                         <div>
-                          <strong>Session:</strong> {char.gameSession} <br />
                           <strong>Level:</strong> {char.level} |{" "}
                           <strong>HP:</strong> {char.hitPoints}
                         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Edit3, Check, X, User } from "lucide-react";
 
 import { createClient } from "@supabase/supabase-js";
+import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
 import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
 import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
@@ -144,11 +145,6 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
             <Edit3 size={14} />
           </button>
         </div>
-        {customUsername && (
-          <div style={styles.discordName}>
-            Discord: {user?.user_metadata?.full_name}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -185,33 +181,42 @@ const AuthComponent = ({
               <User size={20} color="white" />
             </div>
           )}
-          <UsernameEditor
-            user={user}
-            customUsername={customUsername}
-            onUsernameUpdate={onUsernameUpdate}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <UsernameEditor
+              user={user}
+              customUsername={customUsername}
+              onUsernameUpdate={onUsernameUpdate}
+            />
+            <button
+              onClick={onSignOut}
+              style={{
+                ...styles.authButton,
+                ...styles.signoutButton,
+                ...(isLoading ? styles.authButtonDisabled : {}),
+                fontSize: "12px",
+                padding: "4px 8px",
+                alignSelf: "flex-start",
+              }}
+              disabled={isLoading}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  Object.assign(e.target.style, styles.signoutButtonHover);
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  Object.assign(e.target.style, {
+                    ...styles.signoutButton,
+                    fontSize: "12px",
+                    padding: "4px 8px",
+                  });
+                }
+              }}
+            >
+              {isLoading ? "Signing Out..." : "Sign Out"}
+            </button>
+          </div>
         </div>
-        <button
-          onClick={onSignOut}
-          style={{
-            ...styles.authButton,
-            ...styles.signoutButton,
-            ...(isLoading ? styles.authButtonDisabled : {}),
-          }}
-          disabled={isLoading}
-          onMouseEnter={(e) => {
-            if (!isLoading) {
-              Object.assign(e.target.style, styles.signoutButtonHover);
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isLoading) {
-              Object.assign(e.target.style, styles.signoutButton);
-            }
-          }}
-        >
-          {isLoading ? "Signing Out..." : "Sign Out"}
-        </button>
       </div>
     );
   }
@@ -239,6 +244,126 @@ const AuthComponent = ({
       >
         {isLoading ? "Signing In..." : "Sign in with Discord"}
       </button>
+    </div>
+  );
+};
+
+// Shared Character Selector Component
+const CharacterSelector = ({
+  user,
+  characters,
+  selectedCharacter,
+  onCharacterChange,
+  isLoading,
+  error,
+}) => {
+  if (!user) return null;
+
+  return (
+    <div
+      style={{
+        padding: "20px",
+        backgroundColor: "#f8fafc",
+        borderBottom: "2px solid #e2e8f0",
+        marginBottom: "20px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "20px",
+          maxWidth: "1200px",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+            flexWrap: "wrap",
+          }}
+        >
+          <User size={24} color="#64748b" />
+          <label
+            style={{
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#374151",
+            }}
+          >
+            Character:
+          </label>
+          <select
+            value={selectedCharacter?.id?.toString() || ""}
+            onChange={(e) => {
+              const char = characters.find(
+                (c) => c.id.toString() === e.target.value
+              );
+              onCharacterChange(char);
+            }}
+            style={{
+              padding: "8px 12px",
+              fontSize: "16px",
+              border: "2px solid #d1d5db",
+              borderRadius: "8px",
+              backgroundColor: "white",
+              color: "#374151",
+              minWidth: "200px",
+            }}
+            disabled={isLoading}
+          >
+            <option value="">
+              {isLoading ? "Loading characters..." : "Select a character..."}
+            </option>
+            {characters.map((char) => (
+              <option key={char.id} value={char.id}>
+                {char.name} ({char.castingStyle || "Unknown Class"}) - Level{" "}
+                {char.level || "?"} - {char.house || "No House"}
+                {char.gameSession && ` - ${char.gameSession}`}
+              </option>
+            ))}
+          </select>
+        </div>
+        {characters.length === 0 && !isLoading && (
+          <div
+            style={{
+              backgroundColor: "#fbbf24",
+              color: "#92400e",
+              padding: "12px 20px",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: "500",
+              textAlign: "center",
+            }}
+          >
+            No characters found. Create a character in the Character Creation
+            tab first.
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div
+          style={{
+            backgroundColor: "#FEE2E2",
+            border: "1px solid #FECACA",
+            color: "#DC2626",
+            padding: "12px",
+            borderRadius: "8px",
+            margin: "16px 0",
+            fontSize: "14px",
+            maxWidth: "1200px",
+            marginLeft: "auto",
+            marginRight: "auto",
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </div>
+      )}
     </div>
   );
 };
@@ -320,6 +445,14 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
 
+  // Shared character state
+  const [characters, setCharacters] = useState([]);
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [charactersLoading, setCharactersLoading] = useState(false);
+  const [charactersError, setCharactersError] = useState(null);
+
+  const discordUserId = user?.user_metadata?.provider_id;
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -341,11 +474,69 @@ function App() {
   useEffect(() => {
     if (user) {
       loadCustomUsername();
+      loadCharacters();
     } else {
       setCustomUsername("");
+      setCharacters([]);
+      setSelectedCharacter(null);
     }
     // eslint-disable-next-line
   }, [user]);
+
+  // Shared character loading function
+  const loadCharacters = async () => {
+    if (!discordUserId) return;
+
+    setCharactersLoading(true);
+    setCharactersError(null);
+
+    try {
+      const charactersData = await characterService.getCharacters(
+        discordUserId
+      );
+
+      const transformedCharacters = charactersData.map((char) => ({
+        id: char.id,
+        name: char.name,
+        house: char.house,
+        castingStyle: char.casting_style,
+        subclass: char.subclass,
+        innateHeritage: char.innate_heritage,
+        background: char.background,
+        gameSession: char.game_session,
+        level: char.level,
+        hitPoints: char.hit_points,
+        abilityScores: char.ability_scores,
+        magicModifiers: char.magic_modifiers || {
+          divinations: 0,
+          charms: 0,
+          transfiguration: 0,
+          healing: 0,
+          jinxesHexesCurses: 0,
+        },
+        standardFeats: char.standard_feats || [],
+        skillProficiencies: char.skill_proficiencies || [],
+        wandType: char.wand_type || "",
+      }));
+
+      setCharacters(transformedCharacters);
+
+      // Auto-select first character if none selected
+      if (!selectedCharacter && transformedCharacters.length > 0) {
+        setSelectedCharacter(transformedCharacters[0]);
+      }
+    } catch (err) {
+      setCharactersError("Failed to load characters: " + err.message);
+      console.error("Error loading characters:", err);
+    } finally {
+      setCharactersLoading(false);
+    }
+  };
+
+  // Refresh characters when returning from character creation
+  const refreshCharacters = () => {
+    loadCharacters();
+  };
 
   const loadCustomUsername = async () => {
     if (!user) return;
@@ -447,6 +638,8 @@ function App() {
       } else {
         setUser(null);
         setCustomUsername("");
+        setCharacters([]);
+        setSelectedCharacter(null);
         setActiveTab("home");
       }
     } catch (err) {
@@ -473,26 +666,47 @@ function App() {
             <CharacterCreationForm
               user={user}
               customUsername={customUsername}
+              onCharacterSaved={refreshCharacters}
             />
           </ProtectedRoute>
         );
       case "character-sheet":
         return (
           <ProtectedRoute user={user}>
+            <CharacterSelector
+              user={user}
+              characters={characters}
+              selectedCharacter={selectedCharacter}
+              onCharacterChange={setSelectedCharacter}
+              isLoading={charactersLoading}
+              error={charactersError}
+            />
             <CharacterSheet
+              user={user}
               customUsername={customUsername}
               supabase={supabase}
-              user={user}
+              selectedCharacter={selectedCharacter}
+              characters={characters}
             />
           </ProtectedRoute>
         );
       case "spellbook":
         return (
           <ProtectedRoute user={user}>
+            <CharacterSelector
+              user={user}
+              characters={characters}
+              selectedCharacter={selectedCharacter}
+              onCharacterChange={setSelectedCharacter}
+              isLoading={charactersLoading}
+              error={charactersError}
+            />
             <SpellBook
+              user={user}
               customUsername={customUsername}
               supabase={supabase}
-              user={user}
+              selectedCharacter={selectedCharacter}
+              characters={characters}
             />
           </ProtectedRoute>
         );
