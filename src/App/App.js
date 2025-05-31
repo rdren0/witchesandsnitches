@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Edit3, Check, X, User } from "lucide-react";
-
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
@@ -51,7 +50,6 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
   const handleSave = async () => {
     const trimmedValue = editValue.trim();
     const validationError = validateUsername(trimmedValue);
-
     if (validationError) {
       setError(validationError);
       return;
@@ -249,7 +247,6 @@ const AuthComponent = ({
   );
 };
 
-// Shared Character Selector Component
 const CharacterSelector = ({
   user,
   characters,
@@ -345,7 +342,6 @@ const CharacterSelector = ({
           </div>
         )}
       </div>
-
       {error && (
         <div
           style={{
@@ -369,7 +365,7 @@ const CharacterSelector = ({
   );
 };
 
-const HomePage = ({ user, customUsername, onTabChange }) => {
+const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
   const displayName = customUsername || user?.user_metadata?.full_name;
 
   const handleCardClick = (tab) => {
@@ -390,25 +386,7 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
             experience.
           </p>
         )}
-        <div style={styles.featureGrid}>
-          <div
-            style={styles.featureCard}
-            onClick={() => handleCardClick("character-sheet")}
-          >
-            <h3>Character Sheet</h3>
-            <p>View Character Sheet.</p>
-          </div>
-          <div
-            style={styles.featureCard}
-            onClick={() => handleCardClick("spellbook")}
-          >
-            <h3>Spell Management</h3>
-            <p>
-              Browse, search, and organize spells for your spellcasting
-              characters.
-            </p>
-          </div>
-        </div>
+
         <div style={styles.featureGrid}>
           <div
             style={styles.featureCard}
@@ -417,17 +395,42 @@ const HomePage = ({ user, customUsername, onTabChange }) => {
             <h3>Character Creation</h3>
             <p>Build and customize your D&D characters.</p>
           </div>
-          <div
-            style={styles.featureCard}
-            onClick={() => handleCardClick("character-notes")}
-          >
-            <h3>Character Notes</h3>
-            <p>
-              Keep detailed notes about your character's story, relationships,
-              and development.
-            </p>
-          </div>
         </div>
+        {hasCharacters && (
+          <>
+            <div style={styles.featureGrid}>
+              <div
+                style={styles.featureCard}
+                onClick={() => handleCardClick("character-sheet")}
+              >
+                <h3>Character Sheet</h3>
+                <p>View and manage your character's stats and abilities.</p>
+              </div>
+              <div
+                style={styles.featureCard}
+                onClick={() => handleCardClick("spellbook")}
+              >
+                <h3>Spell Management</h3>
+                <p>
+                  Browse, search, and organize spells for your spellcasting
+                  characters.
+                </p>
+              </div>
+            </div>
+            <div style={styles.featureGrid}>
+              <div
+                style={styles.featureCard}
+                onClick={() => handleCardClick("character-notes")}
+              >
+                <h3>Character Notes</h3>
+                <p>
+                  Keep detailed notes about your character's story,
+                  relationships, and development.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -456,7 +459,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Shared character state
   const [characters, setCharacters] = useState([]);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [charactersLoading, setCharactersLoading] = useState(false);
@@ -531,7 +533,6 @@ function App() {
 
       setCharacters(transformedCharacters);
 
-      // Auto-select first character if none selected
       if (!selectedCharacter && transformedCharacters.length > 0) {
         setSelectedCharacter(transformedCharacters[0]);
       }
@@ -610,7 +611,6 @@ function App() {
   const signInWithDiscord = async () => {
     try {
       setAuthLoading(true);
-
       const isLocalhost = window.location.hostname === "localhost";
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -618,7 +618,7 @@ function App() {
         options: {
           redirectTo: isLocalhost
             ? "http://localhost:3000"
-            : "https://your-production-domain.com",
+            : "https://witchesandsnitches.com",
         },
       });
 
@@ -638,7 +638,6 @@ function App() {
   const signOut = async () => {
     try {
       setAuthLoading(true);
-
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -667,6 +666,7 @@ function App() {
             user={user}
             customUsername={customUsername}
             onTabChange={setActiveTab}
+            hasCharacters={characters.length > 0}
           />
         );
       case "character-creation":
@@ -743,10 +743,29 @@ function App() {
             user={user}
             customUsername={customUsername}
             onTabChange={setActiveTab}
+            hasCharacters={characters.length > 0}
           />
         );
     }
   };
+
+  const getVisibleTabs = () => {
+    const baseTabs = ["home", "character-creation"];
+
+    if (characters.length > 0) {
+      return [...baseTabs, "character-sheet", "spellbook", "character-notes"];
+    }
+
+    return baseTabs;
+  };
+
+  useEffect(() => {
+    const visibleTabs = getVisibleTabs();
+    if (!visibleTabs.includes(activeTab)) {
+      setActiveTab("home");
+    }
+    // eslint-disable-next-line
+  }, [characters.length, activeTab]);
 
   if (loading) {
     return (
@@ -756,17 +775,13 @@ function App() {
     );
   }
 
+  const visibleTabs = getVisibleTabs();
+
   return (
     <div style={styles.appContainer}>
       <header style={styles.appHeader}>
         <nav style={styles.tabNavigation}>
-          {[
-            "home",
-            "character-creation",
-            "character-sheet",
-            "spellbook",
-            "character-notes",
-          ].map((tab) => {
+          {visibleTabs.map((tab) => {
             const tabLabels = {
               home: "Home",
               "character-creation": "Character Creation",
@@ -799,7 +814,6 @@ function App() {
             );
           })}
         </nav>
-
         <AuthComponent
           user={user}
           customUsername={customUsername}
@@ -809,7 +823,6 @@ function App() {
           isLoading={authLoading}
         />
       </header>
-
       <main style={styles.tabContent}>{renderContent()}</main>
     </div>
   );

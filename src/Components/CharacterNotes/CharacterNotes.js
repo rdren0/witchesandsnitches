@@ -14,6 +14,104 @@ import {
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
 
+const templates = {
+  spell: `## 🔮 [Spell Name]
+
+**📊 Stats:**
+- **Level:** 
+- **School:** 
+- **Casting Time:** 
+- **Range:** 
+- **Components:** 
+- **Duration:** 
+- **Concentration:** 
+
+**📝 Description:**
+
+
+**⚔️ Combat Use:**
+
+
+**🎯 Strategic Notes:**
+
+
+---
+
+`,
+  session: `# 📅 Session ${new Date().toLocaleDateString()}
+
+## 📖 Session Summary
+
+
+## 🗣️ Important NPCs
+| Name | Role | Notes |
+|------|------|-------|
+|      |      |       |
+
+## 🗺️ Locations Visited
+
+
+## ⚔️ Combat Encounters
+
+
+## 🎒 Loot & Rewards
+
+
+## 📝 Character Development
+
+
+## 🎯 Next Session Goals
+- [ ] 
+- [ ] 
+- [ ] 
+
+## 💭 Player Notes
+
+
+---
+
+`,
+  combat: `## ⚔️ Combat Tactics
+
+### 🛡️ Defensive Options
+- 
+- 
+
+### ⚡ Offensive Strategies
+- 
+- 
+
+### 🎭 Roleplay in Combat
+- 
+- 
+
+### 🤝 Team Synergies
+- 
+- 
+
+---
+
+`,
+  relationship: `## 👥 Relationship: [NPC Name]
+
+**📊 Relationship Status:** 
+**🎭 Their Personality:** 
+**🎯 Their Goals:** 
+**💭 What They Think of Me:** 
+**🤝 How I Can Help Them:** 
+**⚠️ Potential Conflicts:** 
+
+### 📝 Interaction History
+
+
+### 🎯 Future Plans
+
+
+---
+
+`,
+};
+
 export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,93 +222,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
         finalTitle = `Note ${new Date().toLocaleString()}`;
       }
     }
-
-    const templates = {
-      spell: `## 🔮 ${finalTitle}
-
-**📊 Stats:**
-- **Level:** 
-- **School:** 
-- **Casting Time:** 
-- **Range:** 
-- **Components:** 
-- **Duration:** 
-- **Concentration:** 
-
-**📝 Description:**
-
-
-**⚔️ Combat Use:**
-
-
-**🎯 Strategic Notes:**
-
-`,
-      session: `# 📅 ${finalTitle}
-
-## 📖 Session Summary
-
-
-## 🗣️ Important NPCs
-| Name | Role | Notes |
-|------|------|-------|
-|      |      |       |
-
-## 🗺️ Locations Visited
-
-
-## ⚔️ Combat Encounters
-
-
-## 🎒 Loot & Rewards
-
-
-## 📝 Character Development
-
-
-## 🎯 Next Session Goals
-- [ ] 
-- [ ] 
-- [ ] 
-
-## 💭 Player Notes
-
-`,
-      combat: `# ⚔️ ${finalTitle}
-
-## 🛡️ Defensive Options
-- 
-- 
-
-## ⚡ Offensive Strategies
-- 
-- 
-
-## 🎭 Roleplay in Combat
-- 
-- 
-
-## 🤝 Team Synergies
-- 
-- 
-
-`,
-      relationship: `# 👥 ${finalTitle}
-
-**📊 Relationship Status:** 
-**🎭 Their Personality:** 
-**🎯 Their Goals:** 
-**💭 What They Think of Me:** 
-**🤝 How I Can Help Them:** 
-**⚠️ Potential Conflicts:** 
-
-## 📝 Interaction History
-
-
-## 🎯 Future Plans
-
-`,
-    };
 
     const finalContent = templateType ? templates[templateType] : content;
     const now = new Date().toISOString();
@@ -444,7 +455,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
         </div>
       </div>
 
-      {/* New Entry Form */}
       {showNewEntryForm && (
         <div
           style={{
@@ -600,7 +610,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
         </div>
       )}
 
-      {/* Editing Entry - Full Width */}
       {editingEntry && entries.find((e) => e.id === editingEntry) && (
         <div style={{ marginBottom: "20px" }}>
           <FullWidthEditForm
@@ -611,7 +620,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
         </div>
       )}
 
-      {/* Entries Grid */}
       {isLoading ? (
         <div
           style={{
@@ -649,7 +657,7 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
           }}
         >
           {entries
-            .filter((entry) => entry.id !== editingEntry) // Hide entry being edited
+            .filter((entry) => entry.id !== editingEntry)
             .map((entry) => (
               <div
                 key={entry.id}
@@ -671,7 +679,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
         </div>
       )}
 
-      {/* Export/Import Bar */}
       <div
         style={{
           backgroundColor: "white",
@@ -736,7 +743,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
   const [content, setContent] = useState(entry?.content || "");
   const [isEditorReady, setIsEditorReady] = useState(false);
 
-  // Update state when entry changes
   useEffect(() => {
     if (entry) {
       setTitle(entry.title || "");
@@ -744,7 +750,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
     }
   }, [entry]);
 
-  // Small delay to ensure DOM is ready for MDEditor
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsEditorReady(true);
@@ -762,104 +767,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
   };
 
   const insertTemplate = (templateType) => {
-    const templates = {
-      spell: `## 🔮 [Spell Name]
-
-**📊 Stats:**
-- **Level:** 
-- **School:** 
-- **Casting Time:** 
-- **Range:** 
-- **Components:** 
-- **Duration:** 
-- **Concentration:** 
-
-**📝 Description:**
-
-
-**⚔️ Combat Use:**
-
-
-**🎯 Strategic Notes:**
-
-
----
-
-`,
-      session: `# 📅 Session ${new Date().toLocaleDateString()}
-
-## 📖 Session Summary
-
-
-## 🗣️ Important NPCs
-| Name | Role | Notes |
-|------|------|-------|
-|      |      |       |
-
-## 🗺️ Locations Visited
-
-
-## ⚔️ Combat Encounters
-
-
-## 🎒 Loot & Rewards
-
-
-## 📝 Character Development
-
-
-## 🎯 Next Session Goals
-- [ ] 
-- [ ] 
-- [ ] 
-
-## 💭 Player Notes
-
-
----
-
-`,
-      combat: `## ⚔️ Combat Tactics
-
-### 🛡️ Defensive Options
-- 
-- 
-
-### ⚡ Offensive Strategies
-- 
-- 
-
-### 🎭 Roleplay in Combat
-- 
-- 
-
-### 🤝 Team Synergies
-- 
-- 
-
----
-
-`,
-      relationship: `## 👥 Relationship: [NPC Name]
-
-**📊 Relationship Status:** 
-**🎭 Their Personality:** 
-**🎯 Their Goals:** 
-**💭 What They Think of Me:** 
-**🤝 How I Can Help Them:** 
-**⚠️ Potential Conflicts:** 
-
-### 📝 Interaction History
-
-
-### 🎯 Future Plans
-
-
----
-
-`,
-    };
-
     const templateContent = templates[templateType] || "";
     setContent(content + "\n\n" + templateContent);
   };
