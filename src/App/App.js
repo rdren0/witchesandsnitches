@@ -362,7 +362,6 @@ function App() {
       } else if (error) {
         console.error("Error loading custom username:", error);
       }
-      // If data is null, user has no profile yet - that's fine, keep empty username
     } catch (error) {
       console.error("Error loading custom username:", error);
     }

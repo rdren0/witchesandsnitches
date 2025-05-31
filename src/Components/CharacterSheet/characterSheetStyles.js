@@ -189,7 +189,6 @@ export const styles = {
     color: "#6b7280",
     marginTop: "0.25rem",
   },
-  // Skills Table Styles
   skillsCard: {
     backgroundColor: "#fff",
     borderRadius: "0.5rem",

@@ -33,3 +33,49 @@ export const skillMap = {
   performance: "Performance",
   persuasion: "Persuasion",
 };
+
+export const allSkills = [
+  { name: "athletics", displayName: "Athletics", ability: "strength" },
+  { name: "acrobatics", displayName: "Acrobatics", ability: "dexterity" },
+  {
+    name: "sleightOfHand",
+    displayName: "Sleight of Hand",
+    ability: "dexterity",
+  },
+  { name: "stealth", displayName: "Stealth", ability: "dexterity" },
+  { name: "herbology", displayName: "Herbology", ability: "intelligence" },
+  {
+    name: "historyOfMagic",
+    displayName: "History of Magic",
+    ability: "intelligence",
+  },
+  {
+    name: "investigation",
+    displayName: "Investigation",
+    ability: "intelligence",
+  },
+  {
+    name: "magicalTheory",
+    displayName: "Magical Theory",
+    ability: "intelligence",
+  },
+  {
+    name: "muggleStudies",
+    displayName: "Muggle Studies",
+    ability: "intelligence",
+  },
+  { name: "insight", displayName: "Insight", ability: "wisdom" },
+  {
+    name: "magicalCreatures",
+    displayName: "Magical Creatures",
+    ability: "wisdom",
+  },
+  { name: "medicine", displayName: "Medicine", ability: "wisdom" },
+  { name: "perception", displayName: "Perception", ability: "wisdom" },
+  { name: "potionMaking", displayName: "Potion Making", ability: "wisdom" },
+  { name: "survival", displayName: "Survival", ability: "wisdom" },
+  { name: "deception", displayName: "Deception", ability: "charisma" },
+  { name: "intimidation", displayName: "Intimidation", ability: "charisma" },
+  { name: "performance", displayName: "Performance", ability: "charisma" },
+  { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
+];

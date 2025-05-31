@@ -86,7 +86,6 @@ export const styles = {
     border: "1px solid #e5e7eb",
     overflow: "hidden",
     transition: "all 0.2s ease",
-    // width: "90%",
   },
   subjectHeader: {
     padding: "1.5rem",

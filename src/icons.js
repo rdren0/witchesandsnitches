@@ -1,4 +1,3 @@
-// Simple SVG Icons
 export const WandIcon = () => (
   <svg
     width="24"

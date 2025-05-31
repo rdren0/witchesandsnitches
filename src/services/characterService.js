@@ -5,7 +5,6 @@ const supabase = createClient(
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
-// Set the current Discord user for RLS
 export const setCurrentUser = async (discordUserId) => {
   const { error } = await supabase.rpc("set_config", {
     setting_name: "app.current_user_id",
@@ -18,11 +17,8 @@ export const setCurrentUser = async (discordUserId) => {
   }
 };
 
-// Character database operations
 export const characterService = {
-  // Get all characters for the current Discord user
   async getCharacters(discordUserId) {
-    // Set the current user for RLS
     await setCurrentUser(discordUserId);
 
     const { data, error } = await supabase
@@ -35,9 +31,7 @@ export const characterService = {
     return data;
   },
 
-  // Save a new character
   async saveCharacter(character, discordUserId) {
-    // Set the current user for RLS
     await setCurrentUser(discordUserId);
 
     const { data, error } = await supabase
@@ -66,9 +60,7 @@ export const characterService = {
     return data[0];
   },
 
-  // Update an existing character
   async updateCharacter(id, character, discordUserId) {
-    // Set the current user for RLS
     await setCurrentUser(discordUserId);
 
     const { data, error } = await supabase
@@ -90,23 +82,21 @@ export const characterService = {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .eq("discord_user_id", discordUserId) // Ensure user can only update their own characters
+      .eq("discord_user_id", discordUserId)
       .select();
 
     if (error) throw error;
     return data[0];
   },
 
-  // Delete a character
   async deleteCharacter(id, discordUserId) {
-    // Set the current user for RLS
     await setCurrentUser(discordUserId);
 
     const { error } = await supabase
       .from("characters")
       .delete()
       .eq("id", id)
-      .eq("discord_user_id", discordUserId); // Ensure user can only delete their own characters
+      .eq("discord_user_id", discordUserId);
 
     if (error) throw error;
   },

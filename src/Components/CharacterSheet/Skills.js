@@ -1,7 +1,7 @@
 import { styles } from "./characterSheetStyles";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { formatModifier, modifiers, skillMap } from "./utils";
+import { formatModifier, modifiers, skillMap, allSkills } from "./utils";
 import { rollDice } from "../../App/diceRoller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
@@ -163,44 +163,48 @@ export const Skills = ({
       const total = d20Roll + skillBonus;
       const isProficient = character.skills?.[skill.name] || false;
 
+      const isCriticalSuccess = d20Roll === 20;
+      const isCriticalFailure = d20Roll === 1;
+
+      let embedColor = 0x6600cc;
+      let resultText = "";
+
+      if (isCriticalSuccess) {
+        embedColor = 0xffd700;
+        resultText = " - **CRITICAL SUCCESS!** 🎉";
+      } else if (isCriticalFailure) {
+        embedColor = 0xff0000;
+        resultText = " - **CRITICAL FAILURE!** 💥";
+      }
+
       const message = {
         embeds: [
           {
-            title: `${character.name} Attempted: ${skill.displayName}`,
-            description: `1d20: [${d20Roll}] = ${d20Roll}`,
-            color: 0x00ff00, // Green color like the spell attempts
+            title: `${character.name} Rolled: ${skill.displayName}${resultText}`,
+            color: embedColor,
             fields: [
               {
                 name: "Roll Details",
                 value: `Roll: ${d20Roll} ${
                   skillBonus >= 0 ? "+" : ""
-                }${skillBonus} = **${total}**`,
-                inline: false,
-              },
-              {
-                name: "Modifier Breakdown",
-                value: `${character.house}\n${
-                  skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)
-                }: ${formatModifier(abilityMod)}${
-                  isProficient
-                    ? `\nProficiency: +${character.proficiencyBonus}`
+                }${skillBonus} = **${total}**${
+                  isCriticalSuccess
+                    ? "\n✨ **Exceptional success!**"
+                    : isCriticalFailure
+                    ? "\n💀 **Spectacular failure regardless of modifier!**"
                     : ""
-                }\nTotal: **${formatModifier(skillBonus)}**`,
+                }`,
                 inline: false,
-              },
-              {
-                name: "Player",
-                value: character.name,
-                inline: true,
               },
             ],
             footer: {
-              text: `${
-                character.house
-              } - Skill Check • Today at ${new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}`,
+              text: `Wtiches and Snitches - Skill Check • Today at ${new Date().toLocaleTimeString(
+                [],
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              )}`,
             },
           },
         ],
@@ -215,8 +219,13 @@ export const Skills = ({
           body: JSON.stringify(message),
         });
       } else {
+        const criticalText = isCriticalSuccess
+          ? " - CRITICAL SUCCESS!"
+          : isCriticalFailure
+          ? " - CRITICAL FAILURE!"
+          : "";
         alert(
-          `${skill.displayName} Check: d20(${d20Roll}) + ${skillBonus} = ${total}`
+          `${skill.displayName} Check: d20(${d20Roll}) + ${skillBonus} = ${total}${criticalText}`
         );
       }
     } catch (error) {
@@ -226,52 +235,6 @@ export const Skills = ({
       setIsRolling(false);
     }
   };
-
-  const allSkills = [
-    { name: "athletics", displayName: "Athletics", ability: "strength" },
-    { name: "acrobatics", displayName: "Acrobatics", ability: "dexterity" },
-    {
-      name: "sleightOfHand",
-      displayName: "Sleight of Hand",
-      ability: "dexterity",
-    },
-    { name: "stealth", displayName: "Stealth", ability: "dexterity" },
-    { name: "herbology", displayName: "Herbology", ability: "intelligence" },
-    {
-      name: "historyOfMagic",
-      displayName: "History of Magic",
-      ability: "intelligence",
-    },
-    {
-      name: "investigation",
-      displayName: "Investigation",
-      ability: "intelligence",
-    },
-    {
-      name: "magicalTheory",
-      displayName: "Magical Theory",
-      ability: "intelligence",
-    },
-    {
-      name: "muggleStudies",
-      displayName: "Muggle Studies",
-      ability: "intelligence",
-    },
-    { name: "insight", displayName: "Insight", ability: "wisdom" },
-    {
-      name: "magicalCreatures",
-      displayName: "Magical Creatures",
-      ability: "wisdom",
-    },
-    { name: "medicine", displayName: "Medicine", ability: "wisdom" },
-    { name: "perception", displayName: "Perception", ability: "wisdom" },
-    { name: "potionMaking", displayName: "Potion Making", ability: "wisdom" },
-    { name: "survival", displayName: "Survival", ability: "wisdom" },
-    { name: "deception", displayName: "Deception", ability: "charisma" },
-    { name: "intimidation", displayName: "Intimidation", ability: "charisma" },
-    { name: "performance", displayName: "Performance", ability: "charisma" },
-    { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
-  ];
 
   const getAbilityAbbr = (ability) => {
     const abbrevMap = {
