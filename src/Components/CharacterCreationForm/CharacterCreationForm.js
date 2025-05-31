@@ -30,6 +30,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
     subclass: "",
     innateHeritage: "",
     background: "",
+    gameSession: "",
     standardFeats: [],
     skillProficiencies: [],
     abilityScores: {
@@ -51,6 +52,30 @@ const CharacterCreationForm = ({ user, customUsername }) => {
       jinxesHexesCurses: 0,
     },
   });
+
+  const getGameSessionOptions = () => {
+    const days = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const times = ["AM", "PM"];
+    const options = [];
+
+    days.forEach((day) => {
+      times.forEach((time) => {
+        options.push(`${day} ${time}`);
+      });
+    });
+
+    return options;
+  };
+
+  const gameSessionOptions = getGameSessionOptions();
 
   const [character, setCharacter] = useState(getInitialCharacterState());
   const [rolledStats, setRolledStats] = useState([]);
@@ -167,6 +192,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
         subclass: char.subclass,
         innateHeritage: char.innate_heritage,
         background: char.background,
+        gameSession: char.game_session || "",
         standardFeats: char.standard_feats || [],
         skillProficiencies: char.skill_proficiencies || [],
         abilityScores: char.ability_scores,
@@ -192,7 +218,6 @@ const CharacterCreationForm = ({ user, customUsername }) => {
 
   useEffect(() => {
     rollAllStats();
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -417,6 +442,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
                   subclass: updatedCharacter.subclass,
                   innateHeritage: updatedCharacter.innate_heritage,
                   background: updatedCharacter.background,
+                  gameSession: updatedCharacter.game_session || "",
                   standardFeats: updatedCharacter.standard_feats || [],
                   skillProficiencies:
                     updatedCharacter.skill_proficiencies || [],
@@ -452,6 +478,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
           subclass: savedCharacter.subclass,
           innateHeritage: savedCharacter.innate_heritage,
           background: savedCharacter.background,
+          gameSession: savedCharacter.game_session || "",
           standardFeats: savedCharacter.standard_feats || [],
           skillProficiencies: savedCharacter.skill_proficiencies || [],
           abilityScores: savedCharacter.ability_scores,
@@ -490,6 +517,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
       subclass: character.subclass,
       innateHeritage: character.innateHeritage,
       background: character.background,
+      gameSession: character.gameSession || "",
       standardFeats: character.standardFeats,
       skillProficiencies: character.skillProficiencies,
       abilityScores: character.abilityScores,
@@ -630,6 +658,26 @@ const CharacterCreationForm = ({ user, customUsername }) => {
               placeholder="Enter character name..."
               style={styles.input}
             />
+          </div>
+
+          <div style={styles.fieldContainer}>
+            <label style={styles.label}>Game Session</label>
+            <select
+              value={character.gameSession}
+              onChange={(e) => handleInputChange("gameSession", e.target.value)}
+              style={styles.select}
+            >
+              <option value="">Select Game Session...</option>
+              {gameSessionOptions.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </select>
+            <div style={styles.helpText}>
+              Select which day and time your character's game session takes
+              place.
+            </div>
           </div>
 
           <div style={styles.fieldContainer}>
@@ -1279,6 +1327,17 @@ const CharacterCreationForm = ({ user, customUsername }) => {
                     <div>
                       <h3 style={styles.characterName}>{char.name}</h3>
                       <div style={styles.characterDetails}>
+                        {char.gameSession && (
+                          <div
+                            style={{
+                              ...styles.heritage,
+                              color: "#8B5CF6",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            📅 {char.gameSession}
+                          </div>
+                        )}
                         {char.innateHeritage && (
                           <div style={styles.heritage}>
                             <StarIcon
@@ -1288,6 +1347,7 @@ const CharacterCreationForm = ({ user, customUsername }) => {
                           </div>
                         )}
                         <div>
+                          <strong>Session:</strong> {char.gameSession} <br />
                           <strong>Level:</strong> {char.level} |{" "}
                           <strong>HP:</strong> {char.hitPoints}
                         </div>

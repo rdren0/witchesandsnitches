@@ -45,6 +45,7 @@ export const characterService = {
           subclass: character.subclass,
           innate_heritage: character.innateHeritage,
           background: character.background,
+          game_session: character.gameSession, // ADD THIS LINE!
           standard_feats: character.standardFeats,
           skill_proficiencies: character.skillProficiencies,
           ability_scores: character.abilityScores,
@@ -72,6 +73,7 @@ export const characterService = {
         subclass: character.subclass,
         innate_heritage: character.innateHeritage,
         background: character.background,
+        game_session: character.gameSession,
         standard_feats: character.standardFeats,
         skill_proficiencies: character.skillProficiencies,
         ability_scores: character.abilityScores,
