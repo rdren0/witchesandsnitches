@@ -53,7 +53,6 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
     },
   });
 
-  // Generate game session options
   const getGameSessionOptions = () => {
     const days = [
       "Monday",
@@ -137,6 +136,22 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
     }
   };
 
+  const createNewCharacter = () => {
+    setCharacter(getInitialCharacterState());
+    setIsEditing(false);
+    setEditingId(null);
+    setExpandedFeats(new Set());
+    setFeatFilter("");
+    setTempInputValues({});
+
+    if (isManualMode) {
+      setRolledStats([]);
+      setAvailableStats([]);
+    } else {
+      rollAllStats();
+    }
+  };
+
   const handleManualScoreChange = (ability, value) => {
     setTempInputValues((prev) => ({
       ...prev,
@@ -193,7 +208,7 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
         subclass: char.subclass,
         innateHeritage: char.innate_heritage,
         background: char.background,
-        gameSession: char.game_session || "", // Handle new field
+        gameSession: char.game_session || "",
         standardFeats: char.standard_feats || [],
         skillProficiencies: char.skill_proficiencies || [],
         abilityScores: char.ability_scores,
@@ -444,7 +459,7 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
                   subclass: updatedCharacter.subclass,
                   innateHeritage: updatedCharacter.innate_heritage,
                   background: updatedCharacter.background,
-                  gameSession: updatedCharacter.game_session || "", // Handle new field
+                  gameSession: updatedCharacter.game_session || "",
                   standardFeats: updatedCharacter.standard_feats || [],
                   skillProficiencies:
                     updatedCharacter.skill_proficiencies || [],
@@ -480,7 +495,7 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
           subclass: savedCharacter.subclass,
           innateHeritage: savedCharacter.innate_heritage,
           background: savedCharacter.background,
-          gameSession: savedCharacter.game_session || "", // Handle new field
+          gameSession: savedCharacter.game_session || "",
           standardFeats: savedCharacter.standard_feats || [],
           skillProficiencies: savedCharacter.skill_proficiencies || [],
           abilityScores: savedCharacter.ability_scores,
@@ -1310,6 +1325,54 @@ const CharacterCreationForm = ({ user, customUsername, onCharacterSaved }) => {
         </div>
 
         <div style={styles.panel}>
+          {isEditing && (
+            <div style={{ marginBottom: "20px" }}>
+              <button
+                onClick={createNewCharacter}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "12px 20px",
+                  backgroundColor: "#10B981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  width: "100%",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#059669";
+                  e.target.style.transform = "translateY(-1px)";
+                  e.target.style.boxShadow =
+                    "0 4px 12px rgba(16, 185, 129, 0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#10B981";
+                  e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "none";
+                }}
+              >
+                <WandIcon />
+                Create New Character
+              </button>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6B7280",
+                  textAlign: "center",
+                  marginTop: "8px",
+                  fontStyle: "italic",
+                }}
+              >
+                This will abandon any unsaved changes to the current character
+              </div>
+            </div>
+          )}
           <h2 style={styles.sectionHeader}>
             <BookIcon />
             Saved Characters ({savedCharacters.length})

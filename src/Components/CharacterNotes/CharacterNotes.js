@@ -376,61 +376,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
           </p>
         </div>
 
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "16px 20px",
-            borderRadius: "12px",
-            border: "2px solid #e2e8f0",
-            marginTop: "20px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-          }}
-        >
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <button
-              onClick={exportAllNotes}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#ecfdf5",
-                border: "1px solid #bbf7d0",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
-                color: "#065f46",
-              }}
-            >
-              <Download size={16} />
-              Export All
-            </button>
-
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#eff6ff",
-                border: "1px solid #bfdbfe",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
-                color: "#1e40af",
-              }}
-            >
-              <Upload size={16} />
-              Import File
-              <input
-                type="file"
-                accept=".md,.txt"
-                onChange={importNotes}
-                style={{ display: "none" }}
-              />
-            </label>
-          </div>
-        </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <button
             onClick={() => setShowNewEntryForm(true)}

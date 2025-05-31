@@ -127,16 +127,6 @@ const AbilityScores = ({ character, discordWebhookUrl }) => {
             key={ability.key}
             style={clickableAbilityStyle}
             onClick={() => !isRolling && rollAbility(ability)}
-            onMouseEnter={(e) => {
-              if (!isRolling) {
-                Object.assign(e.target.style, hoverAbilityStyle);
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isRolling) {
-                Object.assign(e.target.style, clickableAbilityStyle);
-              }
-            }}
             title={`Click to roll ${ability.name} check (d20 + ${formatModifier(
               characterModifiers[ability.key]
             )})`}

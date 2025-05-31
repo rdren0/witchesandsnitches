@@ -7,6 +7,7 @@ import CharacterCreationForm from "../Components/CharacterCreationForm/Character
 import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
 import { CharacterNotes } from "../Components/CharacterNotes/CharacterNotes";
 import { styles } from "./style";
+import { CharacterSelector } from "./CharacterSelector";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -132,13 +133,6 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
           <button
             onClick={handleEdit}
             style={styles.editButton}
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.editButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.color = "#6c757d";
-              e.target.style.backgroundColor = "transparent";
-            }}
             title="Edit username"
           >
             <Edit3 size={14} />
@@ -197,20 +191,6 @@ const AuthComponent = ({
                 alignSelf: "flex-start",
               }}
               disabled={isLoading}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  Object.assign(e.target.style, styles.signoutButtonHover);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoading) {
-                  Object.assign(e.target.style, {
-                    ...styles.signoutButton,
-                    fontSize: "12px",
-                    padding: "4px 8px",
-                  });
-                }
-              }}
             >
               {isLoading ? "Signing Out..." : "Sign Out"}
             </button>
@@ -230,137 +210,9 @@ const AuthComponent = ({
           ...(isLoading ? styles.authButtonDisabled : {}),
         }}
         disabled={isLoading}
-        onMouseEnter={(e) => {
-          if (!isLoading) {
-            Object.assign(e.target.style, styles.signinButtonHover);
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isLoading) {
-            Object.assign(e.target.style, styles.signinButton);
-          }
-        }}
       >
         {isLoading ? "Signing In..." : "Sign in with Discord"}
       </button>
-    </div>
-  );
-};
-
-const CharacterSelector = ({
-  user,
-  characters,
-  selectedCharacter,
-  onCharacterChange,
-  isLoading,
-  error,
-}) => {
-  if (!user) return null;
-
-  return (
-    <div
-      style={{
-        padding: "20px",
-        backgroundColor: "#f8fafc",
-        borderBottom: "2px solid #e2e8f0",
-        marginBottom: "20px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "20px",
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "15px",
-            flexWrap: "wrap",
-          }}
-        >
-          <User size={24} color="#64748b" />
-          <label
-            style={{
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#374151",
-            }}
-          >
-            Character:
-          </label>
-          <select
-            value={selectedCharacter?.id?.toString() || ""}
-            onChange={(e) => {
-              const char = characters.find(
-                (c) => c.id.toString() === e.target.value
-              );
-              onCharacterChange(char);
-            }}
-            style={{
-              padding: "8px 12px",
-              fontSize: "16px",
-              border: "2px solid #d1d5db",
-              borderRadius: "8px",
-              backgroundColor: "white",
-              color: "#374151",
-              minWidth: "200px",
-            }}
-            disabled={isLoading}
-          >
-            <option value="">
-              {isLoading ? "Loading characters..." : "Select a character..."}
-            </option>
-            {characters.map((char) => (
-              <option key={char.id} value={char.id}>
-                {char.name} ({char.castingStyle || "Unknown Class"}) - Level{" "}
-                {char.level || "?"} - {char.house || "No House"}
-                {char.gameSession && ` - ${char.gameSession}`}
-              </option>
-            ))}
-          </select>
-        </div>
-        {characters.length === 0 && !isLoading && (
-          <div
-            style={{
-              backgroundColor: "#fbbf24",
-              color: "#92400e",
-              padding: "12px 20px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "500",
-              textAlign: "center",
-            }}
-          >
-            No characters found. Create a character in the Character Creation
-            tab first.
-          </div>
-        )}
-      </div>
-      {error && (
-        <div
-          style={{
-            backgroundColor: "#FEE2E2",
-            border: "1px solid #FECACA",
-            color: "#DC2626",
-            padding: "12px",
-            borderRadius: "8px",
-            margin: "16px 0",
-            fontSize: "14px",
-            maxWidth: "1200px",
-            marginLeft: "auto",
-            marginRight: "auto",
-            textAlign: "center",
-          }}
-        >
-          {error}
-        </div>
-      )}
     </div>
   );
 };
@@ -395,7 +247,26 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
             <h3>Character Creation</h3>
             <p>Build and customize your D&D characters.</p>
           </div>
+
+          {!hasCharacters && (
+            <div
+              style={{
+                ...styles.featureCard,
+                backgroundColor: "#f8fafc",
+                border: "2px dashed #cbd5e1",
+                cursor: "default",
+                opacity: 0.7,
+              }}
+            >
+              <h3 style={{ color: "#64748b" }}>More Features Coming Soon</h3>
+              <p style={{ color: "#64748b" }}>
+                Create your first character to unlock Character Sheets, Spell
+                Management, and Character Notes!
+              </p>
+            </div>
+          )}
         </div>
+
         {hasCharacters && (
           <>
             <div style={styles.featureGrid}>
@@ -492,6 +363,7 @@ function App() {
       setCustomUsername("");
       setCharacters([]);
       setSelectedCharacter(null);
+      sessionStorage.removeItem("selectedCharacterId");
     }
     // eslint-disable-next-line
   }, [user]);
@@ -529,12 +401,34 @@ function App() {
         standardFeats: char.standard_feats || [],
         skillProficiencies: char.skill_proficiencies || [],
         wandType: char.wand_type || "",
+        createdAt: char.created_at,
       }));
 
-      setCharacters(transformedCharacters);
+      const sortedCharacters = transformedCharacters.sort((a, b) => {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
 
-      if (!selectedCharacter && transformedCharacters.length > 0) {
-        setSelectedCharacter(transformedCharacters[0]);
+      setCharacters(sortedCharacters);
+
+      const savedCharacterId = sessionStorage.getItem("selectedCharacterId");
+      let characterToSelect = null;
+
+      if (savedCharacterId) {
+        characterToSelect = sortedCharacters.find(
+          (char) => char.id.toString() === savedCharacterId
+        );
+      }
+
+      if (!characterToSelect && sortedCharacters.length > 0) {
+        characterToSelect = sortedCharacters[0];
+      }
+
+      if (characterToSelect) {
+        setSelectedCharacter(characterToSelect);
+        sessionStorage.setItem(
+          "selectedCharacterId",
+          characterToSelect.id.toString()
+        );
       }
     } catch (err) {
       setCharactersError("Failed to load characters: " + err.message);
@@ -546,6 +440,16 @@ function App() {
 
   const refreshCharacters = () => {
     loadCharacters();
+  };
+
+  const handleCharacterChange = (character) => {
+    setSelectedCharacter(character);
+
+    if (character) {
+      sessionStorage.setItem("selectedCharacterId", character.id.toString());
+    } else {
+      sessionStorage.removeItem("selectedCharacterId");
+    }
   };
 
   const loadCustomUsername = async () => {
@@ -649,6 +553,7 @@ function App() {
         setCharacters([]);
         setSelectedCharacter(null);
         setActiveTab("home");
+        sessionStorage.removeItem("selectedCharacterId");
       }
     } catch (err) {
       console.error("Unexpected error during sign out:", err);
@@ -686,7 +591,7 @@ function App() {
               user={user}
               characters={characters}
               selectedCharacter={selectedCharacter}
-              onCharacterChange={setSelectedCharacter}
+              onCharacterChange={handleCharacterChange}
               isLoading={charactersLoading}
               error={charactersError}
             />
@@ -706,7 +611,7 @@ function App() {
               user={user}
               characters={characters}
               selectedCharacter={selectedCharacter}
-              onCharacterChange={setSelectedCharacter}
+              onCharacterChange={handleCharacterChange}
               isLoading={charactersLoading}
               error={charactersError}
             />
@@ -724,7 +629,7 @@ function App() {
               user={user}
               characters={characters}
               selectedCharacter={selectedCharacter}
-              onCharacterChange={setSelectedCharacter}
+              onCharacterChange={handleCharacterChange}
               isLoading={charactersLoading}
               error={charactersError}
             />
@@ -798,16 +703,6 @@ function App() {
                   ...(activeTab === tab ? styles.tabButtonActive : {}),
                 }}
                 onClick={() => setActiveTab(tab)}
-                onMouseEnter={(e) => {
-                  if (activeTab !== tab) {
-                    Object.assign(e.target.style, styles.tabButtonHover);
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== tab) {
-                    Object.assign(e.target.style, styles.tabButton);
-                  }
-                }}
               >
                 {tabLabels[tab]}
               </button>
