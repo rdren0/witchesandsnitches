@@ -265,7 +265,7 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                 style={styles.featureCard}
                 onClick={() => handleCardClick("character-notes")}
               >
-                <h3>Character Notes</h3>
+                <h3>Notes</h3>
                 <p>
                   Keep detailed notes about your character's story,
                   relationships, and development.
@@ -729,7 +729,7 @@ function App() {
               home: "Home",
               "character-creation": "Character Creation",
               "character-sheet": "Character Sheet",
-              "character-notes": "Character Notes",
+              "character-notes": "Notes",
               spellbook: "SpellBook",
             };
 
