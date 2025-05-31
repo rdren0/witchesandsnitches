@@ -239,26 +239,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
           </p>
         )}
 
-        <div style={styles.featureGrid}>
-          {!hasCharacters && (
-            <div
-              style={{
-                ...styles.featureCard,
-                backgroundColor: "#f8fafc",
-                border: "2px dashed #cbd5e1",
-                cursor: "default",
-                opacity: 0.7,
-              }}
-            >
-              <h3 style={{ color: "#64748b" }}>More Features Coming Soon</h3>
-              <p style={{ color: "#64748b" }}>
-                Create your first character to unlock Character Sheets, Spell
-                Management, and Character Notes!
-              </p>
-            </div>
-          )}
-        </div>
-
         {hasCharacters && (
           <>
             <div style={styles.featureGrid}>
