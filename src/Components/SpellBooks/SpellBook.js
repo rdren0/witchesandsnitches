@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import { User } from "lucide-react";
-import { styles } from "./styles";
+import { styles } from "./spellBookStyles";
 import { characterService } from "../../services/characterService";
 import { SubjectCard } from "./SubjectCard";
 

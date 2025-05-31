@@ -19,7 +19,7 @@ import {
   backgrounds,
   standardFeats,
 } from "../data";
-import { styles } from "./styles";
+import { styles } from "./characterCreationStyles";
 import { characterService } from "../../services/characterService";
 
 const CharacterCreationForm = ({ user, customUsername }) => {
@@ -400,14 +400,11 @@ const CharacterCreationForm = ({ user, customUsername }) => {
 
     try {
       if (isEditing && editingId) {
-        console.log("Updating character with ID:", editingId);
         const updatedCharacter = await characterService.updateCharacter(
           editingId,
           characterToSave,
           discordUserId
         );
-
-        console.log("Updated character returned:", updatedCharacter);
 
         setSavedCharacters((prev) =>
           prev.map((char) =>
@@ -442,13 +439,10 @@ const CharacterCreationForm = ({ user, customUsername }) => {
         setIsEditing(false);
         setEditingId(null);
       } else {
-        console.log("Saving new character");
         const savedCharacter = await characterService.saveCharacter(
           characterToSave,
           discordUserId
         );
-
-        console.log("Saved character returned:", savedCharacter);
 
         const transformedCharacter = {
           id: savedCharacter.id,

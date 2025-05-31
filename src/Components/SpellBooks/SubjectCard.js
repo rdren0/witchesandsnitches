@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { styles } from "./styles";
+import { styles } from "./spellBookStyles";
 import {
   ChevronDown,
   ChevronRight,
@@ -27,8 +27,7 @@ import {
   // SPELL_DESCRIPTIONS,
 } from "./spells";
 import { getModifierInfo, getSpellModifier } from "./utils";
-
-import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+import { rollDice } from "../../App/diceRoller";
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -80,7 +79,6 @@ export const SubjectCard = ({
     const masteredSpells = Object.values(levels)
       .flat()
       .filter((spell) => {
-        console.log("spell:", spell);
         const attempts = spellAttempts?.[spell] ?? {};
         return Object.values(attempts).filter(Boolean).length >= 2;
       }).length;
@@ -118,16 +116,6 @@ export const SubjectCard = ({
   //     details: details,
   //   };
   // };
-
-  const rollDice = () => {
-    const roller = new DiceRoller();
-    const roll = roller.roll("1d20");
-    return {
-      total: roll.total,
-      notation: roll.notation,
-      output: roll.output,
-    };
-  };
 
   const generateLevelColor = (baseColor, level) => {
     const hex = baseColor.replace("#", "");
@@ -494,8 +482,6 @@ export const SubjectCard = ({
         return;
       }
 
-      console.log("Loaded spell progress data:", data);
-
       const formattedAttempts = {};
       const formattedCriticals = {};
 
@@ -512,10 +498,6 @@ export const SubjectCard = ({
           }
         }
       });
-
-      console.log("Formatted attempts:", formattedAttempts);
-      console.log("Formatted criticals:", formattedCriticals);
-
       setSpellAttempts(formattedAttempts);
       setCriticalSuccesses(formattedCriticals);
     } catch (error) {

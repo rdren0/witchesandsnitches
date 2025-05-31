@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Edit3, Check, X, User } from "lucide-react";
 
 import { createClient } from "@supabase/supabase-js";
@@ -321,10 +321,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false);
 
   useEffect(() => {
-    console.log("Setting up auth listener");
-
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session:", session?.user?.email);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -332,18 +329,11 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(
-        "Auth event:",
-        event,
-        session?.user?.email,
-        new Date().toISOString()
-      );
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
 
     return () => {
-      console.log("Cleaning up auth listener");
       subscription.unsubscribe();
     };
   }, []);
@@ -421,11 +411,10 @@ function App() {
   const signInWithDiscord = async () => {
     try {
       setAuthLoading(true);
-      console.log("Initiating Discord sign in...");
 
       const isLocalhost = window.location.hostname === "localhost";
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: {
           redirectTo: isLocalhost
@@ -438,7 +427,6 @@ function App() {
         console.error("Error signing in:", error);
         alert("Failed to sign in: " + error.message);
       } else {
-        console.log("Sign in initiated:", data);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -451,7 +439,6 @@ function App() {
   const signOut = async () => {
     try {
       setAuthLoading(true);
-      console.log("Attempting to sign out...");
 
       const { error } = await supabase.auth.signOut();
 
@@ -459,7 +446,6 @@ function App() {
         console.error("Error signing out:", error);
         alert("Failed to sign out: " + error.message);
       } else {
-        console.log("Successfully signed out");
         setUser(null);
         setCustomUsername("");
         setActiveTab("home");
