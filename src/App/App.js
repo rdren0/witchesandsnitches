@@ -312,12 +312,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("character-sheet")}
-                onMouseEnter={(e) => {
-                  Object.assign(e.target.style, styles.featureCardHover);
-                }}
-                onMouseLeave={(e) => {
-                  Object.assign(e.target.style, styles.featureCard);
-                }}
               >
                 <h3>Character Sheet</h3>
                 <p>View and manage your character's stats and abilities.</p>
@@ -325,12 +319,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("spellbook")}
-                onMouseEnter={(e) => {
-                  Object.assign(e.target.style, styles.featureCardHover);
-                }}
-                onMouseLeave={(e) => {
-                  Object.assign(e.target.style, styles.featureCard);
-                }}
               >
                 <h3>Spell Management</h3>
                 <p>
@@ -343,12 +331,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("character-notes")}
-                onMouseEnter={(e) => {
-                  Object.assign(e.target.style, styles.featureCardHover);
-                }}
-                onMouseLeave={(e) => {
-                  Object.assign(e.target.style, styles.featureCard);
-                }}
               >
                 <h3>Notes</h3>
                 <p>
@@ -359,12 +341,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("gallery")}
-                onMouseEnter={(e) => {
-                  Object.assign(e.target.style, styles.featureCardHover);
-                }}
-                onMouseLeave={(e) => {
-                  Object.assign(e.target.style, styles.featureCard);
-                }}
               >
                 <h3>Character Gallery</h3>
                 <p>
@@ -381,12 +357,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
         <div
           style={styles.featureCard}
           onClick={() => handleCardClick("character-creation")}
-          onMouseEnter={(e) => {
-            Object.assign(e.target.style, styles.featureCardHover);
-          }}
-          onMouseLeave={(e) => {
-            Object.assign(e.target.style, styles.featureCard);
-          }}
         >
           <h3>Character Creation</h3>
           <p>Build and customize your D&D characters.</p>
