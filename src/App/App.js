@@ -51,6 +51,7 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
     if (username.length > 30) {
       return "Username must be less than 30 characters";
     }
+    // eslint-disable-next-line
     if (!/^[a-zA-Z0-9_\-\.\s@\+!#\$%&\*\(\)\[\]\{\}'",:;?=]+$/.test(username)) {
       return "Invalid characters in username";
     }
@@ -575,6 +576,7 @@ function AppContent() {
       setThemeSelectedCharacter(null);
       sessionStorage.removeItem("selectedCharacterId");
     }
+
     // eslint-disable-next-line
   }, [user]);
 
