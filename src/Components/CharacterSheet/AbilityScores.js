@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { rollDice } from "../../App/diceRoller";
-import { styles } from "../CharacterSheet/styles";
-import { formatModifier, modifiers } from "../CharacterSheet/utils";
+import { formatModifier, modifiers } from "./utils";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedStyles } from "./styles";
 
 const AbilityScores = ({ character, discordWebhookUrl }) => {
   const [isRolling, setIsRolling] = useState(false);
   const characterModifiers = modifiers(character);
+
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
 
   const clickableAbilityStyle = {
     ...styles.abilityItem,

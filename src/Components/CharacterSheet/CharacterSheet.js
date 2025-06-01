@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { rollDice } from "../../App/diceRoller";
 import { Skills } from "./Skills";
-import AbilityScores from "../AbilityScores/AbilityScores";
+import AbilityScores from "./AbilityScores";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
