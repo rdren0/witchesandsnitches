@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { User, Shield, Heart, Zap, Dice6, ChevronUp } from "lucide-react";
 import { rollDice } from "../../App/diceRoller";
-import { styles } from "./characterSheetStyles";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
 import { modifiers } from "./utils";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedStyles } from "./styles";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -15,6 +16,8 @@ const CharacterSheet = ({
   characters,
   className = "",
 }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
 
   const [character, setCharacter] = useState(null);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { rollDice } from "../../App/diceRoller";
-import { styles } from "../CharacterSheet/characterSheetStyles";
+import { styles } from "../CharacterSheet/styles";
 import { formatModifier, modifiers } from "../CharacterSheet/utils";
 
 const AbilityScores = ({ character, discordWebhookUrl }) => {

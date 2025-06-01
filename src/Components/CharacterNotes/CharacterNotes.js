@@ -1007,3 +1007,4 @@ const EntryCard = ({ entry, onEdit, onDelete }) => {
     </>
   );
 };
+export default CharacterNotes;

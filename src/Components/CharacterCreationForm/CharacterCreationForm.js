@@ -17,7 +17,7 @@ import {
   backgrounds,
   standardFeats,
 } from "../data";
-import { styles } from "./characterCreationStyles";
+import { styles } from "./styles";
 import { characterService } from "../../services/characterService";
 import { SavedCharacters } from "./SavedCharacters";
 

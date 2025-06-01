@@ -1,8 +1,9 @@
-import { styles } from "./characterSheetStyles";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatModifier, modifiers, skillMap, allSkills } from "./utils";
 import { rollDice } from "../../App/diceRoller";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedStyles } from "./styles";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -13,6 +14,8 @@ export const Skills = ({
   setCharacter,
   selectedCharacterId,
 }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
   const [sortColumn, setSortColumn] = useState("skill");
   const [sortDirection, setSortDirection] = useState("asc");
   const [hoveredHeader, setHoveredHeader] = useState(null);

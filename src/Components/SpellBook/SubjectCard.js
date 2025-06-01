@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-
-import { styles } from "./spellBookStyles";
 import {
   ChevronDown,
   ChevronRight,
@@ -28,6 +26,8 @@ import {
 } from "./spells";
 import { getModifierInfo, getSpellModifier } from "./utils";
 import { rollDice } from "../../App/diceRoller";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedSpellBookStyles } from "./styles";
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -61,6 +61,8 @@ export const SubjectCard = ({
   supabase,
   user,
 }) => {
+  const { theme } = useTheme();
+  const styles = createThemedSpellBookStyles(theme);
   const [attemptingSpells, setAttemptingSpells] = useState({});
 
   const [openMenus, setOpenMenus] = useState({});

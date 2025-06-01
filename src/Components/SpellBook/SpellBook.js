@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-
-import { styles } from "./spellBookStyles";
 import { SubjectCard } from "./SubjectCard";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedSpellBookStyles } from "./styles";
 
 import { spellsData } from "./spells";
 
@@ -12,6 +12,8 @@ const SpellBook = ({
   selectedCharacter,
   characters,
 }) => {
+  const { theme } = useTheme();
+  const styles = createThemedSpellBookStyles(theme);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [error, setError] = useState(null);

@@ -1,6 +1,6 @@
 import { BookIcon, UserIcon, TrashIcon, StarIcon } from "../../icons";
 
-import { styles } from "./characterCreationStyles";
+import { styles } from "./styles";
 
 export const SavedCharacters = ({
   isLoading,

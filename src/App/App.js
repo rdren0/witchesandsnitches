@@ -1,13 +1,17 @@
+// src/App/App.js (Final Clean Version)
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Edit3, Check, X, User } from "lucide-react";
+import { Edit3, Check, X, User, Palette } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
 import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
 import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
-import { CharacterNotes } from "../Components/CharacterNotes/CharacterNotes";
-import { styles } from "./style";
-import { CharacterSelector } from "./CharacterSelector";
+import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
+import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
+import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
+import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { createThemedStyles } from "./style";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -15,6 +19,9 @@ const supabase = createClient(
 );
 
 const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
+
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(customUsername || "");
   const [error, setError] = useState("");
@@ -134,6 +141,12 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
             onClick={handleEdit}
             style={styles.editButton}
             title="Edit username"
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.editButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.editButton);
+            }}
           >
             <Edit3 size={14} />
           </button>
@@ -150,10 +163,28 @@ const AuthComponent = ({
   onSignIn,
   onSignOut,
   isLoading,
+  onThemeClick,
 }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
+
   if (user) {
     return (
       <div style={styles.authSection}>
+        <button
+          onClick={onThemeClick}
+          style={styles.themeButton}
+          title="Theme Settings"
+          onMouseEnter={(e) => {
+            Object.assign(e.target.style, styles.themeButtonHover);
+          }}
+          onMouseLeave={(e) => {
+            Object.assign(e.target.style, styles.themeButton);
+          }}
+        >
+          <Palette size={16} color={theme.primary} />
+        </button>
+
         <div style={styles.userInfo}>
           {user.user_metadata?.avatar_url ? (
             <img
@@ -165,7 +196,7 @@ const AuthComponent = ({
             <div
               style={{
                 ...styles.userAvatar,
-                backgroundColor: "#007bff",
+                backgroundColor: theme.primary,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -191,6 +222,16 @@ const AuthComponent = ({
                 alignSelf: "flex-start",
               }}
               disabled={isLoading}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  Object.assign(e.target.style, styles.signoutButtonHover);
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  Object.assign(e.target.style, styles.signoutButton);
+                }
+              }}
             >
               {isLoading ? "Signing Out..." : "Sign Out"}
             </button>
@@ -203,6 +244,20 @@ const AuthComponent = ({
   return (
     <div style={styles.authSection}>
       <button
+        onClick={onThemeClick}
+        style={styles.themeButton}
+        title="Theme Settings"
+        onMouseEnter={(e) => {
+          Object.assign(e.target.style, styles.themeButtonHover);
+        }}
+        onMouseLeave={(e) => {
+          Object.assign(e.target.style, styles.themeButton);
+        }}
+      >
+        <Palette size={16} color={theme.primary} />
+      </button>
+
+      <button
         onClick={onSignIn}
         style={{
           ...styles.authButton,
@@ -210,6 +265,16 @@ const AuthComponent = ({
           ...(isLoading ? styles.authButtonDisabled : {}),
         }}
         disabled={isLoading}
+        onMouseEnter={(e) => {
+          if (!isLoading) {
+            Object.assign(e.target.style, styles.signinButtonHover);
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isLoading) {
+            Object.assign(e.target.style, styles.signinButton);
+          }
+        }}
       >
         {isLoading ? "Signing In..." : "Sign in with Discord"}
       </button>
@@ -218,6 +283,8 @@ const AuthComponent = ({
 };
 
 const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
   const displayName = customUsername || user?.user_metadata?.full_name;
 
   const handleCardClick = (tab) => {
@@ -245,6 +312,12 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("character-sheet")}
+                onMouseEnter={(e) => {
+                  Object.assign(e.target.style, styles.featureCardHover);
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.target.style, styles.featureCard);
+                }}
               >
                 <h3>Character Sheet</h3>
                 <p>View and manage your character's stats and abilities.</p>
@@ -252,6 +325,12 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("spellbook")}
+                onMouseEnter={(e) => {
+                  Object.assign(e.target.style, styles.featureCardHover);
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.target.style, styles.featureCard);
+                }}
               >
                 <h3>Spell Management</h3>
                 <p>
@@ -264,6 +343,12 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("character-notes")}
+                onMouseEnter={(e) => {
+                  Object.assign(e.target.style, styles.featureCardHover);
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.target.style, styles.featureCard);
+                }}
               >
                 <h3>Notes</h3>
                 <p>
@@ -271,13 +356,37 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                   relationships, and development.
                 </p>
               </div>
+              <div
+                style={styles.featureCard}
+                onClick={() => handleCardClick("gallery")}
+                onMouseEnter={(e) => {
+                  Object.assign(e.target.style, styles.featureCardHover);
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.target.style, styles.featureCard);
+                }}
+              >
+                <h3>Character Gallery</h3>
+                <p>
+                  Browse student portraits and profiles organized by school
+                  year.
+                </p>
+              </div>
             </div>
           </>
         )}
-        <hr style={{ border: "1px solid #eee", marginBottom: "16px" }} />
+        <hr
+          style={{ border: `1px solid ${theme.border}`, marginBottom: "16px" }}
+        />
         <div
           style={styles.featureCard}
           onClick={() => handleCardClick("character-creation")}
+          onMouseEnter={(e) => {
+            Object.assign(e.target.style, styles.featureCardHover);
+          }}
+          onMouseLeave={(e) => {
+            Object.assign(e.target.style, styles.featureCard);
+          }}
         >
           <h3>Character Creation</h3>
           <p>Build and customize your D&D characters.</p>
@@ -288,6 +397,9 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
 };
 
 const ProtectedRoute = ({ user, children, fallback }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
+
   if (!user) {
     return (
       fallback || (
@@ -303,7 +415,7 @@ const ProtectedRoute = ({ user, children, fallback }) => {
   return children;
 };
 
-function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState("home");
   const [user, setUser] = useState(null);
   const [customUsername, setCustomUsername] = useState("");
@@ -316,6 +428,9 @@ function App() {
   const [initialCharacterId, setInitialCharacterId] = useState(null);
 
   const loadingRef = useRef(false);
+
+  const { theme, setSelectedCharacter: setThemeSelectedCharacter } = useTheme();
+  const styles = createThemedStyles(theme);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -331,15 +446,23 @@ function App() {
     }
     return null;
   };
+
   const [selectedCharacter, setSelectedCharacter] = useState(
     getInitialSelectedCharacter
   );
 
+  // Update theme context when character changes
+  useEffect(() => {
+    setThemeSelectedCharacter(selectedCharacter);
+  }, [selectedCharacter, setThemeSelectedCharacter]);
+
   const resetSelectedCharacter = (newCharacter = null) => {
     if (newCharacter) {
       setSelectedCharacter(newCharacter);
+      setThemeSelectedCharacter(newCharacter);
     } else {
       setSelectedCharacter(null);
+      setThemeSelectedCharacter(null);
       sessionStorage.removeItem("selectedCharacterId");
     }
   };
@@ -417,6 +540,7 @@ function App() {
         (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
       ) {
         setSelectedCharacter(characterToSelect);
+        setThemeSelectedCharacter(characterToSelect);
         sessionStorage.setItem(
           "selectedCharacterId",
           characterToSelect.id.toString()
@@ -437,7 +561,12 @@ function App() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-  }, [discordUserId, selectedCharacter, initialCharacterId]);
+  }, [
+    discordUserId,
+    selectedCharacter,
+    initialCharacterId,
+    setThemeSelectedCharacter,
+  ]);
 
   useEffect(() => {
     if (discordUserId && characters.length === 0 && !charactersLoading) {
@@ -453,7 +582,7 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
@@ -471,6 +600,7 @@ function App() {
       setCustomUsername("");
       setCharacters([]);
       setSelectedCharacter(null);
+      setThemeSelectedCharacter(null);
       sessionStorage.removeItem("selectedCharacterId");
     }
     // eslint-disable-next-line
@@ -478,6 +608,7 @@ function App() {
 
   const handleCharacterChange = (character) => {
     setSelectedCharacter(character);
+    setThemeSelectedCharacter(character);
 
     if (character) {
       sessionStorage.setItem("selectedCharacterId", character.id.toString());
@@ -563,7 +694,6 @@ function App() {
       if (error) {
         console.error("Error signing in:", error);
         alert("Failed to sign in: " + error.message);
-      } else {
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -586,6 +716,7 @@ function App() {
         setCustomUsername("");
         setCharacters([]);
         setSelectedCharacter(null);
+        setThemeSelectedCharacter(null);
         setActiveTab("home");
         sessionStorage.removeItem("selectedCharacterId");
       }
@@ -642,6 +773,8 @@ function App() {
             />
           </ProtectedRoute>
         );
+      case "gallery":
+        return <CharacterGallery />;
       case "character-notes":
         return (
           <ProtectedRoute user={user}>
@@ -680,6 +813,8 @@ function App() {
             />
           </ProtectedRoute>
         );
+      case "theme-settings":
+        return <ThemeSettings />;
       default:
         return (
           <HomePage
@@ -693,7 +828,7 @@ function App() {
   };
 
   const getVisibleTabs = () => {
-    const baseTabs = ["home", "character-creation"];
+    const baseTabs = ["home", "character-creation", "gallery"];
 
     if (characters.length > 0) {
       return [...baseTabs, "character-sheet", "spellbook", "character-notes"];
@@ -704,7 +839,7 @@ function App() {
 
   useEffect(() => {
     const visibleTabs = getVisibleTabs();
-    if (!visibleTabs.includes(activeTab)) {
+    if (!visibleTabs.includes(activeTab) && activeTab !== "theme-settings") {
       setActiveTab("home");
     }
     // eslint-disable-next-line
@@ -728,19 +863,32 @@ function App() {
             const tabLabels = {
               home: "Home",
               "character-creation": "Character Creation",
+              gallery: "Gallery",
               "character-sheet": "Character Sheet",
               "character-notes": "Notes",
               spellbook: "SpellBook",
             };
+
+            const isActive = activeTab === tab;
 
             return (
               <button
                 key={tab}
                 style={{
                   ...styles.tabButton,
-                  ...(activeTab === tab ? styles.tabButtonActive : {}),
+                  ...(isActive ? styles.tabButtonActive : {}),
                 }}
                 onClick={() => setActiveTab(tab)}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    Object.assign(e.target.style, styles.tabButtonHover);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    Object.assign(e.target.style, styles.tabButton);
+                  }
+                }}
               >
                 {tabLabels[tab]}
               </button>
@@ -754,10 +902,19 @@ function App() {
           onSignIn={signInWithDiscord}
           onSignOut={signOut}
           isLoading={authLoading}
+          onThemeClick={() => setActiveTab("theme-settings")}
         />
       </header>
       <main style={styles.tabContent}>{renderContent()}</main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 
