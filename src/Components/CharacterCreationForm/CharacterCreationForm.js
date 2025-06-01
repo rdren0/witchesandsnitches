@@ -61,22 +61,20 @@ const CharacterCreationForm = ({
   });
 
   const getGameSessionOptions = () => {
-    const days = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
+    const sessions = [
+      "Sunday - Knights",
+      "Monday - Haunting",
+      "Tuesday - Knights",
+      "Wednesday - Haunting",
+      "Thursday - Knights",
+      "Friday - Knights",
+      "Saturday - Haunting",
+      "Saturday - Knights",
     ];
-    const times = ["AM", "PM"];
     const options = [];
 
-    days.forEach((day) => {
-      times.forEach((time) => {
-        options.push(`${day} ${time}`);
-      });
+    sessions.forEach((session) => {
+      options.push(`${session}`);
     });
 
     return options;
@@ -731,8 +729,7 @@ const CharacterCreationForm = ({
               ))}
             </select>
             <div style={styles.helpText}>
-              Select which day and time your character's game session takes
-              place.
+              Select which session your character is in.
             </div>
           </div>
 

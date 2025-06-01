@@ -23,287 +23,1756 @@ export const standardSchools = [
   "healing",
   "divination",
 ];
-// #51DDF6 for professinal
+
 export const spellsData = {
   Charms: {
+    hasRestriction: false,
     icon: "Wand2",
     color: "#51B5F6",
     description: "Utility and enhancement magic",
     levels: {
       Cantrips: [
-        "Accio",
-        "Alohomora",
-        "Capto",
-        "Carpe Retractum",
-        "Cistem Aperio",
-        "Colloportus",
-        "Colovaria",
-        "Defodio",
-        "Duro",
-        "Finestra",
-        "Flagrate",
-        "Glisseo",
-        "Illegibilus",
-        "Impervius",
-        "Lumos/Nox",
-        "Molliare",
-        "Pereo",
-        "Periculum/Verdimillious",
-        "Scourgify",
-        "Sonorus/Quietus",
-        "Spongify",
-        "Tergeo",
-        "Wingardium Leviosa",
+        {
+          name: "Accio",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
+          year: 2,
+          description:
+            "A target object is pulled directly to the caster as if carried by an invisible hand. The object is selected by pointing at it with a wand or by naming it, Accio broom. An object heavier than 20 pounds may not be summoned.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 1st level or higher, you may select or stack one of the following effects for each slot level above 0: Increase spell range by 100 feet, Increase weight limit by 20 pounds, Increase the number of targetable objects by 5.",
+        },
+        {
+          name: "Alohomora",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: 1,
+          description:
+            "Choose a door or window that you can see within range, that uses mundane or magical means to prevent access. A target that is held shut by a mundane lock or that is stuck or barred becomes unlocked, unstuck, or unbarred. If the object has multiple locks, only one of them is unlocked. If you choose a target that is held shut with Colloportus, that spell is removed. When you cast the spell, the mechanism noisily turns and unlocks. This noise emanates from the target object and is audible from as far away as 100 feet.",
+        },
+        {
+          name: "Capto",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "10 Minutes",
+          year: 1,
+          description:
+            "One target object becomes quite easily gripped by one hand, almost sticky unless the holder willfully lets go. The holder has advantage against being non-magically disarmed.",
+        },
+        {
+          name: "Cistem Aperio",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: 1,
+          description:
+            "Choose a box, chest, or another container that you can see within range that uses mundane or magical means to prevent access. A target that is held shut by a mundane lock or that is stuck or chained becomes unlocked, unstuck, or unchained. If the object has multiple locks, only one of them is unlocked. If you choose a target that is held shut with Colloportus, that spell is dispelled. When you cast the spell, the mechanism noisily turns and unlocks. This noise emanates from the target object and is audible from as far away as 100 feet.",
+        },
+        {
+          name: "Colloportus",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Until Dispelled",
+          year: 1,
+          description:
+            "You touch a closed door, window, gate, chest, or other entryway, and it becomes locked for the duration. It is impassable until it is broken or the spell is dispelled or suppressed. While affected by this spell, the object is more difficult to break or force open; the DC to break it or pick any locks on it increases by 10.",
+        },
+        {
+          name: "Colovaria",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "1 Hour",
+          year: 1,
+          description:
+            "You change the color of any target within range that lasts for the duration, to any desired complexity. The color may only be reverted by dispelling the charm. Physical interaction with the object reveals that the object has retained its original texture and material, but its color has truly changed.",
+        },
+        {
+          name: "Defodio",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet (5 Foot Cube)",
+          duration: "Instantaneous",
+          year: 2,
+          description:
+            "You choose a portion of dirt or stone that you can see within range and that fits within a 5-foot cube. You manipulate it in one of the following ways: If you target an area of stone or earth, you can instantaneously excavate it, move it along the ground, and deposit it up to 5 feet away. This movement doesn't have enough force to cause damage. If the dirt or stone you target is on the ground, you cause it to become difficult terrain.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 1st level or higher, the cube's size and distance the earth can be moved are each increased by 5 feet and the number of active normal/difficult terrain effects increase by 1 for each slot level above 0.",
+        },
+        {
+          name: "Duro",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Minute",
+          year: 1,
+          description:
+            "An object you can see within range becomes as hard and tough as stone. It gains resistance to all damage.",
+        },
+        {
+          name: "Finestra",
+          level: "Cantrip",
+          castingTime: "1 Action",
+          range: "10 Feet",
+          duration: "Instantaneous",
+          year: 1,
+          description:
+            "A pane of glass you can see within range turns to powder, discreetly turning it into an open entryway.",
+        },
+        {
+          name: "Flagrate",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "Instantaneous",
+          year: 1,
+          description:
+            "You trace your wand in the air or over an object, leaving fiery marks in that position. You may write any letters or depict any shapes, as if you were writing with a quill. Although the glowing letters appear to be made of fire, it is just an illusion and it cannot burn anything.",
+        },
+        {
+          name: "Glisseo",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 2,
+          description:
+            "Famously used to protect the Hogwarts girls' dormitories from intruders, this spell changes the angle of all connected steps in a single flight of stairs within range. They angle downwards, turning into an abnormally slick ramp.",
+        },
+        {
+          name: "Illegibilus",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "1 Hour",
+          year: 1,
+          description:
+            "For the duration, no one can understand any written language that the spell is cast upon. The pieces of all the letters are separated and scrambled, rendering it impossible to try to decode.",
+        },
+        {
+          name: "Impervius",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "1 Hour",
+          year: 1,
+          description:
+            "For the duration, a target object that you can see within range is waterproof and completely protected from any gas. It's as if any liquid or gas runs into a magnetic field around the object by which it is repelled, but the spell has no effect against solids impacting the target object.",
+        },
+        {
+          name: "Lumos/Nox",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Until Dispelled",
+          year: 2,
+          description:
+            "Upon muttering the incantation, the tip of your wand sheds bright light in a narrow 15-foot cone and dim light for an additional 15 feet, much like a flashlight. The light is a bright white with a slight bluish tint. Completely covering the tip of your wand with something opaque blocks the light. The spell ends if you dismiss it with the nox incantation, as a bonus action.",
+        },
+        {
+          name: "Molliare",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "1 Hour",
+          year: 1,
+          description:
+            "This comfortable charm is most commonly found on a broomstick. One object you touch with your wand is wrapped in an invisible cushioning effect for the duration, almost like two magnets repelling one another.",
+        },
+        {
+          name: "Pereo",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
+          year: 2,
+          description:
+            "You choose a flame that you can see within range and that fits within a 5-foot cube. You instantaneously extinguish the flames within the cube.",
+        },
+        {
+          name: "Scourgify",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "Instantaneous",
+          year: 2,
+          description:
+            "An object no larger than 5 cubic feet is flawlessly cleaned.",
+        },
+        {
+          name: "Sonorus/Quietus",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Until Dispelled",
+          year: 2,
+          description:
+            "When you hold the tip of your wand to your neck and cast this spell, your voice booms up to three times as loud as normal. Your voice is loud enough to fill a large stadium, but won't cause any hearing damage. Casting quietus with your wand to your throat is the counter-charm and ends the effect.",
+        },
+        {
+          name: "Tergeo",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 1 minute",
+          year: 2,
+          description:
+            "You choose an specific liquid that you can see within range and that fits within a 5-foot cube. The liquid gathers up into a blob floating at the tip of your wand, and you can direct it to form into simple shapes, animate, or flow into a container.",
+        },
+        {
+          name: "Wingardium Leviosa",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Dedication, 1 Minute",
+          year: 1,
+          description:
+            "One creature other than yourself or object of your choice that you can see within range rises vertically, up to 20 feet, and remains suspended there for the duration. The spell can levitate a target that weighs up to 100 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected. The target can move only by pushing or pulling against a fixed object or surface within reach (such as a wall or a ceiling), which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 1st level or higher, the weight limit is increased by 150 pounds for each slot level above 0.",
+        },
       ],
       "1st Level": [
-        "Arresto Momentum",
-        "Diffindo R",
-        "Exhilaro R",
-        "Glacius R",
-        "Locomotor R",
-        "Mobilicorpus R",
-        "Perfusorius R",
-        "Protego",
-        "Reducio R",
-        "Rictusempra",
-        "Riddikulus",
-        "Vigilatus R",
-        "Abscondi R",
-        "Diminuendo",
-        "Engorgio R",
-        "Expelliarmus",
-        "Finite Incantatem",
-        "Fumos",
-        "Geminio R",
-        "Immobulus",
-        "Muffliato*",
-        "Partis Temporus",
-        "Pellucidi Pellis",
-        "Protego Maxima",
-        "Reparo R",
-        "Silencio R",
-        "Stupefy",
+        {
+          name: "Diffindo",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
+          year: 2,
+          tags: ["R"],
+          description:
+            "An object is precisely torn or cut, as if a magical blade extended from the tip of your wand. This spell was not designed to be used on creatures and only makes very shallow cuts. Choose a target you can see within range that fits within a 5-foot cube. If the target is a creature, it must make a Dexterity saving throw. It takes 4d4 slashing damage on a failed save or half as much damage on a successful one. This is the counterspell to incarcerous, immediately ending that spell's effects.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature or the cube's size increases by 5 feet for each slot level above 1st.",
+        },
+        {
+          name: "Glacius",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Hour",
+          year: 1,
+          tags: ["R"],
+          description:
+            "You freeze an area of water that you can see within range and that fits within a 5-foot cube. The area becomes difficult terrain for the duration. Each Medium or smaller creature that is covered, submerged or partially submerged in the affected water has its speed halved and must make a Constitution saving throw. On a failed save, a creature takes 3d8 cold damage, or half as much damage on a successful one.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 and the cube's size increases by 5 feet for each slot level above 1st.",
+        },
+        {
+          name: "Locomotor",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "1 Hour",
+          year: 2,
+          tags: ["R"],
+          description:
+            "One object that isn't being worn or carried of your choice that you can see within range rises 3 feet off the ground, and remains suspended there for the duration. The spell can levitate a target that weighs up to 500 pounds. If more weight than the limit is placed on top of the object, the spell ends, and it falls to the ground. The object is immobile while you are within 20 feet of it. If you move more than 20 feet away from it, the object follows you so that it remains within 20 feet of you.",
+        },
+        {
+          name: "Mobilicorpus",
+          level: "1st Level (ritual)",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "1 hour",
+          year: 3,
+          tags: ["R"],
+          description:
+            "You animate a corpse or unconscious creature to move under your control for the duration.",
+        },
+        {
+          name: "Perfusorius",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "1 Hour",
+          year: 2,
+          tags: ["R"],
+          description:
+            "This spell alters an object of up to 500 pounds, changing its weight to be just barely heavier than the atmosphere around it. The slightest force is needed to move, pick up, or carry this object for the duration. It can be easily thrown as well.",
+        },
+        {
+          name: "Reducio",
+          level: "1st Level (ritual)",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "1 hour",
+          year: 3,
+          tags: ["R"],
+          description:
+            "You cause an object that isn't being worn or carried and that you can see within range to shrink in size for the duration. The target's size is halved in all dimensions, and its weight is reduced to one-eighth of normal. This reduction decreases its size by one category – from Medium to Small, for example.",
+        },
+        {
+          name: "Rictusempra",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Round",
+          year: 1,
+          description:
+            "This low-level dueling spell gives the recipient an intense tickling sensation. Make a ranged spell attack against a being within range. On a hit, the target will double over in laughter and become incapacitated with its speed halved until the start of your next turn.",
+        },
+        {
+          name: "Vigilatus",
+          level: "1st Level",
+          castingTime: "1 Minute",
+          range: "30 Feet",
+          duration: "8 Hours",
+          year: 2,
+          tags: ["R"],
+          description:
+            "You set a mental alarm against unwanted intrusion. Choose a door, a window, or an area within range that is no larger than a 20-foot cube. Until the spell ends, a ping in your mind alerts you whenever a Tiny or larger creature touches or enters the warded area, if you are within 1 mile of the warded area. This ping awakens you if you are sleeping. When you cast the spell, you can designate creatures that won't set off the alarm.",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Abscondi",
+          level: "2nd Level (ritual)",
+          castingTime: "1 action",
+          range: "Self",
+          duration: "Concentration, up to 1 hour",
+          year: 4,
+          tags: ["R"],
+          description:
+            "A magical aura makes your impact on your surroundings unseen, masking you and your companions from detection. For the duration, each creature you choose within 30 feet of you (including you) has a +10 bonus to Dexterity (Stealth) checks and can't be tracked except by magical means. A creature that receives this bonus leaves behind no tracks or other traces of its passage.",
+        },
+        {
+          name: "Diminuendo",
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
+          year: 4,
+          description:
+            "Make a ranged spell attack against a creature within range. On a hit, the being or beast's size is halved in all dimensions, and its weight is reduced to one-eighth of normal. This reduction decreases its size by one category - from Medium to Small, for example. Until the spell ends, the target also has disadvantage on Strength checks and Strength saving throws. The target deals 1d4 less damage (this can't reduce the damage below 1).",
+        },
+        {
+          name: "Engorgio",
+          level: "2nd Level (ritual)",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "1 minute",
+          year: 4,
+          tags: ["R"],
+          description:
+            "You cause a creature or an object you can see within range to grow larger for the duration. Choose either a creature or an object that isn't being worn or carried. If the target is unwilling, it can make a Constitution saving throw. On a success, the spell has no effect. The target's size doubles in all dimensions, and its weight is multiplied by eight. This growth increases its size by one category - from Medium to Large, for example. Until the spell ends, the target also has advantage on Strength checks and Strength saving throws. While enlarged, the target deals 1d4 extra damage.",
+        },
+        {
+          name: "Finite Incantatem",
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "instantaneous",
+          year: 3,
+          tags: ["Defensive"],
+          description:
+            "Choose any creature, object, or magical effect within range. One non-Transfiguration spell of 2nd level or lower on the target ends. If you are aware of at least one spell affecting the target, you can specify that spell in your mind. If you are unaware of what spells are affecting the target, one randomly selected spell ends. For a spell of a higher level on the target, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you automatically end the effects of a non-Transfiguration spell on the target if the spell's level is equal to or less than the level of the spell slot you used.",
+        },
+        {
+          name: "Geminio",
+          level: "2nd Level (ritual)",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "10 days",
+          year: 3,
+          tags: ["R"],
+          description:
+            "You tap an object that fits within a 1-foot cube with your wand and a perfect duplicate of it pops out from the object. The duplicate is indistinguishable from the object by normal means, but does not share any of its magical qualities or functions. The duplicate has one quarter of the original object's hit points and vanishes at the end of the spell's duration.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the cube's size increases by 1 foot for each slot level above 2nd.",
+        },
+        {
+          name: "Immobulus",
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "Self (15 Feet Cube)",
+          duration: "1 Round",
+          year: 2,
+          description:
+            "You send a pulse through the area in front of you, freezing everything in space and time. Roll 7d10; the total is how many hit points of creatures this spell can affect. All creatures and objects in a 15-foot cube originating from you are affected in the order of nearest to farthest. Each creature affected by this spell is paralyzed until the spell ends. While paralyzed, the creature is fixed in the space they occupied when the spell was cast, which may leave it suspended in air.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, roll an additional 2d10 for each slot level above 2nd. When you cast this spell using a spell slot of 4th level or higher, the duration increases by 1 round for each two slot levels above 2nd.",
+        },
+        {
+          name: "Muffliato",
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "Self",
+          duration: "Concentration, up to 1 hour",
+          year: 3,
+          restriction: true,
+          description:
+            "For the duration, each creature you choose within 30 feet of you (including you) are able to converse with each other without anyone or anything else hearing. Instead of the voices, nearby creatures hear a faint buzzing, like white noise. If a creature is within 15 feet of you and sees your mouth move when you speak, it is aware that your voice is being magically masked.",
+        },
+        {
+          name: "Partis Temporus",
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Instantaneous",
+          year: 4,
+          description:
+            "This unique charm redirects magical effects to create an opening. On any area spell of 3rd level or lower that forms a line, wall, or perimeter, an opening appears in the spell's effect at a point of your choice that you can see within range and lasts for the duration. You choose the opening's dimensions: up to 5 feet wide and 8 feet tall.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you automatically create an opening in the spell if the spell's level is one level higher than, equal to or less than the level of the spell slot you used.",
+        },
+        {
+          name: "Pellucidi Pellis",
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "Concentration, up to 1 hour",
+          year: 4,
+          description:
+            "With a tap of a wand on the top of the head and a sensation of raw egg being broken where the wand was tapped, a creature becomes invisible until the spell ends. Anything the target is wearing or carrying is invisible as long as it is on the target's person. The spell ends for a target that attacks or casts a spell.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd.",
+        },
+        {
+          name: "Reparo",
+          level: "2nd Level (ritual)",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Instantaneous",
+          year: 3,
+          tags: ["R"],
+          description:
+            "This spell magically reverses any damage done to any objects or structures within a 5-foot cube, collecting all the pieces or components and reassembling them. Anything previously contained by the broken target, like a spilled liquid, is not placed back inside it. This spell can physically repair a magic item, but the spell can't restore magic to such an object.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the cube's size increases by 10 feet for each slot level above 2nd.",
+        },
       ],
       "3rd Level": [
-        "Deprimo R",
-        "Depulso",
-        "Dissonus Ululatus",
-        "Expecto Patronum R",
-        "Fianto Duri",
-        "Fortissimum",
-        "Herbivicus",
-        "Lumos Maxima R",
-        "Novum Spirare R",
-        "Repello Inimicum",
+        {
+          name: "Dissonus Ululatus",
+          level: "3rd Level",
+          castingTime: "10 minutes",
+          range: "Self (30-foot-radius hemisphere)",
+          duration: "8 hours",
+          year: 5,
+          tags: ["Defensive"],
+          description:
+            "You set an alarm to emit a piercing shriek when an unauthorized person enters the area. Until the spell ends, an alarm sounds whenever a Tiny or larger creature touches or enters the warded area. When you cast the spell, you can designate creatures or areas within the hemisphere that won't set off the alarm. The alarm produces an unpleasant screaming sound for as long as the intruding creature is in the area of the spell, audible from as far away as 300 feet.",
+        },
+        {
+          name: "Fianto Duri",
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Instantaneous",
+          year: 5,
+          tags: ["Defensive"],
+          description:
+            "Whenever you cast this spell on an active defensive spell within range that improves a creature's AC or grants it temporary hit points, each creature affected by the targeted spell gains temporary hit points equal to twice your caster level + your spellcasting ability modifier. When the targeted spell ends or an affected creature is no longer affected by it, the creature loses any remaining temporary hit points from this spell.",
+        },
+        {
+          name: "Fortissimum",
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "Until dispelled",
+          year: 4,
+          description:
+            "One object of your choice that you can see within range and that fits within a 1-foot cube is made completely invulnerable to physical destruction. This renders it immune to any damage, magical or mundane, but it can still be affected by spells that directly change the object, such as vera verto or evanesco.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the cube's size increases by 1 foot for each slot level above 3rd.",
+        },
+        {
+          name: "Herbivicus",
+          level: "3rd Level",
+          castingTime: "1 action or 1 minute",
+          range: "90 feet",
+          duration: "1 hour or Instantaneous",
+          year: 3,
+          description:
+            "This spell channels vitality into plants within a specific area. There are two possible uses for the spell, granting either immediate or long-term benefits. If you cast this spell using 1 action, choose a point within range. All non-magical plants in a 60-foot radius centered on that point become thick and overgrown for 1 hour, turning the area into difficult terrain. If you cast this spell over 1 minute, you accelerate the growth of a single young plant you can see within range, magical or mundane.",
+        },
+        {
+          name: "Lumos Maxima",
+          level: "3rd Level (ritual)",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "1 hour",
+          year: 3,
+          tags: ["R"],
+          description:
+            "A 60-foot-radius sphere of light spreads out from a small floating ball of light that hovers in place. The sphere is bright light and sheds dim light for an additional 60 feet. As a bonus action, you can direct the ball of light to a new position within range.",
+        },
+        {
+          name: "Novum Spirare",
+          level: "3rd Level (ritual)",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "24 hours",
+          year: 4,
+          tags: ["R"],
+          description:
+            "Accurately named, the bubble-head charm forms a large bubble-like mask over a creature's mouth, nose, and ears that is magically filled with never-ending fresh air. This spell grants one willing creature you can see within range the ability to breathe underwater or in a vacuum until the spell ends. Additionally, the creature is immune to poison damage due to inhalation for the duration.",
+        },
+        {
+          name: "Repello Inimicum",
+          level: "3rd Level",
+          castingTime: "1 minute",
+          range: "Self (20-foot-radius hemisphere)",
+          duration: "1 hour",
+          year: 5,
+          tags: ["Defensive"],
+          description:
+            "You create a 20-foot-radius hemisphere of magical energy to protect you from one or more of the following: Dark wizards, other Dark beings, or Dark beasts. The circle affects creatures of the chosen type(s) in the following ways: The affected creatures can't willingly enter the hemisphere by nonmagical means. The affected creatures have disadvantage on attack rolls against targets within the hemisphere. Targets within the hemisphere can't be charmed or frightened by affected creatures.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the duration increases by 1 hour for each slot level above 3rd.",
+        },
       ],
-      "4th Level": ["Capacious Extremis*", "Confundo R", "Repello Muggletum R"],
+      "4th Level": [
+        {
+          name: "Capacious Extremis",
+          level: "4th Level (ritual)",
+          castingTime: "10 minutes",
+          range: "Touch",
+          duration: "Until dispelled",
+          year: 6,
+          restriction: true,
+          description:
+            "Transform an ordinary small bag/pouch into a Handy Haversack's central pouch, a backpack into a Bag of Holding, or a trunk's internal capacity into a Bag of Holding with: 3 ft. long and 2 ft. wide opening; internal size of 6 ft. long, 4 ft. wide, and 4 ft. deep; 1000 pounds and 150 cubic ft. limits.",
+        },
+        {
+          name: "Confundo",
+          level: "4th Level (ritual)",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Concentration, up to 1 minute",
+          year: 6,
+          tags: ["R"],
+          description:
+            "The Confundus Charm is a particularly powerful charm that leaves anything confused, forgetful, and impressionable, often causing people to wander off absent-mindedly. If the target is an object you can see within range that operates or functions on its own, it will operate erratically, malfunction, or completely shut down. If the target is a creature you can see within range, it must succeed on a Wisdom saving throw when you cast this spell or be affected by it.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 5th level or higher, you can target one additional target for each slot level above 4th.",
+        },
+        {
+          name: "Repello Muggletum",
+          level: "4th Level (ritual)",
+          castingTime: "10 minutes",
+          range: "Self (60-foot-radius hemisphere)",
+          duration: "8 hours",
+          year: 7,
+          tags: ["Defensive", "R"],
+          description:
+            "Frequently used around wizarding areas, this charm keeps Muggles away from dangerous situations or overtly magical locations. You enchant an area to suggest a course of activity and magically influence a non-magical human. Upon entering the warded area, the subject must make a Wisdom saving throw at disadvantage. On a failed save, it pursues a course of action that takes it away from the area of the spell.",
+        },
+      ],
       "5th Level": [
-        "Cave Inimicum",
-        "Ne Ustio",
-        "Obliviate*",
-        "Piertotum Locomotor*",
-        "Salvio Hexia",
+        {
+          name: "Cave Inimicum",
+          level: "5th Level",
+          castingTime: "1 minute",
+          range: "Self (10-foot-radius hemisphere)",
+          duration: "1 hour",
+          year: 7,
+          tags: ["Defensive"],
+          description:
+            "A forcefield-like dome forms a perimeter around the caster that filters vision of anything or anyone designated by the caster, rendering those objects infallibly invisible. The dome is undetectable from the outside, but slightly visible from the inside, like a wavering glass barrier. Anyone can move through the field freely to see the hidden contents.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th level or higher, you may select or stack one of the following effects for each slot level above 5th: Increase the spell radius by 20 feet, Increase the duration to 8 hours, Add the ability to completely block sounds, Add the ability to completely block smells.",
+        },
+        {
+          name: "Obliviate",
+          level: "5th Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 minute",
+          year: 5,
+          restriction: true,
+          description:
+            "You attempt to reshape another being's memories. One being you can see within range must make a Wisdom saving throw. If you are fighting the creature, it has advantage on the saving throw. On a failed save, the target becomes charmed by you for the duration. You can eliminate the target's memory of an event or detail that it experienced or perceived within the last 24 hours and that lasted no more than 10 minutes.",
+          higherLevels:
+            "If you cast this spell using a spell slot of 6th level or higher, you can eliminate the target's memories of an event that took place up to 7 days ago (6th level), 30 days ago (7th level), 1 year ago (8th level), or any time in the creature's past (9th level).",
+        },
+        {
+          name: "Piertotum Locomotor",
+          level: "5th Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Concentration, up to 1 minute",
+          year: 6,
+          restriction: true,
+          description:
+            "Objects come to life at your command. Choose up to five nonmagical objects within range that are not being worn or carried. Medium targets count as one object, Large targets count as two objects, Huge targets count as four objects. You can't animate any object larger than Huge. Each target animates and becomes a creature under your control until the spell ends or until reduced to 0 hit points.",
+          higherLevels:
+            "If you cast this spell using a spell slot of 6th level or higher, you can animate one additional object for each slot level above 5th.",
+        },
       ],
-      "6th Level": ["Protego Totalum*"],
-      "9th Level": ["Fidelius Mysteria Celare*"],
+      "9th Level": [
+        {
+          name: "Fidelius Mysteria Celare",
+          level: "9th Level",
+          castingTime: "1 hour",
+          range: "Self (150-foot-radius hemisphere)",
+          duration: "Until dispelled",
+          year: 7,
+          restriction: true,
+          description:
+            "When cast upon a single dwelling that fits within range, it becomes a secret, infallibly invisible and inaccessible by anyone else. This effect reaches to the dwelling's property lines, or if no property lines are defined, the edge of the hemisphere centered on the caster at the time of casting. You choose yourself or one person within the area of the spell to be the Secret-Keeper. If the Secret-Keeper tells someone the secret (the location of the dwelling) verbally or in writing, that person can see the secret like the Secret-Keeper and step onto the property.",
+        },
+      ],
     },
   },
   "Jinxes, Hexes & Curses": {
+    hasRestriction: false,
     icon: "Zap",
     color: "#B751F6",
     description: "Offensive and mischievous magic",
     levels: {
       Cantrips: [
-        "Bombarda",
-        "Cantis",
-        "Devicto",
-        "Furnunculus",
-        "Genu Recurvatum",
-        "Infirma Cerebra",
-        "Locomotor Wibbly",
+        // Note: These spells were mentioned in the list but detailed descriptions weren't provided in the document
+        { name: "Bombarda", level: "Cantrip", description: "Explosive spell" },
+        { name: "Cantis", level: "Cantrip", description: "Jinx spell" },
+        { name: "Devicto", level: "Cantrip", description: "Hex spell" },
+        { name: "Furnunculus", level: "Cantrip", description: "Boil hex" },
+        {
+          name: "Genu Recurvatum",
+          level: "Cantrip",
+          description: "Knee-reversal hex",
+        },
+        {
+          name: "Infirma Cerebra",
+          level: "Cantrip",
+          description: "Mind-weakening jinx",
+        },
+        {
+          name: "Locomotor Wibbly",
+          level: "Cantrip",
+          description: "Leg-locker curse",
+        },
       ],
       "1st Level": [
-        "Colloshoo",
-        "Densaugeo",
-        "Digitus Wibbly",
-        "Flipendo",
-        "Locomotor Mortis",
-        "Mimblewimble",
-        "Petrificus Totalus",
+        { name: "Colloshoo", level: "1st Level", description: "Stickfast hex" },
+        {
+          name: "Densaugeo",
+          level: "1st Level",
+          description: "Tooth-growing hex",
+        },
+        {
+          name: "Digitus Wibbly",
+          level: "1st Level",
+          description: "Finger-removal jinx",
+        },
+        { name: "Flipendo", level: "1st Level", description: "Knockback jinx" },
+        {
+          name: "Locomotor Mortis",
+          level: "1st Level",
+          description: "Leg-locker curse",
+        },
+        {
+          name: "Mimblewimble",
+          level: "1st Level",
+          description: "Tongue-tying curse",
+        },
+        {
+          name: "Petrificus Totalus",
+          level: "1st Level",
+          description: "Full body-bind curse",
+        },
       ],
       "2nd Level": [
-        "Arania Exumai",
-        "Oppugno",
-        "Relashio",
-        "Slugulus Eructo",
-        "Tarantallegra",
-        "Ventus R",
+        {
+          name: "Arania Exumai",
+          level: "2nd Level",
+          description: "Spider repelling charm",
+        },
+        { name: "Oppugno", level: "2nd Level", description: "Oppugning charm" },
+        { name: "Relashio", level: "2nd Level", description: "Revulsion jinx" },
+        {
+          name: "Slugulus Eructo",
+          level: "2nd Level",
+          description: "Slug-vomiting charm",
+        },
+        {
+          name: "Tarantallegra",
+          level: "2nd Level",
+          description: "Dancing feet spell",
+        },
+        {
+          name: "Ventus",
+          level: "2nd Level",
+          tags: ["R"],
+          description: "Wind jinx",
+        },
       ],
       "3rd Level": [
-        "Confringo",
-        "Conjunctivia",
-        "Expulso",
-        "Impedimenta",
-        "Langlock*",
+        {
+          name: "Confringo",
+          level: "3rd Level",
+          description: "Blasting curse",
+        },
+        {
+          name: "Conjunctivia",
+          level: "3rd Level",
+          description: "Conjunctivitis curse",
+        },
+        { name: "Expulso", level: "3rd Level", description: "Exploding curse" },
+        {
+          name: "Impedimenta",
+          level: "3rd Level",
+          description: "Impediment jinx",
+        },
+        {
+          name: "Langlock",
+          level: "3rd Level",
+          restriction: true,
+          description: "Tongue-tying curse",
+        },
       ],
       "4th Level": [
-        "Levicorpus/Liberacorpus",
-        "Muco Volatilis",
-        "Reducto",
-        "Sectumsempra*",
+        {
+          name: "Levicorpus/Liberacorpus",
+          level: "4th Level",
+          description: "Dangles target by ankle",
+        },
+        {
+          name: "Muco Volatilis",
+          level: "4th Level",
+          description: "Bat-bogey hex",
+        },
+        { name: "Reducto", level: "4th Level", description: "Reductor curse" },
+        {
+          name: "Sectumsempra",
+          level: "4th Level",
+          restriction: true,
+          description: "Slashing curse",
+        },
       ],
-      "5th Level": ["Imperio", "Nullum Effugium*", "Omnifracto*"],
-      "7th Level": ["Azreth", "Crucio"],
-      "8th Level": ["Avada Kedavra"],
+      "5th Level": [
+        { name: "Imperio", level: "5th Level", description: "Imperius curse" },
+        {
+          name: "Nullum Effugium",
+          level: "5th Level",
+          restriction: true,
+          description: "No escape curse",
+        },
+        {
+          name: "Omnifracto",
+          level: "5th Level",
+          restriction: true,
+          description: "Breaking curse",
+        },
+      ],
+      "7th Level": [
+        {
+          name: "Azreth",
+          level: "7th Level",
+          description: "Killing curse variant",
+        },
+        { name: "Crucio", level: "7th Level", description: "Cruciatus curse" },
+      ],
+      "8th Level": [
+        {
+          name: "Avada Kedavra",
+          level: "8th Level",
+          description: "Killing curse",
+        },
+      ],
     },
   },
   Transfigurations: {
+    hasRestriction: false,
     icon: "BookOpen",
     color: "#5BC257",
     description: "Transformation and alteration magic",
     levels: {
       Cantrips: [
-        "Aguamenti",
-        "Crinus Muto",
-        "Epoximise",
-        "Incendio Glacia",
-        "Orchideous",
-        "Vera Verto",
+        {
+          name: "Aguamenti",
+          level: "Cantrip",
+          description: "Water-making spell",
+        },
+        {
+          name: "Crinus Muto",
+          level: "Cantrip",
+          description: "Hair color change",
+        },
+        { name: "Epoximise", level: "Cantrip", description: "Bonding agent" },
+        {
+          name: "Incendio Glacia",
+          level: "Cantrip",
+          description: "Fire and ice spell",
+        },
+        {
+          name: "Orchideous",
+          level: "Cantrip",
+          description: "Orchid conjuration",
+        },
+        {
+          name: "Vera Verto",
+          level: "Cantrip",
+          description: "True transformation",
+        },
       ],
       "1st Level": [
-        "Inanimatus Conjurus R",
-        "Incendio R",
-        "Nebulus",
-        "Obscuro R",
-        "Sagittario",
+        {
+          name: "Inanimatus Conjurus",
+          level: "1st Level",
+          tags: ["R"],
+          description: "Conjures inanimate objects",
+        },
+        {
+          name: "Incendio",
+          level: "1st Level",
+          tags: ["R"],
+          description: "Fire-making spell",
+        },
+        { name: "Nebulus", level: "1st Level", description: "Fog creation" },
+        {
+          name: "Obscuro",
+          level: "1st Level",
+          tags: ["R"],
+          description: "Blindfold hex",
+        },
+        {
+          name: "Sagittario",
+          level: "1st Level",
+          description: "Arrow conjuration",
+        },
       ],
-      "2nd Level": ["Incarcerous R", "Orbis*", "Reparifarge*", "Serpensortia"],
-      "3rd Level": ["Avis", "Evanesco", "Ignis Laquis*", "Melofors"],
-      "4th Level": ["Ebublio R", "Lapifors*"],
-      "5th Level": ["Draconifors", "Transmogrify"],
-      "6th Level": ["Ignis Furore"],
-    },
-  },
-  Elemental: {
-    icon: "Zap",
-    color: "#97C00C",
-    description: "Mastery over the elements",
-    levels: {
-      Cantrips: ["Incendio Ruptis*"],
-      "1st Level": ["Diffindo Glacia*", "Intonuit Fluctus*"],
-      "3rd Level": ["Fulgur*", "Respersio*"],
-      "4th Level": ["Glacius Maxima*"],
-      "8th Level": ["Tempestus*"],
-      "9th Level": ["Fulgur Maxima*"],
-    },
-  },
-  Valiant: {
-    icon: "Shield",
-    color: "#7A5E0D",
-    description: "Combat and valor magic",
-    levels: {
-      Cantrips: ["Magno*"],
-      "1st Level": [
-        "Clario*",
-        "Ignis Ictus*",
-        "Irus Ictus*",
-        "Pererro*",
-        "Tonitrus Ictus*",
+      "2nd Level": [
+        {
+          name: "Incarcerous",
+          level: "2nd Level",
+          tags: ["R"],
+          description: "Rope binding",
+        },
+        {
+          name: "Orbis",
+          level: "2nd Level",
+          restriction: true,
+          description: "Orb creation",
+        },
+        {
+          name: "Reparifarge",
+          level: "2nd Level",
+          restriction: true,
+          description: "Untransfiguration",
+        },
+        {
+          name: "Serpensortia",
+          level: "2nd Level",
+          description: "Snake conjuration",
+        },
       ],
-      "2nd Level": ["Notam Ictus*"],
-      "3rd Level": ["Inanus Ictus*"],
-      "4th Level": ["Titubo Ictus*"],
-      "5th Level": ["Clario Maxima*"],
+      "3rd Level": [
+        { name: "Avis", level: "3rd Level", description: "Bird conjuration" },
+        {
+          name: "Evanesco",
+          level: "3rd Level",
+          description: "Vanishing spell",
+        },
+        {
+          name: "Ignis Laquis",
+          level: "3rd Level",
+          restriction: true,
+          description: "Fire rope",
+        },
+        {
+          name: "Melofors",
+          level: "3rd Level",
+          description: "Pumpkin head jinx",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Ebublio",
+          level: "4th Level",
+          tags: ["R"],
+          description: "Bubble creation",
+        },
+        {
+          name: "Lapifors",
+          level: "4th Level",
+          restriction: true,
+          description: "Rabbit transformation",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Draconifors",
+          level: "5th Level",
+          description: "Dragon transformation",
+        },
+        {
+          name: "Transmogrify",
+          level: "5th Level",
+          description: "Complete transformation",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Ignis Furore",
+          level: "6th Level",
+          description: "Raging fire",
+        },
+      ],
     },
   },
   Divinations: {
+    hasRestriction: false,
     icon: "Eye",
     color: "#D2C90C",
     description: "Sight beyond sight and knowledge magic",
     levels: {
-      Cantrips: ["Mumblio*", "Point Me", "Prior Incantato"],
+      Cantrips: [
+        {
+          name: "Mumblio",
+          level: "Cantrip",
+          restriction: true,
+          description: "Mumbling charm",
+        },
+        { name: "Point Me", level: "Cantrip", description: "Four-point spell" },
+        {
+          name: "Prior Incantato",
+          level: "Cantrip",
+          description: "Reveals last spell cast",
+        },
+      ],
       "1st Level": [
-        "Linguarium R",
-        "Luxus Manus R",
-        "Martem*",
-        "Motus Revelio",
-        "Specialis Revelio",
-        "Venenum Revelio R",
+        {
+          name: "Linguarium",
+          level: "1st Level",
+          tags: ["R"],
+          description: "Language comprehension",
+        },
+        {
+          name: "Luxus Manus",
+          level: "1st Level",
+          tags: ["R"],
+          description: "Hand of light",
+        },
+        {
+          name: "Martem",
+          level: "1st Level",
+          restriction: true,
+          description: "War sight",
+        },
+        {
+          name: "Motus Revelio",
+          level: "1st Level",
+          description: "Motion detection",
+        },
+        {
+          name: "Specialis Revelio",
+          level: "1st Level",
+          description: "Reveals magical properties",
+        },
+        {
+          name: "Venenum Revelio",
+          level: "1st Level",
+          tags: ["R"],
+          description: "Poison detection",
+        },
       ],
       "2nd Level": [
-        "Absconditus Revelio",
-        "Facultatem*",
-        "Inanimatus Revelio",
-        "Secundio",
+        {
+          name: "Absconditus Revelio",
+          level: "2nd Level",
+          description: "Reveals hidden objects",
+        },
+        {
+          name: "Facultatem",
+          level: "2nd Level",
+          restriction: true,
+          description: "Ability detection",
+        },
+        {
+          name: "Inanimatus Revelio",
+          level: "2nd Level",
+          description: "Inanimate detection",
+        },
+        {
+          name: "Secundio",
+          level: "2nd Level",
+          description: "Secondary sight",
+        },
       ],
       "3rd Level": [
-        "Annotatem",
-        "Legilimens*",
-        "Linguarium Maxima",
-        "Mumblio Maxima*",
-        "Revelio",
+        {
+          name: "Annotatem",
+          level: "3rd Level",
+          description: "Note-taking charm",
+        },
+        {
+          name: "Legilimens",
+          level: "3rd Level",
+          restriction: true,
+          description: "Mind reading",
+        },
+        {
+          name: "Linguarium Maxima",
+          level: "3rd Level",
+          description: "Enhanced language comprehension",
+        },
+        {
+          name: "Mumblio Maxima",
+          level: "3rd Level",
+          restriction: true,
+          description: "Enhanced mumbling",
+        },
+        {
+          name: "Revelio",
+          level: "3rd Level",
+          description: "General revealing charm",
+        },
       ],
       "4th Level": [
-        "Appare Vestigium R",
-        "Creatura Revelio",
-        "Homenum Revelio",
-        "Oculus Speculatem",
+        {
+          name: "Appare Vestigium",
+          level: "4th Level",
+          tags: ["R"],
+          description: "Tracking spell",
+        },
+        {
+          name: "Creatura Revelio",
+          level: "4th Level",
+          description: "Creature detection",
+        },
+        {
+          name: "Homenum Revelio",
+          level: "4th Level",
+          description: "Human detection",
+        },
+        {
+          name: "Oculus Speculatem",
+          level: "4th Level",
+          description: "Scrying eye",
+        },
       ],
-      "5th Level": ["Annotatem Maxima*", "Augurium R", "Mumblio Totalum R*"],
-      "6th Level": ["Invenire Viam*", "Verum Aspectum"],
-      "9th Level": ["Providentum*"],
+      "5th Level": [
+        {
+          name: "Annotatem Maxima",
+          level: "5th Level",
+          restriction: true,
+          description: "Superior note-taking",
+        },
+        {
+          name: "Augurium",
+          level: "5th Level",
+          tags: ["R"],
+          description: "Divination spell",
+        },
+        {
+          name: "Mumblio Totalum",
+          level: "5th Level",
+          tags: ["R"],
+          restriction: true,
+          description: "Total mumbling",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Invenire Viam",
+          level: "6th Level",
+          restriction: true,
+          description: "Path finding",
+        },
+        {
+          name: "Verum Aspectum",
+          level: "6th Level",
+          description: "True sight",
+        },
+      ],
+      "9th Level": [
+        {
+          name: "Providentum",
+          level: "9th Level",
+          restriction: true,
+          description: "Providence spell",
+        },
+      ],
+    },
+  },
+  Elemental: {
+    hasRestriction: true,
+    icon: "Zap",
+    color: "#97C00C",
+    description: "Mastery over the elements",
+    levels: {
+      Cantrips: [
+        {
+          name: "Incendio Ruptis",
+          level: "Cantrip",
+          restriction: true,
+          description: "Enhanced fire spell with explosive properties",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Diffindo Glacia",
+          level: "1st Level",
+          restriction: true,
+          description:
+            "Ice-cutting spell that combines slicing and freezing effects",
+        },
+        {
+          name: "Intonuit Fluctus",
+          level: "1st Level",
+          restriction: true,
+          description: "Thunder wave spell",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Fulgur",
+          level: "3rd Level",
+          restriction: true,
+          description: "Lightning spell",
+        },
+        {
+          name: "Respersio",
+          level: "3rd Level",
+          restriction: true,
+          description: "Elemental spray or splash spell",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Glacius Maxima",
+          level: "4th Level",
+          restriction: true,
+          description:
+            "Enhanced version of Glacius with greater freezing power",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Tempestus",
+          level: "8th Level",
+          restriction: true,
+          description: "Storm conjuration spell",
+        },
+      ],
+      "9th Level": [
+        {
+          name: "Fulgur Maxima",
+          level: "9th Level",
+          restriction: true,
+          description: "Maximum power lightning spell",
+        },
+      ],
+    },
+  },
+  Valiant: {
+    hasRestriction: true,
+    icon: "Shield",
+    color: "#7A5E0D",
+    description: "Combat and valor magic",
+    levels: {
+      Cantrips: [
+        {
+          name: "Magno",
+          level: "Cantrip",
+          restriction: true,
+          description: "Magnification or enhancement spell",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Clario",
+          level: "1st Level",
+          restriction: true,
+          description: "Clarity or illumination spell for combat",
+        },
+        {
+          name: "Ignis Ictus",
+          level: "1st Level",
+          restriction: true,
+          description: "Fire strike spell",
+        },
+        {
+          name: "Irus Ictus",
+          level: "1st Level",
+          restriction: true,
+          description: "Anger strike spell",
+        },
+        {
+          name: "Pererro",
+          level: "1st Level",
+          restriction: true,
+          description: "Wandering or erratic movement spell",
+        },
+        {
+          name: "Tonitrus Ictus",
+          level: "1st Level",
+          restriction: true,
+          description: "Thunder strike spell",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Notam Ictus",
+          level: "2nd Level",
+          restriction: true,
+          description: "Mark strike spell",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Inanus Ictus",
+          level: "3rd Level",
+          restriction: true,
+          description: "Void or empty strike spell",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Titubo Ictus",
+          level: "4th Level",
+          restriction: true,
+          description: "Staggering strike spell",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Clario Maxima",
+          level: "5th Level",
+          restriction: true,
+          description: "Maximum clarity spell for combat enhancement",
+        },
+      ],
     },
   },
   Healing: {
+    hasRestriction: false,
     icon: "Heart",
     color: "#F31717",
     description: "Restoration and medical magic",
     levels: {
-      Cantrips: ["Anapneo*", "Rennervate"],
-      "1st Level": ["Episkey", "Ferula", "Reparifors"],
-      "2nd Level": ["Adversus Interitus R*"],
-      "3rd Level": ["Aculeo Sanentur*", "Animatem*", "Intus Sunt R*"],
-      "4th Level": ["Brackium Emendo"],
-      "5th Level": ["Pervivo*"],
-      "6th Level": ["Vulnera Sanentur*"],
+      Cantrips: [
+        {
+          name: "Anapneo",
+          level: "Cantrip",
+          restriction: true,
+          description: "Clears breathing passages and airways",
+        },
+        {
+          name: "Rennervate",
+          level: "Cantrip",
+          description: "Revives unconscious persons",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Episkey",
+          level: "1st Level",
+          description: "Heals minor injuries",
+        },
+        {
+          name: "Ferula",
+          level: "1st Level",
+          description: "Conjures bandages and splints",
+        },
+        {
+          name: "Reparifors",
+          level: "1st Level",
+          description: "Heals magical transformations",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Adversus Interitus",
+          level: "2nd Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Protection against death",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Aculeo Sanentur",
+          level: "3rd Level",
+          restriction: true,
+          description: "Heals puncture wounds and stings",
+        },
+        {
+          name: "Animatem",
+          level: "3rd Level",
+          restriction: true,
+          description: "Restores life force or animation",
+        },
+        {
+          name: "Intus Sunt",
+          level: "3rd Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Internal healing spell",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Brackium Emendo",
+          level: "4th Level",
+          description: "Mends broken bones",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Pervivo",
+          level: "5th Level",
+          restriction: true,
+          description: "Survival or life extension spell",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Vulnera Sanentur",
+          level: "6th Level",
+          restriction: true,
+          description: "Heals serious wounds and cuts",
+        },
+      ],
       "7th Level": [],
     },
   },
   Magizoo: {
+    hasRestriction: false,
     icon: "PawPrint",
     color: "#E6A327",
     description: "Beast and creature magic",
     levels: {
-      Cantrips: ["Insectum*"],
-      "1st Level": ["Beastia Vinculum*", "Beastia Amicatum*"],
-      "2nd Level": ["Beastia Nuntium R*", "Beastia Sensibus R*"],
-      "3rd Level": ["Obtestor*"],
-      "4th Level": ["Imperio Creatura*", "Engorgio Insectum*"],
-      "5th Level": ["Insectum Maxima*"],
-      "6th Level": ["Natura Incantatem R*"],
-      "7th Level": ["Draconiverto*"],
-      "8th Level": ["Animato Maxima*"],
+      Cantrips: [
+        {
+          name: "Insectum",
+          level: "Cantrip",
+          restriction: true,
+          description: "Insect control or summoning spell",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Beastia Vinculum",
+          level: "1st Level",
+          restriction: true,
+          description: "Creates a bond with beasts",
+        },
+        {
+          name: "Beastia Amicatum",
+          level: "1st Level",
+          restriction: true,
+          description: "Befriends beasts and creatures",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Beastia Nuntium",
+          level: "2nd Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Allows communication with beasts",
+        },
+        {
+          name: "Beastia Sensibus",
+          level: "2nd Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Shares senses with beasts",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Obtestor",
+          level: "3rd Level",
+          restriction: true,
+          description: "Implores or commands creatures",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Imperio Creatura",
+          level: "4th Level",
+          restriction: true,
+          description: "Commands creatures (creature-specific Imperius)",
+        },
+        {
+          name: "Engorgio Insectum",
+          level: "4th Level",
+          restriction: true,
+          description: "Enlarges insects to massive size",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Insectum Maxima",
+          level: "5th Level",
+          restriction: true,
+          description: "Maximum insect control or summoning",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Natura Incantatem",
+          level: "6th Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Enchants nature itself",
+        },
+      ],
+      "7th Level": [
+        {
+          name: "Draconiverto",
+          level: "7th Level",
+          restriction: true,
+          description: "Dragon transformation or control",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Animato Maxima",
+          level: "8th Level",
+          restriction: true,
+          description: "Maximum animation of creatures",
+        },
+      ],
     },
   },
   Grim: {
+    hasRestriction: true,
     icon: "Skull",
     color: "#F17FF1",
     description: "Dark and fear magic",
     levels: {
-      Cantrips: ["Ignis Lunalis*", "Fraudemo*"],
-      "1st Level": ["Formidulosus*"],
-      "2nd Level": ["Exspiravit*"],
-      "3rd Level": ["Fraudemo Maxima*", "Timor"],
-      "4th Level": ["Relicuum R*"],
-      "6th Level": ["Oculus Malus*"],
-      "9th Level": ["Menus Eruptus*"],
+      Cantrips: [
+        {
+          name: "Ignis Lunalis",
+          level: "Cantrip",
+          restriction: true,
+          description: "Moonfire or eerie flame spell",
+        },
+        {
+          name: "Fraudemo",
+          level: "Cantrip",
+          restriction: true,
+          description: "Deception or illusion spell",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Formidulosus",
+          level: "1st Level",
+          restriction: true,
+          description: "Induces fear and dread",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Exspiravit",
+          level: "2nd Level",
+          restriction: true,
+          description: "Expiration or breath-stealing spell",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Fraudemo Maxima",
+          level: "3rd Level",
+          restriction: true,
+          description: "Enhanced deception spell",
+        },
+        {
+          name: "Timor",
+          level: "3rd Level",
+          description: "Fear spell",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Relicuum",
+          level: "4th Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Relic or remnant spell",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Oculus Malus",
+          level: "6th Level",
+          restriction: true,
+          description: "Evil eye curse",
+        },
+      ],
+      "9th Level": [
+        {
+          name: "Menus Eruptus",
+          level: "9th Level",
+          restriction: true,
+          description: "Mind eruption or mental explosion spell",
+        },
+      ],
+    },
+  },
+  Forbidden: {
+    hasRestriction: true,
+    icon: "Ban",
+    color: "#000000",
+    description: "Dangerous and forbidden magic",
+    levels: {
+      Cantrips: [
+        {
+          name: "Ferio",
+          level: "Cantrip",
+          restriction: true,
+          description: "Strike or wound spell",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Tenebris",
+          level: "1st Level",
+          restriction: true,
+          description: "Darkness spell",
+        },
+        {
+          name: "Ferio Maxima",
+          level: "1st Level",
+          restriction: true,
+          description: "Enhanced wounding spell",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Sagittario Virius",
+          level: "2nd Level",
+          restriction: true,
+          description: "Poisoned arrow spell",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Gehennus Conjurus",
+          level: "3rd Level",
+          restriction: true,
+          description: "Conjures hellish flames",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Combustio",
+          level: "5th Level",
+          restriction: true,
+          description: "Spontaneous combustion spell",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Inmoritatem",
+          level: "6th Level",
+          restriction: true,
+          description: "Immortality or undeath spell",
+        },
+        {
+          name: "Undanem",
+          level: "6th Level",
+          restriction: true,
+          description: "Wave or flood spell",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Tenebris Maxima",
+          level: "8th Level",
+          restriction: true,
+          description: "Maximum darkness spell",
+        },
+        {
+          name: "Insanio",
+          level: "8th Level",
+          restriction: true,
+          description: "Madness spell",
+        },
+      ],
+    },
+  },
+  Ancient: {
+    hasRestriction: true,
+    icon: "Scroll",
+    color: "#941212",
+    description: "Lost and ancient magics",
+    levels: {
+      Cantrips: [
+        {
+          name: "Utilitatem",
+          level: "Cantrip",
+          restriction: true,
+          description: "Utility or usefulness spell",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Facias Infirmitatem",
+          level: "1st Level",
+          restriction: true,
+          description: "Causes weakness or infirmity",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Exagitatus",
+          level: "2nd Level",
+          restriction: true,
+          description: "Agitation or disturbance spell",
+        },
+        {
+          name: "Impulso",
+          level: "2nd Level",
+          restriction: true,
+          description: "Impulse or driving force spell",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Maledicto",
+          level: "4th Level",
+          restriction: true,
+          description: "Curse or malediction spell",
+        },
+        {
+          name: "Sagittario Maxima",
+          level: "4th Level",
+          restriction: true,
+          description: "Maximum arrow spell",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Sanitatem",
+          level: "6th Level",
+          restriction: true,
+          description: "Health or sanity spell",
+        },
+      ],
+      "7th Level": [
+        {
+          name: "Portentia Spiculum",
+          level: "7th Level",
+          restriction: true,
+          description: "Portent spike or omen dart spell",
+        },
+      ],
+    },
+  },
+  Astronomic: {
+    hasRestriction: true,
+    icon: "Moon",
+    color: "#0E48D8",
+    description: "Celestial and stellar magic",
+    levels: {
+      Cantrips: [
+        {
+          name: "Lux",
+          level: "Cantrip",
+          restriction: true,
+          description: "Light spell with celestial properties",
+        },
+        {
+          name: "Ignis Lunalis",
+          level: "Cantrip",
+          restriction: true,
+          description: "Moonfire spell",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Lux Maxima",
+          level: "1st Level",
+          restriction: true,
+          description: "Maximum celestial light",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Trabem",
+          level: "2nd Level",
+          restriction: true,
+          description: "Beam or ray spell",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Stellaro",
+          level: "3rd Level",
+          restriction: true,
+          description: "Star-based spell",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Lunativia",
+          level: "5th Level",
+          restriction: true,
+          description: "Lunar path or moon magic",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Solativia",
+          level: "8th Level",
+          restriction: true,
+          description: "Solar path or sun magic",
+        },
+      ],
+    },
+  },
+  "Prof. Charms": {
+    hasRestriction: true,
+    icon: "GraduationCap",
+    color: "#51DDF6",
+    description: "Professional and advanced charm work",
+    levels: {
+      "1st Level": [
+        {
+          name: "Diffindo",
+          level: "1st Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Professional version of the cutting spell",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Immobulus",
+          level: "2nd Level",
+          restriction: true,
+          description: "Professional version of the freezing spell",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Deprimo",
+          level: "3rd Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Depression or lowering spell",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Confundo",
+          level: "4th Level (ritual)",
+          restriction: true,
+          tags: ["R"],
+          description: "Professional version of the confusion charm",
+        },
+      ],
+      "5th Level": [],
     },
   },
 };
-// Forbidden #000000
-// Ancient #941212
-// Astro #0E48D8
-
 export const INDIVIDUAL_SPELL_MODIFIERS = {
   "Ferio*": SCHOOL_TO_MODIFIER_MAP.jhc,
   "Tenebris*": SCHOOL_TO_MODIFIER_MAP.jhc,

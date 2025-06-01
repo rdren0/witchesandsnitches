@@ -8,12 +8,12 @@ import {
   ChevronUp,
   Swords,
 } from "lucide-react";
-import { rollDice } from "../../App/diceRoller";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
+import { useRollFunctions } from "../../App/diceRoller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -24,6 +24,8 @@ const CharacterSheet = ({
   characters,
   className = "",
 }) => {
+  const { rollInitiative } = useRollFunctions();
+
   const { theme } = useTheme();
   const styles = createThemedStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
@@ -34,65 +36,6 @@ const CharacterSheet = ({
 
   const [characterLoading, setCharacterLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const rollInitiative = async () => {
-    if (isRolling) return;
-
-    setIsRolling(true);
-
-    try {
-      const diceResult = rollDice();
-      const d20Roll = diceResult.total;
-      const mod = characterModifiers.dexterity;
-      const total = d20Roll + mod;
-
-      let embedColor = 0x107319;
-
-      const message = {
-        embeds: [
-          {
-            title: `${character.name} Rolled Initiative`,
-            description: "",
-            color: embedColor,
-            fields: [
-              {
-                name: "Roll Details",
-                value: `Roll: ${d20Roll} ${
-                  mod >= 0 ? "+" : ""
-                }${mod} = **${total}**`,
-                inline: false,
-              },
-            ],
-            footer: {
-              text: `Witches and Snitches- Initiative • Today at ${new Date().toLocaleTimeString(
-                [],
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              )}`,
-            },
-          },
-        ],
-      };
-
-      if (discordWebhookUrl) {
-        await fetch(discordWebhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(message),
-        });
-      }
-      alert(`Rolled Initiative: d20(${d20Roll}) + ${mod} = ${total}`);
-    } catch (error) {
-      console.error("Error sending Discord message:", error);
-      alert("Failed to send roll to Discord");
-    } finally {
-      setIsRolling(false);
-    }
-  };
 
   useEffect(() => {
     const fetchCharacterDetails = async () => {
@@ -192,111 +135,6 @@ const CharacterSheet = ({
     });
 
     return skills;
-  };
-
-  const calculateSkillBonus = (skillName, abilityMod) => {
-    if (!character) return 0;
-    const isProficient = character.skills?.[skillName] || false;
-    const profBonus = isProficient ? character.proficiencyBonus : 0;
-    return abilityMod + profBonus;
-  };
-
-  const rollSkill = async (skill, abilityMod) => {
-    if (isRolling) return;
-
-    setIsRolling(true);
-
-    try {
-      const diceResult = rollDice();
-      const d20Roll = diceResult.total;
-      const skillBonus = calculateSkillBonus(skill.name, abilityMod);
-      const total = d20Roll + skillBonus;
-      const isProficient = character.skills?.[skill.name] || false;
-
-      const isCriticalSuccess = d20Roll === 20;
-      const isCriticalFailure = d20Roll === 1;
-
-      let embedColor = 0x6600cc;
-      let resultText = "";
-
-      if (isCriticalSuccess) {
-        embedColor = 0xffd700;
-        resultText = " - **CRITICAL SUCCESS!** 🎉";
-      } else if (isCriticalFailure) {
-        embedColor = 0xff0000;
-        resultText = " - **CRITICAL FAILURE!** 💥";
-      }
-
-      const message = {
-        embeds: [
-          {
-            title: `${character.name} Attempted: ${skill.displayName}${resultText}`,
-            description: `1d20: [${d20Roll}] = ${d20Roll}${
-              isCriticalSuccess
-                ? " (Natural 20!)"
-                : isCriticalFailure
-                ? " (Natural 1!)"
-                : ""
-            }`,
-            color: embedColor,
-            fields: [
-              {
-                name: "Roll Details",
-                value: `Roll: ${d20Roll} ${
-                  skillBonus >= 0 ? "+" : ""
-                }${skillBonus} = **${total}**${
-                  isCriticalSuccess
-                    ? "\n✨ **Exceptional success regardless of DC!**"
-                    : isCriticalFailure
-                    ? "\n💀 **Spectacular failure regardless of modifier!**"
-                    : ""
-                }${
-                  isProficient
-                    ? `\n🎯 **Proficient** (+${character.proficiencyBonus} bonus included)`
-                    : ""
-                }`,
-                inline: false,
-              },
-            ],
-            footer: {
-              text: `${
-                character.house
-              } - Skill Check • Today at ${new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}`,
-            },
-          },
-        ],
-      };
-
-      if (discordWebhookUrl) {
-        await fetch(discordWebhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(message),
-        });
-      } else {
-        const criticalText = isCriticalSuccess
-          ? " - CRITICAL SUCCESS!"
-          : isCriticalFailure
-          ? " - CRITICAL FAILURE!"
-          : "";
-        const profText = isProficient
-          ? ` (Proficient +${character.proficiencyBonus})`
-          : "";
-        alert(
-          `${skill.displayName} Check: d20(${d20Roll}) + ${skillBonus} = ${total}${criticalText}${profText}`
-        );
-      }
-    } catch (error) {
-      console.error("Error sending Discord message:", error);
-      alert("Failed to send roll to Discord");
-    } finally {
-      setIsRolling(false);
-    }
   };
 
   if (error) {
@@ -433,7 +271,15 @@ const CharacterSheet = ({
                   });
                 }}
                 style={{ ...styles.statCard, ...styles.statCardGreen }}
-                onClick={() => !isRolling && rollInitiative()}
+                onClick={() =>
+                  !isRolling &&
+                  rollInitiative({
+                    character,
+                    isRolling,
+                    setIsRolling,
+                    characterModifiers,
+                  })
+                }
               >
                 <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
@@ -457,7 +303,6 @@ const CharacterSheet = ({
             discordUserId={discordUserId}
             setCharacter={setCharacter}
             selectedCharacterId={selectedCharacter.id}
-            rollSkill={rollSkill}
             isRolling={isRolling}
             modifiers={modifiers(character)}
           />

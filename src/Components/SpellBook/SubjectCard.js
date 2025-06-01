@@ -18,16 +18,11 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  spellsData,
-  INDIVIDUAL_SPELL_MODIFIERS,
-  TRADITIONAL_SCHOOL_MAPPINGS,
-  // SPELL_DESCRIPTIONS,
-} from "./spells";
-import { getModifierInfo, getSpellModifier } from "./utils";
-import { rollDice } from "../../App/diceRoller";
+import { spellsData } from "./spells";
+import { getSpellModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedSpellBookStyles } from "./styles";
+import { useRollFunctions } from "../../App/diceRoller";
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -39,6 +34,10 @@ const getIcon = (iconName) => {
     Heart: Heart,
     PawPrint: Squirrel,
     Skull: Skull,
+    GraduationCap: BookOpen,
+    Moon: Eye,
+    Ban: Skull,
+    Scroll: BookOpen,
   };
   return iconMap[iconName] || Star;
 };
@@ -61,17 +60,18 @@ export const SubjectCard = ({
   supabase,
   user,
 }) => {
+  const { attemptSpell } = useRollFunctions();
   const { theme } = useTheme();
   const styles = createThemedSpellBookStyles(theme);
   const [attemptingSpells, setAttemptingSpells] = useState({});
-
   const [openMenus, setOpenMenus] = useState({});
   const [editingSpell, setEditingSpell] = useState(null);
   const [editFormData, setEditFormData] = useState({
     successfulAttempts: 0,
     hasCriticalSuccess: false,
   });
-  // const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+
   const getSubjectStats = (subject) => {
     const levels = spellsData[subject].levels;
     const totalSpells = Object.values(levels).reduce(
@@ -80,15 +80,17 @@ export const SubjectCard = ({
     );
     const masteredSpells = Object.values(levels)
       .flat()
-      .filter((spell) => {
-        const attempts = spellAttempts?.[spell] ?? {};
+      .filter((spellObj) => {
+        const spellName = spellObj.name;
+        const attempts = spellAttempts?.[spellName] ?? {};
         return Object.values(attempts).filter(Boolean).length >= 2;
       }).length;
 
     const attemptedSpells = Object.values(levels)
       .flat()
-      .filter((spell) => {
-        const attempts = spellAttempts[spell] || {};
+      .filter((spellObj) => {
+        const spellName = spellObj.name;
+        const attempts = spellAttempts[spellName] || {};
         return (
           Object.keys(attempts).length > 0 ||
           Object.values(attempts).filter(Boolean).length > 0
@@ -97,27 +99,10 @@ export const SubjectCard = ({
 
     return { totalSpells, masteredSpells, attemptedSpells };
   };
+
   const Icon = getIcon(subjectData.icon);
   const stats = getSubjectStats(subjectName);
   const isExpanded = expandedSubjects[subjectName];
-  // const getSpellDescription = (spellName) => {
-  //   return SPELL_DESCRIPTIONS[spellName] || null;
-  // };
-
-  // const formatSpellDescription = (description) => {
-  //   if (!description) return null;
-
-  //   const lines = description.split("\n");
-  //   const spellName = lines[0];
-  //   const subtitle = lines[1] || "";
-  //   const details = lines.slice(2).join("\n").trim();
-
-  //   return {
-  //     name: spellName,
-  //     subtitle: subtitle,
-  //     details: details,
-  //   };
-  // };
 
   const generateLevelColor = (baseColor, level) => {
     const hex = baseColor.replace("#", "");
@@ -168,8 +153,8 @@ export const SubjectCard = ({
     };
   };
 
-  const getSuccessfulAttempts = (spell) => {
-    const attempts = spellAttempts[spell] || {};
+  const getSuccessfulAttempts = (spellName) => {
+    const attempts = spellAttempts[spellName] || {};
     return Object.values(attempts).filter(Boolean).length;
   };
 
@@ -292,91 +277,20 @@ export const SubjectCard = ({
     }));
   };
 
-  const attemptSpell = async (spellName, subject) => {
-    if (!selectedCharacter || !discordUserId) {
-      alert("Please select a character first!");
-      return;
-    }
-
-    setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
-
-    try {
-      const rollResult = rollDice();
-      const totalModifier = getSpellModifier(
-        spellName,
-        subject,
-        selectedCharacter
-      );
-      const modifiedTotal = rollResult.total + totalModifier;
-
-      const isNaturalTwenty = rollResult.total === 20;
-      const isNaturalOne = rollResult.total === 1;
-      const isSuccess =
-        (modifiedTotal >= 11 || isNaturalTwenty) && !isNaturalOne;
-
-      await saveSpellAttempt(
-        spellName,
-        subject,
-        rollResult.total,
-        isSuccess,
-        isNaturalTwenty,
-        isNaturalOne,
-        totalModifier,
-        modifiedTotal
-      );
-
-      if (isNaturalTwenty) {
-        setSpellAttempts((prev) => ({
-          ...prev,
-          [spellName]: { 1: true, 2: true },
-        }));
-        setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
-      } else if (isSuccess) {
-        setSpellAttempts((prev) => {
-          const currentAttempts = prev[spellName] || {};
-          const newAttempts = { ...currentAttempts };
-
-          if (!newAttempts[1]) {
-            newAttempts[1] = true;
-          } else if (!newAttempts[2]) {
-            newAttempts[2] = true;
-          }
-
-          return {
-            ...prev,
-            [spellName]: newAttempts,
-          };
-        });
-      }
-
-      await sendToDiscord(
-        spellName,
-        rollResult,
-        isSuccess,
-        isNaturalTwenty,
-        isNaturalOne,
-        totalModifier,
-        modifiedTotal,
-        subject
-      );
-
-      if (isSuccess) {
-        await updateSpellProgressSummary(spellName, isNaturalTwenty);
-      }
-    } catch (error) {
-      console.error("Error attempting spell:", error);
-      alert("Error processing spell attempt. Please try again.");
-    } finally {
-      setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
-    }
-  };
-
   const toggleSubject = (subjectName) => {
     setExpandedSubjects((prev) => ({
       ...prev,
       [subjectName]: !prev[subjectName],
     }));
   };
+
+  const toggleDescription = (spellName) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [spellName]: !prev[spellName],
+    }));
+  };
+
   useEffect(() => {
     if (selectedCharacter && discordUserId) {
       loadSpellProgress();
@@ -466,6 +380,7 @@ export const SubjectCard = ({
   const closeAllMenus = () => {
     setOpenMenus({});
   };
+
   const loadSpellProgress = async () => {
     if (!selectedCharacter || !discordUserId) {
       return;
@@ -508,206 +423,33 @@ export const SubjectCard = ({
     }
   };
 
-  const sendToDiscord = async (
-    spellName,
-    rollResult,
-    isSuccess,
-    isNaturalTwenty = false,
-    isNaturalOne = false,
-    totalModifier = 0,
-    modifiedTotal = 0,
-    subject = ""
-  ) => {
-    const webhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
-
-    if (!webhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
-
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Attempted: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
-    if (isNaturalTwenty) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Attempted: ${spellName}`;
-      resultText = `**${rollResult.total}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700;
-    } else if (isNaturalOne) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Attempted: ${spellName}`;
-      resultText = `**${rollResult.total}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
-    }
-
-    let rollDescription = `**Roll:** ${rollResult.total}`;
-    if (totalModifier !== 0) {
-      const modifierText =
-        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-      rollDescription += ` ${modifierText} = **${modifiedTotal}**`;
-    }
-
-    const fields = [
-      {
-        name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
-        inline: true,
-      },
-      {
-        name: "Player",
-        value:
-          customUsername ?? user?.user_metadata?.full_name ?? "Unknown Player",
-        inline: true,
-      },
-    ];
-
-    if (totalModifier !== 0 && selectedCharacter) {
-      const modifierInfo = getModifierInfo(
-        spellName,
-        subject,
-        selectedCharacter
-      );
-
-      let modifierBreakdown = `**${modifierInfo.source}**\n`;
-      modifierBreakdown += `${modifierInfo.abilityName}: ${
-        modifierInfo.abilityModifier >= 0 ? "+" : ""
-      }${modifierInfo.abilityModifier}`;
-      if (modifierInfo.wandModifier !== 0) {
-        modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-          modifierInfo.wandModifier >= 0 ? "+" : ""
-        }${modifierInfo.wandModifier}`;
-      }
-      modifierBreakdown += `\n**Total: ${
-        totalModifier >= 0 ? "+" : ""
-      }${totalModifier}**`;
-
-      fields.push({
-        name: "Modifier Breakdown",
-        value: modifierBreakdown,
-        inline: false,
-      });
-    }
-
-    const embed = {
-      title: title,
-      description: rollResult.output,
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Spellcasting",
-      },
-    };
-
-    try {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
-    }
-  };
-
-  const saveSpellAttempt = async (
-    spellName,
-    subject,
-    rollResult,
-    isSuccess,
-    isNaturalTwenty = false,
-    isNaturalOne = false,
-    totalModifier = 0,
-    modifiedTotal = 0
-  ) => {
-    if (!selectedCharacter || !discordUserId) return;
-
-    try {
-      const modifierInfo = getModifierInfo(
-        spellName,
-        subject,
-        selectedCharacter
-      );
-
-      const { error } = await supabase.from("spell_attempts").insert([
-        {
-          character_id: selectedCharacter.id,
-          discord_user_id: discordUserId,
-          spell_name: spellName,
-          spell_subject: subject,
-          roll_result: rollResult,
-          modified_total: modifiedTotal,
-          total_modifier: totalModifier,
-          is_success: isSuccess,
-          is_natural_twenty: isNaturalTwenty,
-          is_natural_one: isNaturalOne,
-
-          modifier_source: INDIVIDUAL_SPELL_MODIFIERS[spellName]
-            ? "individual"
-            : TRADITIONAL_SCHOOL_MAPPINGS[subject]
-            ? "school"
-            : "category",
-          ability_used: modifierInfo.abilityName.toLowerCase(),
-          wand_modifier_used: modifierInfo.wandType.toLowerCase(),
-          ability_modifier: modifierInfo.abilityModifier,
-          wand_modifier_value: modifierInfo.wandModifier,
-        },
-      ]);
-
-      if (error) {
-        console.error("Error saving spell attempt:", error);
-        throw error;
-      }
-
-      await loadSpellProgress();
-    } catch (error) {
-      console.error("Error saving spell attempt:", error);
-    }
-  };
-
   const renderSection = (subject, level, spells, subjectColor) => {
     const isExpanded = expandedSections[`${subject}-${level}`];
     const levelColor = generateLevelColor(subjectColor, level);
     const masteredCount = spells.filter(
-      (spell) => getSuccessfulAttempts(spell) >= 2
+      (spellObj) => getSuccessfulAttempts(spellObj.name) >= 2
     ).length;
     const progressPercentage = (masteredCount / spells.length) * 100;
 
-    const renderSpellRow = (spell, index, subject) => {
-      const attempts = spellAttempts[spell] || {};
-      const successCount = getSuccessfulAttempts(spell);
-      const hasCriticalSuccess = criticalSuccesses[spell] || false;
+    const renderSpellRow = (spellObj, index, subject) => {
+      const spellName = spellObj.name;
+      const attempts = spellAttempts[spellName] || {};
+      const successCount = getSuccessfulAttempts(spellName);
+      const hasCriticalSuccess = criticalSuccesses[spellName] || false;
       const isMastered = successCount >= 2;
-      const isSpecial = spell.includes("*");
-      const isAttempting = attemptingSpells[spell];
+      const isRestricted = spellObj.restriction || false;
+      const isAttempting = attemptingSpells[spellName];
       const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
-      // const spellDescription = getSpellDescription(spell);
-      // const formattedDescription = spellDescription
-      //   ? formatSpellDescription(spellDescription)
-      //   : null;
+      const isDescriptionExpanded = expandedDescriptions[spellName];
 
-      return (
+      const mainRow = (
         <tr
-          key={spell}
+          key={spellName}
           style={{
             ...styles.tableRow,
             ...(isMastered ? styles.tableRowMastered : {}),
             ...(hasAttempts && !isMastered
-              ? { backgroundColor: "#f8fafc" }
+              ? { backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc" }
               : {}),
           }}
           onMouseEnter={(e) => {
@@ -718,7 +460,9 @@ export const SubjectCard = ({
           onMouseLeave={(e) => {
             if (!isMastered) {
               e.target.style.backgroundColor = hasAttempts
-                ? "#f8fafc"
+                ? theme === "dark"
+                  ? "#1f2937"
+                  : "#f8fafc"
                 : "transparent";
             }
           }}
@@ -734,38 +478,43 @@ export const SubjectCard = ({
                     isMastered ? styles.spellNameMastered : styles.spellName
                   }
                 >
-                  {spell}
+                  {spellName}
                 </span>
-                {isSpecial && (
+                {isRestricted && (
                   <Star
                     size={16}
                     color="#eab308"
-                    title="Special/Advanced Spell"
+                    title="Restricted/Advanced Spell"
                   />
                 )}
-                {/* {formattedDescription && (
+                {spellObj.description && (
                   <button
-                    onClick={() =>
-                      setIsDescriptionExpanded(!isDescriptionExpanded)
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleDescription(spellName);
+                    }}
                     style={{
                       background: "none",
-                      border: "1px solid #3b82f6",
-                      borderRadius: "4px",
-                      color: "#3b82f6",
-                      padding: "2px 6px",
-                      fontSize: "12px",
+                      border: "none",
                       cursor: "pointer",
+                      padding: "2px",
                       display: "flex",
                       alignItems: "center",
-                      gap: "2px",
+                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
                     }}
-                    title="View spell description"
+                    title={
+                      isDescriptionExpanded
+                        ? "Hide description"
+                        : "Show description"
+                    }
                   >
-                    <BookOpen size={12} />
-                    {isDescriptionExpanded ? "Hide" : "Info"}
+                    {isDescriptionExpanded ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
                   </button>
-                )} */}
+                )}
               </div>
 
               {hasCriticalSuccess && (
@@ -804,45 +553,6 @@ export const SubjectCard = ({
                   Attempted
                 </span>
               )}
-
-              {/* Spell Description
-              {isDescriptionExpanded && formattedDescription && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    padding: "12px",
-                    backgroundColor: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "6px",
-                    fontSize: "13px",
-                    lineHeight: "1.4",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: "bold",
-                      color: "#1e40af",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {formattedDescription.name}
-                  </div>
-                  {formattedDescription.subtitle && (
-                    <div
-                      style={{
-                        fontStyle: "italic",
-                        color: "#6b7280",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      {formattedDescription.subtitle}
-                    </div>
-                  )}
-                  <div style={{ whiteSpace: "pre-line", color: "#374151" }}>
-                    {formattedDescription.details}
-                  </div>
-                </div>
-              )} */}
             </div>
           </td>
           <td style={styles.tableCell}>
@@ -911,7 +621,19 @@ export const SubjectCard = ({
           </td>
           <td style={{ ...styles.tableCell, textAlign: "center" }}>
             <button
-              onClick={() => attemptSpell(spell, subject)}
+              onClick={() =>
+                attemptSpell({
+                  spellName,
+                  subject,
+                  getSpellModifier,
+                  selectedCharacter,
+                  setSpellAttempts,
+                  discordUserId,
+                  setAttemptingSpells,
+                  setCriticalSuccesses,
+                  updateSpellProgressSummary,
+                })
+              }
               disabled={isAttempting || isMastered || !selectedCharacter}
               style={{
                 ...styles.attemptButton,
@@ -944,7 +666,7 @@ export const SubjectCard = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                toggleMenu(spell);
+                toggleMenu(spellName);
               }}
               style={{
                 background: "none",
@@ -957,23 +679,29 @@ export const SubjectCard = ({
                 justifyContent: "center",
               }}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#f3f4f6";
+                e.target.style.backgroundColor =
+                  theme === "dark" ? "#4b5563" : "#f3f4f6";
               }}
               onMouseLeave={(e) => {
                 e.target.style.backgroundColor = "transparent";
               }}
             >
-              <MoreVertical size={16} color="#6b7280" />
+              <MoreVertical
+                size={16}
+                color={theme === "dark" ? "#9ca3af" : "#6b7280"}
+              />
             </button>
 
-            {openMenus[spell] && (
+            {openMenus[spellName] && (
               <div
                 style={{
                   position: "absolute",
                   right: "0",
                   top: "100%",
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
+                  backgroundColor: theme === "dark" ? "#374151" : "white",
+                  border: `1px solid ${
+                    theme === "dark" ? "#4b5563" : "#e5e7eb"
+                  }`,
                   borderRadius: "8px",
                   boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   zIndex: 1000,
@@ -983,7 +711,7 @@ export const SubjectCard = ({
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  onClick={() => startEditing(spell)}
+                  onClick={() => startEditing(spellName)}
                   style={{
                     width: "100%",
                     padding: "8px 12px",
@@ -996,9 +724,11 @@ export const SubjectCard = ({
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
+                    color: theme === "dark" ? "#d1d5db" : "#374151",
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = "#f3f4f6";
+                    e.target.style.backgroundColor =
+                      theme === "dark" ? "#4b5563" : "#f3f4f6";
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.backgroundColor = "transparent";
@@ -1010,7 +740,7 @@ export const SubjectCard = ({
               </div>
             )}
 
-            {editingSpell === spell && (
+            {editingSpell === spellName && (
               <div
                 style={{
                   position: "fixed",
@@ -1028,7 +758,7 @@ export const SubjectCard = ({
               >
                 <div
                   style={{
-                    backgroundColor: "white",
+                    backgroundColor: theme === "dark" ? "#374151" : "white",
                     padding: "24px",
                     borderRadius: "12px",
                     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -1042,24 +772,26 @@ export const SubjectCard = ({
                       margin: "0 0 8px 0",
                       fontSize: "18px",
                       fontWeight: "600",
+                      color: theme === "dark" ? "#f9fafb" : "#1f2937",
                     }}
                   >
-                    Edit Progress: {spell}
+                    Edit Progress: {spellName}
                   </h3>
                   <p
                     style={{
                       margin: "0 0 16px 0",
                       fontSize: "14px",
-                      color: "#6b7280",
+                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
                     }}
                   >
                     Current:{" "}
                     {
-                      Object.values(spellAttempts[spell] || {}).filter(Boolean)
-                        .length
+                      Object.values(spellAttempts[spellName] || {}).filter(
+                        Boolean
+                      ).length
                     }{" "}
                     successful attempts
-                    {criticalSuccesses[spell] ? " (Critical Success)" : ""}
+                    {criticalSuccesses[spellName] ? " (Critical Success)" : ""}
                   </p>
 
                   <div style={{ marginBottom: "16px" }}>
@@ -1069,6 +801,7 @@ export const SubjectCard = ({
                         marginBottom: "8px",
                         fontSize: "14px",
                         fontWeight: "500",
+                        color: theme === "dark" ? "#f9fafb" : "#374151",
                       }}
                     >
                       Successful Attempts (0-2):
@@ -1092,12 +825,19 @@ export const SubjectCard = ({
                       style={{
                         width: "100%",
                         padding: "8px 12px",
-                        border: "2px solid #d1d5db",
+                        border: `2px solid ${
+                          theme === "dark" ? "#4b5563" : "#d1d5db"
+                        }`,
                         borderRadius: "6px",
                         fontSize: "14px",
                         backgroundColor: editFormData.hasCriticalSuccess
-                          ? "#f9fafb"
+                          ? theme === "dark"
+                            ? "#1f2937"
+                            : "#f9fafb"
+                          : theme === "dark"
+                          ? "#374151"
                           : "white",
+                        color: theme === "dark" ? "#f9fafb" : "#1f2937",
                         cursor: editFormData.hasCriticalSuccess
                           ? "not-allowed"
                           : "text",
@@ -1107,7 +847,7 @@ export const SubjectCard = ({
                       <p
                         style={{
                           fontSize: "12px",
-                          color: "#6b7280",
+                          color: theme === "dark" ? "#9ca3af" : "#6b7280",
                           marginTop: "4px",
                         }}
                       >
@@ -1123,6 +863,7 @@ export const SubjectCard = ({
                         alignItems: "center",
                         gap: "8px",
                         cursor: "pointer",
+                        color: theme === "dark" ? "#f9fafb" : "#374151",
                       }}
                     >
                       <input
@@ -1146,7 +887,7 @@ export const SubjectCard = ({
                     <p
                       style={{
                         fontSize: "12px",
-                        color: "#6b7280",
+                        color: theme === "dark" ? "#9ca3af" : "#6b7280",
                         marginTop: "4px",
                         marginLeft: "24px",
                       }}
@@ -1167,8 +908,11 @@ export const SubjectCard = ({
                       onClick={cancelEditing}
                       style={{
                         padding: "8px 16px",
-                        border: "2px solid #d1d5db",
-                        backgroundColor: "white",
+                        border: `2px solid ${
+                          theme === "dark" ? "#4b5563" : "#d1d5db"
+                        }`,
+                        backgroundColor: theme === "dark" ? "#374151" : "white",
+                        color: theme === "dark" ? "#f9fafb" : "#374151",
                         borderRadius: "6px",
                         cursor: "pointer",
                         fontSize: "14px",
@@ -1207,6 +951,95 @@ export const SubjectCard = ({
           </td>
         </tr>
       );
+
+      const descriptionRow =
+        isDescriptionExpanded && spellObj.description ? (
+          <tr key={`${spellName}-description`}>
+            <td colSpan="6" style={{ padding: "0", border: "none" }}>
+              <div
+                style={{
+                  margin: "0 16px 12px 16px",
+                  padding: "16px",
+                  backgroundColor: theme === "dark" ? "#374151" : "#f8fafc",
+                  border: `1px solid ${
+                    theme === "dark" ? "#4b5563" : "#e2e8f0"
+                  }`,
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  lineHeight: "1.5",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "600",
+                    color: theme === "dark" ? "#60a5fa" : "#1e40af",
+                    marginBottom: "8px",
+                    fontSize: "16px",
+                  }}
+                >
+                  {spellName}
+                </div>
+                <div
+                  style={{
+                    fontStyle: "italic",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    marginBottom: "12px",
+                    fontSize: "13px",
+                  }}
+                >
+                  {spellObj.level} •{" "}
+                  {spellObj.castingTime || "Unknown casting time"} • Range:{" "}
+                  {spellObj.range || "Unknown"} • Duration:{" "}
+                  {spellObj.duration || "Unknown"}
+                </div>
+                <div
+                  style={{
+                    whiteSpace: "pre-line",
+                    color: theme === "dark" ? "#d1d5db" : "#374151",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {spellObj.description}
+                </div>
+                {spellObj.higherLevels && (
+                  <div
+                    style={{
+                      marginBottom: "12px",
+                      fontStyle: "italic",
+                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    }}
+                  >
+                    <strong>At Higher Levels:</strong> {spellObj.higherLevels}
+                  </div>
+                )}
+                {spellObj.tags && spellObj.tags.length > 0 && (
+                  <div>
+                    {spellObj.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 8px",
+                          backgroundColor:
+                            theme === "dark" ? "#4b5563" : "#e5e7eb",
+                          color: theme === "dark" ? "#d1d5db" : "#374151",
+                          fontSize: "12px",
+                          borderRadius: "4px",
+                          marginRight: "6px",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </td>
+          </tr>
+        ) : null;
+
+      return [mainRow, descriptionRow].filter(Boolean);
     };
 
     return (
@@ -1266,9 +1099,11 @@ export const SubjectCard = ({
               </tr>
             </thead>
             <tbody>
-              {spells.map((spell, index) =>
-                renderSpellRow(spell, index, subject)
-              )}
+              {spells
+                .map((spellObj, index) =>
+                  renderSpellRow(spellObj, index, subject)
+                )
+                .flat()}
             </tbody>
           </table>
         )}

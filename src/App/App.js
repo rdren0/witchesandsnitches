@@ -11,6 +11,8 @@ import CharacterSelector from "../Components/CharacterSelector/CharacterSelector
 import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { RollModalProvider } from "./diceRoller";
+
 import { createThemedStyles } from "./style";
 
 const supabase = createClient(
@@ -888,9 +890,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <RollModalProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </RollModalProvider>
   );
 }
 

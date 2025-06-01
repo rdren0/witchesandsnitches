@@ -41,8 +41,8 @@ const SpellBook = ({
   };
 
   const getTotalMastered = () => {
-    return Object.keys(spellAttempts).filter((spell) => {
-      const attempts = spellAttempts[spell] || {};
+    return Object.keys(spellAttempts).filter((spellName) => {
+      const attempts = spellAttempts[spellName] || {};
       return Object.values(attempts).filter(Boolean).length >= 2;
     }).length;
   };

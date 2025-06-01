@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatModifier, modifiers, skillMap, allSkills } from "./utils";
-import { rollDice } from "../../App/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
-
-const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
+import { useRollFunctions } from "../../App/diceRoller";
 
 export const Skills = ({
   character,
@@ -14,6 +12,7 @@ export const Skills = ({
   setCharacter,
   selectedCharacterId,
 }) => {
+  const { rollSkill } = useRollFunctions();
   const { theme } = useTheme();
   const styles = createThemedStyles(theme);
   const [sortColumn, setSortColumn] = useState("skill");
@@ -154,89 +153,6 @@ export const Skills = ({
     );
   };
 
-  const rollSkill = async (skill, abilityMod) => {
-    if (isRolling) return;
-
-    setIsRolling(true);
-
-    try {
-      const diceResult = rollDice();
-      const d20Roll = diceResult.total;
-      const skillBonus = calculateSkillBonus(skill.name, abilityMod);
-      const total = d20Roll + skillBonus;
-      const isCriticalSuccess = d20Roll === 20;
-      const isCriticalFailure = d20Roll === 1;
-
-      let embedColor = 0x6600cc;
-      let resultText = "";
-
-      if (isCriticalSuccess) {
-        embedColor = 0xffd700;
-        resultText = " - **CRITICAL SUCCESS!** 🎉";
-      } else if (isCriticalFailure) {
-        embedColor = 0xff0000;
-        resultText = " - **CRITICAL FAILURE!** 💥";
-      }
-
-      const message = {
-        embeds: [
-          {
-            title: `${character.name} Rolled: ${skill.displayName}${resultText}`,
-            color: embedColor,
-            fields: [
-              {
-                name: "Roll Details",
-                value: `Roll: ${d20Roll} ${
-                  skillBonus >= 0 ? "+" : ""
-                }${skillBonus} = **${total}**${
-                  isCriticalSuccess
-                    ? "\n✨ **Exceptional success!**"
-                    : isCriticalFailure
-                    ? "\n💀 **Spectacular failure regardless of modifier!**"
-                    : ""
-                }`,
-                inline: false,
-              },
-            ],
-            footer: {
-              text: `Wtiches and Snitches - Skill Check • Today at ${new Date().toLocaleTimeString(
-                [],
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              )}`,
-            },
-          },
-        ],
-      };
-
-      if (discordWebhookUrl) {
-        await fetch(discordWebhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(message),
-        });
-      } else {
-        const criticalText = isCriticalSuccess
-          ? " - CRITICAL SUCCESS!"
-          : isCriticalFailure
-          ? " - CRITICAL FAILURE!"
-          : "";
-        alert(
-          `${skill.displayName} Check: d20(${d20Roll}) + ${skillBonus} = ${total}${criticalText}`
-        );
-      }
-    } catch (error) {
-      console.error("Error sending Discord message:", error);
-      alert("Failed to send roll to Discord");
-    } finally {
-      setIsRolling(false);
-    }
-  };
-
   const getAbilityAbbr = (ability) => {
     const abbrevMap = {
       strength: "STR",
@@ -369,7 +285,15 @@ export const Skills = ({
                 </td>
                 <td style={styles.skillCell}>
                   <button
-                    onClick={() => rollSkill(skill, abilityMod)}
+                    onClick={() =>
+                      rollSkill({
+                        skill,
+                        abilityMod,
+                        isRolling,
+                        setIsRolling,
+                        character,
+                      })
+                    }
                     disabled={isRolling}
                     style={{
                       ...styles.skillNameButton,
