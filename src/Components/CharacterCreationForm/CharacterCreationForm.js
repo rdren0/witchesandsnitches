@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  WandIcon,
-  RotateIcon,
-  SaveIcon,
-  UserIcon,
-  TrashIcon,
-} from "../../icons";
+
+import { WandIcon, Dices, Trash2, User, Save } from "lucide-react";
 
 import {
   castingStyles,
@@ -701,7 +696,7 @@ const CharacterCreationForm = ({
       <div style={styles.mainGrid}>
         <div style={styles.panel}>
           <h2 style={styles.sectionHeader}>
-            <UserIcon />
+            <User />
             {isEditing ? "Edit Character" : "Create Character"}
           </h2>
 
@@ -934,7 +929,7 @@ const CharacterCreationForm = ({
                         backgroundColor: "#EF4444",
                       }}
                     >
-                      <RotateIcon />
+                      <Dices />
                       Roll For Stats
                     </button>
                   )}
@@ -1058,7 +1053,7 @@ const CharacterCreationForm = ({
                             onClick={() => clearStat(ability)}
                             style={styles.trashButton}
                           >
-                            <TrashIcon />
+                            <Trash2 />
                           </button>
                         </div>
                       </>
@@ -1361,7 +1356,7 @@ const CharacterCreationForm = ({
               cursor: isSaveEnabled ? "pointer" : "not-allowed",
             }}
           >
-            <SaveIcon />
+            <Save />
             {isSaving
               ? "Saving..."
               : isEditing
