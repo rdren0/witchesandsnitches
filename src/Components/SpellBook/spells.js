@@ -23,11 +23,11 @@ export const standardSchools = [
   "healing",
   "divination",
 ];
-
+// #51DDF6 for professinal
 export const spellsData = {
   Charms: {
     icon: "Wand2",
-    color: "#3b82f6",
+    color: "#51B5F6",
     description: "Utility and enhancement magic",
     levels: {
       Cantrips: [
@@ -110,7 +110,7 @@ export const spellsData = {
   },
   "Jinxes, Hexes & Curses": {
     icon: "Zap",
-    color: "#dc2626",
+    color: "#B751F6",
     description: "Offensive and mischievous magic",
     levels: {
       Cantrips: [
@@ -159,7 +159,7 @@ export const spellsData = {
   },
   Transfigurations: {
     icon: "BookOpen",
-    color: "#10b981",
+    color: "#5BC257",
     description: "Transformation and alteration magic",
     levels: {
       Cantrips: [
@@ -186,7 +186,7 @@ export const spellsData = {
   },
   Elemental: {
     icon: "Zap",
-    color: "#f59e0b",
+    color: "#97C00C",
     description: "Mastery over the elements",
     levels: {
       Cantrips: ["Incendio Ruptis*"],
@@ -199,7 +199,7 @@ export const spellsData = {
   },
   Valiant: {
     icon: "Shield",
-    color: "#8b5cf6",
+    color: "#7A5E0D",
     description: "Combat and valor magic",
     levels: {
       Cantrips: ["Magno*"],
@@ -218,7 +218,7 @@ export const spellsData = {
   },
   Divinations: {
     icon: "Eye",
-    color: "#ec4899",
+    color: "#D2C90C",
     description: "Sight beyond sight and knowledge magic",
     levels: {
       Cantrips: ["Mumblio*", "Point Me", "Prior Incantato"],
@@ -256,7 +256,7 @@ export const spellsData = {
   },
   Healing: {
     icon: "Heart",
-    color: "#ef4444",
+    color: "#F31717",
     description: "Restoration and medical magic",
     levels: {
       Cantrips: ["Anapneo*", "Rennervate"],
@@ -271,7 +271,7 @@ export const spellsData = {
   },
   Magizoo: {
     icon: "PawPrint",
-    color: "#059669",
+    color: "#E6A327",
     description: "Beast and creature magic",
     levels: {
       Cantrips: ["Insectum*"],
@@ -287,7 +287,7 @@ export const spellsData = {
   },
   Grim: {
     icon: "Skull",
-    color: "#1f2937",
+    color: "#F17FF1",
     description: "Dark and fear magic",
     levels: {
       Cantrips: ["Ignis Lunalis*", "Fraudemo*"],
@@ -300,6 +300,9 @@ export const spellsData = {
     },
   },
 };
+// Forbidden #000000
+// Ancient #941212
+// Astro #0E48D8
 
 export const INDIVIDUAL_SPELL_MODIFIERS = {
   "Ferio*": SCHOOL_TO_MODIFIER_MAP.jhc,
