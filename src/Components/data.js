@@ -80,6 +80,273 @@ export const housesBySchool = {
     "Thunderbird",
     "Pukwudgie",
   ],
+  "Beauxbatons Academy of Magic": ["Beauxbatons"],
+  "Durmstrang Institute": ["Durmstrang"],
+  "Uagadou School of Magic": ["Uagadou"],
+  "Mahoutokoro School of Magic": ["Mahoutokoro"],
+  Castelobruxo: ["Castelobruxo"],
+  Koldovstoretz: ["Koldovstoretz"],
+};
+
+export const houseAbilityBonuses = {
+  Gryffindor: {
+    fixed: ["constitution", "charisma"],
+    choice: 1, // player chooses 1 additional ability
+  },
+  Hufflepuff: {
+    fixed: ["constitution", "wisdom"],
+    choice: 1,
+  },
+  Ravenclaw: {
+    fixed: ["intelligence", "wisdom"],
+    choice: 1,
+  },
+  Slytherin: {
+    fixed: ["dexterity", "charisma"],
+    choice: 1,
+  },
+  Beauxbatons: {
+    fixed: ["dexterity", "wisdom"],
+    choice: 1,
+  },
+  Durmstrang: {
+    fixed: ["strength", "constitution"],
+    choice: 1,
+  },
+  Uagadou: {
+    fixed: ["strength", "dexterity"],
+    choice: 1,
+  },
+  Mahoutokoro: {
+    fixed: ["dexterity", "intelligence"],
+    choice: 1,
+  },
+  Castelobruxo: {
+    fixed: ["constitution", "dexterity"],
+    choice: 1,
+  },
+  Koldovstoretz: {
+    fixed: ["strength", "wisdom"],
+    choice: 1,
+  },
+  "Horned Serpent": {
+    fixed: ["intelligence", "charisma"],
+    choice: 1,
+  },
+  "Wampus Cat": {
+    fixed: ["dexterity", "constitution"],
+    choice: 1,
+  },
+  Thunderbird: {
+    fixed: ["strength", "charisma"],
+    choice: 1,
+  },
+  Pukwudgie: {
+    fixed: ["wisdom", "charisma"],
+    choice: 1,
+  },
+};
+
+export const houseFeatures = {
+  Gryffindor: {
+    features: [
+      {
+        name: "Inspiring Presence OR Bravehearted",
+        description:
+          "Choose between inspiring allies when they fall or advantage on fear saves",
+      },
+      {
+        name: "True Gryffindor",
+        description: "Sword of Gryffindor may present itself in dire need",
+      },
+    ],
+    feat: true,
+  },
+  Hufflepuff: {
+    features: [
+      {
+        name: "Words of Encouragement OR Neg D4",
+        description: "Choose between giving d4 bonus or penalty to rolls",
+      },
+      {
+        name: "Steadfast Loyalty OR Kitchen Trips",
+        description:
+          "Choose between loyalty saves or magical being interaction",
+      },
+    ],
+    feat: true,
+  },
+  Ravenclaw: {
+    features: [
+      {
+        name: "In-Depth Knowledge",
+        description:
+          "Treat d20 rolls of 5 or lower as 6 on Int/Wis checks with proficiency",
+      },
+      {
+        name: "Rowena's Library",
+        description: "Research topics with housemates and exclusive books",
+      },
+    ],
+    feat: true,
+  },
+  Slytherin: {
+    features: [
+      {
+        name: "Compromising Information",
+        description:
+          "Double proficiency bonus on Charisma checks using secrets",
+      },
+      {
+        name: "A Noble Quality",
+        description: "Adopt persona to blend in with high-ranking officials",
+      },
+    ],
+    feat: true,
+  },
+  Beauxbatons: {
+    features: [
+      {
+        name: "Nimble Evasion",
+        description:
+          "Evasion on Str/Dex saves - no damage on success, half on failure",
+      },
+      {
+        name: "Exchange Student",
+        description: "Insight checks to understand and emulate other cultures",
+      },
+    ],
+    feat: true,
+  },
+  Durmstrang: {
+    features: [
+      {
+        name: "Cold Efficiency",
+        description:
+          "Add Bombarda to known spells, cast as bonus action in combat",
+      },
+      {
+        name: "Aggressive Endurance",
+        description:
+          "Stay conscious until end of next turn when reduced to 0 HP",
+      },
+    ],
+    feat: true,
+  },
+  Uagadou: {
+    features: [
+      {
+        name: "Lesser Animagus",
+        description: "Gain one Animagus form at 6th level from specific list",
+      },
+      {
+        name: "I'd Rather Use My Hands",
+        description: "Add half Dex bonus to wandless spellcasting attempts",
+      },
+    ],
+    feat: true,
+  },
+  Mahoutokoro: {
+    features: [
+      {
+        name: "Quidditch Fanatic",
+        description:
+          "Broom proficiency, expertise if taking Quidditch background/feat",
+      },
+      {
+        name: "Locked in Spells",
+        description:
+          "Choose 3 Charms, 3 DADA, 2 Transfiguration spells from 1st year for guaranteed success",
+      },
+    ],
+    feat: true,
+  },
+  Castelobruxo: {
+    features: [
+      {
+        name: "Beast Finder",
+        description:
+          "Spend spell slots to sense magical creatures within 100 feet",
+      },
+      {
+        name: "Toxicology Specialist",
+        description: "Advantage on Constitution saves against poison",
+      },
+    ],
+    feat: true,
+  },
+  Koldovstoretz: {
+    features: [
+      {
+        name: "Quick Brew",
+        description:
+          "Potioneer's Kit proficiency, brew two doses instead of one",
+      },
+      {
+        name: "Improvised Brooms",
+        description:
+          "Enchant uprooted trees into brooms with spellcasting check",
+      },
+    ],
+    feat: true,
+  },
+  "Horned Serpent": {
+    features: [
+      {
+        name: "Scholar's Mind",
+        description:
+          "Add half proficiency to Int/Cha checks without proficiency",
+      },
+      {
+        name: "Procedural Thinking",
+        description: "Advantage on Investigation for riddles and logic puzzles",
+      },
+    ],
+    feat: true,
+  },
+  "Wampus Cat": {
+    features: [
+      {
+        name: "Warrior's Endurance",
+        description: "Regain 1 HP on death save of 16+ (once per long rest)",
+      },
+      {
+        name: "Contagious Valor",
+        description:
+          "Battle cry gives advantage to up to 10 allies within 60 feet",
+      },
+    ],
+    feat: true,
+  },
+  Thunderbird: {
+    features: [
+      {
+        name: "Adventurer's Footing",
+        description: "No difficult terrain penalty, +5 speed, climb/swim speed",
+      },
+      {
+        name: "Dependable Bearings",
+        description:
+          "Good sense of direction, advantage on navigation Survival checks",
+      },
+    ],
+    feat: true,
+  },
+  Pukwudgie: {
+    features: [
+      {
+        name: "Healer's Knack",
+        description:
+          "Healing spells grant temp HP equal to 1 + Wis/Cha modifier",
+      },
+      {
+        name: "A Diplomatic Touch",
+        description:
+          "Meaningful help to hostile creatures may reduce their hostility",
+      },
+    ],
+    feat: true,
+  },
 };
 
 export const castingStyles = [
