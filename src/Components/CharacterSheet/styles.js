@@ -482,6 +482,10 @@ export const createThemedStyles = (theme) => ({
     backgroundColor: theme.success + "20",
     borderColor: theme.success + "60",
   },
+  statCardGreenHover: {
+    backgroundColor: theme.success + "60",
+    borderColor: theme.success + "100",
+  },
   statValue: {
     fontSize: "1.25rem",
     fontWeight: "bold",

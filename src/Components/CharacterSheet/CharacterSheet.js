@@ -3,7 +3,7 @@ import {
   User,
   Shield,
   Heart,
-  Zap,
+  // Zap,
   Dice6,
   ChevronUp,
   Swords,
@@ -11,7 +11,7 @@ import {
 import { rollDice } from "../../App/diceRoller";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
-import { modifiers } from "./utils";
+import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
 
@@ -30,9 +30,69 @@ const CharacterSheet = ({
 
   const [character, setCharacter] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
+  const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const rollInitiative = async () => {
+    if (isRolling) return;
+
+    setIsRolling(true);
+
+    try {
+      const diceResult = rollDice();
+      const d20Roll = diceResult.total;
+      const mod = characterModifiers.dexterity;
+      const total = d20Roll + mod;
+
+      let embedColor = 0x107319;
+
+      const message = {
+        embeds: [
+          {
+            title: `${character.name} Rolled Initiative`,
+            description: "",
+            color: embedColor,
+            fields: [
+              {
+                name: "Roll Details",
+                value: `Roll: ${d20Roll} ${
+                  mod >= 0 ? "+" : ""
+                }${mod} = **${total}**`,
+                inline: false,
+              },
+            ],
+            footer: {
+              text: `Witches and Snitches- Initiative • Today at ${new Date().toLocaleTimeString(
+                [],
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              )}`,
+            },
+          },
+        ],
+      };
+
+      if (discordWebhookUrl) {
+        await fetch(discordWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(message),
+        });
+      }
+      alert(`Rolled Initiative: d20(${d20Roll}) + ${mod} = ${total}`);
+    } catch (error) {
+      console.error("Error sending Discord message:", error);
+      alert("Failed to send roll to Discord");
+    } finally {
+      setIsRolling(false);
+    }
+  };
 
   useEffect(() => {
     const fetchCharacterDetails = async () => {
@@ -359,10 +419,25 @@ const CharacterSheet = ({
                   Speed
                 </div>
               </div> */}
-              <div style={{ ...styles.statCard, ...styles.statCardGreen }}>
+              <div
+                onMouseEnter={(e) => {
+                  Object.assign(e.target.style, {
+                    ...styles.statCard,
+                    ...styles.statCardGreenHover,
+                  });
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.target.style, {
+                    ...styles.statCard,
+                    ...styles.statCardGreen,
+                  });
+                }}
+                style={{ ...styles.statCard, ...styles.statCardGreen }}
+                onClick={() => !isRolling && rollInitiative()}
+              >
                 <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
-                  {character.initiative ?? 8}
+                  {formatModifier(characterModifiers.dexterity)}
                 </div>
                 <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
                   Initiative
