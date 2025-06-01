@@ -181,7 +181,6 @@ export const styles = {
   },
   availableStatsLabel: {
     fontWeight: "bold",
-    color: "#92400E",
     border: "2px solid #FEF3C7",
     borderRadius: "6px",
     padding: "15px",
