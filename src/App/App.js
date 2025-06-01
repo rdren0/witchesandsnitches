@@ -342,7 +342,7 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                 style={styles.featureCard}
                 onClick={() => handleCardClick("gallery")}
               >
-                <h3>Character Gallery</h3>
+                <h3>NPCs</h3>
                 <p>
                   Browse student portraits and profiles organized by school
                   year.
@@ -839,7 +839,7 @@ function AppContent() {
             const tabLabels = {
               home: "Home",
               "character-creation": "Character Creation",
-              gallery: "Gallery",
+              gallery: "NPCs",
               "character-sheet": "Character Sheet",
               "character-notes": "Notes",
               spellbook: "SpellBook",
