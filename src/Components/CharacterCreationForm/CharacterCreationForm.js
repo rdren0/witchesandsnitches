@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   WandIcon,
   RotateIcon,
   SaveIcon,
-  BookIcon,
   UserIcon,
   TrashIcon,
-  StarIcon,
 } from "../../icons";
 
 import {
@@ -21,6 +19,9 @@ import {
 } from "../data";
 import { styles } from "./characterCreationStyles";
 import { characterService } from "../../services/characterService";
+import { SavedCharacters } from "./SavedCharacters";
+
+const MAX_CHARACTERS = 10;
 
 const CharacterCreationForm = ({
   user,
@@ -626,12 +627,14 @@ const CharacterCreationForm = ({
     return Math.floor((score - 10) / 2);
   };
 
+  // Updated isSaveEnabled to include character limit check
   const isSaveEnabled =
     character.name &&
     character.house &&
     character.castingStyle &&
     allStatsAssigned() &&
-    !isSaving;
+    !isSaving &&
+    (isEditing || savedCharacters.length < MAX_CHARACTERS); // Only check limit when creating new
 
   const filteredFeats = getFilteredFeats();
 
@@ -1225,18 +1228,6 @@ const CharacterCreationForm = ({
                           onClick={() => toggleFeatExpansion(feat.name)}
                           style={styles.expandButton}
                           type="button"
-                          onMouseEnter={(e) => {
-                            e.target.style.background = "#FCD34D";
-                            e.target.style.transform = "translateY(-1px)";
-                            e.target.style.boxShadow =
-                              "0 4px 8px rgba(0,0,0,0.25)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.background = "#FBBF24";
-                            e.target.style.transform = "translateY(0)";
-                            e.target.style.boxShadow =
-                              "0 3px 6px rgba(0,0,0,0.2)";
-                          }}
                         >
                           {expandedFeats.has(feat.name) ? "▲" : "▼"}
                         </button>
@@ -1338,6 +1329,29 @@ const CharacterCreationForm = ({
               ))}
             </div>
           </div>
+
+          {!isEditing && savedCharacters.length >= MAX_CHARACTERS && (
+            <div
+              style={{
+                backgroundColor: "#FEE2E2",
+                border: "2px solid #EF4444",
+                color: "#DC2626",
+                padding: "16px",
+                borderRadius: "8px",
+                margin: "16px 0",
+                fontSize: "14px",
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
+            >
+              ⚠️ Character Limit Reached
+              <div style={{ marginTop: "8px", fontWeight: "normal" }}>
+                You have reached the maximum of {MAX_CHARACTERS} characters.
+                Delete an existing character to create a new one.
+              </div>
+            </div>
+          )}
+
           <button
             onClick={saveCharacter}
             disabled={!isSaveEnabled}
@@ -1352,8 +1366,30 @@ const CharacterCreationForm = ({
               ? "Saving..."
               : isEditing
               ? "Update Character"
+              : savedCharacters.length >= MAX_CHARACTERS
+              ? "Character Limit Reached"
               : "Save Character"}
           </button>
+
+          {!isEditing &&
+            savedCharacters.length >= MAX_CHARACTERS - 2 &&
+            savedCharacters.length < MAX_CHARACTERS && (
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#F59E0B",
+                  textAlign: "center",
+                  marginTop: "8px",
+                  fontStyle: "italic",
+                }}
+              >
+                {savedCharacters.length === MAX_CHARACTERS - 1
+                  ? "You can create 1 more character before reaching the limit."
+                  : `You can create ${
+                      MAX_CHARACTERS - savedCharacters.length
+                    } more characters.`}
+              </div>
+            )}
         </div>
 
         <div style={styles.panel}>
@@ -1361,22 +1397,7 @@ const CharacterCreationForm = ({
             <div style={{ marginBottom: "20px" }}>
               <button
                 onClick={createNewCharacter}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "12px 20px",
-                  backgroundColor: "#10B981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  width: "100%",
-                  justifyContent: "center",
-                  transition: "all 0.2s ease",
-                }}
+                style={styles.newCharacterButton}
                 onMouseEnter={(e) => {
                   e.target.style.backgroundColor = "#059669";
                   e.target.style.transform = "translateY(-1px)";
@@ -1392,144 +1413,18 @@ const CharacterCreationForm = ({
                 <WandIcon />
                 Create New Character
               </button>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#6B7280",
-                  textAlign: "center",
-                  marginTop: "8px",
-                  fontStyle: "italic",
-                }}
-              >
+              <div style={styles.newCharacter}>
                 This will abandon any unsaved changes to the current character
               </div>
             </div>
           )}
-          <h2 style={styles.sectionHeader}>
-            <BookIcon />
-            Saved Characters ({savedCharacters.length})
-            {isLoading && (
-              <span style={{ fontSize: "14px", color: "#6B7280" }}>
-                {" "}
-                (Loading...)
-              </span>
-            )}
-          </h2>
-
-          {savedCharacters.length === 0 && !isLoading ? (
-            <div style={styles.emptyCharacters}>
-              No characters created yet. Create your first character!
-            </div>
-          ) : (
-            <div style={styles.charactersContainer}>
-              {savedCharacters.map((char) => (
-                <div key={char.id} style={styles.characterCard}>
-                  <div style={styles.characterHeader}>
-                    <div>
-                      <h3 style={styles.characterName}>{char.name}</h3>
-                      <div style={styles.characterDetails}>
-                        {char.gameSession && (
-                          <div
-                            style={{
-                              ...styles.heritage,
-                              color: "#8B5CF6",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            📅 {char.gameSession}
-                          </div>
-                        )}
-                        {char.innateHeritage && (
-                          <div style={styles.heritage}>
-                            <StarIcon
-                              style={{ display: "inline", marginRight: "4px" }}
-                            />{" "}
-                            {char.innateHeritage}
-                          </div>
-                        )}
-                        <div>
-                          <strong>Level:</strong> {char.level} |{" "}
-                          <strong>HP:</strong> {char.hitPoints}
-                        </div>
-                        <div>
-                          <strong>House:</strong> {char.house}
-                        </div>
-                        <div>
-                          <strong>Class:</strong> {char.castingStyle}
-                        </div>
-                        <div>
-                          <strong>Subclass:</strong> {char.subclass}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={styles.characterActions}>
-                      <button
-                        onClick={() => editCharacter(char)}
-                        style={{
-                          ...styles.actionButton,
-                          backgroundColor: "#3B82F6",
-                        }}
-                      >
-                        <UserIcon />
-                      </button>
-                      <button
-                        onClick={() => deleteCharacter(char.id)}
-                        style={{
-                          ...styles.actionButton,
-                          backgroundColor: "#EF4444",
-                        }}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </div>
-                  {char.standardFeats.length > 0 && (
-                    <div style={styles.feats}>
-                      <strong>Feats:</strong>{" "}
-                      {char.standardFeats.slice(0, 3).join(", ")}
-                      {char.standardFeats.length > 3 &&
-                        ` +${char.standardFeats.length - 3} more`}
-                    </div>
-                  )}
-
-                  {char.skillProficiencies &&
-                    char.skillProficiencies.length > 0 && (
-                      <div style={styles.skills}>
-                        <strong>
-                          Skill Proficiencies ({char.skillProficiencies.length}
-                          ):
-                        </strong>{" "}
-                        {char.skillProficiencies.slice(0, 4).join(", ")}
-                        {char.skillProficiencies.length > 4 &&
-                          ` +${char.skillProficiencies.length - 4} more`}
-                      </div>
-                    )}
-                  {char.magicModifiers &&
-                    Object.values(char.magicModifiers).some(
-                      (mod) => mod !== 0
-                    ) && (
-                      <div style={styles.skills}>
-                        <strong>Magic Modifiers:</strong>{" "}
-                        {Object.entries(char.magicModifiers)
-                          .filter(([_, value]) => value !== 0)
-                          .map(([key, value], index, array) => (
-                            <>
-                              <br />
-                              <span key={key}>
-                                {key.charAt(0).toUpperCase() +
-                                  key.slice(1).replace(/([A-Z])/g, " $1")}
-                                : {value > 0 ? "+" : ""}
-                                {value}
-                                {index < array.length - 1 ? ", " : ""}
-                              </span>
-                            </>
-                          ))}
-                      </div>
-                    )}
-                </div>
-              ))}
-            </div>
-          )}
+          <SavedCharacters
+            isLoading={isLoading}
+            savedCharacters={savedCharacters}
+            editCharacter={editCharacter}
+            deleteCharacter={deleteCharacter}
+            maxCharacters={MAX_CHARACTERS}
+          />
         </div>
       </div>
     </div>
