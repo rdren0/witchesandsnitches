@@ -1,11 +1,8 @@
-// src/contexts/ThemeContext.js
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 
 const ThemeContext = createContext();
 
-// House color schemes
 const HOUSE_THEMES = {
-  // Hogwarts Houses
   Gryffindor: {
     primary: "#740001",
     secondary: "#D3A625",
@@ -74,7 +71,6 @@ const HOUSE_THEMES = {
     headerBackground: "#1A472A",
     sidebarBackground: "#F9FAFB",
   },
-  // Ilvermorny Houses
   Thunderbird: {
     primary: "#8B5A2B",
     secondary: "#FF6B35",
@@ -145,7 +141,6 @@ const HOUSE_THEMES = {
   },
 };
 
-// Base themes
 const THEMES = {
   light: {
     primary: "#6366F1",
@@ -183,43 +178,154 @@ const THEMES = {
   },
 };
 
-export const ThemeProvider = ({ children }) => {
-  const [themeMode, setThemeMode] = useState("light"); // 'light', 'dark', 'house'
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
+const normalizeHouseName = (houseName) => {
+  if (!houseName) return null;
 
-  // Load theme preference from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("app-theme");
-    if (savedTheme && ["light", "dark", "house"].includes(savedTheme)) {
-      setThemeMode(savedTheme);
-    }
-  }, []);
-
-  // Save theme preference to localStorage
-  useEffect(() => {
-    localStorage.setItem("app-theme", themeMode);
-  }, [themeMode]);
-
-  // Get current theme based on mode and character
-  const getCurrentTheme = () => {
-    if (themeMode === "house" && selectedCharacter?.house) {
-      return HOUSE_THEMES[selectedCharacter.house] || THEMES.light;
-    }
-    return THEMES[themeMode] || THEMES.light;
+  const houseMap = {
+    "Wampus Cat": "Wampus",
+    "Horned Serpent": "Horned Serpent",
+    Thunderbird: "Thunderbird",
+    Pukwudgie: "Pukwudgie",
+    Gryffindor: "Gryffindor",
+    Hufflepuff: "Hufflepuff",
+    Ravenclaw: "Ravenclaw",
+    Slytherin: "Slytherin",
   };
 
-  const theme = getCurrentTheme();
+  return houseMap[houseName] || houseName;
+};
+
+const saveToLocalStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Failed to save ${key} to localStorage:`, error);
+  }
+};
+
+const loadFromLocalStorage = (key, defaultValue = null) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (error) {
+    console.warn(`Failed to load ${key} from localStorage:`, error);
+    return defaultValue;
+  }
+};
+
+export const ThemeProvider = ({ children }) => {
+  const [themeMode, setThemeMode] = useState("light");
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedThemeMode = loadFromLocalStorage("themeMode", "light");
+    const savedCharacter = loadFromLocalStorage("selectedCharacter", null);
+
+    if (["light", "dark", "house"].includes(savedThemeMode)) {
+      setThemeMode(savedThemeMode);
+    }
+
+    if (savedCharacter && savedCharacter.house) {
+      const normalizedHouse = normalizeHouseName(savedCharacter.house);
+      if (HOUSE_THEMES[normalizedHouse]) {
+        setSelectedCharacter(savedCharacter);
+      }
+    }
+
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveToLocalStorage("themeMode", themeMode);
+    }
+  }, [themeMode, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (selectedCharacter) {
+        const characterForTheme = {
+          id: selectedCharacter.id,
+          name: selectedCharacter.name,
+          house: selectedCharacter.house,
+        };
+        saveToLocalStorage("selectedCharacter", characterForTheme);
+      } else {
+        localStorage.removeItem("selectedCharacter");
+      }
+    }
+  }, [selectedCharacter, isLoaded]);
+
+  const theme = useMemo(() => {
+    if (themeMode === "house" && selectedCharacter?.house) {
+      const normalizedHouse = normalizeHouseName(selectedCharacter.house);
+      const houseTheme = HOUSE_THEMES[normalizedHouse];
+      if (houseTheme) {
+        return houseTheme;
+      }
+      console.warn(
+        `❌ House theme not found for: ${selectedCharacter.house} (normalized: ${normalizedHouse})`
+      );
+    }
+    const activeTheme = THEMES[themeMode] || THEMES.light;
+
+    return activeTheme;
+  }, [themeMode, selectedCharacter]);
+
+  const handleSetThemeMode = (mode) => {
+    if (mode === "house" && !selectedCharacter?.house) {
+      console.warn(
+        "Cannot set house theme without a selected character with a house"
+      );
+      return;
+    }
+    setThemeMode(mode);
+  };
+
+  const handleSetSelectedCharacter = (character) => {
+    if (character && character.house) {
+      const normalizedHouse = normalizeHouseName(character.house);
+      if (!HOUSE_THEMES[normalizedHouse]) {
+        console.warn(
+          `Unknown house: ${character.house} (normalized: ${normalizedHouse}). Available houses:`,
+          Object.keys(HOUSE_THEMES)
+        );
+      }
+    }
+    setSelectedCharacter(character);
+  };
+
+  const isHouseThemeAvailable = () => {
+    if (!selectedCharacter?.house) return false;
+    const normalizedHouse = normalizeHouseName(selectedCharacter.house);
+    return HOUSE_THEMES[normalizedHouse];
+  };
 
   const contextValue = {
     themeMode,
-    setThemeMode,
+    setThemeMode: handleSetThemeMode,
     theme,
     selectedCharacter,
-    setSelectedCharacter,
+    setSelectedCharacter: handleSetSelectedCharacter,
     availableHouses: Object.keys(HOUSE_THEMES),
     HOUSE_THEMES,
     THEMES,
+    isLoaded,
+    isHouseThemeAvailable,
+    normalizeHouseName,
+
+    clearThemePreferences: () => {
+      localStorage.removeItem("themeMode");
+      localStorage.removeItem("selectedCharacter");
+      setThemeMode("light");
+      setSelectedCharacter(null);
+    },
   };
+
+  if (!isLoaded) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={contextValue}>

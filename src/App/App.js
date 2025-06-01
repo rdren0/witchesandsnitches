@@ -171,7 +171,7 @@ const AuthComponent = ({
   if (user) {
     return (
       <div style={styles.authSection}>
-        <button
+        {/* <button
           onClick={onThemeClick}
           style={styles.themeButton}
           title="Theme Settings"
@@ -183,7 +183,7 @@ const AuthComponent = ({
           }}
         >
           <Palette size={16} color={theme.primary} />
-        </button>
+        </button> */}
 
         <div style={styles.userInfo}>
           {user.user_metadata?.avatar_url ? (
@@ -243,7 +243,7 @@ const AuthComponent = ({
 
   return (
     <div style={styles.authSection}>
-      <button
+      {/* <button
         onClick={onThemeClick}
         style={styles.themeButton}
         title="Theme Settings"
@@ -255,7 +255,7 @@ const AuthComponent = ({
         }}
       >
         <Palette size={16} color={theme.primary} />
-      </button>
+      </button> */}
 
       <button
         onClick={onSignIn}
@@ -783,8 +783,8 @@ function AppContent() {
             />
           </ProtectedRoute>
         );
-      case "theme-settings":
-        return <ThemeSettings />;
+      // case "theme-settings":
+      //   return <ThemeSettings />;
       default:
         return (
           <HomePage
@@ -878,7 +878,7 @@ function AppContent() {
           onSignIn={signInWithDiscord}
           onSignOut={signOut}
           isLoading={authLoading}
-          onThemeClick={() => setActiveTab("theme-settings")}
+          // onThemeClick={() => setActiveTab("theme-settings")}
         />
       </header>
       <main style={styles.tabContent}>{renderContent()}</main>

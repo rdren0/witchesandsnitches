@@ -1,5 +1,6 @@
 import { Star, User, Trash2, Users } from "lucide-react";
-import { styles } from "./styles";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedStyles } from "./styles";
 
 export const SavedCharacters = ({
   isLoading,
@@ -8,6 +9,8 @@ export const SavedCharacters = ({
   editCharacter,
   maxCharacters,
 }) => {
+  const { theme } = useTheme();
+  const styles = createThemedStyles(theme);
   return (
     <>
       <h2 style={styles.sectionHeader}>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 import { WandIcon, Dices, Trash2, User, Save } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createThemedStyles } from "./styles";
 
 import {
   castingStyles,
@@ -12,7 +14,6 @@ import {
   backgrounds,
   standardFeats,
 } from "../data";
-import { styles } from "./styles";
 import { characterService } from "../../services/characterService";
 import { SavedCharacters } from "./SavedCharacters";
 
@@ -25,6 +26,9 @@ const CharacterCreationForm = ({
   selectedCharacterId,
   onSelectedCharacterReset,
 }) => {
+  const { theme, themeMode, setThemeMode, setSelectedCharacter } = useTheme();
+  const styles = createThemedStyles(theme);
+
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
@@ -250,25 +254,14 @@ const CharacterCreationForm = ({
     return (
       <div style={styles.container}>
         <div style={styles.header}>
-          <div style={{ color: "#8B5CF6" }}>
+          <div style={styles.wandIconColor}>
             <WandIcon />
           </div>
           <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
         </div>
-        <div
-          style={{
-            textAlign: "center",
-            padding: "40px",
-            backgroundColor: "#FEF3C7",
-            border: "1px solid #F59E0B",
-            borderRadius: "8px",
-            margin: "20px",
-          }}
-        >
-          <h2 style={{ color: "#92400E", marginBottom: "16px" }}>
-            Authentication Required
-          </h2>
-          <p style={{ color: "#92400E" }}>
+        <div style={styles.authRequired}>
+          <h2 style={styles.authRequiredTitle}>Authentication Required</h2>
+          <p style={styles.authRequiredText}>
             Please log in with Discord to create and manage your characters.
           </p>
         </div>
@@ -622,14 +615,13 @@ const CharacterCreationForm = ({
     return Math.floor((score - 10) / 2);
   };
 
-  // Updated isSaveEnabled to include character limit check
   const isSaveEnabled =
     character.name &&
     character.house &&
     character.castingStyle &&
     allStatsAssigned() &&
     !isSaving &&
-    (isEditing || savedCharacters.length < MAX_CHARACTERS); // Only check limit when creating new
+    (isEditing || savedCharacters.length < MAX_CHARACTERS);
 
   const filteredFeats = getFilteredFeats();
 
@@ -649,50 +641,20 @@ const CharacterCreationForm = ({
         <div style={{ flex: 1 }}>
           <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
           {user && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginTop: "8px",
-                fontSize: "14px",
-                color: "#6B7280",
-              }}
-            >
+            <div style={styles.userAvatarContainer}>
               <img
                 src={user.user_metadata.avatar_url}
                 alt="Avatar"
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  border: "2px solid #8B5CF6",
-                }}
+                style={styles.userAvatar}
               />
-              <span style={{ color: "#eee" }}>
+              <span style={styles.userWelcomeText}>
                 Welcome, {customUsername ?? user.user_metadata.full_name}!
               </span>
             </div>
           )}
         </div>
       </div>
-
-      {error && (
-        <div
-          style={{
-            backgroundColor: "#FEE2E2",
-            border: "1px solid #FECACA",
-            color: "#DC2626",
-            padding: "12px",
-            borderRadius: "8px",
-            margin: "16px 0",
-            fontSize: "14px",
-          }}
-        >
-          {error}
-        </div>
-      )}
-
+      {error && <div style={styles.errorDisplay}>{error}</div>}
       <div style={styles.mainGrid}>
         <div style={styles.panel}>
           <h2 style={styles.sectionHeader}>
@@ -816,12 +778,11 @@ const CharacterCreationForm = ({
                         key={skill}
                         style={{
                           ...styles.skillOptionBase,
-                          cursor: canSelect ? "pointer" : "not-allowed",
-                          backgroundColor: isSelected ? "#F0FDF4" : "white",
-                          border: isSelected
-                            ? "2px solid #10B981"
-                            : "2px solid #E5E7EB",
-                          opacity: canSelect ? 1 : 0.5,
+                          ...(isSelected
+                            ? styles.skillOptionSelected
+                            : canSelect
+                            ? styles.skillOptionUnselected
+                            : styles.skillOptionDisabled),
                         }}
                       >
                         <input
@@ -832,11 +793,11 @@ const CharacterCreationForm = ({
                           style={styles.skillCheckbox}
                         />
                         <span
-                          style={{
-                            fontSize: "14px",
-                            color: isSelected ? "#059669" : "#374151",
-                            fontWeight: isSelected ? "bold" : "normal",
-                          }}
+                          style={
+                            isSelected
+                              ? styles.skillTextSelected
+                              : styles.skillTextUnselected
+                          }
                         >
                           {skill}
                         </span>
@@ -926,7 +887,7 @@ const CharacterCreationForm = ({
                       onClick={rollAllStats}
                       style={{
                         ...styles.button,
-                        backgroundColor: "#EF4444",
+                        ...styles.rollStatsButton,
                       }}
                     >
                       <Dices />
@@ -937,29 +898,18 @@ const CharacterCreationForm = ({
                 <div
                   onClick={toggleManualMode}
                   style={{
-                    position: "relative",
-                    marginTop: "4px",
-                    width: "44px",
-                    height: "24px",
-                    backgroundColor: isManualMode ? "#10B981" : "#D1D5DB",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    transition: "background-color 0.2s ease",
-                    border: "2px solid",
-                    borderColor: isManualMode ? "#10B981" : "#9CA3AF",
+                    ...styles.toggleContainer,
+                    ...(isManualMode
+                      ? styles.toggleActive
+                      : styles.toggleInactive),
                   }}
                 >
                   <div
                     style={{
-                      position: "absolute",
-                      top: "2px",
-                      left: isManualMode ? "22px" : "2px",
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "white",
-                      borderRadius: "50%",
-                      transition: "left 0.2s ease",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                      ...styles.toggleSlider,
+                      ...(isManualMode
+                        ? styles.toggleSliderActive
+                        : styles.toggleSliderInactive),
                     }}
                   />
                 </div>
@@ -1009,7 +959,9 @@ const CharacterCreationForm = ({
                     key={ability}
                     style={{
                       ...styles.abilityCard,
-                      backgroundColor: score !== null ? "#F0FDF4" : "white",
+                      ...(score !== null
+                        ? styles.abilityCardAssigned
+                        : styles.abilityCardEmpty),
                     }}
                   >
                     <div style={styles.abilityName}>{ability}</div>
@@ -1037,14 +989,7 @@ const CharacterCreationForm = ({
                                 handleManualScoreChange(ability, e.target.value)
                               }
                               onBlur={() => handleManualScoreBlur(ability)}
-                              style={{
-                                ...styles.input,
-                                textAlign: "center",
-                                fontSize: "18px",
-                                fontWeight: "bold",
-                                width: "60px",
-                                padding: "4px",
-                              }}
+                              style={styles.manualInput}
                             />
                           ) : (
                             <div style={styles.abilityScore}>{score}</div>
@@ -1118,9 +1063,10 @@ const CharacterCreationForm = ({
                   onChange={(e) => setFeatFilter(e.target.value)}
                   style={styles.featFilterInput}
                   onFocus={(e) => {
-                    e.target.style.borderColor = "#FBBF24";
-                    e.target.style.boxShadow =
-                      "inset 0 2px 6px rgba(245,158,11,0.2), 0 0 0 3px rgba(251,191,36,0.3)";
+                    Object.assign(
+                      e.target.style,
+                      styles.featFilterInputFocusThemed
+                    );
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = "#F59E0B";
@@ -1132,17 +1078,17 @@ const CharacterCreationForm = ({
                   <button
                     onClick={() => setFeatFilter("")}
                     style={styles.featFilterClearButton}
-                    type="button"
-                    title="Clear search"
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#FCD34D";
-                      e.target.style.transform = "translateY(-50%) scale(1.1)";
-                      e.target.style.boxShadow = "0 3px 6px rgba(0,0,0,0.3)";
+                      Object.assign(
+                        e.target.style,
+                        styles.featFilterClearButtonHoverThemed
+                      );
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = "#FBBF24";
-                      e.target.style.transform = "translateY(-50%) scale(1)";
-                      e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+                      Object.assign(
+                        e.target.style,
+                        styles.featFilterClearButton
+                      );
                     }}
                   >
                     ×
@@ -1158,19 +1104,7 @@ const CharacterCreationForm = ({
             )}
 
             {character.standardFeats.length === 2 && (
-              <div
-                style={{
-                  backgroundColor: "#F0FDF4",
-                  border: "2px solid #10B981",
-                  color: "#059669",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  margin: "12px 0",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  textAlign: "center",
-                }}
-              >
+              <div style={styles.featCompleteMessage}>
                 ✓ Feat selection complete! Showing your 2 selected feats.
                 Uncheck one to see all feats again.
               </div>
@@ -1394,15 +1328,10 @@ const CharacterCreationForm = ({
                 onClick={createNewCharacter}
                 style={styles.newCharacterButton}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#059669";
-                  e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow =
-                    "0 4px 12px rgba(16, 185, 129, 0.3)";
+                  Object.assign(e.target.style, styles.newCharacterButtonHover);
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#10B981";
-                  e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "none";
+                  Object.assign(e.target.style, styles.newCharacterButton);
                 }}
               >
                 <WandIcon />
@@ -1421,6 +1350,39 @@ const CharacterCreationForm = ({
             maxCharacters={MAX_CHARACTERS}
           />
         </div>
+      </div>
+
+      <div
+        style={{ margin: "20px 0", padding: "10px", border: "2px solid red" }}
+      >
+        <h3>THEME TEST (Remove this later)</h3>
+        <p>Current theme mode: {themeMode}</p>
+        <p>Current theme primary: {theme.primary}</p>
+        <button
+          onClick={() => {
+            setSelectedCharacter({ house: "Gryffindor", name: "Test" });
+            setThemeMode("house");
+          }}
+          style={{
+            margin: "5px",
+            padding: "10px",
+            background: "#740001",
+            color: "white",
+          }}
+        >
+          Test Gryffindor Theme
+        </button>
+        <button
+          onClick={() => setThemeMode("light")}
+          style={{
+            margin: "5px",
+            padding: "10px",
+            background: "#6366F1",
+            color: "white",
+          }}
+        >
+          Back to Light
+        </button>
       </div>
     </div>
   );

@@ -1,11 +1,18 @@
-// src/Components/Settings/ThemeSettings.js
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Sun, Moon, Home, Palette } from "lucide-react";
 
 const ThemeSettings = () => {
-  const { themeMode, setThemeMode, theme, selectedCharacter, availableHouses } =
-    useTheme();
+  const {
+    themeMode,
+    setThemeMode,
+    theme,
+    selectedCharacter,
+    availableHouses,
+    HOUSE_THEMES,
+    normalizeHouseName,
+    setSelectedCharacter,
+  } = useTheme();
 
   const themeOptions = [
     {
@@ -30,6 +37,7 @@ const ThemeSettings = () => {
         background: "#111827",
       },
     },
+
     {
       id: "house",
       name: "House Theme",
@@ -38,11 +46,24 @@ const ThemeSettings = () => {
         : "Select a character to use house colors",
       icon: Home,
       preview: selectedCharacter?.house
-        ? {
-            primary: theme.primary,
-            secondary: theme.secondary,
-            background: theme.background,
-          }
+        ? (() => {
+            const normalizedHouse =
+              selectedCharacter.house === "Wampus Cat"
+                ? "Wampus"
+                : selectedCharacter.house;
+            const houseTheme = HOUSE_THEMES[normalizedHouse];
+            return houseTheme
+              ? {
+                  primary: houseTheme.primary,
+                  secondary: houseTheme.secondary,
+                  background: houseTheme.background,
+                }
+              : {
+                  primary: "#6B7280",
+                  secondary: "#9CA3AF",
+                  background: "#F3F4F6",
+                };
+          })()
         : {
             primary: "#6B7280",
             secondary: "#9CA3AF",
@@ -209,10 +230,10 @@ const ThemeSettings = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
+      {/* <div style={styles.header}>
         <Palette size={32} color={theme.primary} />
         <h1 style={styles.title}>Theme Settings</h1>
-      </div>
+      </div> */}
 
       <p style={styles.description}>
         Customize the appearance of your character manager. Choose from light,
@@ -294,36 +315,93 @@ const ThemeSettings = () => {
           );
         })}
       </div>
-
       {themeMode === "house" && (
         <div style={styles.housePreview}>
           <div style={styles.housePreviewTitle}>Available House Themes</div>
           <div style={styles.houseGrid}>
             {availableHouses.map((house) => {
-              const houseTheme =
-                theme.constructor === Object && theme.primary
-                  ? theme
-                  : typeof theme === "object"
-                  ? theme
-                  : {};
+              const houseTheme = HOUSE_THEMES[house];
+              const normalizedCurrentHouse = selectedCharacter?.house
+                ? normalizeHouseName(selectedCharacter.house)
+                : null;
+              const isCurrentHouse = normalizedCurrentHouse === house;
 
               return (
-                <div key={house} style={styles.houseCard}>
+                <div
+                  key={house}
+                  style={{
+                    ...styles.houseCard,
+                    cursor: "pointer",
+                    border: isCurrentHouse
+                      ? `2px solid ${theme.primary}`
+                      : `1px solid ${theme.border}`,
+                    backgroundColor: isCurrentHouse
+                      ? theme.primary + "10"
+                      : theme.surface,
+                    transform: isCurrentHouse ? "scale(1.02)" : "scale(1)",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={async () => {
+                    console.log(`Switching to ${house} theme`);
+
+                    try {
+                      await setSelectedCharacter({
+                        id: "theme-preview",
+                        name: "Theme Preview",
+                        house: house,
+                      });
+
+                      await setThemeMode("light");
+                      await new Promise((resolve) => setTimeout(resolve, 10));
+                      await setThemeMode("house");
+
+                      console.log(
+                        `Should now be ${house} theme with primary: ${houseTheme?.primary}`
+                      );
+                    } catch (error) {
+                      console.error("Theme switch failed:", error);
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isCurrentHouse) {
+                      e.target.style.backgroundColor = theme.primary + "05";
+                      e.target.style.transform = "scale(1.05)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isCurrentHouse) {
+                      e.target.style.backgroundColor = theme.surface;
+                      e.target.style.transform = "scale(1)";
+                    }
+                  }}
+                >
                   <div style={styles.houseName}>{house}</div>
                   <div style={styles.houseColors}>
                     <div
                       style={{
                         ...styles.houseColorSwatch,
-                        backgroundColor: houseTheme.primary || "#6B7280",
+                        backgroundColor: houseTheme?.primary || "#6B7280",
                       }}
                     />
                     <div
                       style={{
                         ...styles.houseColorSwatch,
-                        backgroundColor: houseTheme.secondary || "#9CA3AF",
+                        backgroundColor: houseTheme?.secondary || "#9CA3AF",
                       }}
                     />
                   </div>
+                  {isCurrentHouse && (
+                    <div
+                      style={{
+                        marginTop: "4px",
+                        fontSize: "10px",
+                        color: theme.primary,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ✓ Active
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -342,6 +420,14 @@ const ThemeSettings = () => {
               }}
             >
               Currently using <strong>{selectedCharacter.house}</strong> theme
+              <br />
+              <small style={{ fontSize: "12px", opacity: 0.8 }}>
+                Primary: {theme.primary} | Expected:{" "}
+                {
+                  HOUSE_THEMES[normalizeHouseName(selectedCharacter.house)]
+                    ?.primary
+                }
+              </small>
             </div>
           )}
         </div>
