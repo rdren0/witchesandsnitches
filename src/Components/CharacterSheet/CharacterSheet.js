@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { User, Shield, Heart, Zap, Dice6, ChevronUp } from "lucide-react";
+import {
+  User,
+  Shield,
+  Heart,
+  Zap,
+  Dice6,
+  ChevronUp,
+  Swords,
+} from "lucide-react";
 import { rollDice } from "../../App/diceRoller";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -65,6 +73,7 @@ const CharacterSheet = ({
             armorClass:
               11 + Math.floor((data.ability_scores?.dexterity - 10) / 2) || 11,
             speed: 30,
+            initiative: 8,
             proficiencyBonus: Math.ceil(data.level / 4) + 1,
             skills: transformSkillProficiencies(data.skill_proficiencies || []),
             castingStyle: data.casting_style,
@@ -341,13 +350,22 @@ const CharacterSheet = ({
                   Armor Class
                 </div>
               </div>
-              <div style={{ ...styles.statCard, ...styles.statCardGreen }}>
+              {/* <div style={{ ...styles.statCard, ...styles.statCardGreen }}>
                 <Zap className="w-6 h-6 text-green-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
                   {character.speed} ft
                 </div>
                 <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
                   Speed
+                </div>
+              </div> */}
+              <div style={{ ...styles.statCard, ...styles.statCardGreen }}>
+                <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
+                  {character.initiative ?? 8}
+                </div>
+                <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
+                  Initiative
                 </div>
               </div>
             </div>
