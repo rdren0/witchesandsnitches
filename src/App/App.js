@@ -1,6 +1,8 @@
 // src/App/App.js (Final Clean Version)
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Edit3, Check, X, User, Palette } from "lucide-react";
+import { Edit3, Check, X, User } from "lucide-react";
+
+// import { Palette } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
@@ -9,7 +11,7 @@ import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
 import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
 import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
 import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
-import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
+// import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { createThemedStyles } from "./style";
 
@@ -356,7 +358,7 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
         />
         <div
           style={styles.featureCard}
-          onClick={() => handleCardClick("character-creation")}
+          onClick={() => user && handleCardClick("character-creation")}
         >
           <h3>Character Creation</h3>
           <p>Build and customize your D&D characters.</p>
@@ -798,11 +800,12 @@ function AppContent() {
   };
 
   const getVisibleTabs = () => {
-    const baseTabs = ["home", "character-creation"];
+    const baseTabs = ["home"];
 
     if (characters.length > 0) {
       return [
         ...baseTabs,
+        "character-creation",
         "character-sheet",
         "spellbook",
         "character-notes",

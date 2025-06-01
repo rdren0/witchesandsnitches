@@ -1,6 +1,7 @@
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Sun, Moon, Home, Palette } from "lucide-react";
+import { Sun, Moon, Home } from "lucide-react";
+// import { Palette } from "lucide-react";
 
 const ThemeSettings = () => {
   const {
