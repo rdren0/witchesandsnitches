@@ -800,13 +800,13 @@ function AppContent() {
   };
 
   const getVisibleTabs = () => {
-    const baseTabs = ["home"];
+    const baseTabs = ["home", "character-sheet"];
 
     if (characters.length > 0) {
       return [
         ...baseTabs,
         "character-creation",
-        "character-sheet",
+        // "character-sheet",
         "spellbook",
         "character-notes",
         "gallery",

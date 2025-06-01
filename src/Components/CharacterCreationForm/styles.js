@@ -1507,6 +1507,46 @@ export const createThemedStyles = (theme) => ({
     borderColor: theme.warning,
     boxShadow: `inset 0 2px 6px ${theme.warning}20, 0 2px 4px rgba(0,0,0,0.1)`,
   },
+  hpDisplayEnabled: {
+    opacity: 1,
+    color: theme.text,
+  },
+
+  hpDisplayDisabled: {
+    opacity: 0.5,
+    color: theme.textSecondary,
+  },
+
+  hpHelpText: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+    fontStyle: "italic",
+    marginTop: "4px",
+  },
+
+  formValidationContainer: {
+    backgroundColor: theme.surface,
+    border: `1px solid ${theme.border}`,
+    borderRadius: "8px",
+    padding: "12px",
+    marginBottom: "16px",
+  },
+
+  formValidationHeader: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: theme.text,
+    marginBottom: "8px",
+  },
+
+  formValidationList: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+  },
+
+  formValidationItem: {
+    marginBottom: "4px",
+  },
 });
 
 export default styles;
