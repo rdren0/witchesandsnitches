@@ -145,9 +145,11 @@ export const AbilityScorePicker = ({
       {!isManualMode && (
         <div style={styles.availableStats}>
           <div style={styles.availableStatsHeader}>
-            <span style={styles.availableStatsLabel}>
-              Available Stats to Assign:
-            </span>
+            {availableStats.length > 0 && (
+              <span style={styles.availableStatsLabel}>
+                Available Stats to Assign:
+              </span>
+            )}
             <span style={styles.availableStatsTotal}>
               Total: {rolledStats.reduce((sum, stat) => sum + stat, 0)}
               {allStatsAssigned() && (
