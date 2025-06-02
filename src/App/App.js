@@ -819,7 +819,7 @@ function AppContent() {
         "character-sheet",
         "spellbook",
         "character-notes",
-        ...(isLocalhost && ["downtime", "gallery"]),
+        ...(isLocalhost ? ["downtime", "gallery"] : []),
       ];
     }
 
