@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  Users,
-  ChevronDown,
-  ChevronUp,
-  Star,
-  Calendar,
-  MapPin,
-} from "lucide-react";
+import { Users, ChevronDown, ChevronUp, Calendar, MapPin } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterGalleryStyles } from "./styles";
 import * as images from "../../Images";
