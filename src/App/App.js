@@ -51,8 +51,9 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
     if (username.length > 30) {
       return "Username must be less than 30 characters";
     }
-    if (!/^[a-zA-Z0-9_\-\s]+$/.test(username)) {
-      return "Username can only contain letters, numbers, spaces, hyphens, and underscores";
+    // eslint-disable-next-line
+    if (!/^[a-zA-Z0-9_\-\.\s@\+!#\$%&\*\(\)\[\]\{\}'",:;?=]+$/.test(username)) {
+      return "Invalid characters in username";
     }
     return null;
   };

@@ -341,7 +341,7 @@ export const createThemedStyles = (theme) => ({
     cursor: "not-allowed",
   },
   signinButton: {
-    backgroundColor: "#5865f2",
+    backgroundColor: theme.text,
     color: "white",
   },
   signinButtonHover: {

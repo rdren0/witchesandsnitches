@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  WandIcon,
-  RotateIcon,
-  SaveIcon,
-  UserIcon,
-  TrashIcon,
-} from "../../icons";
+import { WandIcon, SaveIcon, UserIcon } from "../../icons";
 
 import {
   castingStyles,
@@ -13,13 +7,14 @@ import {
   skillsByCastingStyle,
   hpData,
   subclasses,
-  innateHeritages,
   backgrounds,
-  standardFeats,
 } from "../data";
 import { styles } from "./styles";
 import { characterService } from "../../services/characterService";
 import { SavedCharacters } from "./SavedCharacters";
+import { InnateHeritage } from "./InnateHeritage";
+import { StandardFeat } from "./StandardFeat";
+import { AbilityScorePicker } from "./AbilityScorePicker";
 
 const MAX_CHARACTERS = 10;
 
@@ -58,6 +53,7 @@ const CharacterCreationForm = ({
       healing: 0,
       jinxesHexesCurses: 0,
     },
+    level1ChoiceType: "", // "innate" or "feat"
   });
 
   const getGameSessionOptions = () => {
@@ -90,8 +86,8 @@ const CharacterCreationForm = ({
   const [editingId, setEditingId] = useState(null);
   const [expandedFeats, setExpandedFeats] = useState(new Set());
   const [featFilter, setFeatFilter] = useState("");
-  const [isManualMode, setIsManualMode] = useState(false);
   const [tempInputValues, setTempInputValues] = useState({});
+  const [isManualMode, setIsManualMode] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -99,15 +95,21 @@ const CharacterCreationForm = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  const rollStat = () => {
-    const rolls = [];
-    for (let i = 0; i < 4; i++) {
-      rolls.push(Math.floor(Math.random() * 6) + 1);
-    }
-    rolls.sort((a, b) => b - a);
-    return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
-  };
+  const createNewCharacter = () => {
+    setCharacter(getInitialCharacterState());
+    setIsEditing(false);
+    setEditingId(null);
+    setExpandedFeats(new Set());
+    setFeatFilter("");
+    setTempInputValues({});
 
+    if (isManualMode) {
+      setRolledStats([]);
+      setAvailableStats([]);
+    } else {
+      rollAllStats();
+    }
+  };
   const rollAllStats = () => {
     const newStats = [];
     for (let i = 0; i < 6; i++) {
@@ -128,74 +130,13 @@ const CharacterCreationForm = ({
       },
     }));
   };
-
-  const toggleManualMode = () => {
-    const newManualMode = !isManualMode;
-    setIsManualMode(newManualMode);
-
-    if (newManualMode) {
-      setRolledStats([]);
-      setAvailableStats([]);
-    } else {
-      rollAllStats();
+  const rollStat = () => {
+    const rolls = [];
+    for (let i = 0; i < 4; i++) {
+      rolls.push(Math.floor(Math.random() * 6) + 1);
     }
-  };
-
-  const createNewCharacter = () => {
-    setCharacter(getInitialCharacterState());
-    setIsEditing(false);
-    setEditingId(null);
-    setExpandedFeats(new Set());
-    setFeatFilter("");
-    setTempInputValues({});
-
-    if (isManualMode) {
-      setRolledStats([]);
-      setAvailableStats([]);
-    } else {
-      rollAllStats();
-    }
-  };
-
-  const handleManualScoreChange = (ability, value) => {
-    setTempInputValues((prev) => ({
-      ...prev,
-      [ability]: value,
-    }));
-
-    if (value === "") {
-      setCharacter((prev) => ({
-        ...prev,
-        abilityScores: {
-          ...prev.abilityScores,
-          [ability]: null,
-        },
-      }));
-    }
-  };
-
-  const handleManualScoreBlur = (ability) => {
-    const tempValue = tempInputValues[ability];
-    if (tempValue && tempValue !== "") {
-      const numericValue = parseInt(tempValue, 10);
-      if (!isNaN(numericValue) && numericValue >= 1 && numericValue <= 30) {
-        setCharacter((prev) => ({
-          ...prev,
-          abilityScores: {
-            ...prev.abilityScores,
-            [ability]: numericValue,
-          },
-        }));
-      }
-    }
-
-    setTimeout(() => {
-      setTempInputValues((prev) => {
-        const newTemp = { ...prev };
-        delete newTemp[ability];
-        return newTemp;
-      });
-    }, 0);
+    rolls.sort((a, b) => b - a);
+    return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
   };
 
   const loadCharacters = useCallback(async () => {
@@ -227,6 +168,7 @@ const CharacterCreationForm = ({
           healing: 0,
           jinxesHexesCurses: 0,
         },
+        level1ChoiceType: char.level1_choice_type || "",
       }));
       setSavedCharacters(transformedCharacters);
     } catch (err) {
@@ -346,6 +288,14 @@ const CharacterCreationForm = ({
           [field]: value,
           skillProficiencies: [],
         }));
+      } else if (field === "level") {
+        setCharacter((prev) => ({
+          ...prev,
+          [field]: value,
+          // Reset level 1 choice if level changes from 1
+          level1ChoiceType: value === 1 ? prev.level1ChoiceType : "",
+          innateHeritage: value === 1 ? prev.innateHeritage : "",
+        }));
       } else {
         setCharacter((prev) => ({
           ...prev,
@@ -355,52 +305,14 @@ const CharacterCreationForm = ({
     }
   };
 
-  const handleFeatToggle = (featName) => {
-    setCharacter((prev) => {
-      const currentFeats = prev.standardFeats;
-      const isCurrentlySelected = currentFeats.includes(featName);
-
-      if (!isCurrentlySelected && currentFeats.length >= 2) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        standardFeats: isCurrentlySelected
-          ? currentFeats.filter((f) => f !== featName)
-          : [...currentFeats, featName],
-      };
-    });
-  };
-
-  const toggleFeatExpansion = (featName) => {
-    setExpandedFeats((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(featName)) {
-        newSet.delete(featName);
-      } else {
-        newSet.add(featName);
-      }
-      return newSet;
-    });
-  };
-
-  const getFilteredFeats = () => {
-    if (character.standardFeats.length === 2) {
-      return standardFeats.filter((feat) =>
-        character.standardFeats.includes(feat.name)
-      );
-    }
-
-    if (!featFilter.trim()) return standardFeats;
-
-    const searchTerm = featFilter.toLowerCase();
-    return standardFeats.filter(
-      (feat) =>
-        feat.name.toLowerCase().includes(searchTerm) ||
-        feat.preview.toLowerCase().includes(searchTerm) ||
-        feat.description.toLowerCase().includes(searchTerm)
-    );
+  const handleLevel1ChoiceChange = (choiceType) => {
+    setCharacter((prev) => ({
+      ...prev,
+      level1ChoiceType: choiceType,
+      // Clear the other option when switching
+      innateHeritage: choiceType === "feat" ? "" : prev.innateHeritage,
+      standardFeats: choiceType === "innate" ? [] : prev.standardFeats,
+    }));
   };
 
   const handleSkillToggle = (skill) => {
@@ -479,6 +391,7 @@ const CharacterCreationForm = ({
                     healing: 0,
                     jinxesHexesCurses: 0,
                   },
+                  level1ChoiceType: updatedCharacter.level1_choice_type || "",
                 }
               : char
           )
@@ -514,6 +427,7 @@ const CharacterCreationForm = ({
             healing: 0,
             jinxesHexesCurses: 0,
           },
+          level1ChoiceType: savedCharacter.level1_choice_type || "",
         };
 
         setSavedCharacters((prev) => [transformedCharacter, ...prev]);
@@ -557,6 +471,7 @@ const CharacterCreationForm = ({
         healing: 0,
         jinxesHexesCurses: 0,
       },
+      level1ChoiceType: character.level1ChoiceType || "",
     });
 
     const hasAllScores = Object.values(character.abilityScores).every(
@@ -620,21 +535,13 @@ const CharacterCreationForm = ({
     }
   };
 
-  const getAbilityModifier = (score) => {
-    if (score === null || score === undefined) return 0;
-    return Math.floor((score - 10) / 2);
-  };
-
-  // Updated isSaveEnabled to include character limit check
   const isSaveEnabled =
     character.name &&
     character.house &&
     character.castingStyle &&
     allStatsAssigned() &&
     !isSaving &&
-    (isEditing || savedCharacters.length < MAX_CHARACTERS); // Only check limit when creating new
-
-  const filteredFeats = getFilteredFeats();
+    (isEditing || savedCharacters.length < MAX_CHARACTERS);
 
   return (
     <div style={styles.container}>
@@ -877,23 +784,121 @@ const CharacterCreationForm = ({
             </select>
           </div>
 
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>Innate Heritage</label>
-            <select
-              value={character.innateHeritage}
-              onChange={(e) =>
-                handleInputChange("innateHeritage", e.target.value)
-              }
-              style={styles.select}
-            >
-              <option value="">Select Heritage...</option>
-              {innateHeritages.map((heritage) => (
-                <option key={heritage} value={heritage}>
-                  {heritage}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Level 1 Choice Section */}
+          {character.level === 1 && (
+            <div style={styles.fieldContainer}>
+              <h3 style={styles.skillsHeader}>Level 1 Choice</h3>
+              <div style={styles.helpText}>
+                At level 1, you can choose either an Innate Heritage or a
+                Standard Feat.
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    ...styles.skillOptionBase,
+                    cursor: "pointer",
+                    backgroundColor:
+                      character.level1ChoiceType === "innate"
+                        ? "#F0FDF4"
+                        : "white",
+                    border:
+                      character.level1ChoiceType === "innate"
+                        ? "2px solid #10B981"
+                        : "2px solid #E5E7EB",
+                    marginBottom: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="level1Choice"
+                    value="innate"
+                    checked={character.level1ChoiceType === "innate"}
+                    onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
+                    style={{ marginRight: "8px" }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color:
+                        character.level1ChoiceType === "innate"
+                          ? "#059669"
+                          : "#374151",
+                      fontWeight:
+                        character.level1ChoiceType === "innate"
+                          ? "bold"
+                          : "normal",
+                    }}
+                  >
+                    Innate Heritage
+                  </span>
+                </label>
+
+                <label
+                  style={{
+                    ...styles.skillOptionBase,
+                    cursor: "pointer",
+                    backgroundColor:
+                      character.level1ChoiceType === "feat"
+                        ? "#F0FDF4"
+                        : "white",
+                    border:
+                      character.level1ChoiceType === "feat"
+                        ? "2px solid #10B981"
+                        : "2px solid #E5E7EB",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="level1Choice"
+                    value="feat"
+                    checked={character.level1ChoiceType === "feat"}
+                    onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
+                    style={{ marginRight: "8px" }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color:
+                        character.level1ChoiceType === "feat"
+                          ? "#059669"
+                          : "#374151",
+                      fontWeight:
+                        character.level1ChoiceType === "feat"
+                          ? "bold"
+                          : "normal",
+                    }}
+                  >
+                    Standard Feat
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Conditionally render Innate Heritage or Standard Feat based on level and choice */}
+          {character.level === 1 && character.level1ChoiceType === "innate" && (
+            <InnateHeritage
+              character={character}
+              handleInputChange={handleInputChange}
+            />
+          )}
+
+          {((character.level === 1 && character.level1ChoiceType === "feat") ||
+            character.level > 1) && (
+            <StandardFeat
+              character={character}
+              setCharacter={setCharacter}
+              expandedFeats={expandedFeats}
+              setExpandedFeats={setExpandedFeats}
+              featFilter={featFilter}
+              setFeatFilter={setFeatFilter}
+            />
+          )}
 
           <div style={styles.fieldContainer}>
             <label style={styles.label}>Background</label>
@@ -910,358 +915,21 @@ const CharacterCreationForm = ({
               ))}
             </select>
           </div>
-
-          <div style={styles.fieldContainer}>
-            <div style={styles.abilityScoresHeader}>
-              <h3 style={styles.abilityScoresTitle}>Ability Scores</h3>
-
-              <div style={styles.buttonGroup}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                  }}
-                >
-                  {!isManualMode && (
-                    <button
-                      onClick={rollAllStats}
-                      style={{
-                        ...styles.button,
-                        backgroundColor: "#EF4444",
-                      }}
-                    >
-                      <RotateIcon />
-                      Roll For Stats
-                    </button>
-                  )}
-                </div>
-                <div
-                  onClick={toggleManualMode}
-                  style={{
-                    position: "relative",
-                    marginTop: "4px",
-                    width: "44px",
-                    height: "24px",
-                    backgroundColor: isManualMode ? "#10B981" : "#D1D5DB",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    transition: "background-color 0.2s ease",
-                    border: "2px solid",
-                    borderColor: isManualMode ? "#10B981" : "#9CA3AF",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "2px",
-                      left: isManualMode ? "22px" : "2px",
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "white",
-                      borderRadius: "50%",
-                      transition: "left 0.2s ease",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div style={styles.helpText}>
-              {isManualMode
-                ? "Manual input mode - enter ability scores directly"
-                : "Roll mode - assign generated stats to abilities"}
-            </div>
-
-            {!isManualMode && (
-              <div style={styles.availableStats}>
-                <div style={styles.availableStatsHeader}>
-                  <span style={styles.availableStatsLabel}>
-                    Available Stats to Assign:
-                  </span>
-                  <span style={styles.availableStatsTotal}>
-                    Total: {rolledStats.reduce((sum, stat) => sum + stat, 0)}
-                    {allStatsAssigned() && (
-                      <span style={styles.completeIndicator}>✓ Complete</span>
-                    )}
-                  </span>
-                </div>
-                <div style={styles.statsContainer}>
-                  {availableStats.length > 0 ? (
-                    availableStats.map((stat, index) => (
-                      <span key={index} style={styles.statBadge}>
-                        {stat} ({getAbilityModifier(stat) >= 0 ? "+" : ""}
-                        {getAbilityModifier(stat)})
-                      </span>
-                    ))
-                  ) : (
-                    <span style={styles.allAssignedText}>
-                      All stats assigned!
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div style={styles.abilityGrid}>
-              {Object.entries(character.abilityScores).map(
-                ([ability, score]) => (
-                  <div
-                    key={ability}
-                    style={{
-                      ...styles.abilityCard,
-                      backgroundColor: score !== null ? "#F0FDF4" : "white",
-                    }}
-                  >
-                    <div style={styles.abilityName}>{ability}</div>
-
-                    {score !== null ? (
-                      <>
-                        <div style={styles.abilityModifier}>
-                          {getAbilityModifier(score) >= 0 ? "+" : ""}
-                          {getAbilityModifier(score)}
-                        </div>
-
-                        <div style={styles.abilityScoreContainer}>
-                          {isManualMode ? (
-                            <input
-                              type="number"
-                              min="1"
-                              value={
-                                tempInputValues[ability] !== undefined
-                                  ? tempInputValues[ability]
-                                  : score === null
-                                  ? ""
-                                  : score
-                              }
-                              onChange={(e) =>
-                                handleManualScoreChange(ability, e.target.value)
-                              }
-                              onBlur={() => handleManualScoreBlur(ability)}
-                              style={{
-                                ...styles.input,
-                                textAlign: "center",
-                                fontSize: "18px",
-                                fontWeight: "bold",
-                                width: "60px",
-                                padding: "4px",
-                              }}
-                            />
-                          ) : (
-                            <div style={styles.abilityScore}>{score}</div>
-                          )}
-                          <button
-                            onClick={() => clearStat(ability)}
-                            style={styles.trashButton}
-                          >
-                            <TrashIcon />
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={styles.abilityModifierEmpty}>--</div>
-                        {isManualMode ? (
-                          <input
-                            type="number"
-                            min="1"
-                            placeholder="Enter..."
-                            value={tempInputValues[ability] || ""}
-                            onChange={(e) =>
-                              handleManualScoreChange(ability, e.target.value)
-                            }
-                            onBlur={() => handleManualScoreBlur(ability)}
-                            style={{
-                              ...styles.input,
-                              textAlign: "center",
-                              fontSize: "16px",
-                              width: "80px",
-                              padding: "4px",
-                            }}
-                          />
-                        ) : (
-                          <select
-                            value=""
-                            onChange={(e) =>
-                              assignStat(ability, parseInt(e.target.value))
-                            }
-                            style={styles.assignSelect}
-                          >
-                            <option value="">Assign...</option>
-                            {availableStats.map((stat, index) => (
-                              <option key={index} value={stat}>
-                                {stat} (
-                                {getAbilityModifier(stat) >= 0 ? "+" : ""}
-                                {getAbilityModifier(stat)})
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          <div style={styles.fieldContainer}>
-            <h3 style={styles.skillsHeader}>
-              Standard Feats ({character.standardFeats.length}/2 selected)
-            </h3>
-
-            {character.standardFeats.length < 2 && (
-              <div style={styles.featFilterContainer}>
-                <input
-                  type="text"
-                  placeholder="Search feats by name, preview, or description..."
-                  value={featFilter}
-                  onChange={(e) => setFeatFilter(e.target.value)}
-                  style={styles.featFilterInput}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#FBBF24";
-                    e.target.style.boxShadow =
-                      "inset 0 2px 6px rgba(245,158,11,0.2), 0 0 0 3px rgba(251,191,36,0.3)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#F59E0B";
-                    e.target.style.boxShadow =
-                      "inset 0 2px 6px rgba(245,158,11,0.2), 0 2px 4px rgba(0,0,0,0.1)";
-                  }}
-                />
-                {featFilter.trim() && (
-                  <button
-                    onClick={() => setFeatFilter("")}
-                    style={styles.featFilterClearButton}
-                    type="button"
-                    title="Clear search"
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#FCD34D";
-                      e.target.style.transform = "translateY(-50%) scale(1.1)";
-                      e.target.style.boxShadow = "0 3px 6px rgba(0,0,0,0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = "#FBBF24";
-                      e.target.style.transform = "translateY(-50%) scale(1)";
-                      e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-                    }}
-                  >
-                    ×
-                  </button>
-                )}
-                {featFilter.trim() && (
-                  <div style={styles.featFilterResults}>
-                    Showing {filteredFeats.length} of {standardFeats.length}{" "}
-                    feats
-                  </div>
-                )}
-              </div>
-            )}
-
-            {character.standardFeats.length === 2 && (
-              <div
-                style={{
-                  backgroundColor: "#F0FDF4",
-                  border: "2px solid #10B981",
-                  color: "#059669",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  margin: "12px 0",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  textAlign: "center",
-                }}
-              >
-                ✓ Feat selection complete! Showing your 2 selected feats.
-                Uncheck one to see all feats again.
-              </div>
-            )}
-
-            <div style={styles.featsContainer}>
-              {filteredFeats.length === 0 ? (
-                <div style={styles.noFeatsFound}>
-                  No feats found matching "{featFilter}". Try a different search
-                  term.
-                </div>
-              ) : (
-                filteredFeats.map((feat) => {
-                  const isSelected = character.standardFeats.includes(
-                    feat.name
-                  );
-                  return (
-                    <div
-                      key={feat.name}
-                      style={
-                        isSelected ? styles.featCardSelected : styles.featCard
-                      }
-                    >
-                      <div style={styles.featHeader}>
-                        <label style={styles.featLabelClickable}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleFeatToggle(feat.name)}
-                            style={{
-                              width: "18px",
-                              height: "18px",
-                              marginRight: "8px",
-                              cursor: "pointer",
-                              accentColor: "#8B5CF6",
-                              transform: "scale(1.2)",
-                            }}
-                          />
-                          <span
-                            style={
-                              isSelected
-                                ? styles.featNameSelected
-                                : styles.featName
-                            }
-                          >
-                            {feat.name}
-                          </span>
-                        </label>
-                        <button
-                          onClick={() => toggleFeatExpansion(feat.name)}
-                          style={styles.expandButton}
-                          type="button"
-                        >
-                          {expandedFeats.has(feat.name) ? "▲" : "▼"}
-                        </button>
-                      </div>
-
-                      <div
-                        style={
-                          isSelected
-                            ? styles.featPreviewSelected
-                            : styles.featPreview
-                        }
-                      >
-                        {feat.preview}
-                      </div>
-
-                      {expandedFeats.has(feat.name) && (
-                        <div
-                          style={
-                            isSelected
-                              ? styles.featDescriptionSelected
-                              : styles.featDescription
-                          }
-                        >
-                          {feat.description}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-            <div style={styles.helpText}>
-              Note: You can select up to 2 standard feats. Standard feats are
-              optional and may have prerequisites. Click the + button to see
-              full descriptions.
-            </div>
-          </div>
+          <AbilityScorePicker
+            character={character}
+            setRolledStats={setRolledStats}
+            setAvailableStats={setAvailableStats}
+            setCharacter={setCharacter}
+            rollAllStats={rollAllStats}
+            setTempInputValues={setTempInputValues}
+            allStatsAssigned={allStatsAssigned}
+            availableStats={availableStats}
+            tempInputValues={tempInputValues}
+            clearStat={clearStat}
+            assignStat={assignStat}
+            setIsManualMode={setIsManualMode}
+            rolledStats={rolledStats}
+          />
 
           <div style={styles.fieldContainer}>
             <h3 style={styles.skillsHeader}>Magic School Modifiers</h3>
