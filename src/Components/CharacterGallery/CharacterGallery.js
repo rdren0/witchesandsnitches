@@ -9,19 +9,36 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterGalleryStyles } from "./styles";
+import * as images from "../../Images";
 
+//   ,
+//   Bailey_Anna,
+//   Claire,
+//   Colby,
+//   Erika,
+//   Genesis,
+//   Harmony,
+//   Jeremiah,
+//   Maddie,
+//   Noah,
+//   Olivia,
+//   Omari,
+//   Rome,
+//   Seth,
+//   Shelby,
+//   Tony,
+//   Warren,
 // Sample character data - replace with your actual character data
 const SAMPLE_CHARACTERS = [
   {
     id: 1,
-    name: "Hermione Granger",
+    name: "Ava Robinson",
     year: 1,
-    house: "Gryffindor",
+    house: "?",
     description:
       "Brilliant witch known for her intelligence, quick thinking, and extensive knowledge of magic.",
-    imagePath: "/src/Images/hermione.jpg", // Update with actual image paths
+    src: images.Ava,
     specialties: ["Transfiguration", "Charms", "Ancient Runes"],
-    status: "Active",
   },
   {
     id: 2,
@@ -30,9 +47,8 @@ const SAMPLE_CHARACTERS = [
     house: "Slytherin",
     description:
       "Ambitious student from a pure-blood family with a talent for potions and dark arts.",
-    imagePath: "/src/Images/draco.jpg",
+    src: images.Anuhea,
     specialties: ["Potions", "Dark Arts", "Quidditch"],
-    status: "Active",
   },
   {
     id: 3,
@@ -41,9 +57,8 @@ const SAMPLE_CHARACTERS = [
     house: "Ravenclaw",
     description:
       "Dreamy and eccentric student with a unique perspective on magical creatures.",
-    imagePath: "/src/Images/luna.jpg",
+    src: images.Azha,
     specialties: ["Magical Creatures", "Divination", "Herbology"],
-    status: "Active",
   },
   {
     id: 4,
@@ -52,9 +67,8 @@ const SAMPLE_CHARACTERS = [
     house: "Hufflepuff",
     description:
       "Popular and talented student known for his fairness and athletic ability.",
-    imagePath: "/src/Images/cedric.jpg",
+    src: images.Bailey_Anna,
     specialties: ["Quidditch", "Defense Against Dark Arts", "Charms"],
-    status: "Graduate",
   },
   {
     id: 5,
@@ -63,28 +77,14 @@ const SAMPLE_CHARACTERS = [
     house: "Hufflepuff",
     description:
       "Magizoologist with an extraordinary gift for understanding magical creatures.",
-    imagePath: "/src/Images/newt.jpg",
+    src: "/src/Images/newt.jpg",
     specialties: ["Magical Creatures", "Herbology", "Potions"],
-    status: "Alumni",
   },
 ];
 
 const CharacterCard = ({ character, theme, styles }) => {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Active":
-        return theme.success;
-      case "Graduate":
-        return theme.primary;
-      case "Alumni":
-        return theme.accent;
-      default:
-        return theme.textSecondary;
-    }
-  };
 
   const getHouseColor = (house) => {
     const houseColors = {
@@ -109,7 +109,7 @@ const CharacterCard = ({ character, theme, styles }) => {
       <div style={styles.imageContainer}>
         {!imageError ? (
           <img
-            src={character.imagePath}
+            src={character.src}
             alt={character.name}
             style={styles.characterImage}
             onError={() => setImageError(true)}
@@ -121,18 +121,6 @@ const CharacterCard = ({ character, theme, styles }) => {
             <span style={styles.placeholderText}>No Image</span>
           </div>
         )}
-
-        {/* Status Badge */}
-        <div
-          style={{
-            ...styles.statusBadge,
-            backgroundColor: getStatusColor(character.status) + "20",
-            borderColor: getStatusColor(character.status),
-            color: getStatusColor(character.status),
-          }}
-        >
-          {character.status}
-        </div>
 
         {/* House Badge */}
         <div
@@ -151,30 +139,6 @@ const CharacterCard = ({ character, theme, styles }) => {
       <div style={styles.characterInfo}>
         <h3 style={styles.characterName}>{character.name}</h3>
         <p style={styles.characterDescription}>{character.description}</p>
-
-        {/* Specialties */}
-        {character.specialties && character.specialties.length > 0 && (
-          <div style={styles.specialtiesContainer}>
-            <div style={styles.specialtiesHeader}>
-              <Star size={14} color={theme.accent} />
-              <span style={styles.specialtiesLabel}>Specialties:</span>
-            </div>
-            <div style={styles.specialtiesList}>
-              {character.specialties.map((specialty, index) => (
-                <span
-                  key={index}
-                  style={{
-                    ...styles.specialtyTag,
-                    backgroundColor: theme.primary + "15",
-                    color: theme.primary,
-                  }}
-                >
-                  {specialty}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -14,11 +14,13 @@ import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "./diceRoller";
 
 import { createThemedStyles } from "./style";
+import DowntimeSheet from "../Components/Downtime/DowntimeSheet";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
+const isLocalhost = window.location.hostname === "localhost";
 
 const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
   const { theme } = useTheme();
@@ -351,6 +353,13 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                   year.
                 </p>
               </div>
+              <div
+                style={styles.featureCard}
+                onClick={() => handleCardClick("downtime")}
+              >
+                <h3>Downtime</h3>
+                <p>How your character stays occupied over break</p>
+              </div>
             </div>
           </>
         )}
@@ -653,7 +662,6 @@ function AppContent() {
   const signInWithDiscord = async () => {
     try {
       setAuthLoading(true);
-      const isLocalhost = window.location.hostname === "localhost";
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
@@ -786,6 +794,8 @@ function AppContent() {
             />
           </ProtectedRoute>
         );
+      case "downtime":
+        return <DowntimeSheet />;
       case "theme-settings":
         return <ThemeSettings />;
       default:
@@ -809,7 +819,7 @@ function AppContent() {
         "character-sheet",
         "spellbook",
         "character-notes",
-        "gallery",
+        ...(isLocalhost && ["downtime", "gallery"]),
       ];
     }
 
@@ -843,6 +853,7 @@ function AppContent() {
               home: "Home",
               "character-creation": "Character Creation",
               gallery: "NPCs",
+              downtime: "Downtime",
               "character-sheet": "Character Sheet",
               "character-notes": "Notes",
               spellbook: "SpellBook",
