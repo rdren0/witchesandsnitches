@@ -343,7 +343,7 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                   relationships, and development.
                 </p>
               </div>
-              <div
+              {/* <div
                 style={styles.featureCard}
                 onClick={() => handleCardClick("gallery")}
               >
@@ -359,7 +359,7 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
               >
                 <h3>Downtime</h3>
                 <p>How your character stays occupied over break</p>
-              </div>
+              </div> */}
             </div>
           </>
         )}
