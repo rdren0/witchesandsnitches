@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { styles } from "./styles";
 import { innateHeritages, heritageDescriptions } from "../data";
+import { getStyles } from "./styles";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export const InnateHeritage = ({ character, handleInputChange }) => {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [expandedHeritages, setExpandedHeritages] = useState(new Set());
   const [heritageFilter, setHeritageFilter] = useState("");
   const [showWarning, setShowWarning] = useState(false);

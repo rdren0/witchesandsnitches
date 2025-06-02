@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { WandIcon, SaveIcon, UserIcon } from "../../icons";
+import { rollAbilityStat } from "../../App/diceRoller";
+import { WandIcon, SaveIcon, UserIcon, RotateIcon } from "../../icons";
+import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
 import {
   castingStyles,
@@ -9,7 +11,8 @@ import {
   subclasses,
   backgrounds,
 } from "../data";
-import { styles } from "./styles";
+import { getStyles } from "./styles";
+import { useTheme } from "../../contexts/ThemeContext";
 import { characterService } from "../../services/characterService";
 import { SavedCharacters } from "./SavedCharacters";
 import { InnateHeritage } from "./InnateHeritage";
@@ -25,6 +28,9 @@ const CharacterCreationForm = ({
   selectedCharacterId,
   onSelectedCharacterReset,
 }) => {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
@@ -78,6 +84,7 @@ const CharacterCreationForm = ({
 
   const gameSessionOptions = getGameSessionOptions();
 
+  const [activeTab, setActiveTab] = useState("create");
   const [character, setCharacter] = useState(getInitialCharacterState());
   const [rolledStats, setRolledStats] = useState([]);
   const [availableStats, setAvailableStats] = useState([]);
@@ -88,32 +95,17 @@ const CharacterCreationForm = ({
   const [featFilter, setFeatFilter] = useState("");
   const [tempInputValues, setTempInputValues] = useState({});
   const [isManualMode, setIsManualMode] = useState(false);
+  const [isHpManualMode, setIsHpManualMode] = useState(false);
+  const [rolledHp, setRolledHp] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const discordUserId = user?.user_metadata?.provider_id;
-
-  const createNewCharacter = () => {
-    setCharacter(getInitialCharacterState());
-    setIsEditing(false);
-    setEditingId(null);
-    setExpandedFeats(new Set());
-    setFeatFilter("");
-    setTempInputValues({});
-
-    if (isManualMode) {
-      setRolledStats([]);
-      setAvailableStats([]);
-    } else {
-      rollAllStats();
-    }
-  };
   const rollAllStats = () => {
     const newStats = [];
     for (let i = 0; i < 6; i++) {
-      newStats.push(rollStat());
+      newStats.push(rollAbilityStat());
     }
     setRolledStats(newStats);
     setAvailableStats([...newStats]);
@@ -130,13 +122,51 @@ const CharacterCreationForm = ({
       },
     }));
   };
-  const rollStat = () => {
-    const rolls = [];
-    for (let i = 0; i < 4; i++) {
-      rolls.push(Math.floor(Math.random() * 6) + 1);
+
+  const rollHp = () => {
+    if (!character.castingStyle) return;
+
+    const roller = new DiceRoller();
+    const castingData = hpData[character.castingStyle];
+    if (!castingData) return;
+
+    const conScore = character.abilityScores.constitution;
+    const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
+    const level = character.level || 1;
+
+    const hitDie = castingData.hitDie || 6;
+
+    const baseRoll = roller.roll(`1d${hitDie}`);
+    const baseHP = baseRoll.total + conMod;
+
+    let additionalHP = 0;
+    if (level > 1) {
+      const additionalRolls = roller.roll(`${level - 1}d${hitDie}`);
+      additionalHP = additionalRolls.total + conMod * (level - 1);
     }
-    rolls.sort((a, b) => b - a);
-    return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
+
+    const totalHP = baseHP + additionalHP;
+    setRolledHp(Math.max(1, totalHP));
+  };
+
+  const discordUserId = user?.user_metadata?.provider_id;
+  const createNewCharacter = () => {
+    setCharacter(getInitialCharacterState());
+    setIsEditing(false);
+    setEditingId(null);
+    setExpandedFeats(new Set());
+    setFeatFilter("");
+    setTempInputValues({});
+    setActiveTab("create");
+    setIsHpManualMode(false);
+    setRolledHp(null);
+
+    if (isManualMode) {
+      setRolledStats([]);
+      setAvailableStats([]);
+    } else {
+      rollAllStats();
+    }
   };
 
   const loadCharacters = useCallback(async () => {
@@ -194,26 +224,36 @@ const CharacterCreationForm = ({
   if (!user || !discordUserId) {
     return (
       <div style={styles.container}>
-        <div style={styles.header}>
-          <div style={{ color: "#8B5CF6" }}>
-            <WandIcon />
-          </div>
-          <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
-        </div>
         <div
           style={{
-            textAlign: "center",
-            padding: "40px",
-            backgroundColor: "#FEF3C7",
-            border: "1px solid #F59E0B",
-            borderRadius: "8px",
-            margin: "20px",
+            ...styles.header,
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
           }}
         >
-          <h2 style={{ color: "#92400E", marginBottom: "16px" }}>
-            Authentication Required
-          </h2>
-          <p style={{ color: "#92400E" }}>
+          <div style={{ color: theme.primary }}>
+            <WandIcon />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
+            {user && (
+              <div style={styles.userAvatarContainer}>
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="Avatar"
+                  style={styles.userAvatar}
+                />
+                <span style={styles.welcomeText}>
+                  Welcome, {customUsername ?? user.user_metadata.full_name}!
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={styles.authContainer}>
+          <h2 style={styles.authHeader}>Authentication Required</h2>
+          <p style={styles.authText}>
             Please log in with Discord to create and manage your characters.
           </p>
         </div>
@@ -288,6 +328,9 @@ const CharacterCreationForm = ({
           [field]: value,
           skillProficiencies: [],
         }));
+        // Reset HP when casting style changes
+        setRolledHp(null);
+        setIsHpManualMode(false);
       } else if (field === "level") {
         setCharacter((prev) => ({
           ...prev,
@@ -296,6 +339,11 @@ const CharacterCreationForm = ({
           level1ChoiceType: value === 1 ? prev.level1ChoiceType : "",
           innateHeritage: value === 1 ? prev.innateHeritage : "",
         }));
+        // Reset HP when level changes
+        setRolledHp(null);
+        if (!isHpManualMode) {
+          // Only reset manual mode if we're not already in manual mode
+        }
       } else {
         setCharacter((prev) => ({
           ...prev,
@@ -349,13 +397,23 @@ const CharacterCreationForm = ({
     return baseHP + additionalHP;
   };
 
+  const getCurrentHp = () => {
+    if (isHpManualMode) {
+      return character.hitPoints || 0;
+    } else if (rolledHp !== null && !isHpManualMode) {
+      return rolledHp;
+    } else {
+      return calculateHitPoints();
+    }
+  };
+
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
 
     const characterToSave = {
       ...character,
-      hitPoints: calculateHitPoints(),
+      hitPoints: getCurrentHp(),
     };
     try {
       if (isEditing && editingId) {
@@ -438,6 +496,9 @@ const CharacterCreationForm = ({
         rollAllStats();
       }
 
+      // Switch to saved characters tab after saving
+      setActiveTab("saved");
+
       if (onCharacterSaved) {
         onCharacterSaved();
       }
@@ -491,8 +552,31 @@ const CharacterCreationForm = ({
       setIsManualMode(false);
     }
 
+    // Set HP mode based on whether HP differs from calculated value
+    const calculatedHp = () => {
+      if (!character.castingStyle) return 0;
+      const castingData = hpData[character.castingStyle];
+      if (!castingData) return 0;
+      const conScore = character.abilityScores.constitution;
+      const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
+      const level = character.level || 1;
+      const baseHP = castingData.base + conMod;
+      const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
+      return baseHP + additionalHP;
+    };
+
+    const calculatedValue = calculatedHp();
+    if (character.hitPoints !== calculatedValue && character.hitPoints > 0) {
+      setIsHpManualMode(true);
+      setRolledHp(null);
+    } else {
+      setIsHpManualMode(false);
+      setRolledHp(null);
+    }
+
     setIsEditing(true);
     setEditingId(character.id);
+    setActiveTab("create"); // Switch to create tab when editing
   };
 
   const deleteCharacter = async (id) => {
@@ -553,33 +637,19 @@ const CharacterCreationForm = ({
           gap: "16px",
         }}
       >
-        <div style={{ color: "#8B5CF6" }}>
+        <div style={{ color: theme.primary }}>
           <WandIcon />
         </div>
         <div style={{ flex: 1 }}>
           <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
           {user && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginTop: "8px",
-                fontSize: "14px",
-                color: "#6B7280",
-              }}
-            >
+            <div style={styles.userAvatarContainer}>
               <img
                 src={user.user_metadata.avatar_url}
                 alt="Avatar"
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  border: "2px solid #8B5CF6",
-                }}
+                style={styles.userAvatar}
               />
-              <span style={{ color: "#eee" }}>
+              <span style={styles.welcomeText}>
                 Welcome, {customUsername ?? user.user_metadata.full_name}!
               </span>
             </div>
@@ -587,490 +657,565 @@ const CharacterCreationForm = ({
         </div>
       </div>
 
-      {error && (
-        <div
+      {error && <div style={styles.errorContainer}>{error}</div>}
+
+      {/* Tab Navigation */}
+      <div style={styles.tabContainer}>
+        <button
           style={{
-            backgroundColor: "#FEE2E2",
-            border: "1px solid #FECACA",
-            color: "#DC2626",
-            padding: "12px",
-            borderRadius: "8px",
-            margin: "16px 0",
-            fontSize: "14px",
+            ...styles.tab,
+            ...(activeTab === "create" ? styles.activeTab : {}),
           }}
+          onClick={() => setActiveTab("create")}
         >
-          {error}
-        </div>
-      )}
+          <UserIcon />
+          {isEditing ? "Edit Character" : "Create Character"}
+        </button>
+        <button
+          style={{
+            ...styles.tab,
+            ...(activeTab === "saved" ? styles.activeTab : {}),
+          }}
+          onClick={() => setActiveTab("saved")}
+        >
+          <SaveIcon />
+          Saved Characters ({savedCharacters.length})
+        </button>
+      </div>
 
-      <div style={styles.mainGrid}>
-        <div style={styles.panel}>
-          <h2 style={styles.sectionHeader}>
-            <UserIcon />
-            {isEditing ? "Edit Character" : "Create Character"}
-          </h2>
+      {/* Tab Content */}
+      <div style={styles.tabContent}>
+        {activeTab === "create" && (
+          <div style={styles.panel}>
+            <h2 style={styles.sectionHeader}>
+              <UserIcon />
+              {isEditing ? "Edit Character" : "Create Character"}
+            </h2>
 
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>Character Name</label>
-            <input
-              type="text"
-              value={character.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              placeholder="Enter character name..."
-              style={styles.input}
-            />
-          </div>
+            {isEditing && (
+              <div style={{ marginBottom: "20px" }}>
+                <button
+                  onClick={createNewCharacter}
+                  style={{
+                    ...styles.newCharacterButton,
+                    backgroundColor: theme.success,
+                    color: "white",
+                    border: "none",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = theme.primary;
+                    e.target.style.transform = "translateY(-1px)";
+                    e.target.style.boxShadow = `0 4px 12px ${theme.success}40`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = theme.success;
+                    e.target.style.transform = "translateY(0)";
+                    e.target.style.boxShadow = "none";
+                  }}
+                >
+                  <WandIcon />
+                  Create New Character
+                </button>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#6B7280",
+                    marginTop: "4px",
+                    fontStyle: "italic",
+                  }}
+                >
+                  This will abandon any unsaved changes to the current character
+                </div>
+              </div>
+            )}
 
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>Game Session</label>
-            <select
-              value={character.gameSession}
-              onChange={(e) => handleInputChange("gameSession", e.target.value)}
-              style={styles.select}
-            >
-              <option value="">Select Game Session...</option>
-              {gameSessionOptions.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </select>
-            <div style={styles.helpText}>
-              Select which session your character is in.
-            </div>
-          </div>
-
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>House</label>
-            <select
-              value={character.house}
-              onChange={(e) => handleInputChange("house", e.target.value)}
-              style={styles.select}
-            >
-              <option value="">Select House...</option>
-              {Object.entries(housesBySchool).map(([school, houses]) => (
-                <optgroup key={school} label={school}>
-                  {houses.map((house) => (
-                    <option key={house} value={house}>
-                      {house}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </div>
-
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>Casting Style</label>
-            <select
-              value={character.castingStyle}
-              onChange={(e) =>
-                handleInputChange("castingStyle", e.target.value)
-              }
-              style={styles.select}
-            >
-              <option value="">Select Casting Style...</option>
-              {castingStyles.map((style) => (
-                <option key={style} value={style}>
-                  {style}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={styles.levelHpGrid}>
-            <div>
-              <label style={styles.label}>Level</label>
+            <div style={styles.fieldContainer}>
+              <label style={styles.label}>Character Name</label>
               <input
-                type="number"
-                min="1"
-                max="20"
-                value={character.level}
-                onChange={(e) =>
-                  handleInputChange("level", parseInt(e.target.value) || 1)
-                }
+                type="text"
+                value={character.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="Enter character name..."
                 style={styles.input}
               />
             </div>
-            <div>
-              <label style={styles.label}>Hit Points (Calculated)</label>
-              <div style={styles.hpDisplay}>{calculateHitPoints()}</div>
-            </div>
-          </div>
 
-          <div style={styles.fieldContainer}>
-            <h3 style={styles.skillsHeader}>
-              Skill Proficiencies ({character.skillProficiencies.length}/2
-              selected)
-            </h3>
-
-            {!character.castingStyle ? (
-              <div style={styles.skillsPlaceholder}>
-                Please select a Casting Style first to see available skills.
+            <div style={styles.fieldContainer}>
+              <label style={styles.label}>Game Session</label>
+              <select
+                value={character.gameSession}
+                onChange={(e) =>
+                  handleInputChange("gameSession", e.target.value)
+                }
+                style={styles.select}
+              >
+                <option value="">Select Game Session...</option>
+                {gameSessionOptions.map((session) => (
+                  <option key={session} value={session}>
+                    {session}
+                  </option>
+                ))}
+              </select>
+              <div style={styles.helpText}>
+                Select which session your character is in.
               </div>
-            ) : (
-              <div style={styles.skillsContainer}>
-                <h4 style={styles.skillsSubheader}>
-                  {character.castingStyle} Skills (Choose 2)
-                </h4>
-                <div style={styles.skillsGrid}>
-                  {getAvailableSkills().map((skill) => {
-                    const isSelected =
-                      character.skillProficiencies.includes(skill);
-                    const canSelect =
-                      isSelected || character.skillProficiencies.length < 2;
+            </div>
 
-                    return (
-                      <label
-                        key={skill}
-                        style={{
-                          ...styles.skillOptionBase,
-                          cursor: canSelect ? "pointer" : "not-allowed",
-                          backgroundColor: isSelected ? "#F0FDF4" : "white",
-                          border: isSelected
-                            ? "2px solid #10B981"
-                            : "2px solid #E5E7EB",
-                          opacity: canSelect ? 1 : 0.5,
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleSkillToggle(skill)}
-                          disabled={!canSelect}
-                          style={styles.skillCheckbox}
-                        />
-                        <span
-                          style={{
-                            fontSize: "14px",
-                            color: isSelected ? "#059669" : "#374151",
-                            fontWeight: isSelected ? "bold" : "normal",
-                          }}
-                        >
-                          {skill}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
+            <div style={styles.fieldContainer}>
+              <label style={styles.label}>House</label>
+              <select
+                value={character.house}
+                onChange={(e) => handleInputChange("house", e.target.value)}
+                style={styles.select}
+              >
+                <option value="">Select House...</option>
+                {Object.entries(housesBySchool).map(([school, houses]) => (
+                  <optgroup key={school} label={school}>
+                    {houses.map((house) => (
+                      <option key={house} value={house}>
+                        {house}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
 
-                {character.skillProficiencies.length === 2 && (
-                  <div style={styles.skillsComplete}>
-                    ✓ Skill selection complete! You've chosen your 2 skills.
+            <div style={styles.fieldContainer}>
+              <label style={styles.label}>Casting Style</label>
+              <select
+                value={character.castingStyle}
+                onChange={(e) =>
+                  handleInputChange("castingStyle", e.target.value)
+                }
+                style={styles.select}
+              >
+                <option value="">Select Casting Style...</option>
+                {castingStyles.map((style) => (
+                  <option key={style} value={style}>
+                    {style}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Level and HP Grid with inline controls */}
+            <div style={styles.levelHpGrid}>
+              <div style={styles.levelContainer}>
+                <label style={styles.label}>Level</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={character.level}
+                  onChange={(e) =>
+                    handleInputChange("level", parseInt(e.target.value) || 1)
+                  }
+                  style={styles.input}
+                />
+              </div>
+
+              <div style={styles.hpFieldContainer}>
+                <label style={styles.label}>Hit Points</label>
+                {!character.castingStyle ? (
+                  <div style={styles.skillsPlaceholder}>
+                    Please select a Casting Style first to calculate hit points.
+                  </div>
+                ) : (
+                  <div style={styles.hpValueContainer}>
+                    {isHpManualMode ? (
+                      <input
+                        type="number"
+                        min="1"
+                        value={character.hitPoints || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "hitPoints",
+                            parseInt(e.target.value) || 1
+                          )
+                        }
+                        placeholder="--"
+                        style={styles.hpManualInput}
+                      />
+                    ) : rolledHp !== null ? (
+                      <div style={styles.hpRollDisplay}>{rolledHp}</div>
+                    ) : (
+                      <div style={styles.hpDisplay}>{calculateHitPoints()}</div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
 
-            <div style={styles.helpText}>
-              Note: Each casting style has access to specific skills. You can
-              choose up to 2 skills from your casting style's list.
-            </div>
-          </div>
+              {character.castingStyle && (
+                <div style={styles.hpControlsContainer}>
+                  <div style={styles.hpControlsInline}>
+                    {!isHpManualMode && (
+                      <button
+                        onClick={rollHp}
+                        style={{
+                          ...styles.button,
+                          backgroundColor: "#EF4444",
+                          fontSize: "12px",
+                          // padding: "6px 10px",
+                        }}
+                      >
+                        <RotateIcon />
+                        Roll
+                      </button>
+                    )}
 
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>Subclass</label>
-            <select
-              value={character.subclass}
-              onChange={(e) => handleInputChange("subclass", e.target.value)}
-              style={styles.select}
-            >
-              <option value="">Select Subclass...</option>
-              {subclasses.map((subclass) => (
-                <option key={subclass} value={subclass}>
-                  {subclass}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Level 1 Choice Section */}
-          {character.level === 1 && (
-            <div style={styles.fieldContainer}>
-              <h3 style={styles.skillsHeader}>Level 1 Choice</h3>
-              <div style={styles.helpText}>
-                At level 1, you can choose either an Innate Heritage or a
-                Standard Feat.
-              </div>
-
-              <div style={{ marginBottom: "16px" }}>
-                <label
-                  style={{
-                    ...styles.skillOptionBase,
-                    cursor: "pointer",
-                    backgroundColor:
-                      character.level1ChoiceType === "innate"
-                        ? "#F0FDF4"
-                        : "white",
-                    border:
-                      character.level1ChoiceType === "innate"
-                        ? "2px solid #10B981"
-                        : "2px solid #E5E7EB",
-                    marginBottom: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="level1Choice"
-                    value="innate"
-                    checked={character.level1ChoiceType === "innate"}
-                    onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
-                    style={{ marginRight: "8px" }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color:
-                        character.level1ChoiceType === "innate"
-                          ? "#059669"
-                          : "#374151",
-                      fontWeight:
-                        character.level1ChoiceType === "innate"
-                          ? "bold"
-                          : "normal",
-                    }}
-                  >
-                    Innate Heritage
-                  </span>
-                </label>
-
-                <label
-                  style={{
-                    ...styles.skillOptionBase,
-                    cursor: "pointer",
-                    backgroundColor:
-                      character.level1ChoiceType === "feat"
-                        ? "#F0FDF4"
-                        : "white",
-                    border:
-                      character.level1ChoiceType === "feat"
-                        ? "2px solid #10B981"
-                        : "2px solid #E5E7EB",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="level1Choice"
-                    value="feat"
-                    checked={character.level1ChoiceType === "feat"}
-                    onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
-                    style={{ marginRight: "8px" }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color:
-                        character.level1ChoiceType === "feat"
-                          ? "#059669"
-                          : "#374151",
-                      fontWeight:
-                        character.level1ChoiceType === "feat"
-                          ? "bold"
-                          : "normal",
-                    }}
-                  >
-                    Standard Feat
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Conditionally render Innate Heritage or Standard Feat based on level and choice */}
-          {character.level === 1 && character.level1ChoiceType === "innate" && (
-            <InnateHeritage
-              character={character}
-              handleInputChange={handleInputChange}
-            />
-          )}
-
-          {((character.level === 1 && character.level1ChoiceType === "feat") ||
-            character.level > 1) && (
-            <StandardFeat
-              character={character}
-              setCharacter={setCharacter}
-              expandedFeats={expandedFeats}
-              setExpandedFeats={setExpandedFeats}
-              featFilter={featFilter}
-              setFeatFilter={setFeatFilter}
-            />
-          )}
-
-          <div style={styles.fieldContainer}>
-            <label style={styles.label}>Background</label>
-            <select
-              value={character.background}
-              onChange={(e) => handleInputChange("background", e.target.value)}
-              style={styles.select}
-            >
-              <option value="">Select Background...</option>
-              {backgrounds.map((background) => (
-                <option key={background} value={background}>
-                  {background}
-                </option>
-              ))}
-            </select>
-          </div>
-          <AbilityScorePicker
-            character={character}
-            setRolledStats={setRolledStats}
-            setAvailableStats={setAvailableStats}
-            setCharacter={setCharacter}
-            rollAllStats={rollAllStats}
-            setTempInputValues={setTempInputValues}
-            allStatsAssigned={allStatsAssigned}
-            availableStats={availableStats}
-            tempInputValues={tempInputValues}
-            clearStat={clearStat}
-            assignStat={assignStat}
-            setIsManualMode={setIsManualMode}
-            rolledStats={rolledStats}
-          />
-
-          <div style={styles.fieldContainer}>
-            <h3 style={styles.skillsHeader}>Magic School Modifiers</h3>
-            <div style={styles.helpText}>
-              Enter your wand's bonuses/penalties for each school of magic
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "16px",
-                flexWrap: "wrap",
-                alignItems: "end",
-                justifyContent: "space-between",
-              }}
-            >
-              {[
-                { key: "divinations", label: "Divinations" },
-                { key: "charms", label: "Charms" },
-                { key: "transfiguration", label: "Transfiguration" },
-                { key: "healing", label: "Healing" },
-                { key: "jinxesHexesCurses", label: "JHC" },
-              ].map(({ key, label }) => (
-                <div
-                  key={key}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    flex: "1",
-                    minWidth: "80px",
-                  }}
-                >
-                  <label
-                    style={{
-                      ...styles.label,
-                      fontSize: "14px",
-                      marginBottom: "4px",
-                      textAlign: "center",
-                    }}
-                  >
-                    {label}
-                  </label>
-                  <input
-                    type="number"
-                    value={character.magicModifiers[key]}
-                    onChange={(e) =>
-                      handleInputChange(
-                        `magicModifiers.${key}`,
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                    style={{
-                      ...styles.input,
-                      width: "60px",
-                      textAlign: "center",
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                    }}
-                  />
+                    <div
+                      onClick={() => {
+                        setIsHpManualMode(!isHpManualMode);
+                        setRolledHp(null);
+                      }}
+                      style={{
+                        ...styles.hpToggle,
+                        backgroundColor: isHpManualMode
+                          ? theme.success
+                          : theme.border,
+                        borderColor: isHpManualMode
+                          ? theme.success
+                          : theme.textSecondary,
+                      }}
+                      title={
+                        isHpManualMode
+                          ? "Switch to Auto/Roll mode"
+                          : "Switch to Manual mode"
+                      }
+                    >
+                      <div
+                        style={{
+                          ...styles.hpToggleKnob,
+                          left: isHpManualMode ? "22px" : "2px",
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
 
-          {!isEditing && savedCharacters.length >= MAX_CHARACTERS && (
-            <div
-              style={{
-                backgroundColor: "#FEE2E2",
-                border: "2px solid #EF4444",
-                color: "#DC2626",
-                padding: "16px",
-                borderRadius: "8px",
-                margin: "16px 0",
-                fontSize: "14px",
-                fontWeight: "bold",
-                textAlign: "center",
-              }}
-            >
-              ⚠️ Character Limit Reached
-              <div style={{ marginTop: "8px", fontWeight: "normal" }}>
-                You have reached the maximum of {MAX_CHARACTERS} characters.
-                Delete an existing character to create a new one.
+            <div style={styles.fieldContainer}>
+              <h3 style={styles.skillsHeader}>
+                Skill Proficiencies ({character.skillProficiencies.length}/2
+                selected)
+              </h3>
+
+              {!character.castingStyle ? (
+                <div style={styles.skillsPlaceholder}>
+                  Please select a Casting Style first to see available skills.
+                </div>
+              ) : (
+                <div style={styles.skillsContainer}>
+                  <h4 style={styles.skillsSubheader}>
+                    {character.castingStyle} Skills (Choose 2)
+                  </h4>
+                  <div style={styles.skillsGrid}>
+                    {getAvailableSkills().map((skill) => {
+                      const isSelected =
+                        character.skillProficiencies.includes(skill);
+                      const canSelect =
+                        isSelected || character.skillProficiencies.length < 2;
+
+                      return (
+                        <label
+                          key={skill}
+                          style={{
+                            ...styles.skillOptionBase,
+                            cursor: canSelect ? "pointer" : "not-allowed",
+                            backgroundColor: isSelected
+                              ? theme.success + "20"
+                              : theme.surface,
+                            border: isSelected
+                              ? `2px solid ${theme.success}`
+                              : `2px solid ${theme.border}`,
+                            opacity: canSelect ? 1 : 0.5,
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleSkillToggle(skill)}
+                            disabled={!canSelect}
+                            style={styles.skillCheckbox}
+                          />
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              color: isSelected ? theme.success : theme.text,
+                              fontWeight: isSelected ? "bold" : "normal",
+                            }}
+                          >
+                            {skill}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {character.skillProficiencies.length === 2 && (
+                    <div style={styles.skillsComplete}>
+                      ✓ Skill selection complete! You've chosen your 2 skills.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={styles.helpText}>
+                Note: Each casting style has access to specific skills. You can
+                choose up to 2 skills from your casting style's list.
               </div>
             </div>
-          )}
 
-          <button
-            onClick={saveCharacter}
-            disabled={!isSaveEnabled}
-            style={{
-              ...styles.saveButton,
-              backgroundColor: isSaveEnabled ? "#8B5CF6" : "#9CA3AF",
-              cursor: isSaveEnabled ? "pointer" : "not-allowed",
-            }}
-          >
-            <SaveIcon />
-            {isSaving
-              ? "Saving..."
-              : isEditing
-              ? "Update Character"
-              : savedCharacters.length >= MAX_CHARACTERS
-              ? "Character Limit Reached"
-              : "Save Character"}
-          </button>
-
-          {!isEditing &&
-            savedCharacters.length >= MAX_CHARACTERS - 2 &&
-            savedCharacters.length < MAX_CHARACTERS && (
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#F59E0B",
-                  textAlign: "center",
-                  marginTop: "8px",
-                  fontStyle: "italic",
-                }}
+            <div style={styles.fieldContainer}>
+              <label style={styles.label}>Subclass</label>
+              <select
+                value={character.subclass}
+                onChange={(e) => handleInputChange("subclass", e.target.value)}
+                style={styles.select}
               >
-                {savedCharacters.length === MAX_CHARACTERS - 1
-                  ? "You can create 1 more character before reaching the limit."
-                  : `You can create ${
-                      MAX_CHARACTERS - savedCharacters.length
-                    } more characters.`}
+                <option value="">Select Subclass...</option>
+                {subclasses.map((subclass) => (
+                  <option key={subclass} value={subclass}>
+                    {subclass}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Level 1 Choice Section */}
+            {character.level === 1 && (
+              <div style={styles.fieldContainer}>
+                <h3 style={styles.skillsHeader}>Level 1 Choice</h3>
+                <div style={styles.helpText}>
+                  At level 1, you can choose either an Innate Heritage or a
+                  Standard Feat.
+                </div>
+
+                <div style={styles.level1ChoiceContainer}>
+                  <label
+                    style={
+                      character.level1ChoiceType === "innate"
+                        ? styles.level1ChoiceLabelSelected
+                        : styles.level1ChoiceLabel
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="level1Choice"
+                      value="innate"
+                      checked={character.level1ChoiceType === "innate"}
+                      onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
+                      style={styles.level1ChoiceRadio}
+                    />
+                    <span
+                      style={
+                        character.level1ChoiceType === "innate"
+                          ? styles.level1ChoiceTextSelected
+                          : styles.level1ChoiceText
+                      }
+                    >
+                      Innate Heritage
+                    </span>
+                  </label>
+
+                  <label
+                    style={
+                      character.level1ChoiceType === "feat"
+                        ? styles.level1ChoiceLabelSelected
+                        : styles.level1ChoiceLabel
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="level1Choice"
+                      value="feat"
+                      checked={character.level1ChoiceType === "feat"}
+                      onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
+                      style={styles.level1ChoiceRadio}
+                    />
+                    <span
+                      style={
+                        character.level1ChoiceType === "feat"
+                          ? styles.level1ChoiceTextSelected
+                          : styles.level1ChoiceText
+                      }
+                    >
+                      Standard Feat
+                    </span>
+                  </label>
+                </div>
               </div>
             )}
-        </div>
 
-        <div style={styles.panel}>
-          {isEditing && (
-            <div style={{ marginBottom: "20px" }}>
+            {/* Conditionally render Innate Heritage or Standard Feat based on level and choice */}
+            {character.level === 1 &&
+              character.level1ChoiceType === "innate" && (
+                <InnateHeritage
+                  character={character}
+                  handleInputChange={handleInputChange}
+                />
+              )}
+
+            {((character.level === 1 &&
+              character.level1ChoiceType === "feat") ||
+              character.level > 1) && (
+              <StandardFeat
+                character={character}
+                setCharacter={setCharacter}
+                expandedFeats={expandedFeats}
+                setExpandedFeats={setExpandedFeats}
+                featFilter={featFilter}
+                setFeatFilter={setFeatFilter}
+              />
+            )}
+
+            <div style={styles.fieldContainer}>
+              <label style={styles.label}>Background</label>
+              <select
+                value={character.background}
+                onChange={(e) =>
+                  handleInputChange("background", e.target.value)
+                }
+                style={styles.select}
+              >
+                <option value="">Select Background...</option>
+                {backgrounds.map((background) => (
+                  <option key={background} value={background}>
+                    {background}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <AbilityScorePicker
+              character={character}
+              setRolledStats={setRolledStats}
+              setAvailableStats={setAvailableStats}
+              setCharacter={setCharacter}
+              rollAllStats={rollAllStats}
+              setTempInputValues={setTempInputValues}
+              allStatsAssigned={allStatsAssigned}
+              availableStats={availableStats}
+              tempInputValues={tempInputValues}
+              clearStat={clearStat}
+              assignStat={assignStat}
+              setIsManualMode={setIsManualMode}
+              rolledStats={rolledStats}
+            />
+
+            <div style={styles.fieldContainer}>
+              <h3 style={styles.skillsHeader}>Magic School Modifiers</h3>
+              <div style={styles.helpText}>
+                Enter your wand's bonuses/penalties for each school of magic
+              </div>
+
+              <div style={styles.magicModifiersGrid}>
+                {[
+                  { key: "divinations", label: "Divinations" },
+                  { key: "charms", label: "Charms" },
+                  { key: "transfiguration", label: "Transfiguration" },
+                  { key: "healing", label: "Healing" },
+                  { key: "jinxesHexesCurses", label: "JHC" },
+                ].map(({ key, label }) => (
+                  <div key={key} style={styles.magicModifierItem}>
+                    <label style={styles.magicModifierLabel}>{label}</label>
+                    <input
+                      type="number"
+                      value={character.magicModifiers[key]}
+                      onChange={(e) =>
+                        handleInputChange(
+                          `magicModifiers.${key}`,
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      style={styles.magicModifierInput}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {!isEditing && savedCharacters.length >= MAX_CHARACTERS && (
+              <div style={styles.characterLimitWarning}>
+                ⚠️ Character Limit Reached
+                <div style={styles.characterLimitWarningText}>
+                  You have reached the maximum of {MAX_CHARACTERS} characters.
+                  Delete an existing character to create a new one.
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={saveCharacter}
+              disabled={!isSaveEnabled}
+              style={{
+                ...styles.saveButton,
+                backgroundColor: isSaveEnabled
+                  ? theme.primary
+                  : theme.textSecondary,
+                cursor: isSaveEnabled ? "pointer" : "not-allowed",
+              }}
+            >
+              <SaveIcon />
+              {isSaving
+                ? "Saving..."
+                : isEditing
+                ? "Update Character"
+                : savedCharacters.length >= MAX_CHARACTERS
+                ? "Character Limit Reached"
+                : "Save Character"}
+            </button>
+
+            {!isEditing &&
+              savedCharacters.length >= MAX_CHARACTERS - 2 &&
+              savedCharacters.length < MAX_CHARACTERS && (
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#F59E0B",
+                    textAlign: "center",
+                    marginTop: "8px",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {savedCharacters.length === MAX_CHARACTERS - 1
+                    ? "You can create 1 more character before reaching the limit."
+                    : `You can create ${
+                        MAX_CHARACTERS - savedCharacters.length
+                      } more characters.`}
+                </div>
+              )}
+          </div>
+        )}
+
+        {activeTab === "saved" && (
+          <div style={styles.panel}>
+            <div style={styles.savedCharactersHeader}>
+              <h2 style={styles.sectionHeader}>
+                <SaveIcon />
+                Saved Characters
+              </h2>
               <button
                 onClick={createNewCharacter}
-                style={styles.newCharacterButton}
+                style={styles.createNewButtonInSaved}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#059669";
+                  e.target.style.backgroundColor = theme.secondary;
                   e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow =
-                    "0 4px 12px rgba(16, 185, 129, 0.3)";
+                  e.target.style.boxShadow = `0 4px 12px ${theme.primary}40`;
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#10B981";
+                  e.target.style.backgroundColor = theme.primary;
                   e.target.style.transform = "translateY(0)";
                   e.target.style.boxShadow = "none";
                 }}
@@ -1078,19 +1223,17 @@ const CharacterCreationForm = ({
                 <WandIcon />
                 Create New Character
               </button>
-              <div style={styles.newCharacter}>
-                This will abandon any unsaved changes to the current character
-              </div>
             </div>
-          )}
-          <SavedCharacters
-            isLoading={isLoading}
-            savedCharacters={savedCharacters}
-            editCharacter={editCharacter}
-            deleteCharacter={deleteCharacter}
-            maxCharacters={MAX_CHARACTERS}
-          />
-        </div>
+
+            <SavedCharacters
+              isLoading={isLoading}
+              savedCharacters={savedCharacters}
+              editCharacter={editCharacter}
+              deleteCharacter={deleteCharacter}
+              maxCharacters={MAX_CHARACTERS}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

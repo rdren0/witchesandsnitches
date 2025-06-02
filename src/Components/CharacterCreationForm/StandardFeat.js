@@ -1,6 +1,6 @@
 import { standardFeats } from "../data";
-import { styles } from "./styles";
-
+import { getStyles } from "./styles";
+import { useTheme } from "../../contexts/ThemeContext";
 export const StandardFeat = ({
   character,
   setCharacter,
@@ -9,6 +9,8 @@ export const StandardFeat = ({
   featFilter,
   setFeatFilter,
 }) => {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const handleFeatToggle = (featName) => {
     setCharacter((prev) => {
       const currentFeats = prev.standardFeats;

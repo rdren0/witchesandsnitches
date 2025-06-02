@@ -842,3 +842,9 @@ export const attemptSpell = async ({
     setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
   }
 };
+
+export const rollAbilityStat = () => {
+  const roller = new DiceRoller();
+  const result = roller.roll("4d6kh3");
+  return result.total;
+};
