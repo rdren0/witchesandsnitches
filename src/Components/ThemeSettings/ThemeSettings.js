@@ -116,7 +116,7 @@ const ThemeSettings = () => {
       margin: 0,
     },
     subtitle: {
-      color: theme.textSecondary,
+      color: theme.text,
       fontSize: "18px",
       margin: "8px 0 0 0",
       lineHeight: "1.5",
