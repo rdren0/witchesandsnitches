@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Plus, Minus, RotateCcw, Coins } from "lucide-react";
+import { useState } from "react";
+import { Plus, Minus, Coins } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const Bank = () => {
@@ -57,11 +57,6 @@ const Bank = () => {
     setInputGalleons("");
     setInputSickles("");
     setInputKnuts("");
-  };
-
-  const resetMoney = () => {
-    setTotalKnuts(0);
-    clearInputs();
   };
 
   const hasInput = inputGalleons || inputSickles || inputKnuts;
@@ -279,7 +274,7 @@ const Bank = () => {
       <div style={styles.header}>
         <h2 style={styles.title}>
           <Coins size={28} color={theme.primary} />
-          Gringotts Vault Tracker
+          Wizarding Bank
         </h2>
         <p style={styles.subtitle}>
           Manage your magical currency with precision
@@ -420,23 +415,6 @@ const Bank = () => {
           </button>
         </div>
       </div>
-
-      {/* Reset Button */}
-      <button
-        onClick={resetMoney}
-        style={styles.resetButton}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = theme.secondary;
-          e.target.style.transform = "translateY(-1px)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = theme.primary;
-          e.target.style.transform = "translateY(0)";
-        }}
-      >
-        <RotateCcw size={18} />
-        Reset Vault
-      </button>
 
       {/* Currency Reference */}
       <div style={styles.referenceCard}>
