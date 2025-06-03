@@ -825,18 +825,7 @@ export const rollBrewPotion = async ({
             value: profText,
             inline: true,
           },
-          {
-            name: "Max Possible Quality",
-            value:
-              brewingResult.maxQuality.charAt(0).toUpperCase() +
-              brewingResult.maxQuality.slice(1),
-            inline: true,
-          },
-          {
-            name: "Proficiency Analysis",
-            value: getProficiencyAnalysis(proficiencies, ingredientQuality),
-            inline: false,
-          },
+
           {
             name: "Potion Effect",
             value: selectedPotion.description,
