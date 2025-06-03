@@ -299,11 +299,6 @@ const Bank = () => {
           <span style={styles.currencyLabel}>🥉 Knuts</span>
           <span style={styles.currencyValue}>{knuts}</span>
         </div>
-
-        <div style={styles.totalRow}>
-          <span style={styles.totalLabel}>Total (in Knuts)</span>
-          <span style={styles.totalValue}>{totalKnuts}</span>
-        </div>
       </div>
 
       {/* Input Section */}
