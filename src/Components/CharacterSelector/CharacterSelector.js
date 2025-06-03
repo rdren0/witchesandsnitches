@@ -1,7 +1,7 @@
 // src/App/CharacterSelector.js (Updated with Clean Theme Integration)
 import { User } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-
+import { createCharacterSelectorStyles } from "../../styles/masterStyles";
 export const CharacterSelector = ({
   user,
   characters,
@@ -10,7 +10,23 @@ export const CharacterSelector = ({
   isLoading,
   error,
 }) => {
-  const { theme } = useTheme();
+  const { theme: contextTheme } = useTheme();
+
+  // Fallback theme if context is undefined
+  const theme = contextTheme || {
+    surface: "#ffffff",
+    background: "#f8fafc",
+    text: "#1f2937",
+    textSecondary: "#6b7280",
+    primary: "#6366f1",
+    secondary: "#8b5cf6",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    border: "#e5e7eb",
+  };
+
+  const styles = createCharacterSelectorStyles(theme);
 
   if (!user) return null;
 
@@ -24,88 +40,6 @@ export const CharacterSelector = ({
     } - ${char.house || "No House"}${
       char.gameSession ? ` - ${char.gameSession}` : ""
     }`;
-  };
-
-  const styles = {
-    container: {
-      padding: "20px",
-      backgroundColor: theme.surface,
-      borderBottom: `2px solid ${theme.border}`,
-      marginBottom: "20px",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    },
-    innerContainer: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "20px",
-      maxWidth: "1200px",
-      margin: "0 auto",
-    },
-    selectorRow: {
-      display: "flex",
-      alignItems: "center",
-      gap: "15px",
-      flexWrap: "wrap",
-    },
-    label: {
-      fontSize: "16px",
-      fontWeight: "600",
-      color: theme.text,
-    },
-    select: {
-      padding: "8px 12px",
-      fontSize: "16px",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "8px",
-      backgroundColor: theme.surface,
-      color: theme.text,
-      minWidth: "200px",
-    },
-    singleCharacterDisplay: {
-      padding: "8px 12px",
-      fontSize: "16px",
-      backgroundColor: theme.primary + "20",
-      border: `2px solid ${theme.primary}`,
-      borderRadius: "8px",
-      color: theme.text,
-      fontWeight: "500",
-      minWidth: "200px",
-      textAlign: "center",
-    },
-    noCharactersDisplay: {
-      padding: "8px 12px",
-      fontSize: "16px",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "8px",
-      backgroundColor: theme.background,
-      color: theme.textSecondary,
-      minWidth: "200px",
-      textAlign: "center",
-    },
-    warningMessage: {
-      backgroundColor: theme.warning + "20",
-      color: theme.warning,
-      border: `1px solid ${theme.warning}`,
-      padding: "12px 20px",
-      borderRadius: "8px",
-      fontSize: "16px",
-      fontWeight: "500",
-      textAlign: "center",
-    },
-    errorMessage: {
-      backgroundColor: theme.error + "20",
-      border: `1px solid ${theme.error}`,
-      color: theme.error,
-      padding: "12px",
-      borderRadius: "8px",
-      margin: "16px 0",
-      fontSize: "14px",
-      maxWidth: "1200px",
-      marginLeft: "auto",
-      marginRight: "auto",
-      textAlign: "center",
-    },
   };
 
   return (

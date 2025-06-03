@@ -11,14 +11,14 @@ import {
   subclasses,
   backgrounds,
 } from "../data";
-import { getStyles } from "./styles";
+
 import { useTheme } from "../../contexts/ThemeContext";
 import { characterService } from "../../services/characterService";
 import { SavedCharacters } from "./SavedCharacters";
 import { InnateHeritage } from "./InnateHeritage";
 import { StandardFeat } from "./StandardFeat";
 import { AbilityScorePicker } from "./AbilityScorePicker";
-
+import { createCharacterCreationStyles } from "../../styles/masterStyles";
 const MAX_CHARACTERS = 10;
 
 const CharacterCreationForm = ({
@@ -29,7 +29,7 @@ const CharacterCreationForm = ({
   onSelectedCharacterReset,
 }) => {
   const { theme } = useTheme();
-  const styles = getStyles(theme);
+  const styles = createCharacterCreationStyles(theme);
 
   const getInitialCharacterState = () => ({
     name: "",

@@ -228,11 +228,47 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
+const DEFAULT_THEME = {
+  surface: "#ffffff",
+  background: "#f8fafc",
+  text: "#1f2937",
+  textSecondary: "#6b7280",
+  primary: "#6366f1",
+  secondary: "#8b5cf6",
+  success: "#10b981",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  border: "#e5e7eb",
+};
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
+
   if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    console.warn(
+      "useTheme must be used within a ThemeProvider. Using default theme."
+    );
+    return {
+      theme: DEFAULT_THEME,
+      themeMode: "light",
+      setThemeMode: () => {},
+      selectedCharacter: null,
+      setSelectedCharacter: () => {},
+      availableHouses: [],
+      HOUSE_THEMES: {},
+      THEMES: { light: DEFAULT_THEME },
+    };
   }
+
+  // Extra safety check - if context exists but theme is undefined
+  if (!context.theme) {
+    console.warn("Theme is undefined in context. Using default theme.");
+    return {
+      ...context,
+      theme: DEFAULT_THEME,
+    };
+  }
+
   return context;
 };
 

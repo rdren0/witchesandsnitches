@@ -751,7 +751,7 @@ const DowntimeSheet = () => {
       gridTemplateColumns: "2fr 1fr",
       borderBottom: "2px solid #333",
     },
-    yearSection: {
+    typeSection: {
       padding: "12px",
       borderRight: "2px solid #333",
     },
@@ -913,7 +913,7 @@ const DowntimeSheet = () => {
 
         {/* Year and Semester Section */}
         <div style={styles.yearSemesterSection}>
-          <div style={styles.yearSection}>
+          <div style={styles.typeSection}>
             <div style={styles.checkboxRow}>
               <strong>Year:</strong>
               {[1, 2, 3, 4, 5, 6, 7].map((year) => (

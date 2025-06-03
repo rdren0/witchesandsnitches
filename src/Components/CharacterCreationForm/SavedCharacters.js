@@ -1,6 +1,6 @@
 import { BookIcon, UserIcon, TrashIcon, StarIcon } from "../../icons";
 
-import { getStyles } from "./styles";
+import { createCharacterCreationStyles } from "../../styles/masterStyles";
 import { useTheme } from "../../contexts/ThemeContext";
 export const SavedCharacters = ({
   isLoading,
@@ -10,7 +10,7 @@ export const SavedCharacters = ({
   maxCharacters,
 }) => {
   const { theme } = useTheme();
-  const styles = getStyles(theme);
+  const styles = createCharacterCreationStyles(theme);
   return (
     <>
       <h2 style={styles.sectionHeader}>

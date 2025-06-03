@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { SubjectCard } from "./SubjectCard";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createThemedSpellBookStyles } from "./styles";
+import { createSpellBookStyles } from "../../styles/masterStyles";
 
 import { spellsData } from "./spells";
 
@@ -13,7 +13,7 @@ const SpellBook = ({
   characters,
 }) => {
   const { theme } = useTheme();
-  const styles = createThemedSpellBookStyles(theme);
+  const styles = createSpellBookStyles(theme);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [error, setError] = useState(null);

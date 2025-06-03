@@ -13,106 +13,15 @@ import {
 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
+import { templates } from "../data";
 
-const templates = {
-  spell: `## 🔮 [Spell Name]
-
-**📊 Stats:**
-- **Level:** 
-- **School:** 
-- **Casting Time:** 
-- **Range:** 
-- **Components:** 
-- **Duration:** 
-- **Concentration:** 
-
-**📝 Description:**
-
-
-**⚔️ Combat Use:**
-
-
-**🎯 Strategic Notes:**
-
-
----
-
-`,
-  session: `# 📅 Session ${new Date().toLocaleDateString()}
-
-## 📖 Session Summary
-
-
-## 🗣️ Important NPCs
-| Name | Role | Notes |
-|------|------|-------|
-|      |      |       |
-
-## 🗺️ Locations Visited
-
-
-## ⚔️ Combat Encounters
-
-
-## 🎒 Loot & Rewards
-
-
-## 📝 Character Development
-
-
-## 🎯 Next Session Goals
-- [ ] 
-- [ ] 
-- [ ] 
-
-## 💭 Player Notes
-
-
----
-
-`,
-  combat: `## ⚔️ Combat Tactics
-
-### 🛡️ Defensive Options
-- 
-- 
-
-### ⚡ Offensive Strategies
-- 
-- 
-
-### 🎭 Roleplay in Combat
-- 
-- 
-
-### 🤝 Team Synergies
-- 
-- 
-
----
-
-`,
-  relationship: `## 👥 Relationship: [NPC Name]
-
-**📊 Relationship Status:** 
-**🎭 Their Personality:** 
-**🎯 Their Goals:** 
-**💭 What They Think of Me:** 
-**🤝 How I Can Help Them:** 
-**⚠️ Potential Conflicts:** 
-
-### 📝 Interaction History
-
-
-### 🎯 Future Plans
-
-
----
-
-`,
-};
+import { useTheme } from "../../contexts/ThemeContext";
+import { createCharacterNotesStyles } from "../../styles/masterStyles";
 
 export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
+  const { theme } = useTheme();
+  const styles = createCharacterNotesStyles(theme);
+
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
@@ -307,27 +216,10 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
 
   if (!selectedCharacter) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "60px 20px",
-          backgroundColor: "#fef2f2",
-          border: "2px solid #fecaca",
-          borderRadius: "12px",
-          margin: "20px",
-          maxWidth: "600px",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
-      >
-        <FileText size={48} color="#dc2626" style={{ marginBottom: "16px" }} />
-        <h2 style={{ color: "#dc2626", margin: "0 0 8px 0", fontSize: "24px" }}>
-          No Character Selected
-        </h2>
-        <p style={{ color: "#dc2626", margin: "0", textAlign: "center" }}>
+      <div style={styles.noCharacterContainer}>
+        <FileText size={48} color="#dc2626" style={styles.noCharacterIcon} />
+        <h2 style={styles.noCharacterTitle}>No Character Selected</h2>
+        <p style={styles.noCharacterText}>
           Please select a character from the dropdown above to view and edit
           their notes.
         </p>
@@ -336,62 +228,28 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-          padding: "20px",
-          backgroundColor: "white",
-          borderRadius: "12px",
-          border: "2px solid #e2e8f0",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              margin: "0 0 8px 0",
-              fontSize: "28px",
-              color: "#1f2937",
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <FileText size={32} color="#6366f1" />
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <div style={styles.headerContent}>
+          <h1 style={styles.title}>
+            <FileText size={32} color={theme.primary} />
             Character Notes
           </h1>
-          <p style={{ margin: "0", color: "#6b7280", fontSize: "16px" }}>
+          <p style={styles.subtitle}>
             {entries.length} note{entries.length !== 1 ? "s" : ""} for{" "}
             {selectedCharacter.name}
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={styles.headerActions}>
           <button
             onClick={() => setShowNewEntryForm(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "12px 20px",
-              backgroundColor: "#6366f1",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all 0.2s",
+            style={styles.newEntryButton}
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.newEntryButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.newEntryButton);
             }}
           >
             <Plus size={16} />
@@ -401,63 +259,28 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
       </div>
 
       {showNewEntryForm && (
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "20px",
-            borderRadius: "12px",
-            border: "2px solid #e2e8f0",
-            marginBottom: "20px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-          }}
-        >
-          <div style={{ marginBottom: "16px" }}>
-            <h3
-              style={{
-                margin: "0 0 12px 0",
-                fontSize: "18px",
-                color: "#374151",
-              }}
-            >
-              Create New Entry
-            </h3>
+        <div style={styles.newEntryForm}>
+          <div>
+            <h3 style={styles.newEntryTitle}>Create New Entry</h3>
             <input
               type="text"
               placeholder="Entry title (optional - will auto-generate if empty)"
               value={newEntryTitle}
               onChange={(e) => setNewEntryTitle(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                border: "1px solid #d1d5db",
-                borderRadius: "8px",
-                fontSize: "16px",
-                outline: "none",
-              }}
+              style={styles.newEntryInput}
               autoFocus
             />
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              flexWrap: "wrap",
-              marginBottom: "16px",
-            }}
-          >
+          <div style={styles.templateButtons}>
             <button
               onClick={() => createNewEntry(newEntryTitle)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#f3f4f6",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
+              style={styles.templateButton}
+              onMouseEnter={(e) => {
+                Object.assign(e.target.style, styles.templateButtonHover);
+              }}
+              onMouseLeave={(e) => {
+                Object.assign(e.target.style, styles.templateButton);
               }}
             >
               <Zap size={16} />
@@ -466,16 +289,12 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
 
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "spell")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#f3f4f6",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
+              style={styles.templateButton}
+              onMouseEnter={(e) => {
+                Object.assign(e.target.style, styles.templateButtonHover);
+              }}
+              onMouseLeave={(e) => {
+                Object.assign(e.target.style, styles.templateButton);
               }}
             >
               <Zap size={16} />
@@ -484,16 +303,12 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
 
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "session")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#f3f4f6",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
+              style={styles.templateButton}
+              onMouseEnter={(e) => {
+                Object.assign(e.target.style, styles.templateButtonHover);
+              }}
+              onMouseLeave={(e) => {
+                Object.assign(e.target.style, styles.templateButton);
               }}
             >
               <Calendar size={16} />
@@ -502,16 +317,12 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
 
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "combat")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#f3f4f6",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
+              style={styles.templateButton}
+              onMouseEnter={(e) => {
+                Object.assign(e.target.style, styles.templateButtonHover);
+              }}
+              onMouseLeave={(e) => {
+                Object.assign(e.target.style, styles.templateButton);
               }}
             >
               ⚔️ Combat Tactics
@@ -519,35 +330,25 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
 
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "relationship")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                backgroundColor: "#f3f4f6",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                fontSize: "14px",
-                cursor: "pointer",
+              style={styles.templateButton}
+              onMouseEnter={(e) => {
+                Object.assign(e.target.style, styles.templateButtonHover);
+              }}
+              onMouseLeave={(e) => {
+                Object.assign(e.target.style, styles.templateButton);
               }}
             >
               👥 Relationship
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={styles.formActions}>
             <button
               onClick={() => {
                 setShowNewEntryForm(false);
                 setNewEntryTitle("");
               }}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#f3f4f6",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                cursor: "pointer",
-              }}
+              style={styles.cancelButton}
             >
               Cancel
             </button>
@@ -561,120 +362,50 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
             entry={entries.find((e) => e.id === editingEntry)}
             onSave={(updates) => updateEntry(editingEntry, updates)}
             onCancel={() => setEditingEntry(null)}
+            styles={styles}
+            theme={theme}
           />
         </div>
       )}
 
       {isLoading ? (
-        <div
-          style={{
-            padding: "60px 20px",
-            textAlign: "center",
-            color: "#6b7280",
-            fontSize: "16px",
-            backgroundColor: "white",
-            borderRadius: "12px",
-            border: "2px solid #e2e8f0",
-          }}
-        >
-          Loading notes...
-        </div>
+        <div style={styles.loadingContainer}>Loading notes...</div>
       ) : entries.length === 0 ? (
-        <div
-          style={{
-            padding: "60px 20px",
-            textAlign: "center",
-            color: "#6b7280",
-            fontSize: "16px",
-            backgroundColor: "white",
-            borderRadius: "12px",
-            border: "2px solid #e2e8f0",
-          }}
-        >
+        <div style={styles.emptyContainer}>
           No notes yet. Click "New Entry" to get started!
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
-            gap: "20px",
-          }}
-        >
+        <div style={styles.entriesGrid}>
           {entries
             .filter((entry) => entry.id !== editingEntry)
             .map((entry) => (
-              <div
-                key={entry.id}
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  border: "2px solid #e2e8f0",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                  overflow: "hidden",
-                }}
-              >
+              <div key={entry.id} style={styles.entryCard}>
                 <EntryCard
                   entry={entry}
                   onEdit={() => setEditingEntry(entry.id)}
                   onDelete={() => deleteEntry(entry.id)}
+                  styles={styles}
                 />
               </div>
             ))}
         </div>
       )}
 
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "16px 20px",
-          borderRadius: "12px",
-          border: "2px solid #e2e8f0",
-          marginTop: "20px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-        }}
-      >
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <button
-            onClick={exportAllNotes}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 12px",
-              backgroundColor: "#ecfdf5",
-              border: "1px solid #bbf7d0",
-              borderRadius: "6px",
-              fontSize: "14px",
-              cursor: "pointer",
-              color: "#065f46",
-            }}
-          >
+      <div style={styles.importExportSection}>
+        <div style={styles.importExportActions}>
+          <button onClick={exportAllNotes} style={styles.exportButton}>
             <Download size={16} />
             Export All
           </button>
 
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 12px",
-              backgroundColor: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              borderRadius: "6px",
-              fontSize: "14px",
-              cursor: "pointer",
-              color: "#1e40af",
-            }}
-          >
+          <label style={styles.importLabel}>
             <Upload size={16} />
             Import File
             <input
               type="file"
               accept=".md,.txt"
               onChange={importNotes}
-              style={{ display: "none" }}
+              style={styles.hiddenFileInput}
             />
           </label>
         </div>
@@ -683,7 +414,7 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
   );
 };
 
-const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
+const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
   const [title, setTitle] = useState(entry?.title || "");
   const [content, setContent] = useState(entry?.content || "");
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -717,74 +448,21 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: "12px",
-        border: "2px solid #e2e8f0",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-        overflow: "hidden",
-      }}
-    >
+    <div style={styles.editForm}>
       {/* Header */}
-      <div
-        style={{
-          padding: "16px 20px",
-          borderBottom: "1px solid #e2e8f0",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div style={styles.editHeader}>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "8px 12px",
-            border: "1px solid #d1d5db",
-            borderRadius: "6px",
-            fontSize: "18px",
-            fontWeight: "600",
-            marginRight: "12px",
-          }}
+          style={styles.editTitleInput}
         />
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={handleSave}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#ecfdf5",
-              border: "1px solid #bbf7d0",
-              borderRadius: "6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              color: "#065f46",
-              fontSize: "14px",
-              fontWeight: "600",
-              gap: "6px",
-            }}
-          >
+        <div style={styles.editActions}>
+          <button onClick={handleSave} style={styles.saveButton}>
             <Check size={16} />
             Save Changes
           </button>
-          <button
-            onClick={onCancel}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#f3f4f6",
-              border: "1px solid #d1d5db",
-              borderRadius: "6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              fontSize: "14px",
-              fontWeight: "600",
-              gap: "6px",
-            }}
-          >
+          <button onClick={onCancel} style={styles.editCancelButton}>
             <X size={16} />
             Cancel
           </button>
@@ -792,47 +470,20 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
       </div>
 
       {/* Templates */}
-      <div
-        style={{
-          padding: "16px 20px",
-          borderBottom: "1px solid #e2e8f0",
-          backgroundColor: "#f8fafc",
-        }}
-      >
-        <div style={{ marginBottom: "12px" }}>
-          <h4
-            style={{
-              margin: "0",
-              fontSize: "14px",
-              color: "#374151",
-              fontWeight: "600",
-            }}
-          >
-            📋 Insert Template
-          </h4>
+      <div style={styles.templateSection}>
+        <div>
+          <h4 style={styles.templateSectionTitle}>📋 Insert Template</h4>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
+        <div style={styles.templateButtons}>
           <button
             onClick={() => insertTemplate("spell")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 10px",
-              backgroundColor: "white",
-              border: "1px solid #d1d5db",
-              borderRadius: "4px",
-              fontSize: "12px",
-              cursor: "pointer",
-              transition: "all 0.2s",
+            style={styles.templateButton}
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.templateButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.templateButton);
             }}
           >
             <Zap size={14} />
@@ -841,17 +492,12 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
 
           <button
             onClick={() => insertTemplate("session")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 10px",
-              backgroundColor: "white",
-              border: "1px solid #d1d5db",
-              borderRadius: "4px",
-              fontSize: "12px",
-              cursor: "pointer",
-              transition: "all 0.2s",
+            style={styles.templateButton}
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.templateButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.templateButton);
             }}
           >
             <Calendar size={14} />
@@ -860,17 +506,12 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
 
           <button
             onClick={() => insertTemplate("combat")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 10px",
-              backgroundColor: "white",
-              border: "1px solid #d1d5db",
-              borderRadius: "4px",
-              fontSize: "12px",
-              cursor: "pointer",
-              transition: "all 0.2s",
+            style={styles.templateButton}
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.templateButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.templateButton);
             }}
           >
             ⚔️ Combat
@@ -878,17 +519,12 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
 
           <button
             onClick={() => insertTemplate("relationship")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 10px",
-              backgroundColor: "white",
-              border: "1px solid #d1d5db",
-              borderRadius: "4px",
-              fontSize: "12px",
-              cursor: "pointer",
-              transition: "all 0.2s",
+            style={styles.templateButton}
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.templateButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.templateButton);
             }}
           >
             👥 Relationship
@@ -897,7 +533,7 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
       </div>
 
       {/* Editor */}
-      <div style={{ padding: "20px" }}>
+      <div style={styles.editorContainer}>
         {isEditorReady && content !== undefined ? (
           <MDEditor
             value={content}
@@ -909,93 +545,53 @@ const FullWidthEditForm = ({ entry, onSave, onCancel }) => {
             hideToolbar={false}
           />
         ) : (
-          <div
-            style={{
-              height: "500px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#f8fafc",
-              borderRadius: "8px",
-              color: "#6b7280",
-            }}
-          >
-            Loading editor...
-          </div>
+          <div style={styles.editorLoading}>Loading editor...</div>
         )}
       </div>
     </div>
   );
 };
 
-const EntryCard = ({ entry, onEdit, onDelete }) => {
+const EntryCard = ({ entry, onEdit, onDelete, styles }) => {
   return (
     <>
-      <div
-        style={{
-          padding: "16px 20px",
-          borderBottom: "1px solid #e2e8f0",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "start",
-        }}
-      >
-        <div style={{ flex: 1 }}>
-          <h3
-            style={{
-              margin: "0 0 4px 0",
-              fontSize: "18px",
-              color: "#1f2937",
-              fontWeight: "600",
-            }}
-          >
-            {entry.title}
-          </h3>
-          <p
-            style={{
-              margin: "0",
-              fontSize: "12px",
-              color: "#6b7280",
-            }}
-          >
+      <div style={styles.entryHeader}>
+        <div style={styles.entryTitleSection}>
+          <h3 style={styles.entryTitle}>{entry.title}</h3>
+          <p style={styles.entryDate}>
             {new Date(entry.updated_at).toLocaleString()}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "8px", marginLeft: "12px" }}>
+        <div style={styles.entryActions}>
           <button
             onClick={onEdit}
-            style={{
-              padding: "6px",
-              backgroundColor: "#f3f4f6",
-              border: "1px solid #d1d5db",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
+            style={styles.editEntryButton}
             title="Edit entry"
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.editEntryButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.editEntryButton);
+            }}
           >
             <Edit2 size={14} />
           </button>
           <button
             onClick={onDelete}
-            style={{
-              padding: "6px",
-              backgroundColor: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              color: "#dc2626",
-            }}
+            style={styles.deleteEntryButton}
             title="Delete entry"
+            onMouseEnter={(e) => {
+              Object.assign(e.target.style, styles.deleteEntryButtonHover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.target.style, styles.deleteEntryButton);
+            }}
           >
             <Trash2 size={14} />
           </button>
         </div>
       </div>
-      <div style={{ padding: "20px" }}>
+      <div style={styles.entryContent}>
         <MDEditor.Markdown
           source={entry.content}
           style={{
@@ -1007,4 +603,5 @@ const EntryCard = ({ entry, onEdit, onDelete }) => {
     </>
   );
 };
+
 export default CharacterNotes;

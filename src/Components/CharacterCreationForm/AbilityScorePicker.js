@@ -1,6 +1,6 @@
 import { RotateIcon, TrashIcon } from "../../icons";
-import { getStyles } from "./styles";
 import { useTheme } from "../../contexts/ThemeContext";
+import { createAbilityScorePickerStyles } from "../../styles/masterStyles";
 
 export const AbilityScorePicker = ({
   character,
@@ -19,7 +19,7 @@ export const AbilityScorePicker = ({
   rollAllStats,
 }) => {
   const { theme } = useTheme();
-  const styles = getStyles(theme);
+  const styles = createAbilityScorePickerStyles(theme);
   const toggleManualMode = () => {
     const newManualMode = !isManualMode;
     setIsManualMode(newManualMode);
@@ -272,3 +272,4 @@ export const AbilityScorePicker = ({
     </div>
   );
 };
+export default AbilityScorePicker;

@@ -4,74 +4,139 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterGalleryStyles } from "./styles";
 import * as images from "../../Images";
 
-//   ,
-//   Bailey_Anna,
-//   Claire,
-//   Colby,
-//   Erika,
-//   Genesis,
-//   Harmony,
-//   Jeremiah,
-//   Maddie,
-//   Noah,
-//   Olivia,
-//   Omari,
-//   Rome,
-//   Seth,
-//   Shelby,
-//   Tony,
-//   Warren,
-// Sample character data - replace with your actual character data
-const SAMPLE_CHARACTERS = [
+const ILVERMORNY_CHARACTERS = [
   {
     id: 1,
     name: "Ava Robinson",
-    year: 1,
+    type: "Students",
     house: "?",
-    description:
-      "Brilliant witch known for her intelligence, quick thinking, and extensive knowledge of magic.",
     src: images.Ava,
-    specialties: ["Transfiguration", "Charms", "Ancient Runes"],
   },
   {
     id: 2,
-    name: "Draco Malfoy",
-    year: 1,
-    house: "Slytherin",
-    description:
-      "Ambitious student from a pure-blood family with a talent for potions and dark arts.",
+    name: "Anuhea Kelii",
+    type: "Students",
+    house: "?",
     src: images.Anuhea,
-    specialties: ["Potions", "Dark Arts", "Quidditch"],
   },
   {
     id: 3,
-    name: "Luna Lovegood",
-    year: 2,
-    house: "Ravenclaw",
-    description:
-      "Dreamy and eccentric student with a unique perspective on magical creatures.",
+    name: "Azha Pavan",
+    type: "Students",
+    house: "?",
     src: images.Azha,
-    specialties: ["Magical Creatures", "Divination", "Herbology"],
   },
   {
     id: 4,
-    name: "Cedric Diggory",
-    year: 3,
-    house: "Hufflepuff",
-    description:
-      "Popular and talented student known for his fairness and athletic ability.",
+    name: "Bailey-Anna Balders",
+    type: "Students",
+    house: "?",
     src: images.Bailey_Anna,
-    specialties: ["Quidditch", "Defense Against Dark Arts", "Charms"],
   },
   {
     id: 5,
-    name: "Newt Scamander",
-    year: 4,
-    house: "Hufflepuff",
-    description:
-      "Magizoologist with an extraordinary gift for understanding magical creatures.",
-    src: "/src/Images/newt.jpg",
-    specialties: ["Magical Creatures", "Herbology", "Potions"],
+    name: "Claire Takahashi",
+    type: "Students",
+    house: "?",
+    src: images.Claire,
+  },
+  {
+    id: 6,
+    name: "Colby Engel",
+    type: "Students",
+    house: "?",
+    src: images.Colby,
+  },
+  {
+    id: 7,
+    name: "Erika Baker",
+    type: "Students",
+    house: "?",
+    src: images.Erika,
+  },
+  {
+    id: 8,
+    name: "Genesis Firth",
+    type: "Students",
+    house: "?",
+    src: images.Genesis,
+  },
+  {
+    id: 9,
+    name: "Harmony",
+    type: "Students",
+    house: "?",
+    src: images.Harmony,
+  },
+  {
+    id: 10,
+    name: "Jeremiah Collier",
+    type: "Students",
+    house: "?",
+    src: images.Jeremiah,
+  },
+  {
+    id: 11,
+    name: "Maddie Gardner",
+    type: "Students",
+    house: "?",
+    src: images.Maddie,
+  },
+  {
+    id: 12,
+    name: "Noah Robinson",
+    type: "Students",
+    house: "?",
+    src: images.Noah,
+  },
+  {
+    id: 13,
+    name: "Olivia Law",
+    type: "Students",
+    house: "?",
+    src: images.Olivia,
+  },
+  {
+    id: 14,
+    name: "Omari Curtis",
+    type: "Students",
+    house: "?",
+    src: images.Omari,
+  },
+  {
+    id: 15,
+    name: "Rome Sanford",
+    type: "Students",
+    house: "?",
+    src: images.Rome,
+  },
+  {
+    id: 16,
+    name: "Seth Claw",
+    type: "Students",
+    house: "?",
+    src: images.Seth,
+  },
+  {
+    id: 17,
+    name: "Shelby MGH",
+    type: "Students",
+    house: "?",
+    src: images.Shelby,
+  },
+  {
+    id: 18,
+    name: "Tony DeLuca",
+    type: "Students",
+    house: "?",
+    src: images.Tony,
+  },
+  {
+    id: 19,
+    name: "Warren Ceredaryk",
+    type: "Students",
+    house: "?",
+    src: images.Warren,
   },
 ];
 
@@ -85,6 +150,10 @@ const CharacterCard = ({ character, theme, styles }) => {
       Slytherin: "#1a472a",
       Ravenclaw: "#0e1a40",
       Hufflepuff: "#ecb939",
+      Thunderbird: "#8B5A2B",
+      "Horned Serpent": "#1E3A8A",
+      Pukwudgie: "#7C2D12",
+      Wampus: "#6D28D9",
     };
     return houseColors[house] || theme.primary;
   };
@@ -116,63 +185,47 @@ const CharacterCard = ({ character, theme, styles }) => {
         )}
 
         {/* House Badge */}
-        <div
-          style={{
-            ...styles.houseBadge,
-            backgroundColor: getHouseColor(character.house) + "20",
-            borderColor: getHouseColor(character.house),
-            color: getHouseColor(character.house),
-          }}
-        >
-          {character.house}
-        </div>
+        {character.house !== "?" && (
+          <div
+            style={{
+              ...styles.houseBadge,
+              backgroundColor: getHouseColor(character.house) + "20",
+              borderColor: getHouseColor(character.house),
+              color: getHouseColor(character.house),
+            }}
+          >
+            {character.house}
+          </div>
+        )}
       </div>
 
       {/* Character Info */}
       <div style={styles.characterInfo}>
         <h3 style={styles.characterName}>{character.name}</h3>
-        <p style={styles.characterDescription}>{character.description}</p>
       </div>
     </div>
   );
 };
 
-const YearSection = ({
-  year,
-  characters,
-  theme,
-  styles,
-  isExpanded,
-  onToggle,
-}) => {
-  const yearLabels = {
-    1: "First Year",
-    2: "Second Year",
-    3: "Third Year",
-    4: "Fourth Year",
-    5: "Fifth Year",
-    6: "Sixth Year",
-    7: "Seventh Year",
-  };
-
+const Section = ({ type, characters, theme, styles, isExpanded, onToggle }) => {
   return (
-    <div style={styles.yearSection}>
+    <div style={styles.typeSection}>
       <button
         style={{
-          ...styles.yearHeader,
+          ...styles.typeHeader,
           backgroundColor: isExpanded ? theme.primary + "10" : theme.surface,
           borderColor: isExpanded ? theme.primary : theme.border,
         }}
         onClick={onToggle}
       >
-        <div style={styles.yearHeaderLeft}>
+        <div style={styles.typeHeaderLeft}>
           <Calendar size={20} color={theme.primary} />
-          <h2 style={styles.yearTitle}>{yearLabels[year] || `Year ${year}`}</h2>
+          <h2 style={styles.typeTitle}>{type}</h2>
           <span style={styles.characterCount}>
-            ({characters.length} students)
+            ({characters.length} {type.toLowerCase()})
           </span>
         </div>
-        <div style={styles.yearHeaderRight}>
+        <div style={styles.typeHeaderRight}>
           {isExpanded ? (
             <ChevronUp size={20} color={theme.primary} />
           ) : (
@@ -197,40 +250,38 @@ const YearSection = ({
   );
 };
 
-export const CharacterGallery = ({ characters = SAMPLE_CHARACTERS }) => {
+export const CharacterGallery = ({ characters = ILVERMORNY_CHARACTERS }) => {
   const { theme } = useTheme();
-  const [expandedYears, setExpandedYears] = useState(new Set([1])); // First year expanded by default
+  const [expandedTypes, setExpandedTypes] = useState(new Set(["Students"]));
 
-  // Group characters by year
-  const charactersByYear = characters.reduce((acc, character) => {
-    const year = character.year;
-    if (!acc[year]) {
-      acc[year] = [];
+  // Group characters by type
+  const charactersByType = characters.reduce((acc, character) => {
+    const type = character.type;
+    if (!acc[type]) {
+      acc[type] = [];
     }
-    acc[year].push(character);
+    acc[type].push(character);
     return acc;
   }, {});
 
-  // Sort years
-  const sortedYears = Object.keys(charactersByYear)
-    .map(Number)
-    .sort((a, b) => a - b);
+  // Get the type keys for iteration
+  const typeKeys = Object.keys(charactersByType);
 
-  const toggleYear = (year) => {
-    const newExpanded = new Set(expandedYears);
-    if (newExpanded.has(year)) {
-      newExpanded.delete(year);
+  const toggleType = (type) => {
+    const newExpanded = new Set(expandedTypes);
+    if (newExpanded.has(type)) {
+      newExpanded.delete(type);
     } else {
-      newExpanded.add(year);
+      newExpanded.add(type);
     }
-    setExpandedYears(newExpanded);
+    setExpandedTypes(newExpanded);
   };
 
-  const toggleAllYears = () => {
-    if (expandedYears.size === sortedYears.length) {
-      setExpandedYears(new Set());
+  const toggleAllTypes = () => {
+    if (expandedTypes.size === typeKeys.length) {
+      setExpandedTypes(new Set());
     } else {
-      setExpandedYears(new Set(sortedYears));
+      setExpandedTypes(new Set(typeKeys));
     }
   };
 
@@ -244,14 +295,14 @@ export const CharacterGallery = ({ characters = SAMPLE_CHARACTERS }) => {
           <div>
             <h1 style={styles.title}>Character Gallery</h1>
             <p style={styles.subtitle}>
-              Explore students from different school years and their magical
-              specialties
+              Explore students, teachers, and other important individuals from
+              Ilvermorny.
             </p>
           </div>
         </div>
         <div style={styles.headerRight}>
-          <button style={styles.toggleAllButton} onClick={toggleAllYears}>
-            {expandedYears.size === sortedYears.length
+          <button style={styles.toggleAllButton} onClick={toggleAllTypes}>
+            {expandedTypes.size === typeKeys.length
               ? "Collapse All"
               : "Expand All"}
           </button>
@@ -261,24 +312,24 @@ export const CharacterGallery = ({ characters = SAMPLE_CHARACTERS }) => {
       <div style={styles.statsBar}>
         <div style={styles.statItem}>
           <MapPin size={16} color={theme.accent} />
-          <span>Total Students: {characters.length}</span>
+          <span>Total Characters: {characters.length}</span>
         </div>
         <div style={styles.statItem}>
           <Calendar size={16} color={theme.accent} />
-          <span>School Years: {sortedYears.length}</span>
+          <span>Categories: {typeKeys.length}</span>
         </div>
       </div>
 
-      <div style={styles.yearContainer}>
-        {sortedYears.map((year) => (
-          <YearSection
-            key={year}
-            year={year}
-            characters={charactersByYear[year]}
+      <div style={styles.typeContainer}>
+        {typeKeys.map((type) => (
+          <Section
+            key={type}
+            type={type}
+            characters={charactersByType[type]}
             theme={theme}
             styles={styles}
-            isExpanded={expandedYears.has(year)}
-            onToggle={() => toggleYear(year)}
+            isExpanded={expandedTypes.has(type)}
+            onToggle={() => toggleType(type)}
           />
         ))}
       </div>

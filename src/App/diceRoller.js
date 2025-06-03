@@ -338,6 +338,7 @@ export const useRollFunctions = () => {
     rollInitiative: (params) => rollInitiative({ ...params, showRollResult }),
     rollSkill: (params) => rollSkill({ ...params, showRollResult }),
     attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
+    rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
   };
 };
 
@@ -468,7 +469,417 @@ export const rollAbility = async ({
     setIsRolling(false);
   }
 };
+export const getMaxAchievableQuality = ({
+  proficiencies,
+  ingredientQuality,
+}) => {
+  const potionMakingLevel = proficiencies.potionMaking; // 0, 1, or 2 (expertise)
+  const potioneerKit = proficiencies.potioneersKit;
+  const herbologyKit = proficiencies.herbologyKit;
 
+  const hasPotion = potionMakingLevel > 0;
+  const hasExpertise = potionMakingLevel === 2;
+  const kitCount = (potioneerKit ? 1 : 0) + (herbologyKit ? 1 : 0);
+  const totalRegularProficiencies = (hasPotion ? 1 : 0) + kitCount;
+
+  // Match the rules table exactly:
+  // 0 Prof: No proficiencies at all
+  // 1 Prof: Exactly 1 proficiency (any type)
+  // 2 Profs or 1 Exp: Either 2 regular proficiencies OR expertise in potion-making
+  // 1 Prof 1 Exp: Expertise in potion-making + at least 1 kit proficiency
+  // 2 Expertise: Not achievable in current system (would need kit expertise)
+
+  if (totalRegularProficiencies === 0) {
+    // 0 Prof row: Poor->Flawed, Normal->Flawed, Superior->Normal
+    switch (ingredientQuality) {
+      case "poor":
+        return "flawed";
+      case "normal":
+        return "flawed";
+      case "exceptional":
+        return "flawed"; // Interpolated: same as normal
+      case "superior":
+        return "normal";
+      default:
+        return "flawed";
+    }
+  } else if (totalRegularProficiencies === 1 && !hasExpertise) {
+    // 1 Prof row: Poor->Flawed, Normal->Normal, Superior->Normal
+    switch (ingredientQuality) {
+      case "poor":
+        return "flawed";
+      case "normal":
+        return "normal";
+      case "exceptional":
+        return "normal"; // Interpolated: same as normal
+      case "superior":
+        return "normal";
+      default:
+        return "normal";
+    }
+  } else if (
+    (totalRegularProficiencies === 2 && !hasExpertise) ||
+    (hasExpertise && kitCount === 0)
+  ) {
+    // 2 Profs or 1 Exp row: Poor->Normal, Normal->Normal, Superior->Exceptional
+    switch (ingredientQuality) {
+      case "poor":
+        return "normal";
+      case "normal":
+        return "normal";
+      case "exceptional":
+        return "exceptional"; // Interpolated: better than normal
+      case "superior":
+        return "exceptional";
+      default:
+        return "normal";
+    }
+  } else if (hasExpertise && kitCount >= 1) {
+    // 1 Prof 1 Exp row: Poor->Normal, Normal->Exceptional, Superior->Exceptional
+    switch (ingredientQuality) {
+      case "poor":
+        return "normal";
+      case "normal":
+        return "exceptional";
+      case "exceptional":
+        return "exceptional";
+      case "superior":
+        return "exceptional";
+      default:
+        return "exceptional";
+    }
+  }
+
+  return "normal"; // fallback
+};
+
+export const getProficiencyAnalysis = (proficiencies, ingredientQuality) => {
+  const potionMakingLevel = proficiencies.potionMaking;
+  const hasPotion = potionMakingLevel > 0;
+  const hasExpertise = potionMakingLevel === 2;
+  const kitCount =
+    (proficiencies.potioneersKit ? 1 : 0) +
+    (proficiencies.herbologyKit ? 1 : 0);
+  const totalRegularProficiencies = (hasPotion ? 1 : 0) + kitCount;
+
+  let category = "";
+  if (totalRegularProficiencies === 0) {
+    category = "0 Proficiencies";
+  } else if (totalRegularProficiencies === 1 && !hasExpertise) {
+    category = "1 Proficiency";
+  } else if (
+    (totalRegularProficiencies === 2 && !hasExpertise) ||
+    (hasExpertise && kitCount === 0)
+  ) {
+    category = "2 Proficiencies or 1 Expertise";
+  } else if (hasExpertise && kitCount >= 1) {
+    category = "1 Proficiency + 1 Expertise";
+  }
+
+  return `**Category:** ${category}\n**With ${ingredientQuality} ingredients:** Can achieve up to ${getMaxAchievableQuality(
+    { proficiencies, ingredientQuality }
+  )} quality`;
+};
+
+export const rollBrewPotion = async ({
+  isRolling,
+  setIsRolling,
+  character,
+  selectedPotion,
+  proficiencies,
+  ingredientQuality,
+  qualityDCs,
+  ingredientModifiers,
+  webhookUrl,
+  showRollResult,
+}) => {
+  if (isRolling) return null;
+
+  setIsRolling(true);
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+
+    const calculateBrewingResult = (roll) => {
+      const baseDCs = qualityDCs[selectedPotion.rarity];
+      const ingredientMod = ingredientModifiers[ingredientQuality];
+      // FIX: Pass the required parameters to getMaxAchievableQuality
+      const maxQuality = getMaxAchievableQuality({
+        proficiencies,
+        ingredientQuality,
+      });
+
+      // Create adjusted DCs for all qualities
+      const adjustedDCs = Object.fromEntries(
+        Object.entries(baseDCs).map(([quality, dc]) => [
+          quality,
+          dc + ingredientMod,
+        ])
+      );
+
+      // Determine achieved quality based on roll
+      let achievedQuality = "ruined";
+      const qualityOrder = ["superior", "exceptional", "normal", "flawed"];
+
+      for (const quality of qualityOrder) {
+        if (roll >= adjustedDCs[quality]) {
+          achievedQuality = quality;
+          break;
+        }
+      }
+
+      // Cap the achieved quality at the maximum possible for this brewer/ingredient combo
+      const qualityHierarchy = [
+        "ruined",
+        "flawed",
+        "normal",
+        "exceptional",
+        "superior",
+      ];
+      const maxIndex = qualityHierarchy.indexOf(maxQuality);
+      const achievedIndex = qualityHierarchy.indexOf(achievedQuality);
+
+      if (achievedIndex > maxIndex) {
+        achievedQuality = maxQuality;
+      }
+
+      return {
+        achievedQuality,
+        maxQuality,
+        roll,
+        targetDC: adjustedDCs[achievedQuality],
+        baseDCs,
+        adjustedDCs,
+        ingredientMod,
+        potion: selectedPotion,
+        ingredientQuality,
+        proficiencies,
+      };
+    };
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    // Handle critical results BEFORE calculating brewing result
+    let brewingResult;
+    if (isCriticalSuccess) {
+      // Natural 20 always succeeds at the maximum possible quality
+      const maxQuality = getMaxAchievableQuality({
+        proficiencies,
+        ingredientQuality,
+      });
+      const baseDCs = qualityDCs[selectedPotion.rarity];
+      const ingredientMod = ingredientModifiers[ingredientQuality];
+      const adjustedDCs = Object.fromEntries(
+        Object.entries(baseDCs).map(([quality, dc]) => [
+          quality,
+          dc + ingredientMod,
+        ])
+      );
+
+      brewingResult = {
+        achievedQuality: maxQuality,
+        maxQuality: maxQuality,
+        roll: d20Roll,
+        targetDC: adjustedDCs[maxQuality],
+        baseDCs,
+        adjustedDCs,
+        ingredientMod,
+        potion: selectedPotion,
+        ingredientQuality,
+        proficiencies,
+      };
+    } else if (isCriticalFailure) {
+      // Natural 1 always results in ruined potion
+      const baseDCs = qualityDCs[selectedPotion.rarity];
+      const ingredientMod = ingredientModifiers[ingredientQuality];
+      const adjustedDCs = Object.fromEntries(
+        Object.entries(baseDCs).map(([quality, dc]) => [
+          quality,
+          dc + ingredientMod,
+        ])
+      );
+      const maxQuality = getMaxAchievableQuality({
+        proficiencies,
+        ingredientQuality,
+      });
+
+      brewingResult = {
+        achievedQuality: "ruined",
+        maxQuality: maxQuality,
+        roll: d20Roll,
+        targetDC: 0,
+        baseDCs,
+        adjustedDCs,
+        ingredientMod,
+        potion: selectedPotion,
+        ingredientQuality,
+        proficiencies,
+      };
+    } else {
+      // Normal roll - calculate result based on DC
+      brewingResult = calculateBrewingResult(d20Roll);
+    }
+
+    if (showRollResult) {
+      showRollResult({
+        title: `Potion Brewing: ${selectedPotion.name}`,
+        rollValue: d20Roll,
+        modifier: 0,
+        total: d20Roll,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "potion",
+        description: `Quality Achieved: ${
+          brewingResult.achievedQuality.charAt(0).toUpperCase() +
+          brewingResult.achievedQuality.slice(1)
+        }`,
+      });
+    }
+
+    // Discord webhook logic (unchanged)
+    if (webhookUrl || discordWebhookUrl) {
+      const webhookToUse = webhookUrl || discordWebhookUrl;
+
+      const qualityEmojis = {
+        ruined: "💥",
+        flawed: "🔧",
+        normal: "✅",
+        exceptional: "⭐",
+        superior: "🏆",
+      };
+
+      const profText =
+        `Potion-Making: ${
+          proficiencies.potionMaking === 2
+            ? "Expertise"
+            : proficiencies.potionMaking === 1
+            ? "Proficient"
+            : "None"
+        }\n` +
+        `Potioneer's Kit: ${proficiencies.potioneersKit ? "Yes" : "No"}\n` +
+        `Herbology Kit: ${proficiencies.herbologyKit ? "Yes" : "No"}`;
+
+      let embedColor = 0x6b46c1; // Default purple
+      let resultText = "";
+
+      // Set result text for critical rolls
+
+      // Set embed color based on achieved quality (always)
+      switch (brewingResult.achievedQuality) {
+        case "superior":
+          embedColor = 0x8b5cf6; // Purple - highest quality
+          break;
+        case "exceptional":
+          embedColor = 0x3b82f6; // Blue - high quality
+          break;
+        case "normal":
+          embedColor = 0x10b981; // Green - standard quality
+          break;
+        case "flawed":
+          embedColor = 0xf59e0b; // Orange - low quality
+          break;
+        case "ruined":
+          embedColor = 0xef4444; // Red - failed
+          break;
+        default:
+          embedColor = 0x6b7280; // Gray - fallback
+          break;
+      }
+      if (isCriticalSuccess) {
+        embedColor = 0xffd700;
+        resultText = " - **CRITICAL SUCCESS!** 🎉";
+      } else if (isCriticalFailure) {
+        embedColor = 0xff0000;
+        resultText = " - **CRITICAL FAILURE!** 💥";
+      }
+
+      const embed = {
+        title: `🧪 ${character?.name || "Unknown"} Brewed: ${
+          selectedPotion.name
+        }${resultText}`,
+        description: `1d20: [${d20Roll}] = ${d20Roll}${
+          isCriticalSuccess
+            ? " (Natural 20!)"
+            : isCriticalFailure
+            ? " (Natural 1!)"
+            : ""
+        }`,
+        color: embedColor,
+        fields: [
+          {
+            name: "🏆 Quality Achieved",
+            value: `${qualityEmojis[brewingResult.achievedQuality]} ${
+              brewingResult.achievedQuality.charAt(0).toUpperCase() +
+              brewingResult.achievedQuality.slice(1)
+            }`,
+            inline: true,
+          },
+          {
+            name: "🎲 Roll vs DC",
+            value: `${d20Roll} vs DC ${brewingResult.targetDC}`,
+            inline: true,
+          },
+          {
+            name: "🧬 Ingredient Quality",
+            value:
+              ingredientQuality.charAt(0).toUpperCase() +
+              ingredientQuality.slice(1),
+            inline: true,
+          },
+          {
+            name: "📚 Proficiencies",
+            value: profText,
+            inline: true,
+          },
+          {
+            name: "🔍 Max Possible Quality",
+            value:
+              brewingResult.maxQuality.charAt(0).toUpperCase() +
+              brewingResult.maxQuality.slice(1),
+            inline: true,
+          },
+          {
+            name: "📝 Proficiency Analysis",
+            value: getProficiencyAnalysis(proficiencies, ingredientQuality),
+            inline: false,
+          },
+          {
+            name: "🧪 Potion Effect",
+            value: selectedPotion.description,
+            inline: false,
+          },
+        ],
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: "Witches and Snitches - Potion Brewing",
+        },
+      };
+
+      try {
+        await fetch(webhookToUse, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            embeds: [embed],
+          }),
+        });
+      } catch (error) {
+        console.error("Error sending to Discord:", error);
+      }
+    }
+
+    return brewingResult;
+  } catch (error) {
+    console.error("Error brewing potion:", error);
+    return null;
+  } finally {
+    setIsRolling(false);
+  }
+};
 export const rollInitiative = async ({
   character,
   isRolling,

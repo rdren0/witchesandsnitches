@@ -72,19 +72,19 @@ export const createCharacterGalleryStyles = (theme) => ({
     fontSize: "0.875rem",
     fontWeight: "500",
   },
-  yearContainer: {
+  typeContainer: {
     display: "flex",
     flexDirection: "column",
     gap: "1.5rem",
   },
-  yearSection: {
+  typeSection: {
     backgroundColor: theme.surface,
     borderRadius: "1rem",
     border: `1px solid ${theme.border}`,
     overflow: "hidden",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   },
-  yearHeader: {
+  typeHeader: {
     width: "100%",
     display: "flex",
     justifyContent: "space-between",
@@ -96,16 +96,16 @@ export const createCharacterGalleryStyles = (theme) => ({
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
-  yearHeaderLeft: {
+  typeHeaderLeft: {
     display: "flex",
     alignItems: "center",
     gap: "1rem",
   },
-  yearHeaderRight: {
+  typeHeaderRight: {
     display: "flex",
     alignItems: "center",
   },
-  yearTitle: {
+  typeTitle: {
     fontSize: "1.5rem",
     fontWeight: "600",
     color: theme.text,
@@ -146,8 +146,8 @@ export const createCharacterGalleryStyles = (theme) => ({
   },
   characterImage: {
     width: "100%",
-    height: "100%",
-    objectFit: "cover",
+    height: "300px",
+    objectFit: "contain",
     transition: "transform 0.3s ease",
   },
   imagePlaceholder: {

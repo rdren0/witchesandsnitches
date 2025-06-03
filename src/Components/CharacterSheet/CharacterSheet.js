@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  User,
-  Shield,
-  Heart,
-  // Zap,
-  Dice6,
-  ChevronUp,
-  Swords,
-} from "lucide-react";
+import { User, Shield, Heart, Dice6, ChevronUp, Swords } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createThemedStyles } from "./styles";
+import { createCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions } from "../../App/diceRoller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
@@ -27,7 +19,7 @@ const CharacterSheet = ({
   const { rollInitiative } = useRollFunctions();
 
   const { theme } = useTheme();
-  const styles = createThemedStyles(theme);
+  const styles = createCharacterSheetStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
 
   const [character, setCharacter] = useState(null);
@@ -248,15 +240,6 @@ const CharacterSheet = ({
                   Armor Class
                 </div>
               </div>
-              {/* <div style={{ ...styles.statCard, ...styles.statCardGreen }}>
-                <Zap className="w-6 h-6 text-green-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
-                  {character.speed} ft
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
-                  Speed
-                </div>
-              </div> */}
               <div
                 onMouseEnter={(e) => {
                   Object.assign(e.target.style, {

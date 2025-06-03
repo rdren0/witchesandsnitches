@@ -21,8 +21,8 @@ import {
 import { spellsData } from "./spells";
 import { getSpellModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createThemedSpellBookStyles } from "./styles";
 import { useRollFunctions } from "../../App/diceRoller";
+import { createSpellBookStyles } from "../../styles/masterStyles";
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -44,7 +44,6 @@ const getIcon = (iconName) => {
 
 export const SubjectCard = ({
   criticalSuccesses,
-  customUsername,
   discordUserId,
   expandedSections,
   expandedSubjects,
@@ -62,7 +61,7 @@ export const SubjectCard = ({
 }) => {
   const { attemptSpell } = useRollFunctions();
   const { theme } = useTheme();
-  const styles = createThemedSpellBookStyles(theme);
+  const styles = createSpellBookStyles(theme);
   const [attemptingSpells, setAttemptingSpells] = useState({});
   const [openMenus, setOpenMenus] = useState({});
   const [editingSpell, setEditingSpell] = useState(null);
