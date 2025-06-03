@@ -1202,10 +1202,6 @@ const CharacterCreationForm = ({
         {activeTab === "saved" && (
           <div style={styles.panel}>
             <div style={styles.savedCharactersHeader}>
-              <h2 style={styles.sectionHeader}>
-                <Save />
-                Saved Characters
-              </h2>
               <button
                 onClick={createNewCharacter}
                 style={styles.createNewButtonInSaved}
