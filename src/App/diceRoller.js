@@ -724,7 +724,7 @@ export const rollBrewPotion = async ({
 
     if (showRollResult) {
       showRollResult({
-        title: `Potion Brewing: ${selectedPotion.name}`,
+        title: `Potion Brewing: \n ${selectedPotion.name}`,
         rollValue: d20Roll,
         modifier: 0,
         total: d20Roll,
@@ -741,17 +741,6 @@ export const rollBrewPotion = async ({
     // Discord webhook logic (unchanged)
     if (webhookUrl || discordWebhookUrl) {
       const webhookToUse = webhookUrl || discordWebhookUrl;
-
-      const profText =
-        `Potion-Making: ${
-          proficiencies.potionMaking === 2
-            ? "Expertise"
-            : proficiencies.potionMaking === 1
-            ? "Proficient"
-            : "None"
-        }\n` +
-        `Potioneer's Kit: ${proficiencies.potioneersKit ? "Yes" : "No"}\n` +
-        `Herbology Kit: ${proficiencies.herbologyKit ? "Yes" : "No"}`;
 
       let embedColor = 0x6b46c1; // Default purple
       let resultText = "";
@@ -810,11 +799,6 @@ export const rollBrewPotion = async ({
             value:
               ingredientQuality.charAt(0).toUpperCase() +
               ingredientQuality.slice(1),
-            inline: true,
-          },
-          {
-            name: "Proficiencies",
-            value: profText,
             inline: true,
           },
           {

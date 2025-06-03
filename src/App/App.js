@@ -317,18 +317,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                 <p>View and manage your character's stats and abilities.</p>
               </div>
             </div>
-            <div style={styles.featureGrid}>
-              <div
-                style={styles.featureCard}
-                onClick={() => handleCardClick("character", "notes")}
-              >
-                <h3>Notes</h3>
-                <p>
-                  Keep detailed notes about your character's story,
-                  relationships, and development.
-                </p>
-              </div>
-            </div>
           </>
         )}
         <hr
