@@ -639,9 +639,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         <p style={styles.subtitle}>
           Manage your character's items, equipment, and treasures
         </p>
-        <div style={styles.characterInfo}>
-          Character: {selectedCharacter.name}
-        </div>
       </div>
 
       {/* Error Message */}
