@@ -1,6 +1,4 @@
-// Replace your entire Inventory component with this working version:
-
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Plus,
   Edit2,
@@ -12,18 +10,47 @@ import {
   Loader,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
+import Bank from "../Bank/Bank";
 
 const Inventory = ({ user, selectedCharacter, supabase }) => {
   const { theme } = useTheme();
-  const [items, setItems] = useState([]);
+
+  const [items, setItems] = useState([
+    {
+      id: 1,
+      name: "Wizard's Hat",
+      description: "A magical hat that boosts wisdom",
+      quantity: 1,
+      value: "15 Galleons",
+      category: "Armor",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      name: "Health Potion",
+      description: "Restores 50 HP when consumed",
+      quantity: 3,
+      value: "5 Galleons each",
+      category: "Potions",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 3,
+      name: "Ancient Spellbook",
+      description: "Contains forgotten spells of the old masters",
+      quantity: 1,
+      value: "100 Galleons",
+      category: "Books",
+      created_at: new Date().toISOString(),
+    },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -45,19 +72,28 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     "Food",
   ];
 
-  const discordUserId = user?.user_metadata?.provider_id || user?.id;
-
-  // Memoize styles to prevent recreation on every render
   const styles = useMemo(
     () => ({
       container: {
-        maxWidth: "1400px",
+        maxWidth: "1600px",
         margin: "0 auto",
         padding: "20px",
         backgroundColor: theme.background,
         minHeight: "100vh",
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      },
+      mainGrid: {
+        display: "grid",
+        gridTemplateColumns: "350px 1fr",
+        gap: "24px",
+        alignItems: "start",
+        "@media (max-width: 1024px)": {
+          gridTemplateColumns: "1fr",
+        },
+      },
+      inventorySection: {
+        minWidth: 0,
       },
       header: {
         backgroundColor: theme.surface,
@@ -68,7 +104,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
       },
       title: {
-        fontSize: "32px",
+        fontSize: "28px",
         fontWeight: "bold",
         color: theme.text,
         margin: "0 0 8px 0",
@@ -81,42 +117,14 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         color: theme.textSecondary,
         margin: 0,
       },
-      characterInfo: {
-        fontSize: "14px",
-        color: theme.primary,
-        fontWeight: "600",
-        marginTop: "8px",
-      },
       errorMessage: {
-        backgroundColor: theme.error + "20",
-        border: `1px solid ${theme.error}`,
-        color: theme.error,
+        backgroundColor: (theme.error || "#EF4444") + "20",
+        border: `1px solid ${theme.error || "#EF4444"}`,
+        color: theme.error || "#EF4444",
         padding: "12px",
         borderRadius: "8px",
         marginBottom: "16px",
         fontSize: "14px",
-      },
-      loadingContainer: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "60px",
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        border: `2px solid ${theme.border}`,
-      },
-      loadingText: {
-        color: theme.textSecondary,
-        fontSize: "16px",
-        marginLeft: "12px",
-      },
-      noCharacterSelected: {
-        textAlign: "center",
-        padding: "60px 20px",
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        border: `2px solid ${theme.border}`,
-        color: theme.textSecondary,
       },
       controls: {
         display: "flex",
@@ -138,6 +146,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         fontWeight: "600",
         cursor: "pointer",
         transition: "all 0.2s ease",
+        fontFamily: "inherit",
       },
       searchContainer: {
         position: "relative",
@@ -155,6 +164,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         backgroundColor: theme.surface,
         color: theme.text,
         fontSize: "16px",
+        fontFamily: "inherit",
       },
       searchIcon: {
         position: "absolute",
@@ -204,6 +214,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         backgroundColor: theme.surface,
         color: theme.text,
         fontSize: "16px",
+        fontFamily: "inherit",
       },
       select: {
         padding: "12px",
@@ -212,6 +223,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         backgroundColor: theme.surface,
         color: theme.text,
         fontSize: "16px",
+        fontFamily: "inherit",
       },
       textarea: {
         padding: "12px",
@@ -222,6 +234,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         fontSize: "16px",
         height: "80px",
         resize: "vertical",
+        fontFamily: "inherit",
       },
       formActions: {
         display: "flex",
@@ -232,7 +245,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         alignItems: "center",
         gap: "8px",
         padding: "12px 24px",
-        backgroundColor: "#10B981",
+        backgroundColor: theme.success || "#10B981",
         color: "white",
         border: "none",
         borderRadius: "8px",
@@ -241,6 +254,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         cursor: "pointer",
         flex: "1",
         justifyContent: "center",
+        fontFamily: "inherit",
       },
       cancelButton: {
         display: "flex",
@@ -254,10 +268,11 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         fontSize: "16px",
         fontWeight: "600",
         cursor: "pointer",
+        fontFamily: "inherit",
       },
       itemsGrid: {
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
         gap: "16px",
       },
       itemCard: {
@@ -306,11 +321,11 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         transition: "all 0.2s ease",
       },
       editButton: {
-        backgroundColor: "#3B82F6",
+        backgroundColor: theme.accent || "#3B82F6",
         color: "white",
       },
       deleteButton: {
-        backgroundColor: "#EF4444",
+        backgroundColor: theme.error || "#EF4444",
         color: "white",
       },
       itemDescription: {
@@ -342,103 +357,52 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         color: theme.textSecondary,
         margin: 0,
       },
+      categoryHeader: {
+        fontSize: "18px",
+        fontWeight: "600",
+        color: theme.text,
+        marginBottom: "16px",
+        padding: "12px 16px",
+        backgroundColor: theme.surface,
+        borderRadius: "8px",
+        border: `1px solid ${theme.border}`,
+      },
+      statsCard: {
+        backgroundColor: theme.surface,
+        padding: "16px",
+        borderRadius: "8px",
+        border: `1px solid ${theme.border}`,
+        marginBottom: "16px",
+      },
+      statsRow: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        fontSize: "14px",
+        color: theme.text,
+      },
     }),
     [theme]
   );
 
-  // Load items from database
-  const loadItems = useCallback(async () => {
-    if (!selectedCharacter?.id || !user || !supabase) {
-      setItems([]);
-      setIsLoading(false);
-      return;
-    }
-
-    const userId = discordUserId;
-    if (!userId) {
-      setItems([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log(
-        "Loading items for user:",
-        userId,
-        "character:",
-        selectedCharacter.id
-      );
-
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .select("*")
-        .eq("discord_user_id", userId)
-        .eq("character_id", selectedCharacter.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      console.log("Loaded items:", data);
-      setItems(data || []);
-    } catch (err) {
-      console.error("Error loading inventory items:", err);
-      setError(`Failed to load inventory: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedCharacter?.id, discordUserId, user, supabase]);
-
-  // Load items when component mounts or character changes
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
-
   // Add new item
   const addItem = useCallback(async () => {
-    if (!formData.name.trim() || !selectedCharacter?.id || !user || !supabase)
-      return;
-
-    const userId = discordUserId;
-    if (!userId) return;
+    if (!formData.name.trim()) return;
 
     setIsSaving(true);
-    setError(null);
-
-    try {
+    // Simulate API call
+    setTimeout(() => {
       const newItem = {
-        discord_user_id: userId,
-        character_id: selectedCharacter.id,
+        id: Date.now(),
         name: formData.name.trim(),
         description: formData.description.trim(),
         quantity: parseInt(formData.quantity) || 1,
         value: formData.value.trim(),
         category: formData.category,
+        created_at: new Date().toISOString(),
       };
 
-      console.log("Attempting to insert item:", newItem);
-
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .insert([newItem])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
-
-      console.log("Successfully inserted item:", data);
-
-      // Add the new item to the local state
-      setItems((prev) => [data, ...prev]);
-
-      // Reset form
+      setItems((prev) => [newItem, ...prev]);
       setFormData({
         name: "",
         description: "",
@@ -447,42 +411,14 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         category: "General",
       });
       setShowAddForm(false);
-    } catch (err) {
-      console.error("Error adding item:", err);
-      setError(`Failed to add item: ${err.message}`);
-    } finally {
       setIsSaving(false);
-    }
-  }, [formData, selectedCharacter?.id, discordUserId, user, supabase]);
+    }, 500);
+  }, [formData]);
 
   // Delete item
-  const deleteItem = useCallback(
-    async (id) => {
-      if (!supabase || !user) return;
-
-      const userId = discordUserId;
-      if (!userId) return;
-
-      try {
-        const { error } = await supabase
-          .from("inventory_items")
-          .delete()
-          .eq("id", id)
-          .eq("discord_user_id", userId);
-
-        if (error) {
-          throw error;
-        }
-
-        // Remove from local state
-        setItems((prev) => prev.filter((item) => item.id !== id));
-      } catch (err) {
-        console.error("Error deleting item:", err);
-        setError(`Failed to delete item: ${err.message}`);
-      }
-    },
-    [supabase, discordUserId, user]
-  );
+  const deleteItem = useCallback(async (id) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }, []);
 
   // Start editing
   const startEdit = useCallback((item) => {
@@ -498,41 +434,26 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
   // Save edit
   const saveEdit = useCallback(async () => {
-    if (!formData.name.trim() || !editingId || !supabase || !user) return;
-
-    const userId = discordUserId;
-    if (!userId) return;
+    if (!formData.name.trim() || !editingId) return;
 
     setIsSaving(true);
-    setError(null);
-
-    try {
-      const updates = {
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        quantity: parseInt(formData.quantity) || 1,
-        value: formData.value.trim(),
-        category: formData.category,
-      };
-
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .update(updates)
-        .eq("id", editingId)
-        .eq("discord_user_id", userId)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      // Update local state
+    // Simulate API call
+    setTimeout(() => {
       setItems((prev) =>
-        prev.map((item) => (item.id === editingId ? data : item))
+        prev.map((item) =>
+          item.id === editingId
+            ? {
+                ...item,
+                name: formData.name.trim(),
+                description: formData.description.trim(),
+                quantity: parseInt(formData.quantity) || 1,
+                value: formData.value.trim(),
+                category: formData.category,
+              }
+            : item
+        )
       );
 
-      // Reset form
       setEditingId(null);
       setFormData({
         name: "",
@@ -541,15 +462,11 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         value: "",
         category: "General",
       });
-    } catch (err) {
-      console.error("Error updating item:", err);
-      setError(`Failed to update item: ${err.message}`);
-    } finally {
       setIsSaving(false);
-    }
-  }, [formData, editingId, supabase, discordUserId, user]);
+    }, 500);
+  }, [formData, editingId]);
 
-  // Cancel edit/add
+  // Cancel edit
   const cancelEdit = useCallback(() => {
     setEditingId(null);
     setFormData({
@@ -591,90 +508,91 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [filteredItems]
   );
 
-  // Show authentication required message
-  if (!user) {
+  if (!user || !selectedCharacter) {
     return (
-      <div style={styles.noCharacterSelected}>
-        <Package
-          size={48}
-          color={theme.textSecondary}
-          style={styles.emptyIcon}
-        />
-        <h2 style={{ color: theme.text, marginBottom: "16px" }}>
-          Authentication Required
-        </h2>
-        <p>Please log in with Discord to access the inventory system.</p>
-      </div>
-    );
-  }
-
-  // Show character selection message
-  if (!selectedCharacter) {
-    return (
-      <div style={styles.noCharacterSelected}>
-        <Package
-          size={48}
-          color={theme.textSecondary}
-          style={styles.emptyIcon}
-        />
-        <h2 style={{ color: theme.text, marginBottom: "16px" }}>
-          No Character Selected
-        </h2>
-        <p>
-          Please select a character from the dropdown above to manage their
-          inventory.
-        </p>
+      <div style={styles.container}>
+        <div style={styles.emptyState}>
+          <Package
+            size={48}
+            color={theme.textSecondary}
+            style={styles.emptyIcon}
+          />
+          <p style={styles.emptyText}>
+            Please select a character to view their inventory.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <h1 style={styles.title}>
-          <Package size={32} color={theme.primary} />
-          Inventory Management
-        </h1>
-        <p style={styles.subtitle}>
-          Manage your character's items, equipment, and treasures
-        </p>
-      </div>
+      <div style={styles.mainGrid}>
+        {/* Bank Section - Left Column */}
+        <Bank />
 
-      {/* Error Message */}
-      {error && (
-        <div style={styles.errorMessage}>
-          {error}
-          <button
-            onClick={() => setError(null)}
-            style={{
-              marginLeft: "12px",
-              background: "none",
-              border: "none",
-              color: theme.error,
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+        {/* Inventory Section - Right Column */}
+        <div style={styles.inventorySection}>
+          {/* Header */}
+          <div style={styles.header}>
+            <h1 style={styles.title}>
+              <Package size={28} color={theme.primary} />
+              Inventory Management
+            </h1>
+            <p style={styles.subtitle}>
+              Manage {selectedCharacter.name}'s items, equipment, and treasures
+            </p>
+          </div>
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div style={styles.loadingContainer}>
-          <Loader size={24} className="animate-spin" color={theme.primary} />
-          <span style={styles.loadingText}>Loading inventory...</span>
-        </div>
-      ) : (
-        <>
+          {/* Error Message */}
+          {error && (
+            <div style={styles.errorMessage}>
+              {error}
+              <button
+                onClick={() => setError(null)}
+                style={{
+                  marginLeft: "12px",
+                  background: "none",
+                  border: "none",
+                  color: theme.error || "#EF4444",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {/* Stats */}
+          {items.length > 0 && (
+            <div style={styles.statsCard}>
+              <div style={styles.statsRow}>
+                <span>
+                  Total Items: <strong>{items.length}</strong>
+                </span>
+                <span>
+                  Total Quantity:{" "}
+                  <strong>
+                    {items.reduce((sum, item) => sum + item.quantity, 0)}
+                  </strong>
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Controls */}
           <div style={styles.controls}>
             {!showAddForm && !editingId && (
               <button
                 onClick={() => setShowAddForm(true)}
                 style={styles.addButton}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = theme.secondary;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = theme.primary;
+                }}
               >
                 <Plus size={18} />
                 Add New Item
@@ -688,8 +606,14 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search items by name, description, or category..."
+                  placeholder="Search items..."
                   style={styles.searchInput}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = theme.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = theme.border;
+                  }}
                 />
               </div>
             )}
@@ -714,6 +638,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     placeholder="e.g., Wizard's Hat, Health Potion"
                     style={styles.input}
                     disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
                   />
                 </div>
 
@@ -752,6 +682,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     }
                     style={styles.input}
                     disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
                   />
                 </div>
 
@@ -769,6 +705,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     placeholder="5 Galleons, 10 Sickles, etc."
                     style={styles.input}
                     disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
                   />
                 </div>
 
@@ -785,6 +727,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     placeholder="Item description, magical properties, etc."
                     style={styles.textarea}
                     disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
                   />
                 </div>
               </div>
@@ -804,7 +752,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                 >
                   {isSaving ? (
                     <>
-                      <Loader size={18} className="animate-spin" />
+                      <Loader size={18} />
                       {editingId ? "Saving..." : "Adding..."}
                     </>
                   ) : (
@@ -831,18 +779,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           {filteredItems.length > 0 ? (
             Object.entries(groupedItems).map(([category, categoryItems]) => (
               <div key={category} style={{ marginBottom: "32px" }}>
-                <div
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: "600",
-                    color: theme.text,
-                    marginBottom: "16px",
-                    padding: "12px 16px",
-                    backgroundColor: theme.surface,
-                    borderRadius: "8px",
-                    border: `1px solid ${theme.border}`,
-                  }}
-                >
+                <div style={styles.categoryHeader}>
                   {category} ({categoryItems.length})
                 </div>
                 <div style={styles.itemsGrid}>
@@ -929,8 +866,8 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
               </p>
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 };

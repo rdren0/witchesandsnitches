@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { Plus, Minus, RotateCcw } from "lucide-react";
+import { Plus, Minus, RotateCcw, Coins } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
 
-const MoneyTracker = () => {
+const Bank = () => {
+  const { theme } = useTheme();
+
   // Store total money in Knuts for precision
   const [totalKnuts, setTotalKnuts] = useState(0);
   const [inputGalleons, setInputGalleons] = useState("");
@@ -62,59 +65,259 @@ const MoneyTracker = () => {
   };
 
   const hasInput = inputGalleons || inputSickles || inputKnuts;
-
   const { galleons, sickles, knuts } = getBreakdown(totalKnuts);
 
+  const styles = {
+    container: {
+      backgroundColor: theme.surface,
+      borderRadius: "16px",
+      padding: "24px",
+      border: `2px solid ${theme.border}`,
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+      maxWidth: "600px",
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    },
+    header: {
+      textAlign: "center",
+      marginBottom: "24px",
+    },
+    title: {
+      fontSize: "24px",
+      fontWeight: "bold",
+      color: theme.text,
+      margin: "0 0 8px 0",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "12px",
+    },
+    subtitle: {
+      fontSize: "14px",
+      color: theme.textSecondary,
+      margin: 0,
+    },
+    balanceCard: {
+      background:
+        theme.gradient ||
+        `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`,
+      color: "white",
+      padding: "20px",
+      borderRadius: "12px",
+      marginBottom: "24px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+    },
+    balanceTitle: {
+      fontSize: "18px",
+      fontWeight: "600",
+      marginBottom: "16px",
+      textAlign: "center",
+      color: "white",
+      opacity: 0.9,
+    },
+    currencyRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "12px",
+    },
+    currencyLabel: {
+      fontWeight: "500",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    },
+    currencyValue: {
+      fontSize: "20px",
+      fontWeight: "bold",
+    },
+    totalRow: {
+      borderTop: "2px solid rgba(255, 255, 255, 0.3)",
+      marginTop: "16px",
+      paddingTop: "12px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    totalLabel: {
+      fontWeight: "500",
+      opacity: 0.9,
+    },
+    totalValue: {
+      fontSize: "18px",
+      fontWeight: "bold",
+    },
+    inputCard: {
+      backgroundColor: theme.background,
+      padding: "20px",
+      borderRadius: "12px",
+      border: `1px solid ${theme.border}`,
+      marginBottom: "16px",
+    },
+    inputTitle: {
+      fontSize: "16px",
+      fontWeight: "600",
+      color: theme.text,
+      marginBottom: "16px",
+      margin: "0 0 16px 0",
+    },
+    inputGrid: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr 1fr",
+      gap: "12px",
+      marginBottom: "16px",
+    },
+    inputColumn: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "8px",
+    },
+    inputLabel: {
+      fontSize: "14px",
+      fontWeight: "500",
+      color: theme.text,
+      textAlign: "center",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "6px",
+    },
+    input: {
+      width: "100%",
+      padding: "10px 12px",
+      border: `2px solid ${theme.border}`,
+      borderRadius: "8px",
+      backgroundColor: theme.surface,
+      color: theme.text,
+      fontSize: "16px",
+      transition: "border-color 0.2s ease",
+      textAlign: "center",
+      fontFamily: "inherit",
+    },
+    buttonRow: {
+      display: "flex",
+      gap: "12px",
+    },
+    button: {
+      flex: 1,
+      padding: "12px 16px",
+      borderRadius: "8px",
+      border: "none",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+      fontFamily: "inherit",
+    },
+    addButton: {
+      backgroundColor: theme.success || "#10B981",
+      color: "white",
+    },
+    addButtonDisabled: {
+      backgroundColor: theme.textSecondary,
+      color: "white",
+      cursor: "not-allowed",
+      opacity: 0.6,
+    },
+    removeButton: {
+      backgroundColor: theme.error || "#EF4444",
+      color: "white",
+    },
+    removeButtonDisabled: {
+      backgroundColor: theme.textSecondary,
+      color: "white",
+      cursor: "not-allowed",
+      opacity: 0.6,
+    },
+    resetButton: {
+      width: "100%",
+      padding: "12px 16px",
+      backgroundColor: theme.primary,
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+      marginBottom: "16px",
+      fontFamily: "inherit",
+    },
+    referenceCard: {
+      backgroundColor: theme.background,
+      padding: "16px",
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
+    },
+    referenceTitle: {
+      fontSize: "12px",
+      fontWeight: "600",
+      color: theme.text,
+      marginBottom: "8px",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+    },
+    referenceText: {
+      fontSize: "12px",
+      color: theme.textSecondary,
+      lineHeight: "1.4",
+      margin: "0 0 4px 0",
+    },
+  };
+
   return (
-    <div className="max-w-md mx-auto bg-gradient-to-br from-amber-50 to-yellow-100 p-6 rounded-xl shadow-lg border-2 border-amber-300">
-      <h1 className="text-2xl font-bold text-amber-800 text-center mb-6 font-serif">
-        🪙 Gringotts Vault Tracker
-      </h1>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <h2 style={styles.title}>
+          <Coins size={28} color={theme.primary} />
+          Gringotts Vault Tracker
+        </h2>
+        <p style={styles.subtitle}>
+          Manage your magical currency with precision
+        </p>
+      </div>
 
       {/* Current Balance Display */}
-      <div className="bg-amber-900 text-amber-100 p-4 rounded-lg mb-6 shadow-inner">
-        <h2 className="text-lg font-semibold mb-3 text-center text-amber-200">
-          Current Balance
-        </h2>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="font-medium">🥇 Galleons:</span>
-            <span className="text-xl font-bold text-yellow-300">
-              {galleons}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="font-medium">🥈 Sickles:</span>
-            <span className="text-xl font-bold text-gray-300">{sickles}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="font-medium">🥉 Knuts:</span>
-            <span className="text-xl font-bold text-amber-300">{knuts}</span>
-          </div>
+      <div style={styles.balanceCard}>
+        <h3 style={styles.balanceTitle}>Current Balance</h3>
+
+        <div style={styles.currencyRow}>
+          <span style={styles.currencyLabel}>🥇 Galleons</span>
+          <span style={styles.currencyValue}>{galleons}</span>
         </div>
-        <div className="border-t border-amber-700 mt-3 pt-2">
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-amber-200">
-              Total (in Knuts):
-            </span>
-            <span className="text-lg font-bold text-amber-100">
-              {totalKnuts}
-            </span>
-          </div>
+
+        <div style={styles.currencyRow}>
+          <span style={styles.currencyLabel}>🥈 Sickles</span>
+          <span style={styles.currencyValue}>{sickles}</span>
+        </div>
+
+        <div style={styles.currencyRow}>
+          <span style={styles.currencyLabel}>🥉 Knuts</span>
+          <span style={styles.currencyValue}>{knuts}</span>
+        </div>
+
+        <div style={styles.totalRow}>
+          <span style={styles.totalLabel}>Total (in Knuts)</span>
+          <span style={styles.totalValue}>{totalKnuts}</span>
         </div>
       </div>
 
       {/* Input Section */}
-      <div className="bg-white p-4 rounded-lg shadow-inner border border-amber-200 mb-4">
-        <h3 className="text-md font-semibold text-amber-800 mb-3">
-          Add/Remove Money
-        </h3>
+      <div style={styles.inputCard}>
+        <h3 style={styles.inputTitle}>Add/Remove Money</h3>
 
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-amber-700 w-16">
-              🥇 Galleons:
-            </span>
+        <div style={styles.inputGrid}>
+          <div style={styles.inputColumn}>
+            <span style={styles.inputLabel}>🥇 Galleons</span>
             <input
               type="number"
               step="0.01"
@@ -122,14 +325,18 @@ const MoneyTracker = () => {
               value={inputGalleons}
               onChange={(e) => setInputGalleons(e.target.value)}
               placeholder="0"
-              className="flex-1 px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              style={styles.input}
+              onFocus={(e) => {
+                e.target.style.borderColor = theme.primary;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = theme.border;
+              }}
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-amber-700 w-16">
-              🥈 Sickles:
-            </span>
+          <div style={styles.inputColumn}>
+            <span style={styles.inputLabel}>🥈 Sickles</span>
             <input
               type="number"
               step="0.01"
@@ -137,14 +344,18 @@ const MoneyTracker = () => {
               value={inputSickles}
               onChange={(e) => setInputSickles(e.target.value)}
               placeholder="0"
-              className="flex-1 px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              style={styles.input}
+              onFocus={(e) => {
+                e.target.style.borderColor = theme.primary;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = theme.border;
+              }}
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-amber-700 w-16">
-              🥉 Knuts:
-            </span>
+          <div style={styles.inputColumn}>
+            <span style={styles.inputLabel}>🥉 Knuts</span>
             <input
               type="number"
               step="0.01"
@@ -152,16 +363,35 @@ const MoneyTracker = () => {
               value={inputKnuts}
               onChange={(e) => setInputKnuts(e.target.value)}
               placeholder="0"
-              className="flex-1 px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              style={styles.input}
+              onFocus={(e) => {
+                e.target.style.borderColor = theme.primary;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = theme.border;
+              }}
             />
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div style={styles.buttonRow}>
           <button
             onClick={addMoney}
             disabled={!hasInput}
-            className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 font-medium"
+            style={{
+              ...styles.button,
+              ...(hasInput ? styles.addButton : styles.addButtonDisabled),
+            }}
+            onMouseEnter={(e) => {
+              if (hasInput) {
+                e.target.style.backgroundColor = "#059669";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (hasInput) {
+                e.target.style.backgroundColor = theme.success || "#10B981";
+              }
+            }}
           >
             <Plus size={18} />
             Add
@@ -170,7 +400,20 @@ const MoneyTracker = () => {
           <button
             onClick={subtractMoney}
             disabled={!hasInput}
-            className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 font-medium"
+            style={{
+              ...styles.button,
+              ...(hasInput ? styles.removeButton : styles.removeButtonDisabled),
+            }}
+            onMouseEnter={(e) => {
+              if (hasInput) {
+                e.target.style.backgroundColor = "#DC2626";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (hasInput) {
+                e.target.style.backgroundColor = theme.error || "#EF4444";
+              }
+            }}
           >
             <Minus size={18} />
             Remove
@@ -181,20 +424,30 @@ const MoneyTracker = () => {
       {/* Reset Button */}
       <button
         onClick={resetMoney}
-        className="w-full bg-amber-700 hover:bg-amber-800 text-amber-100 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 font-medium"
+        style={styles.resetButton}
+        onMouseEnter={(e) => {
+          e.target.style.backgroundColor = theme.secondary;
+          e.target.style.transform = "translateY(-1px)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.backgroundColor = theme.primary;
+          e.target.style.transform = "translateY(0)";
+        }}
       >
         <RotateCcw size={18} />
         Reset Vault
       </button>
 
       {/* Currency Reference */}
-      <div className="mt-4 text-xs text-amber-700 bg-amber-100 p-3 rounded-md">
-        <div className="font-semibold mb-1">Exchange Rates:</div>
-        <div>1 Galleon = 17 Sickles = 493 Knuts</div>
-        <div>1 Sickle = 29 Knuts</div>
+      <div style={styles.referenceCard}>
+        <div style={styles.referenceTitle}>Exchange Rates</div>
+        <div style={styles.referenceText}>
+          1 Galleon = 17 Sickles = 493 Knuts
+        </div>
+        <div style={styles.referenceText}>1 Sickle = 29 Knuts</div>
       </div>
     </div>
   );
 };
 
-export default MoneyTracker;
+export default Bank;
