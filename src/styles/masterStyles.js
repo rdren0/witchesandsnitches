@@ -241,6 +241,7 @@ const createCharacterSheetStyles = (theme) => ({
     borderColor: "#10b981",
   },
   statCardGreenHover: {
+    // eslint-disable-next-line
     backgroundColor: "#10b981" + "10",
     transform: "translateY(-2px)",
     boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
@@ -943,6 +944,7 @@ export const createCharacterCreationStyles = (theme) => ({
     color: "#10B981",
     textAlign: "center",
     padding: "10px",
+    // eslint-disable-next-line
     backgroundColor: "#10B981" + "20",
     border: "2px solid #10B981",
     borderRadius: "6px",

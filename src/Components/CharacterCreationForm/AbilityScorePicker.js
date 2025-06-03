@@ -1,4 +1,5 @@
-import { RotateIcon, TrashIcon } from "../../icons";
+import { RefreshCw, Trash } from "lucide-react";
+
 import { useTheme } from "../../contexts/ThemeContext";
 import { createAbilityScorePickerStyles } from "../../styles/masterStyles";
 
@@ -99,7 +100,7 @@ export const AbilityScorePicker = ({
                   backgroundColor: "#EF4444",
                 }}
               >
-                <RotateIcon />
+                <RefreshCw />
                 Roll For Stats
               </button>
             )}
@@ -222,7 +223,7 @@ export const AbilityScorePicker = ({
                     onClick={() => clearStat(ability)}
                     style={styles.trashButton}
                   >
-                    <TrashIcon />
+                    <Trash />
                   </button>
                 </div>
               </>

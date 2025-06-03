@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { rollAbilityStat } from "../../App/diceRoller";
-import { WandIcon, SaveIcon, UserIcon, RotateIcon } from "../../icons";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
 import {
@@ -11,6 +10,7 @@ import {
   subclasses,
   backgrounds,
 } from "../data";
+import { Wand, Save, User, RefreshCw } from "lucide-react";
 
 import { useTheme } from "../../contexts/ThemeContext";
 import { characterService } from "../../services/characterService";
@@ -233,7 +233,7 @@ const CharacterCreationForm = ({
           }}
         >
           <div style={{ color: theme.primary }}>
-            <WandIcon />
+            <Wand />
           </div>
           <div style={{ flex: 1 }}>
             <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
@@ -638,7 +638,7 @@ const CharacterCreationForm = ({
         }}
       >
         <div style={{ color: theme.primary }}>
-          <WandIcon />
+          <Wand />
         </div>
         <div style={{ flex: 1 }}>
           <h1 style={styles.title}>Witches & Snitches Character Creator</h1>
@@ -668,7 +668,7 @@ const CharacterCreationForm = ({
           }}
           onClick={() => setActiveTab("create")}
         >
-          <UserIcon />
+          <User />
           {isEditing ? "Edit Character" : "Create Character"}
         </button>
         <button
@@ -678,7 +678,7 @@ const CharacterCreationForm = ({
           }}
           onClick={() => setActiveTab("saved")}
         >
-          <SaveIcon />
+          <Save />
           Saved Characters ({savedCharacters.length})
         </button>
       </div>
@@ -688,7 +688,7 @@ const CharacterCreationForm = ({
         {activeTab === "create" && (
           <div style={styles.panel}>
             <h2 style={styles.sectionHeader}>
-              <UserIcon />
+              <User />
               {isEditing ? "Edit Character" : "Create Character"}
             </h2>
 
@@ -722,7 +722,7 @@ const CharacterCreationForm = ({
                     e.target.style.boxShadow = "none";
                   }}
                 >
-                  <WandIcon />
+                  <Wand />
                   Create New Character
                 </button>
                 <div
@@ -868,7 +868,7 @@ const CharacterCreationForm = ({
                           // padding: "6px 10px",
                         }}
                       >
-                        <RotateIcon />
+                        <RefreshCw />
                         Roll
                       </button>
                     )}
@@ -1167,7 +1167,7 @@ const CharacterCreationForm = ({
                 cursor: isSaveEnabled ? "pointer" : "not-allowed",
               }}
             >
-              <SaveIcon />
+              <Save />
               {isSaving
                 ? "Saving..."
                 : isEditing
@@ -1203,7 +1203,7 @@ const CharacterCreationForm = ({
           <div style={styles.panel}>
             <div style={styles.savedCharactersHeader}>
               <h2 style={styles.sectionHeader}>
-                <SaveIcon />
+                <Save />
                 Saved Characters
               </h2>
               <button
@@ -1220,7 +1220,7 @@ const CharacterCreationForm = ({
                   e.target.style.boxShadow = "none";
                 }}
               >
-                <WandIcon />
+                <Wand />
                 Create New Character
               </button>
             </div>

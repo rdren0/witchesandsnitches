@@ -358,7 +358,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
 
 const ProtectedRoute = ({ user, children, fallback }) => {
   const { theme } = useTheme();
-  const styles = createAppStyles(theme);
 
   if (!user) {
     return (
@@ -771,11 +770,10 @@ function AppContent() {
       case "inventory":
         return (
           <>
-            {" "}
             {characterSelector}
             <Inventory
               user={user}
-              character={selectedCharacter}
+              selectedCharacter={selectedCharacter}
               supabase={supabase}
             />
           </>

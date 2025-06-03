@@ -1,5 +1,4 @@
-import { BookIcon, UserIcon, TrashIcon, StarIcon } from "../../icons";
-
+import { Star, BookOpenText, User, Trash } from "lucide-react";
 import { createCharacterCreationStyles } from "../../styles/masterStyles";
 import { useTheme } from "../../contexts/ThemeContext";
 export const SavedCharacters = ({
@@ -14,7 +13,7 @@ export const SavedCharacters = ({
   return (
     <>
       <h2 style={styles.sectionHeader}>
-        <BookIcon />
+        <BookOpenText />
         Saved Characters ({savedCharacters.length}/{maxCharacters})
         {isLoading && (
           <span style={{ fontSize: "14px", color: "#6B7280" }}>
@@ -48,7 +47,7 @@ export const SavedCharacters = ({
                     )}
                     {char.innateHeritage && (
                       <div style={styles.heritage}>
-                        <StarIcon
+                        <Star
                           style={{ display: "inline", marginRight: "4px" }}
                         />{" "}
                         {char.innateHeritage}
@@ -77,7 +76,7 @@ export const SavedCharacters = ({
                       backgroundColor: "#3B82F6",
                     }}
                   >
-                    <UserIcon />
+                    <User />
                   </button>
                   <button
                     onClick={() => deleteCharacter(char.id)}
@@ -86,7 +85,7 @@ export const SavedCharacters = ({
                       backgroundColor: "#EF4444",
                     }}
                   >
-                    <TrashIcon />
+                    <Trash />
                   </button>
                 </div>
               </div>

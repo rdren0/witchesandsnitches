@@ -1,4 +1,5 @@
-// src/Components/Character/Inventory.js
+// Replace your entire Inventory component with this working version:
+
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   Plus,
@@ -11,130 +12,6 @@ import {
   Loader,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-
-// Move ItemForm component outside to prevent recreation on every render
-const ItemForm = ({
-  isEditing = false,
-  formData,
-  setFormData,
-  onSave,
-  onCancel,
-  categories,
-  styles,
-  isSaving = false,
-}) => (
-  <div style={styles.formCard}>
-    <h3 style={styles.formTitle}>{isEditing ? "Edit Item" : "Add New Item"}</h3>
-
-    <div style={styles.formGrid}>
-      <div style={styles.formField}>
-        <label style={styles.label}>Item Name *</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, name: e.target.value }))
-          }
-          placeholder="e.g., Wizard's Hat, Health Potion"
-          style={styles.input}
-          disabled={isSaving}
-        />
-      </div>
-
-      <div style={styles.formField}>
-        <label style={styles.label}>Category</label>
-        <select
-          value={formData.category}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, category: e.target.value }))
-          }
-          style={styles.select}
-          disabled={isSaving}
-        >
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div style={styles.formField}>
-        <label style={styles.label}>Quantity</label>
-        <input
-          type="number"
-          min="1"
-          value={formData.quantity}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, quantity: e.target.value }))
-          }
-          style={styles.input}
-          disabled={isSaving}
-        />
-      </div>
-
-      <div style={styles.formField}>
-        <label style={styles.label}>Value</label>
-        <input
-          type="text"
-          value={formData.value}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, value: e.target.value }))
-          }
-          placeholder="5 Galleons, 10 Sickles, etc."
-          style={styles.input}
-          disabled={isSaving}
-        />
-      </div>
-
-      <div style={{ ...styles.formField, ...styles.formFieldFull }}>
-        <label style={styles.label}>Description</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, description: e.target.value }))
-          }
-          placeholder="Item description, magical properties, etc."
-          style={styles.textarea}
-          disabled={isSaving}
-        />
-      </div>
-    </div>
-
-    <div style={styles.formActions}>
-      <button
-        onClick={onSave}
-        disabled={!formData.name.trim() || isSaving}
-        style={{
-          ...styles.saveButton,
-          opacity: !formData.name.trim() || isSaving ? 0.5 : 1,
-          cursor: !formData.name.trim() || isSaving ? "not-allowed" : "pointer",
-        }}
-      >
-        {isSaving ? (
-          <>
-            <Loader size={18} className="animate-spin" />
-            {isEditing ? "Saving..." : "Adding..."}
-          </>
-        ) : (
-          <>
-            <Check size={18} />
-            {isEditing ? "Save Changes" : "Add Item"}
-          </>
-        )}
-      </button>
-
-      <button
-        onClick={onCancel}
-        style={styles.cancelButton}
-        disabled={isSaving}
-      >
-        <X size={18} />
-        Cancel
-      </button>
-    </div>
-  </div>
-);
 
 const Inventory = ({ user, selectedCharacter, supabase }) => {
   const { theme } = useTheme();
@@ -169,50 +46,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
   ];
 
   const discordUserId = user?.user_metadata?.provider_id || user?.id;
-
-  // Load items from database
-  const loadItems = useCallback(async () => {
-    if (!selectedCharacter?.id || !user || !supabase) {
-      setItems([]);
-      setIsLoading(false);
-      return;
-    }
-
-    const userId = discordUserId || user.id;
-    if (!userId) {
-      setItems([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const { data, error } = await supabase
-        .from("inventory_items")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("character_id", selectedCharacter.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      setItems(data || []);
-    } catch (err) {
-      console.error("Error loading inventory items:", err);
-      setError(`Failed to load inventory: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedCharacter?.id, discordUserId, user, supabase]);
-
-  // Load items when component mounts or character changes
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
 
   // Memoize styles to prevent recreation on every render
   const styles = useMemo(
@@ -284,30 +117,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         borderRadius: "12px",
         border: `2px solid ${theme.border}`,
         color: theme.textSecondary,
-      },
-      statsContainer: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "16px",
-        marginBottom: "24px",
-      },
-      statCard: {
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        padding: "20px",
-        border: `2px solid ${theme.border}`,
-        textAlign: "center",
-      },
-      statNumber: {
-        fontSize: "28px",
-        fontWeight: "bold",
-        color: theme.primary,
-        margin: "0 0 4px 0",
-      },
-      statLabel: {
-        fontSize: "14px",
-        color: theme.textSecondary,
-        margin: 0,
       },
       controls: {
         display: "flex",
@@ -423,7 +232,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         alignItems: "center",
         gap: "8px",
         padding: "12px 24px",
-        backgroundColor: theme.success || "#10B981",
+        backgroundColor: "#10B981",
         color: "white",
         border: "none",
         borderRadius: "8px",
@@ -445,19 +254,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         fontSize: "16px",
         fontWeight: "600",
         cursor: "pointer",
-      },
-      categorySection: {
-        marginBottom: "32px",
-      },
-      categoryHeader: {
-        fontSize: "20px",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "16px",
-        padding: "12px 16px",
-        backgroundColor: theme.surface,
-        borderRadius: "8px",
-        border: `1px solid ${theme.border}`,
       },
       itemsGrid: {
         display: "grid",
@@ -550,12 +346,64 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [theme]
   );
 
-  // Use useCallback to prevent function recreation on every render
+  // Load items from database
+  const loadItems = useCallback(async () => {
+    if (!selectedCharacter?.id || !user || !supabase) {
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const userId = discordUserId;
+    if (!userId) {
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log(
+        "Loading items for user:",
+        userId,
+        "character:",
+        selectedCharacter.id
+      );
+
+      const { data, error } = await supabase
+        .from("inventory_items")
+        .select("*")
+        .eq("discord_user_id", userId)
+        .eq("character_id", selectedCharacter.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log("Loaded items:", data);
+      setItems(data || []);
+    } catch (err) {
+      console.error("Error loading inventory items:", err);
+      setError(`Failed to load inventory: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedCharacter?.id, discordUserId, user, supabase]);
+
+  // Load items when component mounts or character changes
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
+  // Add new item
   const addItem = useCallback(async () => {
     if (!formData.name.trim() || !selectedCharacter?.id || !user || !supabase)
       return;
 
-    const userId = discordUserId || user.id;
+    const userId = discordUserId;
     if (!userId) return;
 
     setIsSaving(true);
@@ -563,7 +411,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
     try {
       const newItem = {
-        user_id: userId,
+        discord_user_id: userId,
         character_id: selectedCharacter.id,
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -572,6 +420,8 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         category: formData.category,
       };
 
+      console.log("Attempting to insert item:", newItem);
+
       const { data, error } = await supabase
         .from("inventory_items")
         .insert([newItem])
@@ -579,8 +429,11 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         .single();
 
       if (error) {
+        console.error("Supabase error:", error);
         throw error;
       }
+
+      console.log("Successfully inserted item:", data);
 
       // Add the new item to the local state
       setItems((prev) => [data, ...prev]);
@@ -602,11 +455,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     }
   }, [formData, selectedCharacter?.id, discordUserId, user, supabase]);
 
+  // Delete item
   const deleteItem = useCallback(
     async (id) => {
       if (!supabase || !user) return;
 
-      const userId = discordUserId || user.id;
+      const userId = discordUserId;
       if (!userId) return;
 
       try {
@@ -614,7 +468,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           .from("inventory_items")
           .delete()
           .eq("id", id)
-          .eq("user_id", userId);
+          .eq("discord_user_id", userId);
 
         if (error) {
           throw error;
@@ -630,6 +484,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [supabase, discordUserId, user]
   );
 
+  // Start editing
   const startEdit = useCallback((item) => {
     setEditingId(item.id);
     setFormData({
@@ -641,10 +496,11 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     });
   }, []);
 
+  // Save edit
   const saveEdit = useCallback(async () => {
     if (!formData.name.trim() || !editingId || !supabase || !user) return;
 
-    const userId = discordUserId || user.id;
+    const userId = discordUserId;
     if (!userId) return;
 
     setIsSaving(true);
@@ -663,7 +519,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         .from("inventory_items")
         .update(updates)
         .eq("id", editingId)
-        .eq("user_id", userId)
+        .eq("discord_user_id", userId)
         .select()
         .single();
 
@@ -693,6 +549,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     }
   }, [formData, editingId, supabase, discordUserId, user]);
 
+  // Cancel edit/add
   const cancelEdit = useCallback(() => {
     setEditingId(null);
     setFormData({
@@ -706,16 +563,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     setError(null);
   }, []);
 
-  const handleSearchChange = useCallback((e) => {
-    setSearchTerm(e.target.value);
-  }, []);
-
-  const handleShowAddForm = useCallback(() => {
-    setShowAddForm(true);
-    setError(null);
-  }, []);
-
-  // Memoize filtered and grouped items
+  // Filter items based on search
   const filteredItems = useMemo(
     () =>
       items.filter(
@@ -730,6 +578,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [items, searchTerm]
   );
 
+  // Group items by category
   const groupedItems = useMemo(
     () =>
       filteredItems.reduce((acc, item) => {
@@ -740,18 +589,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         return acc;
       }, {}),
     [filteredItems]
-  );
-
-  // Calculate inventory statistics
-  const totalItems = items.length;
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const categoryCounts = useMemo(
-    () =>
-      items.reduce((acc, item) => {
-        acc[item.category] = (acc[item.category] || 0) + 1;
-        return acc;
-      }, {}),
-    [items]
   );
 
   // Show authentication required message
@@ -835,30 +672,13 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         </div>
       ) : (
         <>
-          {/* Statistics */}
-          {items.length > 0 && (
-            <div style={styles.statsContainer}>
-              <div style={styles.statCard}>
-                <div style={styles.statNumber}>{totalItems}</div>
-                <div style={styles.statLabel}>Total Items</div>
-              </div>
-              <div style={styles.statCard}>
-                <div style={styles.statNumber}>{totalQuantity}</div>
-                <div style={styles.statLabel}>Total Quantity</div>
-              </div>
-              <div style={styles.statCard}>
-                <div style={styles.statNumber}>
-                  {Object.keys(categoryCounts).length}
-                </div>
-                <div style={styles.statLabel}>Categories</div>
-              </div>
-            </div>
-          )}
-
           {/* Controls */}
           <div style={styles.controls}>
             {!showAddForm && !editingId && (
-              <button onClick={handleShowAddForm} style={styles.addButton}>
+              <button
+                onClick={() => setShowAddForm(true)}
+                style={styles.addButton}
+              >
                 <Plus size={18} />
                 Add New Item
               </button>
@@ -870,7 +690,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={handleSearchChange}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search items by name, description, or category..."
                   style={styles.searchInput}
                 />
@@ -880,23 +700,152 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
           {/* Add/Edit Form */}
           {(showAddForm || editingId) && (
-            <ItemForm
-              isEditing={!!editingId}
-              formData={formData}
-              setFormData={setFormData}
-              onSave={editingId ? saveEdit : addItem}
-              onCancel={cancelEdit}
-              categories={categories}
-              styles={styles}
-              isSaving={isSaving}
-            />
+            <div style={styles.formCard}>
+              <h3 style={styles.formTitle}>
+                {editingId ? "Edit Item" : "Add New Item"}
+              </h3>
+
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.label}>Item Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    placeholder="e.g., Wizard's Hat, Health Potion"
+                    style={styles.input}
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.label}>Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
+                    }
+                    style={styles.select}
+                    disabled={isSaving}
+                  >
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.label}>Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        quantity: e.target.value,
+                      }))
+                    }
+                    style={styles.input}
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.label}>Value</label>
+                  <input
+                    type="text"
+                    value={formData.value}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        value: e.target.value,
+                      }))
+                    }
+                    placeholder="5 Galleons, 10 Sickles, etc."
+                    style={styles.input}
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div style={{ ...styles.formField, ...styles.formFieldFull }}>
+                  <label style={styles.label}>Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder="Item description, magical properties, etc."
+                    style={styles.textarea}
+                    disabled={isSaving}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formActions}>
+                <button
+                  onClick={editingId ? saveEdit : addItem}
+                  disabled={!formData.name.trim() || isSaving}
+                  style={{
+                    ...styles.saveButton,
+                    opacity: !formData.name.trim() || isSaving ? 0.5 : 1,
+                    cursor:
+                      !formData.name.trim() || isSaving
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader size={18} className="animate-spin" />
+                      {editingId ? "Saving..." : "Adding..."}
+                    </>
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      {editingId ? "Save Changes" : "Add Item"}
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={cancelEdit}
+                  style={styles.cancelButton}
+                  disabled={isSaving}
+                >
+                  <X size={18} />
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Items Display */}
           {filteredItems.length > 0 ? (
             Object.entries(groupedItems).map(([category, categoryItems]) => (
-              <div key={category} style={styles.categorySection}>
-                <div style={styles.categoryHeader}>
+              <div key={category} style={{ marginBottom: "32px" }}>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: "600",
+                    color: theme.text,
+                    marginBottom: "16px",
+                    padding: "12px 16px",
+                    backgroundColor: theme.surface,
+                    borderRadius: "8px",
+                    border: `1px solid ${theme.border}`,
+                  }}
+                >
                   {category} ({categoryItems.length})
                 </div>
                 <div style={styles.itemsGrid}>

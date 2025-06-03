@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dice1,
   Dice2,
@@ -8,8 +8,8 @@ import {
   Dice6,
   Beaker,
   Star,
-  Settings,
   Search,
+  FlaskRound,
 } from "lucide-react";
 import { useRollFunctions } from "../../App/diceRoller";
 
@@ -19,14 +19,7 @@ import { getMaxAchievableQuality } from "../../App/diceRoller";
 import { createPotionsStyles } from "../../styles/masterStyles";
 
 const PotionBrewingSystem = ({ character }) => {
-  const {
-    theme,
-    themeMode,
-    setThemeMode,
-    selectedCharacter,
-    setSelectedCharacter,
-    availableHouses,
-  } = useTheme();
+  const { theme, selectedCharacter } = useTheme();
   const styles = createPotionsStyles(theme);
   const { rollBrewPotion } = useRollFunctions();
 
@@ -34,10 +27,7 @@ const PotionBrewingSystem = ({ character }) => {
   const [selectedPotion, setSelectedPotion] = useState(null);
   const [brewingInProgress, setBrewingInProgress] = useState(false);
   const [lastResult, setLastResult] = useState(null);
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("all");
 
   const [proficiencies, setProficiencies] = useState({
     potionMaking: 0,
@@ -77,7 +67,6 @@ const PotionBrewingSystem = ({ character }) => {
         ingredientQuality,
         qualityDCs,
         ingredientModifiers,
-        webhookUrl,
       });
 
       if (brewingResult) {
@@ -97,19 +86,14 @@ const PotionBrewingSystem = ({ character }) => {
   const getFilteredPotions = () => {
     let allPotions = [];
 
-    if (selectedYear === "all") {
-      Object.entries(potions).forEach(([year, yearPotions]) => {
-        allPotions.push(
-          ...yearPotions.map((p) => ({ ...p, year: parseInt(year) }))
-        );
-      });
-    } else {
-      allPotions = potions[selectedYear].map((p) => ({
-        ...p,
-        year: parseInt(selectedYear),
-      }));
-    }
+    // Get all potions from all years
+    Object.entries(potions).forEach(([year, yearPotions]) => {
+      allPotions.push(
+        ...yearPotions.map((p) => ({ ...p, year: parseInt(year) }))
+      );
+    });
 
+    // Filter by search term if provided
     if (searchTerm) {
       allPotions = allPotions.filter(
         (potion) =>
@@ -125,14 +109,14 @@ const PotionBrewingSystem = ({ character }) => {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>🧪 Hogwarts Potions Laboratory</h1>
+      <h1 style={styles.title}>
+        <FlaskRound /> Potion Brewing
+      </h1>
 
-      {/* Character Setup */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Character Proficiencies & Ingredients</h3>
 
         <div style={styles.proficiencyGrid}>
-          {/* Proficiencies */}
           <div style={styles.proficiencySection}>
             <h4 style={styles.proficiencyTitle}>Proficiencies</h4>
             <div style={styles.inputGroup}>
@@ -184,7 +168,6 @@ const PotionBrewingSystem = ({ character }) => {
             </div>
           </div>
 
-          {/* Ingredient Quality */}
           <div style={styles.proficiencySection}>
             <h4 style={styles.proficiencyTitle}>Ingredient Quality</h4>
             <select
@@ -212,7 +195,6 @@ const PotionBrewingSystem = ({ character }) => {
         </div>
       </div>
 
-      {/* Search and Filter */}
       <div style={styles.card}>
         <div style={styles.searchContainer}>
           <div style={styles.searchInputContainer}>
@@ -225,26 +207,10 @@ const PotionBrewingSystem = ({ character }) => {
               style={styles.searchInput}
             />
           </div>
-
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            style={styles.select}
-          >
-            <option value="all">All Years</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-            <option value="5">5th Year</option>
-            <option value="6">6th Year</option>
-          </select>
         </div>
       </div>
 
-      {/* Main Content */}
       <div style={styles.mainGrid}>
-        {/* Potion Selection */}
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>Select Potion to Brew</h2>
 
@@ -292,13 +258,11 @@ const PotionBrewingSystem = ({ character }) => {
           </div>
         </div>
 
-        {/* Brewing Interface */}
         <div style={styles.brewingInterface}>
-          {/* Selected Potion Info with DCs */}
           {selectedPotion && (
             <div style={styles.selectedPotionCard}>
               <h2 style={styles.selectedPotionTitle}>
-                🧪 Brewing: {selectedPotion.name}
+                <FlaskRound /> Brewing: {selectedPotion.name}
               </h2>
               <p style={styles.selectedPotionDescription}>
                 {selectedPotion.description}
@@ -306,7 +270,6 @@ const PotionBrewingSystem = ({ character }) => {
             </div>
           )}
 
-          {/* Brewing Button */}
           <div style={styles.card}>
             <button
               onClick={brewPotion}
@@ -326,7 +289,6 @@ const PotionBrewingSystem = ({ character }) => {
             </button>
           </div>
 
-          {/* Last Result */}
           {lastResult && (
             <div style={styles.resultCard}>
               <h3 style={styles.resultTitle}>Brewing Result</h3>
@@ -379,9 +341,7 @@ const PotionBrewingSystem = ({ character }) => {
         </div>
       </div>
 
-      {/* Reference Tables */}
       <div style={styles.referenceGrid}>
-        {/* Quality DCs by Rarity */}
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>Quality DCs by Rarity</h3>
           <div style={styles.referenceTable}>
@@ -404,7 +364,6 @@ const PotionBrewingSystem = ({ character }) => {
           </div>
         </div>
 
-        {/* Ingredient Quality Effects */}
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>Ingredient Quality Effects</h3>
           <div style={styles.ingredientEffectsList}>
