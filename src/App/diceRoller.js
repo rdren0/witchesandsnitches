@@ -801,15 +801,7 @@ export const rollBrewPotion = async ({
         color: embedColor,
         fields: [
           {
-            name: "Quality Achieved",
-            value: `${
-              brewingResult.achievedQuality.charAt(0).toUpperCase() +
-              brewingResult.achievedQuality.slice(1)
-            }`,
-            inline: true,
-          },
-          {
-            name: "🎲 Roll vs DC",
+            name: "Roll vs DC",
             value: `${d20Roll} vs DC ${brewingResult.targetDC}`,
             inline: true,
           },
@@ -823,6 +815,14 @@ export const rollBrewPotion = async ({
           {
             name: "Proficiencies",
             value: profText,
+            inline: true,
+          },
+          {
+            name: "Quality Achieved",
+            value: `${
+              brewingResult.achievedQuality.charAt(0).toUpperCase() +
+              brewingResult.achievedQuality.slice(1)
+            }`,
             inline: true,
           },
 
