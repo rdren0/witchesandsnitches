@@ -316,16 +316,6 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
                 <h3>Character Sheet</h3>
                 <p>View and manage your character's stats and abilities.</p>
               </div>
-              <div
-                style={styles.featureCard}
-                onClick={() => handleCardClick("character", "spellbook")}
-              >
-                <h3>Spell Management</h3>
-                <p>
-                  Browse, search, and organize spells for your spellcasting
-                  characters.
-                </p>
-              </div>
             </div>
             <div style={styles.featureGrid}>
               <div
