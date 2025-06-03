@@ -742,14 +742,6 @@ export const rollBrewPotion = async ({
     if (webhookUrl || discordWebhookUrl) {
       const webhookToUse = webhookUrl || discordWebhookUrl;
 
-      const qualityEmojis = {
-        ruined: "💥",
-        flawed: "🔧",
-        normal: "✅",
-        exceptional: "⭐",
-        superior: "🏆",
-      };
-
       const profText =
         `Potion-Making: ${
           proficiencies.potionMaking === 2
@@ -796,7 +788,7 @@ export const rollBrewPotion = async ({
       }
 
       const embed = {
-        title: `🧪 ${character?.name || "Unknown"} Brewed: ${
+        title: `${character?.name || "Unknown"} Brewed: ${
           selectedPotion.name
         }${resultText}`,
         description: `1d20: [${d20Roll}] = ${d20Roll}${
@@ -809,8 +801,8 @@ export const rollBrewPotion = async ({
         color: embedColor,
         fields: [
           {
-            name: "🏆 Quality Achieved",
-            value: `${qualityEmojis[brewingResult.achievedQuality]} ${
+            name: "Quality Achieved",
+            value: `${
               brewingResult.achievedQuality.charAt(0).toUpperCase() +
               brewingResult.achievedQuality.slice(1)
             }`,
@@ -822,31 +814,31 @@ export const rollBrewPotion = async ({
             inline: true,
           },
           {
-            name: "🧬 Ingredient Quality",
+            name: "Ingredient Quality",
             value:
               ingredientQuality.charAt(0).toUpperCase() +
               ingredientQuality.slice(1),
             inline: true,
           },
           {
-            name: "📚 Proficiencies",
+            name: "Proficiencies",
             value: profText,
             inline: true,
           },
           {
-            name: "🔍 Max Possible Quality",
+            name: "Max Possible Quality",
             value:
               brewingResult.maxQuality.charAt(0).toUpperCase() +
               brewingResult.maxQuality.slice(1),
             inline: true,
           },
           {
-            name: "📝 Proficiency Analysis",
+            name: "Proficiency Analysis",
             value: getProficiencyAnalysis(proficiencies, ingredientQuality),
             inline: false,
           },
           {
-            name: "🧪 Potion Effect",
+            name: "Potion Effect",
             value: selectedPotion.description,
             inline: false,
           },
