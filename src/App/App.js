@@ -853,15 +853,14 @@ function AppContent() {
     const baseTabs = ["home", "character-creation"];
 
     if (characters.length > 0) {
-      return [...baseTabs, "character", ...(isLocalhost ? ["gallery"] : [])];
+      return [...baseTabs, "character", "gallery"];
     }
 
     return baseTabs;
   };
 
   const getCharacterSubtabs = () => {
-    const baseTabs = ["sheet", "spellbook", "potions", "inventory", "notes"];
-    return isLocalhost ? [...baseTabs, "downtime"] : baseTabs;
+    return ["sheet", "spellbook", "potions", "inventory", "downtime", "notes"];
   };
 
   useEffect(() => {
