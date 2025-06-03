@@ -825,7 +825,6 @@ export const rollBrewPotion = async ({
             }`,
             inline: true,
           },
-
           {
             name: "Potion Effect",
             value: selectedPotion.description,
