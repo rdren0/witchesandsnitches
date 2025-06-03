@@ -2,6 +2,44 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 
 const DowntimeSheet = () => {
+  // List of available activities
+  const availableActivities = [
+    "",
+    "Gain a Job",
+    "Promotion",
+    "Work Job",
+    "Shopping",
+    "Selling",
+    "Allowance",
+    "Explore the Castle",
+    "Explore the Forbidden Forest",
+    "Restricted Section",
+    "Search for Magical Creatures",
+    "Search for Plants",
+    "Stealing",
+    "Spread Rumors",
+    "Dig for Dirt",
+    "Prank Other Students",
+    "Increase an Ability Score",
+    "Gain Proficiency or Expertise",
+    "Increase Wand Stat",
+    "Research Spells",
+    "Attempt a Spell",
+    "Create a Spell",
+    "Studying",
+    "Research a Topic",
+    "Craft Items",
+    "Brew a Potion",
+    "Invent a Potion",
+    "Cooking",
+    "Learn a Recipe",
+    "Create a New Recipe",
+    "Engineer Plants",
+    "Hire a Tutor",
+    "Teacher Tutor",
+    "Animagus Form (RP)",
+  ];
+
   // State for form data
   const [formData, setFormData] = useState({
     name: "",
@@ -48,7 +86,13 @@ const DowntimeSheet = () => {
       npc: "",
       successes: [false, false, false, false, false],
     },
-    magicSchoolChoice: "",
+    magicSchoolChoices: {
+      Transfiguration: false,
+      Charms: false,
+      DADA: false,
+      Potions: false,
+      Herbology: false,
+    },
   });
 
   const updateYearCheck = (year) => {
@@ -104,7 +148,6 @@ const DowntimeSheet = () => {
     }));
   };
 
-  // Add this function to handle extra activity successes
   const updateExtraSuccess = (successIndex) => {
     setFormData((prev) => ({
       ...prev,
@@ -113,6 +156,16 @@ const DowntimeSheet = () => {
         successes: prev.extraActivity.successes.map((success, si) =>
           si === successIndex ? !success : success
         ),
+      },
+    }));
+  };
+
+  const updateMagicSchoolChoice = (school) => {
+    setFormData((prev) => ({
+      ...prev,
+      magicSchoolChoices: {
+        ...prev.magicSchoolChoices,
+        [school]: !prev.magicSchoolChoices[school],
       },
     }));
   };
@@ -632,8 +685,17 @@ const DowntimeSheet = () => {
       "",
       "",
     ]);
+
     wsData.push([
-      "Choose one: " + (formData.magicSchoolChoice || ""),
+      "Transfiguration",
+      "",
+      "Charms",
+      "",
+      "DADA",
+      "",
+      "Potions",
+      "",
+      "Herbology",
       "",
       "",
       "",
@@ -642,6 +704,31 @@ const DowntimeSheet = () => {
       "",
       "",
       "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
+
+    wsData.push([
+      formData.magicSchoolChoices.Transfiguration ? "X" : "",
+      "",
+      formData.magicSchoolChoices.Charms ? "X" : "",
+      "",
+      formData.magicSchoolChoices.DADA ? "X" : "",
+      "",
+      formData.magicSchoolChoices.Potions ? "X" : "",
+      "",
+      formData.magicSchoolChoices.Herbology ? "X" : "",
       "",
       "",
       "",
@@ -732,7 +819,7 @@ const DowntimeSheet = () => {
     },
     headerSection: {
       display: "grid",
-      gridTemplateColumns: "2fr 1fr",
+      gridTemplateColumns: "2fr 2fr",
       borderBottom: "2px solid #333",
     },
     nameSection: {
@@ -745,6 +832,7 @@ const DowntimeSheet = () => {
       fontWeight: "bold",
       fontSize: "14px",
       backgroundColor: "#e9ecef",
+      borderBottom: "2px solid #333",
     },
     yearSemesterSection: {
       display: "grid",
@@ -753,7 +841,6 @@ const DowntimeSheet = () => {
     },
     typeSection: {
       padding: "12px",
-      borderRight: "2px solid #333",
     },
     semesterSection: {
       padding: "12px",
@@ -781,11 +868,28 @@ const DowntimeSheet = () => {
     },
     activityRow: {
       display: "grid",
-      gridTemplateColumns: "200px 1fr 150px 1fr 120px 200px",
+      gridTemplateColumns: "60px 1fr",
       alignItems: "center",
       padding: "12px",
       borderBottom: "1px solid #dee2e6",
-      gap: "12px",
+      gap: "8px",
+    },
+    relationshipRow: {
+      display: "grid",
+      gridTemplateColumns: "50px 1fr auto auto",
+      alignItems: "center",
+      padding: "12px",
+      borderBottom: "1px solid #dee2e6",
+      gap: "8px",
+      backgroundColor: "#f8f9fa",
+    },
+    relationshipInput: {
+      border: "1px solid #ced4da",
+      borderRadius: "4px",
+      padding: "4px 8px",
+      alignItems: "left",
+      fontSize: "12px",
+      width: "100%",
     },
     activityHeader: {
       backgroundColor: "#e9ecef",
@@ -799,6 +903,15 @@ const DowntimeSheet = () => {
       padding: "4px 8px",
       fontSize: "12px",
       width: "100%",
+    },
+    select: {
+      border: "1px solid #ced4da",
+      borderRadius: "4px",
+      padding: "4px 8px",
+      fontSize: "12px",
+      width: "100%",
+      backgroundColor: "white",
+      cursor: "pointer",
     },
     gradeInput: {
       border: "1px solid #ced4da",
@@ -832,8 +945,15 @@ const DowntimeSheet = () => {
     },
     radioGroup: {
       display: "flex",
+      justifyContent: "space-between",
+      gap: "16px",
+      marginTop: "12px",
+    },
+    magicSchoolItem: {
+      display: "flex",
       flexDirection: "column",
-      gap: "4px",
+      alignItems: "center",
+      gap: "8px",
     },
     exportButton: {
       backgroundColor: "#28a745",
@@ -908,11 +1028,6 @@ const DowntimeSheet = () => {
               />
             </label>
           </div>
-          <div style={styles.gradesSection}>Grades</div>
-        </div>
-
-        {/* Year and Semester Section */}
-        <div style={styles.yearSemesterSection}>
           <div style={styles.typeSection}>
             <div style={styles.checkboxRow}>
               <strong>Year:</strong>
@@ -949,8 +1064,10 @@ const DowntimeSheet = () => {
               ))}
             </div>
           </div>
-          <div style={styles.semesterSection}>{/* Empty for layout */}</div>
         </div>
+
+        {/* Grades Header Section */}
+        <div style={styles.gradesSection}>Grades</div>
 
         {/* Subjects Grid */}
         <div style={styles.subjectsGrid}>
@@ -980,37 +1097,46 @@ const DowntimeSheet = () => {
         {/* Downtime Activities Section */}
         <div style={styles.activitiesSection}>
           <div style={styles.activityHeader}>
-            <div style={styles.activityRow}>
-              <strong>Downtime Activities</strong>
-              <strong>Activity:</strong>
-              <strong>Relationship Activities</strong>
-              <strong>NPC:</strong>
-              <strong>Successes:</strong>
-              <div></div>
-            </div>
+            <strong>Downtime Activities</strong>
           </div>
 
           {formData.activities.map((activity, index) => (
             <div key={index} style={styles.activityRow}>
-              <div></div>
-              <input
-                type="text"
+              <strong>Activity {index + 1}:</strong>
+              <select
                 value={activity.activity}
                 onChange={(e) =>
                   updateActivity(index, "activity", e.target.value)
                 }
-                style={styles.input}
-                placeholder="Activity description"
-              />
-              <div></div>
+                style={styles.select}
+              >
+                {availableActivities.map((activityOption) => (
+                  <option key={activityOption} value={activityOption}>
+                    {activityOption || "Select an activity..."}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+
+        {/* Relationship Activities Section */}
+        <div style={styles.activitiesSection}>
+          <div style={styles.activityHeader}>
+            <strong>Relationship Activities</strong>
+          </div>
+
+          {formData.activities.map((activity, index) => (
+            <div key={index} style={styles.relationshipRow}>
+              <strong>NPC {index + 1}:</strong>
               <input
                 type="text"
                 value={activity.npc}
                 onChange={(e) => updateActivity(index, "npc", e.target.value)}
-                style={styles.input}
+                style={styles.relationshipInput}
                 placeholder="NPC name"
               />
-              <div></div>
+              <strong>Successes:</strong>
               <div style={styles.successCheckboxes}>
                 {activity.successes.map((success, successIndex) => (
                   <input
@@ -1029,26 +1155,33 @@ const DowntimeSheet = () => {
         {/* Extra Downtime Section */}
         <div style={styles.activitiesSection}>
           <div style={styles.activityHeader}>
-            <div style={styles.activityRow}>
-              <strong>Extra Downtime</strong>
-              <strong>Activity:</strong>
-              <strong>Extra Relationship</strong>
-              <strong>NPC:</strong>
-              <strong>Successes:</strong>
-              <div></div>
-            </div>
+            <strong>Extra Downtime</strong>
           </div>
 
           <div style={styles.activityRow}>
-            <div></div>
-            <input
-              type="text"
+            <strong>Extra Activity:</strong>
+            <select
               value={formData.extraActivity.activity}
               onChange={(e) => updateExtraActivity("activity", e.target.value)}
-              style={styles.input}
-              placeholder="Activity description"
-            />
-            <div></div>
+              style={styles.select}
+            >
+              {availableActivities.map((activityOption) => (
+                <option key={activityOption} value={activityOption}>
+                  {activityOption || "Select an activity..."}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Extra Relationship Section */}
+        <div style={styles.activitiesSection}>
+          <div style={styles.activityHeader}>
+            <strong>Extra Relationship</strong>
+          </div>
+
+          <div style={styles.relationshipRow}>
+            <strong>Extra NPC:</strong>
             <input
               type="text"
               value={formData.extraActivity.npc}
@@ -1056,7 +1189,7 @@ const DowntimeSheet = () => {
               style={styles.input}
               placeholder="NPC name"
             />
-            <div></div>
+            <strong>Successes:</strong>
             <div style={styles.successCheckboxes}>
               {formData.extraActivity.successes.map((success, successIndex) => (
                 <input
@@ -1075,27 +1208,25 @@ const DowntimeSheet = () => {
         <div style={styles.magicSchoolSection}>
           <div style={styles.sectionTitle}>Magic School Increase</div>
           <div style={styles.radioGroup}>
-            <div>Choose one:</div>
             {["Transfiguration", "Charms", "DADA", "Potions", "Herbology"].map(
               (school) => (
-                <label
-                  key={school}
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
+                <div key={school} style={styles.magicSchoolItem}>
+                  <span
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: 400,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {school}
+                  </span>
                   <input
-                    type="radio"
-                    name="magicSchool"
-                    value={school}
-                    checked={formData.magicSchoolChoice === school}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        magicSchoolChoice: e.target.value,
-                      }))
-                    }
+                    type="checkbox"
+                    checked={formData.magicSchoolChoices[school]}
+                    onChange={() => updateMagicSchoolChoice(school)}
+                    style={styles.checkbox}
                   />
-                  <span>{school}</span>
-                </label>
+                </div>
               )
             )}
           </div>
