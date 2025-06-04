@@ -16,7 +16,8 @@ const ThemeSettings = () => {
     setThemeMode,
     theme,
     selectedCharacter,
-    setSelectedCharacter,
+    themeHouse,
+    setThemeHouse,
     HOUSE_THEMES,
     THEMES,
     SCHOOL_CATEGORIES,
@@ -65,21 +66,18 @@ const ThemeSettings = () => {
     {
       id: "house",
       name: "School Theme",
-      description: selectedCharacter?.house
-        ? `Experience the magic of ${selectedCharacter.house}`
-        : "Select a character to unlock school-themed colors",
+      description: themeHouse
+        ? `Experience the magic of ${themeHouse}`
+        : "Choose a magical school theme",
       icon: Home,
-      preview:
-        selectedCharacter?.house && HOUSE_THEMES?.[selectedCharacter.house]
-          ? HOUSE_THEMES[selectedCharacter.house]
-          : {
-              primary: "#6B7280",
-              secondary: "#9CA3AF",
-              background: "#F3F4F6",
-              surface: "#FFFFFF",
-              text: "#1F2937",
-            },
-      disabled: !selectedCharacter?.house,
+      preview: HOUSE_THEMES?.[themeHouse] || {
+        primary: "#6B7280",
+        secondary: "#9CA3AF",
+        background: "#F3F4F6",
+        surface: "#FFFFFF",
+        text: "#1F2937",
+      },
+      disabled: false, // Always available now
     },
   ];
 
@@ -90,7 +88,7 @@ const ThemeSettings = () => {
 
   const handleSchoolChange = (school) => {
     console.log("ThemeSettings: Changing school to", school);
-    setSelectedCharacter({ ...selectedCharacter, house: school });
+    setThemeHouse(school);
   };
 
   const styles = {
@@ -411,6 +409,35 @@ const ThemeSettings = () => {
 
   return (
     <div style={styles.container}>
+      {/* Debug Info - Remove this in production */}
+      <div
+        style={{
+          backgroundColor: theme.surface,
+          border: `1px solid ${theme.border}`,
+          borderRadius: "8px",
+          padding: "16px",
+          marginBottom: "16px",
+          fontSize: "12px",
+          fontFamily: "monospace",
+        }}
+      >
+        <strong>Debug Info:</strong>
+        <br />
+        Current themeMode: {themeMode}
+        <br />
+        Current themeHouse: {themeHouse}
+        <br />
+        App selectedCharacter:{" "}
+        {selectedCharacter
+          ? selectedCharacter.name + " (" + selectedCharacter.house + ")"
+          : "null"}
+        <br />
+        localStorage app-theme: {localStorage.getItem("app-theme")}
+        <br />
+        localStorage app-theme-house: {localStorage.getItem("app-theme-house")}
+      </div>
+
+      {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerOverlay} />
         <div style={styles.headerContent}>
@@ -427,6 +454,7 @@ const ThemeSettings = () => {
         </div>
       </div>
 
+      {/* Theme Selection */}
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>
           <Palette size={20} />
@@ -557,7 +585,7 @@ const ThemeSettings = () => {
                       <div style={styles.schoolGrid}>
                         {schools.map((school) => {
                           const schoolTheme = HOUSE_THEMES?.[school] || {};
-                          const isActive = selectedCharacter?.house === school;
+                          const isActive = themeHouse === school;
 
                           return (
                             <div
@@ -628,7 +656,7 @@ const ThemeSettings = () => {
                 )
               )}
 
-            {selectedCharacter?.house && (
+            {themeHouse && themeMode === "house" && (
               <div style={styles.currentSelection}>
                 <div style={styles.currentSelectionTitle}>
                   Current School Theme
@@ -661,8 +689,7 @@ const ThemeSettings = () => {
                     />
                   </div>
                   <div style={styles.currentSelectionText}>
-                    <strong>{selectedCharacter.house}</strong> theme is
-                    currently active
+                    <strong>{themeHouse}</strong> theme is currently active
                   </div>
                 </div>
               </div>

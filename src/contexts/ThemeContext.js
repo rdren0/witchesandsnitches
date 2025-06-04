@@ -298,13 +298,19 @@ export const SCHOOL_CATEGORIES = {
 export const ThemeProvider = ({ children }) => {
   const [themeMode, setThemeMode] = useState("light");
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [themeHouse, setThemeHouse] = useState("Gryffindor");
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("app-theme");
+    const savedHouse = localStorage.getItem("app-theme-house");
 
     if (savedTheme && ["light", "dark", "house"].includes(savedTheme)) {
       setThemeMode(savedTheme);
+    }
+
+    if (savedHouse && HOUSE_THEMES[savedHouse]) {
+      setThemeHouse(savedHouse);
     }
 
     setIsInitialized(true);
@@ -315,8 +321,9 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("app-theme", newTheme);
   };
 
-  const setSelectedCharacterForTheme = (newCharacter) => {
-    setSelectedCharacter(newCharacter);
+  const setThemeHouseWithPersistence = (newHouse) => {
+    setThemeHouse(newHouse);
+    localStorage.setItem("app-theme-house", newHouse);
   };
 
   const updateSelectedCharacterFromExternal = (character) => {
@@ -329,9 +336,15 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [themeMode, isInitialized]);
 
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("app-theme-house", themeHouse);
+    }
+  }, [themeHouse, isInitialized]);
+
   const getCurrentTheme = () => {
-    if (themeMode === "house" && selectedCharacter?.house) {
-      return HOUSE_THEMES[selectedCharacter.house] || THEMES.light;
+    if (themeMode === "house") {
+      return HOUSE_THEMES[themeHouse] || THEMES.light;
     }
     return THEMES[themeMode] || THEMES.light;
   };
@@ -343,7 +356,9 @@ export const ThemeProvider = ({ children }) => {
     setThemeMode: setThemeModeWithPersistence,
     theme,
     selectedCharacter,
-    setSelectedCharacter: setSelectedCharacterForTheme,
+    setSelectedCharacter: () => {},
+    themeHouse,
+    setThemeHouse: setThemeHouseWithPersistence,
     updateSelectedCharacterFromExternal,
     availableHouses: Object.keys(HOUSE_THEMES),
     HOUSE_THEMES,
@@ -385,6 +400,8 @@ export const useTheme = () => {
       setThemeMode: () => {},
       selectedCharacter: null,
       setSelectedCharacter: () => {},
+      themeHouse: "Gryffindor",
+      setThemeHouse: () => {},
       updateSelectedCharacterFromExternal: () => {},
       availableHouses: [],
       HOUSE_THEMES: {},

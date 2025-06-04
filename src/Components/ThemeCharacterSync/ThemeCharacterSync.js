@@ -1,3 +1,4 @@
+// src/components/ThemeCharacterSync.js
 import { useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 
