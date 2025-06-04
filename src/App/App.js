@@ -1,4 +1,4 @@
-// src/App/App.js (Updated with React Router)
+import ThemeCharacterSync from "../Components/ThemeCharacterSync/ThemeCharacterSync";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   BrowserRouter as Router,
@@ -905,6 +905,8 @@ function AppContent() {
 
   return (
     <div style={styles.appContainer}>
+      <ThemeCharacterSync selectedCharacter={selectedCharacter} />
+
       <header style={styles.appHeader}>
         <Navigation characters={characters} user={user} />
         <AuthComponent
@@ -917,7 +919,6 @@ function AppContent() {
         />
       </header>
 
-      {/* Character Subtabs */}
       {location.pathname.startsWith("/character/") && (
         <CharacterSubNavigation />
       )}
@@ -1035,7 +1036,6 @@ function AppContent() {
           />
           <Route path="/gallery" element={<CharacterGallery />} />
           <Route path="/theme-settings" element={<ThemeSettings />} />
-          {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

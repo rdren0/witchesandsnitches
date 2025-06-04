@@ -1,5 +1,14 @@
 import { useTheme } from "../../contexts/ThemeContext";
-import { Sun, Moon, Home, Palette, Check } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  Home,
+  Palette,
+  Check,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import { useState } from "react";
 
 const ThemeSettings = () => {
   const {
@@ -7,11 +16,24 @@ const ThemeSettings = () => {
     setThemeMode,
     theme,
     selectedCharacter,
-    availableHouses,
     setSelectedCharacter,
     HOUSE_THEMES,
     THEMES,
+    SCHOOL_CATEGORIES,
   } = useTheme();
+
+  const [expandedCategories, setExpandedCategories] = useState({
+    "Hogwarts Houses": true,
+    "Ilvermorny Houses": false,
+    "International Schools": false,
+  });
+
+  const toggleCategory = (category) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
 
   const themeOptions = [
     {
@@ -42,10 +64,10 @@ const ThemeSettings = () => {
     },
     {
       id: "house",
-      name: "House Theme",
+      name: "School Theme",
       description: selectedCharacter?.house
         ? `Experience the magic of ${selectedCharacter.house}`
-        : "Select a character to unlock house-themed colors",
+        : "Select a character to unlock school-themed colors",
       icon: Home,
       preview:
         selectedCharacter?.house && HOUSE_THEMES?.[selectedCharacter.house]
@@ -62,11 +84,13 @@ const ThemeSettings = () => {
   ];
 
   const handleThemeChange = (newTheme) => {
+    console.log("ThemeSettings: Changing theme to", newTheme);
     setThemeMode(newTheme);
   };
 
-  const handleHouseChange = (house) => {
-    setSelectedCharacter({ ...selectedCharacter, house });
+  const handleSchoolChange = (school) => {
+    console.log("ThemeSettings: Changing school to", school);
+    setSelectedCharacter({ ...selectedCharacter, house: school });
   };
 
   const styles = {
@@ -235,13 +259,42 @@ const ThemeSettings = () => {
       borderColor: theme.primary,
       backgroundColor: theme.primary,
     },
-    houseGrid: {
+    categoryHeader: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      padding: "16px",
+      backgroundColor: theme.background,
+      borderRadius: "12px",
+      border: `2px solid ${theme.border}`,
+      cursor: "pointer",
+      marginBottom: "16px",
+      transition: "all 0.2s ease",
+    },
+    categoryHeaderActive: {
+      borderColor: theme.primary,
+      backgroundColor: theme.surface,
+    },
+    categoryTitle: {
+      fontSize: "18px",
+      fontWeight: "600",
+      color: theme.text,
+      flex: 1,
+    },
+    categoryCount: {
+      fontSize: "14px",
+      color: theme.textSecondary,
+      backgroundColor: theme.surface,
+      padding: "4px 8px",
+      borderRadius: "12px",
+    },
+    schoolGrid: {
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
       gap: "16px",
-      marginTop: "16px",
+      marginBottom: "16px",
     },
-    houseCard: {
+    schoolCard: {
       padding: "20px",
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
@@ -252,37 +305,37 @@ const ThemeSettings = () => {
       position: "relative",
       overflow: "hidden",
     },
-    houseCardActive: {
+    schoolCardActive: {
       borderColor: theme.primary,
       backgroundColor: theme.surface,
       boxShadow: `0 0 0 2px ${theme.primary}20`,
     },
-    houseCardHover: {
+    schoolCardHover: {
       borderColor: `${theme.primary}60`,
       backgroundColor: theme.surface,
       transform: "translateY(-2px)",
       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
     },
-    houseName: {
+    schoolName: {
       fontSize: "16px",
       fontWeight: "600",
       color: theme.text,
       marginBottom: "12px",
       margin: "0 0 12px 0",
     },
-    houseColors: {
+    schoolColors: {
       display: "flex",
       gap: "6px",
       justifyContent: "center",
       marginBottom: "12px",
     },
-    houseColorSwatch: {
+    schoolColorSwatch: {
       width: "20px",
       height: "20px",
       borderRadius: "50%",
       border: `1px solid ${theme.border}`,
     },
-    housePreview: {
+    schoolPreview: {
       fontSize: "12px",
       color: theme.textSecondary,
       textTransform: "uppercase",
@@ -358,7 +411,6 @@ const ThemeSettings = () => {
 
   return (
     <div style={styles.container}>
-      {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerOverlay} />
         <div style={styles.headerContent}>
@@ -375,7 +427,6 @@ const ThemeSettings = () => {
         </div>
       </div>
 
-      {/* Theme Selection */}
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>
           <Palette size={20} />
@@ -470,80 +521,117 @@ const ThemeSettings = () => {
             );
           })}
         </div>
-        {/* House Theme Selection */}
+
         {themeMode === "house" && (
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>
               <Home size={20} />
-              Choose Your House
+              Choose Your School
             </h2>
 
-            <div style={styles.houseGrid}>
-              {availableHouses?.map((house) => {
-                const houseTheme = HOUSE_THEMES?.[house] || {};
-                const isActive = selectedCharacter?.house === house;
+            {SCHOOL_CATEGORIES &&
+              Object.entries(SCHOOL_CATEGORIES).map(
+                ([categoryName, schools]) => (
+                  <div key={categoryName}>
+                    <div
+                      style={{
+                        ...styles.categoryHeader,
+                        ...(expandedCategories[categoryName]
+                          ? styles.categoryHeaderActive
+                          : {}),
+                      }}
+                      onClick={() => toggleCategory(categoryName)}
+                    >
+                      <div style={styles.categoryTitle}>{categoryName}</div>
+                      <div style={styles.categoryCount}>
+                        {schools.length} school{schools.length !== 1 ? "s" : ""}
+                      </div>
+                      {expandedCategories[categoryName] ? (
+                        <ChevronDown size={20} color={theme.primary} />
+                      ) : (
+                        <ChevronRight size={20} color={theme.textSecondary} />
+                      )}
+                    </div>
 
-                return (
-                  <div
-                    key={house}
-                    style={{
-                      ...styles.houseCard,
-                      ...(isActive ? styles.houseCardActive : {}),
-                    }}
-                    onClick={() => handleHouseChange(house)}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.borderColor = `${theme.primary}60`;
-                        e.currentTarget.style.backgroundColor = theme.surface;
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 8px rgba(0, 0, 0, 0.1)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.borderColor = theme.border;
-                        e.currentTarget.style.backgroundColor =
-                          theme.background;
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "none";
-                      }
-                    }}
-                  >
-                    <div style={styles.houseName}>{house}</div>
-                    <div style={styles.houseColors}>
-                      <div
-                        style={{
-                          ...styles.houseColorSwatch,
-                          backgroundColor: houseTheme.primary || "#6B7280",
-                        }}
-                      />
-                      <div
-                        style={{
-                          ...styles.houseColorSwatch,
-                          backgroundColor: houseTheme.secondary || "#9CA3AF",
-                        }}
-                      />
-                      <div
-                        style={{
-                          ...styles.houseColorSwatch,
-                          backgroundColor: houseTheme.accent || "#D1D5DB",
-                        }}
-                      />
-                    </div>
-                    <div style={styles.housePreview}>
-                      {isActive ? "Currently Active" : "Click to Apply"}
-                    </div>
+                    {expandedCategories[categoryName] && (
+                      <div style={styles.schoolGrid}>
+                        {schools.map((school) => {
+                          const schoolTheme = HOUSE_THEMES?.[school] || {};
+                          const isActive = selectedCharacter?.house === school;
+
+                          return (
+                            <div
+                              key={school}
+                              style={{
+                                ...styles.schoolCard,
+                                ...(isActive ? styles.schoolCardActive : {}),
+                              }}
+                              onClick={() => handleSchoolChange(school)}
+                              onMouseEnter={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.borderColor = `${theme.primary}60`;
+                                  e.currentTarget.style.backgroundColor =
+                                    theme.surface;
+                                  e.currentTarget.style.transform =
+                                    "translateY(-2px)";
+                                  e.currentTarget.style.boxShadow =
+                                    "0 4px 8px rgba(0, 0, 0, 0.1)";
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.borderColor =
+                                    theme.border;
+                                  e.currentTarget.style.backgroundColor =
+                                    theme.background;
+                                  e.currentTarget.style.transform =
+                                    "translateY(0)";
+                                  e.currentTarget.style.boxShadow = "none";
+                                }
+                              }}
+                            >
+                              <div style={styles.schoolName}>{school}</div>
+                              <div style={styles.schoolColors}>
+                                <div
+                                  style={{
+                                    ...styles.schoolColorSwatch,
+                                    backgroundColor:
+                                      schoolTheme.primary || "#6B7280",
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    ...styles.schoolColorSwatch,
+                                    backgroundColor:
+                                      schoolTheme.secondary || "#9CA3AF",
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    ...styles.schoolColorSwatch,
+                                    backgroundColor:
+                                      schoolTheme.accent || "#D1D5DB",
+                                  }}
+                                />
+                              </div>
+                              <div style={styles.schoolPreview}>
+                                {isActive
+                                  ? "Currently Active"
+                                  : "Click to Apply"}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                )
+              )}
 
-            {/* Current Selection Display */}
             {selectedCharacter?.house && (
               <div style={styles.currentSelection}>
                 <div style={styles.currentSelectionTitle}>
-                  Current House Theme
+                  Current School Theme
                 </div>
                 <div style={styles.currentSelectionContent}>
                   <div style={styles.currentSelectionColors}>

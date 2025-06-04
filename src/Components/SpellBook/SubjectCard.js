@@ -1365,7 +1365,6 @@ export const SubjectCard = ({
 
       {isExpanded && (
         <div style={styles.subjectContent}>
-          {/* Search Controls */}
           <div
             style={{
               padding: "16px",
@@ -1498,7 +1497,6 @@ export const SubjectCard = ({
             )}
           </div>
 
-          {/* Content */}
           {hasActiveSearch
             ? renderSearchResults()
             : Object.entries(subjectData.levels)

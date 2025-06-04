@@ -389,7 +389,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </div>
           )}
 
-          {/* Add/Edit Form */}
           {(showAddForm || editingId) && (
             <div style={styles.formCard}>
               <h3 style={styles.formTitle}>
@@ -569,7 +568,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </div>
           )}
 
-          {/* Items Display */}
           {!isLoading && (
             <>
               {filteredItems.length > 0 ? (

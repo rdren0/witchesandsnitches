@@ -38,11 +38,9 @@ const CharacterCard = ({ character, theme, styles }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Character Image */}
       <div style={styles.imageContainer}>
         {character.src && !imageError ? (
           <div style={{ position: "relative", width: "100%", height: "100%" }}>
-            {/* Loading placeholder */}
             {!imageLoaded && (
               <div
                 style={{
@@ -95,7 +93,6 @@ const CharacterCard = ({ character, theme, styles }) => {
           </div>
         )}
 
-        {/* House Badge */}
         {character.house !== "?" && character.house && (
           <div
             style={{
@@ -110,7 +107,6 @@ const CharacterCard = ({ character, theme, styles }) => {
         )}
       </div>
 
-      {/* Character Info */}
       <div style={styles.characterInfo}>
         <h3 style={styles.characterName}>{character.name}</h3>
       </div>

@@ -1,11 +1,8 @@
-// src/contexts/ThemeContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 
-// House color schemes
 const HOUSE_THEMES = {
-  // Hogwarts Houses
   Gryffindor: {
     primary: "#740001",
     secondary: "#D3A625",
@@ -74,7 +71,7 @@ const HOUSE_THEMES = {
     headerBackground: "#1A472A",
     sidebarBackground: "#F9FAFB",
   },
-  // Ilvermorny Houses
+
   Thunderbird: {
     primary: "#8B5A2B",
     secondary: "#FF6B35",
@@ -143,9 +140,111 @@ const HOUSE_THEMES = {
     headerBackground: "#6D28D9",
     sidebarBackground: "#F9FAFB",
   },
+
+  Beauxbatons: {
+    primary: "#4F8FFF",
+    secondary: "#E8F4FD",
+    accent: "#87CEEB",
+    background: "#F0F8FF",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #4F8FFF 0%, #E8F4FD 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#4F8FFF",
+    sidebarBackground: "#F0F8FF",
+  },
+  Durmstrang: {
+    primary: "#8B0000",
+    secondary: "#2F2F2F",
+    accent: "#DC143C",
+    background: "#2C1810",
+    surface: "#3A2317",
+    text: "#F5F5F5",
+    textSecondary: "#C0C0C0",
+    border: "#4A3A2A",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #8B0000 0%, #2F2F2F 100%)",
+    cardBackground: "#3A2317",
+    headerBackground: "#8B0000",
+    sidebarBackground: "#2C1810",
+  },
+  Uagadou: {
+    primary: "#CD853F",
+    secondary: "#F4A460",
+    accent: "#DEB887",
+    background: "#FFF8DC",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #CD853F 0%, #F4A460 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#CD853F",
+    sidebarBackground: "#FFF8DC",
+  },
+  Mahoutokoro: {
+    primary: "#DC143C",
+    secondary: "#FFD700",
+    accent: "#FF6B6B",
+    background: "#FFF5F5",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #DC143C 0%, #FFD700 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#DC143C",
+    sidebarBackground: "#FFF5F5",
+  },
+  Castelobruxo: {
+    primary: "#228B22",
+    secondary: "#32CD32",
+    accent: "#90EE90",
+    background: "#F0FFF0",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #228B22 0%, #32CD32 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#228B22",
+    sidebarBackground: "#F0FFF0",
+  },
+  Koldovstoretz: {
+    primary: "#4682B4",
+    secondary: "#E0FFFF",
+    accent: "#87CEFA",
+    background: "#F0F8FF",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #4682B4 0%, #E0FFFF 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#4682B4",
+    sidebarBackground: "#F0F8FF",
+  },
 };
 
-// Base themes
 const THEMES = {
   light: {
     primary: "#6366F1",
@@ -183,24 +282,53 @@ const THEMES = {
   },
 };
 
-export const ThemeProvider = ({ children }) => {
-  const [themeMode, setThemeMode] = useState("light"); // 'light', 'dark', 'house'
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
+export const SCHOOL_CATEGORIES = {
+  "Hogwarts Houses": ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"],
+  "Ilvermorny Houses": ["Thunderbird", "Horned Serpent", "Pukwudgie", "Wampus"],
+  "International Schools": [
+    "Beauxbatons",
+    "Durmstrang",
+    "Uagadou",
+    "Mahoutokoro",
+    "Castelobruxo",
+    "Koldovstoretz",
+  ],
+};
 
-  // Load theme preference from localStorage
+export const ThemeProvider = ({ children }) => {
+  const [themeMode, setThemeMode] = useState("light");
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("app-theme");
+
     if (savedTheme && ["light", "dark", "house"].includes(savedTheme)) {
       setThemeMode(savedTheme);
     }
+
+    setIsInitialized(true);
   }, []);
 
-  // Save theme preference to localStorage
-  useEffect(() => {
-    localStorage.setItem("app-theme", themeMode);
-  }, [themeMode]);
+  const setThemeModeWithPersistence = (newTheme) => {
+    setThemeMode(newTheme);
+    localStorage.setItem("app-theme", newTheme);
+  };
 
-  // Get current theme based on mode and character
+  const setSelectedCharacterForTheme = (newCharacter) => {
+    setSelectedCharacter(newCharacter);
+  };
+
+  const updateSelectedCharacterFromExternal = (character) => {
+    setSelectedCharacter(character);
+  };
+
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("app-theme", themeMode);
+    }
+  }, [themeMode, isInitialized]);
+
   const getCurrentTheme = () => {
     if (themeMode === "house" && selectedCharacter?.house) {
       return HOUSE_THEMES[selectedCharacter.house] || THEMES.light;
@@ -212,13 +340,16 @@ export const ThemeProvider = ({ children }) => {
 
   const contextValue = {
     themeMode,
-    setThemeMode,
+    setThemeMode: setThemeModeWithPersistence,
     theme,
     selectedCharacter,
-    setSelectedCharacter,
+    setSelectedCharacter: setSelectedCharacterForTheme,
+    updateSelectedCharacterFromExternal,
     availableHouses: Object.keys(HOUSE_THEMES),
     HOUSE_THEMES,
     THEMES,
+    SCHOOL_CATEGORIES,
+    isInitialized,
   };
 
   return (
@@ -254,13 +385,15 @@ export const useTheme = () => {
       setThemeMode: () => {},
       selectedCharacter: null,
       setSelectedCharacter: () => {},
+      updateSelectedCharacterFromExternal: () => {},
       availableHouses: [],
       HOUSE_THEMES: {},
       THEMES: { light: DEFAULT_THEME },
+      SCHOOL_CATEGORIES: {},
+      isInitialized: true,
     };
   }
 
-  // Extra safety check - if context exists but theme is undefined
   if (!context.theme) {
     console.warn("Theme is undefined in context. Using default theme.");
     return {

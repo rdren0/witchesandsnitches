@@ -1012,7 +1012,6 @@ const DowntimeSheet = () => {
       </button>
 
       <div style={styles.sheet}>
-        {/* Header Section */}
         <div style={styles.headerSection}>
           <div style={styles.nameSection}>
             <label>
@@ -1066,10 +1065,8 @@ const DowntimeSheet = () => {
           </div>
         </div>
 
-        {/* Grades Header Section */}
         <div style={styles.gradesSection}>Grades</div>
 
-        {/* Subjects Grid */}
         <div style={styles.subjectsGrid}>
           {subjects.map((column, columnIndex) => (
             <div
@@ -1094,7 +1091,6 @@ const DowntimeSheet = () => {
           ))}
         </div>
 
-        {/* Downtime Activities Section */}
         <div style={styles.activitiesSection}>
           <div style={styles.activityHeader}>
             <strong>Downtime Activities</strong>
@@ -1120,7 +1116,6 @@ const DowntimeSheet = () => {
           ))}
         </div>
 
-        {/* Relationship Activities Section */}
         <div style={styles.activitiesSection}>
           <div style={styles.activityHeader}>
             <strong>Relationship Activities</strong>
@@ -1152,7 +1147,6 @@ const DowntimeSheet = () => {
           ))}
         </div>
 
-        {/* Extra Downtime Section */}
         <div style={styles.activitiesSection}>
           <div style={styles.activityHeader}>
             <strong>Extra Downtime</strong>
@@ -1174,7 +1168,6 @@ const DowntimeSheet = () => {
           </div>
         </div>
 
-        {/* Extra Relationship Section */}
         <div style={styles.activitiesSection}>
           <div style={styles.activityHeader}>
             <strong>Extra Relationship</strong>
@@ -1204,7 +1197,6 @@ const DowntimeSheet = () => {
           </div>
         </div>
 
-        {/* Magic School Increase Section */}
         <div style={styles.magicSchoolSection}>
           <div style={styles.sectionTitle}>Magic School Increase</div>
           <div style={styles.radioGroup}>

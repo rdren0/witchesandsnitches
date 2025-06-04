@@ -449,7 +449,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
 
   return (
     <div style={styles.editForm}>
-      {/* Header */}
       <div style={styles.editHeader}>
         <input
           type="text"
@@ -469,7 +468,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
         </div>
       </div>
 
-      {/* Templates */}
       <div style={styles.templateSection}>
         <div>
           <h4 style={styles.templateSectionTitle}>📋 Insert Template</h4>
@@ -532,7 +530,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
         </div>
       </div>
 
-      {/* Editor */}
       <div style={styles.editorContainer}>
         {isEditorReady && content !== undefined ? (
           <MDEditor

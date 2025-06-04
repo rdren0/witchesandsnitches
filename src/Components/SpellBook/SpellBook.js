@@ -177,7 +177,6 @@ const SpellBook = ({
         </div>
       )}
 
-      {/* Search Bar */}
       <div style={styles.searchContainer}>
         <div style={styles.searchInputContainer}>
           <Search
@@ -215,7 +214,6 @@ const SpellBook = ({
         )}
       </div>
 
-      {/* Stats */}
       <div style={styles.statsContainer}>
         <span style={styles.statItem}>
           <span
@@ -238,7 +236,6 @@ const SpellBook = ({
         </span>
       </div>
 
-      {/* No Results Message */}
       {searchTerm && Object.keys(filteredSpellsData).length === 0 && (
         <div style={styles.noResultsContainer}>
           <div style={styles.noResultsIcon}>🔍</div>
@@ -261,7 +258,6 @@ const SpellBook = ({
         </div>
       )}
 
-      {/* Subject Cards */}
       <div style={styles.subjectsGrid}>
         {Object.entries(filteredSpellsData).map(
           ([subjectName, subjectData]) => (

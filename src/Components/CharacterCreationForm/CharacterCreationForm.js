@@ -659,7 +659,6 @@ const CharacterCreationForm = ({
 
       {error && <div style={styles.errorContainer}>{error}</div>}
 
-      {/* Tab Navigation */}
       <div style={styles.tabContainer}>
         <button
           style={{
@@ -683,7 +682,6 @@ const CharacterCreationForm = ({
         </button>
       </div>
 
-      {/* Tab Content */}
       <div style={styles.tabContent}>
         {activeTab === "create" && (
           <div style={styles.panel}>
@@ -808,7 +806,6 @@ const CharacterCreationForm = ({
               </select>
             </div>
 
-            {/* Level and HP Grid with inline controls */}
             <div style={styles.levelHpGrid}>
               <div style={styles.levelContainer}>
                 <label style={styles.label}>Level</label>
@@ -993,7 +990,6 @@ const CharacterCreationForm = ({
               </select>
             </div>
 
-            {/* Level 1 Choice Section */}
             {character.level === 1 && (
               <div style={styles.fieldContainer}>
                 <h3 style={styles.skillsHeader}>Level 1 Choice</h3>
@@ -1058,7 +1054,6 @@ const CharacterCreationForm = ({
               </div>
             )}
 
-            {/* Conditionally render Innate Heritage or Standard Feat based on level and choice */}
             {character.level === 1 &&
               character.level1ChoiceType === "innate" && (
                 <InnateHeritage

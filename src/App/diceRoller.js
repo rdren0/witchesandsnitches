@@ -76,7 +76,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
         <button
           onClick={onClose}
           style={{
@@ -96,7 +95,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           <X size={20} />
         </button>
 
-        {/* Critical Success/Failure Icon */}
         {(isCriticalSuccess || isCriticalFailure) && (
           <div style={{ textAlign: "center", marginBottom: "16px" }}>
             {isCriticalSuccess ? (
@@ -107,7 +105,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Title */}
         <h2
           style={{
             margin: "0 0 16px 0",
@@ -121,7 +118,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           {title}
         </h2>
 
-        {/* Roll Display */}
         <div
           style={{
             textAlign: "center",
@@ -175,7 +171,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             )}
           </div>
 
-          {/* Roll breakdown text */}
           <div
             style={{
               fontSize: "14px",
@@ -189,7 +184,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Critical Success/Failure Message */}
         {isCriticalSuccess && (
           <div
             style={{
@@ -244,7 +238,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Description */}
         {description && (
           <div
             style={{
@@ -259,7 +252,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Close Button */}
         <div style={{ textAlign: "center" }}>
           <button
             onClick={onClose}

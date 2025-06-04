@@ -270,7 +270,6 @@ const Bank = () => {
 
   return (
     <div style={styles.container}>
-      {/* Header */}
       <div style={styles.header}>
         <h2 style={styles.title}>
           <Coins size={28} color={theme.primary} />
@@ -281,7 +280,6 @@ const Bank = () => {
         </p>
       </div>
 
-      {/* Current Balance Display */}
       <div style={styles.balanceCard}>
         <h3 style={styles.balanceTitle}>Current Balance</h3>
 
@@ -301,7 +299,6 @@ const Bank = () => {
         </div>
       </div>
 
-      {/* Input Section */}
       <div style={styles.inputCard}>
         <h3 style={styles.inputTitle}>Add/Remove Money</h3>
 
@@ -411,7 +408,6 @@ const Bank = () => {
         </div>
       </div>
 
-      {/* Currency Reference */}
       <div style={styles.referenceCard}>
         <div style={styles.referenceTitle}>Exchange Rates</div>
         <div style={styles.referenceText}>
