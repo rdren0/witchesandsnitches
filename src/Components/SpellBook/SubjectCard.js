@@ -16,6 +16,8 @@ import {
   Edit3,
   Check,
   X,
+  Search,
+  Filter,
 } from "lucide-react";
 
 import { spellsData } from "./spells";
@@ -58,6 +60,7 @@ export const SubjectCard = ({
   subjectName,
   supabase,
   user,
+  globalSearchTerm = "", // Rename to avoid confusion with local search
 }) => {
   const { attemptSpell } = useRollFunctions();
   const { theme } = useTheme();
@@ -70,6 +73,10 @@ export const SubjectCard = ({
     hasCriticalSuccess: false,
   });
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+
+  // Local search state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchFilter, setSearchFilter] = useState("all"); // all, mastered, attempted, unmastered
 
   const getSubjectStats = (subject) => {
     const levels = spellsData[subject].levels;
@@ -99,10 +106,107 @@ export const SubjectCard = ({
     return { totalSpells, masteredSpells, attemptedSpells };
   };
 
+  // Get all spells for this subject
+  const getAllSpells = () => {
+    const allSpells = [];
+    Object.entries(subjectData.levels).forEach(([level, spells]) => {
+      spells.forEach((spell, index) => {
+        allSpells.push({
+          ...spell,
+          level,
+          originalIndex: index,
+        });
+      });
+    });
+    return allSpells;
+  };
+
+  // Determine which search term to use (local takes precedence)
+  const activeSearchTerm = searchTerm || globalSearchTerm;
+
+  // Filter spells by search term and status
+  const getFilteredSpells = () => {
+    let spells = getAllSpells();
+
+    // Filter by search term (local or global)
+    if (activeSearchTerm && activeSearchTerm.trim().length > 0) {
+      const term = activeSearchTerm.toLowerCase();
+      spells = spells.filter((spell) => {
+        return (
+          spell.name.toLowerCase().includes(term) ||
+          (spell.description &&
+            spell.description.toLowerCase().includes(term)) ||
+          spell.level.toLowerCase().includes(term) ||
+          (spell.tags &&
+            spell.tags.some((tag) => tag.toLowerCase().includes(term)))
+        );
+      });
+    }
+
+    // Filter by status
+    if (searchFilter !== "all") {
+      spells = spells.filter((spellObj) => {
+        const spellName = spellObj.name;
+        const attempts = spellAttempts[spellName] || {};
+        const successCount = Object.values(attempts).filter(Boolean).length;
+        const isMastered = successCount >= 2;
+        const hasAttempts =
+          Object.keys(attempts).length > 0 || successCount > 0;
+
+        switch (searchFilter) {
+          case "mastered":
+            return isMastered;
+          case "attempted":
+            return hasAttempts && !isMastered;
+          case "unmastered":
+            return !isMastered;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return spells;
+  };
+
+  // Filter spells by status only (for level sections)
+  const filterSpellsByStatus = (spells) => {
+    if (searchFilter === "all") return spells;
+
+    return spells.filter((spellObj) => {
+      const spellName = spellObj.name;
+      const attempts = spellAttempts[spellName] || {};
+      const successCount = Object.values(attempts).filter(Boolean).length;
+      const isMastered = successCount >= 2;
+      const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
+
+      switch (searchFilter) {
+        case "mastered":
+          return isMastered;
+        case "attempted":
+          return hasAttempts && !isMastered;
+        case "unmastered":
+          return !isMastered;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const searchResults = getFilteredSpells();
+  const hasActiveSearch =
+    (activeSearchTerm && activeSearchTerm.trim().length > 0) ||
+    searchFilter !== "all";
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setSearchFilter("all");
+  };
+
   const Icon = getIcon(subjectData.icon);
   const stats = getSubjectStats(subjectName);
   const isExpanded = expandedSubjects[subjectName];
-
+  const hasStatusFilter = searchFilter !== "all";
   const generateLevelColor = (baseColor, level) => {
     const hex = baseColor.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
@@ -155,6 +259,32 @@ export const SubjectCard = ({
   const getSuccessfulAttempts = (spellName) => {
     const attempts = spellAttempts[spellName] || {};
     return Object.values(attempts).filter(Boolean).length;
+  };
+
+  const highlightSearchTerm = (text) => {
+    if (!activeSearchTerm || !text) return text;
+
+    const regex = new RegExp(`(${activeSearchTerm})`, "gi");
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span
+          key={index}
+          style={{
+            backgroundColor: theme === "dark" ? "#fbbf24" : "#fef3c7",
+            color: theme === "dark" ? "#000" : "#92400e",
+            fontWeight: "bold",
+            padding: "1px 2px",
+            borderRadius: "2px",
+          }}
+        >
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
   };
 
   const startEditing = (spellName) => {
@@ -422,624 +552,696 @@ export const SubjectCard = ({
     }
   };
 
-  const renderSection = (subject, level, spells, subjectColor) => {
-    const isExpanded = expandedSections[`${subject}-${level}`];
-    const levelColor = generateLevelColor(subjectColor, level);
-    const masteredCount = spells.filter(
-      (spellObj) => getSuccessfulAttempts(spellObj.name) >= 2
-    ).length;
-    const progressPercentage = (masteredCount / spells.length) * 100;
-
-    const renderSpellRow = (spellObj, index, subject) => {
-      const spellName = spellObj.name;
-      const attempts = spellAttempts[spellName] || {};
-      const successCount = getSuccessfulAttempts(spellName);
-      const hasCriticalSuccess = criticalSuccesses[spellName] || false;
-      const isMastered = successCount >= 2;
-      const isRestricted = spellObj.restriction || false;
-      const isAttempting = attemptingSpells[spellName];
-      const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
-      const isDescriptionExpanded = expandedDescriptions[spellName];
-
-      const mainRow = (
-        <tr
-          key={spellName}
+  const renderSearchResults = () => {
+    if (searchResults.length === 0) {
+      return (
+        <div
           style={{
-            ...styles.tableRow,
-            ...(isMastered ? styles.tableRowMastered : {}),
-            ...(hasAttempts && !isMastered
-              ? { backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc" }
-              : {}),
-          }}
-          onMouseEnter={(e) => {
-            if (!isMastered) {
-              Object.assign(e.target.style, styles.tableRowHover);
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isMastered) {
-              e.target.style.backgroundColor = hasAttempts
-                ? theme === "dark"
-                  ? "#1f2937"
-                  : "#f8fafc"
-                : "transparent";
-            }
+            padding: "40px 20px",
+            textAlign: "center",
+            color: theme === "dark" ? "#9ca3af" : "#6b7280",
           }}
         >
-          <td style={{ ...styles.tableCell, width: "3rem" }}>{index + 1}</td>
-          <td style={styles.tableCell}>
-            <div style={styles.spellNameContainer}>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <span
-                  style={
-                    isMastered ? styles.spellNameMastered : styles.spellName
-                  }
-                >
-                  {spellName}
-                </span>
-                {isRestricted && (
-                  <Star
-                    size={16}
-                    color="#eab308"
-                    title="Restricted/Advanced Spell"
-                  />
-                )}
-                {spellObj.description && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleDescription(spellName);
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "2px",
-                      display: "flex",
-                      alignItems: "center",
-                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                    }}
-                    title={
-                      isDescriptionExpanded
-                        ? "Hide description"
-                        : "Show description"
-                    }
-                  >
-                    {isDescriptionExpanded ? (
-                      <ChevronDown size={16} />
-                    ) : (
-                      <ChevronRight size={16} />
-                    )}
-                  </button>
-                )}
-              </div>
+          <Search size={48} style={{ marginBottom: "16px", opacity: 0.5 }} />
+          <p>No spells found matching your search criteria.</p>
+          <button
+            onClick={clearSearch}
+            style={{
+              marginTop: "12px",
+              padding: "8px 16px",
+              backgroundColor: theme === "dark" ? "#374151" : "#e5e7eb",
+              color: theme === "dark" ? "#f9fafb" : "#374151",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Clear Search
+          </button>
+        </div>
+      );
+    }
 
-              {hasCriticalSuccess && (
-                <span
-                  style={{
-                    ...styles.masteredBadge,
-                    backgroundColor: "#fbbf24",
-                    color: "#92400e",
-                    border: "none",
-                  }}
-                >
-                  Critically Mastered
-                </span>
-              )}
-              {isMastered && !hasCriticalSuccess && (
-                <span
-                  style={{
-                    ...styles.masteredBadge,
-                    backgroundColor: "#10b981",
-                    color: "white",
-                    border: "none",
-                  }}
-                >
-                  Mastered
-                </span>
-              )}
-              {hasAttempts && !isMastered && (
-                <span
-                  style={{
-                    ...styles.masteredBadge,
-                    backgroundColor: "white",
-                    color: "#10b981",
-                    border: "2px solid #10b981",
-                  }}
-                >
-                  Attempted
-                </span>
-              )}
-            </div>
-          </td>
-          <td style={styles.tableCell}>
-            <div style={styles.attemptsContainer}>
-              <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(attempts[1])}
-                  disabled={true}
-                  readOnly={true}
-                  style={{
-                    ...styles.checkbox,
-                    accentColor: "#3b82f6",
-                    cursor: "not-allowed",
-                    opacity: 0.8,
-                  }}
-                />
-                <span style={styles.checkboxText}>1st</span>
-              </label>
-              <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(attempts[2])}
-                  disabled={true}
-                  readOnly={true}
-                  style={{
-                    ...styles.checkbox,
-                    accentColor: "#10b981",
-                    cursor: "not-allowed",
-                    opacity: 0.8,
-                  }}
-                />
-                <span style={styles.checkboxText}>2nd</span>
-              </label>
-            </div>
-          </td>
-          <td style={{ ...styles.tableCell, textAlign: "center" }}>
-            {hasCriticalSuccess ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                }}
+    return (
+      <div style={styles.searchResultsContainer}>
+        <table style={styles.table}>
+          <thead style={styles.tableHeader}>
+            <tr>
+              <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
+              <th style={styles.tableHeaderCell}>Spell Name</th>
+              <th style={styles.tableHeaderCell}>Successful Attempts</th>
+              <th style={styles.tableHeaderCellCenter}>Critical</th>
+              <th style={styles.tableHeaderCellCenter}>Action</th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
+                Menu
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {searchResults
+              .map((spellObj, index) =>
+                renderSpellRow(spellObj, index, subjectName, true)
+              )
+              .flat()}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderSpellRow = (spellObj, index, subject, showLevel = false) => {
+    const spellName = spellObj.name;
+    const attempts = spellAttempts[spellName] || {};
+    const successCount = getSuccessfulAttempts(spellName);
+    const hasCriticalSuccess = criticalSuccesses[spellName] || false;
+    const isMastered = successCount >= 2;
+    const isRestricted = spellObj.restriction || false;
+    const isAttempting = attemptingSpells[spellName];
+    const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
+    const isDescriptionExpanded = expandedDescriptions[spellName];
+
+    const mainRow = (
+      <tr
+        key={spellName}
+        style={{
+          ...styles.tableRow,
+          ...(isMastered ? styles.tableRowMastered : {}),
+          ...(hasAttempts && !isMastered
+            ? { backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc" }
+            : {}),
+        }}
+        onMouseEnter={(e) => {
+          if (!isMastered) {
+            Object.assign(e.target.style, styles.tableRowHover);
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isMastered) {
+            e.target.style.backgroundColor = hasAttempts
+              ? theme === "dark"
+                ? "#1f2937"
+                : "#f8fafc"
+              : "transparent";
+          }
+        }}
+      >
+        <td style={{ ...styles.tableCell, width: "3rem" }}>{index + 1}</td>
+        <td style={styles.tableCell}>
+          <div style={styles.spellNameContainer}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span
+                style={isMastered ? styles.spellNameMastered : styles.spellName}
               >
-                <Star
-                  size={20}
-                  color="#ffd700"
-                  fill="#ffd700"
-                  title="Critical Success - Mastered with Natural 20!"
-                />
+                {highlightSearchTerm(spellName)}
+              </span>
+              {showLevel && (
                 <span
                   style={{
                     fontSize: "12px",
-                    color: "#ffd700",
-                    fontWeight: "bold",
+                    padding: "2px 6px",
+                    backgroundColor: theme === "dark" ? "#4b5563" : "#e5e7eb",
+                    color: theme === "dark" ? "#d1d5db" : "#374151",
+                    borderRadius: "4px",
+                    fontWeight: "500",
                   }}
                 >
-                  20
+                  {spellObj.level}
                 </span>
-              </div>
-            ) : (
-              <span style={{ color: "#9ca3af" }}>-</span>
+              )}
+              {isRestricted && (
+                <Star
+                  size={16}
+                  color="#eab308"
+                  title="Restricted/Advanced Spell"
+                />
+              )}
+              {spellObj.description && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleDescription(spellName);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "2px",
+                    display: "flex",
+                    alignItems: "center",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  }}
+                  title={
+                    isDescriptionExpanded
+                      ? "Hide description"
+                      : "Show description"
+                  }
+                >
+                  {isDescriptionExpanded ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {hasCriticalSuccess && (
+              <span
+                style={{
+                  ...styles.masteredBadge,
+                  backgroundColor: "#fbbf24",
+                  color: "#92400e",
+                  border: "none",
+                }}
+              >
+                Critically Mastered
+              </span>
             )}
-          </td>
-          <td style={{ ...styles.tableCell, textAlign: "center" }}>
-            <button
-              onClick={() =>
-                attemptSpell({
-                  spellName,
-                  subject,
-                  getSpellModifier,
-                  selectedCharacter,
-                  setSpellAttempts,
-                  discordUserId,
-                  setAttemptingSpells,
-                  setCriticalSuccesses,
-                  updateSpellProgressSummary,
-                })
-              }
-              disabled={isAttempting || isMastered || !selectedCharacter}
+            {isMastered && !hasCriticalSuccess && (
+              <span
+                style={{
+                  ...styles.masteredBadge,
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                }}
+              >
+                Mastered
+              </span>
+            )}
+            {hasAttempts && !isMastered && (
+              <span
+                style={{
+                  ...styles.masteredBadge,
+                  backgroundColor: "white",
+                  color: "#10b981",
+                  border: "2px solid #10b981",
+                }}
+              >
+                Attempted
+              </span>
+            )}
+          </div>
+        </td>
+        <td style={styles.tableCell}>
+          <div style={styles.attemptsContainer}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={Boolean(attempts[1])}
+                disabled={true}
+                readOnly={true}
+                style={{
+                  ...styles.checkbox,
+                  accentColor: "#3b82f6",
+                  cursor: "not-allowed",
+                  opacity: 0.8,
+                }}
+              />
+              <span style={styles.checkboxText}>1st</span>
+            </label>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={Boolean(attempts[2])}
+                disabled={true}
+                readOnly={true}
+                style={{
+                  ...styles.checkbox,
+                  accentColor: "#10b981",
+                  cursor: "not-allowed",
+                  opacity: 0.8,
+                }}
+              />
+              <span style={styles.checkboxText}>2nd</span>
+            </label>
+          </div>
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          {hasCriticalSuccess ? (
+            <div
               style={{
-                ...styles.attemptButton,
-                ...(isMastered || isAttempting || !selectedCharacter
-                  ? styles.attemptButtonDisabled
-                  : {}),
-              }}
-              onMouseEnter={(e) => {
-                if (!isMastered && !isAttempting && selectedCharacter) {
-                  e.target.style.backgroundColor = "#2563eb";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isMastered && !isAttempting && selectedCharacter) {
-                  e.target.style.backgroundColor = "#3b82f6";
-                }
-              }}
-            >
-              <Dice6 size={14} />
-              {isAttempting ? "Rolling..." : "Attempt"}
-            </button>
-          </td>
-          <td
-            style={{
-              ...styles.tableCell,
-              textAlign: "center",
-              position: "relative",
-            }}
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleMenu(spellName);
-              }}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "4px",
-                borderRadius: "4px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor =
-                  theme === "dark" ? "#4b5563" : "#f3f4f6";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "transparent";
+                gap: "4px",
               }}
             >
-              <MoreVertical
-                size={16}
-                color={theme === "dark" ? "#9ca3af" : "#6b7280"}
+              <Star
+                size={20}
+                color="#ffd700"
+                fill="#ffd700"
+                title="Critical Success - Mastered with Natural 20!"
               />
-            </button>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "#ffd700",
+                  fontWeight: "bold",
+                }}
+              >
+                20
+              </span>
+            </div>
+          ) : (
+            <span style={{ color: "#9ca3af" }}>-</span>
+          )}
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          <button
+            onClick={() =>
+              attemptSpell({
+                spellName,
+                subject,
+                getSpellModifier,
+                selectedCharacter,
+                setSpellAttempts,
+                discordUserId,
+                setAttemptingSpells,
+                setCriticalSuccesses,
+                updateSpellProgressSummary,
+              })
+            }
+            disabled={isAttempting || isMastered || !selectedCharacter}
+            style={{
+              ...styles.attemptButton,
+              ...(isMastered || isAttempting || !selectedCharacter
+                ? styles.attemptButtonDisabled
+                : {}),
+            }}
+            onMouseEnter={(e) => {
+              if (!isMastered && !isAttempting && selectedCharacter) {
+                e.target.style.backgroundColor = "#2563eb";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isMastered && !isAttempting && selectedCharacter) {
+                e.target.style.backgroundColor = "#3b82f6";
+              }
+            }}
+          >
+            <Dice6 size={14} />
+            {isAttempting ? "Rolling..." : "Attempt"}
+          </button>
+        </td>
+        <td
+          style={{
+            ...styles.tableCell,
+            textAlign: "center",
+            position: "relative",
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMenu(spellName);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor =
+                theme === "dark" ? "#4b5563" : "#f3f4f6";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = "transparent";
+            }}
+          >
+            <MoreVertical
+              size={16}
+              color={theme === "dark" ? "#9ca3af" : "#6b7280"}
+            />
+          </button>
 
-            {openMenus[spellName] && (
+          {openMenus[spellName] && (
+            <div
+              style={{
+                position: "absolute",
+                right: "0",
+                top: "100%",
+                backgroundColor: theme === "dark" ? "#374151" : "white",
+                border: `1px solid ${theme === "dark" ? "#4b5563" : "#e5e7eb"}`,
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                zIndex: 1000,
+                minWidth: "160px",
+                padding: "4px",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => startEditing(spellName)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor =
+                    theme === "dark" ? "#4b5563" : "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "transparent";
+                }}
+              >
+                <Edit3 size={14} />
+                Edit Progress
+              </button>
+            </div>
+          )}
+
+          {editingSpell === spellName && (
+            <div
+              style={{
+                position: "fixed",
+                top: "0",
+                left: "0",
+                right: "0",
+                bottom: "0",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 2000,
+              }}
+              onClick={cancelEditing}
+            >
               <div
                 style={{
-                  position: "absolute",
-                  right: "0",
-                  top: "100%",
                   backgroundColor: theme === "dark" ? "#374151" : "white",
-                  border: `1px solid ${
-                    theme === "dark" ? "#4b5563" : "#e5e7eb"
-                  }`,
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  zIndex: 1000,
-                  minWidth: "160px",
-                  padding: "4px",
+                  padding: "24px",
+                  borderRadius: "12px",
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                  minWidth: "400px",
+                  maxWidth: "500px",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <button
-                  onClick={() => startEditing(spellName)}
+                <h3
                   style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    borderRadius: "4px",
+                    margin: "0 0 8px 0",
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  }}
+                >
+                  Edit Progress: {spellName}
+                </h3>
+                <p
+                  style={{
+                    margin: "0 0 16px 0",
                     fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: theme === "dark" ? "#d1d5db" : "#374151",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor =
-                      theme === "dark" ? "#4b5563" : "#f3f4f6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = "transparent";
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
                   }}
                 >
-                  <Edit3 size={14} />
-                  Edit Progress
-                </button>
-              </div>
-            )}
+                  Current:{" "}
+                  {
+                    Object.values(spellAttempts[spellName] || {}).filter(
+                      Boolean
+                    ).length
+                  }{" "}
+                  successful attempts
+                  {criticalSuccesses[spellName] ? " (Critical Success)" : ""}
+                </p>
 
-            {editingSpell === spellName && (
-              <div
-                style={{
-                  position: "fixed",
-                  top: "0",
-                  left: "0",
-                  right: "0",
-                  bottom: "0",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 2000,
-                }}
-                onClick={cancelEditing}
-              >
-                <div
-                  style={{
-                    backgroundColor: theme === "dark" ? "#374151" : "white",
-                    padding: "24px",
-                    borderRadius: "12px",
-                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-                    minWidth: "400px",
-                    maxWidth: "500px",
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <h3
+                <div style={{ marginBottom: "16px" }}>
+                  <label
                     style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                    }}
-                  >
-                    Edit Progress: {spellName}
-                  </h3>
-                  <p
-                    style={{
-                      margin: "0 0 16px 0",
+                      display: "block",
+                      marginBottom: "8px",
                       fontSize: "14px",
-                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                      fontWeight: "500",
+                      color: theme === "dark" ? "#f9fafb" : "#374151",
                     }}
                   >
-                    Current:{" "}
-                    {
-                      Object.values(spellAttempts[spellName] || {}).filter(
-                        Boolean
-                      ).length
-                    }{" "}
-                    successful attempts
-                    {criticalSuccesses[spellName] ? " (Critical Success)" : ""}
-                  </p>
-
-                  <div style={{ marginBottom: "16px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        color: theme === "dark" ? "#f9fafb" : "#374151",
-                      }}
-                    >
-                      Successful Attempts (0-2):
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="2"
-                      value={
-                        editFormData.hasCriticalSuccess
-                          ? 2
-                          : editFormData.successfulAttempts
-                      }
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          successfulAttempts: parseInt(e.target.value) || 0,
-                        }))
-                      }
-                      disabled={editFormData.hasCriticalSuccess}
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: `2px solid ${
-                          theme === "dark" ? "#4b5563" : "#d1d5db"
-                        }`,
-                        borderRadius: "6px",
-                        fontSize: "14px",
-                        backgroundColor: editFormData.hasCriticalSuccess
-                          ? theme === "dark"
-                            ? "#1f2937"
-                            : "#f9fafb"
-                          : theme === "dark"
-                          ? "#374151"
-                          : "white",
-                        color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                        cursor: editFormData.hasCriticalSuccess
-                          ? "not-allowed"
-                          : "text",
-                      }}
-                    />
-                    {editFormData.hasCriticalSuccess && (
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                          marginTop: "4px",
-                        }}
-                      >
-                        Automatically set to 2 due to critical success
-                      </p>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "24px" }}>
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        cursor: "pointer",
-                        color: theme === "dark" ? "#f9fafb" : "#374151",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={editFormData.hasCriticalSuccess}
-                        onChange={(e) =>
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            hasCriticalSuccess: e.target.checked,
-                            successfulAttempts: e.target.checked
-                              ? 2
-                              : prev.successfulAttempts,
-                          }))
-                        }
-                        style={{ width: "16px", height: "16px" }}
-                      />
-                      <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                        Critical Success (Natural 20)
-                      </span>
-                    </label>
+                    Successful Attempts (0-2):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="2"
+                    value={
+                      editFormData.hasCriticalSuccess
+                        ? 2
+                        : editFormData.successfulAttempts
+                    }
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        successfulAttempts: parseInt(e.target.value) || 0,
+                      }))
+                    }
+                    disabled={editFormData.hasCriticalSuccess}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: `2px solid ${
+                        theme === "dark" ? "#4b5563" : "#d1d5db"
+                      }`,
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      backgroundColor: editFormData.hasCriticalSuccess
+                        ? theme === "dark"
+                          ? "#1f2937"
+                          : "#f9fafb"
+                        : theme === "dark"
+                        ? "#374151"
+                        : "white",
+                      color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                      cursor: editFormData.hasCriticalSuccess
+                        ? "not-allowed"
+                        : "text",
+                    }}
+                  />
+                  {editFormData.hasCriticalSuccess && (
                     <p
                       style={{
                         fontSize: "12px",
                         color: theme === "dark" ? "#9ca3af" : "#6b7280",
                         marginTop: "4px",
-                        marginLeft: "24px",
                       }}
                     >
-                      Checking this will automatically set successful attempts
-                      to 2 (mastery)
+                      Automatically set to 2 due to critical success
                     </p>
-                  </div>
+                  )}
+                </div>
 
-                  <div
+                <div style={{ marginBottom: "24px" }}>
+                  <label
                     style={{
                       display: "flex",
-                      gap: "12px",
-                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      color: theme === "dark" ? "#f9fafb" : "#374151",
                     }}
                   >
-                    <button
-                      onClick={cancelEditing}
-                      style={{
-                        padding: "8px 16px",
-                        border: `2px solid ${
-                          theme === "dark" ? "#4b5563" : "#d1d5db"
-                        }`,
-                        backgroundColor: theme === "dark" ? "#374151" : "white",
-                        color: theme === "dark" ? "#f9fafb" : "#374151",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <X size={14} />
-                      Cancel
-                    </button>
-                    <button
-                      onClick={saveEdit}
-                      style={{
-                        padding: "8px 16px",
-                        border: "2px solid #10b981",
-                        backgroundColor: "#10b981",
-                        color: "white",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <Check size={14} />
-                      Save Changes
-                    </button>
-                  </div>
+                    <input
+                      type="checkbox"
+                      checked={editFormData.hasCriticalSuccess}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          hasCriticalSuccess: e.target.checked,
+                          successfulAttempts: e.target.checked
+                            ? 2
+                            : prev.successfulAttempts,
+                        }))
+                      }
+                      style={{ width: "16px", height: "16px" }}
+                    />
+                    <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                      Critical Success (Natural 20)
+                    </span>
+                  </label>
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                      marginTop: "4px",
+                      marginLeft: "24px",
+                    }}
+                  >
+                    Checking this will automatically set successful attempts to
+                    2 (mastery)
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    onClick={cancelEditing}
+                    style={{
+                      padding: "8px 16px",
+                      border: `2px solid ${
+                        theme === "dark" ? "#4b5563" : "#d1d5db"
+                      }`,
+                      backgroundColor: theme === "dark" ? "#374151" : "white",
+                      color: theme === "dark" ? "#f9fafb" : "#374151",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <X size={14} />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    style={{
+                      padding: "8px 16px",
+                      border: "2px solid #10b981",
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <Check size={14} />
+                    Save Changes
+                  </button>
                 </div>
               </div>
-            )}
-          </td>
-        </tr>
-      );
+            </div>
+          )}
+        </td>
+      </tr>
+    );
 
-      const descriptionRow =
-        isDescriptionExpanded && spellObj.description ? (
-          <tr key={`${spellName}-description`}>
-            <td colSpan="6" style={{ padding: "0", border: "none" }}>
+    const descriptionRow =
+      isDescriptionExpanded && spellObj.description ? (
+        <tr key={`${spellName}-description`}>
+          <td colSpan="6" style={{ padding: "0", border: "none" }}>
+            <div
+              style={{
+                margin: "0 16px 12px 16px",
+                padding: "16px",
+                backgroundColor: theme === "dark" ? "#374151" : "#f8fafc",
+                border: `1px solid ${theme === "dark" ? "#4b5563" : "#e2e8f0"}`,
+                borderRadius: "8px",
+                fontSize: "14px",
+                lineHeight: "1.5",
+              }}
+            >
               <div
                 style={{
-                  margin: "0 16px 12px 16px",
-                  padding: "16px",
-                  backgroundColor: theme === "dark" ? "#374151" : "#f8fafc",
-                  border: `1px solid ${
-                    theme === "dark" ? "#4b5563" : "#e2e8f0"
-                  }`,
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  lineHeight: "1.5",
+                  fontWeight: "600",
+                  color: theme === "dark" ? "#60a5fa" : "#1e40af",
+                  marginBottom: "8px",
+                  fontSize: "16px",
                 }}
               >
+                {spellName}
+              </div>
+              <div
+                style={{
+                  fontStyle: "italic",
+                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  marginBottom: "12px",
+                  fontSize: "13px",
+                }}
+              >
+                {spellObj.level} •{" "}
+                {spellObj.castingTime || "Unknown casting time"} • Range:{" "}
+                {spellObj.range || "Unknown"} • Duration:{" "}
+                {spellObj.duration || "Unknown"}
+              </div>
+              <div
+                style={{
+                  whiteSpace: "pre-line",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  marginBottom: "12px",
+                }}
+              >
+                {highlightSearchTerm(spellObj.description)}
+              </div>
+              {spellObj.higherLevels && (
                 <div
                   style={{
-                    fontWeight: "600",
-                    color: theme === "dark" ? "#60a5fa" : "#1e40af",
-                    marginBottom: "8px",
-                    fontSize: "16px",
-                  }}
-                >
-                  {spellName}
-                </div>
-                <div
-                  style={{
+                    marginBottom: "12px",
                     fontStyle: "italic",
                     color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                    marginBottom: "12px",
-                    fontSize: "13px",
                   }}
                 >
-                  {spellObj.level} •{" "}
-                  {spellObj.castingTime || "Unknown casting time"} • Range:{" "}
-                  {spellObj.range || "Unknown"} • Duration:{" "}
-                  {spellObj.duration || "Unknown"}
+                  <strong>At Higher Levels:</strong> {spellObj.higherLevels}
                 </div>
-                <div
-                  style={{
-                    whiteSpace: "pre-line",
-                    color: theme === "dark" ? "#d1d5db" : "#374151",
-                    marginBottom: "12px",
-                  }}
-                >
-                  {spellObj.description}
+              )}
+              {spellObj.tags && spellObj.tags.length > 0 && (
+                <div>
+                  {spellObj.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 8px",
+                        backgroundColor:
+                          theme === "dark" ? "#4b5563" : "#e5e7eb",
+                        color: theme === "dark" ? "#d1d5db" : "#374151",
+                        fontSize: "12px",
+                        borderRadius: "4px",
+                        marginRight: "6px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {highlightSearchTerm(tag)}
+                    </span>
+                  ))}
                 </div>
-                {spellObj.higherLevels && (
-                  <div
-                    style={{
-                      marginBottom: "12px",
-                      fontStyle: "italic",
-                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                    }}
-                  >
-                    <strong>At Higher Levels:</strong> {spellObj.higherLevels}
-                  </div>
-                )}
-                {spellObj.tags && spellObj.tags.length > 0 && (
-                  <div>
-                    {spellObj.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        style={{
-                          display: "inline-block",
-                          padding: "4px 8px",
-                          backgroundColor:
-                            theme === "dark" ? "#4b5563" : "#e5e7eb",
-                          color: theme === "dark" ? "#d1d5db" : "#374151",
-                          fontSize: "12px",
-                          borderRadius: "4px",
-                          marginRight: "6px",
-                          fontWeight: "500",
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </td>
-          </tr>
-        ) : null;
+              )}
+            </div>
+          </td>
+        </tr>
+      ) : null;
 
-      return [mainRow, descriptionRow].filter(Boolean);
-    };
+    return [mainRow, descriptionRow].filter(Boolean);
+  };
+
+  const renderSection = (subject, level, spells, subjectColor) => {
+    const filteredSpells = filterSpellsByStatus(spells);
+    const isExpanded = expandedSections[`${subject}-${level}`];
+    const levelColor = generateLevelColor(subjectColor, level);
+    const masteredCount = filteredSpells.filter(
+      (spellObj) => getSuccessfulAttempts(spellObj.name) >= 2
+    ).length;
+    const progressPercentage =
+      filteredSpells.length > 0
+        ? (masteredCount / filteredSpells.length) * 100
+        : 0;
+
+    // Don't render section if no spells match filter
+    if (filteredSpells.length === 0 && hasStatusFilter) {
+      return null;
+    }
 
     return (
       <div key={level} style={styles.sectionContainer}>
@@ -1065,12 +1267,16 @@ export const SubjectCard = ({
               <ChevronRight size={20} />
             )}
             <span>
-              {level} ({spells.length} spells)
+              {level} ({filteredSpells.length} spells
+              {hasStatusFilter && filteredSpells.length !== spells.length
+                ? ` of ${spells.length}`
+                : ""}
+              )
             </span>
           </div>
           <div style={styles.sectionRight}>
             <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
-              {masteredCount}/{spells.length} Mastered
+              {masteredCount}/{filteredSpells.length} Mastered
             </span>
             <div style={styles.sectionProgress}>
               <div
@@ -1098,7 +1304,7 @@ export const SubjectCard = ({
               </tr>
             </thead>
             <tbody>
-              {spells
+              {filteredSpells
                 .map((spellObj, index) =>
                   renderSpellRow(spellObj, index, subject)
                 )
@@ -1156,13 +1362,151 @@ export const SubjectCard = ({
           </div>
         </div>
       </div>
+
       {isExpanded && (
         <div style={styles.subjectContent}>
-          {Object.entries(subjectData.levels)
-            .filter(([level, spells]) => spells.length > 0)
-            .map(([level, spells]) =>
-              renderSection(subjectName, level, spells, subjectData.color)
+          {/* Search Controls */}
+          <div
+            style={{
+              padding: "16px",
+              borderBottom: `1px solid ${
+                theme === "dark" ? "#374151" : "#e2e8f0"
+              }`,
+              backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <div style={{ position: "relative", flex: 1 }}>
+                <Search
+                  size={18}
+                  style={{
+                    position: "absolute",
+                    left: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search spells by name, description, level, or tags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px 8px 40px",
+                    border: `2px solid ${
+                      theme === "dark" ? "#374151" : "#e2e8f0"
+                    }`,
+                    borderRadius: "8px",
+                    backgroundColor: theme === "dark" ? "#374151" : "white",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    fontSize: "14px",
+                  }}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    style={{
+                      position: "absolute",
+                      right: "8px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "4px",
+                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    }}
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <Filter
+                  size={16}
+                  color={theme === "dark" ? "#9ca3af" : "#6b7280"}
+                />
+                <select
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  style={{
+                    padding: "8px 12px",
+                    border: `2px solid ${
+                      theme === "dark" ? "#374151" : "#e2e8f0"
+                    }`,
+                    borderRadius: "8px",
+                    backgroundColor: theme === "dark" ? "#374151" : "white",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    fontSize: "14px",
+                  }}
+                >
+                  <option value="all">All Spells</option>
+                  <option value="mastered">Mastered</option>
+                  <option value="attempted">Attempted</option>
+                  <option value="unmastered">Not Mastered</option>
+                </select>
+              </div>
+            </div>
+
+            {hasActiveSearch && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "14px",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  }}
+                >
+                  {searchResults?.length || 0} spell(s) found
+                </span>
+                <button
+                  onClick={clearSearch}
+                  style={{
+                    padding: "4px 8px",
+                    backgroundColor: theme === "dark" ? "#374151" : "#e2e8f0",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <X size={12} />
+                  Clear
+                </button>
+              </div>
             )}
+          </div>
+
+          {/* Content */}
+          {hasActiveSearch
+            ? renderSearchResults()
+            : Object.entries(subjectData.levels)
+                .filter(([level, spells]) => spells.length > 0)
+                .map(([level, spells]) =>
+                  renderSection(subjectName, level, spells, subjectData.color)
+                )
+                .filter(Boolean)}
         </div>
       )}
     </div>

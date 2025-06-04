@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   Plus,
   Edit2,
@@ -8,43 +8,19 @@ import {
   X,
   Check,
   Loader,
+  Star,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { getInventoryStyles } from "../../styles/masterStyles";
+
 import Bank from "../Bank/Bank";
 
 const Inventory = ({ user, selectedCharacter, supabase }) => {
   const { theme } = useTheme();
+  const styles = getInventoryStyles(theme);
 
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      name: "Wizard's Hat",
-      description: "A magical hat that boosts wisdom",
-      quantity: 1,
-      value: "15 Galleons",
-      category: "Armor",
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      name: "Health Potion",
-      description: "Restores 50 HP when consumed",
-      quantity: 3,
-      value: "5 Galleons each",
-      category: "Potions",
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      name: "Ancient Spellbook",
-      description: "Contains forgotten spells of the old masters",
-      quantity: 1,
-      value: "100 Galleons",
-      category: "Books",
-      created_at: new Date().toISOString(),
-    },
-  ]);
-
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -57,6 +33,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     quantity: 1,
     value: "",
     category: "General",
+    attunement_required: false,
   });
 
   const categories = [
@@ -72,355 +49,102 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     "Food",
   ];
 
-  const styles = useMemo(
-    () => ({
-      container: {
-        maxWidth: "1600px",
-        margin: "0 auto",
-        padding: "20px",
-        backgroundColor: theme.background,
-        minHeight: "100vh",
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      },
-      mainGrid: {
-        display: "grid",
-        gridTemplateColumns: "350px 1fr",
-        gap: "24px",
-        alignItems: "start",
-        "@media (max-width: 1024px)": {
-          gridTemplateColumns: "1fr",
-        },
-      },
-      inventorySection: {
-        minWidth: 0,
-      },
-      header: {
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        padding: "24px",
-        marginBottom: "24px",
-        border: `2px solid ${theme.border}`,
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-      },
-      title: {
-        fontSize: "28px",
-        fontWeight: "bold",
-        color: theme.text,
-        margin: "0 0 8px 0",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-      },
-      subtitle: {
-        fontSize: "16px",
-        color: theme.textSecondary,
-        margin: 0,
-      },
-      errorMessage: {
-        backgroundColor: (theme.error || "#EF4444") + "20",
-        border: `1px solid ${theme.error || "#EF4444"}`,
-        color: theme.error || "#EF4444",
-        padding: "12px",
-        borderRadius: "8px",
-        marginBottom: "16px",
-        fontSize: "14px",
-      },
-      controls: {
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-        marginBottom: "24px",
-        flexWrap: "wrap",
-      },
-      addButton: {
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "12px 20px",
-        backgroundColor: theme.primary,
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
-        fontSize: "16px",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        fontFamily: "inherit",
-      },
-      searchContainer: {
-        position: "relative",
-        flex: "1",
-        minWidth: "250px",
-      },
-      searchInput: {
-        width: "100%",
-        paddingLeft: "40px",
-        paddingRight: "16px",
-        paddingTop: "12px",
-        paddingBottom: "12px",
-        border: `2px solid ${theme.border}`,
-        borderRadius: "8px",
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "16px",
-        fontFamily: "inherit",
-      },
-      searchIcon: {
-        position: "absolute",
-        left: "12px",
-        top: "50%",
-        transform: "translateY(-50%)",
-        color: theme.textSecondary,
-      },
-      formCard: {
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        padding: "24px",
-        marginBottom: "24px",
-        border: `2px solid ${theme.border}`,
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-      },
-      formTitle: {
-        fontSize: "20px",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "20px",
-        margin: "0 0 20px 0",
-      },
-      formGrid: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "16px",
-        marginBottom: "16px",
-      },
-      formField: {
-        display: "flex",
-        flexDirection: "column",
-      },
-      formFieldFull: {
-        gridColumn: "1 / -1",
-      },
-      label: {
-        fontSize: "14px",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "8px",
-      },
-      input: {
-        padding: "12px",
-        border: `2px solid ${theme.border}`,
-        borderRadius: "8px",
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "16px",
-        fontFamily: "inherit",
-      },
-      select: {
-        padding: "12px",
-        border: `2px solid ${theme.border}`,
-        borderRadius: "8px",
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "16px",
-        fontFamily: "inherit",
-      },
-      textarea: {
-        padding: "12px",
-        border: `2px solid ${theme.border}`,
-        borderRadius: "8px",
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "16px",
-        height: "80px",
-        resize: "vertical",
-        fontFamily: "inherit",
-      },
-      formActions: {
-        display: "flex",
-        gap: "12px",
-      },
-      saveButton: {
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "12px 24px",
-        backgroundColor: theme.success || "#10B981",
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
-        fontSize: "16px",
-        fontWeight: "600",
-        cursor: "pointer",
-        flex: "1",
-        justifyContent: "center",
-        fontFamily: "inherit",
-      },
-      cancelButton: {
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "12px 24px",
-        backgroundColor: theme.textSecondary,
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
-        fontSize: "16px",
-        fontWeight: "600",
-        cursor: "pointer",
-        fontFamily: "inherit",
-      },
-      itemsGrid: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-        gap: "16px",
-      },
-      itemCard: {
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        padding: "20px",
-        border: `2px solid ${theme.border}`,
-        transition: "all 0.2s ease",
-      },
-      itemHeader: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: "12px",
-      },
-      itemName: {
-        fontSize: "18px",
-        fontWeight: "600",
-        color: theme.text,
-        margin: "0 0 4px 0",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-      },
-      quantityBadge: {
-        fontSize: "12px",
-        fontWeight: "600",
-        padding: "4px 8px",
-        backgroundColor: theme.background,
-        color: theme.text,
-        borderRadius: "12px",
-        border: `1px solid ${theme.border}`,
-      },
-      itemActions: {
-        display: "flex",
-        gap: "8px",
-      },
-      actionButton: {
-        padding: "8px",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "all 0.2s ease",
-      },
-      editButton: {
-        backgroundColor: theme.accent || "#3B82F6",
-        color: "white",
-      },
-      deleteButton: {
-        backgroundColor: theme.error || "#EF4444",
-        color: "white",
-      },
-      itemDescription: {
-        fontSize: "14px",
-        color: theme.textSecondary,
-        marginBottom: "8px",
-        lineHeight: "1.4",
-      },
-      itemMeta: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: "14px",
-        color: theme.text,
-      },
-      emptyState: {
-        textAlign: "center",
-        padding: "60px 20px",
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        border: `2px solid ${theme.border}`,
-      },
-      emptyIcon: {
-        marginBottom: "16px",
-        opacity: 0.5,
-      },
-      emptyText: {
-        fontSize: "18px",
-        color: theme.textSecondary,
-        margin: 0,
-      },
-      categoryHeader: {
-        fontSize: "18px",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "16px",
-        padding: "12px 16px",
-        backgroundColor: theme.surface,
-        borderRadius: "8px",
-        border: `1px solid ${theme.border}`,
-      },
-      statsCard: {
-        backgroundColor: theme.surface,
-        padding: "16px",
-        borderRadius: "8px",
-        border: `1px solid ${theme.border}`,
-        marginBottom: "16px",
-      },
-      statsRow: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: "14px",
-        color: theme.text,
-      },
-    }),
-    [theme]
-  );
+  const fetchItems = useCallback(async () => {
+    if (!supabase || !selectedCharacter?.id) return;
 
-  // Add new item
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { data, error: fetchError } = await supabase
+        .from("inventory_items")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .order("created_at", { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      setItems(data || []);
+    } catch (err) {
+      console.error("Error fetching inventory items:", err);
+      setError("Failed to load inventory items. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [supabase, selectedCharacter?.id]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
   const addItem = useCallback(async () => {
-    if (!formData.name.trim()) return;
+    if (!formData.name.trim() || !supabase || !selectedCharacter?.id) return;
 
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError(null);
+
+    try {
       const newItem = {
-        id: Date.now(),
         name: formData.name.trim(),
-        description: formData.description.trim(),
+        description: formData.description.trim() || null,
         quantity: parseInt(formData.quantity) || 1,
-        value: formData.value.trim(),
+        value: formData.value.trim() || null,
         category: formData.category,
-        created_at: new Date().toISOString(),
+        attunement_required: formData.attunement_required,
+        character_id: selectedCharacter.id,
+        discord_user_id: user?.discord_user_id || user?.id,
       };
 
-      setItems((prev) => [newItem, ...prev]);
+      const { data, error: insertError } = await supabase
+        .from("inventory_items")
+        .insert([newItem])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      setItems((prev) => [data, ...prev]);
       setFormData({
         name: "",
         description: "",
         quantity: 1,
+        attunement_required: false,
         value: "",
         category: "General",
       });
       setShowAddForm(false);
+    } catch (err) {
+      console.error("Error adding item:", err);
+      setError("Failed to add item. Please try again.");
+    } finally {
       setIsSaving(false);
-    }, 500);
-  }, [formData]);
+    }
+    // eslint-disable-next-line
+  }, [formData, supabase, selectedCharacter?.id, user?.id]);
 
-  // Delete item
-  const deleteItem = useCallback(async (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  const deleteItem = useCallback(
+    async (id) => {
+      if (!supabase) return;
 
-  // Start editing
+      setError(null);
+
+      try {
+        const { error: deleteError } = await supabase
+          .from("inventory_items")
+          .delete()
+          .eq("id", id);
+
+        if (deleteError) throw deleteError;
+
+        setItems((prev) => prev.filter((item) => item.id !== id));
+      } catch (err) {
+        console.error("Error deleting item:", err);
+        setError("Failed to delete item. Please try again.");
+      }
+    },
+    [supabase]
+  );
+
   const startEdit = useCallback((item) => {
     setEditingId(item.id);
     setFormData({
@@ -429,29 +153,37 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
       quantity: item.quantity,
       value: item.value || "",
       category: item.category,
+      attunement_required: item.attunement_required,
     });
   }, []);
 
-  // Save edit
   const saveEdit = useCallback(async () => {
-    if (!formData.name.trim() || !editingId) return;
+    if (!formData.name.trim() || !editingId || !supabase) return;
 
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const updatedItem = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        quantity: parseInt(formData.quantity) || 1,
+        value: formData.value.trim() || null,
+        category: formData.category,
+        attunement_required: formData.attunement_required,
+      };
+
+      const { data, error: updateError } = await supabase
+        .from("inventory_items")
+        .update(updatedItem)
+        .eq("id", editingId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
       setItems((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                quantity: parseInt(formData.quantity) || 1,
-                value: formData.value.trim(),
-                category: formData.category,
-              }
-            : item
-        )
+        prev.map((item) => (item.id === editingId ? data : item))
       );
 
       setEditingId(null);
@@ -461,12 +193,16 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         quantity: 1,
         value: "",
         category: "General",
+        attunement_required: false,
       });
+    } catch (err) {
+      console.error("Error updating item:", err);
+      setError("Failed to update item. Please try again.");
+    } finally {
       setIsSaving(false);
-    }, 500);
-  }, [formData, editingId]);
+    }
+  }, [formData, editingId, supabase]);
 
-  // Cancel edit
   const cancelEdit = useCallback(() => {
     setEditingId(null);
     setFormData({
@@ -475,12 +211,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
       quantity: 1,
       value: "",
       category: "General",
+      attunement_required: false,
     });
     setShowAddForm(false);
     setError(null);
   }, []);
 
-  // Filter items based on search
   const filteredItems = useMemo(
     () =>
       items.filter(
@@ -495,7 +231,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [items, searchTerm]
   );
 
-  // Group items by category
   const groupedItems = useMemo(
     () =>
       filteredItems.reduce((acc, item) => {
@@ -507,6 +242,28 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
       }, {}),
     [filteredItems]
   );
+
+  const stats = useMemo(() => {
+    const totalItems = items.length;
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+    const attunementItems = items.filter(
+      (item) => item.attunement_required
+    ).length;
+    const categories = new Set(items.map((item) => item.category)).size;
+
+    return {
+      totalItems,
+      totalQuantity,
+      attunementItems,
+      categories,
+    };
+  }, [items]);
+
+  const mockCharacter = selectedCharacter || {
+    id: "demo",
+    name: "Demo Character",
+  };
+  const mockUser = user || { id: "demo" };
 
   if (!user || !selectedCharacter) {
     return (
@@ -527,24 +284,32 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.mainGrid}>
-        {/* Bank Section - Left Column */}
-        <Bank />
+      <div style={styles.mainLayout}>
+        <Bank
+          user={mockUser}
+          selectedCharacter={mockCharacter}
+          theme={theme}
+          styles={styles}
+        />
 
-        {/* Inventory Section - Right Column */}
         <div style={styles.inventorySection}>
-          {/* Header */}
           <div style={styles.header}>
             <h1 style={styles.title}>
               <Package size={28} color={theme.primary} />
               Inventory Management
             </h1>
             <p style={styles.subtitle}>
-              Manage {selectedCharacter.name}'s items, equipment, and treasures
+              Manage your character's items, equipment, and possessions
             </p>
           </div>
 
-          {/* Error Message */}
+          {isLoading && (
+            <div style={styles.loadingMessage}>
+              <Loader size={16} />
+              Loading inventory items...
+            </div>
+          )}
+
           {error && (
             <div style={styles.errorMessage}>
               {error}
@@ -564,60 +329,65 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </div>
           )}
 
-          {/* Stats */}
-          {items.length > 0 && (
+          {items.length > 0 && !isLoading && (
             <div style={styles.statsCard}>
               <div style={styles.statsRow}>
                 <span>
-                  Total Items: <strong>{items.length}</strong>
+                  Total Items: <strong>{stats.totalItems}</strong>
                 </span>
                 <span>
-                  Total Quantity:{" "}
-                  <strong>
-                    {items.reduce((sum, item) => sum + item.quantity, 0)}
-                  </strong>
+                  Total Quantity: <strong>{stats.totalQuantity}</strong>
+                </span>
+              </div>
+              <div style={{ ...styles.statsRow, ...styles.statsRowLast }}>
+                <span>
+                  Categories: <strong>{stats.categories}</strong>
+                </span>
+                <span>
+                  Attunement Required: <strong>{stats.attunementItems}</strong>
                 </span>
               </div>
             </div>
           )}
 
-          {/* Controls */}
-          <div style={styles.controls}>
-            {!showAddForm && !editingId && (
-              <button
-                onClick={() => setShowAddForm(true)}
-                style={styles.addButton}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = theme.secondary;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = theme.primary;
-                }}
-              >
-                <Plus size={18} />
-                Add New Item
-              </button>
-            )}
+          {!isLoading && (
+            <div style={styles.controls}>
+              {!showAddForm && !editingId && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  style={styles.addButton}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = theme.secondary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = theme.primary;
+                  }}
+                >
+                  <Plus size={18} />
+                  Add New Item
+                </button>
+              )}
 
-            {items.length > 0 && (
-              <div style={styles.searchContainer}>
-                <Search size={18} style={styles.searchIcon} />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search items..."
-                  style={styles.searchInput}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = theme.primary;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = theme.border;
-                  }}
-                />
-              </div>
-            )}
-          </div>
+              {items.length > 0 && (
+                <div style={styles.searchContainer}>
+                  <Search size={18} style={styles.searchIcon} />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search items..."
+                    style={styles.searchInput}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Add/Edit Form */}
           {(showAddForm || editingId) && (
@@ -735,6 +505,30 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     }}
                   />
                 </div>
+
+                <div style={styles.checkboxField}>
+                  <label style={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={formData.attunement_required}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          attunement_required: e.target.checked,
+                        }))
+                      }
+                      style={styles.checkbox}
+                      disabled={isSaving}
+                    />
+                    <Star size={16} color="#F59E0B" />
+                    Requires Attunement
+                  </label>
+                  <small
+                    style={{ color: theme.textSecondary, fontSize: "12px" }}
+                  >
+                    Check this if the item requires magical attunement to use
+                  </small>
+                </div>
               </div>
 
               <div style={styles.formActions}>
@@ -776,95 +570,131 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           )}
 
           {/* Items Display */}
-          {filteredItems.length > 0 ? (
-            Object.entries(groupedItems).map(([category, categoryItems]) => (
-              <div key={category} style={{ marginBottom: "32px" }}>
-                <div style={styles.categoryHeader}>
-                  {category} ({categoryItems.length})
-                </div>
-                <div style={styles.itemsGrid}>
-                  {categoryItems.map((item) => (
-                    <div key={item.id} style={styles.itemCard}>
-                      <div style={styles.itemHeader}>
-                        <div>
-                          <div style={styles.itemName}>
-                            <Package size={18} color={theme.primary} />
-                            {item.name}
-                            {item.quantity > 1 && (
-                              <span style={styles.quantityBadge}>
-                                x{item.quantity}
-                              </span>
-                            )}
-                          </div>
+          {!isLoading && (
+            <>
+              {filteredItems.length > 0 ? (
+                Object.entries(groupedItems).map(
+                  ([category, categoryItems]) => {
+                    const attunementCount = categoryItems.filter(
+                      (item) => item.attunement_required
+                    ).length;
+                    return (
+                      <div key={category} style={{ marginBottom: "32px" }}>
+                        <div style={styles.categoryHeader}>
+                          <span>
+                            {category} ({categoryItems.length})
+                          </span>
+                          {attunementCount > 0 && (
+                            <span style={styles.categoryStats}>
+                              {attunementCount} require attunement
+                            </span>
+                          )}
                         </div>
-                        <div style={styles.itemActions}>
-                          <button
-                            onClick={() => startEdit(item)}
-                            disabled={editingId || showAddForm || isSaving}
-                            style={{
-                              ...styles.actionButton,
-                              ...styles.editButton,
-                              opacity:
-                                editingId || showAddForm || isSaving ? 0.5 : 1,
-                            }}
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => deleteItem(item.id)}
-                            disabled={editingId || showAddForm || isSaving}
-                            style={{
-                              ...styles.actionButton,
-                              ...styles.deleteButton,
-                              opacity:
-                                editingId || showAddForm || isSaving ? 0.5 : 1,
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                        <div style={styles.itemsGrid}>
+                          {categoryItems.map((item) => (
+                            <div key={item.id} style={styles.itemCard}>
+                              <div style={styles.itemHeader}>
+                                <div>
+                                  <div style={styles.itemName}>
+                                    <Package size={18} color={theme.primary} />
+                                    {item.name}
+                                    {item.quantity > 1 && (
+                                      <span style={styles.quantityBadge}>
+                                        x{item.quantity}
+                                      </span>
+                                    )}
+                                    {item.attunement_required && (
+                                      <span style={styles.attunementBadge}>
+                                        <Star size={12} />
+                                        Attunement
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div style={styles.itemActions}>
+                                  <button
+                                    onClick={() => startEdit(item)}
+                                    disabled={
+                                      editingId || showAddForm || isSaving
+                                    }
+                                    style={{
+                                      ...styles.actionButton,
+                                      ...styles.editButton,
+                                      opacity:
+                                        editingId || showAddForm || isSaving
+                                          ? 0.5
+                                          : 1,
+                                    }}
+                                  >
+                                    <Edit2 size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteItem(item.id)}
+                                    disabled={
+                                      editingId || showAddForm || isSaving
+                                    }
+                                    style={{
+                                      ...styles.actionButton,
+                                      ...styles.deleteButton,
+                                      opacity:
+                                        editingId || showAddForm || isSaving
+                                          ? 0.5
+                                          : 1,
+                                    }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {item.description && (
+                                <div style={styles.itemDescription}>
+                                  {item.description}
+                                </div>
+                              )}
+
+                              <div style={styles.itemMeta}>
+                                <span>
+                                  {item.value
+                                    ? `Value: ${item.value}`
+                                    : "No value set"}
+                                </span>
+                                <span>
+                                  Added:{" "}
+                                  {new Date(
+                                    item.created_at
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-
-                      {item.description && (
-                        <div style={styles.itemDescription}>
-                          {item.description}
-                        </div>
-                      )}
-
-                      <div style={styles.itemMeta}>
-                        <span>
-                          {item.value ? `Value: ${item.value}` : "No value set"}
-                        </span>
-                        <span>
-                          Added:{" "}
-                          {new Date(item.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  }
+                )
+              ) : items.length > 0 ? (
+                <div style={styles.emptyState}>
+                  <Search
+                    size={48}
+                    color={theme.textSecondary}
+                    style={styles.emptyIcon}
+                  />
+                  <p style={styles.emptyText}>No items match your search.</p>
                 </div>
-              </div>
-            ))
-          ) : items.length > 0 ? (
-            <div style={styles.emptyState}>
-              <Search
-                size={48}
-                color={theme.textSecondary}
-                style={styles.emptyIcon}
-              />
-              <p style={styles.emptyText}>No items match your search.</p>
-            </div>
-          ) : (
-            <div style={styles.emptyState}>
-              <Package
-                size={48}
-                color={theme.textSecondary}
-                style={styles.emptyIcon}
-              />
-              <p style={styles.emptyText}>
-                Your inventory is empty. Add some items to get started!
-              </p>
-            </div>
+              ) : (
+                <div style={styles.emptyState}>
+                  <Package
+                    size={48}
+                    color={theme.textSecondary}
+                    style={styles.emptyIcon}
+                  />
+                  <p style={styles.emptyText}>
+                    Your inventory is empty. Add some items to get started!
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

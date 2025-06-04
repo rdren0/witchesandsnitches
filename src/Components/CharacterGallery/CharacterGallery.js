@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Users, ChevronDown, ChevronUp, Calendar, MapPin } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterGalleryStyles } from "./styles";
+import { getCharacterGalleryStyles } from "../../styles/masterStyles";
 import * as images from "../../Images";
 
 const ILVERMORNY_CHARACTERS = [
@@ -285,7 +285,7 @@ export const CharacterGallery = ({ characters = ILVERMORNY_CHARACTERS }) => {
     }
   };
 
-  const styles = createCharacterGalleryStyles(theme);
+  const styles = getCharacterGalleryStyles(theme);
 
   return (
     <div style={styles.container}>

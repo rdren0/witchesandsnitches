@@ -1,5 +1,13 @@
-// src/App/App.js (Updated to use Master Styles)
+// src/App/App.js (Updated with React Router)
 import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { Edit3, Check, X, User, Palette } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
@@ -155,10 +163,14 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
             style={styles.editButton}
             title="Edit username"
             onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.editButtonHover);
+              e.target.style.backgroundColor =
+                styles.editButtonHover.backgroundColor;
+              e.target.style.color = styles.editButtonHover.color;
             }}
             onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.editButton);
+              e.target.style.backgroundColor =
+                styles.editButton.backgroundColor;
+              e.target.style.color = styles.editButton.color;
             }}
           >
             <Edit3 size={14} />
@@ -176,23 +188,26 @@ const AuthComponent = ({
   onSignIn,
   onSignOut,
   isLoading,
-  onThemeClick,
 }) => {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
+  const navigate = useNavigate();
 
   if (user) {
     return (
       <div style={styles.authSection}>
         <button
-          onClick={onThemeClick}
+          onClick={() => navigate("/theme-settings")}
           style={styles.themeButton}
           title="Theme Settings"
           onMouseEnter={(e) => {
-            Object.assign(e.target.style, styles.themeButtonHover);
+            e.target.style.backgroundColor =
+              styles.themeButtonHover.backgroundColor;
+            e.target.style.borderColor = styles.themeButtonHover.borderColor;
           }}
           onMouseLeave={(e) => {
-            Object.assign(e.target.style, styles.themeButton);
+            e.target.style.backgroundColor = styles.themeButton.backgroundColor;
+            e.target.style.borderColor = styles.themeButton.borderColor;
           }}
         >
           <Palette size={16} color={theme.primary} />
@@ -245,14 +260,17 @@ const AuthComponent = ({
   return (
     <div style={styles.authSection}>
       <button
-        onClick={onThemeClick}
+        onClick={() => navigate("/theme-settings")}
         style={styles.themeButton}
         title="Theme Settings"
         onMouseEnter={(e) => {
-          Object.assign(e.target.style, styles.themeButtonHover);
+          e.target.style.backgroundColor =
+            styles.themeButtonHover.backgroundColor;
+          e.target.style.borderColor = styles.themeButtonHover.borderColor;
         }}
         onMouseLeave={(e) => {
-          Object.assign(e.target.style, styles.themeButton);
+          e.target.style.backgroundColor = styles.themeButton.backgroundColor;
+          e.target.style.borderColor = styles.themeButton.borderColor;
         }}
       >
         <Palette size={16} color={theme.primary} />
@@ -280,15 +298,173 @@ const AuthComponent = ({
   );
 };
 
-const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
+const Navigation = ({ characters, user }) => {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getVisibleTabs = () => {
+    const baseTabs = [
+      { path: "/", label: "Home", key: "home" },
+      {
+        path: "/character-creation",
+        label: "Character Builder",
+        key: "character-creation",
+      },
+    ];
+
+    if (characters.length > 0) {
+      return [
+        ...baseTabs,
+        {
+          path: "/character/sheet",
+          label: "Character Sheet",
+          key: "character",
+        },
+        { path: "/gallery", label: "NPCs", key: "gallery" },
+      ];
+    }
+
+    return baseTabs;
+  };
+
+  const visibleTabs = getVisibleTabs();
+
+  const isActiveTab = (path) => {
+    if (path === "/") {
+      return location.pathname === "/" || location.pathname === "/home";
+    }
+    if (path === "/character/sheet") {
+      // For the Character Sheet tab, check if we're on any character route
+      return location.pathname.startsWith("/character/");
+    }
+    return location.pathname === path;
+  };
+
+  return (
+    <nav style={styles.tabNavigation}>
+      {visibleTabs.map((tab) => {
+        const isActive = isActiveTab(tab.path);
+
+        return (
+          <button
+            key={tab.key}
+            style={{
+              ...styles.tabButton,
+              ...(isActive ? styles.tabButtonActive : {}),
+            }}
+            onClick={() => navigate(tab.path)}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.target.style.backgroundColor =
+                  styles.tabButtonHover.backgroundColor;
+                e.target.style.borderColor = styles.tabButtonHover.borderColor;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.target.style.backgroundColor =
+                  styles.tabButton.backgroundColor;
+                e.target.style.borderColor = styles.tabButton.borderColor;
+              }
+            }}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+};
+
+const CharacterSubNavigation = () => {
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const characterSubtabs = [
+    { path: "/character/sheet", label: "Character Sheet", key: "sheet" },
+    { path: "/character/spellbook", label: "Spellbook", key: "spellbook" },
+    { path: "/character/potions", label: "Potions", key: "potions" },
+    { path: "/character/inventory", label: "Inventory", key: "inventory" },
+    { path: "/character/downtime", label: "Downtime", key: "downtime" },
+    { path: "/character/notes", label: "Notes", key: "notes" },
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
+  return (
+    <div
+      style={{
+        borderBottom: `1px solid ${theme.border}`,
+        backgroundColor: theme.background,
+        padding: "0 20px",
+      }}
+    >
+      <nav
+        style={{
+          display: "flex",
+          gap: "4px",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          paddingTop: "8px",
+        }}
+      >
+        {characterSubtabs.map((subtab) => {
+          const active = isActive(subtab.path);
+
+          return (
+            <button
+              key={subtab.key}
+              style={{
+                background: active ? theme.surface : "transparent",
+                border: "none",
+                borderRadius: "8px 8px 0 0",
+                padding: "10px 16px 12px 16px",
+                fontSize: "14px",
+                fontWeight: active ? "600" : "500",
+                color: active ? theme.text : theme.textSecondary,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                position: "relative",
+                marginBottom: "-1px",
+                borderBottom: active
+                  ? `2px solid ${theme.primary}`
+                  : "2px solid transparent",
+                minWidth: "120px",
+              }}
+              onClick={() => navigate(subtab.path)}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.target.style.backgroundColor = theme.surface;
+                  e.target.style.color = theme.text;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.target.style.backgroundColor = "transparent";
+                  e.target.style.color = theme.textSecondary;
+                }
+              }}
+            >
+              {subtab.label}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+};
+
+const HomePage = ({ user, customUsername, hasCharacters }) => {
+  const { theme } = useTheme();
+  const styles = createAppStyles(theme);
+  const navigate = useNavigate();
   const displayName = customUsername || user?.user_metadata?.full_name;
 
-  const handleCardClick = (tab, subtab = null) => {
-    if (onTabChange) {
-      onTabChange(tab, subtab);
-    }
+  const handleCardClick = (path) => {
+    navigate(path);
   };
 
   return (
@@ -311,7 +487,7 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
             <div style={styles.featureGrid}>
               <div
                 style={styles.featureCard}
-                onClick={() => handleCardClick("character", "sheet")}
+                onClick={() => handleCardClick("/character/sheet")}
               >
                 <h3>Character Sheet</h3>
                 <p>View and manage your character's stats and abilities.</p>
@@ -324,9 +500,9 @@ const HomePage = ({ user, customUsername, onTabChange, hasCharacters }) => {
         />
         <div
           style={styles.featureCard}
-          onClick={() => handleCardClick("character-creation")}
+          onClick={() => handleCardClick("/character-creation")}
         >
-          <h3>Character Creation</h3>
+          <h3>Character Builder</h3>
           <p>Build and customize your D&D characters.</p>
         </div>
       </div>
@@ -371,9 +547,9 @@ const ProtectedRoute = ({ user, children, fallback }) => {
 function AppContent() {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("home");
-  const [activeSubtab, setActiveSubtab] = useState("sheet");
   const [user, setUser] = useState(null);
   const [customUsername, setCustomUsername] = useState("");
   const [loading, setLoading] = useState(true);
@@ -507,8 +683,6 @@ function AppContent() {
           "selectedCharacterId",
           characterToSelect.id.toString()
         );
-      } else {
-        console.log("❌ No character to select");
       }
     } catch (err) {
       setCharactersError("Failed to load characters: " + err.message);
@@ -561,6 +735,33 @@ function AppContent() {
     }
     // eslint-disable-next-line
   }, [user]);
+
+  // Redirect to character/sheet if user navigates to /character directly
+  useEffect(() => {
+    if (location.pathname === "/character") {
+      navigate("/character/sheet", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  // Redirect character routes to home if no characters exist and not loading
+  useEffect(() => {
+    if (
+      location.pathname.startsWith("/character") &&
+      characters.length === 0 &&
+      !charactersLoading &&
+      !loading &&
+      user
+    ) {
+      navigate("/", { replace: true });
+    }
+  }, [
+    location.pathname,
+    characters.length,
+    charactersLoading,
+    loading,
+    navigate,
+    user,
+  ]);
 
   const handleCharacterChange = (character) => {
     setSelectedCharacter(character);
@@ -672,9 +873,8 @@ function AppContent() {
         setCharacters([]);
         setSelectedCharacter(null);
         setThemeSelectedCharacter(null);
-        setActiveTab("home");
-        setActiveSubtab("sheet");
         sessionStorage.removeItem("selectedCharacterId");
+        navigate("/");
       }
     } catch (err) {
       console.error("Unexpected error during sign out:", err);
@@ -684,181 +884,6 @@ function AppContent() {
     }
   };
 
-  const handleTabChange = (tab, subtab = null) => {
-    setActiveTab(tab);
-    if (subtab) {
-      setActiveSubtab(subtab);
-    } else if (tab === "character") {
-      // Default to sheet when switching to character tab
-      setActiveSubtab("sheet");
-    }
-  };
-
-  const renderCharacterContent = () => {
-    const characterSelector = (
-      <CharacterSelector
-        user={user}
-        characters={characters}
-        selectedCharacter={selectedCharacter}
-        onCharacterChange={handleCharacterChange}
-        isLoading={charactersLoading}
-        error={charactersError}
-      />
-    );
-
-    switch (activeSubtab) {
-      case "sheet":
-        return (
-          <>
-            {characterSelector}
-            <CharacterSheet
-              user={user}
-              customUsername={customUsername}
-              supabase={supabase}
-              selectedCharacter={selectedCharacter}
-              characters={characters}
-            />
-          </>
-        );
-      case "spellbook":
-        return (
-          <>
-            {characterSelector}
-            <SpellBook
-              user={user}
-              customUsername={customUsername}
-              supabase={supabase}
-              selectedCharacter={selectedCharacter}
-              characters={characters}
-            />
-          </>
-        );
-      case "potions":
-        return (
-          <>
-            {" "}
-            {characterSelector}
-            <PotionBrewingSystem
-              user={user}
-              character={selectedCharacter}
-              supabase={supabase}
-            />
-          </>
-        );
-      case "inventory":
-        return (
-          <>
-            {characterSelector}
-            <Inventory
-              user={user}
-              selectedCharacter={selectedCharacter}
-              supabase={supabase}
-            />
-          </>
-        );
-      case "notes":
-        return (
-          <>
-            {characterSelector}
-            <CharacterNotes
-              user={user}
-              selectedCharacter={selectedCharacter}
-              supabase={supabase}
-            />
-          </>
-        );
-      case "downtime":
-        return (
-          <>
-            {characterSelector}
-            <DowntimeSheet />
-          </>
-        );
-      default:
-        return (
-          <>
-            {characterSelector}
-            <CharacterSheet
-              user={user}
-              customUsername={customUsername}
-              supabase={supabase}
-              selectedCharacter={selectedCharacter}
-              characters={characters}
-            />
-          </>
-        );
-    }
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "home":
-        return (
-          <HomePage
-            user={user}
-            customUsername={customUsername}
-            onTabChange={handleTabChange}
-            hasCharacters={characters.length > 0}
-          />
-        );
-      case "character-creation":
-        return (
-          <ProtectedRoute user={user}>
-            <CharacterCreationForm
-              user={user}
-              customUsername={customUsername}
-              onCharacterSaved={() => {
-                loadCharacters();
-              }}
-              selectedCharacterId={selectedCharacter?.id}
-              onSelectedCharacterReset={resetSelectedCharacter}
-            />
-          </ProtectedRoute>
-        );
-      case "character":
-        return (
-          <ProtectedRoute user={user}>
-            {renderCharacterContent()}
-          </ProtectedRoute>
-        );
-      case "gallery":
-        return <CharacterGallery />;
-      case "theme-settings":
-        return <ThemeSettings />;
-      default:
-        return (
-          <HomePage
-            user={user}
-            customUsername={customUsername}
-            onTabChange={handleTabChange}
-            hasCharacters={characters.length > 0}
-          />
-        );
-    }
-  };
-
-  const getVisibleTabs = () => {
-    const baseTabs = ["home", "character-creation"];
-
-    if (characters.length > 0) {
-      return [...baseTabs, "character", "gallery"];
-    }
-
-    return baseTabs;
-  };
-
-  const getCharacterSubtabs = () => {
-    return ["sheet", "spellbook", "potions", "inventory", "downtime", "notes"];
-  };
-
-  useEffect(() => {
-    const visibleTabs = getVisibleTabs();
-    if (!visibleTabs.includes(activeTab) && activeTab !== "theme-settings") {
-      setActiveTab("home");
-    }
-    // eslint-disable-next-line
-  }, [characters.length, activeTab]);
-
   if (loading) {
     return (
       <div style={styles.appContainer}>
@@ -867,49 +892,21 @@ function AppContent() {
     );
   }
 
-  const visibleTabs = getVisibleTabs();
-  const characterSubtabs = getCharacterSubtabs();
+  const characterSelector = (
+    <CharacterSelector
+      user={user}
+      characters={characters}
+      selectedCharacter={selectedCharacter}
+      onCharacterChange={handleCharacterChange}
+      isLoading={charactersLoading}
+      error={charactersError}
+    />
+  );
 
   return (
     <div style={styles.appContainer}>
       <header style={styles.appHeader}>
-        <nav style={styles.tabNavigation}>
-          {visibleTabs.map((tab) => {
-            const tabLabels = {
-              home: "Home",
-              "character-creation": "Character Creation",
-              character: "Character",
-              gallery: "NPCs",
-              potions: "potions",
-              inventory: "inventory",
-            };
-
-            const isActive = activeTab === tab;
-
-            return (
-              <button
-                key={tab}
-                style={{
-                  ...styles.tabButton,
-                  ...(isActive ? styles.tabButtonActive : {}),
-                }}
-                onClick={() => handleTabChange(tab)}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    Object.assign(e.target.style, styles.tabButtonHover);
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    Object.assign(e.target.style, styles.tabButton);
-                  }
-                }}
-              >
-                {tabLabels[tab]}
-              </button>
-            );
-          })}
-        </nav>
+        <Navigation characters={characters} user={user} />
         <AuthComponent
           user={user}
           customUsername={customUsername}
@@ -917,94 +914,144 @@ function AppContent() {
           onSignIn={signInWithDiscord}
           onSignOut={signOut}
           isLoading={authLoading}
-          onThemeClick={() => setActiveTab("theme-settings")}
         />
       </header>
 
       {/* Character Subtabs */}
-      {activeTab === "character" && (
-        <div
-          style={{
-            borderBottom: `1px solid ${theme.border}`,
-            backgroundColor: theme.background,
-            padding: "0 20px",
-          }}
-        >
-          <nav
-            style={{
-              display: "flex",
-              gap: "4px",
-              maxWidth: "1200px",
-              margin: "0 auto",
-              paddingTop: "8px",
-            }}
-          >
-            {characterSubtabs.map((subtab) => {
-              const subtabLabels = {
-                sheet: "Character Sheet",
-                spellbook: "Spellbook",
-                notes: "Notes",
-                downtime: "Downtime",
-                potions: "Potions",
-                inventory: "Inventory",
-              };
-
-              const isActive = activeSubtab === subtab;
-
-              return (
-                <button
-                  key={subtab}
-                  style={{
-                    background: isActive ? theme.surface : "transparent",
-                    border: "none",
-                    borderRadius: "8px 8px 0 0",
-                    padding: "10px 16px 12px 16px",
-                    fontSize: "14px",
-                    fontWeight: isActive ? "600" : "500",
-                    color: isActive ? theme.text : theme.textSecondary,
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    position: "relative",
-                    marginBottom: "-1px",
-                    borderBottom: isActive
-                      ? `2px solid ${theme.primary}`
-                      : "2px solid transparent",
-                    minWidth: "120px",
-                  }}
-                  onClick={() => setActiveSubtab(subtab)}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.target.style.backgroundColor = theme.surface;
-                      e.target.style.color = theme.text;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.target.style.backgroundColor = "transparent";
-                      e.target.style.color = theme.textSecondary;
-                    }
-                  }}
-                >
-                  {subtabLabels[subtab]}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+      {location.pathname.startsWith("/character/") && (
+        <CharacterSubNavigation />
       )}
 
-      <main style={styles.tabContent}>{renderContent()}</main>
+      <main style={styles.tabContent}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <HomePage
+                user={user}
+                customUsername={customUsername}
+                hasCharacters={characters.length > 0}
+              />
+            }
+          />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route
+            path="/character-creation"
+            element={
+              <ProtectedRoute user={user}>
+                <CharacterCreationForm
+                  user={user}
+                  customUsername={customUsername}
+                  onCharacterSaved={() => {
+                    loadCharacters();
+                  }}
+                  selectedCharacterId={selectedCharacter?.id}
+                  onSelectedCharacterReset={resetSelectedCharacter}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character"
+            element={<Navigate to="/character/sheet" replace />}
+          />
+          <Route
+            path="/character/sheet"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <CharacterSheet
+                  user={user}
+                  customUsername={customUsername}
+                  supabase={supabase}
+                  selectedCharacter={selectedCharacter}
+                  characters={characters}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character/spellbook"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <SpellBook
+                  user={user}
+                  customUsername={customUsername}
+                  supabase={supabase}
+                  selectedCharacter={selectedCharacter}
+                  characters={characters}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character/potions"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <PotionBrewingSystem
+                  user={user}
+                  character={selectedCharacter}
+                  supabase={supabase}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character/inventory"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <Inventory
+                  user={user}
+                  selectedCharacter={selectedCharacter}
+                  supabase={supabase}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character/notes"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <CharacterNotes
+                  user={user}
+                  selectedCharacter={selectedCharacter}
+                  supabase={supabase}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character/downtime"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <DowntimeSheet />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/gallery" element={<CharacterGallery />} />
+          <Route path="/theme-settings" element={<ThemeSettings />} />
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
     </div>
   );
 }
 
 function App() {
   return (
-    <RollModalProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
-    </RollModalProvider>
+    <Router>
+      <RollModalProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </RollModalProvider>
+    </Router>
   );
 }
 
