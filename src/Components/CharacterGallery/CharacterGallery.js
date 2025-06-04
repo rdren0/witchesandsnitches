@@ -1,148 +1,20 @@
 import React, { useState } from "react";
-import { Users, ChevronDown, ChevronUp, Calendar, MapPin } from "lucide-react";
+import {
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  MapPin,
+  GraduationCap,
+} from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getCharacterGalleryStyles } from "../../styles/masterStyles";
-import * as images from "../../Images";
-
-const ILVERMORNY_CHARACTERS = [
-  {
-    id: 1,
-    name: "Ava Robinson",
-    type: "Students",
-    house: "?",
-    src: images.Ava,
-  },
-  {
-    id: 2,
-    name: "Anuhea Kelii",
-    type: "Students",
-    house: "?",
-    src: images.Anuhea,
-  },
-  {
-    id: 3,
-    name: "Azha Pavan",
-    type: "Students",
-    house: "?",
-    src: images.Azha,
-  },
-  {
-    id: 4,
-    name: "Bailey-Anna Balders",
-    type: "Students",
-    house: "?",
-    src: images.Bailey_Anna,
-  },
-  {
-    id: 5,
-    name: "Claire Takahashi",
-    type: "Students",
-    house: "?",
-    src: images.Claire,
-  },
-  {
-    id: 6,
-    name: "Colby Engel",
-    type: "Students",
-    house: "?",
-    src: images.Colby,
-  },
-  {
-    id: 7,
-    name: "Erika Baker",
-    type: "Students",
-    house: "?",
-    src: images.Erika,
-  },
-  {
-    id: 8,
-    name: "Genesis Firth",
-    type: "Students",
-    house: "?",
-    src: images.Genesis,
-  },
-  {
-    id: 9,
-    name: "Harmony",
-    type: "Students",
-    house: "?",
-    src: images.Harmony,
-  },
-  {
-    id: 10,
-    name: "Jeremiah Collier",
-    type: "Students",
-    house: "?",
-    src: images.Jeremiah,
-  },
-  {
-    id: 11,
-    name: "Maddie Gardner",
-    type: "Students",
-    house: "?",
-    src: images.Maddie,
-  },
-  {
-    id: 12,
-    name: "Noah Robinson",
-    type: "Students",
-    house: "?",
-    src: images.Noah,
-  },
-  {
-    id: 13,
-    name: "Olivia Law",
-    type: "Students",
-    house: "?",
-    src: images.Olivia,
-  },
-  {
-    id: 14,
-    name: "Omari Curtis",
-    type: "Students",
-    house: "?",
-    src: images.Omari,
-  },
-  {
-    id: 15,
-    name: "Rome Sanford",
-    type: "Students",
-    house: "?",
-    src: images.Rome,
-  },
-  {
-    id: 16,
-    name: "Seth Claw",
-    type: "Students",
-    house: "?",
-    src: images.Seth,
-  },
-  {
-    id: 17,
-    name: "Shelby MGH",
-    type: "Students",
-    house: "?",
-    src: images.Shelby,
-  },
-  {
-    id: 18,
-    name: "Tony DeLuca",
-    type: "Students",
-    house: "?",
-    src: images.Tony,
-  },
-  {
-    id: 19,
-    name: "Warren Ceredaryk",
-    type: "Students",
-    house: "?",
-    src: images.Warren,
-  },
-];
+import { createCharacterGalleryStyles } from ".././../styles/masterStyles";
+import { ALL_CHARACTERS } from "./characters";
 
 const CharacterCard = ({ character, theme, styles }) => {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const getHouseColor = (house) => {
     const houseColors = {
@@ -169,14 +41,54 @@ const CharacterCard = ({ character, theme, styles }) => {
     >
       {/* Character Image */}
       <div style={styles.imageContainer}>
-        {!imageError ? (
-          <img
-            src={character.src}
-            alt={character.name}
-            style={styles.characterImage}
-            onError={() => setImageError(true)}
-            onLoad={() => setImageError(false)}
-          />
+        {character.src && !imageError ? (
+          <div style={{ position: "relative", width: "100%", height: "100%" }}>
+            {/* Loading placeholder */}
+            {!imageLoaded && (
+              <div
+                style={{
+                  ...styles.imagePlaceholder,
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  zIndex: 1,
+                  backgroundColor: theme.background,
+                }}
+              >
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    border: `3px solid ${theme.border}`,
+                    borderTop: `3px solid ${theme.primary}`,
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+                <span style={{ ...styles.placeholderText, marginTop: "8px" }}>
+                  Loading...
+                </span>
+              </div>
+            )}
+            <img
+              src={character.src}
+              alt={character.name}
+              style={{
+                ...styles.characterImage,
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+              loading="lazy"
+              onError={() => setImageError(true)}
+              onLoad={() => {
+                setImageError(false);
+                setImageLoaded(true);
+              }}
+              decoding="async"
+            />
+          </div>
         ) : (
           <div style={styles.imagePlaceholder}>
             <Users size={48} color={theme.textSecondary} />
@@ -185,7 +97,7 @@ const CharacterCard = ({ character, theme, styles }) => {
         )}
 
         {/* House Badge */}
-        {character.house !== "?" && (
+        {character.house !== "?" && character.house && (
           <div
             style={{
               ...styles.houseBadge,
@@ -207,7 +119,15 @@ const CharacterCard = ({ character, theme, styles }) => {
   );
 };
 
-const Section = ({ type, characters, theme, styles, isExpanded, onToggle }) => {
+const TypeSection = ({
+  type,
+  characters,
+  theme,
+  styles,
+  isExpanded,
+  onToggle,
+  schoolName,
+}) => {
   return (
     <div style={styles.typeSection}>
       <button
@@ -215,27 +135,28 @@ const Section = ({ type, characters, theme, styles, isExpanded, onToggle }) => {
           ...styles.typeHeader,
           backgroundColor: isExpanded ? theme.primary + "10" : theme.surface,
           borderColor: isExpanded ? theme.primary : theme.border,
+          marginLeft: "20px",
         }}
         onClick={onToggle}
       >
         <div style={styles.typeHeaderLeft}>
-          <Calendar size={20} color={theme.primary} />
-          <h2 style={styles.typeTitle}>{type}</h2>
+          <Calendar size={18} color={theme.primary} />
+          <h3 style={styles.typeTitle}>{type}</h3>
           <span style={styles.characterCount}>
             ({characters.length} {type.toLowerCase()})
           </span>
         </div>
         <div style={styles.typeHeaderRight}>
           {isExpanded ? (
-            <ChevronUp size={20} color={theme.primary} />
+            <ChevronUp size={18} color={theme.primary} />
           ) : (
-            <ChevronDown size={20} color={theme.primary} />
+            <ChevronDown size={18} color={theme.primary} />
           )}
         </div>
       </button>
 
       {isExpanded && (
-        <div style={styles.charactersGrid}>
+        <div style={{ ...styles.charactersGrid, marginLeft: "20px" }}>
           {characters.map((character) => (
             <CharacterCard
               key={character.id}
@@ -250,42 +171,175 @@ const Section = ({ type, characters, theme, styles, isExpanded, onToggle }) => {
   );
 };
 
-export const CharacterGallery = ({ characters = ILVERMORNY_CHARACTERS }) => {
-  const { theme } = useTheme();
-  const [expandedTypes, setExpandedTypes] = useState(new Set(["Students"]));
+const SchoolSection = ({
+  school,
+  schoolData,
+  theme,
+  styles,
+  isSchoolExpanded,
+  onSchoolToggle,
+  expandedTypes,
+  onTypeToggle,
+}) => {
+  const totalCharacters = Object.values(schoolData).reduce(
+    (sum, chars) => sum + chars.length,
+    0
+  );
 
-  // Group characters by type
-  const charactersByType = characters.reduce((acc, character) => {
+  return (
+    <div style={styles.schoolSection}>
+      <button
+        style={{
+          ...styles.schoolHeader,
+          backgroundColor: isSchoolExpanded
+            ? theme.primary + "15"
+            : theme.surface,
+          borderColor: isSchoolExpanded ? theme.primary : theme.border,
+        }}
+        onClick={onSchoolToggle}
+      >
+        <div style={styles.schoolHeaderLeft}>
+          <GraduationCap size={24} color={theme.primary} />
+          <h2 style={styles.schoolTitle}>{school}</h2>
+          <span style={styles.schoolCount}>
+            ({totalCharacters} total characters)
+          </span>
+        </div>
+        <div style={styles.schoolHeaderRight}>
+          {isSchoolExpanded ? (
+            <ChevronUp size={24} color={theme.primary} />
+          ) : (
+            <ChevronDown size={24} color={theme.primary} />
+          )}
+        </div>
+      </button>
+
+      {isSchoolExpanded && (
+        <div style={styles.schoolContent}>
+          {Object.entries(schoolData).map(([type, characters]) => (
+            <TypeSection
+              key={`${school}-${type}`}
+              type={type}
+              characters={characters}
+              theme={theme}
+              styles={styles}
+              isExpanded={expandedTypes.has(`${school}-${type}`)}
+              onToggle={() => onTypeToggle(`${school}-${type}`)}
+              schoolName={school}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const CharacterGallery = ({ characters = ALL_CHARACTERS }) => {
+  const { theme } = useTheme();
+  const [expandedSchools, setExpandedSchools] = useState(
+    new Set(["Ilvermorny"])
+  );
+  const [expandedTypes, setExpandedTypes] = useState(
+    new Set(["Ilvermorny-Students"])
+  );
+
+  const charactersBySchool = characters.reduce((acc, character) => {
+    const school = character.school;
     const type = character.type;
-    if (!acc[type]) {
-      acc[type] = [];
+
+    if (!acc[school]) {
+      acc[school] = {};
     }
-    acc[type].push(character);
+    if (!acc[school][type]) {
+      acc[school][type] = [];
+    }
+    acc[school][type].push(character);
     return acc;
   }, {});
 
-  // Get the type keys for iteration
-  const typeKeys = Object.keys(charactersByType);
+  React.useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes skeleton {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
-  const toggleType = (type) => {
-    const newExpanded = new Set(expandedTypes);
-    if (newExpanded.has(type)) {
-      newExpanded.delete(type);
+  React.useEffect(() => {
+    const preloadImages = () => {
+      const visibleCharacters = [];
+
+      expandedSchools.forEach((school) => {
+        if (charactersBySchool[school]) {
+          Object.entries(charactersBySchool[school]).forEach(
+            ([type, chars]) => {
+              if (expandedTypes.has(`${school}-${type}`)) {
+                visibleCharacters.push(...chars);
+              }
+            }
+          );
+        }
+      });
+
+      visibleCharacters.slice(0, 6).forEach((character) => {
+        if (character.src) {
+          const img = new Image();
+          img.src = character.src;
+        }
+      });
+    };
+
+    preloadImages();
+  }, [expandedSchools, expandedTypes, charactersBySchool]);
+
+  const schoolKeys = Object.keys(charactersBySchool);
+
+  const toggleSchool = (school) => {
+    const newExpanded = new Set(expandedSchools);
+    if (newExpanded.has(school)) {
+      newExpanded.delete(school);
     } else {
-      newExpanded.add(type);
+      newExpanded.add(school);
+    }
+    setExpandedSchools(newExpanded);
+  };
+
+  const toggleType = (typeId) => {
+    const newExpanded = new Set(expandedTypes);
+    if (newExpanded.has(typeId)) {
+      newExpanded.delete(typeId);
+    } else {
+      newExpanded.add(typeId);
     }
     setExpandedTypes(newExpanded);
   };
 
-  const toggleAllTypes = () => {
-    if (expandedTypes.size === typeKeys.length) {
+  const toggleAllSchools = () => {
+    if (expandedSchools.size === schoolKeys.length) {
+      setExpandedSchools(new Set());
       setExpandedTypes(new Set());
     } else {
-      setExpandedTypes(new Set(typeKeys));
+      setExpandedSchools(new Set(schoolKeys));
+
+      const allTypeIds = [];
+      Object.entries(charactersBySchool).forEach(([school, schoolData]) => {
+        Object.keys(schoolData).forEach((type) => {
+          allTypeIds.push(`${school}-${type}`);
+        });
+      });
+      setExpandedTypes(new Set(allTypeIds));
     }
   };
 
-  const styles = getCharacterGalleryStyles(theme);
+  const styles = createCharacterGalleryStyles(theme);
 
   return (
     <div style={styles.container}>
@@ -296,40 +350,32 @@ export const CharacterGallery = ({ characters = ILVERMORNY_CHARACTERS }) => {
             <h1 style={styles.title}>Character Gallery</h1>
             <p style={styles.subtitle}>
               Explore students, teachers, and other important individuals from
-              Ilvermorny.
+              magical schools around the world.
             </p>
           </div>
         </div>
         <div style={styles.headerRight}>
-          <button style={styles.toggleAllButton} onClick={toggleAllTypes}>
-            {expandedTypes.size === typeKeys.length
+          <button style={styles.toggleAllButton} onClick={toggleAllSchools}>
+            {expandedSchools.size === schoolKeys.length &&
+            expandedTypes.size > 0
               ? "Collapse All"
               : "Expand All"}
           </button>
         </div>
       </div>
 
-      <div style={styles.statsBar}>
-        <div style={styles.statItem}>
-          <MapPin size={16} color={theme.accent} />
-          <span>Total Characters: {characters.length}</span>
-        </div>
-        <div style={styles.statItem}>
-          <Calendar size={16} color={theme.accent} />
-          <span>Categories: {typeKeys.length}</span>
-        </div>
-      </div>
-
-      <div style={styles.typeContainer}>
-        {typeKeys.map((type) => (
-          <Section
-            key={type}
-            type={type}
-            characters={charactersByType[type]}
+      <div style={styles.schoolContainer}>
+        {schoolKeys.map((school) => (
+          <SchoolSection
+            key={school}
+            school={school}
+            schoolData={charactersBySchool[school]}
             theme={theme}
             styles={styles}
-            isExpanded={expandedTypes.has(type)}
-            onToggle={() => toggleType(type)}
+            isSchoolExpanded={expandedSchools.has(school)}
+            onSchoolToggle={() => toggleSchool(school)}
+            expandedTypes={expandedTypes}
+            onTypeToggle={toggleType}
           />
         ))}
       </div>

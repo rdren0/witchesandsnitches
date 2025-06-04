@@ -17,25 +17,59 @@ import Seth from "./Seth_Claw_1.png";
 import Shelby from "./Shelby_MGH_1.png";
 import Tony from "./Tony_DeLuca_1.png";
 import Warren from "./Warren_Ceredaryk_1.png";
+import Barbuscio from "./Barbuscio.png";
+import Bashir from "./Bashir.png";
+import Carrera from "./Carrera.png";
+import Drummond from "./Drummond.png";
+import Duncan from "./Duncan.png";
+import Anana from "./Anana.png";
+import Hart from "./Hart.png";
+import Jackson from "./Jackson.jpg";
+import Kisio from "./Kisio.png";
+import Loo from "./Loo.png";
+import McNab from "./McNab.png";
+import Melvin from "./Melvin.png";
+import Muhoza from "./Muhoza.png";
+import Nyxi from "./Nyxi.jpg";
+import Rogers from "./Rogers.png";
+import Siemens from "./Siemens.png";
+import Tolman from "./Tolman.png";
 
 export {
   Anuhea,
   Ava,
   Azha,
   Bailey_Anna,
+  Barbuscio,
+  Bashir,
+  Carrera,
   Claire,
   Colby,
+  Drummond,
+  Duncan,
   Erika,
+  Anana,
   Genesis,
   Harmony,
+  Hart,
+  Jackson,
   Jeremiah,
+  Kisio,
+  Loo,
   Maddie,
+  McNab,
+  Melvin,
+  Muhoza,
   Noah,
+  Nyxi,
   Olivia,
   Omari,
+  Rogers,
   Rome,
   Seth,
   Shelby,
+  Siemens,
+  Tolman,
   Tony,
   Warren,
 };
