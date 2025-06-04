@@ -4,7 +4,6 @@ import {
   ChevronDown,
   ChevronUp,
   Calendar,
-  MapPin,
   GraduationCap,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
