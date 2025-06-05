@@ -221,8 +221,14 @@ const CharacterSheet = ({
               </div>
             </div>
 
-            <div style={styles.combatStats}>
-              <div style={{ ...styles.statCard, ...styles.statCardRed }}>
+            <div style={{ ...styles.combatStats }}>
+              <div
+                style={{
+                  ...styles.statCard,
+                  ...styles.statCardRed,
+                  cursor: "default",
+                }}
+              >
                 <Heart className="w-6 h-6 text-red-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueRed }}>
                   {character.hitPoints}
@@ -231,7 +237,13 @@ const CharacterSheet = ({
                   Hit Points
                 </div>
               </div>
-              <div style={{ ...styles.statCard, ...styles.statCardBlue }}>
+              <div
+                style={{
+                  ...styles.statCard,
+                  ...styles.statCardBlue,
+                  cursor: "default",
+                }}
+              >
                 <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
                   {character.armorClass}

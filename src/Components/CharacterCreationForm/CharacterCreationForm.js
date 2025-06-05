@@ -101,6 +101,7 @@ const CharacterCreationForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
 
   const rollAllStats = () => {
     const newStats = [];
@@ -157,6 +158,7 @@ const CharacterCreationForm = ({
     setExpandedFeats(new Set());
     setFeatFilter("");
     setTempInputValues({});
+    setMagicModifierTempValues({}); // Add this line
     setActiveTab("create");
     setIsHpManualMode(false);
     setRolledHp(null);
@@ -1127,14 +1129,51 @@ const CharacterCreationForm = ({
                     <label style={styles.magicModifierLabel}>{label}</label>
                     <input
                       type="number"
-                      value={character.magicModifiers[key]}
-                      onChange={(e) =>
-                        handleInputChange(
-                          `magicModifiers.${key}`,
-                          parseInt(e.target.value) || 0
-                        )
+                      value={
+                        magicModifierTempValues.hasOwnProperty(key)
+                          ? magicModifierTempValues[key]
+                          : character.magicModifiers[key]
                       }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Store the temporary input value to allow typing "-"
+                        setMagicModifierTempValues((prev) => ({
+                          ...prev,
+                          [key]: value,
+                        }));
+                      }}
+                      onBlur={() => {
+                        // On blur, parse and commit the final value
+                        const tempValue = magicModifierTempValues[key];
+                        if (tempValue !== undefined) {
+                          const numValue =
+                            tempValue === "" || tempValue === "-"
+                              ? 0
+                              : parseInt(tempValue, 10);
+                          const finalValue = isNaN(numValue) ? 0 : numValue;
+
+                          handleInputChange(
+                            `magicModifiers.${key}`,
+                            finalValue
+                          );
+
+                          // Clear the temporary input value
+                          setMagicModifierTempValues((prev) => {
+                            const newState = { ...prev };
+                            delete newState[key];
+                            return newState;
+                          });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.target.blur();
+                        }
+                      }}
                       style={styles.magicModifierInput}
+                      min="-99"
+                      max="99"
+                      step="1"
                     />
                   </div>
                 ))}

@@ -231,6 +231,15 @@ const createCharacterSheetStyles = (theme) => ({
     transition: "all 0.2s ease",
     cursor: "pointer",
   },
+  statCardHoverDefault: {
+    backgroundColor: "red",
+    border: `2px solid ${theme.border}`,
+    borderRadius: "12px",
+    padding: "16px",
+    textAlign: "center",
+    transition: "all 0.2s ease",
+    cursor: "pointer",
+  },
   statCardRed: {
     borderColor: "#ef4444",
   },
