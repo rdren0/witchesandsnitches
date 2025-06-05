@@ -1,20 +1,21 @@
 import { useState } from "react";
-import { styles } from "../CharacterSheet/styles";
 import { formatModifier, modifiers } from "../CharacterSheet/utils";
 import { useRollFunctions } from "../../App/diceRoller";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getAbilityScoresStyles } from "../../styles/masterStyles";
 
 const AbilityScores = ({ character }) => {
   const { rollAbility } = useRollFunctions();
-
+  const { theme } = useTheme();
+  const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
   const characterModifiers = modifiers(character);
 
-  const clickableAbilityStyle = {
+  const getClickableAbilityStyle = (ability) => ({
     ...styles.abilityItem,
     cursor: isRolling ? "not-allowed" : "pointer",
-    transition: "all 0.2s",
     opacity: isRolling ? 0.5 : 1,
-  };
+  });
 
   return (
     <div style={styles.abilityCard}>
@@ -30,7 +31,7 @@ const AbilityScores = ({ character }) => {
         ].map((ability) => (
           <div
             key={ability.key}
-            style={clickableAbilityStyle}
+            style={getClickableAbilityStyle(ability)}
             onClick={() =>
               !isRolling &&
               rollAbility({
@@ -41,6 +42,24 @@ const AbilityScores = ({ character }) => {
                 character,
               })
             }
+            onMouseEnter={(e) => {
+              if (!isRolling) {
+                Object.assign(e.target.style, {
+                  backgroundColor: theme.background,
+                  transform: "translateY(-2px)",
+                  boxShadow: `0 4px 8px ${theme.primary}20`,
+                });
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isRolling) {
+                Object.assign(e.target.style, {
+                  backgroundColor: theme.surface,
+                  transform: "translateY(0)",
+                  boxShadow: "none",
+                });
+              }
+            }}
             title={`Click to roll ${ability.name} check (d20 + ${formatModifier(
               characterModifiers[ability.key]
             )})`}

@@ -1,5 +1,4 @@
 import { RefreshCw, Trash } from "lucide-react";
-
 import { useTheme } from "../../contexts/ThemeContext";
 import { createAbilityScorePickerStyles } from "../../styles/masterStyles";
 
@@ -21,6 +20,7 @@ export const AbilityScorePicker = ({
 }) => {
   const { theme } = useTheme();
   const styles = createAbilityScorePickerStyles(theme);
+
   const toggleManualMode = () => {
     const newManualMode = !isManualMode;
     setIsManualMode(newManualMode);
@@ -99,8 +99,16 @@ export const AbilityScorePicker = ({
                   ...styles.button,
                   backgroundColor: "#EF4444",
                 }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#DC2626";
+                  e.target.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#EF4444";
+                  e.target.style.transform = "translateY(0)";
+                }}
               >
-                <RefreshCw />
+                <RefreshCw size={16} />
                 Roll For Stats
               </button>
             )}
@@ -112,12 +120,16 @@ export const AbilityScorePicker = ({
               marginTop: "4px",
               width: "44px",
               height: "24px",
-              backgroundColor: isManualMode ? "#10B981" : "#D1D5DB",
+              backgroundColor: isManualMode
+                ? theme.success || "#10B981"
+                : "#D1D5DB",
               borderRadius: "12px",
               cursor: "pointer",
               transition: "background-color 0.2s ease",
               border: "2px solid",
-              borderColor: isManualMode ? "#10B981" : "#9CA3AF",
+              borderColor: isManualMode
+                ? theme.success || "#10B981"
+                : "#9CA3AF",
             }}
           >
             <div
@@ -179,7 +191,12 @@ export const AbilityScorePicker = ({
             key={ability}
             style={{
               ...styles.abilityCard,
-              backgroundColor: score !== null ? "#F0FDF4" : "white",
+              backgroundColor:
+                score !== null
+                  ? `${theme.success || "#10B981"}20`
+                  : theme.surface,
+              borderColor:
+                score !== null ? theme.success || "#10B981" : theme.border,
             }}
           >
             <div style={styles.abilityName}>{ability}</div>
@@ -206,7 +223,6 @@ export const AbilityScorePicker = ({
                       onChange={(e) =>
                         handleManualScoreChange(ability, e.target.value)
                       }
-                      onBlur={() => handleManualScoreBlur(ability)}
                       style={{
                         ...styles.input,
                         textAlign: "center",
@@ -215,6 +231,13 @@ export const AbilityScorePicker = ({
                         width: "60px",
                         padding: "4px",
                       }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = theme.primary;
+                      }}
+                      onBlur={(e) => {
+                        handleManualScoreBlur(ability);
+                        e.target.style.borderColor = theme.border;
+                      }}
                     />
                   ) : (
                     <div style={styles.abilityScore}>{score}</div>
@@ -222,8 +245,16 @@ export const AbilityScorePicker = ({
                   <button
                     onClick={() => clearStat(ability)}
                     style={styles.trashButton}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = "#DC2626";
+                      e.target.style.transform = "scale(1.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "#EF4444";
+                      e.target.style.transform = "scale(1)";
+                    }}
                   >
-                    <Trash />
+                    <Trash size={16} />
                   </button>
                 </div>
               </>
@@ -247,6 +278,9 @@ export const AbilityScorePicker = ({
                       width: "80px",
                       padding: "4px",
                     }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
                   />
                 ) : (
                   <select
@@ -254,7 +288,16 @@ export const AbilityScorePicker = ({
                     onChange={(e) =>
                       assignStat(ability, parseInt(e.target.value))
                     }
-                    style={styles.assignSelect}
+                    style={{
+                      ...styles.assignSelect,
+                      borderColor: theme.border,
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
                   >
                     <option value="">Assign...</option>
                     {availableStats.map((stat, index) => (
@@ -273,4 +316,5 @@ export const AbilityScorePicker = ({
     </div>
   );
 };
+
 export default AbilityScorePicker;

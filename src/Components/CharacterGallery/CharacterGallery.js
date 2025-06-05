@@ -7,7 +7,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterGalleryStyles } from ".././../styles/masterStyles";
+import { getCharacterGalleryStyles } from ".././../styles/masterStyles";
 import { ALL_CHARACTERS } from "./characters";
 
 const CharacterCard = ({ character, theme, styles }) => {
@@ -334,7 +334,7 @@ export const CharacterGallery = ({ characters = ALL_CHARACTERS }) => {
     }
   };
 
-  const styles = createCharacterGalleryStyles(theme);
+  const styles = getCharacterGalleryStyles(theme);
 
   return (
     <div style={styles.container}>

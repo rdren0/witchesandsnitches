@@ -4,7 +4,7 @@ import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterSheetStyles } from "../../styles/masterStyles";
+import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions } from "../../App/diceRoller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
@@ -19,7 +19,7 @@ const CharacterSheet = ({
   const { rollInitiative } = useRollFunctions();
 
   const { theme } = useTheme();
-  const styles = createCharacterSheetStyles(theme);
+  const styles = getCharacterSheetStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
 
   const [character, setCharacter] = useState(null);

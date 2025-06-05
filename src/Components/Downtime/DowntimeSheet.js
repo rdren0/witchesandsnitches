@@ -1,7 +1,12 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getDowntimeStyles } from "../../styles/masterStyles";
 
 const DowntimeSheet = () => {
+  const { theme } = useTheme();
+  const styles = getDowntimeStyles(theme);
+
   // List of available activities
   const availableActivities = [
     "",
@@ -802,177 +807,6 @@ const DowntimeSheet = () => {
     XLSX.writeFile(wb, filename);
   };
 
-  const styles = {
-    container: {
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "20px",
-      fontFamily: "Arial, sans-serif",
-      fontSize: "12px",
-      backgroundColor: "#f8f9fa",
-    },
-    sheet: {
-      backgroundColor: "white",
-      border: "2px solid #333",
-      borderRadius: "8px",
-      overflow: "hidden",
-    },
-    headerSection: {
-      display: "grid",
-      gridTemplateColumns: "2fr 2fr",
-      borderBottom: "2px solid #333",
-    },
-    nameSection: {
-      padding: "12px",
-      borderRight: "2px solid #333",
-    },
-    gradesSection: {
-      padding: "12px",
-      textAlign: "center",
-      fontWeight: "bold",
-      fontSize: "14px",
-      backgroundColor: "#e9ecef",
-      borderBottom: "2px solid #333",
-    },
-    yearSemesterSection: {
-      display: "grid",
-      gridTemplateColumns: "2fr 1fr",
-      borderBottom: "2px solid #333",
-    },
-    typeSection: {
-      padding: "12px",
-    },
-    semesterSection: {
-      padding: "12px",
-    },
-    subjectsGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(3, 1fr)",
-      borderBottom: "2px solid #333",
-    },
-    subjectColumn: {
-      borderRight: "2px solid #333",
-      "&:last-child": {
-        borderRight: "none",
-      },
-    },
-    subjectItem: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "8px 12px",
-      borderBottom: "1px solid #dee2e6",
-    },
-    activitiesSection: {
-      borderBottom: "2px solid #333",
-    },
-    activityRow: {
-      display: "grid",
-      gridTemplateColumns: "60px 1fr",
-      alignItems: "center",
-      padding: "12px",
-      borderBottom: "1px solid #dee2e6",
-      gap: "8px",
-    },
-    relationshipRow: {
-      display: "grid",
-      gridTemplateColumns: "50px 1fr auto auto",
-      alignItems: "center",
-      padding: "12px",
-      borderBottom: "1px solid #dee2e6",
-      gap: "8px",
-      backgroundColor: "#f8f9fa",
-    },
-    relationshipInput: {
-      border: "1px solid #ced4da",
-      borderRadius: "4px",
-      padding: "4px 8px",
-      alignItems: "left",
-      fontSize: "12px",
-      width: "100%",
-    },
-    activityHeader: {
-      backgroundColor: "#e9ecef",
-      fontWeight: "bold",
-      padding: "12px",
-      borderBottom: "2px solid #333",
-    },
-    input: {
-      border: "1px solid #ced4da",
-      borderRadius: "4px",
-      padding: "4px 8px",
-      fontSize: "12px",
-      width: "100%",
-    },
-    select: {
-      border: "1px solid #ced4da",
-      borderRadius: "4px",
-      padding: "4px 8px",
-      fontSize: "12px",
-      width: "100%",
-      backgroundColor: "white",
-      cursor: "pointer",
-    },
-    gradeInput: {
-      border: "1px solid #ced4da",
-      borderRadius: "4px",
-      padding: "2px 6px",
-      fontSize: "11px",
-      width: "40px",
-      textAlign: "center",
-    },
-    checkbox: {
-      margin: "0 4px",
-    },
-    checkboxRow: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      flexWrap: "wrap",
-    },
-    successCheckboxes: {
-      display: "flex",
-      gap: "4px",
-    },
-    magicSchoolSection: {
-      padding: "16px",
-      backgroundColor: "#f8f9fa",
-    },
-    sectionTitle: {
-      fontWeight: "bold",
-      fontSize: "14px",
-      marginBottom: "8px",
-    },
-    radioGroup: {
-      display: "flex",
-      justifyContent: "space-between",
-      gap: "16px",
-      marginTop: "12px",
-    },
-    magicSchoolItem: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "8px",
-    },
-    exportButton: {
-      backgroundColor: "#28a745",
-      color: "white",
-      border: "none",
-      borderRadius: "6px",
-      padding: "12px 24px",
-      fontSize: "14px",
-      fontWeight: "bold",
-      cursor: "pointer",
-      marginBottom: "16px",
-      transition: "background-color 0.2s ease",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    },
-    exportButtonHover: {
-      backgroundColor: "#218838",
-    },
-  };
-
   const subjects = [
     [
       "Transfiguration",
@@ -1005,8 +839,10 @@ const DowntimeSheet = () => {
       <button
         onClick={exportToExcel}
         style={styles.exportButton}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = "#218838")}
-        onMouseLeave={(e) => (e.target.style.backgroundColor = "#28a745")}
+        onMouseEnter={(e) => (e.target.style.backgroundColor = theme.primary)}
+        onMouseLeave={(e) =>
+          (e.target.style.backgroundColor = theme.success || "#28a745")
+        }
       >
         📥 Download Excel File
       </button>
@@ -1071,7 +907,11 @@ const DowntimeSheet = () => {
           {subjects.map((column, columnIndex) => (
             <div
               key={columnIndex}
-              style={columnIndex < 2 ? { borderRight: "2px solid #333" } : {}}
+              style={
+                columnIndex < 2
+                  ? { borderRight: `2px solid ${theme.border}` }
+                  : {}
+              }
             >
               {column.map((subject) => (
                 <div key={subject} style={styles.subjectItem}>
@@ -1208,6 +1048,7 @@ const DowntimeSheet = () => {
                       fontSize: "16px",
                       fontWeight: 400,
                       fontStyle: "italic",
+                      color: theme.text,
                     }}
                   >
                     {school}

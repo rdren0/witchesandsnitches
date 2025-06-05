@@ -409,35 +409,6 @@ const ThemeSettings = () => {
 
   return (
     <div style={styles.container}>
-      {/* Debug Info - Remove this in production */}
-      <div
-        style={{
-          backgroundColor: theme.surface,
-          border: `1px solid ${theme.border}`,
-          borderRadius: "8px",
-          padding: "16px",
-          marginBottom: "16px",
-          fontSize: "12px",
-          fontFamily: "monospace",
-        }}
-      >
-        <strong>Debug Info:</strong>
-        <br />
-        Current themeMode: {themeMode}
-        <br />
-        Current themeHouse: {themeHouse}
-        <br />
-        App selectedCharacter:{" "}
-        {selectedCharacter
-          ? selectedCharacter.name + " (" + selectedCharacter.house + ")"
-          : "null"}
-        <br />
-        localStorage app-theme: {localStorage.getItem("app-theme")}
-        <br />
-        localStorage app-theme-house: {localStorage.getItem("app-theme-house")}
-      </div>
-
-      {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerOverlay} />
         <div style={styles.headerContent}>
@@ -454,7 +425,6 @@ const ThemeSettings = () => {
         </div>
       </div>
 
-      {/* Theme Selection */}
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>
           <Palette size={20} />

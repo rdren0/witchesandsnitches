@@ -1113,7 +1113,7 @@ export const createAbilityScorePickerStyles = (theme) => ({
   },
   abilityGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
     gap: "16px",
   },
   abilityCard: {
@@ -3290,6 +3290,190 @@ export const createCharacterGalleryStyles = (theme) => ({
     lineHeight: "1.3",
   },
 });
+export const createDowntimeStyles = (theme) => ({
+  container: {
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "20px",
+    fontFamily: "Arial, sans-serif",
+    fontSize: "12px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    minHeight: "100vh",
+  },
+  sheet: {
+    backgroundColor: theme.surface,
+    border: `2px solid ${theme.border}`,
+    borderRadius: "8px",
+    overflow: "hidden",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  headerSection: {
+    display: "grid",
+    gridTemplateColumns: "2fr 2fr",
+    borderBottom: `2px solid ${theme.border}`,
+  },
+  nameSection: {
+    padding: "12px",
+    borderRight: `2px solid ${theme.border}`,
+  },
+  gradesSection: {
+    padding: "12px",
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: "14px",
+    backgroundColor: theme.primary + "20",
+    borderBottom: `2px solid ${theme.border}`,
+    color: theme.text,
+  },
+  yearSemesterSection: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr",
+    borderBottom: `2px solid ${theme.border}`,
+  },
+  typeSection: {
+    padding: "12px",
+  },
+  semesterSection: {
+    padding: "12px",
+  },
+  subjectsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    borderBottom: `2px solid ${theme.border}`,
+  },
+  subjectColumn: {
+    borderRight: `2px solid ${theme.border}`,
+    "&:last-child": {
+      borderRight: "none",
+    },
+  },
+  subjectItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px 12px",
+    borderBottom: `1px solid ${theme.border}`,
+  },
+  activitiesSection: {
+    borderBottom: `2px solid ${theme.border}`,
+  },
+  activityRow: {
+    display: "grid",
+    gridTemplateColumns: "60px 1fr",
+    alignItems: "center",
+    padding: "12px",
+    borderBottom: `1px solid ${theme.border}`,
+    gap: "8px",
+  },
+  relationshipRow: {
+    display: "grid",
+    gridTemplateColumns: "50px 1fr auto auto",
+    alignItems: "center",
+    padding: "12px",
+    borderBottom: `1px solid ${theme.border}`,
+    gap: "8px",
+    backgroundColor: theme.background,
+  },
+  relationshipInput: {
+    border: `1px solid ${theme.border}`,
+    borderRadius: "4px",
+    padding: "4px 8px",
+    alignItems: "left",
+    fontSize: "12px",
+    width: "100%",
+    backgroundColor: theme.surface,
+    color: theme.text,
+  },
+  activityHeader: {
+    backgroundColor: theme.primary + "20",
+    fontWeight: "bold",
+    padding: "12px",
+    borderBottom: `2px solid ${theme.border}`,
+    color: theme.text,
+  },
+  input: {
+    border: `1px solid ${theme.border}`,
+    borderRadius: "4px",
+    padding: "4px 8px",
+    fontSize: "12px",
+    width: "100%",
+    backgroundColor: theme.surface,
+    color: theme.text,
+  },
+  select: {
+    border: `1px solid ${theme.border}`,
+    borderRadius: "4px",
+    padding: "4px 8px",
+    fontSize: "12px",
+    width: "100%",
+    backgroundColor: theme.surface,
+    color: theme.text,
+    cursor: "pointer",
+  },
+  gradeInput: {
+    border: `1px solid ${theme.border}`,
+    borderRadius: "4px",
+    padding: "2px 6px",
+    fontSize: "11px",
+    width: "40px",
+    textAlign: "center",
+    backgroundColor: theme.surface,
+    color: theme.text,
+  },
+  checkbox: {
+    margin: "0 4px",
+    accentColor: theme.primary,
+  },
+  checkboxRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flexWrap: "wrap",
+  },
+  successCheckboxes: {
+    display: "flex",
+    gap: "4px",
+  },
+  magicSchoolSection: {
+    padding: "16px",
+    backgroundColor: theme.background,
+  },
+  sectionTitle: {
+    fontWeight: "bold",
+    fontSize: "14px",
+    marginBottom: "8px",
+    color: theme.text,
+  },
+  radioGroup: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "16px",
+    marginTop: "12px",
+  },
+  magicSchoolItem: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
+  },
+  exportButton: {
+    backgroundColor: theme.success || "#28a745",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "12px 24px",
+    fontSize: "14px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    marginBottom: "16px",
+    transition: "background-color 0.2s ease",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+  exportButtonHover: {
+    backgroundColor: theme.primary,
+  },
+});
 
 // ==================== EXPORT ALL STYLES ====================
 export const getAllStyles = (theme) => ({
@@ -3309,7 +3493,7 @@ export const getAllStyles = (theme) => ({
 // Individual style exports for components that prefer specific functions
 export {
   createAppStyles as createThemedStyles,
-  createCharacterSheetStyles,
+  createCharacterSheetStyles as getCharacterSheetStyles,
   createAbilityScoresStyles as getAbilityScoresStyles,
   createSkillsStyles as getSkillsStyles,
   createCharacterCreationStyles as getStyles,
@@ -3321,4 +3505,5 @@ export {
   createFeatStyles as getFeatStyles,
   createInventoryStyles as getInventoryStyles,
   createCharacterGalleryStyles as getCharacterGalleryStyles,
+  createDowntimeStyles as getDowntimeStyles,
 };
