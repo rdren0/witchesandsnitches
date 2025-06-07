@@ -369,16 +369,6 @@ const Bank = () => {
               ...styles.button,
               ...(hasInput ? styles.addButton : styles.addButtonDisabled),
             }}
-            onMouseEnter={(e) => {
-              if (hasInput) {
-                e.target.style.backgroundColor = "#059669";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (hasInput) {
-                e.target.style.backgroundColor = theme.success || "#10B981";
-              }
-            }}
           >
             <Plus size={18} />
             Add
@@ -390,16 +380,6 @@ const Bank = () => {
             style={{
               ...styles.button,
               ...(hasInput ? styles.removeButton : styles.removeButtonDisabled),
-            }}
-            onMouseEnter={(e) => {
-              if (hasInput) {
-                e.target.style.backgroundColor = "#DC2626";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (hasInput) {
-                e.target.style.backgroundColor = theme.error || "#EF4444";
-              }
             }}
           >
             <Minus size={18} />

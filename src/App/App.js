@@ -162,16 +162,6 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
             onClick={handleEdit}
             style={styles.editButton}
             title="Edit username"
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor =
-                styles.editButtonHover.backgroundColor;
-              e.target.style.color = styles.editButtonHover.color;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor =
-                styles.editButton.backgroundColor;
-              e.target.style.color = styles.editButton.color;
-            }}
           >
             <Edit3 size={14} />
           </button>
@@ -200,15 +190,6 @@ const AuthComponent = ({
           onClick={() => navigate("/theme-settings")}
           style={styles.themeButton}
           title="Theme Settings"
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor =
-              styles.themeButtonHover.backgroundColor;
-            e.target.style.borderColor = styles.themeButtonHover.borderColor;
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = styles.themeButton.backgroundColor;
-            e.target.style.borderColor = styles.themeButton.borderColor;
-          }}
         >
           <Palette size={16} color={theme.primary} />
         </button>
@@ -263,15 +244,6 @@ const AuthComponent = ({
         onClick={() => navigate("/theme-settings")}
         style={styles.themeButton}
         title="Theme Settings"
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor =
-            styles.themeButtonHover.backgroundColor;
-          e.target.style.borderColor = styles.themeButtonHover.borderColor;
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = styles.themeButton.backgroundColor;
-          e.target.style.borderColor = styles.themeButton.borderColor;
-        }}
       >
         <Palette size={16} color={theme.primary} />
       </button>
@@ -355,20 +327,6 @@ const Navigation = ({ characters, user }) => {
               ...(isActive ? styles.tabButtonActive : {}),
             }}
             onClick={() => navigate(tab.path)}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                e.target.style.backgroundColor =
-                  styles.tabButtonHover.backgroundColor;
-                e.target.style.borderColor = styles.tabButtonHover.borderColor;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                e.target.style.backgroundColor =
-                  styles.tabButton.backgroundColor;
-                e.target.style.borderColor = styles.tabButton.borderColor;
-              }
-            }}
           >
             {tab.label}
           </button>
@@ -435,18 +393,6 @@ const CharacterSubNavigation = () => {
                 minWidth: "120px",
               }}
               onClick={() => navigate(subtab.path)}
-              onMouseEnter={(e) => {
-                if (!active) {
-                  e.target.style.backgroundColor = theme.surface;
-                  e.target.style.color = theme.text;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  e.target.style.backgroundColor = "transparent";
-                  e.target.style.color = theme.textSecondary;
-                }
-              }}
             >
               {subtab.label}
             </button>
@@ -948,6 +894,7 @@ function AppContent() {
                   }}
                   selectedCharacterId={selectedCharacter?.id}
                   onSelectedCharacterReset={resetSelectedCharacter}
+                  supabase={supabase}
                 />
               </ProtectedRoute>
             }

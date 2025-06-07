@@ -1,15 +1,18 @@
 import { Star, BookOpenText, User, Trash } from "lucide-react";
 import { createCharacterCreationStyles } from "../../styles/masterStyles";
 import { useTheme } from "../../contexts/ThemeContext";
+import React from "react";
+
 export const SavedCharacters = ({
   isLoading,
   savedCharacters,
-  deleteCharacter,
+  archiveCharacter,
   editCharacter,
   maxCharacters,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
+
   return (
     <>
       <h2 style={styles.sectionHeader}>
@@ -79,11 +82,12 @@ export const SavedCharacters = ({
                     <User />
                   </button>
                   <button
-                    onClick={() => deleteCharacter(char.id)}
+                    onClick={() => archiveCharacter(char.id)}
                     style={{
                       ...styles.actionButton,
                       backgroundColor: "#EF4444",
                     }}
+                    title="Archive Character"
                   >
                     <Trash />
                   </button>
@@ -117,16 +121,16 @@ export const SavedCharacters = ({
                     {Object.entries(char.magicModifiers)
                       .filter(([_, value]) => value !== 0)
                       .map(([key, value], index, array) => (
-                        <>
+                        <React.Fragment key={key}>
                           <br />
-                          <span key={key}>
+                          <span>
                             {key.charAt(0).toUpperCase() +
                               key.slice(1).replace(/([A-Z])/g, " $1")}
                             : {value > 0 ? "+" : ""}
                             {value}
                             {index < array.length - 1 ? ", " : ""}
                           </span>
-                        </>
+                        </React.Fragment>
                       ))}
                   </div>
                 )}

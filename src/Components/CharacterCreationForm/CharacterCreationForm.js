@@ -27,6 +27,7 @@ const CharacterCreationForm = ({
   onCharacterSaved,
   selectedCharacterId,
   onSelectedCharacterReset,
+  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -102,6 +103,20 @@ const CharacterCreationForm = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
+
+  const getActiveCharacterCount = async (discordUserId) => {
+    const { count, error } = await supabase
+      .from("characters")
+      .select("*", { count: "exact", head: true })
+      .eq("discord_user_id", discordUserId)
+      .eq("active", true);
+
+    if (error) {
+      throw new Error(`Failed to count characters: ${error.message}`);
+    }
+
+    return count;
+  };
 
   const rollAllStats = () => {
     const newStats = [];
@@ -581,22 +596,29 @@ const CharacterCreationForm = ({
     setActiveTab("create"); // Switch to create tab when editing
   };
 
-  const deleteCharacter = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this character?")) {
+  const archiveCharacter = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this character? (This can be undone by an administrator)"
+      )
+    ) {
       return;
     }
 
     try {
-      await characterService.deleteCharacter(id, discordUserId);
+      // Use the new archiveCharacter function instead of deleteCharacter
+      await characterService.archiveCharacter(id, discordUserId);
 
       const wasSelected =
         selectedCharacterId && selectedCharacterId.toString() === id.toString();
 
+      // Remove the character from the UI (it's now archived)
       const updatedCharacters = savedCharacters.filter(
         (char) => char.id !== id
       );
       setSavedCharacters(updatedCharacters);
 
+      // Handle selected character cleanup
       if (wasSelected) {
         if (updatedCharacters.length > 0) {
           const newSelectedCharacter = updatedCharacters[0];
@@ -617,7 +639,7 @@ const CharacterCreationForm = ({
       }
     } catch (err) {
       setError("Failed to delete character: " + err.message);
-      console.error("Error deleting character:", err);
+      console.error("Error archiving character:", err);
     }
   };
 
@@ -710,16 +732,6 @@ const CharacterCreationForm = ({
                     alignItems: "center",
                     gap: "8px",
                     transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.primary;
-                    e.target.style.transform = "translateY(-1px)";
-                    e.target.style.boxShadow = `0 4px 12px ${theme.success}40`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = theme.success;
-                    e.target.style.transform = "translateY(0)";
-                    e.target.style.boxShadow = "none";
                   }}
                 >
                   <Wand />
@@ -1239,16 +1251,6 @@ const CharacterCreationForm = ({
               <button
                 onClick={createNewCharacter}
                 style={styles.createNewButtonInSaved}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = theme.secondary;
-                  e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow = `0 4px 12px ${theme.primary}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = theme.primary;
-                  e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "none";
-                }}
               >
                 <Wand />
                 Create New Character
@@ -1259,7 +1261,7 @@ const CharacterCreationForm = ({
               isLoading={isLoading}
               savedCharacters={savedCharacters}
               editCharacter={editCharacter}
-              deleteCharacter={deleteCharacter}
+              archiveCharacter={archiveCharacter}
               maxCharacters={MAX_CHARACTERS}
             />
           </div>

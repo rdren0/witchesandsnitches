@@ -99,14 +99,6 @@ export const AbilityScorePicker = ({
                   ...styles.button,
                   backgroundColor: "#EF4444",
                 }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#DC2626";
-                  e.target.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#EF4444";
-                  e.target.style.transform = "translateY(0)";
-                }}
               >
                 <RefreshCw size={16} />
                 Roll For Stats
@@ -245,14 +237,6 @@ export const AbilityScorePicker = ({
                   <button
                     onClick={() => clearStat(ability)}
                     style={styles.trashButton}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#DC2626";
-                      e.target.style.transform = "scale(1.1)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = "#EF4444";
-                      e.target.style.transform = "scale(1)";
-                    }}
                   >
                     <Trash size={16} />
                   </button>

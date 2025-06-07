@@ -3081,8 +3081,83 @@ export const createCharacterNotesStyles = (theme) => ({
 });
 
 export const createCharacterGalleryStyles = (theme) => ({
+  searchContainer: {
+    marginBottom: "24px",
+    padding: "20px",
+    backgroundColor: theme.surface,
+    borderRadius: "12px",
+    border: `2px solid ${theme.border}`,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+  },
+  searchInputContainer: {
+    position: "relative",
+    maxWidth: "500px",
+    margin: "0 auto",
+  },
+  searchInput: {
+    width: "100%",
+    padding: "12px 16px 12px 44px",
+    fontSize: "16px",
+    border: `2px solid ${theme.border}`,
+    borderRadius: "8px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    outline: "none",
+    transition: "border-color 0.2s ease",
+  },
+  searchIcon: {
+    position: "absolute",
+    left: "14px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: theme.textSecondary,
+  },
+  clearButton: {
+    position: "absolute",
+    right: "12px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    padding: "4px",
+    backgroundColor: "transparent",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    color: theme.textSecondary,
+  },
+  searchResults: {
+    marginBottom: "32px",
+  },
+  searchResultsHeader: {
+    padding: "16px 24px",
+    backgroundColor: theme.primary + "10",
+    borderRadius: "12px 12px 0 0",
+    border: `2px solid ${theme.primary}`,
+    borderBottom: "none",
+  },
+  searchResultsTitle: {
+    fontSize: "20px",
+    fontWeight: "600",
+    color: theme.text,
+    margin: "0 0 4px 0",
+  },
+  searchResultsCount: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+    margin: 0,
+  },
+  searchResultsContent: {
+    padding: "20px",
+    backgroundColor: theme.surface,
+    borderRadius: "0 0 12px 12px",
+    border: `2px solid ${theme.primary}`,
+    borderTop: "none",
+  },
+  noResults: {
+    textAlign: "center",
+    padding: "40px 20px",
+    color: theme.textSecondary,
+  },
   container: {
-    maxWidth: "1200px",
     margin: "0 auto",
     padding: "20px",
     backgroundColor: theme.background,
@@ -3275,18 +3350,6 @@ export const createCharacterGalleryStyles = (theme) => ({
   placeholderText: {
     fontSize: "12px",
     marginTop: "8px",
-  },
-  houseBadge: {
-    position: "absolute",
-    top: "12px",
-    right: "12px",
-    padding: "4px 8px",
-    borderRadius: "12px",
-    fontSize: "10px",
-    fontWeight: "600",
-    border: "1px solid",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
   },
   characterInfo: {
     padding: "16px",

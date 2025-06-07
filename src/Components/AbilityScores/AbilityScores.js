@@ -42,24 +42,6 @@ const AbilityScores = ({ character }) => {
                 character,
               })
             }
-            onMouseEnter={(e) => {
-              if (!isRolling) {
-                Object.assign(e.target.style, {
-                  backgroundColor: theme.background,
-                  transform: "translateY(-2px)",
-                  boxShadow: `0 4px 8px ${theme.primary}20`,
-                });
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isRolling) {
-                Object.assign(e.target.style, {
-                  backgroundColor: theme.surface,
-                  transform: "translateY(0)",
-                  boxShadow: "none",
-                });
-              }
-            }}
             title={`Click to roll ${ability.name} check (d20 + ${formatModifier(
               characterModifiers[ability.key]
             )})`}

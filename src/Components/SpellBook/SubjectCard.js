@@ -630,20 +630,6 @@ export const SubjectCard = ({
             ? { backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc" }
             : {}),
         }}
-        onMouseEnter={(e) => {
-          if (!isMastered) {
-            Object.assign(e.target.style, styles.tableRowHover);
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isMastered) {
-            e.target.style.backgroundColor = hasAttempts
-              ? theme === "dark"
-                ? "#1f2937"
-                : "#f8fafc"
-              : "transparent";
-          }
-        }}
       >
         <td style={{ ...styles.tableCell, width: "3rem" }}>{index + 1}</td>
         <td style={styles.tableCell}>
@@ -829,16 +815,6 @@ export const SubjectCard = ({
                 ? styles.attemptButtonDisabled
                 : {}),
             }}
-            onMouseEnter={(e) => {
-              if (!isMastered && !isAttempting && selectedCharacter) {
-                e.target.style.backgroundColor = "#2563eb";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isMastered && !isAttempting && selectedCharacter) {
-                e.target.style.backgroundColor = "#3b82f6";
-              }
-            }}
           >
             <Dice6 size={14} />
             {isAttempting ? "Rolling..." : "Attempt"}
@@ -865,13 +841,6 @@ export const SubjectCard = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor =
-                theme === "dark" ? "#4b5563" : "#f3f4f6";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "transparent";
             }}
           >
             <MoreVertical
@@ -911,13 +880,6 @@ export const SubjectCard = ({
                   alignItems: "center",
                   gap: "8px",
                   color: theme === "dark" ? "#d1d5db" : "#374151",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor =
-                    theme === "dark" ? "#4b5563" : "#f3f4f6";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "transparent";
                 }}
               >
                 <Edit3 size={14} />
@@ -1252,12 +1214,6 @@ export const SubjectCard = ({
             backgroundColor: levelColor.backgroundColor,
             borderColor: levelColor.borderColor,
             color: levelColor.color,
-          }}
-          onMouseEnter={(e) => {
-            Object.assign(e.target.style, styles.sectionButtonHover);
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.boxShadow = "none";
           }}
         >
           <div style={styles.sectionLeft}>

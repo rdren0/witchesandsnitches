@@ -81,34 +81,14 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
           Innate Heritage ({hasSelectedHeritage}/1 selected)
         </h3>
         {isHigherLevel && (
-          <div
-            style={{
-              backgroundColor: "#FEF3C7",
-              color: "#92400E",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "12px",
-              fontWeight: "bold",
-              border: "1px solid #F59E0B",
-            }}
-          >
+          <div style={styles.warningBadge}>
             ⚠️ Level {character.level} Character
           </div>
         )}
       </div>
 
       {isHigherLevel && (
-        <div
-          style={{
-            backgroundColor: "#FEE2E2",
-            border: "1px solid #FECACA",
-            color: "#DC2626",
-            padding: "12px",
-            borderRadius: "6px",
-            marginBottom: "12px",
-            fontSize: "14px",
-          }}
-        >
+        <div style={styles.levelRestrictionWarning}>
           <strong>⚠️ Level Restriction Warning:</strong> Innate Heritage
           selection is typically only available for Level 1 characters. Higher
           level characters should have their heritage established during
@@ -142,16 +122,6 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
               style={styles.featFilterClearButton}
               type="button"
               title="Clear search"
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#FCD34D";
-                e.target.style.transform = "translateY(-50%) scale(1.1)";
-                e.target.style.boxShadow = "0 3px 6px rgba(0,0,0,0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "#FBBF24";
-                e.target.style.transform = "translateY(-50%) scale(1)";
-                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-              }}
             >
               ×
             </button>
@@ -166,19 +136,7 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
       )}
 
       {hasSelectedHeritage === 1 && (
-        <div
-          style={{
-            backgroundColor: "#F0FDF4",
-            border: "2px solid #10B981",
-            color: "#059669",
-            padding: "12px",
-            borderRadius: "8px",
-            margin: "12px 0",
-            fontSize: "14px",
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
-        >
+        <div style={styles.completionMessage}>
           ✓ Heritage selected! Showing your chosen heritage. Uncheck to remove
           selection and see all heritages again.
         </div>
@@ -213,6 +171,7 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
                         cursor: "pointer",
                         accentColor: "#8B5CF6",
                         transform: "scale(1.2)",
+                        backgroundColor: "cyan",
                       }}
                     />
                     <span
@@ -249,8 +208,8 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
                     }
                   >
                     <ul>
-                      {heritageData?.benefits.map((benefit) => (
-                        <li>{benefit}</li>
+                      {heritageData?.benefits.map((benefit, index) => (
+                        <li key={index}>{benefit}</li>
                       )) || "No description available."}
                     </ul>
                   </div>
@@ -271,89 +230,29 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
       </div>
 
       {showWarning && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "24px",
-              borderRadius: "8px",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-              maxWidth: "400px",
-              margin: "20px",
-            }}
-          >
-            <h3 style={{ margin: "0 0 16px 0", color: "#DC2626" }}>
-              ⚠️ Level Restriction Warning
-            </h3>
-            <p
-              style={{
-                margin: "0 0 16px 0",
-                fontSize: "14px",
-                color: "#374151",
-              }}
-            >
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h3 style={styles.modalTitle}>⚠️ Level Restriction Warning</h3>
+            <p style={styles.modalText}>
               You are attempting to change the Innate Heritage of a Level{" "}
               {character.level} character. Heritage is typically established at
               character creation (Level 1). This change may require DM approval
               and could affect character balance.
             </p>
-            <p
-              style={{
-                margin: "0 0 20px 0",
-                fontSize: "14px",
-                color: "#374151",
-                fontWeight: "bold",
-              }}
-            >
+            <p style={styles.modalTextBold}>
               Are you sure you want to proceed?
             </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                justifyContent: "flex-end",
-              }}
-            >
+            <div style={styles.modalButtons}>
               <button
                 onClick={() => {
                   setShowWarning(false);
                   setPendingHeritage("");
                 }}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#6B7280",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
+                style={styles.modalCancelButton}
               >
                 Cancel
               </button>
-              <button
-                onClick={confirmChange}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#DC2626",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={confirmChange} style={styles.modalConfirmButton}>
                 Proceed Anyway
               </button>
             </div>
@@ -363,3 +262,5 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
     </div>
   );
 };
+
+export default InnateHeritage;

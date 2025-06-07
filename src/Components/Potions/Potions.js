@@ -225,16 +225,6 @@ const PotionBrewingSystem = ({ character }) => {
                     ? styles.potionItemSelected
                     : {}),
                 }}
-                onMouseEnter={(e) => {
-                  if (selectedPotion?.name !== potion.name) {
-                    Object.assign(e.target.style, styles.potionItemHover);
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedPotion?.name !== potion.name) {
-                    Object.assign(e.target.style, styles.potionItem);
-                  }
-                }}
               >
                 <div style={styles.potionHeader}>
                   <h3 style={styles.potionName}>{potion.name}</h3>

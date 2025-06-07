@@ -245,12 +245,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
           <button
             onClick={() => setShowNewEntryForm(true)}
             style={styles.newEntryButton}
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.newEntryButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.newEntryButton);
-            }}
           >
             <Plus size={16} />
             New Entry
@@ -276,12 +270,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
             <button
               onClick={() => createNewEntry(newEntryTitle)}
               style={styles.templateButton}
-              onMouseEnter={(e) => {
-                Object.assign(e.target.style, styles.templateButtonHover);
-              }}
-              onMouseLeave={(e) => {
-                Object.assign(e.target.style, styles.templateButton);
-              }}
             >
               <Zap size={16} />
               Blank Entry
@@ -290,12 +278,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "spell")}
               style={styles.templateButton}
-              onMouseEnter={(e) => {
-                Object.assign(e.target.style, styles.templateButtonHover);
-              }}
-              onMouseLeave={(e) => {
-                Object.assign(e.target.style, styles.templateButton);
-              }}
             >
               <Zap size={16} />
               Spell Template
@@ -304,12 +286,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "session")}
               style={styles.templateButton}
-              onMouseEnter={(e) => {
-                Object.assign(e.target.style, styles.templateButtonHover);
-              }}
-              onMouseLeave={(e) => {
-                Object.assign(e.target.style, styles.templateButton);
-              }}
             >
               <Calendar size={16} />
               Session Notes
@@ -318,12 +294,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "combat")}
               style={styles.templateButton}
-              onMouseEnter={(e) => {
-                Object.assign(e.target.style, styles.templateButtonHover);
-              }}
-              onMouseLeave={(e) => {
-                Object.assign(e.target.style, styles.templateButton);
-              }}
             >
               ⚔️ Combat Tactics
             </button>
@@ -331,12 +301,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
             <button
               onClick={() => createNewEntry(newEntryTitle, "", "relationship")}
               style={styles.templateButton}
-              onMouseEnter={(e) => {
-                Object.assign(e.target.style, styles.templateButtonHover);
-              }}
-              onMouseLeave={(e) => {
-                Object.assign(e.target.style, styles.templateButton);
-              }}
             >
               👥 Relationship
             </button>
@@ -477,12 +441,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
           <button
             onClick={() => insertTemplate("spell")}
             style={styles.templateButton}
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.templateButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.templateButton);
-            }}
           >
             <Zap size={14} />
             Spell
@@ -491,12 +449,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
           <button
             onClick={() => insertTemplate("session")}
             style={styles.templateButton}
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.templateButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.templateButton);
-            }}
           >
             <Calendar size={14} />
             Session
@@ -505,12 +457,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
           <button
             onClick={() => insertTemplate("combat")}
             style={styles.templateButton}
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.templateButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.templateButton);
-            }}
           >
             ⚔️ Combat
           </button>
@@ -518,12 +464,6 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
           <button
             onClick={() => insertTemplate("relationship")}
             style={styles.templateButton}
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.templateButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.templateButton);
-            }}
           >
             👥 Relationship
           </button>
@@ -564,12 +504,6 @@ const EntryCard = ({ entry, onEdit, onDelete, styles }) => {
             onClick={onEdit}
             style={styles.editEntryButton}
             title="Edit entry"
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.editEntryButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.editEntryButton);
-            }}
           >
             <Edit2 size={14} />
           </button>
@@ -577,12 +511,6 @@ const EntryCard = ({ entry, onEdit, onDelete, styles }) => {
             onClick={onDelete}
             style={styles.deleteEntryButton}
             title="Delete entry"
-            onMouseEnter={(e) => {
-              Object.assign(e.target.style, styles.deleteEntryButtonHover);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.target.style, styles.deleteEntryButton);
-            }}
           >
             <Trash2 size={14} />
           </button>

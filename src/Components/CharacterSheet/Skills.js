@@ -182,8 +182,6 @@ export const Skills = ({
                   : {}),
               }}
               onClick={() => handleSort("proficiency")}
-              onMouseEnter={() => setHoveredHeader("proficiency")}
-              onMouseLeave={() => setHoveredHeader(null)}
               title="Click to sort by proficiency"
             >
               <div style={styles.sortableHeader}>
@@ -202,8 +200,6 @@ export const Skills = ({
                   : {}),
               }}
               onClick={() => handleSort("modifier")}
-              onMouseEnter={() => setHoveredHeader("modifier")}
-              onMouseLeave={() => setHoveredHeader(null)}
               title="Click to sort by ability modifier"
             >
               <div style={styles.sortableHeader}>
@@ -222,8 +218,6 @@ export const Skills = ({
                   : {}),
               }}
               onClick={() => handleSort("skill")}
-              onMouseEnter={() => setHoveredHeader("skill")}
-              onMouseLeave={() => setHoveredHeader(null)}
               title="Click to sort by skill name"
             >
               <div style={styles.sortableHeader}>
@@ -242,8 +236,6 @@ export const Skills = ({
                   : {}),
               }}
               onClick={() => handleSort("bonus")}
-              onMouseEnter={() => setHoveredHeader("bonus")}
-              onMouseLeave={() => setHoveredHeader(null)}
               title="Click to sort by total bonus"
             >
               <div style={styles.sortableHeader}>
@@ -265,8 +257,6 @@ export const Skills = ({
                   ...styles.skillRow,
                   ...(hoveredSkill === skill.name ? styles.skillRowHover : {}),
                 }}
-                onMouseEnter={() => setHoveredSkill(skill.name)}
-                onMouseLeave={() => setHoveredSkill(null)}
               >
                 <td style={styles.skillCell}>
                   <div

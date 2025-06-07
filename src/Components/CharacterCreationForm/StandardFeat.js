@@ -1,6 +1,7 @@
 import { standardFeats } from "../data";
 import { createFeatStyles } from "../../styles/masterStyles";
 import { useTheme } from "../../contexts/ThemeContext";
+
 export const StandardFeat = ({
   character,
   setCharacter,
@@ -58,6 +59,7 @@ export const StandardFeat = ({
         feat.description.toLowerCase().includes(searchTerm)
     );
   };
+
   const filteredFeats = getFilteredFeats();
 
   return (
@@ -91,16 +93,6 @@ export const StandardFeat = ({
               style={styles.featFilterClearButton}
               type="button"
               title="Clear search"
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#FCD34D";
-                e.target.style.transform = "translateY(-50%) scale(1.1)";
-                e.target.style.boxShadow = "0 3px 6px rgba(0,0,0,0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "#FBBF24";
-                e.target.style.transform = "translateY(-50%) scale(1)";
-                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
-              }}
             >
               ×
             </button>
@@ -114,19 +106,7 @@ export const StandardFeat = ({
       )}
 
       {character.standardFeats.length === 1 && (
-        <div
-          style={{
-            backgroundColor: "#F0FDF4",
-            border: "2px solid #10B981",
-            color: "#059669",
-            padding: "12px",
-            borderRadius: "8px",
-            margin: "12px 0",
-            fontSize: "14px",
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
-        >
+        <div style={styles.completionMessage}>
           ✓ Feat selection complete! Showing your selected feat. Uncheck it to
           see all feats again.
         </div>
@@ -194,8 +174,8 @@ export const StandardFeat = ({
                     }
                   >
                     <ul>
-                      {feat.description.map((description) => (
-                        <li>{description}</li>
+                      {feat.description.map((description, index) => (
+                        <li key={index}>{description}</li>
                       ))}
                     </ul>
                   </div>
@@ -211,3 +191,4 @@ export const StandardFeat = ({
     </div>
   );
 };
+export default StandardFeat;

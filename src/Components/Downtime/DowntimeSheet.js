@@ -836,14 +836,7 @@ const DowntimeSheet = () => {
 
   return (
     <div style={styles.container}>
-      <button
-        onClick={exportToExcel}
-        style={styles.exportButton}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = theme.primary)}
-        onMouseLeave={(e) =>
-          (e.target.style.backgroundColor = theme.success || "#28a745")
-        }
-      >
+      <button onClick={exportToExcel} style={styles.exportButton}>
         📥 Download Excel File
       </button>
 

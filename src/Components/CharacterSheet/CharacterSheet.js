@@ -253,18 +253,6 @@ const CharacterSheet = ({
                 </div>
               </div>
               <div
-                onMouseEnter={(e) => {
-                  Object.assign(e.target.style, {
-                    ...styles.statCard,
-                    ...styles.statCardGreenHover,
-                  });
-                }}
-                onMouseLeave={(e) => {
-                  Object.assign(e.target.style, {
-                    ...styles.statCard,
-                    ...styles.statCardGreen,
-                  });
-                }}
                 style={{ ...styles.statCard, ...styles.statCardGreen }}
                 onClick={() =>
                   !isRolling &&

@@ -89,8 +89,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             borderRadius: "4px",
             color: "#6b7280",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#f3f4f6")}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
         >
           <X size={20} />
         </button>
@@ -266,8 +264,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               cursor: "pointer",
               minWidth: "100px",
             }}
-            onMouseEnter={(e) => (e.target.style.opacity = "0.9")}
-            onMouseLeave={(e) => (e.target.style.opacity = "1")}
           >
             Close
           </button>

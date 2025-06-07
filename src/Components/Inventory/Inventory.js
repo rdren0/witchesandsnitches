@@ -356,12 +356,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                 <button
                   onClick={() => setShowAddForm(true)}
                   style={styles.addButton}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.secondary;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = theme.primary;
-                  }}
                 >
                   <Plus size={18} />
                   Add New Item

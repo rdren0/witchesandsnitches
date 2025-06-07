@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Users,
   ChevronDown,
   ChevronUp,
   Calendar,
   GraduationCap,
+  Search,
+  X,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from ".././../styles/masterStyles";
@@ -12,31 +14,13 @@ import { ALL_CHARACTERS } from "./characters";
 
 const CharacterCard = ({ character, theme, styles }) => {
   const [imageError, setImageError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  const getHouseColor = (house) => {
-    const houseColors = {
-      Gryffindor: "#740001",
-      Slytherin: "#1a472a",
-      Ravenclaw: "#0e1a40",
-      Hufflepuff: "#ecb939",
-      Thunderbird: "#8B5A2B",
-      "Horned Serpent": "#1E3A8A",
-      Pukwudgie: "#7C2D12",
-      Wampus: "#6D28D9",
-    };
-    return houseColors[house] || theme.primary;
-  };
 
   return (
     <div
       style={{
         ...styles.characterCard,
-        ...(isHovered ? styles.characterCardHover : {}),
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <div style={styles.imageContainer}>
         {character.src && !imageError ? (
@@ -92,23 +76,19 @@ const CharacterCard = ({ character, theme, styles }) => {
             <span style={styles.placeholderText}>No Image</span>
           </div>
         )}
-
-        {character.house !== "?" && character.house && (
-          <div
-            style={{
-              ...styles.houseBadge,
-              backgroundColor: getHouseColor(character.house) + "20",
-              borderColor: getHouseColor(character.house),
-              color: getHouseColor(character.house),
-            }}
-          >
-            {character.house}
-          </div>
-        )}
       </div>
 
       <div style={styles.characterInfo}>
         <h3 style={styles.characterName}>{character.name}</h3>
+        <div
+          style={{
+            fontSize: "12px",
+            color: theme.textSecondary,
+            marginTop: "4px",
+          }}
+        >
+          {character.school} • {character.type}
+        </div>
       </div>
     </div>
   );
@@ -121,7 +101,6 @@ const TypeSection = ({
   styles,
   isExpanded,
   onToggle,
-  schoolName,
 }) => {
   return (
     <div style={styles.typeSection}>
@@ -220,7 +199,6 @@ const SchoolSection = ({
               styles={styles}
               isExpanded={expandedTypes.has(`${school}-${type}`)}
               onToggle={() => onTypeToggle(`${school}-${type}`)}
-              schoolName={school}
             />
           ))}
         </div>
@@ -235,8 +213,9 @@ export const CharacterGallery = ({ characters = ALL_CHARACTERS }) => {
     new Set(["Ilvermorny"])
   );
   const [expandedTypes, setExpandedTypes] = useState(
-    new Set(["Ilvermorny-Students"])
+    new Set(["Ilvermorny-Classmate"])
   );
+  const [searchTerm, setSearchTerm] = useState("");
 
   const charactersBySchool = characters.reduce((acc, character) => {
     const school = character.school;
@@ -252,48 +231,29 @@ export const CharacterGallery = ({ characters = ALL_CHARACTERS }) => {
     return acc;
   }, {});
 
-  React.useEffect(() => {
+  const searchResults = characters.filter((character) => {
+    if (!searchTerm.trim()) return false;
+
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      character.name.toLowerCase().includes(searchLower) ||
+      character.school.toLowerCase().includes(searchLower) ||
+      character.type.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Add spinning animation for loading states
+  useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-      @keyframes skeleton {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
-
-  React.useEffect(() => {
-    const preloadImages = () => {
-      const visibleCharacters = [];
-
-      expandedSchools.forEach((school) => {
-        if (charactersBySchool[school]) {
-          Object.entries(charactersBySchool[school]).forEach(
-            ([type, chars]) => {
-              if (expandedTypes.has(`${school}-${type}`)) {
-                visibleCharacters.push(...chars);
-              }
-            }
-          );
-        }
-      });
-
-      visibleCharacters.slice(0, 6).forEach((character) => {
-        if (character.src) {
-          const img = new Image();
-          img.src = character.src;
-        }
-      });
-    };
-
-    preloadImages();
-  }, [expandedSchools, expandedTypes, charactersBySchool]);
 
   const schoolKeys = Object.keys(charactersBySchool);
 
@@ -334,6 +294,14 @@ export const CharacterGallery = ({ characters = ALL_CHARACTERS }) => {
     }
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+  };
+
   const styles = getCharacterGalleryStyles(theme);
 
   return (
@@ -358,6 +326,61 @@ export const CharacterGallery = ({ characters = ALL_CHARACTERS }) => {
           </button>
         </div>
       </div>
+
+      <div style={styles.searchContainer}>
+        <div style={styles.searchInputContainer}>
+          <Search size={20} style={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Search characters by name, school, or type..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            style={{
+              ...styles.searchInput,
+              borderColor: searchTerm ? theme.primary : theme.border,
+            }}
+          />
+          {searchTerm && (
+            <button onClick={clearSearch} style={styles.clearButton}>
+              <X size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {searchTerm && (
+        <div style={styles.searchResults}>
+          <div style={styles.searchResultsHeader}>
+            <h2 style={styles.searchResultsTitle}>Search Results</h2>
+            <p style={styles.searchResultsCount}>
+              {searchResults.length} character
+              {searchResults.length !== 1 ? "s" : ""} found for "{searchTerm}"
+            </p>
+          </div>
+          <div style={styles.searchResultsContent}>
+            {searchResults.length > 0 ? (
+              <div style={styles.charactersGrid}>
+                {searchResults.map((character) => (
+                  <CharacterCard
+                    key={character.id}
+                    character={character}
+                    theme={theme}
+                    styles={styles}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={styles.noResults}>
+                <Search size={48} color={theme.textSecondary} />
+                <p>No characters found matching "{searchTerm}"</p>
+                <p style={{ fontSize: "14px", marginTop: "8px" }}>
+                  Try searching by name, school, or character type.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div style={styles.schoolContainer}>
         {schoolKeys.map((school) => (

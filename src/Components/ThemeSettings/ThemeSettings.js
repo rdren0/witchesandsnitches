@@ -446,22 +446,6 @@ const ThemeSettings = () => {
                   ...(isDisabled ? styles.themeOptionDisabled : {}),
                 }}
                 onClick={() => !isDisabled && handleThemeChange(option.id)}
-                onMouseEnter={(e) => {
-                  if (!isDisabled && !isActive) {
-                    Object.assign(
-                      e.currentTarget.style,
-                      styles.themeOptionHover
-                    );
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDisabled && !isActive) {
-                    e.currentTarget.style.borderColor = theme.border;
-                    e.currentTarget.style.backgroundColor = theme.background;
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }
-                }}
               >
                 <div
                   style={{
@@ -565,28 +549,6 @@ const ThemeSettings = () => {
                                 ...(isActive ? styles.schoolCardActive : {}),
                               }}
                               onClick={() => handleSchoolChange(school)}
-                              onMouseEnter={(e) => {
-                                if (!isActive) {
-                                  e.currentTarget.style.borderColor = `${theme.primary}60`;
-                                  e.currentTarget.style.backgroundColor =
-                                    theme.surface;
-                                  e.currentTarget.style.transform =
-                                    "translateY(-2px)";
-                                  e.currentTarget.style.boxShadow =
-                                    "0 4px 8px rgba(0, 0, 0, 0.1)";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isActive) {
-                                  e.currentTarget.style.borderColor =
-                                    theme.border;
-                                  e.currentTarget.style.backgroundColor =
-                                    theme.background;
-                                  e.currentTarget.style.transform =
-                                    "translateY(0)";
-                                  e.currentTarget.style.boxShadow = "none";
-                                }
-                              }}
                             >
                               <div style={styles.schoolName}>{school}</div>
                               <div style={styles.schoolColors}>
