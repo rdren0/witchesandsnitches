@@ -17,9 +17,7 @@ export const Skills = ({
   const styles = createThemedStyles(theme);
   const [sortColumn, setSortColumn] = useState("skill");
   const [sortDirection, setSortDirection] = useState("asc");
-  const [hoveredHeader, setHoveredHeader] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
-  const [hoveredSkill, setHoveredSkill] = useState(null);
 
   const calculateSkillBonus = (skillName, abilityMod) => {
     if (!character) return 0;
@@ -174,12 +172,6 @@ export const Skills = ({
             <th
               style={{
                 ...styles.skillsHeaderCell,
-                ...(hoveredHeader === "proficiency"
-                  ? styles.skillsHeaderCellHover
-                  : {}),
-                ...(sortColumn === "proficiency"
-                  ? styles.skillsHeaderCellActive
-                  : {}),
               }}
               onClick={() => handleSort("proficiency")}
               title="Click to sort by proficiency"
@@ -192,12 +184,6 @@ export const Skills = ({
             <th
               style={{
                 ...styles.skillsHeaderCell,
-                ...(hoveredHeader === "modifier"
-                  ? styles.skillsHeaderCellHover
-                  : {}),
-                ...(sortColumn === "modifier"
-                  ? styles.skillsHeaderCellActive
-                  : {}),
               }}
               onClick={() => handleSort("modifier")}
               title="Click to sort by ability modifier"
@@ -210,12 +196,6 @@ export const Skills = ({
             <th
               style={{
                 ...styles.skillsHeaderCell,
-                ...(hoveredHeader === "skill"
-                  ? styles.skillsHeaderCellHover
-                  : {}),
-                ...(sortColumn === "skill"
-                  ? styles.skillsHeaderCellActive
-                  : {}),
               }}
               onClick={() => handleSort("skill")}
               title="Click to sort by skill name"
@@ -228,12 +208,6 @@ export const Skills = ({
             <th
               style={{
                 ...styles.skillsHeaderCellLast,
-                ...(hoveredHeader === "bonus"
-                  ? styles.skillsHeaderCellHover
-                  : {}),
-                ...(sortColumn === "bonus"
-                  ? styles.skillsHeaderCellActive
-                  : {}),
               }}
               onClick={() => handleSort("bonus")}
               title="Click to sort by total bonus"
@@ -255,7 +229,6 @@ export const Skills = ({
                 key={skill.name}
                 style={{
                   ...styles.skillRow,
-                  ...(hoveredSkill === skill.name ? styles.skillRowHover : {}),
                 }}
               >
                 <td style={styles.skillCell}>
@@ -288,9 +261,7 @@ export const Skills = ({
                     style={{
                       ...styles.skillNameButton,
                       ...(isProficient ? styles.skillNameButtonProficient : {}),
-                      ...(hoveredSkill === skill.name
-                        ? styles.skillNameButtonHover
-                        : {}),
+
                       ...(isRolling
                         ? { opacity: 0.5, cursor: "not-allowed" }
                         : {}),

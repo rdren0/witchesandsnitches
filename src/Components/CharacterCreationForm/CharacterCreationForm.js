@@ -98,25 +98,42 @@ const CharacterCreationForm = ({
   const [isManualMode, setIsManualMode] = useState(false);
   const [isHpManualMode, setIsHpManualMode] = useState(false);
   const [rolledHp, setRolledHp] = useState(null);
+  const [activeCharacterCount, setActiveCharacterCount] = useState(0);
+  const [isLoadingCharacterCount, setIsLoadingCharacterCount] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
 
-  const getActiveCharacterCount = async (discordUserId) => {
-    const { count, error } = await supabase
-      .from("characters")
-      .select("*", { count: "exact", head: true })
-      .eq("discord_user_id", discordUserId)
-      .eq("active", true);
+  const getAndUpdateActiveCharacterCount = useCallback(
+    async (discordUserId) => {
+      if (!discordUserId) return 0;
 
-    if (error) {
-      throw new Error(`Failed to count characters: ${error.message}`);
-    }
+      setIsLoadingCharacterCount(true);
+      try {
+        const { count, error } = await supabase
+          .from("characters")
+          .select("*", { count: "exact", head: true })
+          .eq("discord_user_id", discordUserId)
+          .eq("active", true);
 
-    return count;
-  };
+        if (error) {
+          throw new Error(`Failed to count characters: ${error.message}`);
+        }
+
+        setActiveCharacterCount(count || 0);
+        return count || 0;
+      } catch (err) {
+        console.error("Error getting character count:", err);
+        setActiveCharacterCount(savedCharacters.length);
+        return savedCharacters.length;
+      } finally {
+        setIsLoadingCharacterCount(false);
+      }
+    },
+    [supabase, savedCharacters.length]
+  );
 
   const rollAllStats = () => {
     const newStats = [];
@@ -217,14 +234,16 @@ const CharacterCreationForm = ({
         },
         level1ChoiceType: char.level1_choice_type || "",
       }));
+
       setSavedCharacters(transformedCharacters);
+      await getAndUpdateActiveCharacterCount(discordUserId);
     } catch (err) {
       setError("Failed to load characters: " + err.message);
       console.error("Error loading characters:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [discordUserId]);
+  }, [discordUserId, getAndUpdateActiveCharacterCount]);
 
   useEffect(() => {
     rollAllStats();
@@ -234,6 +253,7 @@ const CharacterCreationForm = ({
   useEffect(() => {
     if (discordUserId) {
       loadCharacters();
+      getAndUpdateActiveCharacterCount(discordUserId);
     }
     // eslint-disable-next-line
   }, [discordUserId, loadCharacters]);
@@ -475,6 +495,15 @@ const CharacterCreationForm = ({
         setIsEditing(false);
         setEditingId(null);
       } else {
+        const currentCount = await getAndUpdateActiveCharacterCount(
+          discordUserId
+        );
+        if (currentCount >= MAX_CHARACTERS) {
+          setError(
+            `Cannot create character: You have reached the maximum of ${MAX_CHARACTERS} characters.`
+          );
+          return;
+        }
         const savedCharacter = await characterService.saveCharacter(
           characterToSave,
           discordUserId
@@ -506,6 +535,7 @@ const CharacterCreationForm = ({
         };
 
         setSavedCharacters((prev) => [transformedCharacter, ...prev]);
+        await getAndUpdateActiveCharacterCount(discordUserId);
       }
 
       setCharacter(getInitialCharacterState());
@@ -617,6 +647,7 @@ const CharacterCreationForm = ({
         (char) => char.id !== id
       );
       setSavedCharacters(updatedCharacters);
+      await getAndUpdateActiveCharacterCount(discordUserId);
 
       // Handle selected character cleanup
       if (wasSelected) {
@@ -649,7 +680,8 @@ const CharacterCreationForm = ({
     character.castingStyle &&
     allStatsAssigned() &&
     !isSaving &&
-    (isEditing || savedCharacters.length < MAX_CHARACTERS);
+    !isLoadingCharacterCount &&
+    (isEditing || activeCharacterCount < MAX_CHARACTERS);
 
   return (
     <div style={styles.container}>
@@ -1192,7 +1224,7 @@ const CharacterCreationForm = ({
               </div>
             </div>
 
-            {!isEditing && savedCharacters.length >= MAX_CHARACTERS && (
+            {!isEditing && activeCharacterCount >= MAX_CHARACTERS && (
               <div style={styles.characterLimitWarning}>
                 ⚠️ Character Limit Reached
                 <div style={styles.characterLimitWarningText}>
@@ -1216,16 +1248,17 @@ const CharacterCreationForm = ({
               <Save />
               {isSaving
                 ? "Saving..."
+                : isLoadingCharacterCount
+                ? "Checking limit..."
                 : isEditing
                 ? "Update Character"
-                : savedCharacters.length >= MAX_CHARACTERS
+                : activeCharacterCount >= MAX_CHARACTERS
                 ? "Character Limit Reached"
                 : "Save Character"}
             </button>
-
             {!isEditing &&
-              savedCharacters.length >= MAX_CHARACTERS - 2 &&
-              savedCharacters.length < MAX_CHARACTERS && (
+              activeCharacterCount >= MAX_CHARACTERS - 2 &&
+              activeCharacterCount < MAX_CHARACTERS && (
                 <div
                   style={{
                     fontSize: "12px",
@@ -1235,10 +1268,10 @@ const CharacterCreationForm = ({
                     fontStyle: "italic",
                   }}
                 >
-                  {savedCharacters.length === MAX_CHARACTERS - 1
+                  {activeCharacterCount === MAX_CHARACTERS - 1
                     ? "You can create 1 more character before reaching the limit."
                     : `You can create ${
-                        MAX_CHARACTERS - savedCharacters.length
+                        MAX_CHARACTERS - activeCharacterCount
                       } more characters.`}
                 </div>
               )}
