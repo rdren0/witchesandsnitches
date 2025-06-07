@@ -15,7 +15,6 @@ const ThemeSettings = () => {
     themeMode,
     setThemeMode,
     theme,
-    selectedCharacter,
     themeHouse,
     setThemeHouse,
     HOUSE_THEMES,
