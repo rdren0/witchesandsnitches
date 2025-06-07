@@ -5,101 +5,124 @@ const supabase = createClient(
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
-export const setCurrentUser = async (discordUserId) => {
-  const { error } = await supabase.rpc("set_config", {
-    setting_name: "app.current_user_id",
-    setting_value: discordUserId,
-    is_local: true,
-  });
+const getCharacters = async (discordUserId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .select("*")
+    .eq("discord_user_id", discordUserId)
+    .eq("active", true)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error setting current user:", error);
+    throw new Error(`Failed to fetch characters: ${error.message}`);
   }
+
+  return data || [];
+};
+
+const saveCharacter = async (characterData, discordUserId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .insert([
+      {
+        ...characterData,
+        discord_user_id: discordUserId,
+        active: true,
+        created_at: new Date().toISOString(),
+      },
+    ])
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to save character: ${error.message}`);
+  }
+
+  return data[0];
+};
+
+const updateCharacter = async (characterId, characterData, discordUserId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .update({
+      ...characterData,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", characterId)
+    .eq("discord_user_id", discordUserId)
+    .eq("active", true)
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to update character: ${error.message}`);
+  }
+
+  return data[0];
+};
+
+const archiveCharacter = async (characterId, discordUserId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .update({
+      active: false,
+      archived_at: new Date().toISOString(),
+    })
+    .eq("id", characterId)
+    .eq("discord_user_id", discordUserId)
+    .eq("active", true)
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to archive character: ${error.message}`);
+  }
+
+  return data[0];
+};
+
+const restoreCharacter = async (characterId, discordUserId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .update({
+      active: true,
+      archived_at: null,
+      restored_at: new Date().toISOString(),
+    })
+    .eq("id", characterId)
+    .eq("discord_user_id", discordUserId)
+    .eq("active", false)
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to restore character: ${error.message}`);
+  }
+
+  return data[0];
+};
+
+const getArchivedCharacters = async (discordUserId = null) => {
+  let query = supabase
+    .from("characters")
+    .select("*")
+    .eq("active", false)
+    .order("archived_at", { ascending: false });
+
+  if (discordUserId) {
+    query = query.eq("discord_user_id", discordUserId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to fetch archived characters: ${error.message}`);
+  }
+
+  return data || [];
 };
 
 export const characterService = {
-  async getCharacters(discordUserId) {
-    await setCurrentUser(discordUserId);
-
-    const { data, error } = await supabase
-      .from("characters")
-      .select("*")
-      .eq("discord_user_id", discordUserId)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return data;
-  },
-
-  async saveCharacter(character, discordUserId) {
-    await setCurrentUser(discordUserId);
-
-    const { data, error } = await supabase
-      .from("characters")
-      .insert([
-        {
-          discord_user_id: discordUserId,
-          name: character.name,
-          house: character.house,
-          casting_style: character.castingStyle,
-          subclass: character.subclass,
-          innate_heritage: character.innateHeritage,
-          background: character.background,
-          game_session: character.gameSession, // ADD THIS LINE!
-          standard_feats: character.standardFeats,
-          skill_proficiencies: character.skillProficiencies,
-          ability_scores: character.abilityScores,
-          hit_points: character.hitPoints,
-          level: character.level,
-          wand_type: character.wandType,
-          magic_modifiers: character.magicModifiers,
-        },
-      ])
-      .select();
-
-    if (error) throw error;
-    return data[0];
-  },
-
-  async updateCharacter(id, character, discordUserId) {
-    await setCurrentUser(discordUserId);
-
-    const { data, error } = await supabase
-      .from("characters")
-      .update({
-        name: character.name,
-        house: character.house,
-        casting_style: character.castingStyle,
-        subclass: character.subclass,
-        innate_heritage: character.innateHeritage,
-        background: character.background,
-        game_session: character.gameSession,
-        standard_feats: character.standardFeats,
-        skill_proficiencies: character.skillProficiencies,
-        ability_scores: character.abilityScores,
-        hit_points: character.hitPoints,
-        level: character.level,
-        wand_type: character.wandType,
-        magic_modifiers: character.magicModifiers,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("discord_user_id", discordUserId)
-      .select();
-
-    if (error) throw error;
-    return data[0];
-  },
-
-  async deleteCharacter(id, discordUserId) {
-    await setCurrentUser(discordUserId);
-
-    const { error } = await supabase
-      .from("characters")
-      .delete()
-      .eq("id", id)
-      .eq("discord_user_id", discordUserId);
-
-    if (error) throw error;
-  },
+  getCharacters,
+  saveCharacter,
+  updateCharacter,
+  archiveCharacter,
+  restoreCharacter,
+  getArchivedCharacters,
 };
