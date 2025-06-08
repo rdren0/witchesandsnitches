@@ -60,7 +60,7 @@ const CharacterCreationForm = ({
       healing: 0,
       jinxesHexesCurses: 0,
     },
-    level1ChoiceType: "", // "innate" or "feat"
+    level1ChoiceType: "",
   });
 
   const getGameSessionOptions = () => {
@@ -190,7 +190,7 @@ const CharacterCreationForm = ({
     setExpandedFeats(new Set());
     setFeatFilter("");
     setTempInputValues({});
-    setMagicModifierTempValues({}); // Add this line
+    setMagicModifierTempValues({});
     setActiveTab("create");
     setIsHpManualMode(false);
     setRolledHp(null);
@@ -247,7 +247,6 @@ const CharacterCreationForm = ({
 
   useEffect(() => {
     rollAllStats();
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -255,7 +254,6 @@ const CharacterCreationForm = ({
       loadCharacters();
       getAndUpdateActiveCharacterCount(discordUserId);
     }
-    // eslint-disable-next-line
   }, [discordUserId, loadCharacters]);
 
   if (!user || !discordUserId) {
@@ -365,21 +363,20 @@ const CharacterCreationForm = ({
           [field]: value,
           skillProficiencies: [],
         }));
-        // Reset HP when casting style changes
+
         setRolledHp(null);
         setIsHpManualMode(false);
       } else if (field === "level") {
         setCharacter((prev) => ({
           ...prev,
           [field]: value,
-          // Reset level 1 choice if level changes from 1
+
           level1ChoiceType: value === 1 ? prev.level1ChoiceType : "",
           innateHeritage: value === 1 ? prev.innateHeritage : "",
         }));
-        // Reset HP when level changes
+
         setRolledHp(null);
         if (!isHpManualMode) {
-          // Only reset manual mode if we're not already in manual mode
         }
       } else {
         setCharacter((prev) => ({
@@ -394,7 +391,7 @@ const CharacterCreationForm = ({
     setCharacter((prev) => ({
       ...prev,
       level1ChoiceType: choiceType,
-      // Clear the other option when switching
+
       innateHeritage: choiceType === "feat" ? "" : prev.innateHeritage,
       standardFeats: choiceType === "innate" ? [] : prev.standardFeats,
     }));
@@ -449,9 +446,22 @@ const CharacterCreationForm = ({
     setError(null);
 
     const characterToSave = {
-      ...character,
-      hitPoints: getCurrentHp(),
+      name: character.name,
+      house: character.house,
+      casting_style: character.castingStyle,
+      subclass: character.subclass,
+      innate_heritage: character.innateHeritage,
+      background: character.background,
+      game_session: character.gameSession,
+      standard_feats: character.standardFeats,
+      skill_proficiencies: character.skillProficiencies,
+      ability_scores: character.abilityScores,
+      hit_points: getCurrentHp(),
+      level: character.level,
+      wand_type: character.wandType,
+      magic_modifiers: character.magicModifiers,
     };
+
     try {
       if (isEditing && editingId) {
         const updatedCharacter = await characterService.updateCharacter(
@@ -543,7 +553,6 @@ const CharacterCreationForm = ({
         rollAllStats();
       }
 
-      // Switch to saved characters tab after saving
       setActiveTab("saved");
 
       if (onCharacterSaved) {
@@ -558,6 +567,18 @@ const CharacterCreationForm = ({
   };
 
   const editCharacter = (character) => {
+    let inferredLevel1ChoiceType = character.level1ChoiceType || "";
+    if (character.level === 1 && !inferredLevel1ChoiceType) {
+      if (character.innateHeritage && character.innateHeritage !== "") {
+        inferredLevel1ChoiceType = "innate";
+      } else if (
+        character.standardFeats &&
+        character.standardFeats.length > 0
+      ) {
+        inferredLevel1ChoiceType = "feat";
+      }
+    }
+
     setCharacter({
       name: character.name,
       house: character.house,
@@ -566,7 +587,7 @@ const CharacterCreationForm = ({
       innateHeritage: character.innateHeritage,
       background: character.background,
       gameSession: character.gameSession || "",
-      standardFeats: character.standardFeats,
+      standardFeats: character.standardFeats || [],
       skillProficiencies: character.skillProficiencies,
       abilityScores: character.abilityScores,
       hitPoints: character.hitPoints,
@@ -579,7 +600,7 @@ const CharacterCreationForm = ({
         healing: 0,
         jinxesHexesCurses: 0,
       },
-      level1ChoiceType: character.level1ChoiceType || "",
+      level1ChoiceType: inferredLevel1ChoiceType,
     });
 
     const hasAllScores = Object.values(character.abilityScores).every(
@@ -599,7 +620,6 @@ const CharacterCreationForm = ({
       setIsManualMode(false);
     }
 
-    // Set HP mode based on whether HP differs from calculated value
     const calculatedHp = () => {
       if (!character.castingStyle) return 0;
       const castingData = hpData[character.castingStyle];
@@ -623,7 +643,7 @@ const CharacterCreationForm = ({
 
     setIsEditing(true);
     setEditingId(character.id);
-    setActiveTab("create"); // Switch to create tab when editing
+    setActiveTab("create");
   };
 
   const archiveCharacter = async (id) => {
@@ -636,20 +656,17 @@ const CharacterCreationForm = ({
     }
 
     try {
-      // Use the new archiveCharacter function instead of deleteCharacter
       await characterService.archiveCharacter(id, discordUserId);
 
       const wasSelected =
         selectedCharacterId && selectedCharacterId.toString() === id.toString();
 
-      // Remove the character from the UI (it's now archived)
       const updatedCharacters = savedCharacters.filter(
         (char) => char.id !== id
       );
       setSavedCharacters(updatedCharacters);
       await getAndUpdateActiveCharacterCount(discordUserId);
 
-      // Handle selected character cleanup
       if (wasSelected) {
         if (updatedCharacters.length > 0) {
           const newSelectedCharacter = updatedCharacters[0];
@@ -908,7 +925,6 @@ const CharacterCreationForm = ({
                           ...styles.button,
                           backgroundColor: "#EF4444",
                           fontSize: "12px",
-                          // padding: "6px 10px",
                         }}
                       >
                         <RefreshCw />
@@ -1180,14 +1196,13 @@ const CharacterCreationForm = ({
                       }
                       onChange={(e) => {
                         const value = e.target.value;
-                        // Store the temporary input value to allow typing "-"
+
                         setMagicModifierTempValues((prev) => ({
                           ...prev,
                           [key]: value,
                         }));
                       }}
                       onBlur={() => {
-                        // On blur, parse and commit the final value
                         const tempValue = magicModifierTempValues[key];
                         if (tempValue !== undefined) {
                           const numValue =
@@ -1201,7 +1216,6 @@ const CharacterCreationForm = ({
                             finalValue
                           );
 
-                          // Clear the temporary input value
                           setMagicModifierTempValues((prev) => {
                             const newState = { ...prev };
                             delete newState[key];

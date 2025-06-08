@@ -30,6 +30,12 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         return "#6600cc";
       case "spell":
         return "#3b82f6";
+      case "hitdice":
+        return "#9d4edd";
+      case "damage":
+        return "#ef4444";
+      case "heal":
+        return "#10b981";
       default:
         return "#6b7280";
     }
@@ -457,6 +463,7 @@ export const rollAbility = async ({
     setIsRolling(false);
   }
 };
+
 export const getMaxAchievableQuality = ({
   proficiencies,
   ingredientQuality,
@@ -832,6 +839,7 @@ export const rollBrewPotion = async ({
     setIsRolling(false);
   }
 };
+
 export const rollInitiative = async ({
   character,
   isRolling,

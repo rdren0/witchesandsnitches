@@ -1,13 +1,35 @@
 import { useState, useEffect } from "react";
-import { User, Shield, Heart, Dice6, ChevronUp, Swords } from "lucide-react";
+import {
+  User,
+  Shield,
+  Heart,
+  Swords,
+  Dices,
+  ArrowUp,
+  Plus,
+  Minus,
+  X,
+  Moon,
+  Coffee,
+} from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
+import CharacterLevelUp from "./CharacterLevelUp";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
-import { useRollFunctions } from "../../App/diceRoller";
+import { useRollFunctions, useRollModal } from "../../App/diceRoller";
+import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
+
+const hitDiceData = {
+  Willpower: "d10",
+  Technique: "d6",
+  Intellect: "d8",
+  Vigor: "d12",
+  default: "d8",
+};
 
 const CharacterSheet = ({
   user,
@@ -17,6 +39,7 @@ const CharacterSheet = ({
   className = "",
 }) => {
   const { rollInitiative } = useRollFunctions();
+  const { showRollResult } = useRollModal();
 
   const { theme } = useTheme();
   const styles = getCharacterSheetStyles(theme);
@@ -24,69 +47,92 @@ const CharacterSheet = ({
 
   const [character, setCharacter] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showHitDiceModal, setShowHitDiceModal] = useState(false);
+  const [selectedHitDiceCount, setSelectedHitDiceCount] = useState(1);
+  const [isRollingHitDice, setIsRollingHitDice] = useState(false);
+  const [showDamageModal, setShowDamageModal] = useState(false);
+  const [damageAmount, setDamageAmount] = useState(0);
+  const [isApplyingDamage, setIsApplyingDamage] = useState(false);
+  const [isLongResting, setIsLongResting] = useState(false);
   const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const getHitDie = (castingStyle) => {
+    return hitDiceData[castingStyle] || hitDiceData.default;
+  };
+
+  const fetchCharacterDetails = async () => {
+    if (!selectedCharacter?.id) {
+      setCharacter(null);
+      return;
+    }
+
+    setCharacterLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from("characters")
+        .select("*")
+        .eq("id", selectedCharacter.id)
+        .eq("discord_user_id", discordUserId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const transformedCharacter = {
+          id: data.id,
+          name: data.name,
+          house: data.house,
+          year: `Level ${data.level}`,
+          level: data.level,
+          background: data.background || "Unknown",
+          bloodStatus: data.innate_heritage || "Unknown",
+          wand: data.wand_type || "Unknown wand",
+          gameSession: data.game_session || "",
+          strength: data.ability_scores?.strength || 10,
+          dexterity: data.ability_scores?.dexterity || 10,
+          constitution: data.ability_scores?.constitution || 10,
+          intelligence: data.ability_scores?.intelligence || 10,
+          wisdom: data.ability_scores?.wisdom || 10,
+          charisma: data.ability_scores?.charisma || 10,
+          hitPoints: data.hit_points || 1,
+          currentHitPoints: data.current_hit_points || data.hit_points || 1,
+          maxHitPoints: data.hit_points || 1,
+          armorClass:
+            11 + Math.floor((data.ability_scores?.dexterity - 10) / 2) || 11,
+          speed: 30,
+          initiative: 8,
+          proficiencyBonus: Math.ceil(data.level / 4) + 1,
+          skills: transformSkillProficiencies(data.skill_proficiencies || []),
+          castingStyle: data.casting_style,
+          subclass: data.subclass,
+          standardFeats: data.standard_feats || [],
+          magicModifiers: data.magic_modifiers || {},
+          skillProficiencies: data.skill_proficiencies || [],
+          abilityScores: data.ability_scores,
+          innateHeritage: data.innate_heritage,
+          wandType: data.wand_type,
+          hitDie: getHitDie(data.casting_style),
+          maxHitDice: data.level,
+          currentHitDice: data.current_hit_dice || data.level,
+        };
+
+        setCharacter(transformedCharacter);
+      }
+    } catch (err) {
+      console.error("Error fetching character:", err);
+      setError(err.message);
+    } finally {
+      setCharacterLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCharacterDetails = async () => {
-      if (!selectedCharacter?.id) {
-        setCharacter(null);
-        return;
-      }
-
-      setCharacterLoading(true);
-      setError(null);
-
-      try {
-        const { data, error } = await supabase
-          .from("characters")
-          .select("*")
-          .eq("id", selectedCharacter.id)
-          .eq("discord_user_id", discordUserId)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          const transformedCharacter = {
-            name: data.name,
-            house: data.house,
-            year: `Level ${data.level}`,
-            background: data.background || "Unknown",
-            bloodStatus: data.innate_heritage || "Unknown",
-            wand: data.wand_type || "Unknown wand",
-            gameSession: data.game_session || "",
-            strength: data.ability_scores?.strength || 10,
-            dexterity: data.ability_scores?.dexterity || 10,
-            constitution: data.ability_scores?.constitution || 10,
-            intelligence: data.ability_scores?.intelligence || 10,
-            wisdom: data.ability_scores?.wisdom || 10,
-            charisma: data.ability_scores?.charisma || 10,
-            hitPoints: data.hit_points || 1,
-            armorClass:
-              11 + Math.floor((data.ability_scores?.dexterity - 10) / 2) || 11,
-            speed: 30,
-            initiative: 8,
-            proficiencyBonus: Math.ceil(data.level / 4) + 1,
-            skills: transformSkillProficiencies(data.skill_proficiencies || []),
-            castingStyle: data.casting_style,
-            subclass: data.subclass,
-            standardFeats: data.standard_feats || [],
-            magicModifiers: data.magic_modifiers || {},
-          };
-
-          setCharacter(transformedCharacter);
-        }
-      } catch (err) {
-        console.error("Error fetching character:", err);
-        setError(err.message);
-      } finally {
-        setCharacterLoading(false);
-      }
-    };
-
     fetchCharacterDetails();
   }, [selectedCharacter?.id, discordUserId, supabase]);
 
@@ -127,6 +173,438 @@ const CharacterSheet = ({
     });
 
     return skills;
+  };
+
+  const handleShortRestClick = () => {
+    if (!character || character.currentHitDice <= 0) {
+      alert("No hit dice available for short rest!");
+      return;
+    }
+    setSelectedHitDiceCount(1);
+    setShowHitDiceModal(true);
+  };
+
+  const handleLongRest = async () => {
+    if (!character) return;
+
+    const currentHP = character.currentHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints || character.hitPoints;
+    const currentHitDice = character.currentHitDice;
+    const maxHitDice = character.maxHitDice;
+
+    if (currentHP >= maxHP && currentHitDice >= maxHitDice) {
+      alert("Character is already at full health and hit dice!");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Take a long rest for ${character.name}?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}`
+    );
+    if (!confirmed) return;
+
+    setIsLongResting(true);
+
+    try {
+      const hpRestored = maxHP - currentHP;
+      const hitDiceRestored = maxHitDice - currentHitDice;
+
+      // Show long rest result modal
+      showRollResult({
+        title: `Long Rest Complete`,
+        rollValue: hpRestored + hitDiceRestored,
+        modifier: 0,
+        total: hpRestored + hitDiceRestored,
+        isCriticalSuccess: true, // Long rest is always "critical"
+        isCriticalFailure: false,
+        type: "longrest",
+        description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored • ${character.name} is fully rested!`,
+      });
+
+      // Update database
+      const { error } = await supabase
+        .from("characters")
+        .update({
+          current_hit_points: maxHP,
+          current_hit_dice: maxHitDice,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", character.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error updating character:", error);
+        alert("Failed to update character data");
+        return;
+      }
+
+      // Send to Discord if webhook is available
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${character.name} completed a Long Rest!`,
+          color: 0x3b82f6,
+          fields: [
+            {
+              name: "HP Restored",
+              value: `${hpRestored} HP`,
+              inline: true,
+            },
+            {
+              name: "Hit Dice Restored",
+              value: `${hitDiceRestored} × ${character.hitDie}`,
+              inline: true,
+            },
+            {
+              name: "Current Status",
+              value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice`,
+              inline: false,
+            },
+          ],
+          description: "💤 **Fully rested and ready for adventure!**",
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Long Rest",
+          },
+        };
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending to Discord:", discordError);
+        }
+      }
+
+      // Refresh character data
+      await fetchCharacterDetails();
+    } catch (error) {
+      console.error("Error applying long rest:", error);
+      alert("Error taking long rest. Please try again.");
+    } finally {
+      setIsLongResting(false);
+    }
+  };
+
+  const handleDamageClick = () => {
+    if (!character) return;
+    setDamageAmount(0);
+    setShowDamageModal(true);
+  };
+
+  const applyDamage = async () => {
+    if (!character || damageAmount < 0) return;
+
+    setIsApplyingDamage(true);
+
+    try {
+      // Calculate new HP (can't go below 0)
+      const newCurrentHP = Math.max(
+        0,
+        (character.currentHitPoints || character.hitPoints) - damageAmount
+      );
+      const actualDamage =
+        (character.currentHitPoints || character.hitPoints) - newCurrentHP;
+
+      // Show damage result modal
+      showRollResult({
+        title: `Damage Applied`,
+        rollValue: actualDamage,
+        modifier: 0,
+        total: actualDamage,
+        isCriticalSuccess: false,
+        isCriticalFailure: newCurrentHP === 0,
+        type: "damage",
+        description: `${actualDamage} damage taken • HP: ${
+          character.currentHitPoints || character.hitPoints
+        } → ${newCurrentHP}${newCurrentHP === 0 ? " (Unconscious!)" : ""}`,
+      });
+
+      // Update database
+      const { error } = await supabase
+        .from("characters")
+        .update({
+          current_hit_points: newCurrentHP,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", character.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error updating character:", error);
+        alert("Failed to update character data");
+        return;
+      }
+
+      // Send to Discord if webhook is available
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${character.name} took damage!`,
+          color: 0xef4444,
+          fields: [
+            {
+              name: "Damage Taken",
+              value: `${actualDamage} damage`,
+              inline: true,
+            },
+            {
+              name: "HP Remaining",
+              value: `${newCurrentHP}/${
+                character.maxHitPoints || character.hitPoints
+              }`,
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Damage Taken",
+          },
+        };
+
+        if (newCurrentHP === 0) {
+          embed.description = "⚠️ **Character is unconscious!**";
+          embed.color = 0x7f1d1d;
+        }
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending to Discord:", discordError);
+        }
+      }
+
+      // Refresh character data
+      await fetchCharacterDetails();
+      setShowDamageModal(false);
+    } catch (error) {
+      console.error("Error applying damage:", error);
+      alert("Error applying damage. Please try again.");
+    } finally {
+      setIsApplyingDamage(false);
+    }
+  };
+
+  const fullHeal = async () => {
+    if (!character) return;
+
+    const currentHP = character.currentHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints || character.hitPoints;
+
+    if (currentHP >= maxHP) {
+      alert("Character is already at full health!");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Fully heal ${character.name}?\n\nHP: ${currentHP} → ${maxHP}`
+    );
+    if (!confirmed) return;
+
+    try {
+      const healingAmount = maxHP - currentHP;
+
+      // Show heal result modal
+      showRollResult({
+        title: `Full Heal`,
+        rollValue: healingAmount,
+        modifier: 0,
+        total: healingAmount,
+        isCriticalSuccess: true, // Full heal is always "critical"
+        isCriticalFailure: false,
+        type: "heal",
+        description: `${healingAmount} HP restored • ${character.name} is at full health!`,
+      });
+
+      // Update database
+      const { error } = await supabase
+        .from("characters")
+        .update({
+          current_hit_points: maxHP,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", character.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error updating character:", error);
+        alert("Failed to update character data");
+        return;
+      }
+
+      // Send to Discord if webhook is available
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${character.name} was fully healed!`,
+          color: 0x10b981,
+          fields: [
+            {
+              name: "HP Restored",
+              value: `${maxHP - currentHP} HP`,
+              inline: true,
+            },
+            {
+              name: "Current HP",
+              value: `${maxHP}/${maxHP} (Full Health)`,
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Full Heal",
+          },
+        };
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending to Discord:", discordError);
+        }
+      }
+
+      // Refresh character data
+      await fetchCharacterDetails();
+    } catch (error) {
+      console.error("Error applying full heal:", error);
+      alert("Error healing character. Please try again.");
+    }
+  };
+
+  const rollHitDice = async () => {
+    if (
+      !character ||
+      selectedHitDiceCount <= 0 ||
+      selectedHitDiceCount > character.currentHitDice
+    ) {
+      return;
+    }
+
+    setIsRollingHitDice(true);
+
+    try {
+      const roller = new DiceRoller();
+      const conModifier = characterModifiers.constitution;
+
+      // Roll the hit dice
+      const diceNotation = `${selectedHitDiceCount}${character.hitDie}`;
+      const rollResult = roller.roll(diceNotation);
+
+      // Add constitution modifier for each die rolled
+      const totalHealing =
+        rollResult.total + conModifier * selectedHitDiceCount;
+      const actualHealing = Math.max(1, totalHealing); // Minimum 1 HP per die
+
+      // Calculate new HP (capped at max)
+      const newCurrentHP = Math.min(
+        character.currentHitPoints + actualHealing,
+        character.maxHitPoints
+      );
+      const hpGained = newCurrentHP - character.currentHitPoints;
+
+      // Calculate new hit dice count
+      const newHitDiceCount = character.currentHitDice - selectedHitDiceCount;
+
+      // Show roll result modal
+      showRollResult({
+        title: `Hit Dice Recovery`,
+        rollValue: rollResult.total,
+        modifier: conModifier * selectedHitDiceCount,
+        total: actualHealing,
+        isCriticalSuccess: false,
+        isCriticalFailure: false,
+        type: "hitdice",
+        description: `${selectedHitDiceCount} × ${character.hitDie} + ${
+          conModifier * selectedHitDiceCount
+        } CON • ${hpGained} HP restored • ${newHitDiceCount}/${
+          character.maxHitDice
+        } dice remaining`,
+      });
+
+      // Update database
+      const { error } = await supabase
+        .from("characters")
+        .update({
+          current_hit_points: newCurrentHP,
+          current_hit_dice: newHitDiceCount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", character.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error updating character:", error);
+        alert("Failed to update character data");
+        return;
+      }
+
+      // Send to Discord if webhook is available
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${character.name} used Hit Dice for Short Rest`,
+          color: 0x9d4edd,
+          fields: [
+            {
+              name: "Hit Dice Used",
+              value: `${selectedHitDiceCount} × ${character.hitDie}`,
+              inline: true,
+            },
+            {
+              name: "Roll Result",
+              value: `${rollResult.output} + ${
+                conModifier * selectedHitDiceCount
+              } (CON) = ${actualHealing}`,
+              inline: true,
+            },
+            {
+              name: "HP Restored",
+              value: `${hpGained} HP (${character.currentHitPoints} → ${newCurrentHP})`,
+              inline: true,
+            },
+            {
+              name: "Hit Dice Remaining",
+              value: `${newHitDiceCount}/${character.maxHitDice}`,
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Short Rest Healing",
+          },
+        };
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending to Discord:", discordError);
+        }
+      }
+
+      // Refresh character data
+      await fetchCharacterDetails();
+      setShowHitDiceModal(false);
+    } catch (error) {
+      console.error("Error rolling hit dice:", error);
+      alert("Error rolling hit dice. Please try again.");
+    } finally {
+      setIsRollingHitDice(false);
+    }
+  };
+
+  const handleCharacterUpdated = async (updatedCharacter) => {
+    setCharacter(updatedCharacter);
+    await fetchCharacterDetails();
   };
 
   if (error) {
@@ -184,7 +662,60 @@ const CharacterSheet = ({
                 <User className="w-8 h-8 text-indigo-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <h1 style={styles.characterName}>{character.name}</h1>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <h1 style={styles.characterName}>{character.name}</h1>
+
+                  <div
+                    style={{
+                      ...styles.statCard,
+                      background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      width: "55px",
+                      height: "50px",
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      marginTop: "-10px",
+                      marginRight: "-10px",
+                    }}
+                    onClick={() => setShowLevelUp(true)}
+                    title={`Level up ${character.name} (Current: Level ${character.level})`}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flex: 1,
+                      }}
+                    >
+                      <ArrowUp
+                        className="w-4 h-4 text-white"
+                        style={{
+                          width: "16px",
+                          height: "14px",
+                        }}
+                      />
+                      <div
+                        style={{
+                          color: "white",
+                          fontSize: "10px",
+                          fontWeight: "500",
+                          textAlign: "center",
+                          lineHeight: "1",
+                        }}
+                      >
+                        LEVEL UP
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div style={styles.infoGrid}>
                   <div style={styles.infoItem}>
                     <span style={styles.label}>House:</span> {character.house}
@@ -226,17 +757,25 @@ const CharacterSheet = ({
                 style={{
                   ...styles.statCard,
                   ...styles.statCardRed,
-                  cursor: "default",
+                  cursor: "pointer",
                 }}
+                onClick={handleDamageClick}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  fullHeal();
+                }}
+                title="Left click to apply damage • Right click to full heal"
               >
                 <Heart className="w-6 h-6 text-red-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueRed }}>
-                  {character.hitPoints}
+                  {character.currentHitPoints || character.hitPoints}/
+                  {character.maxHitPoints || character.hitPoints}
                 </div>
                 <div style={{ ...styles.statLabel, ...styles.statLabelRed }}>
                   Hit Points
                 </div>
               </div>
+
               <div
                 style={{
                   ...styles.statCard,
@@ -252,6 +791,25 @@ const CharacterSheet = ({
                   Armor Class
                 </div>
               </div>
+
+              {/* Hit Dice Display (non-clickable) */}
+              <div
+                style={{
+                  ...styles.statCard,
+                  ...styles.statCardPurple,
+                  cursor: "default",
+                }}
+                title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
+              >
+                <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                <div style={{ ...styles.statValue, ...styles.statValuePurple }}>
+                  {character.currentHitDice}/{character.maxHitDice}
+                </div>
+                <div style={{ ...styles.statLabel, ...styles.statLabelPurple }}>
+                  Hit Dice ({character.hitDie})
+                </div>
+              </div>
+
               <div
                 style={{ ...styles.statCard, ...styles.statCardGreen }}
                 onClick={() =>
@@ -275,6 +833,112 @@ const CharacterSheet = ({
             </div>
           </div>
 
+          {/* Rest Actions Section */}
+          <div
+            style={{
+              ...styles.headerCard,
+              padding: "20px",
+              marginBottom: "20px",
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "18px",
+                fontWeight: "600",
+                color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                textAlign: "center",
+              }}
+            >
+              Rest Actions
+            </h3>
+            <div
+              style={{
+                display: "flex",
+                gap: "16px",
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: "#9d4edd",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor:
+                    character.currentHitDice <= 0 ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+                  transition: "all 0.2s ease",
+                  minWidth: "140px",
+                  justifyContent: "center",
+                }}
+                onClick={handleShortRestClick}
+                disabled={character.currentHitDice <= 0}
+                title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
+                onMouseEnter={(e) => {
+                  if (character.currentHitDice > 0) {
+                    e.target.style.backgroundColor = "#8b5cf6";
+                    e.target.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (character.currentHitDice > 0) {
+                    e.target.style.backgroundColor = "#9d4edd";
+                    e.target.style.transform = "translateY(0)";
+                  }
+                }}
+              >
+                <Coffee size={16} />
+                Short Rest
+              </button>
+
+              <button
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: isLongResting ? "wait" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  opacity: isLongResting ? 0.7 : 1,
+                  transition: "all 0.2s ease",
+                  minWidth: "140px",
+                  justifyContent: "center",
+                }}
+                onClick={handleLongRest}
+                disabled={isLongResting}
+                title="Restore all HP and hit dice with a long rest"
+                onMouseEnter={(e) => {
+                  if (!isLongResting) {
+                    e.target.style.backgroundColor = "#2563eb";
+                    e.target.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLongResting) {
+                    e.target.style.backgroundColor = "#3b82f6";
+                    e.target.style.transform = "translateY(0)";
+                  }
+                }}
+              >
+                <Moon size={16} />
+                {isLongResting ? "Resting..." : "Long Rest"}
+              </button>
+            </div>
+          </div>
+
           <AbilityScores
             character={character}
             discordWebhookUrl={discordWebhookUrl}
@@ -293,6 +957,12 @@ const CharacterSheet = ({
           <div style={styles.instructionsCard}>
             <div style={styles.instructionsGrid}>
               <div style={styles.instructionItem}>
+                <Heart className="w-4 h-4 text-red-500" />
+                <span>
+                  Click Hit Points to apply damage • Right-click to full heal
+                </span>
+              </div>
+              <div style={styles.instructionItem}>
                 <div
                   style={{
                     width: "12px",
@@ -308,11 +978,21 @@ const CharacterSheet = ({
                 </span>
               </div>
               <div style={styles.instructionItem}>
-                <Dice6 className="w-4 h-4 text-blue-500" />
                 <span>Click skill or ability name to roll d20 + modifier</span>
               </div>
               <div style={styles.instructionItem}>
-                <ChevronUp className="w-4 h-4 text-purple-500" />
+                <Coffee className="w-4 h-4 text-purple-500" />
+                <span>Short Rest: Use hit dice to recover HP</span>
+              </div>
+              <div style={styles.instructionItem}>
+                <Moon className="w-4 h-4 text-blue-500" />
+                <span>Long Rest: Restore all HP and hit dice</span>
+              </div>
+              <div style={styles.instructionItem}>
+                <ArrowUp className="w-4 h-4 text-green-500" />
+                <span>Click Level Up card to advance your character</span>
+              </div>
+              <div style={styles.instructionItem}>
                 <span>Click column headers to sort skills</span>
               </div>
             </div>
@@ -323,6 +1003,467 @@ const CharacterSheet = ({
             )}
           </div>
         </>
+      )}
+
+      {/* Hit Dice Selection Modal */}
+      {showHitDiceModal && character && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setShowHitDiceModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme === "dark" ? "#374151" : "white",
+              padding: "24px",
+              borderRadius: "12px",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              minWidth: "400px",
+              maxWidth: "500px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                fontSize: "20px",
+                fontWeight: "600",
+                marginBottom: "16px",
+                color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                textAlign: "center",
+              }}
+            >
+              <Coffee
+                size={24}
+                style={{ display: "inline", marginRight: "8px" }}
+              />
+              Short Rest - Use Hit Dice
+            </div>
+
+            <div style={{ marginBottom: "24px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Character:</span>
+                <span>{character.name}</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Current HP:</span>
+                <span>
+                  {character.currentHitPoints || character.hitPoints}/
+                  {character.maxHitPoints || character.hitPoints}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Hit Dice Available:</span>
+                <span>
+                  {character.currentHitDice} × {character.hitDie}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Constitution Modifier:</span>
+                <span>
+                  {formatModifier(characterModifiers.constitution)} per die
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "16px",
+                margin: "20px 0",
+              }}
+            >
+              <button
+                style={{
+                  padding: "8px",
+                  border: `2px solid ${
+                    theme === "dark" ? "#4b5563" : "#d1d5db"
+                  }`,
+                  backgroundColor: theme === "dark" ? "#4b5563" : "#f9fafb",
+                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  borderRadius: "6px",
+                  cursor: selectedHitDiceCount <= 1 ? "not-allowed" : "pointer",
+                  opacity: selectedHitDiceCount <= 1 ? 0.5 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onClick={() =>
+                  setSelectedHitDiceCount(Math.max(1, selectedHitDiceCount - 1))
+                }
+                disabled={selectedHitDiceCount <= 1}
+              >
+                <Minus size={16} />
+              </button>
+
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "600",
+                  minWidth: "40px",
+                  textAlign: "center",
+                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                }}
+              >
+                {selectedHitDiceCount}
+              </div>
+
+              <button
+                style={{
+                  padding: "8px",
+                  border: `2px solid ${
+                    theme === "dark" ? "#4b5563" : "#d1d5db"
+                  }`,
+                  backgroundColor: theme === "dark" ? "#4b5563" : "#f9fafb",
+                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  borderRadius: "6px",
+                  cursor:
+                    selectedHitDiceCount >= character.currentHitDice
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity:
+                    selectedHitDiceCount >= character.currentHitDice ? 0.5 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onClick={() =>
+                  setSelectedHitDiceCount(
+                    Math.min(character.currentHitDice, selectedHitDiceCount + 1)
+                  )
+                }
+                disabled={selectedHitDiceCount >= character.currentHitDice}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                textAlign: "center",
+                marginBottom: "24px",
+                fontSize: "14px",
+                color: theme === "dark" ? "#9ca3af" : "#6b7280",
+              }}
+            >
+              Rolling {selectedHitDiceCount} × {character.hitDie} +{" "}
+              {formatModifier(characterModifiers.constitution)} each
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                style={{
+                  padding: "10px 20px",
+                  border: `2px solid ${
+                    theme === "dark" ? "#4b5563" : "#d1d5db"
+                  }`,
+                  backgroundColor: theme === "dark" ? "#374151" : "white",
+                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+                onClick={() => setShowHitDiceModal(false)}
+                disabled={isRollingHitDice}
+              >
+                <X size={16} style={{ marginRight: "6px" }} />
+                Cancel
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#9d4edd",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: isRollingHitDice ? "wait" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  opacity: isRollingHitDice ? 0.7 : 1,
+                }}
+                onClick={rollHitDice}
+                disabled={isRollingHitDice}
+              >
+                <Dices size={16} />
+                {isRollingHitDice ? "Rolling..." : "Roll Hit Dice"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Damage Modal */}
+      {showDamageModal && character && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setShowDamageModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme === "dark" ? "#374151" : "white",
+              padding: "24px",
+              borderRadius: "12px",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              minWidth: "400px",
+              maxWidth: "500px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                fontSize: "20px",
+                fontWeight: "600",
+                marginBottom: "16px",
+                color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                textAlign: "center",
+              }}
+            >
+              <Heart
+                size={24}
+                style={{
+                  display: "inline",
+                  marginRight: "8px",
+                  color: "#ef4444",
+                }}
+              />
+              Apply Damage
+            </div>
+
+            <div style={{ marginBottom: "24px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Character:</span>
+                <span>{character.name}</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Current HP:</span>
+                <span>
+                  {character.currentHitPoints || character.hitPoints}/
+                  {character.maxHitPoints || character.hitPoints}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Damage Amount:</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={damageAmount}
+                  onChange={(e) =>
+                    setDamageAmount(Math.max(0, parseInt(e.target.value) || 0))
+                  }
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      damageAmount > 0 &&
+                      !isApplyingDamage
+                    ) {
+                      applyDamage();
+                    }
+                    if (e.key === "Escape") {
+                      setShowDamageModal(false);
+                    }
+                  }}
+                  style={{
+                    padding: "4px 8px",
+                    border: `1px solid ${
+                      theme === "dark" ? "#4b5563" : "#d1d5db"
+                    }`,
+                    borderRadius: "4px",
+                    backgroundColor: theme === "dark" ? "#374151" : "white",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    width: "80px",
+                    textAlign: "right",
+                  }}
+                  autoFocus
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                }}
+              >
+                <span>Resulting HP:</span>
+                <span
+                  style={{
+                    color:
+                      Math.max(
+                        0,
+                        (character.currentHitPoints || character.hitPoints) -
+                          damageAmount
+                      ) === 0
+                        ? "#ef4444"
+                        : "inherit",
+                  }}
+                >
+                  {Math.max(
+                    0,
+                    (character.currentHitPoints || character.hitPoints) -
+                      damageAmount
+                  )}
+                  /{character.maxHitPoints || character.hitPoints}
+                  {Math.max(
+                    0,
+                    (character.currentHitPoints || character.hitPoints) -
+                      damageAmount
+                  ) === 0 && " (Unconscious!)"}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                style={{
+                  padding: "10px 20px",
+                  border: `2px solid ${
+                    theme === "dark" ? "#4b5563" : "#d1d5db"
+                  }`,
+                  backgroundColor: theme === "dark" ? "#374151" : "white",
+                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+                onClick={() => setShowDamageModal(false)}
+                disabled={isApplyingDamage}
+              >
+                <X size={16} style={{ marginRight: "6px" }} />
+                Cancel
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#ef4444",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor:
+                    isApplyingDamage || damageAmount <= 0
+                      ? "not-allowed"
+                      : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  opacity: isApplyingDamage || damageAmount <= 0 ? 0.7 : 1,
+                }}
+                onClick={applyDamage}
+                disabled={isApplyingDamage || damageAmount <= 0}
+              >
+                <Heart size={16} />
+                {isApplyingDamage ? "Applying..." : "Apply Damage"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLevelUp && character && (
+        <CharacterLevelUp
+          character={character}
+          onClose={() => setShowLevelUp(false)}
+          onCharacterUpdated={handleCharacterUpdated}
+          supabase={supabase}
+          discordUserId={discordUserId}
+        />
       )}
     </div>
   );
