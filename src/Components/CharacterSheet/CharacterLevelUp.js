@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import { ArrowUp, Heart, Dices, Save, X, RefreshCw } from "lucide-react";
+import { ArrowUp, Heart, Save, X, RefreshCw } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../styles/masterStyles";
-import { hpData, skillsByCastingStyle } from "../data";
+import { skillsByCastingStyle } from "../data";
 import { characterService } from "../../services/characterService";
 
 const CharacterLevelUp = ({
   character,
   onClose,
   onCharacterUpdated,
-  supabase,
+  // supabase,
   discordUserId,
 }) => {
   const { theme } = useTheme();
@@ -100,6 +100,7 @@ const CharacterLevelUp = ({
     } else if (hpMethod === "manual") {
       setHpGain(manualHpGain);
     }
+    // eslint-disable-next-line
   }, [hpMethod, rolledHpGain, manualHpGain]);
 
   // Initialize skill choices for the new level

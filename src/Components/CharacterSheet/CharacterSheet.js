@@ -134,6 +134,7 @@ const CharacterSheet = ({
 
   useEffect(() => {
     fetchCharacterDetails();
+    // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId, supabase]);
 
   const transformSkillProficiencies = (skillArray) => {
