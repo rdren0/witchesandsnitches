@@ -254,6 +254,7 @@ const CharacterCreationForm = ({
       loadCharacters();
       getAndUpdateActiveCharacterCount(discordUserId);
     }
+    // eslint-disable-next-line
   }, [discordUserId, loadCharacters]);
 
   if (!user || !discordUserId) {
