@@ -137,8 +137,8 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
 
       {hasSelectedHeritage === 1 && (
         <div style={styles.completionMessage}>
-          ✓ Heritage selected! Showing your chosen heritage. Uncheck to remove
-          selection and see all heritages again.
+          ✓ Heritage selected! Click the checkbox to unselect and choose a
+          different heritage or switch back to a standard feat.
         </div>
       )}
 
@@ -160,8 +160,7 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
                 <div style={styles.featHeader}>
                   <label style={styles.featLabelClickable}>
                     <input
-                      type="radio"
-                      name="innateHeritage"
+                      type="checkbox"
                       checked={isSelected}
                       onChange={() => handleHeritageToggle(heritage)}
                       style={{
@@ -171,7 +170,6 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
                         cursor: "pointer",
                         accentColor: "#8B5CF6",
                         transform: "scale(1.2)",
-                        backgroundColor: "cyan",
                       }}
                     />
                     <span
@@ -223,8 +221,9 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
       <div style={styles.helpText}>
         Note: Innate Heritage is optional and represents your character's
         magical bloodline or supernatural ancestry. You can select one heritage
-        that provides unique abilities and traits. Heritage is typically
-        established at Level 1.
+        that provides unique abilities and traits. Click the checkbox to
+        select/unselect a heritage. Heritage is typically established at Level
+        1.
         {isHigherLevel &&
           " Heritage changes for higher-level characters may require DM approval."}
       </div>

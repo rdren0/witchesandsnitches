@@ -1,6 +1,7 @@
 import { standardFeats } from "../data";
 import { createFeatStyles } from "../../styles/masterStyles";
 import { useTheme } from "../../contexts/ThemeContext";
+import { allSkills } from "../CharacterSheet/utils";
 
 export const StandardFeat = ({
   character,
@@ -12,6 +13,7 @@ export const StandardFeat = ({
 }) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
+
   const handleFeatToggle = (featName) => {
     setCharacter((prev) => {
       const currentFeats = prev.standardFeats;
@@ -52,16 +54,63 @@ export const StandardFeat = ({
     if (!featFilter.trim()) return standardFeats;
 
     const searchTerm = featFilter.toLowerCase();
-    return standardFeats.filter(
-      (feat) =>
-        feat.name.toLowerCase().includes(searchTerm) ||
-        feat.preview.toLowerCase().includes(searchTerm) ||
-        feat.description.toLowerCase().includes(searchTerm)
+
+    const matchingSkills = allSkills.filter(
+      (skill) =>
+        skill.name.toLowerCase().includes(searchTerm) ||
+        skill.displayName.toLowerCase().includes(searchTerm) ||
+        skill.displayName.toLowerCase().startsWith(searchTerm) ||
+        skill.name.toLowerCase().startsWith(searchTerm)
     );
+
+    return standardFeats.filter((feat) => {
+      const basicMatch =
+        feat.name.toLowerCase().includes(searchTerm) ||
+        feat.preview.toLowerCase().includes(searchTerm);
+
+      const descriptionText = Array.isArray(feat.description)
+        ? feat.description.join(" ").toLowerCase()
+        : (feat.description || "").toLowerCase();
+
+      const descriptionMatch = descriptionText.includes(searchTerm);
+
+      const skillMatch = matchingSkills.some((skill) => {
+        const skillDisplayName = skill.displayName.toLowerCase();
+        const skillKey = skill.name.toLowerCase();
+
+        return (
+          descriptionText.includes(skillDisplayName) ||
+          descriptionText.includes(skillKey) ||
+          descriptionText.includes(`${skillDisplayName} check`) ||
+          descriptionText.includes(`${skillDisplayName} checks`) ||
+          descriptionText.includes(`${skillKey} check`) ||
+          descriptionText.includes(`${skillKey} checks`) ||
+          feat.name.toLowerCase().includes(skillDisplayName) ||
+          feat.name.toLowerCase().includes(skillKey) ||
+          feat.preview.toLowerCase().includes(skillDisplayName) ||
+          feat.preview.toLowerCase().includes(skillKey)
+        );
+      });
+
+      const skillTermMatch =
+        matchingSkills.length > 0 &&
+        matchingSkills.some((skill) => {
+          const ability = skill.ability;
+
+          return (
+            descriptionText.includes(ability) ||
+            descriptionText.includes(`${ability} check`) ||
+            descriptionText.includes(`${ability} checks`) ||
+            descriptionText.includes(`${ability} saving throw`) ||
+            descriptionText.includes(`${ability}-based`)
+          );
+        });
+
+      return basicMatch || descriptionMatch || skillMatch || skillTermMatch;
+    });
   };
 
   const filteredFeats = getFilteredFeats();
-
   return (
     <div style={styles.fieldContainer}>
       <h3 style={styles.skillsHeader}>
@@ -72,7 +121,7 @@ export const StandardFeat = ({
         <div style={styles.featFilterContainer}>
           <input
             type="text"
-            placeholder="Search feats by name, preview, or description..."
+            placeholder="Search feats by name,  description, or ASI."
             value={featFilter}
             onChange={(e) => setFeatFilter(e.target.value)}
             style={styles.featFilterInput}
@@ -100,6 +149,31 @@ export const StandardFeat = ({
           {featFilter.trim() && (
             <div style={styles.featFilterResults}>
               Showing {filteredFeats.length} of {standardFeats.length} feats
+              {(() => {
+                const matchingSkills = allSkills.filter(
+                  (skill) =>
+                    skill.name
+                      .toLowerCase()
+                      .includes(featFilter.toLowerCase()) ||
+                    skill.displayName
+                      .toLowerCase()
+                      .includes(featFilter.toLowerCase())
+                );
+                return (
+                  matchingSkills.length > 0 && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        marginTop: "4px",
+                      }}
+                    >
+                      Including feats that modify:{" "}
+                      {matchingSkills.map((s) => s.displayName).join(", ")}
+                    </div>
+                  )
+                );
+              })()}
             </div>
           )}
         </div>
@@ -115,7 +189,8 @@ export const StandardFeat = ({
       <div style={styles.featsContainer}>
         {filteredFeats.length === 0 ? (
           <div style={styles.noFeatsFound}>
-            No feats found matching "{featFilter}". Try a different search term.
+            No feats found matching "{featFilter}". Try a different search term
+            or skill name.
           </div>
         ) : (
           filteredFeats.map((feat) => {
@@ -186,9 +261,11 @@ export const StandardFeat = ({
         )}
       </div>
       <div style={styles.helpText}>
-        Note: You can select 1 standard feat at Level 1.
+        Note: You can select 1 standard feat at Level 1. Search supports skill
+        names like "deception", "athletics", "perception", etc.
       </div>
     </div>
   );
 };
+
 export default StandardFeat;
