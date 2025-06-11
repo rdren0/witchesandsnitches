@@ -333,6 +333,7 @@ export const useRollFunctions = () => {
     rollSkill: (params) => rollSkill({ ...params, showRollResult }),
     attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
     rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
+    rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
   };
 };
 
@@ -563,6 +564,95 @@ export const getProficiencyAnalysis = (proficiencies, ingredientQuality) => {
   return `**Category:** ${category}\n**With ${ingredientQuality} ingredients:** Can achieve up to ${getMaxAchievableQuality(
     { proficiencies, ingredientQuality }
   )} quality`;
+};
+
+export const rollGenericD20 = async ({
+  modifier = 0,
+  title = "Generic Roll",
+  description = "Rolling a d20 with modifier",
+  character = null,
+  isRolling,
+  setIsRolling,
+  showRollResult,
+}) => {
+  if (isRolling) return;
+
+  setIsRolling(true);
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+    const mod = parseInt(modifier) || 0;
+    const total = d20Roll + mod;
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: title,
+        rollValue: d20Roll,
+        modifier: mod,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "generic",
+        description: description,
+      });
+    } else {
+      alert(`${title}: d20(${d20Roll}) + ${mod} = ${total}`);
+    }
+
+    let embedColor = 0xffe645; // Gray for generic rolls
+    let resultText = "";
+
+    const rollTitle = character
+      ? `${character.name}: ${title}${resultText}`
+      : `${title}${resultText}`;
+
+    const message = {
+      embeds: [
+        {
+          title: rollTitle,
+          description: "",
+          color: embedColor,
+          fields: [
+            {
+              name: "Roll Details",
+              value: `Roll: ${d20Roll} ${
+                mod >= 0 ? "+" : ""
+              }${mod} = **${total}**`,
+              inline: false,
+            },
+          ],
+          footer: {
+            text: `Witches and Snitches - Generic Roll • Today at ${new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}`,
+          },
+        },
+      ],
+    };
+
+    if (discordWebhookUrl) {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
+    }
+  } catch (error) {
+    console.error("Error sending Discord message:", error);
+    alert("Failed to send roll to Discord");
+  } finally {
+    setIsRolling(false);
+  }
 };
 
 export const rollBrewPotion = async ({

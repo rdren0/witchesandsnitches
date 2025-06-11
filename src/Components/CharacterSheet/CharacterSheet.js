@@ -20,6 +20,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../../App/diceRoller";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+import GenericD20Roller from "../GenericD20Roller/GenericD20Roller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -1138,16 +1139,32 @@ const CharacterSheet = ({
             character={character}
             discordWebhookUrl={discordWebhookUrl}
           />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr auto",
+              gap: "20px",
+              alignItems: "start",
+              marginBottom: "20px",
+            }}
+          >
+            <Skills
+              character={character}
+              supabase={supabase}
+              discordUserId={discordUserId}
+              setCharacter={setCharacter}
+              selectedCharacterId={selectedCharacter.id}
+              isRolling={isRolling}
+              modifiers={modifiers(character)}
+            />
 
-          <Skills
-            character={character}
-            supabase={supabase}
-            discordUserId={discordUserId}
-            setCharacter={setCharacter}
-            selectedCharacterId={selectedCharacter.id}
-            isRolling={isRolling}
-            modifiers={modifiers(character)}
-          />
+            <GenericD20Roller
+              title="Custom Roll"
+              description={`Rolling for ${character.name}`}
+              style={{ width: "100%" }}
+              character={character}
+            />
+          </div>
 
           <div style={styles.instructionsCard}>
             <div style={styles.instructionsGrid}>
