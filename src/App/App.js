@@ -350,7 +350,6 @@ const Navigation = ({ characters, user }) => {
         />
       </div>
 
-      {/* Navigation Tabs */}
       <nav style={styles.tabNavigation}>
         {visibleTabs.map((tab) => {
           const isActive = isActiveTab(tab.path);
