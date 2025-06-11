@@ -9,6 +9,7 @@ import {
   skillsByCastingStyle,
   hpData,
   subclasses,
+  standardFeats,
   backgrounds,
 } from "../../data";
 
@@ -34,13 +35,13 @@ const CharacterCreator = ({
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
-    asiChoices: {},
+    asiChoices: {}, // This will track ASI/Feat choices for levels 4, 8, 12, 16, 19
     castingStyle: "",
     subclass: "",
     innateHeritage: "",
     background: "",
     gameSession: "",
-    standardFeats: [],
+    standardFeats: [], // This will ONLY contain feats from choices, not auto-granted
     skillProficiencies: [],
     abilityScores: {
       strength: null,
@@ -60,7 +61,7 @@ const CharacterCreator = ({
       healing: 0,
       jinxesHexesCurses: 0,
     },
-    level1ChoiceType: "",
+    level1ChoiceType: "", // "innate" or "feat"
   });
 
   const getGameSessionOptions = () => {
@@ -95,11 +96,82 @@ const CharacterCreator = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  const FEAT_LEVELS = [4, 8, 12, 16, 19];
+  // ASI levels where characters get to choose ASI or Feat
+  const ASI_LEVELS = [4, 8, 12, 16, 19];
 
-  const getASILevels = () => [4, 8, 12, 16, 19];
+  // Get ASI levels available based on character level
   const getAvailableASILevels = (currentLevel) => {
-    return getASILevels().filter((level) => level <= currentLevel);
+    return ASI_LEVELS.filter((level) => level <= currentLevel);
+  };
+
+  // Calculate total feats ONLY from actual choices made
+  const calculateTotalFeatsFromChoices = () => {
+    let totalFeats = 0;
+
+    // Level 1 choice
+    if (character.level1ChoiceType === "feat") {
+      totalFeats += 1;
+    }
+
+    // ASI level choices
+    const availableASILevels = getAvailableASILevels(character.level);
+    availableASILevels.forEach((level) => {
+      const choice = character.asiChoices[level];
+      if (choice && choice.type === "feat") {
+        totalFeats += 1;
+      }
+    });
+
+    return totalFeats;
+  };
+
+  // Get feat progression info for display
+  const getFeatProgressionInfo = () => {
+    const currentLevel = character.level || 1;
+    const availableASILevels = getAvailableASILevels(currentLevel);
+    const nextASILevel = ASI_LEVELS.find((level) => currentLevel < level);
+
+    const choices = [];
+
+    // Level 1 choice
+    if (character.level1ChoiceType === "innate") {
+      choices.push({ level: 1, choice: "Innate Heritage", type: "innate" });
+    } else if (character.level1ChoiceType === "feat") {
+      choices.push({ level: 1, choice: "Starting Feat", type: "feat" });
+    }
+
+    // ASI level choices
+    availableASILevels.forEach((level) => {
+      const asiChoice = character.asiChoices[level];
+      if (asiChoice) {
+        if (asiChoice.type === "asi") {
+          const increases = asiChoice.abilityScoreIncreases || [];
+          const abilityNames = increases
+            .map(
+              (inc) =>
+                inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
+            )
+            .join(", ");
+          choices.push({
+            level,
+            choice: `ASI (+1 ${abilityNames})`,
+            type: "asi",
+          });
+        } else if (asiChoice.type === "feat") {
+          choices.push({
+            level,
+            choice: asiChoice.selectedFeat || "Feat (not selected)",
+            type: "feat",
+          });
+        }
+      }
+    });
+
+    return {
+      choices,
+      nextASILevel,
+      totalFeatsSelected: calculateTotalFeatsFromChoices(),
+    };
   };
 
   const rollAllStats = () => {
@@ -154,6 +226,7 @@ const CharacterCreator = ({
     setFeatFilter("");
     setTempInputValues({});
     setMagicModifierTempValues({});
+    setExpandedASILevels(new Set());
     setIsHpManualMode(false);
     setRolledHp(null);
     setError(null);
@@ -259,7 +332,6 @@ const CharacterCreator = ({
       ...prev,
       level1ChoiceType: choiceType,
       innateHeritage: choiceType === "feat" ? "" : prev.innateHeritage,
-      standardFeats: choiceType === "innate" ? [] : prev.standardFeats,
     }));
   };
 
@@ -307,37 +379,6 @@ const CharacterCreator = ({
     }
   };
 
-  const calculateMaxFeats = () => {
-    let totalFeats = 0;
-    const currentLevel = character.level || 1;
-
-    if (character.level1ChoiceType === "feat") {
-      totalFeats += 1;
-    }
-
-    FEAT_LEVELS.forEach((level) => {
-      if (currentLevel >= level) {
-        totalFeats += 1;
-      }
-    });
-
-    return totalFeats;
-  };
-
-  const getFeatProgressionInfo = () => {
-    const currentLevel = character.level || 1;
-    const earnedFeatLevels = FEAT_LEVELS.filter(
-      (level) => currentLevel >= level
-    );
-    const nextFeatLevel = FEAT_LEVELS.find((level) => currentLevel < level);
-
-    return {
-      earnedFeatLevels,
-      nextFeatLevel,
-      totalAvailableFeats: calculateMaxFeats(),
-    };
-  };
-
   const handleASIChoiceChange = (level, choiceType) => {
     setCharacter((prev) => ({
       ...prev,
@@ -381,6 +422,30 @@ const CharacterCreator = ({
     });
   };
 
+  // Collect all feats from choices
+  const collectAllFeatsFromChoices = () => {
+    const allFeats = [];
+
+    // Level 1 feat (if chosen)
+    if (
+      character.level1ChoiceType === "feat" &&
+      character.standardFeats.length > 0
+    ) {
+      allFeats.push(...character.standardFeats);
+    }
+
+    // ASI level feats
+    const availableASILevels = getAvailableASILevels(character.level);
+    availableASILevels.forEach((level) => {
+      const choice = character.asiChoices[level];
+      if (choice && choice.type === "feat" && choice.selectedFeat) {
+        allFeats.push(choice.selectedFeat);
+      }
+    });
+
+    return allFeats;
+  };
+
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
@@ -399,16 +464,40 @@ const CharacterCreator = ({
       return;
     }
 
-    const maxFeats = calculateMaxFeats();
+    // Validate ASI choices
+    const availableASILevels = getAvailableASILevels(character.level);
+    for (const level of availableASILevels) {
+      const choice = character.asiChoices[level];
+      if (!choice || !choice.type) {
+        setError(`Please make a choice for Level ${level} (ASI or Feat)`);
+        setIsSaving(false);
+        return;
+      }
+
+      if (choice.type === "asi") {
+        const increases = choice.abilityScoreIncreases || [];
+        if (increases.length !== 2) {
+          setError(
+            `Please select exactly 2 ability score increases for Level ${level}`
+          );
+          setIsSaving(false);
+          return;
+        }
+      } else if (choice.type === "feat") {
+        if (!choice.selectedFeat) {
+          setError(`Please select a feat for Level ${level}`);
+          setIsSaving(false);
+          return;
+        }
+      }
+    }
+
+    // Validate Level 1 feat choice
     if (
       character.level1ChoiceType === "feat" &&
-      character.standardFeats.length !== maxFeats
+      character.standardFeats.length === 0
     ) {
-      setError(
-        `Please select exactly ${maxFeats} feat${
-          maxFeats !== 1 ? "s" : ""
-        } (you have ${character.standardFeats.length} selected)`
-      );
+      setError("Please select your starting feat");
       setIsSaving(false);
       return;
     }
@@ -421,6 +510,9 @@ const CharacterCreator = ({
       return;
     }
 
+    // Collect all feats from all choices
+    const allFeats = collectAllFeatsFromChoices();
+
     const characterToSave = {
       name: character.name.trim(),
       house: character.house,
@@ -429,15 +521,15 @@ const CharacterCreator = ({
       innate_heritage: character.innateHeritage,
       background: character.background,
       game_session: character.gameSession,
-      standard_feats: character.standardFeats,
+      standard_feats: allFeats, // All feats from all choices
       skill_proficiencies: character.skillProficiencies,
       ability_scores: character.abilityScores,
       hit_points: getCurrentHp(),
-
       level: character.level,
       wand_type: character.wandType,
       magic_modifiers: character.magicModifiers,
       level1_choice_type: character.level1ChoiceType,
+      asi_choices: character.asiChoices, // Save ASI choices for future reference
     };
 
     try {
@@ -469,6 +561,7 @@ const CharacterCreator = ({
           jinxesHexesCurses: 0,
         },
         level1ChoiceType: savedCharacter.level1_choice_type || "",
+        asiChoices: savedCharacter.asi_choices || {},
         createdAt: savedCharacter.created_at,
       };
 
@@ -494,8 +587,6 @@ const CharacterCreator = ({
     !isSaving &&
     !isLoadingCharacterCount &&
     activeCharacterCount < maxCharacters;
-
-  console.log(activeCharacterCount, maxCharacters);
 
   const featInfo = getFeatProgressionInfo();
 
@@ -789,6 +880,79 @@ const CharacterCreator = ({
         </select>
       </div>
 
+      {/* Character Progression Summary */}
+      {character.level > 1 && (
+        <div style={styles.fieldContainer}>
+          <div
+            style={{
+              ...styles.fieldContainer,
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+              borderRadius: "8px",
+              padding: "16px",
+              marginBottom: "16px",
+            }}
+          >
+            <h4
+              style={{
+                ...styles.skillsSubheader,
+                margin: "0 0 12px 0",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <Star size={16} color={theme.primary} />
+              Character Progression Summary
+            </h4>
+
+            <div style={{ fontSize: "14px", lineHeight: "1.5" }}>
+              <div style={{ marginBottom: "8px" }}>
+                <strong>Level {character.level} Character Choices:</strong>
+              </div>
+
+              {featInfo.choices.map((choice, index) => (
+                <div
+                  key={index}
+                  style={{
+                    marginBottom: "4px",
+                    color:
+                      choice.type === "feat"
+                        ? theme.primary
+                        : choice.type === "asi"
+                        ? theme.success
+                        : choice.type === "innate"
+                        ? theme.warning
+                        : theme.text,
+                  }}
+                >
+                  ✓ Level {choice.level}: {choice.choice}
+                </div>
+              ))}
+
+              {featInfo.nextASILevel && (
+                <div
+                  style={{ marginBottom: "4px", color: theme.textSecondary }}
+                >
+                  ○ Level {featInfo.nextASILevel}: Next ASI/Feat Choice
+                </div>
+              )}
+
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: theme.textSecondary,
+                  marginTop: "8px",
+                  fontStyle: "italic",
+                }}
+              >
+                Total Feats Selected: {featInfo.totalFeatsSelected}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>
           {character.level === 1
@@ -865,76 +1029,8 @@ const CharacterCreator = ({
         />
       )}
 
-      {(character.level1ChoiceType === "feat" ||
-        featInfo.earnedFeatLevels.length > 0) && (
+      {character.level1ChoiceType === "feat" && (
         <div style={styles.fieldContainer}>
-          <div
-            style={{
-              ...styles.fieldContainer,
-              backgroundColor: theme.surface,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "8px",
-              padding: "16px",
-              marginBottom: "16px",
-            }}
-          >
-            <h4
-              style={{
-                ...styles.skillsSubheader,
-                margin: "0 0 12px 0",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <Star size={16} color={theme.primary} />
-              Feat Progression
-            </h4>
-
-            <div style={{ fontSize: "14px", lineHeight: "1.5" }}>
-              <div style={{ marginBottom: "8px" }}>
-                <strong>Available Feats:</strong> {featInfo.totalAvailableFeats}
-                <span style={{ color: theme.textSecondary, marginLeft: "8px" }}>
-                  ({character.standardFeats.length} selected)
-                </span>
-              </div>
-
-              {character.level1ChoiceType === "feat" && (
-                <div style={{ marginBottom: "4px", color: theme.success }}>
-                  ✓ Level 1: Starting Feat
-                </div>
-              )}
-
-              {featInfo.earnedFeatLevels.map((level) => (
-                <div
-                  key={level}
-                  style={{ marginBottom: "4px", color: theme.success }}
-                >
-                  ✓ Level {level}: Additional Feat
-                </div>
-              ))}
-
-              {featInfo.nextFeatLevel && (
-                <div
-                  style={{ marginBottom: "4px", color: theme.textSecondary }}
-                >
-                  ○ Level {featInfo.nextFeatLevel}: Next Feat
-                </div>
-              )}
-
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: theme.textSecondary,
-                  marginTop: "8px",
-                  fontStyle: "italic",
-                }}
-              >
-                Characters gain additional feats at levels 4, 8, 12, 16, and 19
-              </div>
-            </div>
-          </div>
-
           <StandardFeat
             character={character}
             setCharacter={setCharacter}
@@ -942,14 +1038,14 @@ const CharacterCreator = ({
             setExpandedFeats={setExpandedFeats}
             featFilter={featFilter}
             setFeatFilter={setFeatFilter}
-            maxFeats={calculateMaxFeats()}
-            isLevel1Choice={character.level1ChoiceType === "feat"}
+            maxFeats={1} // Only 1 feat for level 1 choice
+            isLevel1Choice={true}
             characterLevel={character.level}
           />
         </div>
       )}
 
-      {/* Add this after the Level 1 Choice section */}
+      {/* ASI/Feat Choices for levels 4, 8, 12, 16, 19 */}
       {getAvailableASILevels(character.level).map((level) => {
         const choice = character.asiChoices[level] || {};
         const isExpanded = expandedASILevels.has(level);
@@ -962,6 +1058,11 @@ const CharacterCreator = ({
                 cursor: "pointer",
                 display: "flex",
                 justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px",
+                backgroundColor: theme.surface,
+                border: `1px solid ${theme.border}`,
+                borderRadius: "8px",
               }}
               onClick={() => {
                 const newExpanded = new Set(expandedASILevels);
@@ -973,12 +1074,14 @@ const CharacterCreator = ({
                 setExpandedASILevels(newExpanded);
               }}
             >
-              <h3>Level {level} - ASI or Feat</h3>
+              <h3 style={{ margin: 0 }}>
+                Level {level} - Choose ASI or Feat *
+              </h3>
               <span>{isExpanded ? "▼" : "▶"}</span>
             </div>
 
             {isExpanded && (
-              <div>
+              <div style={{ marginTop: "16px" }}>
                 <div style={styles.level1ChoiceContainer}>
                   <label
                     style={
@@ -996,7 +1099,7 @@ const CharacterCreator = ({
                         handleASIChoiceChange(level, e.target.value)
                       }
                     />
-                    <span>Ability Score Improvement</span>
+                    <span>Ability Score Improvement (+2 total)</span>
                   </label>
                   <label
                     style={
@@ -1024,11 +1127,16 @@ const CharacterCreator = ({
                       Select Abilities to Improve (
                       {(choice.abilityScoreIncreases || []).length}/2)
                     </h4>
+                    <div style={styles.helpText}>
+                      Choose exactly 2 ability score increases (can be the same
+                      ability twice)
+                    </div>
                     <div
                       style={{
                         display: "grid",
                         gridTemplateColumns: "repeat(2, 1fr)",
                         gap: "12px",
+                        marginTop: "12px",
                       }}
                     >
                       {[
@@ -1042,6 +1150,10 @@ const CharacterCreator = ({
                         const selectedCount = (
                           choice.abilityScoreIncreases || []
                         ).filter((inc) => inc.ability === ability).length;
+                        const canIncrease =
+                          (choice.abilityScoreIncreases || []).length < 2;
+                        const canDecrease = selectedCount > 0;
+
                         return (
                           <div
                             key={ability}
@@ -1049,16 +1161,31 @@ const CharacterCreator = ({
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              padding: "8px",
-                              border: "1px solid #ccc",
-                              borderRadius: "4px",
+                              padding: "12px",
+                              border: `1px solid ${theme.border}`,
+                              borderRadius: "6px",
+                              backgroundColor:
+                                selectedCount > 0
+                                  ? theme.success + "20"
+                                  : theme.surface,
                             }}
                           >
-                            <span>
+                            <span
+                              style={{
+                                fontWeight:
+                                  selectedCount > 0 ? "600" : "normal",
+                              }}
+                            >
                               {ability.charAt(0).toUpperCase() +
                                 ability.slice(1)}
                             </span>
-                            <div>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1083,28 +1210,56 @@ const CharacterCreator = ({
                                     }));
                                   }
                                 }}
-                                disabled={selectedCount === 0}
+                                disabled={!canDecrease}
                                 style={{
-                                  marginRight: "8px",
                                   padding: "4px 8px",
+                                  backgroundColor: canDecrease
+                                    ? "#ef4444"
+                                    : theme.border,
+                                  color: canDecrease
+                                    ? "white"
+                                    : theme.textSecondary,
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: canDecrease
+                                    ? "pointer"
+                                    : "not-allowed",
                                 }}
                               >
                                 -
                               </button>
-                              <span>+{selectedCount}</span>
+                              <span
+                                style={{
+                                  minWidth: "30px",
+                                  textAlign: "center",
+                                  fontWeight: "600",
+                                  color:
+                                    selectedCount > 0
+                                      ? theme.success
+                                      : theme.text,
+                                }}
+                              >
+                                +{selectedCount}
+                              </span>
                               <button
                                 type="button"
                                 onClick={() =>
                                   handleASIAbilityScoreIncrease(level, ability)
                                 }
-                                disabled={
-                                  selectedCount >= 2 ||
-                                  (choice.abilityScoreIncreases || []).length >=
-                                    2
-                                }
+                                disabled={!canIncrease}
                                 style={{
-                                  marginLeft: "8px",
                                   padding: "4px 8px",
+                                  backgroundColor: canIncrease
+                                    ? theme.success
+                                    : theme.border,
+                                  color: canIncrease
+                                    ? "white"
+                                    : theme.textSecondary,
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: canIncrease
+                                    ? "pointer"
+                                    : "not-allowed",
                                 }}
                               >
                                 +
@@ -1137,62 +1292,11 @@ const CharacterCreator = ({
                       style={styles.select}
                     >
                       <option value="">Select a feat...</option>
-                      <option value="Alert">Alert</option>
-                      <option value="Athlete">Athlete</option>
-                      <option value="Actor">Actor</option>
-                      <option value="Charger">Charger</option>
-                      <option value="Crossbow Expert">Crossbow Expert</option>
-                      <option value="Defensive Duelist">
-                        Defensive Duelist
-                      </option>
-                      <option value="Dual Wielder">Dual Wielder</option>
-                      <option value="Dungeon Delver">Dungeon Delver</option>
-                      <option value="Durable">Durable</option>
-                      <option value="Elemental Adept">Elemental Adept</option>
-                      <option value="Fey Touched">Fey Touched</option>
-                      <option value="Great Weapon Master">
-                        Great Weapon Master
-                      </option>
-                      <option value="Healer">Healer</option>
-                      <option value="Heavily Armored">Heavily Armored</option>
-                      <option value="Heavy Armor Master">
-                        Heavy Armor Master
-                      </option>
-                      <option value="Inspiring Leader">Inspiring Leader</option>
-                      <option value="Keen Mind">Keen Mind</option>
-                      <option value="Lightly Armored">Lightly Armored</option>
-                      <option value="Lucky">Lucky</option>
-                      <option value="Mage Slayer">Mage Slayer</option>
-                      <option value="Magic Initiate">Magic Initiate</option>
-                      <option value="Martial Adept">Martial Adept</option>
-                      <option value="Medium Armor Master">
-                        Medium Armor Master
-                      </option>
-                      <option value="Mobile">Mobile</option>
-                      <option value="Moderately Armored">
-                        Moderately Armored
-                      </option>
-                      <option value="Mounted Combatant">
-                        Mounted Combatant
-                      </option>
-                      <option value="Observant">Observant</option>
-                      <option value="Polearm Master">Polearm Master</option>
-                      <option value="Resilient">Resilient</option>
-                      <option value="Ritual Caster">Ritual Caster</option>
-                      <option value="Savage Attacker">Savage Attacker</option>
-                      <option value="Sentinel">Sentinel</option>
-                      <option value="Shadow Touched">Shadow Touched</option>
-                      <option value="Sharpshooter">Sharpshooter</option>
-                      <option value="Shield Master">Shield Master</option>
-                      <option value="Skilled">Skilled</option>
-                      <option value="Skulker">Skulker</option>
-                      <option value="Spell Sniper">Spell Sniper</option>
-                      <option value="Tavern Brawler">Tavern Brawler</option>
-                      <option value="Telekinetic">Telekinetic</option>
-                      <option value="Telepathic">Telepathic</option>
-                      <option value="Tough">Tough</option>
-                      <option value="War Caster">War Caster</option>
-                      <option value="Weapon Master">Weapon Master</option>
+                      {standardFeats.map((feat) => (
+                        <option key={feat.name} value={feat.name}>
+                          {feat.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}

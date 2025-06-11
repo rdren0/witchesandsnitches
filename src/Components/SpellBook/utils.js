@@ -1,5 +1,4 @@
 import {
-  SPELL_DESCRIPTIONS,
   INDIVIDUAL_SPELL_MODIFIERS,
   TRADITIONAL_SCHOOL_MAPPINGS,
   CATEGORY_DEFAULT_MAPPINGS,
@@ -8,10 +7,6 @@ import {
 export const getAbilityModifier = (score) => {
   if (score === null || score === undefined) return 0;
   return Math.floor((score - 10) / 2);
-};
-
-const getSpellDescription = (spellName) => {
-  return SPELL_DESCRIPTIONS[spellName] || null;
 };
 
 const formatSpellDescription = (description) => {
@@ -134,7 +129,6 @@ const getSpellModifier = (spellName, subject, character) => {
 };
 
 export {
-  getSpellDescription,
   formatSpellDescription,
   getModifierDisplay,
   getModifierInfo,
