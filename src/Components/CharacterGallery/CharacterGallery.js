@@ -9,7 +9,6 @@ import {
   X,
   Edit3,
   Save,
-  MessageSquare,
   Heart,
   UserX,
   User,
@@ -578,7 +577,6 @@ export const CharacterGallery = ({
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [npcNotes, setNpcNotes] = useState({});
-  const [isLoadingNotes, setIsLoadingNotes] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -586,10 +584,10 @@ export const CharacterGallery = ({
     if (selectedCharacter && discordUserId && supabase) {
       loadNpcNotes();
     }
+    // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId]);
 
   const loadNpcNotes = async () => {
-    setIsLoadingNotes(true);
     try {
       const { data, error } = await supabase
         .from("character_npc_notes")
@@ -607,7 +605,6 @@ export const CharacterGallery = ({
     } catch (error) {
       console.error("Error loading NPC notes:", error);
     } finally {
-      setIsLoadingNotes(false);
     }
   };
 
@@ -716,23 +713,6 @@ export const CharacterGallery = ({
       newExpanded.add(typeId);
     }
     setExpandedTypes(newExpanded);
-  };
-
-  const toggleAllSchools = () => {
-    if (expandedSchools.size === schoolKeys.length) {
-      setExpandedSchools(new Set());
-      setExpandedTypes(new Set());
-    } else {
-      setExpandedSchools(new Set(schoolKeys));
-
-      const allTypeIds = [];
-      Object.entries(charactersBySchool).forEach(([school, schoolData]) => {
-        Object.keys(schoolData).forEach((type) => {
-          allTypeIds.push(`${school}-${type}`);
-        });
-      });
-      setExpandedTypes(new Set(allTypeIds));
-    }
   };
 
   const handleSearchChange = (e) => {
