@@ -63,6 +63,19 @@ const CharacterSheet = ({
   const getHitDie = (castingStyle) => {
     return hitDiceData[castingStyle] || hitDiceData.default;
   };
+  const getBaseArmorClass = (castingStyle) => {
+    const baseACMap = {
+      Willpower: 13,
+      "Willpower Caster": 13,
+      Technique: 10,
+      "Technique Caster": 10,
+      Intellect: 11,
+      "Intellect Caster": 11,
+      Vigor: 8,
+      "Vigor Caster": 8,
+    };
+    return baseACMap[castingStyle] || 11;
+  };
 
   const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
     const effectiveScores = { ...baseScores };
@@ -82,7 +95,6 @@ const CharacterSheet = ({
   const getAllCharacterFeats = (standardFeats, asiChoices) => {
     const allFeats = [...standardFeats];
 
-    // Add feats from ASI choices
     Object.entries(asiChoices).forEach(([level, choice]) => {
       if (choice.type === "feat" && choice.selectedFeat) {
         allFeats.push(`${choice.selectedFeat} (Level ${level})`);
@@ -113,10 +125,16 @@ const CharacterSheet = ({
 
       if (data) {
         const baseAbilityScores = data.ability_scores || {};
-        const asiChoices = data.asi_choices || {}; // Load ASI choices from database
+        const asiChoices = data.asi_choices || {};
         const effectiveAbilityScores = calculateEffectiveAbilityScores(
           baseAbilityScores,
           asiChoices
+        );
+        console.log("Casting Style:", data.casting_style);
+        console.log("Base AC:", getBaseArmorClass(data.casting_style));
+        console.log(
+          "Dex Mod:",
+          Math.floor((effectiveAbilityScores.dexterity - 10) / 2)
         );
 
         const allFeats = getAllCharacterFeats(
@@ -134,25 +152,21 @@ const CharacterSheet = ({
           bloodStatus: data.innate_heritage || "Unknown",
           wand: data.wand_type || "Unknown wand",
           gameSession: data.game_session || "",
-
           strength: effectiveAbilityScores.strength || 10,
           dexterity: effectiveAbilityScores.dexterity || 10,
           constitution: effectiveAbilityScores.constitution || 10,
           intelligence: effectiveAbilityScores.intelligence || 10,
           wisdom: effectiveAbilityScores.wisdom || 10,
           charisma: effectiveAbilityScores.charisma || 10,
-
           baseAbilityScores: baseAbilityScores,
           asiChoices: asiChoices,
           allFeats: allFeats,
-
           hitPoints: data.hit_points || 1,
           currentHitPoints: data.current_hit_points || data.hit_points || 1,
           maxHitPoints: data.hit_points || 1,
-
           armorClass:
-            11 + Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 11,
-
+            getBaseArmorClass(data.casting_style) +
+            (Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0),
           speed: 30,
           initiative: 8,
           proficiencyBonus: Math.ceil(data.level / 4) + 1,
@@ -639,7 +653,7 @@ const CharacterSheet = ({
           hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
           current_hit_points:
             updatedCharacter.hit_points || updatedCharacter.hitPoints,
-          current_hit_dice: updatedCharacter.level, // Reset hit dice on level up
+          current_hit_dice: updatedCharacter.level,
           ability_scores:
             updatedCharacter.ability_scores || updatedCharacter.abilityScores,
           standard_feats:
