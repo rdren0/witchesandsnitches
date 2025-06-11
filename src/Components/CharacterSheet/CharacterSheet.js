@@ -130,12 +130,6 @@ const CharacterSheet = ({
           baseAbilityScores,
           asiChoices
         );
-        console.log("Casting Style:", data.casting_style);
-        console.log("Base AC:", getBaseArmorClass(data.casting_style));
-        console.log(
-          "Dex Mod:",
-          Math.floor((effectiveAbilityScores.dexterity - 10) / 2)
-        );
 
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],

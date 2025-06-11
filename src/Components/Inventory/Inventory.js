@@ -286,10 +286,9 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     <div style={styles.container}>
       <div style={styles.mainLayout}>
         <Bank
-          user={mockUser}
-          selectedCharacter={mockCharacter}
-          theme={theme}
-          styles={styles}
+          user={user}
+          selectedCharacter={selectedCharacter}
+          supabase={supabase}
         />
 
         <div style={styles.inventorySection}>
