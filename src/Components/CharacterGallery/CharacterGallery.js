@@ -7,56 +7,55 @@ import {
   GraduationCap,
   Search,
   X,
-  Edit3,
   Save,
-  Heart,
-  UserX,
-  User,
-  AlertTriangle,
+  // Heart,
+  // UserX,
+  // User,
+  // AlertTriangle,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "../../styles/masterStyles";
 import { ALL_CHARACTERS } from "./characters";
 
-const RelationshipBadge = ({ relationship, theme }) => {
-  const getRelationshipStyle = (rel) => {
-    switch (rel) {
-      case "friend":
-        return { color: "#10b981", icon: Heart, label: "Friend" };
-      case "enemy":
-        return { color: "#ef4444", icon: UserX, label: "Enemy" };
-      case "neutral":
-        return { color: "#6b7280", icon: User, label: "Neutral" };
-      case "suspicious":
-        return { color: "#f59e0b", icon: AlertTriangle, label: "Suspicious" };
-      default:
-        return { color: theme.textSecondary, icon: User, label: "Unknown" };
-    }
-  };
+// const RelationshipBadge = ({ relationship, theme }) => {
+//   const getRelationshipStyle = (rel) => {
+//     switch (rel) {
+//       case "friend":
+//         return { color: "#10b981", icon: Heart, label: "Friend" };
+//       case "enemy":
+//         return { color: "#ef4444", icon: UserX, label: "Enemy" };
+//       case "neutral":
+//         return { color: "#6b7280", icon: User, label: "Neutral" };
+//       case "suspicious":
+//         return { color: "#f59e0b", icon: AlertTriangle, label: "Suspicious" };
+//       default:
+//         return { color: theme.textSecondary, icon: User, label: "Unknown" };
+//     }
+//   };
 
-  const style = getRelationshipStyle(relationship);
-  const IconComponent = style.icon;
+//   const style = getRelationshipStyle(relationship);
+//   const IconComponent = style.icon;
 
-  return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "2px 6px",
-        borderRadius: "12px",
-        backgroundColor: style.color + "20",
-        border: `1px solid ${style.color}40`,
-        fontSize: "11px",
-        fontWeight: "500",
-        color: style.color,
-      }}
-    >
-      <IconComponent size={12} />
-      {style.label}
-    </div>
-  );
-};
+//   return (
+//     <div
+//       style={{
+//         display: "inline-flex",
+//         alignItems: "center",
+//         gap: "4px",
+//         padding: "2px 6px",
+//         borderRadius: "12px",
+//         backgroundColor: style.color + "20",
+//         border: `1px solid ${style.color}40`,
+//         fontSize: "11px",
+//         fontWeight: "500",
+//         color: style.color,
+//       }}
+//     >
+//       <IconComponent size={12} />
+//       {style.label}
+//     </div>
+//   );
+// };
 
 const CharacterCard = ({
   character,
@@ -133,11 +132,11 @@ const CharacterCard = ({
     setIsEditingNote(false);
   };
 
-  const hasNote =
-    npcNote &&
-    (npcNote.notes?.trim() ||
-      npcNote.relationship !== "unknown" ||
-      npcNote.last_interaction?.trim());
+  // const hasNote =
+  //   npcNote &&
+  //   (npcNote.notes?.trim() ||
+  //     npcNote.relationship !== "unknown" ||
+  //     npcNote.last_interaction?.trim());
 
   return (
     <div style={styles.characterCard}>
@@ -208,17 +207,17 @@ const CharacterCard = ({
         >
           {character.school} • {character.type}
         </div>
-
+        {/* 
         {hasNote && !isEditingNote && (
           <div style={{ marginBottom: "8px" }}>
             <RelationshipBadge relationship={relationship} theme={theme} />
           </div>
-        )}
+        )} */}
 
         <div style={{ marginTop: "8px" }}>
           {!isEditingNote ? (
             <div>
-              {hasNote ? (
+              {/* {hasNote ? (
                 <div style={{ marginBottom: "8px" }}>
                   {npcNote.notes && (
                     <div
@@ -258,8 +257,8 @@ const CharacterCard = ({
                 >
                   No notes yet...
                 </div>
-              )}
-              <button
+              )} */}
+              {/* <button
                 onClick={() => setIsEditingNote(true)}
                 style={{
                   display: "flex",
@@ -278,7 +277,7 @@ const CharacterCard = ({
               >
                 <Edit3 size={12} />
                 {hasNote ? "Edit Notes" : "Add Notes"}
-              </button>
+              </button> */}
             </div>
           ) : (
             <div style={{ fontSize: "12px" }}>
