@@ -531,7 +531,6 @@ const CharacterList = ({
                     }}
                     title="Edit character"
                   >
-                    <Edit3 size={14} />
                     Edit
                   </button>
 
@@ -544,7 +543,6 @@ const CharacterList = ({
                       }}
                       title="Level up character"
                     >
-                      <ArrowUp size={16} />
                       Level Up
                     </button>
                   )}
@@ -560,7 +558,6 @@ const CharacterList = ({
                     }}
                     title="Duplicate character"
                   >
-                    <Copy size={14} />
                     {isDuplicating ? "Duplicating..." : "Duplicate"}
                   </button>
 

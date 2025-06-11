@@ -1368,7 +1368,8 @@ export const createCharacterCreationStyles = (theme) => ({
     borderRadius: "12px",
     padding: "20px",
     transition: "all 0.2s ease",
-    position: "relative",
+    // position: "relative",
+    // width: "360px",
   },
 
   characterCardSelected: {
@@ -1510,12 +1511,12 @@ export const createCharacterCreationStyles = (theme) => ({
 
   characterCardActions: {
     display: "flex",
-    gap: "8px",
-    justifyContent: "flex-end",
+    gap: "4px",
+    justifyContent: "space-evenly",
   },
 
   actionButton: {
-    display: "flex",
+    // display: "flex",
     alignItems: "center",
     gap: "4px",
     padding: "8px 12px",
@@ -1525,6 +1526,7 @@ export const createCharacterCreationStyles = (theme) => ({
     fontWeight: "500",
     cursor: "pointer",
     transition: "all 0.2s ease",
+    width: "80px",
   },
 
   editButton: {
@@ -1540,6 +1542,7 @@ export const createCharacterCreationStyles = (theme) => ({
   deleteButton: {
     backgroundColor: theme.error,
     color: "white",
+    display: "flex",
   },
 
   // Empty State
