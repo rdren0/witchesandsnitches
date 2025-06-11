@@ -10,8 +10,9 @@ import {
   Dice6,
   RotateCcw,
 } from "lucide-react";
-import { standardFeats } from "../../data";
+import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
+import { standardFeats, hpData } from "../../data";
 const LevelUpModal = ({
   character,
   isOpen,
@@ -198,17 +199,13 @@ const LevelUpModal = ({
   };
 
   const getBaseHPIncrease = () => {
-    const hpByClass = {
-      Charms: 6,
-      Transfiguration: 8,
-      "Defense Against the Dark Arts": 10,
-      Healing: 6,
-      Divination: 6,
-      Magizoology: 8,
-    };
-    return hpByClass[character.castingStyle] || 6;
-  };
+    if (!character.castingStyle) return 6;
 
+    const castingData = hpData[character.castingStyle];
+    if (!castingData) return 6;
+
+    return castingData.hitDie || 6;
+  };
   const baseHitDie = getBaseHPIncrease();
   const constitution = getAbilityScore("constitution");
   const conMod = Math.floor((constitution - 10) / 2);
@@ -255,18 +252,27 @@ const LevelUpModal = ({
 
   const steps = getSteps();
   const maxSteps = steps.length;
-
   const rollHitPoints = () => {
-    const roll = Math.floor(Math.random() * baseHitDie) + 1;
-    const total = roll + conMod;
+    const roller = new DiceRoller();
+    const rollResult = roller.roll(`1d${baseHitDie}`);
+
+    const rollValue = rollResult.total;
+    const total = rollValue + conMod;
+
     setLevelUpData((prev) => ({
       ...prev,
-      rolledHP: roll,
+      rolledHP: rollValue,
+      rollDetails: {
+        notation: rollResult.notation,
+        output: rollResult.output,
+        rollValue: rollValue,
+        modifier: conMod,
+        total: Math.max(1, total),
+      },
       hitPointIncrease: Math.max(1, total),
       hitPointMethod: "roll",
     }));
   };
-
   const useAverageHP = () => {
     const average = Math.floor(baseHitDie / 2) + 1;
     const total = average + conMod;

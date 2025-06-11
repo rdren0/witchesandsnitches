@@ -667,18 +667,22 @@ export const backgrounds = [
 
 export const hpData = {
   "Willpower Caster": {
+    hitDie: 10,
     base: 10,
     avgPerLevel: 6,
   },
   "Technique Caster": {
+    hitDie: 6,
     base: 6,
     avgPerLevel: 4,
   },
   "Intellect Caster": {
+    hitDie: 8,
     base: 8,
     avgPerLevel: 5,
   },
   "Vigor Caster": {
+    hitDie: 12,
     base: 12,
     avgPerLevel: 8,
   },
