@@ -23,6 +23,7 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
     if (selectedCharacter?.id && discordUserId) {
       loadMoneyData();
     }
+    // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId]);
 
   const loadMoneyData = async () => {

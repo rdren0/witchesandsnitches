@@ -259,12 +259,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     };
   }, [items]);
 
-  const mockCharacter = selectedCharacter || {
-    id: "demo",
-    name: "Demo Character",
-  };
-  const mockUser = user || { id: "demo" };
-
   if (!user || !selectedCharacter) {
     return (
       <div style={styles.container}>
