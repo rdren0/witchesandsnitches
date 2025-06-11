@@ -60,7 +60,7 @@ export const SubjectCard = ({
   subjectName,
   supabase,
   user,
-  globalSearchTerm = "", // Rename to avoid confusion with local search
+  globalSearchTerm = "",
 }) => {
   const { attemptSpell } = useRollFunctions();
   const { theme } = useTheme();
@@ -74,9 +74,8 @@ export const SubjectCard = ({
   });
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
-  // Local search state
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchFilter, setSearchFilter] = useState("all"); // all, mastered, attempted, unmastered
+  const [searchFilter, setSearchFilter] = useState("all");
 
   const getSubjectStats = (subject) => {
     const levels = spellsData[subject].levels;
@@ -106,7 +105,6 @@ export const SubjectCard = ({
     return { totalSpells, masteredSpells, attemptedSpells };
   };
 
-  // Get all spells for this subject
   const getAllSpells = () => {
     const allSpells = [];
     Object.entries(subjectData.levels).forEach(([level, spells]) => {
@@ -121,14 +119,11 @@ export const SubjectCard = ({
     return allSpells;
   };
 
-  // Determine which search term to use (local takes precedence)
   const activeSearchTerm = searchTerm || globalSearchTerm;
 
-  // Filter spells by search term and status
   const getFilteredSpells = () => {
     let spells = getAllSpells();
 
-    // Filter by search term (local or global)
     if (activeSearchTerm && activeSearchTerm.trim().length > 0) {
       const term = activeSearchTerm.toLowerCase();
       spells = spells.filter((spell) => {
@@ -143,7 +138,6 @@ export const SubjectCard = ({
       });
     }
 
-    // Filter by status
     if (searchFilter !== "all") {
       spells = spells.filter((spellObj) => {
         const spellName = spellObj.name;
@@ -169,7 +163,6 @@ export const SubjectCard = ({
     return spells;
   };
 
-  // Filter spells by status only (for level sections)
   const filterSpellsByStatus = (spells) => {
     if (searchFilter === "all") return spells;
 
@@ -1200,7 +1193,6 @@ export const SubjectCard = ({
         ? (masteredCount / filteredSpells.length) * 100
         : 0;
 
-    // Don't render section if no spells match filter
     if (filteredSpells.length === 0 && hasStatusFilter) {
       return null;
     }

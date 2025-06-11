@@ -633,7 +633,6 @@ export const spellsData = {
     description: "Offensive and mischievous magic",
     levels: {
       Cantrips: [
-        // Note: These spells were mentioned in the list but detailed descriptions weren't provided in the document
         { name: "Bombarda", level: "Cantrip", description: "Explosive spell" },
         { name: "Cantis", level: "Cantrip", description: "Jinx spell" },
         { name: "Devicto", level: "Cantrip", description: "Hex spell" },

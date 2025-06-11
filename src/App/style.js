@@ -1,5 +1,3 @@
-// src/App/style.js - Updated with Theme Support
-// Original static styles (for backward compatibility)
 export const styles = {
   appContainer: {
     fontFamily:
@@ -211,7 +209,6 @@ export const styles = {
   },
 };
 
-// New themed styles function
 export const createThemedStyles = (theme) => ({
   appContainer: {
     fontFamily:
@@ -443,7 +440,6 @@ export const createThemedStyles = (theme) => ({
     color: theme.textSecondary,
     fontStyle: "italic",
   },
-  // Additional theme-specific styles
   themeButton: {
     padding: "0.5rem",
     backgroundColor: theme.surface,

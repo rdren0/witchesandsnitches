@@ -10,7 +10,6 @@ const CharacterLevelUp = ({
   character,
   onClose,
   onCharacterUpdated,
-  // supabase,
   discordUserId,
 }) => {
   const { theme } = useTheme();
@@ -18,7 +17,7 @@ const CharacterLevelUp = ({
 
   const [newLevel, setNewLevel] = useState(character.level + 1);
   const [hpGain, setHpGain] = useState(0);
-  const [hpMethod, setHpMethod] = useState("average"); // 'roll', 'average', 'manual'
+  const [hpMethod, setHpMethod] = useState("average");
   const [manualHpGain, setManualHpGain] = useState(0);
   const [rolledHpGain, setRolledHpGain] = useState(null);
   const [newSkillProficiencies, setNewSkillProficiencies] = useState([]);
@@ -26,13 +25,11 @@ const CharacterLevelUp = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // Calculate constitution modifier
   const getConMod = () => {
     const conScore = character.abilityScores?.constitution || 10;
     return Math.floor((conScore - 10) / 2);
   };
 
-  // Get hit die for casting style
   const getHitDie = () => {
     const hitDiceMap = {
       Willpower: "d10",
@@ -43,7 +40,6 @@ const CharacterLevelUp = ({
     return hitDiceMap[character.castingStyle] || "d8";
   };
 
-  // Calculate average HP gain per level
   const getAverageHpGain = () => {
     const hitDie = getHitDie();
     const dieSize = parseInt(hitDie.substring(1));
@@ -51,7 +47,6 @@ const CharacterLevelUp = ({
     return averageRoll + getConMod();
   };
 
-  // Roll for HP gain
   const rollHpGain = () => {
     const hitDie = getHitDie();
     const roller = new DiceRoller();
@@ -61,37 +56,29 @@ const CharacterLevelUp = ({
     return totalGain;
   };
 
-  // Calculate proficiency bonus for new level
   const getProficiencyBonus = (level) => {
     return Math.ceil(level / 4) + 1;
   };
 
-  // Check if proficiency bonus increases at new level
   const proficiencyIncreases = () => {
     return getProficiencyBonus(newLevel) > getProficiencyBonus(character.level);
   };
 
-  // Get available skills for the character's casting style
   const getAvailableSkills = () => {
     return skillsByCastingStyle[character.castingStyle] || [];
   };
 
-  // Get skills the character doesn't already have
   const getNewSkillOptions = () => {
     const availableSkills = getAvailableSkills();
     const currentSkills = character.skillProficiencies || [];
     return availableSkills.filter((skill) => !currentSkills.includes(skill));
   };
 
-  // Determine skill choices available at new level
   const getSkillChoicesForLevel = (level) => {
-    // This would depend on your class progression rules
-    // For now, let's say certain levels grant skill choices
     const skillGrantingLevels = [1, 3, 6, 9, 12, 15, 18];
     return skillGrantingLevels.includes(level) ? 1 : 0;
   };
 
-  // Initialize HP gain based on method
   useEffect(() => {
     if (hpMethod === "average") {
       setHpGain(getAverageHpGain());
@@ -103,7 +90,6 @@ const CharacterLevelUp = ({
     // eslint-disable-next-line
   }, [hpMethod, rolledHpGain, manualHpGain]);
 
-  // Initialize skill choices for the new level
   useEffect(() => {
     const choices = getSkillChoicesForLevel(newLevel);
     setSkillChoicesPerLevel({ [newLevel]: choices });
@@ -139,7 +125,6 @@ const CharacterLevelUp = ({
         ],
       };
 
-      // Transform to snake_case for database
       const characterToSave = {
         name: updatedCharacter.name,
         house: updatedCharacter.house,
@@ -206,7 +191,6 @@ const CharacterLevelUp = ({
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
         }}
       >
-        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -258,7 +242,6 @@ const CharacterLevelUp = ({
           </div>
         )}
 
-        {/* Current Level Info */}
         <div
           style={{
             backgroundColor: theme.background,
@@ -322,7 +305,6 @@ const CharacterLevelUp = ({
           </div>
         </div>
 
-        {/* Level Selection */}
         <div style={styles.fieldContainer}>
           <label style={styles.label}>New Level</label>
           <input
@@ -337,7 +319,6 @@ const CharacterLevelUp = ({
           />
         </div>
 
-        {/* HP Gain Section */}
         <div style={styles.fieldContainer}>
           <h3 style={styles.skillsHeader}>
             <Heart size={20} color="#ef4444" />
@@ -433,7 +414,6 @@ const CharacterLevelUp = ({
           </div>
         </div>
 
-        {/* Proficiency Bonus Increase */}
         {proficiencyIncreases() && (
           <div
             style={{
@@ -455,7 +435,6 @@ const CharacterLevelUp = ({
           </div>
         )}
 
-        {/* New Skill Proficiencies */}
         {newSkillChoices > 0 && availableNewSkills.length > 0 && (
           <div style={styles.fieldContainer}>
             <h3 style={styles.skillsHeader}>
@@ -507,7 +486,6 @@ const CharacterLevelUp = ({
           </div>
         )}
 
-        {/* Action Buttons */}
         <div
           style={{
             display: "flex",

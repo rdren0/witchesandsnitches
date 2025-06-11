@@ -1,4 +1,3 @@
-// src/App/themedStyles.js
 import { useTheme } from "../contexts/ThemeContext";
 
 export const useThemedStyles = () => {
@@ -231,7 +230,6 @@ export const useThemedStyles = () => {
       color: theme.textSecondary,
       fontStyle: "italic",
     },
-    // Theme Settings Button
     themeButton: {
       padding: "0.5rem",
       backgroundColor: theme.surface,
@@ -250,9 +248,7 @@ export const useThemedStyles = () => {
   };
 };
 
-// Helper function to create component-specific themed styles
 export const createThemedStyles = (theme) => ({
-  // Character Sheet Styles
   characterSheet: {
     container: {
       maxWidth: "1024px",
@@ -288,7 +284,6 @@ export const createThemedStyles = (theme) => ({
     },
   },
 
-  // Spell Book Styles
   spellBook: {
     subjectCard: {
       backgroundColor: theme.cardBackground,
@@ -332,7 +327,6 @@ export const createThemedStyles = (theme) => ({
     },
   },
 
-  // Character Creation Styles
   characterCreation: {
     container: {
       padding: "20px",

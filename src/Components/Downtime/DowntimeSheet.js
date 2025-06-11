@@ -7,7 +7,6 @@ const DowntimeSheet = () => {
   const { theme } = useTheme();
   const styles = getDowntimeStyles(theme);
 
-  // List of available activities
   const availableActivities = [
     "",
     "Gain a Job - Roll Persuasion or an appropriate skill check (e.g., Magical Creatures at the Magical Menagerie)",
@@ -45,7 +44,6 @@ const DowntimeSheet = () => {
     "Animagus Form (RP) - Engage in roleplay to explore an Animagus transformation.",
   ];
 
-  // State for form data
   const [formData, setFormData] = useState({
     name: "",
     years: {
@@ -176,12 +174,9 @@ const DowntimeSheet = () => {
   };
 
   const exportToExcel = () => {
-    // Create a new workbook
     const wb = XLSX.utils.book_new();
 
-    // Create worksheet data array matching the original structure
     const wsData = [
-      // Row 0: Name and Grades header
       [
         "Name: " + formData.name,
         "",
@@ -215,7 +210,6 @@ const DowntimeSheet = () => {
         "",
       ],
 
-      // Row 1: Empty
       [
         "",
         "",
@@ -249,7 +243,6 @@ const DowntimeSheet = () => {
         "",
       ],
 
-      // Row 2: Subject headers with grades
       [
         "",
         "",
@@ -283,7 +276,6 @@ const DowntimeSheet = () => {
         "",
       ],
 
-      // Row 3: Year and more subjects with grades
       [
         "Year:",
         "",
@@ -317,7 +309,6 @@ const DowntimeSheet = () => {
         "",
       ],
 
-      // Row 4: Year checkboxes and more grades
       [
         "",
         "",
@@ -351,7 +342,6 @@ const DowntimeSheet = () => {
         "",
       ],
 
-      // Row 5: More subjects with grades
       [
         "",
         "",
@@ -384,8 +374,6 @@ const DowntimeSheet = () => {
         "",
         "",
       ],
-
-      // Row 6: Semester with more grades
       [
         "Semester:",
         "",
@@ -418,8 +406,6 @@ const DowntimeSheet = () => {
         "",
         "",
       ],
-
-      // Row 7: Semester checkboxes with final grades
       [
         "",
         "",
@@ -452,8 +438,6 @@ const DowntimeSheet = () => {
         "",
         "",
       ],
-
-      // Row 8: Empty
       [
         "",
         "",
@@ -486,8 +470,6 @@ const DowntimeSheet = () => {
         "",
         "",
       ],
-
-      // Row 9: Activities header
       [
         "Downtime Activities",
         "",
@@ -522,7 +504,6 @@ const DowntimeSheet = () => {
       ],
     ];
 
-    // Add additional activity rows
     for (let i = 1; i < formData.activities.length; i++) {
       const activity = formData.activities[i];
       wsData.push([
@@ -558,8 +539,6 @@ const DowntimeSheet = () => {
         activity.successes[4] ? "X" : "",
       ]);
     }
-
-    // Add extra downtime section
     wsData.push([
       "",
       "",
@@ -625,7 +604,6 @@ const DowntimeSheet = () => {
       formData.extraActivity.successes[4] ? "X" : "",
     ]);
 
-    // Add magic school section
     wsData.push([
       "",
       "",
@@ -757,10 +735,8 @@ const DowntimeSheet = () => {
       "",
     ]);
 
-    // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Add some basic styling/column widths
     ws["!cols"] = [
       { wch: 1.5 },
       { wch: 2.75 },
@@ -794,16 +770,13 @@ const DowntimeSheet = () => {
       { wch: 1.5 },
     ];
 
-    // Generate filename with character name and timestamp
     const timestamp = new Date().toISOString().split("T")[0];
     const filename = `${
       formData.name || "Character"
     }_Downtime_${timestamp}.xlsx`;
 
-    // Add the worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, "Downtime Sheet");
 
-    // Write and download the file
     XLSX.writeFile(wb, filename);
   };
 

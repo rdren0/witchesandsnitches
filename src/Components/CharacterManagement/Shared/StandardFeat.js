@@ -1,7 +1,7 @@
-import { standardFeats } from "../data";
-import { createFeatStyles } from "../../styles/masterStyles";
-import { useTheme } from "../../contexts/ThemeContext";
-import { allSkills } from "../CharacterSheet/utils";
+import { standardFeats } from "../../data";
+import { createFeatStyles } from "../../../styles/masterStyles";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { allSkills } from "../../CharacterSheet/utils";
 
 export const StandardFeat = ({
   character,
@@ -10,6 +10,9 @@ export const StandardFeat = ({
   expandedFeats,
   featFilter,
   setFeatFilter,
+  maxFeats = 1,
+  isLevel1Choice = false,
+  characterLevel = 1,
 }) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
@@ -19,7 +22,7 @@ export const StandardFeat = ({
       const currentFeats = prev.standardFeats;
       const isCurrentlySelected = currentFeats.includes(featName);
 
-      if (!isCurrentlySelected && currentFeats.length >= 1) {
+      if (!isCurrentlySelected && currentFeats.length >= maxFeats) {
         return prev;
       }
 
@@ -45,7 +48,7 @@ export const StandardFeat = ({
   };
 
   const getFilteredFeats = () => {
-    if (character.standardFeats.length === 1) {
+    if (character.standardFeats.length === maxFeats) {
       return standardFeats.filter((feat) =>
         character.standardFeats.includes(feat.name)
       );
@@ -111,17 +114,34 @@ export const StandardFeat = ({
   };
 
   const filteredFeats = getFilteredFeats();
+
+  const getHelpText = () => {
+    if (characterLevel === 1) {
+      return "Select your starting feat.";
+    } else {
+      return `Select your feats: 1 starting feat from Level 1, plus up to ${
+        characterLevel - 1
+      } additional feat${
+        characterLevel > 2 ? "s" : ""
+      } from Levels 2-${characterLevel}. Total possible: ${characterLevel} feat${
+        characterLevel > 1 ? "s" : ""
+      }.`;
+    }
+  };
+
   return (
     <div style={styles.fieldContainer}>
       <h3 style={styles.skillsHeader}>
-        Standard Feats ({character.standardFeats.length}/1 selected)
+        Standard Feats ({character.standardFeats.length}/{maxFeats} selected)
       </h3>
 
-      {character.standardFeats.length < 1 && (
+      <div style={styles.helpText}>{getHelpText()}</div>
+
+      {character.standardFeats.length < maxFeats && (
         <div style={styles.featFilterContainer}>
           <input
             type="text"
-            placeholder="Search feats by name,  description, or ASI."
+            placeholder="Search feats by name, description, or ASI."
             value={featFilter}
             onChange={(e) => setFeatFilter(e.target.value)}
             style={styles.featFilterInput}
@@ -179,10 +199,11 @@ export const StandardFeat = ({
         </div>
       )}
 
-      {character.standardFeats.length === 1 && (
+      {character.standardFeats.length === maxFeats && (
         <div style={styles.completionMessage}>
-          ✓ Feat selection complete! Showing your selected feat. Uncheck it to
-          see all feats again.
+          ✓ Feat selection complete! You've selected{" "}
+          {character.standardFeats.length} of {maxFeats} feat
+          {maxFeats > 1 ? "s" : ""}. Uncheck any feat to see all feats again.
         </div>
       )}
 
@@ -260,9 +281,14 @@ export const StandardFeat = ({
           })
         )}
       </div>
+
       <div style={styles.helpText}>
-        Note: You can select 1 standard feat at Level 1. Search supports skill
-        names like "deception", "athletics", "perception", etc.
+        Note: You can select {maxFeats} feat{maxFeats > 1 ? "s" : ""} total
+        {isLevel1Choice
+          ? ` for a Level ${characterLevel} character`
+          : " at Level 1"}
+        . Search supports skill names like "deception", "athletics",
+        "perception", etc.
       </div>
     </div>
   );

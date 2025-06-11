@@ -91,7 +91,7 @@ export const housesBySchool = {
 export const houseAbilityBonuses = {
   Gryffindor: {
     fixed: ["constitution", "charisma"],
-    choice: 1, // player chooses 1 additional ability
+    choice: 1,
   },
   Hufflepuff: {
     fixed: ["constitution", "wisdom"],

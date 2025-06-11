@@ -86,14 +86,12 @@ const PotionBrewingSystem = ({ character }) => {
   const getFilteredPotions = () => {
     let allPotions = [];
 
-    // Get all potions from all years
     Object.entries(potions).forEach(([year, yearPotions]) => {
       allPotions.push(
         ...yearPotions.map((p) => ({ ...p, year: parseInt(year) }))
       );
     });
 
-    // Filter by search term if provided
     if (searchTerm) {
       allPotions = allPotions.filter(
         (potion) =>

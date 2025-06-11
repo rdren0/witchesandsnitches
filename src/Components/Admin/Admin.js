@@ -18,7 +18,7 @@ const AdminPanel = () => {
     if (window.confirm(`Restore character "${characterName}"?`)) {
       try {
         await characterService.restoreCharacter(characterId, discordUserId);
-        loadArchived(); // Refresh the list
+        loadArchived();
         alert("Character restored successfully!");
       } catch (error) {
         console.error("Error restoring character:", error);

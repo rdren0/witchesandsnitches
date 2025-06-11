@@ -12,7 +12,7 @@ import { Edit3, Check, X, User, Palette } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
-import CharacterCreationForm from "../Components/CharacterCreationForm/CharacterCreationForm";
+
 import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
 import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
 import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
@@ -25,6 +25,7 @@ import { createAppStyles } from "../styles/masterStyles";
 import DowntimeSheet from "../Components/Downtime/DowntimeSheet";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
+import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -280,9 +281,9 @@ const Navigation = ({ characters, user }) => {
     const baseTabs = [
       { path: "/", label: "Home", key: "home" },
       {
-        path: "/character-creation",
-        label: "Character Builder",
-        key: "character-creation",
+        path: "/character-management",
+        label: "Character Management",
+        key: "character-management",
       },
     ];
 
@@ -294,7 +295,6 @@ const Navigation = ({ characters, user }) => {
           label: "Character Sheet",
           key: "character",
         },
-        { path: "/gallery", label: "NPCs", key: "gallery" },
       ];
     }
 
@@ -308,7 +308,6 @@ const Navigation = ({ characters, user }) => {
       return location.pathname === "/" || location.pathname === "/home";
     }
     if (path === "/character/sheet") {
-      // For the Character Sheet tab, check if we're on any character route
       return location.pathname.startsWith("/character/");
     }
     return location.pathname === path;
@@ -346,6 +345,7 @@ const CharacterSubNavigation = () => {
     { path: "/character/spellbook", label: "Spellbook", key: "spellbook" },
     { path: "/character/potions", label: "Potions", key: "potions" },
     { path: "/character/inventory", label: "Inventory", key: "inventory" },
+    { path: "/character/gallery", label: "NPC Gallery", key: "gallery" },
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
     { path: "/character/notes", label: "Notes", key: "notes" },
   ];
@@ -446,10 +446,10 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
         />
         <div
           style={styles.featureCard}
-          onClick={() => handleCardClick("/character-creation")}
+          onClick={() => handleCardClick("/character-management")}
         >
-          <h3>Character Builder</h3>
-          <p>Build and customize your D&D characters.</p>
+          <h3>Character Management</h3>
+          <p>Build, edit, and manage your D&D characters.</p>
         </div>
       </div>
     </div>
@@ -505,6 +505,7 @@ function AppContent() {
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [charactersError, setCharactersError] = useState(null);
   const [initialCharacterId, setInitialCharacterId] = useState(null);
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
   const loadingRef = useRef(false);
 
@@ -529,7 +530,6 @@ function AppContent() {
     getInitialSelectedCharacter
   );
 
-  // Update theme context when character changes
   useEffect(() => {
     setThemeSelectedCharacter(selectedCharacter);
   }, [selectedCharacter, setThemeSelectedCharacter]);
@@ -630,9 +630,12 @@ function AppContent() {
           characterToSelect.id.toString()
         );
       }
+
+      setHasAttemptedLoad(true);
     } catch (err) {
       setCharactersError("Failed to load characters: " + err.message);
       console.error("Error loading characters:", err);
+      setHasAttemptedLoad(true);
     } finally {
       setCharactersLoading(false);
       loadingRef.current = false;
@@ -645,10 +648,10 @@ function AppContent() {
   ]);
 
   useEffect(() => {
-    if (discordUserId && characters.length === 0 && !charactersLoading) {
+    if (discordUserId && !hasAttemptedLoad && !charactersLoading) {
       loadCharacters();
     }
-  }, [discordUserId, loadCharacters, characters.length, charactersLoading]);
+  }, [discordUserId, hasAttemptedLoad, charactersLoading, loadCharacters]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -671,32 +674,32 @@ function AppContent() {
   useEffect(() => {
     if (user) {
       loadCustomUsername();
-      loadCharacters();
+      setHasAttemptedLoad(false);
     } else {
       setCustomUsername("");
       setCharacters([]);
       setSelectedCharacter(null);
       setThemeSelectedCharacter(null);
+      setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
     // eslint-disable-next-line
   }, [user]);
 
-  // Redirect to character/sheet if user navigates to /character directly
   useEffect(() => {
     if (location.pathname === "/character") {
       navigate("/character/sheet", { replace: true });
     }
   }, [location.pathname, navigate]);
 
-  // Redirect character routes to home if no characters exist and not loading
   useEffect(() => {
     if (
-      location.pathname.startsWith("/character") &&
+      location.pathname.startsWith("/character/") &&
       characters.length === 0 &&
       !charactersLoading &&
       !loading &&
-      user
+      user &&
+      hasAttemptedLoad
     ) {
       navigate("/", { replace: true });
     }
@@ -707,6 +710,7 @@ function AppContent() {
     loading,
     navigate,
     user,
+    hasAttemptedLoad,
   ]);
 
   const handleCharacterChange = (character) => {
@@ -883,14 +887,14 @@ function AppContent() {
           />
           <Route path="/home" element={<Navigate to="/" replace />} />
           <Route
-            path="/character-creation"
+            path="/character-management"
             element={
               <ProtectedRoute user={user}>
-                <CharacterCreationForm
+                <CharacterManagement
                   user={user}
                   customUsername={customUsername}
                   onCharacterSaved={() => {
-                    loadCharacters();
+                    setHasAttemptedLoad(false);
                   }}
                   selectedCharacterId={selectedCharacter?.id}
                   onSelectedCharacterReset={resetSelectedCharacter}
@@ -981,7 +985,19 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route path="/gallery" element={<CharacterGallery />} />
+          <Route
+            path="/character/gallery"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <CharacterGallery
+                  selectedCharacter={selectedCharacter}
+                  supabase={supabase}
+                  user={user}
+                />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/theme-settings" element={<ThemeSettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -209,19 +209,17 @@ const CharacterSheet = ({
       const hpRestored = maxHP - currentHP;
       const hitDiceRestored = maxHitDice - currentHitDice;
 
-      // Show long rest result modal
       showRollResult({
         title: `Long Rest Complete`,
         rollValue: hpRestored + hitDiceRestored,
         modifier: 0,
         total: hpRestored + hitDiceRestored,
-        isCriticalSuccess: true, // Long rest is always "critical"
+        isCriticalSuccess: true,
         isCriticalFailure: false,
         type: "longrest",
         description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored • ${character.name} is fully rested!`,
       });
 
-      // Update database
       const { error } = await supabase
         .from("characters")
         .update({
@@ -238,7 +236,6 @@ const CharacterSheet = ({
         return;
       }
 
-      // Send to Discord if webhook is available
       if (discordWebhookUrl) {
         const embed = {
           title: `${character.name} completed a Long Rest!`,
@@ -278,7 +275,6 @@ const CharacterSheet = ({
         }
       }
 
-      // Refresh character data
       await fetchCharacterDetails();
     } catch (error) {
       console.error("Error applying long rest:", error);
@@ -300,7 +296,6 @@ const CharacterSheet = ({
     setIsApplyingDamage(true);
 
     try {
-      // Calculate new HP (can't go below 0)
       const newCurrentHP = Math.max(
         0,
         (character.currentHitPoints || character.hitPoints) - damageAmount
@@ -308,7 +303,6 @@ const CharacterSheet = ({
       const actualDamage =
         (character.currentHitPoints || character.hitPoints) - newCurrentHP;
 
-      // Show damage result modal
       showRollResult({
         title: `Damage Applied`,
         rollValue: actualDamage,
@@ -322,7 +316,6 @@ const CharacterSheet = ({
         } → ${newCurrentHP}${newCurrentHP === 0 ? " (Unconscious!)" : ""}`,
       });
 
-      // Update database
       const { error } = await supabase
         .from("characters")
         .update({
@@ -338,7 +331,6 @@ const CharacterSheet = ({
         return;
       }
 
-      // Send to Discord if webhook is available
       if (discordWebhookUrl) {
         const embed = {
           title: `${character.name} took damage!`,
@@ -379,7 +371,6 @@ const CharacterSheet = ({
         }
       }
 
-      // Refresh character data
       await fetchCharacterDetails();
       setShowDamageModal(false);
     } catch (error) {
@@ -409,19 +400,17 @@ const CharacterSheet = ({
     try {
       const healingAmount = maxHP - currentHP;
 
-      // Show heal result modal
       showRollResult({
         title: `Full Heal`,
         rollValue: healingAmount,
         modifier: 0,
         total: healingAmount,
-        isCriticalSuccess: true, // Full heal is always "critical"
+        isCriticalSuccess: true,
         isCriticalFailure: false,
         type: "heal",
         description: `${healingAmount} HP restored • ${character.name} is at full health!`,
       });
 
-      // Update database
       const { error } = await supabase
         .from("characters")
         .update({
@@ -437,7 +426,6 @@ const CharacterSheet = ({
         return;
       }
 
-      // Send to Discord if webhook is available
       if (discordWebhookUrl) {
         const embed = {
           title: `${character.name} was fully healed!`,
@@ -471,7 +459,6 @@ const CharacterSheet = ({
         }
       }
 
-      // Refresh character data
       await fetchCharacterDetails();
     } catch (error) {
       console.error("Error applying full heal:", error);
@@ -494,26 +481,21 @@ const CharacterSheet = ({
       const roller = new DiceRoller();
       const conModifier = characterModifiers.constitution;
 
-      // Roll the hit dice
       const diceNotation = `${selectedHitDiceCount}${character.hitDie}`;
       const rollResult = roller.roll(diceNotation);
 
-      // Add constitution modifier for each die rolled
       const totalHealing =
         rollResult.total + conModifier * selectedHitDiceCount;
-      const actualHealing = Math.max(1, totalHealing); // Minimum 1 HP per die
+      const actualHealing = Math.max(1, totalHealing);
 
-      // Calculate new HP (capped at max)
       const newCurrentHP = Math.min(
         character.currentHitPoints + actualHealing,
         character.maxHitPoints
       );
       const hpGained = newCurrentHP - character.currentHitPoints;
 
-      // Calculate new hit dice count
       const newHitDiceCount = character.currentHitDice - selectedHitDiceCount;
 
-      // Show roll result modal
       showRollResult({
         title: `Hit Dice Recovery`,
         rollValue: rollResult.total,
@@ -529,7 +511,6 @@ const CharacterSheet = ({
         } dice remaining`,
       });
 
-      // Update database
       const { error } = await supabase
         .from("characters")
         .update({
@@ -546,7 +527,6 @@ const CharacterSheet = ({
         return;
       }
 
-      // Send to Discord if webhook is available
       if (discordWebhookUrl) {
         const embed = {
           title: `${character.name} used Hit Dice for Short Rest`,
@@ -592,7 +572,6 @@ const CharacterSheet = ({
         }
       }
 
-      // Refresh character data
       await fetchCharacterDetails();
       setShowHitDiceModal(false);
     } catch (error) {
@@ -667,55 +646,6 @@ const CharacterSheet = ({
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
                   <h1 style={styles.characterName}>{character.name}</h1>
-
-                  <div
-                    style={{
-                      ...styles.statCard,
-                      background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      width: "55px",
-                      height: "50px",
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "8px 12px",
-                      marginTop: "-10px",
-                      marginRight: "-10px",
-                    }}
-                    onClick={() => setShowLevelUp(true)}
-                    title={`Level up ${character.name} (Current: Level ${character.level})`}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flex: 1,
-                      }}
-                    >
-                      <ArrowUp
-                        className="w-4 h-4 text-white"
-                        style={{
-                          width: "16px",
-                          height: "14px",
-                        }}
-                      />
-                      <div
-                        style={{
-                          color: "white",
-                          fontSize: "10px",
-                          fontWeight: "500",
-                          textAlign: "center",
-                          lineHeight: "1",
-                        }}
-                      >
-                        LEVEL UP
-                      </div>
-                    </div>
-                  </div>
                 </div>
                 <div style={styles.infoGrid}>
                   <div style={styles.infoItem}>
@@ -792,25 +722,6 @@ const CharacterSheet = ({
                   Armor Class
                 </div>
               </div>
-
-              {/* Hit Dice Display (non-clickable) */}
-              <div
-                style={{
-                  ...styles.statCard,
-                  ...styles.statCardPurple,
-                  cursor: "default",
-                }}
-                title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
-              >
-                <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValuePurple }}>
-                  {character.currentHitDice}/{character.maxHitDice}
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelPurple }}>
-                  Hit Dice ({character.hitDie})
-                </div>
-              </div>
-
               <div
                 style={{ ...styles.statCard, ...styles.statCardGreen }}
                 onClick={() =>
@@ -831,10 +742,25 @@ const CharacterSheet = ({
                   Initiative
                 </div>
               </div>
+              <div
+                style={{
+                  ...styles.statCard,
+                  ...styles.statCardPurple,
+                  cursor: "default",
+                }}
+                title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
+              >
+                <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                <div style={{ ...styles.statValue, ...styles.statValuePurple }}>
+                  {character.currentHitDice}/{character.maxHitDice}
+                </div>
+                <div style={{ ...styles.statLabel, ...styles.statLabelPurple }}>
+                  Hit Dice ({character.hitDie})
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Rest Actions Section */}
           <div
             style={{
               ...styles.headerCard,
@@ -989,10 +915,7 @@ const CharacterSheet = ({
                 <Moon className="w-4 h-4 text-blue-500" />
                 <span>Long Rest: Restore all HP and hit dice</span>
               </div>
-              <div style={styles.instructionItem}>
-                <ArrowUp className="w-4 h-4 text-green-500" />
-                <span>Click Level Up card to advance your character</span>
-              </div>
+
               <div style={styles.instructionItem}>
                 <span>Click column headers to sort skills</span>
               </div>
@@ -1006,7 +929,6 @@ const CharacterSheet = ({
         </>
       )}
 
-      {/* Hit Dice Selection Modal */}
       {showHitDiceModal && character && (
         <div
           style={{
@@ -1246,7 +1168,6 @@ const CharacterSheet = ({
         </div>
       )}
 
-      {/* Damage Modal */}
       {showDamageModal && character && (
         <div
           style={{

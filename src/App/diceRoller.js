@@ -468,7 +468,7 @@ export const getMaxAchievableQuality = ({
   proficiencies,
   ingredientQuality,
 }) => {
-  const potionMakingLevel = proficiencies.potionMaking; // 0, 1, or 2 (expertise)
+  const potionMakingLevel = proficiencies.potionMaking;
   const potioneerKit = proficiencies.potioneersKit;
   const herbologyKit = proficiencies.herbologyKit;
 
@@ -477,36 +477,27 @@ export const getMaxAchievableQuality = ({
   const kitCount = (potioneerKit ? 1 : 0) + (herbologyKit ? 1 : 0);
   const totalRegularProficiencies = (hasPotion ? 1 : 0) + kitCount;
 
-  // Match the rules table exactly:
-  // 0 Prof: No proficiencies at all
-  // 1 Prof: Exactly 1 proficiency (any type)
-  // 2 Profs or 1 Exp: Either 2 regular proficiencies OR expertise in potion-making
-  // 1 Prof 1 Exp: Expertise in potion-making + at least 1 kit proficiency
-  // 2 Expertise: Not achievable in current system (would need kit expertise)
-
   if (totalRegularProficiencies === 0) {
-    // 0 Prof row: Poor->Flawed, Normal->Flawed, Superior->Normal
     switch (ingredientQuality) {
       case "poor":
         return "flawed";
       case "normal":
         return "flawed";
       case "exceptional":
-        return "flawed"; // Interpolated: same as normal
+        return "flawed";
       case "superior":
         return "normal";
       default:
         return "flawed";
     }
   } else if (totalRegularProficiencies === 1 && !hasExpertise) {
-    // 1 Prof row: Poor->Flawed, Normal->Normal, Superior->Normal
     switch (ingredientQuality) {
       case "poor":
         return "flawed";
       case "normal":
         return "normal";
       case "exceptional":
-        return "normal"; // Interpolated: same as normal
+        return "normal";
       case "superior":
         return "normal";
       default:
@@ -516,21 +507,19 @@ export const getMaxAchievableQuality = ({
     (totalRegularProficiencies === 2 && !hasExpertise) ||
     (hasExpertise && kitCount === 0)
   ) {
-    // 2 Profs or 1 Exp row: Poor->Normal, Normal->Normal, Superior->Exceptional
     switch (ingredientQuality) {
       case "poor":
         return "normal";
       case "normal":
         return "normal";
       case "exceptional":
-        return "exceptional"; // Interpolated: better than normal
+        return "exceptional";
       case "superior":
         return "exceptional";
       default:
         return "normal";
     }
   } else if (hasExpertise && kitCount >= 1) {
-    // 1 Prof 1 Exp row: Poor->Normal, Normal->Exceptional, Superior->Exceptional
     switch (ingredientQuality) {
       case "poor":
         return "normal";
@@ -545,7 +534,7 @@ export const getMaxAchievableQuality = ({
     }
   }
 
-  return "normal"; // fallback
+  return "normal";
 };
 
 export const getProficiencyAnalysis = (proficiencies, ingredientQuality) => {
@@ -599,13 +588,12 @@ export const rollBrewPotion = async ({
     const calculateBrewingResult = (roll) => {
       const baseDCs = qualityDCs[selectedPotion.rarity];
       const ingredientMod = ingredientModifiers[ingredientQuality];
-      // FIX: Pass the required parameters to getMaxAchievableQuality
+
       const maxQuality = getMaxAchievableQuality({
         proficiencies,
         ingredientQuality,
       });
 
-      // Create adjusted DCs for all qualities
       const adjustedDCs = Object.fromEntries(
         Object.entries(baseDCs).map(([quality, dc]) => [
           quality,
@@ -613,7 +601,6 @@ export const rollBrewPotion = async ({
         ])
       );
 
-      // Determine achieved quality based on roll
       let achievedQuality = "ruined";
       const qualityOrder = ["superior", "exceptional", "normal", "flawed"];
 
@@ -624,7 +611,6 @@ export const rollBrewPotion = async ({
         }
       }
 
-      // Cap the achieved quality at the maximum possible for this brewer/ingredient combo
       const qualityHierarchy = [
         "ruined",
         "flawed",
@@ -656,10 +642,8 @@ export const rollBrewPotion = async ({
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
 
-    // Handle critical results BEFORE calculating brewing result
     let brewingResult;
     if (isCriticalSuccess) {
-      // Natural 20 always succeeds at the maximum possible quality
       const maxQuality = getMaxAchievableQuality({
         proficiencies,
         ingredientQuality,
@@ -686,7 +670,6 @@ export const rollBrewPotion = async ({
         proficiencies,
       };
     } else if (isCriticalFailure) {
-      // Natural 1 always results in ruined potion
       const baseDCs = qualityDCs[selectedPotion.rarity];
       const ingredientMod = ingredientModifiers[ingredientQuality];
       const adjustedDCs = Object.fromEntries(
@@ -713,7 +696,6 @@ export const rollBrewPotion = async ({
         proficiencies,
       };
     } else {
-      // Normal roll - calculate result based on DC
       brewingResult = calculateBrewingResult(d20Roll);
     }
 
@@ -733,34 +715,30 @@ export const rollBrewPotion = async ({
       });
     }
 
-    // Discord webhook logic (unchanged)
     if (webhookUrl || discordWebhookUrl) {
       const webhookToUse = webhookUrl || discordWebhookUrl;
 
-      let embedColor = 0x6b46c1; // Default purple
+      let embedColor = 0x6b46c1;
       let resultText = "";
 
-      // Set result text for critical rolls
-
-      // Set embed color based on achieved quality (always)
       switch (brewingResult.achievedQuality) {
         case "superior":
-          embedColor = 0x8b5cf6; // Purple - highest quality
+          embedColor = 0x8b5cf6;
           break;
         case "exceptional":
-          embedColor = 0x3b82f6; // Blue - high quality
+          embedColor = 0x3b82f6;
           break;
         case "normal":
-          embedColor = 0x10b981; // Green - standard quality
+          embedColor = 0x10b981;
           break;
         case "flawed":
-          embedColor = 0xf59e0b; // Orange - low quality
+          embedColor = 0xf59e0b;
           break;
         case "ruined":
-          embedColor = 0xef4444; // Red - failed
+          embedColor = 0xef4444;
           break;
         default:
-          embedColor = 0x6b7280; // Gray - fallback
+          embedColor = 0x6b7280;
           break;
       }
       if (isCriticalSuccess) {

@@ -1,0 +1,1035 @@
+import { useState, useEffect } from "react";
+import { rollAbilityStat } from "../../../App/diceRoller";
+import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+import { Wand, Save, RefreshCw, AlertCircle, Star } from "lucide-react";
+
+import {
+  castingStyles,
+  housesBySchool,
+  skillsByCastingStyle,
+  hpData,
+  subclasses,
+  backgrounds,
+} from "../../data";
+
+import { useTheme } from "../../../contexts/ThemeContext";
+import { characterService } from "../../../services/characterService";
+import { InnateHeritage } from "../Shared/InnateHeritage";
+import { StandardFeat } from "../Shared/StandardFeat";
+import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
+import { createCharacterCreationStyles } from "../../../styles/masterStyles";
+
+const CharacterCreator = ({
+  user,
+  customUsername,
+  onCharacterSaved,
+  maxCharacters = 10,
+  activeCharacterCount = 0,
+  isLoadingCharacterCount,
+  supabase,
+}) => {
+  const { theme } = useTheme();
+  const styles = createCharacterCreationStyles(theme);
+
+  const getInitialCharacterState = () => ({
+    name: "",
+    house: "",
+    castingStyle: "",
+    subclass: "",
+    innateHeritage: "",
+    background: "",
+    gameSession: "",
+    standardFeats: [],
+    skillProficiencies: [],
+    abilityScores: {
+      strength: null,
+      dexterity: null,
+      constitution: null,
+      intelligence: null,
+      wisdom: null,
+      charisma: null,
+    },
+    hitPoints: 0,
+    level: 1,
+    wandType: "",
+    magicModifiers: {
+      divinations: 0,
+      charms: 0,
+      transfiguration: 0,
+      healing: 0,
+      jinxesHexesCurses: 0,
+    },
+    level1ChoiceType: "",
+  });
+
+  const getGameSessionOptions = () => {
+    const sessions = [
+      "Sunday - Knights",
+      "Monday - Haunting",
+      "Tuesday - Knights",
+      "Wednesday - Haunting",
+      "Thursday - Knights",
+      "Friday - Knights",
+      "Saturday - Haunting",
+      "Saturday - Knights",
+    ];
+    return sessions;
+  };
+
+  const gameSessionOptions = getGameSessionOptions();
+
+  const [character, setCharacter] = useState(getInitialCharacterState());
+  const [rolledStats, setRolledStats] = useState([]);
+  const [availableStats, setAvailableStats] = useState([]);
+  const [expandedFeats, setExpandedFeats] = useState(new Set());
+  const [featFilter, setFeatFilter] = useState("");
+  const [tempInputValues, setTempInputValues] = useState({});
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [isHpManualMode, setIsHpManualMode] = useState(false);
+  const [rolledHp, setRolledHp] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
+
+  const discordUserId = user?.user_metadata?.provider_id;
+
+  const FEAT_LEVELS = [4, 8, 12, 16, 19];
+
+  const rollAllStats = () => {
+    const newStats = [];
+    for (let i = 0; i < 6; i++) {
+      newStats.push(rollAbilityStat());
+    }
+    setRolledStats(newStats);
+    setAvailableStats([...newStats]);
+
+    setCharacter((prev) => ({
+      ...prev,
+      abilityScores: {
+        strength: null,
+        dexterity: null,
+        constitution: null,
+        intelligence: null,
+        wisdom: null,
+        charisma: null,
+      },
+    }));
+  };
+
+  const rollHp = () => {
+    if (!character.castingStyle) return;
+
+    const roller = new DiceRoller();
+    const castingData = hpData[character.castingStyle];
+    if (!castingData) return;
+
+    const conScore = character.abilityScores.constitution;
+    const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
+    const level = character.level || 1;
+    const hitDie = castingData.hitDie || 6;
+
+    const baseRoll = roller.roll(`1d${hitDie}`);
+    const baseHP = baseRoll.total + conMod;
+
+    let additionalHP = 0;
+    if (level > 1) {
+      const additionalRolls = roller.roll(`${level - 1}d${hitDie}`);
+      additionalHP = additionalRolls.total + conMod * (level - 1);
+    }
+
+    const totalHP = baseHP + additionalHP;
+    setRolledHp(Math.max(1, totalHP));
+  };
+
+  const resetForm = () => {
+    setCharacter(getInitialCharacterState());
+    setExpandedFeats(new Set());
+    setFeatFilter("");
+    setTempInputValues({});
+    setMagicModifierTempValues({});
+    setIsHpManualMode(false);
+    setRolledHp(null);
+    setError(null);
+
+    if (isManualMode) {
+      setRolledStats([]);
+      setAvailableStats([]);
+    } else {
+      rollAllStats();
+    }
+  };
+
+  useEffect(() => {
+    rollAllStats();
+  }, []);
+
+  const assignStat = (ability, statValue) => {
+    const oldValue = character.abilityScores[ability];
+
+    const statIndex = availableStats.indexOf(statValue);
+    if (statIndex > -1) {
+      const updatedAvailable = [...availableStats];
+      updatedAvailable.splice(statIndex, 1);
+      setAvailableStats(updatedAvailable);
+    }
+
+    if (oldValue !== null) {
+      setAvailableStats((prev) => [...prev, oldValue]);
+    }
+
+    setCharacter((prev) => ({
+      ...prev,
+      abilityScores: {
+        ...prev.abilityScores,
+        [ability]: statValue,
+      },
+    }));
+  };
+
+  const clearStat = (ability) => {
+    const oldValue = character.abilityScores[ability];
+    if (oldValue !== null) {
+      if (!isManualMode) {
+        setAvailableStats((prev) => [...prev, oldValue]);
+      }
+      setCharacter((prev) => ({
+        ...prev,
+        abilityScores: {
+          ...prev.abilityScores,
+          [ability]: null,
+        },
+      }));
+    }
+  };
+
+  const allStatsAssigned = () => {
+    return Object.values(character.abilityScores).every(
+      (score) => score !== null
+    );
+  };
+
+  const getAvailableSkills = () => {
+    if (!character.castingStyle) return [];
+    return skillsByCastingStyle[character.castingStyle] || [];
+  };
+
+  const handleInputChange = (field, value) => {
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      setCharacter((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value,
+        },
+      }));
+    } else {
+      if (field === "castingStyle") {
+        setCharacter((prev) => ({
+          ...prev,
+          [field]: value,
+          skillProficiencies: [],
+        }));
+        setRolledHp(null);
+        setIsHpManualMode(false);
+      } else if (field === "level") {
+        setCharacter((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+        setRolledHp(null);
+      } else {
+        setCharacter((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+      }
+    }
+  };
+
+  const handleLevel1ChoiceChange = (choiceType) => {
+    setCharacter((prev) => ({
+      ...prev,
+      level1ChoiceType: choiceType,
+      innateHeritage: choiceType === "feat" ? "" : prev.innateHeritage,
+      standardFeats: choiceType === "innate" ? [] : prev.standardFeats,
+    }));
+  };
+
+  const handleSkillToggle = (skill) => {
+    setCharacter((prev) => {
+      const currentSkills = prev.skillProficiencies;
+      const isCurrentlySelected = currentSkills.includes(skill);
+
+      if (!isCurrentlySelected && currentSkills.length >= 2) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        skillProficiencies: isCurrentlySelected
+          ? currentSkills.filter((s) => s !== skill)
+          : [...currentSkills, skill],
+      };
+    });
+  };
+
+  const calculateHitPoints = () => {
+    if (!character.castingStyle) return 0;
+
+    const castingData = hpData[character.castingStyle];
+    if (!castingData) return 0;
+
+    const conScore = character.abilityScores.constitution;
+    const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
+    const level = character.level || 1;
+
+    const baseHP = castingData.base + conMod;
+    const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
+
+    return Math.max(1, baseHP + additionalHP);
+  };
+
+  const getCurrentHp = () => {
+    if (isHpManualMode) {
+      return character.hitPoints || 1;
+    } else if (rolledHp !== null && !isHpManualMode) {
+      return rolledHp;
+    } else {
+      return calculateHitPoints();
+    }
+  };
+
+  const calculateMaxFeats = () => {
+    let totalFeats = 0;
+    const currentLevel = character.level || 1;
+
+    if (character.level1ChoiceType === "feat") {
+      totalFeats += 1;
+    }
+
+    FEAT_LEVELS.forEach((level) => {
+      if (currentLevel >= level) {
+        totalFeats += 1;
+      }
+    });
+
+    return totalFeats;
+  };
+
+  const getFeatProgressionInfo = () => {
+    const currentLevel = character.level || 1;
+    const earnedFeatLevels = FEAT_LEVELS.filter(
+      (level) => currentLevel >= level
+    );
+    const nextFeatLevel = FEAT_LEVELS.find((level) => currentLevel < level);
+
+    return {
+      earnedFeatLevels,
+      nextFeatLevel,
+      totalAvailableFeats: calculateMaxFeats(),
+    };
+  };
+
+  const saveCharacter = async () => {
+    setIsSaving(true);
+    setError(null);
+
+    if (!character.name.trim()) {
+      setError("Character name is required");
+      setIsSaving(false);
+      return;
+    }
+
+    if (!character.level1ChoiceType) {
+      setError(
+        "Please select either Innate Heritage or Starting Standard Feat"
+      );
+      setIsSaving(false);
+      return;
+    }
+
+    const maxFeats = calculateMaxFeats();
+    if (
+      character.level1ChoiceType === "feat" &&
+      character.standardFeats.length !== maxFeats
+    ) {
+      setError(
+        `Please select exactly ${maxFeats} feat${
+          maxFeats !== 1 ? "s" : ""
+        } (you have ${character.standardFeats.length} selected)`
+      );
+      setIsSaving(false);
+      return;
+    }
+
+    if (activeCharacterCount >= maxCharacters) {
+      setError(
+        `Cannot create character: You have reached the maximum of ${maxCharacters} characters.`
+      );
+      setIsSaving(false);
+      return;
+    }
+
+    const characterToSave = {
+      name: character.name.trim(),
+      house: character.house,
+      casting_style: character.castingStyle,
+      subclass: character.subclass,
+      innate_heritage: character.innateHeritage,
+      background: character.background,
+      game_session: character.gameSession,
+      standard_feats: character.standardFeats,
+      skill_proficiencies: character.skillProficiencies,
+      ability_scores: character.abilityScores,
+      hit_points: getCurrentHp(),
+      level: character.level,
+      wand_type: character.wandType,
+      magic_modifiers: character.magicModifiers,
+      level1_choice_type: character.level1ChoiceType,
+    };
+
+    try {
+      const savedCharacter = await characterService.saveCharacter(
+        characterToSave,
+        discordUserId
+      );
+
+      const transformedCharacter = {
+        id: savedCharacter.id,
+        name: savedCharacter.name,
+        house: savedCharacter.house,
+        castingStyle: savedCharacter.casting_style,
+        subclass: savedCharacter.subclass,
+        innateHeritage: savedCharacter.innate_heritage,
+        background: savedCharacter.background,
+        gameSession: savedCharacter.game_session || "",
+        standardFeats: savedCharacter.standard_feats || [],
+        skillProficiencies: savedCharacter.skill_proficiencies || [],
+        abilityScores: savedCharacter.ability_scores,
+        hitPoints: savedCharacter.hit_points,
+        level: savedCharacter.level,
+        wandType: savedCharacter.wand_type || "",
+        magicModifiers: savedCharacter.magic_modifiers || {
+          divinations: 0,
+          charms: 0,
+          transfiguration: 0,
+          healing: 0,
+          jinxesHexesCurses: 0,
+        },
+        level1ChoiceType: savedCharacter.level1_choice_type || "",
+        createdAt: savedCharacter.created_at,
+      };
+
+      resetForm();
+
+      if (onCharacterSaved) {
+        onCharacterSaved(transformedCharacter);
+      }
+    } catch (err) {
+      setError("Failed to save character: " + err.message);
+      console.error("Error saving character:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isSaveEnabled =
+    character.name.trim() &&
+    character.house &&
+    character.castingStyle &&
+    character.level1ChoiceType &&
+    allStatsAssigned() &&
+    !isSaving &&
+    !isLoadingCharacterCount &&
+    activeCharacterCount < maxCharacters;
+
+  console.log(activeCharacterCount, maxCharacters);
+
+  const featInfo = getFeatProgressionInfo();
+
+  return (
+    <div style={styles.panel}>
+      <div
+        style={{
+          ...styles.header,
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+          marginBottom: "24px",
+        }}
+      >
+        <div style={{ color: theme.primary }}>
+          <Wand />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h1 style={styles.title}>Create New Character</h1>
+          <p style={styles.subtitle}>
+            Build your character for the Witches & Snitches campaign
+          </p>
+        </div>
+      </div>
+
+      {error && (
+        <div style={styles.errorContainer}>
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
+
+      {activeCharacterCount >= maxCharacters - 2 && (
+        <div style={styles.warningContainer}>
+          <AlertCircle size={16} />
+          {activeCharacterCount >= maxCharacters
+            ? `Character limit reached (${maxCharacters}/${maxCharacters}). Please delete a character to create a new one.`
+            : `You can create ${
+                maxCharacters - activeCharacterCount
+              } more character${
+                maxCharacters - activeCharacterCount > 1 ? "s" : ""
+              } before reaching the limit (${activeCharacterCount}/${maxCharacters}).`}
+        </div>
+      )}
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Character Name *</label>
+        <input
+          type="text"
+          value={character.name}
+          onChange={(e) => handleInputChange("name", e.target.value)}
+          placeholder="Enter your character's name..."
+          style={styles.input}
+          maxLength={50}
+        />
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Game Session</label>
+        <select
+          value={character.gameSession}
+          onChange={(e) => handleInputChange("gameSession", e.target.value)}
+          style={styles.select}
+        >
+          <option value="">Select Game Session...</option>
+          {gameSessionOptions.map((session) => (
+            <option key={session} value={session}>
+              {session}
+            </option>
+          ))}
+        </select>
+        <div style={styles.helpText}>
+          Select which game session your character will join.
+        </div>
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>House *</label>
+        <select
+          value={character.house}
+          onChange={(e) => handleInputChange("house", e.target.value)}
+          style={styles.select}
+        >
+          <option value="">Select House...</option>
+          {Object.entries(housesBySchool).map(([school, houses]) => (
+            <optgroup key={school} label={school}>
+              {houses.map((house) => (
+                <option key={house} value={house}>
+                  {house}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Casting Style *</label>
+        <select
+          value={character.castingStyle}
+          onChange={(e) => handleInputChange("castingStyle", e.target.value)}
+          style={styles.select}
+        >
+          <option value="">Select Casting Style...</option>
+          {castingStyles.map((style) => (
+            <option key={style} value={style}>
+              {style}
+            </option>
+          ))}
+        </select>
+        <div style={styles.helpText}>
+          Your casting style determines your available skills and hit points.
+        </div>
+      </div>
+
+      <div style={styles.levelHpGrid}>
+        <div style={styles.levelContainer}>
+          <label style={styles.label}>Level</label>
+          <input
+            type="number"
+            min="1"
+            max="20"
+            value={character.level}
+            onChange={(e) =>
+              handleInputChange("level", parseInt(e.target.value) || 1)
+            }
+            style={styles.input}
+          />
+          <div style={styles.helpText}>Starting character level</div>
+        </div>
+
+        <div style={styles.hpFieldContainer}>
+          <label style={styles.label}>Hit Points</label>
+          {!character.castingStyle ? (
+            <div style={styles.skillsPlaceholder}>
+              Select a Casting Style first
+            </div>
+          ) : (
+            <div style={styles.hpValueContainer}>
+              {isHpManualMode ? (
+                <input
+                  type="number"
+                  min="1"
+                  value={character.hitPoints || ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "hitPoints",
+                      parseInt(e.target.value) || 1
+                    )
+                  }
+                  placeholder="--"
+                  style={styles.hpManualInput}
+                />
+              ) : rolledHp !== null ? (
+                <div style={styles.hpRollDisplay}>{rolledHp}</div>
+              ) : (
+                <div style={styles.hpDisplay}>{calculateHitPoints()}</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {character.castingStyle && (
+          <div style={styles.hpControlsContainer}>
+            <div style={styles.hpControlsInline}>
+              {!isHpManualMode && (
+                <button
+                  onClick={rollHp}
+                  style={{
+                    ...styles.button,
+                    backgroundColor: "#EF4444",
+                    fontSize: "12px",
+                  }}
+                >
+                  <RefreshCw size={14} />
+                  Roll
+                </button>
+              )}
+
+              <div
+                onClick={() => {
+                  setIsHpManualMode(!isHpManualMode);
+                  setRolledHp(null);
+                }}
+                style={{
+                  ...styles.hpToggle,
+                  backgroundColor: isHpManualMode
+                    ? theme.success
+                    : theme.border,
+                  borderColor: isHpManualMode
+                    ? theme.success
+                    : theme.textSecondary,
+                }}
+                title={
+                  isHpManualMode
+                    ? "Switch to Auto/Roll mode"
+                    : "Switch to Manual mode"
+                }
+              >
+                <div
+                  style={{
+                    ...styles.hpToggleKnob,
+                    left: isHpManualMode ? "22px" : "2px",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <h3 style={styles.skillsHeader}>
+          Skill Proficiencies ({character.skillProficiencies.length}/2 selected)
+          *
+        </h3>
+
+        {!character.castingStyle ? (
+          <div style={styles.skillsPlaceholder}>
+            Please select a Casting Style first to see available skills.
+          </div>
+        ) : (
+          <div style={styles.skillsContainer}>
+            <h4 style={styles.skillsSubheader}>
+              {character.castingStyle} Skills (Choose 2)
+            </h4>
+            <div style={styles.skillsGrid}>
+              {getAvailableSkills().map((skill) => {
+                const isSelected = character.skillProficiencies.includes(skill);
+                const canSelect =
+                  isSelected || character.skillProficiencies.length < 2;
+
+                return (
+                  <label
+                    key={skill}
+                    style={{
+                      ...styles.skillOptionBase,
+                      cursor: canSelect ? "pointer" : "not-allowed",
+                      backgroundColor: isSelected
+                        ? theme.success + "20"
+                        : theme.surface,
+                      border: isSelected
+                        ? `2px solid ${theme.success}`
+                        : `2px solid ${theme.border}`,
+                      opacity: canSelect ? 1 : 0.5,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleSkillToggle(skill)}
+                      disabled={!canSelect}
+                      style={styles.skillCheckbox}
+                    />
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        color: isSelected ? theme.success : theme.text,
+                        fontWeight: isSelected ? "bold" : "normal",
+                      }}
+                    >
+                      {skill}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {character.skillProficiencies.length === 2 && (
+              <div style={styles.skillsComplete}>
+                ✓ Skill selection complete! You've chosen your 2 skills.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Subclass</label>
+        <select
+          value={character.subclass}
+          onChange={(e) => handleInputChange("subclass", e.target.value)}
+          style={styles.select}
+        >
+          <option value="">Select Subclass...</option>
+          {subclasses.map((subclass) => (
+            <option key={subclass} value={subclass}>
+              {subclass}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <h3 style={styles.skillsHeader}>
+          {character.level === 1
+            ? "Level 1 Choice"
+            : "Starting Choice (Level 1)"}{" "}
+          *
+        </h3>
+        <div style={styles.helpText}>
+          {character.level === 1
+            ? "At level 1, choose either an Innate Heritage or a Standard Feat."
+            : `Even though you're starting at Level ${character.level}, you must choose what your character selected at Level 1.`}
+        </div>
+
+        <div style={styles.level1ChoiceContainer}>
+          <label
+            style={
+              character.level1ChoiceType === "innate"
+                ? styles.level1ChoiceLabelSelected
+                : styles.level1ChoiceLabel
+            }
+          >
+            <input
+              type="radio"
+              name="level1Choice"
+              value="innate"
+              checked={character.level1ChoiceType === "innate"}
+              onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
+              style={styles.level1ChoiceRadio}
+            />
+            <span
+              style={
+                character.level1ChoiceType === "innate"
+                  ? styles.level1ChoiceTextSelected
+                  : styles.level1ChoiceText
+              }
+            >
+              Innate Heritage
+            </span>
+          </label>
+
+          <label
+            style={
+              character.level1ChoiceType === "feat"
+                ? styles.level1ChoiceLabelSelected
+                : styles.level1ChoiceLabel
+            }
+          >
+            <input
+              type="radio"
+              name="level1Choice"
+              value="feat"
+              checked={character.level1ChoiceType === "feat"}
+              onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
+              style={styles.level1ChoiceRadio}
+            />
+            <span
+              style={
+                character.level1ChoiceType === "feat"
+                  ? styles.level1ChoiceTextSelected
+                  : styles.level1ChoiceText
+              }
+            >
+              Starting Standard Feat
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {character.level1ChoiceType === "innate" && (
+        <InnateHeritage
+          character={character}
+          handleInputChange={handleInputChange}
+          isEditing={false}
+        />
+      )}
+
+      {(character.level1ChoiceType === "feat" ||
+        featInfo.earnedFeatLevels.length > 0) && (
+        <div style={styles.fieldContainer}>
+          <div
+            style={{
+              ...styles.fieldContainer,
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+              borderRadius: "8px",
+              padding: "16px",
+              marginBottom: "16px",
+            }}
+          >
+            <h4
+              style={{
+                ...styles.skillsSubheader,
+                margin: "0 0 12px 0",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <Star size={16} color={theme.primary} />
+              Feat Progression
+            </h4>
+
+            <div style={{ fontSize: "14px", lineHeight: "1.5" }}>
+              <div style={{ marginBottom: "8px" }}>
+                <strong>Available Feats:</strong> {featInfo.totalAvailableFeats}
+                <span style={{ color: theme.textSecondary, marginLeft: "8px" }}>
+                  ({character.standardFeats.length} selected)
+                </span>
+              </div>
+
+              {character.level1ChoiceType === "feat" && (
+                <div style={{ marginBottom: "4px", color: theme.success }}>
+                  ✓ Level 1: Starting Feat
+                </div>
+              )}
+
+              {featInfo.earnedFeatLevels.map((level) => (
+                <div
+                  key={level}
+                  style={{ marginBottom: "4px", color: theme.success }}
+                >
+                  ✓ Level {level}: Additional Feat
+                </div>
+              ))}
+
+              {featInfo.nextFeatLevel && (
+                <div
+                  style={{ marginBottom: "4px", color: theme.textSecondary }}
+                >
+                  ○ Level {featInfo.nextFeatLevel}: Next Feat
+                </div>
+              )}
+
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: theme.textSecondary,
+                  marginTop: "8px",
+                  fontStyle: "italic",
+                }}
+              >
+                Characters gain additional feats at levels 4, 8, 12, 16, and 19
+              </div>
+            </div>
+          </div>
+
+          <StandardFeat
+            character={character}
+            setCharacter={setCharacter}
+            expandedFeats={expandedFeats}
+            setExpandedFeats={setExpandedFeats}
+            featFilter={featFilter}
+            setFeatFilter={setFeatFilter}
+            maxFeats={calculateMaxFeats()}
+            isLevel1Choice={character.level1ChoiceType === "feat"}
+            characterLevel={character.level}
+          />
+        </div>
+      )}
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Background</label>
+        <select
+          value={character.background}
+          onChange={(e) => handleInputChange("background", e.target.value)}
+          style={styles.select}
+        >
+          <option value="">Select Background...</option>
+          {backgrounds.map((background) => (
+            <option key={background} value={background}>
+              {background}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <AbilityScorePicker
+        character={character}
+        setRolledStats={setRolledStats}
+        setAvailableStats={setAvailableStats}
+        setCharacter={setCharacter}
+        rollAllStats={rollAllStats}
+        setTempInputValues={setTempInputValues}
+        allStatsAssigned={allStatsAssigned}
+        availableStats={availableStats}
+        tempInputValues={tempInputValues}
+        clearStat={clearStat}
+        assignStat={assignStat}
+        isManualMode={isManualMode}
+        setIsManualMode={setIsManualMode}
+        rolledStats={rolledStats}
+      />
+
+      <div style={styles.fieldContainer}>
+        <h3 style={styles.skillsHeader}>Magic School Modifiers</h3>
+        <div style={styles.helpText}>
+          Enter your wand's bonuses/penalties for each school of magic
+        </div>
+
+        <div style={styles.magicModifiersGrid}>
+          {[
+            { key: "divinations", label: "Divinations" },
+            { key: "transfiguration", label: "Transfiguration" },
+            { key: "charms", label: "Charms" },
+            { key: "healing", label: "Healing" },
+            { key: "jinxesHexesCurses", label: "JHC" },
+          ].map(({ key, label }) => (
+            <div key={key} style={styles.magicModifierItem}>
+              <label style={styles.magicModifierLabel}>{label}</label>
+              <input
+                type="number"
+                value={
+                  magicModifierTempValues.hasOwnProperty(key)
+                    ? magicModifierTempValues[key]
+                    : character.magicModifiers[key]
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setMagicModifierTempValues((prev) => ({
+                    ...prev,
+                    [key]: value,
+                  }));
+                }}
+                onBlur={() => {
+                  const tempValue = magicModifierTempValues[key];
+                  if (tempValue !== undefined) {
+                    const numValue =
+                      tempValue === "" || tempValue === "-"
+                        ? 0
+                        : parseInt(tempValue, 10);
+                    const finalValue = isNaN(numValue) ? 0 : numValue;
+
+                    handleInputChange(`magicModifiers.${key}`, finalValue);
+
+                    setMagicModifierTempValues((prev) => {
+                      const newState = { ...prev };
+                      delete newState[key];
+                      return newState;
+                    });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.target.blur();
+                  }
+                }}
+                style={styles.magicModifierInput}
+                min="-99"
+                max="99"
+                step="1"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={styles.actionButtons}>
+        <button
+          onClick={resetForm}
+          style={{
+            ...styles.button,
+            backgroundColor: theme.border,
+            color: theme.textSecondary,
+          }}
+          disabled={isSaving}
+        >
+          Reset Form
+        </button>
+
+        <button
+          onClick={saveCharacter}
+          disabled={!isSaveEnabled}
+          style={{
+            ...styles.saveButton,
+            backgroundColor: isSaveEnabled
+              ? theme.primary
+              : theme.textSecondary,
+            cursor: isSaveEnabled ? "pointer" : "not-allowed",
+          }}
+        >
+          <Save size={16} />
+          {isSaving
+            ? "Creating Character..."
+            : isLoadingCharacterCount
+            ? "Checking limit..."
+            : activeCharacterCount >= maxCharacters
+            ? "Character Limit Reached"
+            : "Create Character"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CharacterCreator;

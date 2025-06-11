@@ -1,4 +1,3 @@
-// src/App/CharacterSelector.js (Updated with Clean Theme Integration)
 import { User } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterSelectorStyles } from "../../styles/masterStyles";
@@ -12,7 +11,6 @@ export const CharacterSelector = ({
 }) => {
   const { theme: contextTheme } = useTheme();
 
-  // Fallback theme if context is undefined
   const theme = contextTheme || {
     surface: "#ffffff",
     background: "#f8fafc",

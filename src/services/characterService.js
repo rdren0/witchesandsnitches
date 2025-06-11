@@ -59,7 +59,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
   return data[0];
 };
 
-const archiveCharacter = async (characterId, discordUserId) => {
+const deleteCharacter = async (characterId, discordUserId) => {
   const { data, error } = await supabase
     .from("characters")
     .update({
@@ -122,7 +122,7 @@ export const characterService = {
   getCharacters,
   saveCharacter,
   updateCharacter,
-  archiveCharacter,
+  deleteCharacter,
   restoreCharacter,
   getArchivedCharacters,
 };

@@ -76,7 +76,7 @@ const ThemeSettings = () => {
         surface: "#FFFFFF",
         text: "#1F2937",
       },
-      disabled: false, // Always available now
+      disabled: false,
     },
   ];
 

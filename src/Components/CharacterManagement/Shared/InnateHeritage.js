@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { innateHeritages, heritageDescriptions } from "../data";
-import { createFeatStyles } from "../../styles/masterStyles";
-import { useTheme } from "../../contexts/ThemeContext";
+import { innateHeritages, heritageDescriptions } from "../../data";
+import { createFeatStyles } from "../../../styles/masterStyles";
+import { useTheme } from "../../../contexts/ThemeContext";
 
-export const InnateHeritage = ({ character, handleInputChange }) => {
+export const InnateHeritage = ({
+  character,
+  handleInputChange,
+  isEditing = false,
+}) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
   const [expandedHeritages, setExpandedHeritages] = useState(new Set());
@@ -12,6 +16,7 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
   const [pendingHeritage, setPendingHeritage] = useState("");
 
   const isHigherLevel = character.level > 1;
+  const shouldShowLevelWarning = isHigherLevel && isEditing;
   const hasSelectedHeritage = character.innateHeritage ? 1 : 0;
 
   const toggleHeritageExpansion = (heritageName) => {
@@ -50,7 +55,7 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
     const newValue =
       character.innateHeritage === heritageName ? "" : heritageName;
 
-    if (isHigherLevel && newValue !== character.innateHeritage) {
+    if (shouldShowLevelWarning && newValue !== character.innateHeritage) {
       setPendingHeritage(newValue);
       setShowWarning(true);
       return;
@@ -80,20 +85,19 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
         <h3 style={styles.skillsHeader}>
           Innate Heritage ({hasSelectedHeritage}/1 selected)
         </h3>
-        {isHigherLevel && (
+        {shouldShowLevelWarning && (
           <div style={styles.warningBadge}>
-            ⚠️ Level {character.level} Character
+            ⚠️ Editing Level {character.level} Character
           </div>
         )}
       </div>
 
-      {isHigherLevel && (
+      {shouldShowLevelWarning && (
         <div style={styles.levelRestrictionWarning}>
-          <strong>⚠️ Level Restriction Warning:</strong> Innate Heritage
-          selection is typically only available for Level 1 characters. Higher
-          level characters should have their heritage established during
-          character creation. Changing heritage at Level {character.level} may
-          require DM approval.
+          <strong>⚠️ Editing Existing Character:</strong> You are modifying the
+          Innate Heritage of an existing Level {character.level} character.
+          Heritage is typically established during character creation. This
+          change may require DM approval and could affect character balance.
         </div>
       )}
 
@@ -222,24 +226,25 @@ export const InnateHeritage = ({ character, handleInputChange }) => {
         Note: Innate Heritage is optional and represents your character's
         magical bloodline or supernatural ancestry. You can select one heritage
         that provides unique abilities and traits. Click the checkbox to
-        select/unselect a heritage. Heritage is typically established at Level
-        1.
-        {isHigherLevel &&
-          " Heritage changes for higher-level characters may require DM approval."}
+        select/unselect a heritage.
+        {isEditing
+          ? "Modifying heritage for existing characters may require DM approval."
+          : "Heritage can be selected during character creation at any level."}
       </div>
 
       {showWarning && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <h3 style={styles.modalTitle}>⚠️ Level Restriction Warning</h3>
+            <h3 style={styles.modalTitle}>⚠️ Character Edit Warning</h3>
             <p style={styles.modalText}>
-              You are attempting to change the Innate Heritage of a Level{" "}
-              {character.level} character. Heritage is typically established at
-              character creation (Level 1). This change may require DM approval
-              and could affect character balance.
+              You are attempting to change the Innate Heritage of an existing
+              Level {character.level} character. Heritage is typically
+              established during character creation and changing it for an
+              existing character may require DM approval and could affect
+              character balance.
             </p>
             <p style={styles.modalTextBold}>
-              Are you sure you want to proceed?
+              Are you sure you want to proceed with this change?
             </p>
             <div style={styles.modalButtons}>
               <button

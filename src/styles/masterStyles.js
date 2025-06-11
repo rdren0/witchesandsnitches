@@ -721,13 +721,6 @@ export const createCharacterCreationStyles = (theme) => ({
     gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
     gap: "20px",
   },
-  characterCard: {
-    backgroundColor: theme.background,
-    border: `2px solid ${theme.border}`,
-    borderRadius: "12px",
-    padding: "20px",
-    transition: "all 0.2s ease",
-  },
   characterHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -753,17 +746,6 @@ export const createCharacterCreationStyles = (theme) => ({
   characterActions: {
     display: "flex",
     gap: "8px",
-  },
-  actionButton: {
-    padding: "8px",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    color: "white",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "all 0.2s ease",
   },
   heritage: {
     color: theme.primary,
@@ -1030,6 +1012,705 @@ export const createCharacterCreationStyles = (theme) => ({
     backgroundColor: theme.surface,
     color: theme.text,
     transition: "border-color 0.2s ease",
+  },
+  levelUpWizard: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  wizardHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "20px 24px",
+    borderBottom: `1px solid ${theme.border}`,
+    backgroundColor: theme.surface,
+  },
+  wizardTitle: {
+    flex: 1,
+    textAlign: "center",
+  },
+  stepIndicator: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+    fontWeight: "500",
+  },
+  wizardProgress: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "16px",
+    backgroundColor: theme.background,
+    borderBottom: `1px solid ${theme.border}`,
+  },
+  progressStep: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+    fontWeight: "600",
+    backgroundColor: theme.border,
+    color: theme.textSecondary,
+    transition: "all 0.2s ease",
+  },
+  progressStepActive: {
+    backgroundColor: theme.primary,
+    color: "white",
+  },
+  progressStepComplete: {
+    backgroundColor: theme.success,
+    color: "white",
+  },
+  wizardContent: {
+    flex: 1,
+    padding: "24px",
+    overflowY: "auto",
+    backgroundColor: theme.background,
+  },
+  levelUpStep: {
+    maxWidth: "600px",
+    margin: "0 auto",
+  },
+  stepHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "20px",
+  },
+  stepTitle: {
+    margin: 0,
+    fontSize: "24px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  stepContent: {
+    fontSize: "16px",
+    lineHeight: "1.6",
+  },
+  stepDescription: {
+    color: theme.textSecondary,
+    marginBottom: "24px",
+  },
+  hpChoiceContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "16px",
+    marginBottom: "24px",
+  },
+  hpChoice: {
+    padding: "16px",
+    border: `2px solid ${theme.border}`,
+    borderRadius: "8px",
+    textAlign: "center",
+    transition: "all 0.2s ease",
+  },
+  choiceTitle: {
+    margin: "0 0 8px 0",
+    fontSize: "18px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  choiceDescription: {
+    margin: "0 0 16px 0",
+    fontSize: "14px",
+    color: theme.textSecondary,
+  },
+  rolledResult: {
+    padding: "8px 12px",
+    backgroundColor: theme.success + "20",
+    color: theme.success,
+    borderRadius: "6px",
+    marginBottom: "12px",
+    fontSize: "14px",
+  },
+  chosenReward: {
+    padding: "16px",
+    backgroundColor: theme.primary + "10",
+    border: `1px solid ${theme.primary}`,
+    borderRadius: "8px",
+    color: theme.primary,
+    textAlign: "center",
+  },
+  rewardDetail: {
+    fontSize: "14px",
+    opacity: 0.8,
+  },
+  asiContainer: {
+    maxWidth: "500px",
+    margin: "0 auto",
+  },
+  asiProgress: {
+    textAlign: "center",
+    fontSize: "18px",
+    fontWeight: "600",
+    color: theme.text,
+    marginBottom: "24px",
+    padding: "12px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+  },
+  abilityGrid: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  abilityAsiRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px 16px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+  },
+  abilityInfo: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  },
+  abilityScoreInfo: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+  },
+  abilityControls: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  asiButton: {
+    width: "32px",
+    height: "32px",
+    border: "none",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "16px",
+    fontWeight: "600",
+    color: "white",
+    transition: "all 0.2s ease",
+  },
+
+  asiIncrement: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: theme.text,
+    minWidth: "24px",
+    textAlign: "center",
+  },
+
+  levelUpSummary: {
+    maxWidth: "500px",
+    margin: "0 auto",
+  },
+
+  summaryTitle: {
+    textAlign: "center",
+    fontSize: "20px",
+    fontWeight: "600",
+    color: theme.text,
+    marginBottom: "24px",
+  },
+
+  summarySection: {
+    marginBottom: "20px",
+    padding: "16px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+  },
+
+  sectionTitle: {
+    margin: "0 0 8px 0",
+    fontSize: "16px",
+    fontWeight: "600",
+    color: theme.primary,
+  },
+
+  wizardActions: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "20px 24px",
+    borderTop: `1px solid ${theme.border}`,
+    backgroundColor: theme.surface,
+  },
+  subtabContainer: {
+    display: "flex",
+    gap: "4px",
+    borderBottom: `1px solid ${theme.border}`,
+    marginBottom: "24px",
+    backgroundColor: theme.background,
+  },
+
+  subtab: {
+    background: "transparent",
+    border: "none",
+    borderRadius: "8px 8px 0 0",
+    padding: "12px 20px",
+    fontSize: "14px",
+    fontWeight: "500",
+    color: theme.textSecondary,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    borderBottom: "2px solid transparent",
+  },
+
+  activeSubtab: {
+    backgroundColor: theme.surface,
+    color: theme.text,
+    fontWeight: "600",
+    borderBottom: `2px solid ${theme.primary}`,
+  },
+
+  subtabContent: {
+    minHeight: "400px",
+  },
+
+  // Character List Styles
+  filtersContainer: {
+    display: "flex",
+    gap: "16px",
+    marginBottom: "24px",
+    padding: "16px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+
+  searchContainer: {
+    flex: "1 1 300px",
+    minWidth: "200px",
+  },
+
+  searchInput: {
+    width: "100%",
+    padding: "8px 12px",
+    border: `1px solid ${theme.border}`,
+    borderRadius: "6px",
+    fontSize: "14px",
+    backgroundColor: theme.background,
+    color: theme.text,
+  },
+
+  filterContainer: {
+    minWidth: "150px",
+  },
+
+  filterSelect: {
+    padding: "8px 12px",
+    border: `1px solid ${theme.border}`,
+    borderRadius: "6px",
+    fontSize: "14px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    minWidth: "120px",
+  },
+
+  sortContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flexWrap: "wrap",
+  },
+
+  sortLabel: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+    fontWeight: "500",
+  },
+
+  sortButton: {
+    padding: "6px 12px",
+    border: `1px solid ${theme.border}`,
+    borderRadius: "4px",
+    fontSize: "12px",
+    backgroundColor: theme.background,
+    color: theme.textSecondary,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+  },
+
+  sortButtonActive: {
+    backgroundColor: theme.primary,
+    color: "white",
+    borderColor: theme.primary,
+  },
+
+  // Character Cards
+  charactersGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+    gap: "20px",
+    marginBottom: "24px",
+  },
+
+  characterCard: {
+    backgroundColor: theme.surface,
+    border: `2px solid ${theme.border}`,
+    borderRadius: "12px",
+    padding: "20px",
+    transition: "all 0.2s ease",
+    position: "relative",
+  },
+
+  characterCardSelected: {
+    borderColor: theme.primary,
+    boxShadow: `0 0 0 2px ${theme.primary}20`,
+  },
+
+  characterCardHeader: {
+    marginBottom: "16px",
+  },
+
+  characterCardTitle: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: "8px",
+  },
+
+  characterNameSection: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flex: 1,
+  },
+
+  characterCardName: {
+    margin: 0,
+    fontSize: "18px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+
+  selectedBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "2px 8px",
+    backgroundColor: theme.primary,
+    color: "white",
+    borderRadius: "12px",
+    fontSize: "10px",
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+
+  characterLevel: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+    fontWeight: "500",
+    padding: "4px 8px",
+    backgroundColor: theme.background,
+    borderRadius: "6px",
+  },
+
+  characterCardBody: {
+    marginBottom: "16px",
+  },
+
+  characterInfoRow: {
+    display: "flex",
+    gap: "12px",
+    marginBottom: "8px",
+    flexWrap: "wrap",
+  },
+
+  characterInfoItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontSize: "14px",
+    color: theme.textSecondary,
+  },
+
+  characterStats: {
+    display: "flex",
+    gap: "8px",
+    marginTop: "12px",
+    flexWrap: "wrap",
+  },
+
+  statBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "4px 8px",
+    backgroundColor: theme.background,
+    borderRadius: "6px",
+    fontSize: "12px",
+  },
+
+  statLabel: {
+    color: theme.textSecondary,
+    fontWeight: "500",
+  },
+
+  statValue: {
+    color: theme.text,
+    fontWeight: "600",
+  },
+
+  heritageBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "4px 8px",
+    backgroundColor: theme.warning + "20",
+    color: theme.warning,
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "500",
+  },
+
+  featsBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "4px 8px",
+    backgroundColor: theme.secondary + "20",
+    color: theme.secondary,
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "500",
+  },
+
+  subclassInfo: {
+    marginTop: "8px",
+    fontSize: "13px",
+  },
+
+  subclassLabel: {
+    color: theme.textSecondary,
+    marginRight: "6px",
+  },
+
+  subclassValue: {
+    color: theme.text,
+    fontWeight: "500",
+  },
+
+  characterCardActions: {
+    display: "flex",
+    gap: "8px",
+    justifyContent: "flex-end",
+  },
+
+  actionButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "8px 12px",
+    border: "none",
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+
+  editButton: {
+    backgroundColor: theme.primary,
+    color: "white",
+  },
+
+  levelUpButton: {
+    backgroundColor: theme.success,
+    color: "white",
+  },
+
+  deleteButton: {
+    backgroundColor: theme.error,
+    color: "white",
+  },
+
+  // Empty State
+  emptyState: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "60px 20px",
+    textAlign: "center",
+  },
+
+  emptyStateTitle: {
+    margin: "16px 0 8px 0",
+    fontSize: "20px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+
+  emptyStateText: {
+    margin: 0,
+    fontSize: "14px",
+    color: theme.textSecondary,
+    maxWidth: "400px",
+  },
+
+  // Summary
+  summaryContainer: {
+    padding: "16px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+    marginTop: "24px",
+  },
+
+  summaryStats: {
+    display: "flex",
+    gap: "24px",
+    flexWrap: "wrap",
+  },
+
+  summaryItem: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  },
+
+  summaryLabel: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+    fontWeight: "500",
+  },
+
+  summaryValue: {
+    fontSize: "16px",
+    color: theme.text,
+    fontWeight: "600",
+  },
+
+  // Character Editor Styles
+  editingWarning: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "12px 16px",
+    backgroundColor: theme.warning + "10",
+    border: `1px solid ${theme.warning}`,
+    borderRadius: "8px",
+    marginBottom: "24px",
+    color: theme.warning,
+  },
+
+  lockedFieldHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "8px",
+  },
+
+  lockedBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "2px 8px",
+    backgroundColor: theme.error + "20",
+    color: theme.error,
+    borderRadius: "12px",
+    fontSize: "10px",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginLeft: "8px",
+  },
+
+  lockButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "6px 12px",
+    border: "none",
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "500",
+    color: "white",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+
+  lockedFieldInfo: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+    fontStyle: "italic",
+    marginBottom: "12px",
+    padding: "8px 12px",
+    backgroundColor: theme.background,
+    borderRadius: "6px",
+    border: `1px solid ${theme.border}`,
+  },
+
+  lockedAbilityScores: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: "12px",
+    padding: "16px",
+    backgroundColor: theme.background,
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+  },
+
+  lockedAbilityScore: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px 12px",
+    backgroundColor: theme.surface,
+    borderRadius: "6px",
+  },
+
+  abilityName: {
+    fontSize: "13px",
+    color: theme.textSecondary,
+    fontWeight: "500",
+  },
+
+  abilityValue: {
+    fontSize: "16px",
+    color: theme.text,
+    fontWeight: "600",
+  },
+
+  // Action Buttons
+  actionButtons: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "flex-end",
+    marginTop: "32px",
+    paddingTop: "24px",
+    borderTop: `1px solid ${theme.border}`,
+  },
+
+  // Warning Container
+  warningContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "12px 16px",
+    backgroundColor: theme.warning + "10",
+    border: `1px solid ${theme.warning}`,
+    borderRadius: "8px",
+    marginBottom: "16px",
+    color: theme.warning,
+    fontSize: "14px",
   },
 });
 

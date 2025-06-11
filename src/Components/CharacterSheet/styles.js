@@ -1,5 +1,3 @@
-// Character Sheet Styles with Theme Support
-// Original static styles (for backward compatibility)
 export const styles = {
   container: {
     maxWidth: "1024px",
@@ -347,7 +345,6 @@ export const styles = {
   },
 };
 
-// Themed styles function
 export const createThemedStyles = (theme) => ({
   container: {
     maxWidth: "1024px",
@@ -717,5 +714,4 @@ export const createThemedStyles = (theme) => ({
   },
 });
 
-// Export both for backward compatibility
 export default styles;

@@ -5,18 +5,15 @@ import { useTheme } from "../../contexts/ThemeContext";
 const Bank = () => {
   const { theme } = useTheme();
 
-  // Store total money in Knuts for precision
   const [totalKnuts, setTotalKnuts] = useState(0);
   const [inputGalleons, setInputGalleons] = useState("");
   const [inputSickles, setInputSickles] = useState("");
   const [inputKnuts, setInputKnuts] = useState("");
 
-  // Conversion rates
   const SICKLES_PER_GALLEON = 17;
   const KNUTS_PER_SICKLE = 29;
-  const KNUTS_PER_GALLEON = SICKLES_PER_GALLEON * KNUTS_PER_SICKLE; // 493
+  const KNUTS_PER_GALLEON = SICKLES_PER_GALLEON * KNUTS_PER_SICKLE;
 
-  // Convert total Knuts to individual currencies
   const getBreakdown = (knuts) => {
     const galleons = Math.floor(knuts / KNUTS_PER_GALLEON);
     const remainingAfterGalleons = knuts % KNUTS_PER_GALLEON;
@@ -26,7 +23,6 @@ const Bank = () => {
     return { galleons, sickles, knuts: finalKnuts };
   };
 
-  // Calculate total Knuts from all inputs
   const calculateTotalInputKnuts = () => {
     const galleons = parseFloat(inputGalleons) || 0;
     const sickles = parseFloat(inputSickles) || 0;

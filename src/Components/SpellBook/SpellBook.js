@@ -24,13 +24,11 @@ const SpellBook = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  // Reset spell attempts and critical successes when character changes
   useEffect(() => {
     setSpellAttempts({});
     setCriticalSuccesses({});
   }, [selectedCharacter?.id]);
 
-  // Filter spells based on search term
   const getFilteredSpellsData = () => {
     if (!searchTerm.trim()) {
       return spellsData;
@@ -105,7 +103,6 @@ const SpellBook = ({
     setSearchTerm("");
   };
 
-  // Auto-expand all subjects when searching
   useEffect(() => {
     if (searchTerm.trim()) {
       const currentFilteredData = getFilteredSpellsData();
