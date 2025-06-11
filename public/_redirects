@@ -1,0 +1,5 @@
+# Handle client-side routing
+/*    /index.html   200
+
+# Optional: Redirect old routes if you had any
+# /old-route    /new-route    301
