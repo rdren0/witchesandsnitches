@@ -412,11 +412,11 @@ export const rollAbility = async ({
       embeds: [
         {
           title: `${character.name} Rolled: ${ability.name} Check${resultText}`,
-          description: `1d20: [${d20Roll}] = ${d20Roll}${
+          description: `${
             isCriticalSuccess
-              ? " (Natural 20!)"
+              ? "Natural 20!"
               : isCriticalFailure
-              ? " (Natural 1!)"
+              ? "Natural 1!"
               : ""
           }`,
           color: embedColor,
@@ -603,7 +603,7 @@ export const rollGenericD20 = async ({
       alert(`${title}: d20(${d20Roll}) + ${mod} = ${total}`);
     }
 
-    let embedColor = 0xffe645; // Gray for generic rolls
+    let embedColor = 0xff9e3d;
     let resultText = "";
 
     const rollTitle = character
@@ -843,7 +843,7 @@ export const rollBrewPotion = async ({
         title: `${character?.name || "Unknown"} Brewed: ${
           selectedPotion.name
         }${resultText}`,
-        description: `1d20: [${d20Roll}] = ${d20Roll}${
+        description: `${
           isCriticalSuccess
             ? " (Natural 20!)"
             : isCriticalFailure
@@ -1226,8 +1226,7 @@ export const attemptSpell = async ({
         selectedCharacter
       );
 
-      let modifierBreakdown = `**${modifierInfo.source}**\n`;
-      modifierBreakdown += `${modifierInfo.abilityName}: ${
+      let modifierBreakdown = `${modifierInfo.abilityName}: ${
         modifierInfo.abilityModifier >= 0 ? "+" : ""
       }${modifierInfo.abilityModifier}`;
       if (modifierInfo.wandModifier !== 0) {
@@ -1235,9 +1234,6 @@ export const attemptSpell = async ({
           modifierInfo.wandModifier >= 0 ? "+" : ""
         }${modifierInfo.wandModifier}`;
       }
-      modifierBreakdown += `\n**Total: ${
-        totalModifier >= 0 ? "+" : ""
-      }${totalModifier}**`;
 
       fields.push({
         name: "Modifier Breakdown",
@@ -1248,7 +1244,7 @@ export const attemptSpell = async ({
 
     const embed = {
       title: title,
-      description: diceResult.output,
+      description: "",
       color: embedColor,
       fields: fields,
       timestamp: new Date().toISOString(),
