@@ -10,6 +10,7 @@ import {
   Crown,
   Shield,
   Calendar,
+  Copy,
 } from "lucide-react";
 
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -33,6 +34,7 @@ const CharacterList = ({
   const [savedCharacters, setSavedCharacters] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [duplicatingCharacterId, setDuplicatingCharacterId] = useState(null);
 
   const [editingCharacter, setEditingCharacter] = useState(null);
   const [sortBy, setSortBy] = useState("created");
@@ -109,6 +111,37 @@ const CharacterList = ({
   const handleSaveEdit = (updatedCharacter) => {
     setEditingCharacter(null);
     loadCharacters();
+  };
+
+  const handleDuplicate = async (character) => {
+    if (!character) return;
+
+    setDuplicatingCharacterId(character.id);
+
+    try {
+      const baseName = character.name;
+      const existingNames = savedCharacters.map((char) =>
+        char.name.toLowerCase()
+      );
+      let duplicateName = `${baseName} (Copy)`;
+      let counter = 1;
+
+      while (existingNames.includes(duplicateName.toLowerCase())) {
+        counter++;
+        duplicateName = `${baseName} (Copy ${counter})`;
+      }
+
+      await loadCharacters();
+
+      console.log(
+        `Successfully duplicated ${character.name} as ${duplicateName}`
+      );
+    } catch (err) {
+      console.error("Error duplicating character:", err);
+      alert("Failed to duplicate character: " + err.message);
+    } finally {
+      setDuplicatingCharacterId(null);
+    }
   };
 
   const handleLevelUp = async (character) => {
@@ -281,7 +314,8 @@ const CharacterList = ({
         <div style={{ flex: 1 }}>
           <h1 style={styles.title}>My Characters</h1>
           <p style={styles.subtitle}>
-            Manage your characters, level up, and edit details
+            Manage your characters, level up, edit details, and create
+            duplicates
           </p>
         </div>
         {onCreateNew && (
@@ -405,6 +439,7 @@ const CharacterList = ({
             const isSelected =
               selectedCharacterId &&
               selectedCharacterId.toString() === character.id.toString();
+            const isDuplicating = duplicatingCharacterId === character.id;
 
             return (
               <div
@@ -509,10 +544,25 @@ const CharacterList = ({
                       }}
                       title="Level up character"
                     >
-                      <ArrowUp size={14} />
+                      <ArrowUp size={16} />
                       Level Up
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDuplicate(character)}
+                    disabled={isDuplicating}
+                    style={{
+                      ...styles.actionButton,
+                      backgroundColor: isDuplicating ? "#9ca3af" : "#8b5cf6",
+                      color: "white",
+                      cursor: isDuplicating ? "not-allowed" : "pointer",
+                      opacity: isDuplicating ? 0.7 : 1,
+                    }}
+                    title="Duplicate character"
+                  >
+                    <Copy size={14} />
+                    {isDuplicating ? "Duplicating..." : "Duplicate"}
+                  </button>
 
                   <button
                     onClick={() => handleArchive(character)}
