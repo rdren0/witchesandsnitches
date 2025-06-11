@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Edit3,
   Trash2,
   Users,
   Star,
@@ -10,7 +9,6 @@ import {
   Crown,
   Shield,
   Calendar,
-  Copy,
 } from "lucide-react";
 
 import { useTheme } from "../../../contexts/ThemeContext";
