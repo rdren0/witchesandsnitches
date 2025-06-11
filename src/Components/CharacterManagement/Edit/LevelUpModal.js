@@ -10,6 +10,7 @@ import {
   Dice6,
   RotateCcw,
 } from "lucide-react";
+import { standardFeats } from "../../data";
 
 const LevelUpModal = ({
   character,
@@ -30,102 +31,154 @@ const LevelUpModal = ({
     abilityIncreases: [],
     selectedFeats: [],
     manualHP: 0,
+    asiChoice: "asi",
+    featChoices: {},
   });
 
-  const featDescriptions = {
-    Alert:
-      "+5 bonus to initiative, can't be surprised while conscious, other creatures don't gain advantage on attack rolls from being unseen.",
-    Athlete:
-      "Climbing doesn't halve your speed, only 5 feet of movement to climb during a high jump, running start adds +5 feet to long jump distance.",
-    Actor:
-      "Advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as different person.",
-    Charger:
-      "When you use Dash action, you can use bonus action to make one melee weapon attack or shove a creature.",
-    "Defensive Duelist":
-      "When wielding finesse weapon with which you are proficient and another creature hits you with melee attack, use reaction to add proficiency bonus to AC.",
-    "Dual Wielder":
-      "Gain +1 bonus to AC while wielding separate melee weapon in each hand, can use two-weapon fighting with non-light melee weapons.",
-    "Dungeon Delver":
-      "Advantage on Perception and Investigation checks to detect secret doors, advantage on saving throws to avoid or resist traps.",
-    Durable:
-      "When you roll Hit Dice to regain hit points, minimum number you can roll is twice your Constitution modifier.",
-    "Elemental Adept":
-      "Spells ignore resistance to your chosen damage type, treat any 1 on damage dice as 2.",
-    "Fey Touched":
-      "Learn Misty Step and one 1st-level divination or enchantment spell, can cast each once without expending spell slot.",
-    "Gift of the Metallic Dragon":
-      "Learn Cure Wounds or Guidance cantrip, gain protective wings reaction, manifest spectral wings for brief flight.",
-    "Great Weapon Master":
-      "On critical hit or reducing creature to 0 HP with melee weapon, make bonus attack. Can take -5 penalty to attack for +10 damage.",
-    Healer:
-      "Use healer's kit to stabilize dying creature (they regain 1 HP), restore 1d4+4 HP to creature that hasn't regained HP from this feat today.",
-    "Heavily Armored": "Gain proficiency with heavy armor, +1 to Strength.",
-    "Heavy Armor Master":
-      "While wearing heavy armor, reduce bludgeoning, piercing, and slashing damage by 3.",
-    "Inspiring Leader":
-      "Spend 10 minutes inspiring companions, give temporary HP equal to your level + Charisma modifier to up to 6 friendly creatures.",
-    "Keen Mind":
-      "Always know which way is north and hours until next sunrise/sunset, can accurately recall anything seen or heard within the past month.",
-    "Lightly Armored":
-      "Gain proficiency with light armor, +1 to Strength or Dexterity.",
-    Lucky:
-      "Have 3 luck points, spend one to roll additional d20 when making attack roll, ability check, or saving throw.",
-    "Mage Slayer":
-      "When creature within 5 feet casts spell, use reaction to make melee weapon attack. Advantage on saving throws against spells cast within 5 feet.",
-    "Magic Initiate":
-      "Learn two cantrips and one 1st-level spell from chosen class, can cast the spell once without expending spell slot.",
-    "Martial Adept":
-      "Learn two maneuvers from Battle Master archetype, gain one superiority die (d6) to fuel them.",
-    "Medium Armor Master":
-      "Wearing medium armor doesn't impose disadvantage on Dexterity (Stealth) checks, max Dex bonus to AC increases to 3.",
-    Mobile:
-      "Speed increases by 10 feet, when you make melee attack against creature, you don't provoke opportunity attacks from that creature.",
-    "Moderately Armored":
-      "Gain proficiency with medium armor and shields, +1 to Strength or Dexterity.",
-    "Mounted Combatant":
-      "Advantage on melee attacks against unmounted creatures smaller than your mount, force attacks against mount to target you instead.",
-    Observant:
-      "If you can see creature's mouth and know language, you can interpret what it's saying by reading lips, +5 bonus to passive Perception and Investigation.",
-    "Polearm Master":
-      "When wielding glaive, halberd, pike, or quarterstaff, use bonus action for butt end attack, opportunity attacks when creature enters your reach.",
-    Resilient:
-      "Choose one ability score, gain proficiency in saving throws using the chosen ability, +1 to the chosen ability score.",
-    "Ritual Caster":
-      "Learn two 1st-level spells with ritual tag from chosen class, can cast them as rituals, learn additional ritual spells.",
-    "Savage Attacker":
-      "Once per turn when you roll damage for melee weapon attack, reroll damage dice and use either total.",
-    Sentinel:
-      "When you hit creature with opportunity attack, creature's speed becomes 0, creatures provoke opportunity attacks even with Disengage.",
-    "Shadow Touched":
-      "Learn Invisibility and one 1st-level necromancy or illusion spell, can cast each once without expending spell slot.",
-    Sharpshooter:
-      "Attacking at long range doesn't impose disadvantage, ranged attacks ignore half and three-quarters cover, -5 attack for +10 damage.",
-    "Shield Master":
-      "Use bonus action to shove with shield, add shield's AC bonus to Dexterity saving throws against spells and effects.",
-    Skilled:
-      "Gain proficiency in any combination of three skills or tools of your choice.",
-    Skulker:
-      "You can try to hide when lightly obscured, when hidden and you miss with ranged attack, doesn't reveal your position.",
-    "Spell Sniper":
-      "Double range of spells that require attack roll, learn one cantrip that requires attack roll, spells ignore half and three-quarters cover.",
-    "Tavern Brawler":
-      "Proficient with improvised weapons, unarmed strikes use d4 for damage, when you hit with unarmed strike or improvised weapon, grapple as bonus action.",
-    Telekinetic:
-      "Learn Mage Hand cantrip, bonus action to shove creature 5 feet with telekinetic shove, Mage Hand range increases to 60 feet.",
-    Telepathic:
-      "Can communicate telepathically with creature within 60 feet, learn Detect Thoughts spell, can cast once without expending spell slot.",
-    Tough:
-      "Your hit point maximum increases by an amount equal to twice your level when you gain this feat.",
-    "War Caster":
-      "Advantage on Constitution saving throws to maintain concentration, can perform somatic components with hands holding shield and weapon.",
-    "Weapon Master":
-      "Gain proficiency with four weapons of your choice, +1 to Strength or Dexterity.",
+  const getSelectedFeat = () => {
+    if (levelUpData.selectedFeats.length === 0) return null;
+    return standardFeats.find(
+      (feat) => feat.name === levelUpData.selectedFeats[0]
+    );
   };
 
-  if (!isOpen || !character) return null;
+  const getSpellcastingAbility = () => {
+    const spellcastingAbilities = {
+      Charms: "charisma",
+      Transfiguration: "intelligence",
+      "Defense Against the Dark Arts": "wisdom",
+      Healing: "wisdom",
+      Divination: "wisdom",
+      Magizoology: "wisdom",
+    };
+    return spellcastingAbilities[character.castingStyle] || "intelligence";
+  };
+
+  const featDescriptions = standardFeats.reduce((acc, feat) => {
+    acc[feat.name] =
+      feat.preview || (feat.description ? feat.description.join(" • ") : "");
+    return acc;
+  }, {});
+
+  const getFeatChoicesNeeded = (feat) => {
+    if (!feat || !feat.modifiers) return [];
+
+    const choicesNeeded = [];
+
+    feat.modifiers.abilityIncreases.forEach((increase, index) => {
+      if (increase.type === "choice") {
+        choicesNeeded.push({
+          type: "abilityChoice",
+          index,
+          abilities: increase.abilities,
+          amount: increase.amount,
+          id: `ability_${index}`,
+        });
+      } else if (increase.type === "custom") {
+        choicesNeeded.push({
+          type: "abilityCustom",
+          index,
+          amount: increase.amount,
+          id: `ability_${index}`,
+        });
+      }
+    });
+
+    feat.modifiers.skillProficiencies.forEach((skill, index) => {
+      if (skill.type === "choice") {
+        choicesNeeded.push({
+          type: "skillChoice",
+          index,
+          count: skill.count,
+          id: `skill_${index}`,
+        });
+      }
+    });
+
+    feat.modifiers.expertise.forEach((expertise, index) => {
+      if (expertise.type === "choice") {
+        choicesNeeded.push({
+          type: "expertiseChoice",
+          index,
+          count: expertise.count,
+          id: `expertise_${index}`,
+        });
+      }
+    });
+
+    return choicesNeeded;
+  };
+
+  const getAvailableSkills = () => {
+    return [
+      "Athletics",
+      "Acrobatics",
+      "Sleight of Hand",
+      "Stealth",
+      "Herbology",
+      "History of Magic",
+      "Investigation",
+      "Magical Theory",
+      "Muggle Studies",
+      "Insight",
+      "Magical Creatures",
+      "Medicine",
+      "Perception",
+      "Potion Making",
+      "Survival",
+      "Deception",
+      "Intimidation",
+      "Performance",
+      "Persuasion",
+    ];
+  };
+
+  const getCurrentSkillProficiencies = () => {
+    return character.skillProficiencies || [];
+  };
+
+  const updateFeatChoice = (choiceId, value) => {
+    setLevelUpData((prev) => ({
+      ...prev,
+      featChoices: {
+        ...prev.featChoices,
+        [choiceId]: value,
+      },
+    }));
+  };
+
+  const isFeatChoiceComplete = (feat) => {
+    if (!feat) return true;
+
+    const choicesNeeded = getFeatChoicesNeeded(feat);
+    return choicesNeeded.every((choice) => {
+      const choiceValue = levelUpData.featChoices[choice.id];
+
+      switch (choice.type) {
+        case "abilityChoice":
+        case "abilityCustom":
+          return choiceValue && choice.abilities
+            ? choice.abilities.includes(choiceValue)
+            : !!choiceValue;
+        case "skillChoice":
+          return (
+            Array.isArray(choiceValue) && choiceValue.length === choice.count
+          );
+        case "expertiseChoice":
+          return (
+            Array.isArray(choiceValue) && choiceValue.length === choice.count
+          );
+        default:
+          return true;
+      }
+    });
+  };
 
   const currentLevel = character.level || 1;
   const newLevel = currentLevel + 1;
+
+  const asiLevels = [4, 8, 12, 16, 19];
+  const isAsiLevel = asiLevels.includes(newLevel);
 
   const getAbilityScore = (abilityName) => {
     const lowerName = abilityName.toLowerCase();
@@ -160,32 +213,48 @@ const LevelUpModal = ({
   const constitution = getAbilityScore("constitution");
   const conMod = Math.floor((constitution - 10) / 2);
 
-  const steps = [
-    {
-      number: 1,
-      title: "Hit Points",
-      completed: currentStep > 1,
-      active: currentStep === 1,
-    },
-    {
-      number: 2,
-      title: "Ability Scores",
-      completed: currentStep > 2,
-      active: currentStep === 2,
-    },
-    {
-      number: 3,
-      title: "Features",
-      completed: currentStep > 3,
-      active: currentStep === 3,
-    },
-    {
-      number: 4,
-      title: "Summary",
-      completed: false,
-      active: currentStep === 4,
-    },
-  ];
+  const getSteps = () => {
+    if (isAsiLevel) {
+      return [
+        {
+          number: 1,
+          title: "Hit Points",
+          completed: currentStep > 1,
+          active: currentStep === 1,
+        },
+        {
+          number: 2,
+          title: "ASI or Feat",
+          completed: currentStep > 2,
+          active: currentStep === 2,
+        },
+        {
+          number: 3,
+          title: "Summary",
+          completed: false,
+          active: currentStep === 3,
+        },
+      ];
+    } else {
+      return [
+        {
+          number: 1,
+          title: "Hit Points",
+          completed: currentStep > 1,
+          active: currentStep === 1,
+        },
+        {
+          number: 2,
+          title: "Summary",
+          completed: false,
+          active: currentStep === 2,
+        },
+      ];
+    }
+  };
+
+  const steps = getSteps();
+  const maxSteps = steps.length;
 
   const rollHitPoints = () => {
     const roll = Math.floor(Math.random() * baseHitDie) + 1;
@@ -233,6 +302,7 @@ const LevelUpModal = ({
         };
       } else if (prev.abilityIncreases.length < 2) {
         const currentScore = getAbilityScore(ability);
+        if (currentScore >= 20) return prev;
         return {
           ...prev,
           abilityIncreases: [
@@ -249,21 +319,33 @@ const LevelUpModal = ({
     });
   };
 
-  const toggleFeat = (feat) => {
+  const toggleFeat = (featName) => {
     setLevelUpData((prev) => {
-      const isSelected = prev.selectedFeats.includes(feat);
+      const isSelected = prev.selectedFeats.includes(featName);
       if (isSelected) {
         return {
           ...prev,
           selectedFeats: [],
+          featChoices: {},
         };
       } else {
         return {
           ...prev,
-          selectedFeats: [feat],
+          selectedFeats: [featName],
+          featChoices: {},
         };
       }
     });
+  };
+
+  const handleAsiChoiceChange = (choice) => {
+    setLevelUpData((prev) => ({
+      ...prev,
+      asiChoice: choice,
+
+      abilityIncreases: choice === "feat" ? [] : prev.abilityIncreases,
+      selectedFeats: choice === "asi" ? [] : prev.selectedFeats,
+    }));
   };
 
   const canProceed = () => {
@@ -271,10 +353,20 @@ const LevelUpModal = ({
       case 1:
         return levelUpData.hitPointIncrease > 0;
       case 2:
-        return true;
+        if (isAsiLevel) {
+          if (levelUpData.asiChoice === "asi") {
+            return levelUpData.abilityIncreases.length === 2;
+          } else {
+            const selectedFeat = getSelectedFeat();
+            return (
+              levelUpData.selectedFeats.length === 1 &&
+              isFeatChoiceComplete(selectedFeat)
+            );
+          }
+        } else {
+          return true;
+        }
       case 3:
-        return true;
-      case 4:
         return true;
       default:
         return false;
@@ -282,7 +374,7 @@ const LevelUpModal = ({
   };
 
   const handleNext = () => {
-    if (canProceed() && currentStep < 4) {
+    if (canProceed() && currentStep < maxSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -307,7 +399,11 @@ const LevelUpModal = ({
         hitPoints: currentHP + levelUpData.hitPointIncrease,
       };
 
-      if (levelUpData.abilityIncreases.length > 0) {
+      if (
+        isAsiLevel &&
+        levelUpData.asiChoice === "asi" &&
+        levelUpData.abilityIncreases.length > 0
+      ) {
         const newAbilityScores = {
           ...(character.ability_scores || character.abilityScores || {}),
         };
@@ -326,7 +422,78 @@ const LevelUpModal = ({
         });
       }
 
-      if (levelUpData.selectedFeats.length > 0) {
+      if (
+        isAsiLevel &&
+        levelUpData.asiChoice === "feat" &&
+        levelUpData.selectedFeats.length > 0
+      ) {
+        const selectedFeat = getSelectedFeat();
+
+        if (selectedFeat && selectedFeat.modifiers) {
+          const newAbilityScores = { ...updatedCharacter.ability_scores };
+
+          selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
+            let abilityToIncrease;
+
+            switch (increase.type) {
+              case "fixed":
+                abilityToIncrease = increase.ability;
+                break;
+              case "choice":
+              case "custom":
+                abilityToIncrease = levelUpData.featChoices[`ability_${index}`];
+                break;
+              case "spellcastingAbility":
+                abilityToIncrease = getSpellcastingAbility();
+                break;
+              default:
+                break;
+            }
+
+            if (abilityToIncrease) {
+              const currentScore = newAbilityScores[abilityToIncrease] || 10;
+              newAbilityScores[abilityToIncrease] = Math.min(
+                20,
+                currentScore + increase.amount
+              );
+              updatedCharacter[abilityToIncrease] =
+                newAbilityScores[abilityToIncrease];
+            }
+          });
+
+          updatedCharacter.ability_scores = newAbilityScores;
+          updatedCharacter.abilityScores = newAbilityScores;
+
+          const currentSkills = [
+            ...(updatedCharacter.skill_proficiencies ||
+              updatedCharacter.skillProficiencies ||
+              []),
+          ];
+
+          selectedFeat.modifiers.skillProficiencies.forEach(
+            (skillGrant, index) => {
+              if (skillGrant.type === "choice") {
+                const chosenSkills =
+                  levelUpData.featChoices[`skill_${index}`] || [];
+                chosenSkills.forEach((skill) => {
+                  if (!currentSkills.includes(skill)) {
+                    currentSkills.push(skill);
+                  }
+                });
+              }
+            }
+          );
+
+          updatedCharacter.skill_proficiencies = currentSkills;
+          updatedCharacter.skillProficiencies = currentSkills;
+
+          if (selectedFeat.name === "Tough") {
+            const toughBonus = 2 * newLevel;
+            updatedCharacter.hit_points += toughBonus;
+            updatedCharacter.hitPoints += toughBonus;
+          }
+        }
+
         const currentFeats =
           character.standard_feats || character.standardFeats || [];
         updatedCharacter.standard_feats = [
@@ -337,6 +504,22 @@ const LevelUpModal = ({
           ...currentFeats,
           ...levelUpData.selectedFeats,
         ];
+      }
+
+      if (isAsiLevel) {
+        const asiChoices = character.asi_choices || character.asiChoices || {};
+        asiChoices[newLevel] = {
+          choice: levelUpData.asiChoice,
+          ...(levelUpData.asiChoice === "asi" && {
+            abilityIncreases: levelUpData.abilityIncreases,
+          }),
+          ...(levelUpData.asiChoice === "feat" && {
+            selectedFeat: levelUpData.selectedFeats[0],
+            featChoices: levelUpData.featChoices,
+          }),
+        };
+        updatedCharacter.asi_choices = asiChoices;
+        updatedCharacter.asiChoices = asiChoices;
       }
 
       console.log("Original character:", character);
@@ -562,281 +745,797 @@ const LevelUpModal = ({
         );
 
       case 2:
-        const abilities = [
-          "Strength",
-          "Dexterity",
-          "Constitution",
-          "Intelligence",
-          "Wisdom",
-          "Charisma",
-        ];
+        if (isAsiLevel) {
+          return (
+            <div style={{ display: "grid", gap: "24px" }}>
+              <div style={{ textAlign: "center" }}>
+                <h3
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "20px",
+                    fontWeight: "600",
+                  }}
+                >
+                  🌟 Ability Score Improvement or Feat
+                </h3>
+                <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
+                  At level {newLevel}, choose either an Ability Score
+                  Improvement or a Feat
+                </p>
+              </div>
 
-        console.log("Character object:", character);
-        console.log("Ability scores:", {
-          strength: getAbilityScore("strength"),
-          dexterity: getAbilityScore("dexterity"),
-          constitution: getAbilityScore("constitution"),
-          intelligence: getAbilityScore("intelligence"),
-          wisdom: getAbilityScore("wisdom"),
-          charisma: getAbilityScore("charisma"),
-        });
-
-        return (
-          <div style={{ display: "grid", gap: "24px" }}>
-            <div style={{ textAlign: "center" }}>
-              <h3
+              {/* Choice Selection */}
+              <div
                 style={{
-                  margin: "0 0 8px 0",
-                  fontSize: "20px",
-                  fontWeight: "600",
+                  display: "flex",
+                  gap: "16px",
+                  justifyContent: "center",
+                  marginBottom: "24px",
                 }}
               >
-                Ability Score Improvements
-              </h3>
-              <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-                You can increase two different ability scores by 1 each
-                (optional)
-              </p>
-            </div>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "12px 20px",
+                    border: `2px solid ${
+                      levelUpData.asiChoice === "asi" ? "#3b82f6" : "#d1d5db"
+                    }`,
+                    borderRadius: "8px",
+                    backgroundColor:
+                      levelUpData.asiChoice === "asi" ? "#dbeafe" : "white",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    value="asi"
+                    checked={levelUpData.asiChoice === "asi"}
+                    onChange={(e) => handleAsiChoiceChange(e.target.value)}
+                  />
+                  <span style={{ fontWeight: "500" }}>
+                    Ability Score Improvement (+2 points)
+                  </span>
+                </label>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "16px",
-              }}
-            >
-              {abilities.map((ability) => {
-                const currentScore = getAbilityScore(ability);
-                const isSelected = levelUpData.abilityIncreases.find(
-                  (inc) => inc.ability === ability
-                );
-                const canSelect =
-                  isSelected || levelUpData.abilityIncreases.length < 2;
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "12px 20px",
+                    border: `2px solid ${
+                      levelUpData.asiChoice === "feat" ? "#3b82f6" : "#d1d5db"
+                    }`,
+                    borderRadius: "8px",
+                    backgroundColor:
+                      levelUpData.asiChoice === "feat" ? "#dbeafe" : "white",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    value="feat"
+                    checked={levelUpData.asiChoice === "feat"}
+                    onChange={(e) => handleAsiChoiceChange(e.target.value)}
+                  />
+                  <span style={{ fontWeight: "500" }}>Feat</span>
+                </label>
+              </div>
 
-                return (
+              {/* ASI Content */}
+              {levelUpData.asiChoice === "asi" && (
+                <div>
+                  <h4 style={{ margin: "0 0 16px 0", textAlign: "center" }}>
+                    Select Two Ability Score Increases
+                  </h4>
+
                   <div
-                    key={ability}
                     style={{
-                      border: `2px solid ${
-                        isSelected
-                          ? "#10b981"
-                          : canSelect
-                          ? "#d1d5db"
-                          : "#e5e7eb"
-                      }`,
-                      borderRadius: "8px",
-                      padding: "16px",
-                      cursor: canSelect ? "pointer" : "not-allowed",
-                      backgroundColor: isSelected ? "#ecfdf5" : "white",
-                      opacity: canSelect ? 1 : 0.5,
-                      transition: "all 0.2s ease",
-                    }}
-                    onClick={() => canSelect && toggleAbilityIncrease(ability)}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span style={{ fontWeight: "500" }}>{ability}</span>
-                      <span style={{ fontSize: "18px", fontWeight: "bold" }}>
-                        {currentScore} {isSelected && "→ " + (currentScore + 1)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              style={{
-                textAlign: "center",
-                fontSize: "14px",
-                color: "#6b7280",
-              }}
-            >
-              Selected: {levelUpData.abilityIncreases.length}/2
-            </div>
-          </div>
-        );
-
-      case 3:
-        const availableFeats = [
-          "Alert",
-          "Athlete",
-          "Actor",
-          "Charger",
-          "Defensive Duelist",
-          "Dual Wielder",
-          "Dungeon Delver",
-          "Durable",
-          "Elemental Adept",
-          "Fey Touched",
-          "Gift of the Metallic Dragon",
-          "Great Weapon Master",
-          "Healer",
-          "Heavily Armored",
-          "Heavy Armor Master",
-          "Inspiring Leader",
-          "Keen Mind",
-          "Lightly Armored",
-          "Lucky",
-          "Mage Slayer",
-          "Magic Initiate",
-          "Martial Adept",
-          "Medium Armor Master",
-          "Mobile",
-          "Moderately Armored",
-          "Mounted Combatant",
-          "Observant",
-          "Polearm Master",
-          "Resilient",
-          "Ritual Caster",
-          "Savage Attacker",
-          "Sentinel",
-          "Shadow Touched",
-          "Sharpshooter",
-          "Shield Master",
-          "Skilled",
-          "Skulker",
-          "Spell Sniper",
-          "Tavern Brawler",
-          "Telekinetic",
-          "Telepathic",
-          "Tough",
-          "War Caster",
-          "Weapon Master",
-        ];
-
-        return (
-          <div style={{ display: "grid", gap: "24px" }}>
-            <div style={{ textAlign: "center" }}>
-              <h3
-                style={{
-                  margin: "0 0 8px 0",
-                  fontSize: "20px",
-                  fontWeight: "600",
-                }}
-              >
-                Choose a Feat
-              </h3>
-              <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-                Select one feat to add to your character (optional)
-              </p>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-                gap: "12px",
-                maxHeight: "400px",
-                overflowY: "auto",
-                padding: "8px",
-              }}
-            >
-              {availableFeats.map((feat) => {
-                const isSelected = levelUpData.selectedFeats.includes(feat);
-                const isExpanded = expandedFeat === feat;
-
-                return (
-                  <div
-                    key={feat}
-                    style={{
-                      border: `2px solid ${isSelected ? "#3b82f6" : "#d1d5db"}`,
-                      borderRadius: "8px",
-                      padding: "12px",
-                      backgroundColor: isSelected ? "#dbeafe" : "white",
-                      transition: "all 0.2s ease",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: "16px",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        cursor: "pointer",
-                        marginBottom: isExpanded ? "12px" : "0",
-                      }}
-                      onClick={() => setExpandedFeat(isExpanded ? null : feat)}
-                    >
-                      <span
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: isSelected ? "600" : "500",
-                          color: isSelected ? "#1e40af" : "#374151",
-                        }}
-                      >
-                        {feat}
-                      </span>
-                      <span style={{ fontSize: "12px", color: "#6b7280" }}>
-                        {isExpanded ? "−" : "+"}
-                      </span>
-                    </div>
+                    {[
+                      "Strength",
+                      "Dexterity",
+                      "Constitution",
+                      "Intelligence",
+                      "Wisdom",
+                      "Charisma",
+                    ].map((ability) => {
+                      const currentScore = getAbilityScore(ability);
+                      const isSelected = levelUpData.abilityIncreases.find(
+                        (inc) => inc.ability === ability
+                      );
+                      const canSelect =
+                        isSelected ||
+                        (levelUpData.abilityIncreases.length < 2 &&
+                          currentScore < 20);
 
-                    {isExpanded && (
-                      <div>
+                      return (
                         <div
+                          key={ability}
                           style={{
-                            fontSize: "12px",
-                            color: "#4b5563",
-                            lineHeight: "1.4",
-                            marginBottom: "12px",
-                            padding: "8px",
-                            backgroundColor: "#f9fafb",
-                            borderRadius: "4px",
-                            border: "1px solid #e5e7eb",
-                          }}
-                        >
-                          {featDescriptions[feat] ||
-                            "No description available."}
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFeat(feat);
-                          }}
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            backgroundColor: isSelected ? "#ef4444" : "#3b82f6",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            cursor: "pointer",
+                            border: `2px solid ${
+                              isSelected
+                                ? "#10b981"
+                                : canSelect
+                                ? "#d1d5db"
+                                : "#e5e7eb"
+                            }`,
+                            borderRadius: "8px",
+                            padding: "16px",
+                            cursor: canSelect ? "pointer" : "not-allowed",
+                            backgroundColor: isSelected ? "#ecfdf5" : "white",
+                            opacity: canSelect ? 1 : 0.5,
                             transition: "all 0.2s ease",
                           }}
+                          onClick={() =>
+                            canSelect && toggleAbilityIncrease(ability)
+                          }
                         >
-                          {isSelected ? "Remove Feat" : "Select Feat"}
-                        </button>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <span style={{ fontWeight: "500" }}>{ability}</span>
+                            <span
+                              style={{ fontSize: "18px", fontWeight: "bold" }}
+                            >
+                              {currentScore}{" "}
+                              {isSelected && "→ " + (currentScore + 1)}
+                            </span>
+                          </div>
+                          {currentScore >= 20 && (
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#ef4444",
+                                marginTop: "4px",
+                              }}
+                            >
+                              Already at maximum (20)
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    style={{
+                      textAlign: "center",
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      marginTop: "16px",
+                    }}
+                  >
+                    Selected: {levelUpData.abilityIncreases.length}/2
+                    {levelUpData.abilityIncreases.length < 2 && (
+                      <div style={{ color: "#f59e0b", marginTop: "8px" }}>
+                        ⚠️ You must select exactly 2 ability score increases
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
 
-            <div
-              style={{
-                textAlign: "center",
-                fontSize: "14px",
-                color: "#6b7280",
-              }}
-            >
-              {levelUpData.selectedFeats.length > 0
-                ? `Selected: ${levelUpData.selectedFeats[0]}`
-                : "No feat selected"}
-            </div>
-          </div>
-        );
+              {/* Feat Content */}
+              {levelUpData.asiChoice === "feat" && (
+                <div>
+                  <h4 style={{ margin: "0 0 16px 0", textAlign: "center" }}>
+                    Select One Feat
+                  </h4>
 
-      case 4:
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(300px, 1fr))",
+                      gap: "12px",
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                      padding: "8px",
+                    }}
+                  >
+                    {standardFeats.map((feat) => {
+                      const isSelected = levelUpData.selectedFeats.includes(
+                        feat.name
+                      );
+                      const isExpanded = expandedFeat === feat.name;
+                      const choicesNeeded = getFeatChoicesNeeded(feat);
+                      const isChoiceComplete = isFeatChoiceComplete(feat);
+
+                      return (
+                        <div
+                          key={feat.name}
+                          style={{
+                            border: `2px solid ${
+                              isSelected ? "#3b82f6" : "#d1d5db"
+                            }`,
+                            borderRadius: "8px",
+                            padding: "12px",
+                            backgroundColor: isSelected ? "#dbeafe" : "white",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              cursor: "pointer",
+                              marginBottom: isExpanded ? "12px" : "0",
+                            }}
+                            onClick={() =>
+                              setExpandedFeat(isExpanded ? null : feat.name)
+                            }
+                          >
+                            <div>
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: isSelected ? "600" : "500",
+                                  color: isSelected ? "#1e40af" : "#374151",
+                                  display: "block",
+                                }}
+                              >
+                                {feat.name}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#6b7280",
+                                  fontStyle: "italic",
+                                }}
+                              >
+                                {feat.preview}
+                              </span>
+                            </div>
+                            <span
+                              style={{ fontSize: "12px", color: "#6b7280" }}
+                            >
+                              {isExpanded ? "−" : "+"}
+                            </span>
+                          </div>
+
+                          {isExpanded && (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#4b5563",
+                                  lineHeight: "1.4",
+                                  marginBottom: "12px",
+                                  padding: "8px",
+                                  backgroundColor: "#f9fafb",
+                                  borderRadius: "4px",
+                                  border: "1px solid #e5e7eb",
+                                }}
+                              >
+                                {feat.description.map((line, index) => (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      marginBottom:
+                                        index < feat.description.length - 1
+                                          ? "4px"
+                                          : "0",
+                                    }}
+                                  >
+                                    • {line}
+                                  </div>
+                                ))}
+                              </div>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFeat(feat.name);
+                                }}
+                                style={{
+                                  width: "100%",
+                                  padding: "8px 12px",
+                                  backgroundColor: isSelected
+                                    ? "#ef4444"
+                                    : "#3b82f6",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  fontSize: "12px",
+                                  fontWeight: "500",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  marginBottom:
+                                    isSelected && choicesNeeded.length > 0
+                                      ? "12px"
+                                      : "0",
+                                }}
+                              >
+                                {isSelected ? "Remove Feat" : "Select Feat"}
+                              </button>
+
+                              {/* Feat Choices Interface */}
+                              {isSelected && choicesNeeded.length > 0 && (
+                                <div
+                                  style={{
+                                    padding: "12px",
+                                    backgroundColor: "#f0f9ff",
+                                    borderRadius: "6px",
+                                    border: "1px solid #0ea5e9",
+                                  }}
+                                >
+                                  <h5
+                                    style={{
+                                      margin: "0 0 8px 0",
+                                      fontSize: "13px",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    Make Your Choices:
+                                  </h5>
+
+                                  {choicesNeeded.map((choice) => (
+                                    <div
+                                      key={choice.id}
+                                      style={{ marginBottom: "8px" }}
+                                    >
+                                      {choice.type === "abilityChoice" && (
+                                        <div>
+                                          <label
+                                            style={{
+                                              fontSize: "12px",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            Choose ability (+{choice.amount}):
+                                          </label>
+                                          <select
+                                            value={
+                                              levelUpData.featChoices[
+                                                choice.id
+                                              ] || ""
+                                            }
+                                            onChange={(e) =>
+                                              updateFeatChoice(
+                                                choice.id,
+                                                e.target.value
+                                              )
+                                            }
+                                            style={{
+                                              width: "100%",
+                                              padding: "4px 8px",
+                                              fontSize: "12px",
+                                              border: "1px solid #d1d5db",
+                                              borderRadius: "4px",
+                                              marginTop: "4px",
+                                            }}
+                                          >
+                                            <option value="">
+                                              Select ability...
+                                            </option>
+                                            {choice.abilities.map((ability) => (
+                                              <option
+                                                key={ability}
+                                                value={ability}
+                                              >
+                                                {ability
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                                  ability.slice(1)}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      )}
+
+                                      {choice.type === "abilityCustom" && (
+                                        <div>
+                                          <label
+                                            style={{
+                                              fontSize: "12px",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            Choose any ability (+{choice.amount}
+                                            ):
+                                          </label>
+                                          <select
+                                            value={
+                                              levelUpData.featChoices[
+                                                choice.id
+                                              ] || ""
+                                            }
+                                            onChange={(e) =>
+                                              updateFeatChoice(
+                                                choice.id,
+                                                e.target.value
+                                              )
+                                            }
+                                            style={{
+                                              width: "100%",
+                                              padding: "4px 8px",
+                                              fontSize: "12px",
+                                              border: "1px solid #d1d5db",
+                                              borderRadius: "4px",
+                                              marginTop: "4px",
+                                            }}
+                                          >
+                                            <option value="">
+                                              Select ability...
+                                            </option>
+                                            <option value="strength">
+                                              Strength
+                                            </option>
+                                            <option value="dexterity">
+                                              Dexterity
+                                            </option>
+                                            <option value="constitution">
+                                              Constitution
+                                            </option>
+                                            <option value="intelligence">
+                                              Intelligence
+                                            </option>
+                                            <option value="wisdom">
+                                              Wisdom
+                                            </option>
+                                            <option value="charisma">
+                                              Charisma
+                                            </option>
+                                          </select>
+                                        </div>
+                                      )}
+
+                                      {choice.type === "skillChoice" && (
+                                        <div>
+                                          <label
+                                            style={{
+                                              fontSize: "12px",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            Choose {choice.count} skill(s):
+                                          </label>
+                                          <div
+                                            style={{
+                                              marginTop: "4px",
+                                              display: "grid",
+                                              gridTemplateColumns:
+                                                "repeat(2, 1fr)",
+                                              gap: "4px",
+                                            }}
+                                          >
+                                            {getAvailableSkills()
+                                              .filter(
+                                                (skill) =>
+                                                  !getCurrentSkillProficiencies().includes(
+                                                    skill
+                                                  )
+                                              )
+                                              .map((skill) => {
+                                                const currentChoices =
+                                                  levelUpData.featChoices[
+                                                    choice.id
+                                                  ] || [];
+                                                const isChosen =
+                                                  currentChoices.includes(
+                                                    skill
+                                                  );
+                                                const canChoose =
+                                                  isChosen ||
+                                                  currentChoices.length <
+                                                    choice.count;
+
+                                                return (
+                                                  <label
+                                                    key={skill}
+                                                    style={{
+                                                      fontSize: "11px",
+                                                      display: "flex",
+                                                      alignItems: "center",
+                                                      gap: "4px",
+                                                      cursor: canChoose
+                                                        ? "pointer"
+                                                        : "not-allowed",
+                                                      opacity: canChoose
+                                                        ? 1
+                                                        : 0.5,
+                                                    }}
+                                                  >
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={isChosen}
+                                                      disabled={!canChoose}
+                                                      onChange={(e) => {
+                                                        const newChoices = e
+                                                          .target.checked
+                                                          ? [
+                                                              ...currentChoices,
+                                                              skill,
+                                                            ]
+                                                          : currentChoices.filter(
+                                                              (s) => s !== skill
+                                                            );
+                                                        updateFeatChoice(
+                                                          choice.id,
+                                                          newChoices
+                                                        );
+                                                      }}
+                                                      style={{
+                                                        width: "12px",
+                                                        height: "12px",
+                                                      }}
+                                                    />
+                                                    {skill}
+                                                  </label>
+                                                );
+                                              })}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {choice.type === "expertiseChoice" && (
+                                        <div>
+                                          <label
+                                            style={{
+                                              fontSize: "12px",
+                                              fontWeight: "500",
+                                            }}
+                                          >
+                                            Choose {choice.count} skill(s) for
+                                            expertise:
+                                          </label>
+                                          <div style={{ marginTop: "4px" }}>
+                                            <select
+                                              value={
+                                                levelUpData.featChoices[
+                                                  choice.id
+                                                ] || ""
+                                              }
+                                              onChange={(e) =>
+                                                updateFeatChoice(choice.id, [
+                                                  e.target.value,
+                                                ])
+                                              }
+                                              style={{
+                                                width: "100%",
+                                                padding: "4px 8px",
+                                                fontSize: "12px",
+                                                border: "1px solid #d1d5db",
+                                                borderRadius: "4px",
+                                              }}
+                                            >
+                                              <option value="">
+                                                Select skill...
+                                              </option>
+                                              {getCurrentSkillProficiencies().map(
+                                                (skill) => (
+                                                  <option
+                                                    key={skill}
+                                                    value={skill}
+                                                  >
+                                                    {skill}
+                                                  </option>
+                                                )
+                                              )}
+                                            </select>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+
+                                  {!isChoiceComplete && (
+                                    <div
+                                      style={{
+                                        color: "#dc2626",
+                                        fontSize: "11px",
+                                        marginTop: "4px",
+                                      }}
+                                    >
+                                      ⚠️ Complete all choices to proceed
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    style={{
+                      textAlign: "center",
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      marginTop: "16px",
+                    }}
+                  >
+                    {levelUpData.selectedFeats.length > 0 ? (
+                      `Selected: ${levelUpData.selectedFeats[0]}${
+                        !isFeatChoiceComplete(getSelectedFeat())
+                          ? " (incomplete)"
+                          : ""
+                      }`
+                    ) : (
+                      <div style={{ color: "#f59e0b" }}>
+                        ⚠️ You must select exactly 1 feat
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        } else {
+          return (
+            <div style={{ display: "grid", gap: "24px" }}>
+              <div
+                style={{
+                  backgroundColor: "#fef3c7",
+                  border: "2px solid #f59e0b",
+                  borderRadius: "12px",
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <Heart size={20} color="#f59e0b" />
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      color: "#92400e",
+                    }}
+                  >
+                    Hit Points
+                  </h3>
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "18px",
+                    fontWeight: "700",
+                    color: "#92400e",
+                  }}
+                >
+                  +{levelUpData.hitPointIncrease} HP (Total:{" "}
+                  {(character.hitPoints || character.hit_points || 0) +
+                    levelUpData.hitPointIncrease}
+                  )
+                </p>
+                <p
+                  style={{
+                    margin: "8px 0 0 0",
+                    fontSize: "14px",
+                    color: "#92400e",
+                    opacity: 0.8,
+                  }}
+                >
+                  Method:{" "}
+                  {levelUpData.hitPointMethod === "average"
+                    ? "Average"
+                    : levelUpData.hitPointMethod === "roll"
+                    ? `Rolled (${levelUpData.rolledHP})`
+                    : "Manual"}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#f3f4f6",
+                  border: "2px solid #6b7280",
+                  borderRadius: "12px",
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <TrendingUp size={20} color="#6b7280" />
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      color: "#374151",
+                    }}
+                  >
+                    Character Progression
+                  </h3>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "16px",
+                  }}
+                >
+                  <div>
+                    <span style={{ fontSize: "14px", color: "#6b7280" }}>
+                      Current Level
+                    </span>
+                    <div
+                      style={{
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        color: "#374151",
+                      }}
+                    >
+                      {currentLevel}
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "14px", color: "#6b7280" }}>
+                      New Level
+                    </span>
+                    <div
+                      style={{
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        color: "#10b981",
+                      }}
+                    >
+                      {newLevel}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#e0f2fe",
+                  border: "2px solid #0284c7",
+                  borderRadius: "12px",
+                  padding: "20px",
+                  textAlign: "center",
+                }}
+              >
+                <h3
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "#0c4a6e",
+                  }}
+                >
+                  📚 Level {newLevel} Benefits
+                </h3>
+                <p style={{ margin: 0, color: "#0c4a6e", fontSize: "14px" }}>
+                  You gain class features and improvements based on your casting
+                  style.
+                  <br />
+                  ASI or Feat choices are only available at levels 4, 8, 12, 16,
+                  and 19.
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+      case 3:
         return (
           <div style={{ display: "grid", gap: "24px" }}>
             <div
@@ -897,41 +1596,102 @@ const LevelUpModal = ({
               </p>
             </div>
 
-            {levelUpData.abilityIncreases.length > 0 && (
-              <div
-                style={{
-                  backgroundColor: "#ecfdf5",
-                  border: "2px solid #10b981",
-                  borderRadius: "12px",
-                  padding: "20px",
-                }}
-              >
+            {levelUpData.asiChoice === "asi" &&
+              levelUpData.abilityIncreases.length > 0 && (
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "12px",
+                    backgroundColor: "#ecfdf5",
+                    border: "2px solid #10b981",
+                    borderRadius: "12px",
+                    padding: "20px",
                   }}
                 >
-                  <Zap size={20} color="#10b981" />
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#065f46",
-                    }}
-                  >
-                    Ability Score Increases
-                  </h3>
-                </div>
-                {levelUpData.abilityIncreases.map((increase, index) => (
                   <div
-                    key={index}
                     style={{
                       display: "flex",
                       alignItems: "center",
+                      gap: "12px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <Zap size={20} color="#10b981" />
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        color: "#065f46",
+                      }}
+                    >
+                      Ability Score Increases
+                    </h3>
+                  </div>
+                  {levelUpData.abilityIncreases.map((increase, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "8px 0",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "50%",
+                          backgroundColor: "#10b981",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "16px",
+                          color: "#065f46",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {increase.ability}: {increase.from} → {increase.to}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            {levelUpData.asiChoice === "feat" &&
+              levelUpData.selectedFeats.length > 0 && (
+                <div
+                  style={{
+                    backgroundColor: "#dbeafe",
+                    border: "2px solid #3b82f6",
+                    borderRadius: "12px",
+                    padding: "20px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <Star size={20} color="#3b82f6" />
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        color: "#1e40af",
+                      }}
+                    >
+                      New Feat
+                    </h3>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
                       gap: "8px",
                       padding: "8px 0",
                     }}
@@ -941,95 +1701,36 @@ const LevelUpModal = ({
                         width: "6px",
                         height: "6px",
                         borderRadius: "50%",
-                        backgroundColor: "#10b981",
+                        backgroundColor: "#3b82f6",
+                        marginTop: "6px",
                       }}
                     />
-                    <span
-                      style={{
-                        fontSize: "16px",
-                        color: "#065f46",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {increase.ability}: {increase.from} → {increase.to}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {levelUpData.selectedFeats.length > 0 && (
-              <div
-                style={{
-                  backgroundColor: "#dbeafe",
-                  border: "2px solid #3b82f6",
-                  borderRadius: "12px",
-                  padding: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <Star size={20} color="#3b82f6" />
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#1e40af",
-                    }}
-                  >
-                    New Feat
-                  </h3>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "8px",
-                    padding: "8px 0",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      backgroundColor: "#3b82f6",
-                      marginTop: "6px",
-                    }}
-                  />
-                  <div>
-                    <span
-                      style={{
-                        fontSize: "16px",
-                        color: "#1e40af",
-                        fontWeight: "500",
-                        display: "block",
-                      }}
-                    >
-                      {levelUpData.selectedFeats[0]}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#6b7280",
-                        lineHeight: "1.4",
-                        marginTop: "4px",
-                        display: "block",
-                      }}
-                    >
-                      {featDescriptions[levelUpData.selectedFeats[0]]}
-                    </span>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: "16px",
+                          color: "#1e40af",
+                          fontWeight: "500",
+                          display: "block",
+                        }}
+                      >
+                        {levelUpData.selectedFeats[0]}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                          lineHeight: "1.4",
+                          marginTop: "4px",
+                          display: "block",
+                        }}
+                      >
+                        {featDescriptions[levelUpData.selectedFeats[0]]}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div
               style={{
@@ -1177,6 +1878,20 @@ const LevelUpModal = ({
 
           <p style={{ margin: 0, fontSize: "18px", opacity: 0.9 }}>
             Advancing from Level {currentLevel} to Level {newLevel}
+            {isAsiLevel && (
+              <span
+                style={{
+                  fontSize: "14px",
+                  marginTop: "4px",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  display: "inline-block",
+                }}
+              >
+                🌟 ASI Level - Choose ASI or Feat
+              </span>
+            )}
           </p>
         </div>
 
@@ -1206,7 +1921,7 @@ const LevelUpModal = ({
                 style={{
                   height: "100%",
                   backgroundColor: "#10b981",
-                  width: `${((currentStep - 1) / 3) * 100}%`,
+                  width: `${((currentStep - 1) / (maxSteps - 1)) * 100}%`,
                   transition: "width 0.3s ease",
                 }}
               />
@@ -1320,7 +2035,7 @@ const LevelUpModal = ({
               Cancel
             </button>
 
-            {currentStep < 4 ? (
+            {currentStep < maxSteps ? (
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}

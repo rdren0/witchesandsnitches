@@ -10,10 +10,11 @@ import {
   X,
   Moon,
   Coffee,
+  TrendingUp,
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
-import CharacterLevelUp from "./CharacterLevelUp";
+import LevelUpModal from "../CharacterManagement/Edit/LevelUpModal";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
@@ -630,8 +631,45 @@ const CharacterSheet = ({
   };
 
   const handleCharacterUpdated = async (updatedCharacter) => {
-    setCharacter(updatedCharacter);
-    await fetchCharacterDetails();
+    try {
+      const { error } = await supabase
+        .from("characters")
+        .update({
+          level: updatedCharacter.level,
+          hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
+          current_hit_points:
+            updatedCharacter.hit_points || updatedCharacter.hitPoints,
+          current_hit_dice: updatedCharacter.level, // Reset hit dice on level up
+          ability_scores:
+            updatedCharacter.ability_scores || updatedCharacter.abilityScores,
+          standard_feats:
+            updatedCharacter.standard_feats || updatedCharacter.standardFeats,
+          skill_proficiencies:
+            updatedCharacter.skill_proficiencies ||
+            updatedCharacter.skillProficiencies,
+          asi_choices:
+            updatedCharacter.asi_choices || updatedCharacter.asiChoices,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", character.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error updating character:", error);
+        alert("Failed to save level up changes. Please try again.");
+        return;
+      }
+
+      setShowLevelUp(false);
+      await fetchCharacterDetails();
+
+      alert(
+        `${character.name} successfully leveled up to level ${updatedCharacter.level}!`
+      );
+    } catch (error) {
+      console.error("Error saving character:", error);
+      alert("Failed to save level up changes. Please try again.");
+    }
   };
 
   if (error) {
@@ -1179,6 +1217,39 @@ const CharacterSheet = ({
                 <Moon size={16} />
                 {isLongResting ? "Resting..." : "Long Rest"}
               </button>
+              <button
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "all 0.2s ease",
+                  minWidth: "140px",
+                  justifyContent: "center",
+                }}
+                onClick={() => setShowLevelUp(true)}
+                title={`Level up ${character.name} to level ${
+                  (character.level || 1) + 1
+                }`}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#059669";
+                  e.target.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#10b981";
+                  e.target.style.transform = "translateY(0)";
+                }}
+              >
+                <TrendingUp size={16} />
+                Level Up
+              </button>
             </div>
           </div>
 
@@ -1234,6 +1305,12 @@ const CharacterSheet = ({
 
               <div style={styles.instructionItem}>
                 <span>Click column headers to sort skills</span>
+              </div>
+              <div style={styles.instructionItem}>
+                <TrendingUp className="w-4 h-4 text-green-500" />
+                <span>
+                  Level Up: Advance your character and gain new abilities
+                </span>
               </div>
             </div>
             {!discordWebhookUrl && (
@@ -1693,14 +1770,14 @@ const CharacterSheet = ({
           </div>
         </div>
       )}
-
       {showLevelUp && character && (
-        <CharacterLevelUp
+        <LevelUpModal
           character={character}
-          onClose={() => setShowLevelUp(false)}
-          onCharacterUpdated={handleCharacterUpdated}
+          isOpen={showLevelUp}
+          onSave={handleCharacterUpdated}
+          onCancel={() => setShowLevelUp(false)}
+          user={user}
           supabase={supabase}
-          discordUserId={discordUserId}
         />
       )}
     </div>

@@ -694,6 +694,12 @@ export const standardFeats = [
       "Roll a d20: on 5 or lower, roll on magic surge table.",
       "On 15 or higher, spell effects are amplified with increased damage, conditions, area, or targets.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Actor",
@@ -704,6 +710,12 @@ export const standardFeats = [
       "You can mimic sounds and speech.",
       "Others need Wisdom (Insight) check vs DC 8 + Charisma mod + proficiency to detect.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "charisma", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Aerial Combatant",
@@ -713,6 +725,16 @@ export const standardFeats = [
       "Gain broomstick proficiency.",
       "No longer suffer disadvantage on attack rolls while flying.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["strength", "dexterity"], amount: 1 },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        broomstickProficiency: true,
+      },
+    },
   },
   {
     name: "Alert",
@@ -722,6 +744,14 @@ export const standardFeats = [
       "+5 bonus to initiative.",
       "Other creatures don't gain advantage from being unseen by you.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        initiativeBonus: 5,
+      },
+    },
   },
   {
     name: "Athlete",
@@ -732,6 +762,16 @@ export const standardFeats = [
       "Stand up from prone with only 5 feet movement.",
       "Make running jumps after moving only 5 feet.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["strength", "dexterity"], amount: 1 },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        climbSpeed: true,
+      },
+    },
   },
   {
     name: "Cantrip Master",
@@ -742,6 +782,12 @@ export const standardFeats = [
       "Cast locked-in cantrips without a wand.",
       "Can serve as prerequisite for Superior Wandless Casting.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "spellcastingAbility", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Detecting Traces",
@@ -751,6 +797,12 @@ export const standardFeats = [
       "Can see faint auras and learn spell schools.",
       "Penetrates most barriers except 1 foot stone, 1 inch metal, or 3 feet wood/dirt.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Durable",
@@ -760,6 +812,12 @@ export const standardFeats = [
       "Advantage on Death Saving Throws.",
       "As bonus action, expend Hit Die to regain hit points.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "constitution", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Elixir Expertise",
@@ -769,6 +827,14 @@ export const standardFeats = [
       "When using potions you created, add Wisdom modifier to effects.",
       "Applies to damage, healing, and Save DCs.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["wisdom", "intelligence"], amount: 1 },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Elemental Adept",
@@ -780,6 +846,20 @@ export const standardFeats = [
       "Treat 1s on damage dice as 2s.",
       "Repeatable for different elements.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["intelligence", "wisdom", "charisma"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        elementalMastery: true,
+      },
+    },
   },
   {
     name: "Empowered Restoration",
@@ -789,6 +869,14 @@ export const standardFeats = [
       "Gain Empowered Healing metamagic option.",
       "Spend sorcery points to maximize healing dice.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        enhancedHealing: true,
+      },
+    },
   },
   {
     name: "Fade Away",
@@ -798,6 +886,14 @@ export const standardFeats = [
       "After taking damage, use reaction to become invisible until end of next turn.",
       "Invisibility ends if you attack, deal damage, or force saves.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["dexterity", "intelligence"], amount: 1 },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Flames of Fiendfyre",
@@ -808,6 +904,16 @@ export const standardFeats = [
       "When casting fire spells, become wreathed in flames until next turn.",
       "Melee attackers take 1d4 fire damage.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["intelligence", "charisma"], amount: 1 },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        fireEnhancement: true,
+      },
+    },
   },
   {
     name: "Lucky",
@@ -818,6 +924,14 @@ export const standardFeats = [
       "Spend 1 to impose disadvantage on attacks against you.",
       "Regain all points on long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        luckPoints: true,
+      },
+    },
   },
   {
     name: "Magic Initiate",
@@ -828,6 +942,17 @@ export const standardFeats = [
       "Learn one 1st level spell from same school.",
       "Cast the 1st level spell once per long rest at lowest level.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        spellsLearned: {
+          cantrips: 2,
+          firstLevel: 1,
+        },
+      },
+    },
   },
   {
     name: "Metamagic Adept",
@@ -837,6 +962,15 @@ export const standardFeats = [
       "Gain 2 sorcery points for Metamagic use only.",
       "Can replace options on level up.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        metamagicOptions: 2,
+        sorceryPoints: 2,
+      },
+    },
   },
   {
     name: "Mobile",
@@ -846,6 +980,14 @@ export const standardFeats = [
       "Difficult terrain doesn't slow Dash action.",
       "Melee attacks don't provoke opportunity attacks from target.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        speedBonus: 10,
+      },
+    },
   },
   {
     name: "Observant",
@@ -855,6 +997,17 @@ export const standardFeats = [
       "Read lips if you can see mouth and understand language.",
       "+5 bonus to passive Perception and Investigation.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["intelligence", "wisdom"], amount: 1 },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        passivePerceptionBonus: 5,
+        passiveInvestigationBonus: 5,
+      },
+    },
   },
   {
     name: "Occlumency Training",
@@ -864,6 +1017,14 @@ export const standardFeats = [
       "Can feed false information if you choose.",
       "Immune to veritaserum unless willing.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        mentalDefense: true,
+      },
+    },
   },
   {
     name: "Pinpoint Accuracy",
@@ -873,6 +1034,15 @@ export const standardFeats = [
       "Critical hit on 19+ for spell attacks.",
       "+1 to spell attack rolls.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        spellAttackBonus: 1,
+        criticalRange: 19,
+      },
+    },
   },
   {
     name: "Resilient",
@@ -882,6 +1052,14 @@ export const standardFeats = [
       "Increase that ability by 1.",
       "Gain saving throw proficiency with it.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "custom", category: "any", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        savingThrowProficiency: "choice",
+      },
+    },
   },
   {
     name: "Savage Attacker",
@@ -890,6 +1068,12 @@ export const standardFeats = [
       "Once per turn when you hit with an attack.",
       "Roll damage dice twice and use either result.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Sentinel",
@@ -899,6 +1083,12 @@ export const standardFeats = [
       "Creatures provoke opportunity attacks even with Disengage.",
       "React to attack creatures attacking your allies within 5 feet.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
   },
   {
     name: "Skill Expert",
@@ -908,6 +1098,12 @@ export const standardFeats = [
       "Gain proficiency in one skill.",
       "Choose one proficient skill to gain Expertise (double proficiency).",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "custom", category: "any", amount: 1 }],
+      skillProficiencies: [{ type: "choice", count: 1 }],
+      expertise: [{ type: "choice", count: 1 }],
+      other: {},
+    },
   },
   {
     name: "Spell Sniper",
@@ -917,6 +1113,15 @@ export const standardFeats = [
       "Ranged spell attacks ignore half and 3/4 cover.",
       "Lock in one attack roll cantrip from any list.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        spellRangeDouble: true,
+        cantripsLearned: 1,
+      },
+    },
   },
   {
     name: "Superior Wandless",
@@ -925,6 +1130,14 @@ export const standardFeats = [
       "Prerequisites: Cantrip Master or Wandless Magic.",
       "Can cast any locked-in spells wandlessly, not just cantrips.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        superiorWandlessCasting: true,
+      },
+    },
   },
   {
     name: "Tough",
@@ -933,6 +1146,14 @@ export const standardFeats = [
       "Hit Point maximum increases by 2 × character level.",
       "Gain +2 HP each time you level up thereafter.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        hitPointsPerLevel: 2,
+      },
+    },
   },
   {
     name: "War Caster",
@@ -942,6 +1163,20 @@ export const standardFeats = [
       "Advantage on concentration saves.",
       "Cast spells as opportunity attacks instead of weapon attacks.",
     ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["intelligence", "wisdom", "charisma"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        concentrationAdvantage: true,
+      },
+    },
   },
   {
     name: "Wandless Magic",
@@ -950,8 +1185,17 @@ export const standardFeats = [
       "Cast these spells wandlessly if known: accio, alohomora, colovaria, illegibilus, incendio glacia, pereo, wingardium leviosa.",
       "Cannot use higher level spell slots.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        wandlessCasting: true,
+      },
+    },
   },
 ];
+
 export const potions = {
   1: [
     {
