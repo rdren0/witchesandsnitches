@@ -53,18 +53,24 @@ const CharacterList = ({
       );
 
       const transformedCharacters = charactersData.map((char) => ({
-        id: char.id,
-        name: char.name,
-        house: char.house,
-        castingStyle: char.casting_style,
-        subclass: char.subclass,
-        innateHeritage: char.innate_heritage,
-        background: char.background,
-        gameSession: char.game_session,
-        level: char.level,
-        hitPoints: char.hit_points,
-        asiChoices: char.asi_choices || {},
         abilityScores: char.ability_scores,
+        asiChoices: char.asi_choices || {},
+        background: char.background,
+        castingStyle: char.casting_style,
+        createdAt: char.created_at,
+        gameSession: char.game_session,
+        hitPoints: char.hit_points,
+        house: char.house,
+        id: char.id,
+        initiativeAbility: char.initiative_ability || "dexterity",
+        innateHeritage: char.innate_heritage,
+        level: char.level,
+        level1ChoiceType: char.level1_choice_type || "",
+        name: char.name,
+        skillProficiencies: char.skill_proficiencies || [],
+        standardFeats: char.standard_feats || [],
+        subclass: char.subclass,
+        wandType: char.wand_type || "",
         magicModifiers: char.magic_modifiers || {
           divinations: 0,
           charms: 0,
@@ -72,10 +78,6 @@ const CharacterList = ({
           healing: 0,
           jinxesHexesCurses: 0,
         },
-        standardFeats: char.standard_feats || [],
-        skillProficiencies: char.skill_proficiencies || [],
-        wandType: char.wand_type || "",
-        createdAt: char.created_at,
       }));
 
       setSavedCharacters(transformedCharacters);

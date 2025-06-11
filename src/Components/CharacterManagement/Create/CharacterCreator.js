@@ -35,13 +35,14 @@ const CharacterCreator = ({
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
-    asiChoices: {}, // This will track ASI/Feat choices for levels 4, 8, 12, 16, 19
+    asiChoices: {},
     castingStyle: "",
+    initiativeAbility: "dexterity",
     subclass: "",
     innateHeritage: "",
     background: "",
     gameSession: "",
-    standardFeats: [], // This will ONLY contain feats from choices, not auto-granted
+    standardFeats: [],
     skillProficiencies: [],
     abilityScores: {
       strength: null,
@@ -61,7 +62,7 @@ const CharacterCreator = ({
       healing: 0,
       jinxesHexesCurses: 0,
     },
-    level1ChoiceType: "", // "innate" or "feat"
+    level1ChoiceType: "",
   });
 
   const getGameSessionOptions = () => {
@@ -96,24 +97,19 @@ const CharacterCreator = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  // ASI levels where characters get to choose ASI or Feat
   const ASI_LEVELS = [4, 8, 12, 16, 19];
 
-  // Get ASI levels available based on character level
   const getAvailableASILevels = (currentLevel) => {
     return ASI_LEVELS.filter((level) => level <= currentLevel);
   };
 
-  // Calculate total feats ONLY from actual choices made
   const calculateTotalFeatsFromChoices = () => {
     let totalFeats = 0;
 
-    // Level 1 choice
     if (character.level1ChoiceType === "feat") {
       totalFeats += 1;
     }
 
-    // ASI level choices
     const availableASILevels = getAvailableASILevels(character.level);
     availableASILevels.forEach((level) => {
       const choice = character.asiChoices[level];
@@ -125,7 +121,6 @@ const CharacterCreator = ({
     return totalFeats;
   };
 
-  // Get feat progression info for display
   const getFeatProgressionInfo = () => {
     const currentLevel = character.level || 1;
     const availableASILevels = getAvailableASILevels(currentLevel);
@@ -133,14 +128,12 @@ const CharacterCreator = ({
 
     const choices = [];
 
-    // Level 1 choice
     if (character.level1ChoiceType === "innate") {
       choices.push({ level: 1, choice: "Innate Heritage", type: "innate" });
     } else if (character.level1ChoiceType === "feat") {
       choices.push({ level: 1, choice: "Starting Feat", type: "feat" });
     }
 
-    // ASI level choices
     availableASILevels.forEach((level) => {
       const asiChoice = character.asiChoices[level];
       if (asiChoice) {
@@ -309,6 +302,7 @@ const CharacterCreator = ({
           ...prev,
           [field]: value,
           skillProficiencies: [],
+          initiativeAbility: value === "Intellect Caster" ? "" : "dexterity",
         }));
         setRolledHp(null);
         setIsHpManualMode(false);
@@ -422,11 +416,9 @@ const CharacterCreator = ({
     });
   };
 
-  // Collect all feats from choices
   const collectAllFeatsFromChoices = () => {
     const allFeats = [];
 
-    // Level 1 feat (if chosen)
     if (
       character.level1ChoiceType === "feat" &&
       character.standardFeats.length > 0
@@ -434,7 +426,6 @@ const CharacterCreator = ({
       allFeats.push(...character.standardFeats);
     }
 
-    // ASI level feats
     const availableASILevels = getAvailableASILevels(character.level);
     availableASILevels.forEach((level) => {
       const choice = character.asiChoices[level];
@@ -464,7 +455,15 @@ const CharacterCreator = ({
       return;
     }
 
-    // Validate ASI choices
+    if (
+      character.castingStyle === "Intellect Caster" &&
+      !character.initiativeAbility
+    ) {
+      setError("Please select an initiative ability for your Intellect Caster");
+      setIsSaving(false);
+      return;
+    }
+
     const availableASILevels = getAvailableASILevels(character.level);
     for (const level of availableASILevels) {
       const choice = character.asiChoices[level];
@@ -492,7 +491,6 @@ const CharacterCreator = ({
       }
     }
 
-    // Validate Level 1 feat choice
     if (
       character.level1ChoiceType === "feat" &&
       character.standardFeats.length === 0
@@ -510,18 +508,18 @@ const CharacterCreator = ({
       return;
     }
 
-    // Collect all feats from all choices
     const allFeats = collectAllFeatsFromChoices();
 
     const characterToSave = {
       name: character.name.trim(),
       house: character.house,
       casting_style: character.castingStyle,
+      initiative_ability: character.initiativeAbility || "dexterity",
       subclass: character.subclass,
       innate_heritage: character.innateHeritage,
       background: character.background,
       game_session: character.gameSession,
-      standard_feats: allFeats, // All feats from all choices
+      standard_feats: allFeats,
       skill_proficiencies: character.skillProficiencies,
       ability_scores: character.abilityScores,
       hit_points: getCurrentHp(),
@@ -529,7 +527,7 @@ const CharacterCreator = ({
       wand_type: character.wandType,
       magic_modifiers: character.magicModifiers,
       level1_choice_type: character.level1ChoiceType,
-      asi_choices: character.asiChoices, // Save ASI choices for future reference
+      asi_choices: character.asiChoices,
     };
 
     try {
@@ -551,6 +549,7 @@ const CharacterCreator = ({
         skillProficiencies: savedCharacter.skill_proficiencies || [],
         abilityScores: savedCharacter.ability_scores,
         hitPoints: savedCharacter.hit_points,
+        asiChoices: savedCharacter.asi_choices || {},
         level: savedCharacter.level,
         wandType: savedCharacter.wand_type || "",
         magicModifiers: savedCharacter.magic_modifiers || {
@@ -561,7 +560,7 @@ const CharacterCreator = ({
           jinxesHexesCurses: 0,
         },
         level1ChoiceType: savedCharacter.level1_choice_type || "",
-        asiChoices: savedCharacter.asi_choices || {},
+        initiativeAbility: savedCharacter.initiative_ability || "dexterity",
         createdAt: savedCharacter.created_at,
       };
 
@@ -701,6 +700,72 @@ const CharacterCreator = ({
           Your casting style determines your available skills and hit points.
         </div>
       </div>
+      {character.castingStyle === "Intellect Caster" && (
+        <div style={styles.fieldContainer}>
+          <label style={styles.label}>Initiative Ability *</label>
+          <div style={styles.helpText}>
+            As an intellect caster, you may choose to use Intelligence or
+            Dexterity for initiative.
+          </div>
+          <div style={styles.level1ChoiceContainer}>
+            <label
+              style={
+                character.initiativeAbility === "dexterity"
+                  ? styles.level1ChoiceLabelSelected
+                  : styles.level1ChoiceLabel
+              }
+            >
+              <input
+                type="radio"
+                name="initiativeAbility"
+                value="dexterity"
+                checked={character.initiativeAbility === "dexterity"}
+                onChange={(e) =>
+                  handleInputChange("initiativeAbility", e.target.value)
+                }
+                style={styles.level1ChoiceRadio}
+              />
+              <span
+                style={
+                  character.initiativeAbility === "dexterity"
+                    ? styles.level1ChoiceTextSelected
+                    : styles.level1ChoiceText
+                }
+              >
+                Dexterity (Standard)
+              </span>
+            </label>
+
+            <label
+              style={
+                character.initiativeAbility === "intelligence"
+                  ? styles.level1ChoiceLabelSelected
+                  : styles.level1ChoiceLabel
+              }
+            >
+              <input
+                type="radio"
+                name="initiativeAbility"
+                value="intelligence"
+                checked={character.initiativeAbility === "intelligence"}
+                onChange={(e) =>
+                  handleInputChange("initiativeAbility", e.target.value)
+                }
+                style={styles.level1ChoiceRadio}
+              />
+              <span
+                style={
+                  character.initiativeAbility === "intelligence"
+                    ? styles.level1ChoiceTextSelected
+                    : styles.level1ChoiceText
+                }
+              >
+                Intelligence (Intellect Caster)
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
 
       <div style={styles.levelHpGrid}>
         <div style={styles.levelContainer}>
@@ -1038,7 +1103,7 @@ const CharacterCreator = ({
             setExpandedFeats={setExpandedFeats}
             featFilter={featFilter}
             setFeatFilter={setFeatFilter}
-            maxFeats={1} // Only 1 feat for level 1 choice
+            maxFeats={1}
             isLevel1Choice={true}
             characterLevel={character.level}
           />
