@@ -137,6 +137,7 @@ const CharacterLevelUp = ({
         skill_proficiencies: updatedCharacter.skill_proficiencies,
         ability_scores: updatedCharacter.abilityScores,
         hit_points: updatedCharacter.hit_points,
+        asi_choices: character.asiChoices || {}, // ✅ FIXED: was characterData.asiChoices
         level: updatedCharacter.level,
         wand_type: updatedCharacter.wandType,
         magic_modifiers: updatedCharacter.magicModifiers,

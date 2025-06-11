@@ -5,7 +5,6 @@ import {
   Heart,
   Swords,
   Dices,
-  ArrowUp,
   Plus,
   Minus,
   X,
@@ -64,6 +63,34 @@ const CharacterSheet = ({
     return hitDiceData[castingStyle] || hitDiceData.default;
   };
 
+  const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
+    const effectiveScores = { ...baseScores };
+    Object.entries(asiChoices).forEach(([level, choice]) => {
+      if (choice.type === "asi" && choice.abilityScoreIncreases) {
+        choice.abilityScoreIncreases.forEach((increase) => {
+          if (effectiveScores[increase.ability] !== undefined) {
+            effectiveScores[increase.ability] =
+              (effectiveScores[increase.ability] || 10) + 1;
+          }
+        });
+      }
+    });
+    return effectiveScores;
+  };
+
+  const getAllCharacterFeats = (standardFeats, asiChoices) => {
+    const allFeats = [...standardFeats];
+
+    // Add feats from ASI choices
+    Object.entries(asiChoices).forEach(([level, choice]) => {
+      if (choice.type === "feat" && choice.selectedFeat) {
+        allFeats.push(`${choice.selectedFeat} (Level ${level})`);
+      }
+    });
+
+    return allFeats;
+  };
+
   const fetchCharacterDetails = async () => {
     if (!selectedCharacter?.id) {
       setCharacter(null);
@@ -84,6 +111,18 @@ const CharacterSheet = ({
       if (error) throw error;
 
       if (data) {
+        const baseAbilityScores = data.ability_scores || {};
+        const asiChoices = data.asi_choices || {}; // Load ASI choices from database
+        const effectiveAbilityScores = calculateEffectiveAbilityScores(
+          baseAbilityScores,
+          asiChoices
+        );
+
+        const allFeats = getAllCharacterFeats(
+          data.standard_feats || [],
+          asiChoices
+        );
+
         const transformedCharacter = {
           id: data.id,
           name: data.name,
@@ -94,17 +133,25 @@ const CharacterSheet = ({
           bloodStatus: data.innate_heritage || "Unknown",
           wand: data.wand_type || "Unknown wand",
           gameSession: data.game_session || "",
-          strength: data.ability_scores?.strength || 10,
-          dexterity: data.ability_scores?.dexterity || 10,
-          constitution: data.ability_scores?.constitution || 10,
-          intelligence: data.ability_scores?.intelligence || 10,
-          wisdom: data.ability_scores?.wisdom || 10,
-          charisma: data.ability_scores?.charisma || 10,
+
+          strength: effectiveAbilityScores.strength || 10,
+          dexterity: effectiveAbilityScores.dexterity || 10,
+          constitution: effectiveAbilityScores.constitution || 10,
+          intelligence: effectiveAbilityScores.intelligence || 10,
+          wisdom: effectiveAbilityScores.wisdom || 10,
+          charisma: effectiveAbilityScores.charisma || 10,
+
+          baseAbilityScores: baseAbilityScores,
+          asiChoices: asiChoices,
+          allFeats: allFeats,
+
           hitPoints: data.hit_points || 1,
           currentHitPoints: data.current_hit_points || data.hit_points || 1,
           maxHitPoints: data.hit_points || 1,
+
           armorClass:
-            11 + Math.floor((data.ability_scores?.dexterity - 10) / 2) || 11,
+            11 + Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 11,
+
           speed: 30,
           initiative: 8,
           proficiencyBonus: Math.ceil(data.level / 4) + 1,
@@ -759,6 +806,275 @@ const CharacterSheet = ({
                 </div>
               </div>
             </div>
+            {character &&
+              !characterLoading &&
+              Object.keys(character.asiChoices || {}).length > 0 && (
+                <div
+                  style={{
+                    ...styles.headerCard,
+                    marginTop: "16px",
+                    padding: "20px",
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "600",
+                      color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                      marginBottom: "16px",
+                      borderBottom: `1px solid ${
+                        theme === "dark" ? "#4b5563" : "#e5e7eb"
+                      }`,
+                      paddingBottom: "8px",
+                    }}
+                  >
+                    Character Progression
+                  </h3>
+
+                  {/* Show all feats if any */}
+                  {character.allFeats && character.allFeats.length > 0 && (
+                    <div style={{ marginBottom: "16px" }}>
+                      <h4
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: theme === "dark" ? "#f9fafb" : "#374151",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Feats
+                      </h4>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                        }}
+                      >
+                        {character.allFeats.map((feat, index) => (
+                          <span
+                            key={index}
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 12px",
+                              backgroundColor: `${
+                                theme === "dark" ? "#3b82f6" : "#3b82f6"
+                              }20`,
+                              color: theme === "dark" ? "#60a5fa" : "#3b82f6",
+                              borderRadius: "16px",
+                              fontSize: "12px",
+                              fontWeight: "500",
+                              border: `1px solid ${
+                                theme === "dark" ? "#3b82f6" : "#3b82f6"
+                              }40`,
+                            }}
+                          >
+                            {feat}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show ASI history */}
+                  <div>
+                    <h4
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: theme === "dark" ? "#f9fafb" : "#374151",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Ability Score Improvements
+                    </h4>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "4px",
+                      }}
+                    >
+                      {Object.entries(character.asiChoices)
+                        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                        .map(([level, choice]) => (
+                          <div
+                            key={level}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              fontSize: "13px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: "600",
+                                color: theme === "dark" ? "#60a5fa" : "#3b82f6",
+                                minWidth: "60px",
+                              }}
+                            >
+                              Level {level}:
+                            </span>
+                            {choice.type === "asi" ? (
+                              <span
+                                style={{
+                                  color:
+                                    theme === "dark" ? "#9ca3af" : "#6b7280",
+                                }}
+                              >
+                                {choice.abilityScoreIncreases
+                                  ?.map(
+                                    (inc) =>
+                                      inc.ability.charAt(0).toUpperCase() +
+                                      inc.ability.slice(1)
+                                  )
+                                  .join(", ")}{" "}
+                                +1
+                              </span>
+                            ) : (
+                              <span
+                                style={{
+                                  color:
+                                    theme === "dark" ? "#9ca3af" : "#6b7280",
+                                }}
+                              >
+                                Feat: {choice.selectedFeat}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Show ability score summary */}
+                  <div style={{ marginTop: "16px" }}>
+                    <h4
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: theme === "dark" ? "#f9fafb" : "#374151",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Ability Score Summary
+                    </h4>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(200px, 1fr))",
+                        gap: "8px",
+                      }}
+                    >
+                      {[
+                        "strength",
+                        "dexterity",
+                        "constitution",
+                        "intelligence",
+                        "wisdom",
+                        "charisma",
+                      ].map((ability) => {
+                        const baseScore =
+                          character.baseAbilityScores[ability] || 10;
+                        const currentScore = character[ability];
+                        const hasIncrease = currentScore > baseScore;
+
+                        return (
+                          <div
+                            key={ability}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "8px 12px",
+                              backgroundColor:
+                                theme === "dark" ? "#374151" : "#f8fafc",
+                              borderRadius: "6px",
+                              fontSize: "13px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: "500",
+                                color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                              }}
+                            >
+                              {ability.charAt(0).toUpperCase() +
+                                ability.slice(1)}
+                              :
+                            </span>
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              {hasIncrease ? (
+                                <>
+                                  <span
+                                    style={{
+                                      color:
+                                        theme === "dark"
+                                          ? "#9ca3af"
+                                          : "#6b7280",
+                                      fontSize: "12px",
+                                    }}
+                                  >
+                                    {baseScore}
+                                  </span>
+                                  <span
+                                    style={{
+                                      color:
+                                        theme === "dark"
+                                          ? "#9ca3af"
+                                          : "#6b7280",
+                                      fontSize: "12px",
+                                    }}
+                                  >
+                                    →
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontWeight: "600",
+                                      color:
+                                        theme === "dark"
+                                          ? "#f9fafb"
+                                          : "#1f2937",
+                                    }}
+                                  >
+                                    {currentScore}
+                                  </span>
+                                  <span
+                                    style={{
+                                      color: "#10b981",
+                                      fontSize: "11px",
+                                      fontWeight: "500",
+                                    }}
+                                  >
+                                    (+{currentScore - baseScore})
+                                  </span>
+                                </>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontWeight: "600",
+                                    color:
+                                      theme === "dark" ? "#f9fafb" : "#1f2937",
+                                  }}
+                                >
+                                  {currentScore}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
           </div>
 
           <div

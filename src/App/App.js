@@ -606,6 +606,7 @@ function AppContent() {
         gameSession: char.game_session,
         level: char.level,
         hitPoints: char.hit_points,
+        asiChoices: char.asi_choices || {},
         abilityScores: char.ability_scores,
         magicModifiers: char.magic_modifiers || {
           divinations: 0,

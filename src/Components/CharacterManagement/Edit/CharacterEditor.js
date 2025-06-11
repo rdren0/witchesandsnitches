@@ -318,6 +318,7 @@ const CharacterEditor = ({
       skill_proficiencies: character.skillProficiencies || [],
       ability_scores: character.abilityScores,
       hit_points: getCurrentHp(),
+      asi_choices: character.asiChoices || {},
       level: character.level,
       wand_type: character.wandType,
       magic_modifiers: character.magicModifiers,
@@ -344,6 +345,7 @@ const CharacterEditor = ({
         skillProficiencies: updatedCharacter.skill_proficiencies || [],
         abilityScores: updatedCharacter.ability_scores,
         hitPoints: updatedCharacter.hit_points,
+        asiChoices: updatedCharacter.asi_choices || {}, // ✅ FIXED: was characterData.asiChoices
         level: updatedCharacter.level,
         wandType: updatedCharacter.wand_type || "",
         magicModifiers: updatedCharacter.magic_modifiers || {
