@@ -6,7 +6,6 @@ import {
   Plus,
   ArrowUp,
   AlertCircle,
-  Crown,
   Shield,
   Calendar,
 } from "lucide-react";
@@ -451,12 +450,6 @@ const CharacterList = ({
                   <div style={styles.characterCardTitle}>
                     <div style={styles.characterNameSection}>
                       <h3 style={styles.characterCardName}>{character.name}</h3>
-                      {isSelected && (
-                        <div style={styles.selectedBadge}>
-                          <Crown size={12} />
-                          Active
-                        </div>
-                      )}
                     </div>
                     <div style={styles.characterLevel}>
                       Level {character.level}
