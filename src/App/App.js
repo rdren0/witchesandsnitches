@@ -26,6 +26,7 @@ import DowntimeSheet from "../Components/Downtime/DowntimeSheet";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
+import logo from "./../Images/logo/Thumbnail-01.png";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -314,24 +315,61 @@ const Navigation = ({ characters, user }) => {
   };
 
   return (
-    <nav style={styles.tabNavigation}>
-      {visibleTabs.map((tab) => {
-        const isActive = isActiveTab(tab.path);
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "20px",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          cursor: "pointer",
+          flexShrink: 0,
+        }}
+        onClick={() => navigate("/")}
+        title="Home"
+      >
+        <img
+          src={logo}
+          alt="Witches & Snitches Logo"
+          style={{
+            height: "60px",
+            width: "auto",
+            transition: "opacity 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.opacity = "0.8";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.opacity = "1";
+          }}
+        />
+      </div>
 
-        return (
-          <button
-            key={tab.key}
-            style={{
-              ...styles.tabButton,
-              ...(isActive ? styles.tabButtonActive : {}),
-            }}
-            onClick={() => navigate(tab.path)}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </nav>
+      {/* Navigation Tabs */}
+      <nav style={styles.tabNavigation}>
+        {visibleTabs.map((tab) => {
+          const isActive = isActiveTab(tab.path);
+
+          return (
+            <button
+              key={tab.key}
+              style={{
+                ...styles.tabButton,
+                ...(isActive ? styles.tabButtonActive : {}),
+              }}
+              onClick={() => navigate(tab.path)}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 };
 
