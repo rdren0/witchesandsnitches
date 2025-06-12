@@ -78,6 +78,16 @@ const CharacterSheet = ({
     return baseACMap[castingStyle] || 11;
   };
 
+  const getSpellcastingAbility = (castingStyle) => {
+    const spellcastingAbilityMap = {
+      "Willpower Caster": "Charisma",
+      "Technique Caster": "Wisdom",
+      "Intellect Caster": "Intelligence",
+      "Vigor Caster": "Constitution",
+    };
+    return spellcastingAbilityMap[castingStyle] || null;
+  };
+
   const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
     const effectiveScores = { ...baseScores };
     Object.entries(asiChoices).forEach(([level, choice]) => {
@@ -752,6 +762,11 @@ const CharacterSheet = ({
                     <span style={styles.label}>Class:</span>{" "}
                     {character.castingStyle}
                   </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.label}>Spell Casting Ability:</span>{" "}
+                    {getSpellcastingAbility(character.castingStyle)}
+                  </div>
+
                   <div style={styles.infoItem}>
                     <span style={styles.label}>Subclass:</span>{" "}
                     {character.subclass || "None"}
