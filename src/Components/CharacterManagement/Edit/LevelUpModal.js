@@ -9,10 +9,13 @@ import {
   ChevronRight,
   Dice6,
   RotateCcw,
+  Search,
+  Filter,
 } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
 import { standardFeats, hpData } from "../../data";
+
 const LevelUpModal = ({
   character,
   isOpen,
@@ -24,6 +27,7 @@ const LevelUpModal = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedFeat, setExpandedFeat] = useState(null);
+  const [featFilter, setFeatFilter] = useState(""); // Add feat filter state
 
   const [levelUpData, setLevelUpData] = useState({
     hitPointIncrease: 0,
@@ -35,6 +39,36 @@ const LevelUpModal = ({
     asiChoice: "asi",
     featChoices: {},
   });
+
+  // Filter feats based on search term
+  const getFilteredFeats = () => {
+    if (!featFilter.trim()) {
+      return standardFeats;
+    }
+
+    const searchTerm = featFilter.toLowerCase();
+    return standardFeats.filter((feat) => {
+      // Search in name
+      if (feat.name.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Search in preview
+      if (feat.preview && feat.preview.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Search in description
+      if (
+        feat.description &&
+        feat.description.some((desc) => desc.toLowerCase().includes(searchTerm))
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  };
 
   const getSelectedFeat = () => {
     if (levelUpData.selectedFeats.length === 0) return null;
@@ -206,6 +240,7 @@ const LevelUpModal = ({
 
     return castingData.hitDie || 6;
   };
+
   const baseHitDie = getBaseHPIncrease();
   const constitution = getAbilityScore("constitution");
   const conMod = Math.floor((constitution - 10) / 2);
@@ -252,6 +287,7 @@ const LevelUpModal = ({
 
   const steps = getSteps();
   const maxSteps = steps.length;
+
   const rollHitPoints = () => {
     const roller = new DiceRoller();
     const rollResult = roller.roll(`1d${baseHitDie}`);
@@ -273,6 +309,7 @@ const LevelUpModal = ({
       hitPointMethod: "roll",
     }));
   };
+
   const useAverageHP = () => {
     const average = Math.floor(baseHitDie / 2) + 1;
     const total = average + conMod;
@@ -348,10 +385,13 @@ const LevelUpModal = ({
     setLevelUpData((prev) => ({
       ...prev,
       asiChoice: choice,
-
       abilityIncreases: choice === "feat" ? [] : prev.abilityIncreases,
       selectedFeats: choice === "asi" ? [] : prev.selectedFeats,
     }));
+    // Clear feat filter when switching away from feat selection
+    if (choice === "asi") {
+      setFeatFilter("");
+    }
   };
 
   const canProceed = () => {
@@ -936,6 +976,101 @@ const LevelUpModal = ({
                     Select One Feat
                   </h4>
 
+                  {/* Feat Filter Input */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <div
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <div style={{ position: "relative", flex: 1 }}>
+                        <Search
+                          size={16}
+                          style={{
+                            position: "absolute",
+                            left: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "#6b7280",
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Search feats by name, preview, or description..."
+                          value={featFilter}
+                          onChange={(e) => setFeatFilter(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px 10px 36px",
+                            border: "2px solid #d1d5db",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            outline: "none",
+                            transition: "border-color 0.2s ease",
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = "#3b82f6";
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "#d1d5db";
+                          }}
+                        />
+                      </div>
+                      {featFilter && (
+                        <button
+                          onClick={() => setFeatFilter("")}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#ef4444",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            transition: "all 0.2s ease",
+                          }}
+                          title="Clear filter"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter Results Info */}
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <Filter size={12} />
+                      {featFilter ? (
+                        <>
+                          Showing {getFilteredFeats().length} of{" "}
+                          {standardFeats.length} feats
+                          {getFilteredFeats().length === 0 && (
+                            <span
+                              style={{ color: "#ef4444", marginLeft: "8px" }}
+                            >
+                              No feats match your search
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        `${standardFeats.length} feats available`
+                      )}
+                    </div>
+                  </div>
+
                   <div
                     style={{
                       display: "grid",
@@ -947,7 +1082,7 @@ const LevelUpModal = ({
                       padding: "8px",
                     }}
                   >
-                    {standardFeats.map((feat) => {
+                    {getFilteredFeats().map((feat) => {
                       const isSelected = levelUpData.selectedFeats.includes(
                         feat.name
                       );
@@ -1829,9 +1964,11 @@ const LevelUpModal = ({
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           width: "100%",
           maxWidth: "700px",
-          maxHeight: "90vh",
+          maxHeight: "95vh",
           overflow: "hidden",
           position: "relative",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <div
@@ -1978,8 +2115,8 @@ const LevelUpModal = ({
         <div
           style={{
             padding: "32px",
-            maxHeight: "500px",
-            overflowY: "auto",
+            flex: 1,
+            overflow: "visible",
           }}
         >
           {renderStepContent()}

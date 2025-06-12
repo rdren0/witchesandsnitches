@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import {
   Save,
@@ -21,26 +21,78 @@ import {
   standardFeats,
   backgrounds,
 } from "../../data";
+import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { InnateHeritage } from "../Shared/InnateHeritage";
-import { StandardFeat } from "../Shared/StandardFeat";
+import StandardFeat from "../Shared/StandardFeat";
 import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
+
+const FeatRequirementsInfo = ({ character }) => {
+  const { theme } = useTheme();
+  // const styles = createCharacterCreationStyles(theme);
+  const availableCount = standardFeats.filter((feat) =>
+    checkFeatPrerequisites(feat, character)
+  ).length;
+  const totalCount = standardFeats.length;
+  const unavailableCount = totalCount - availableCount;
+
+  return (
+    <div
+      style={{
+        padding: "12px",
+        backgroundColor: theme.surface,
+        borderRadius: "6px",
+        border: `1px solid ${theme.border}`,
+        marginBottom: "16px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "8px",
+        }}
+      >
+        <span style={{ fontWeight: "600", color: theme.text }}>
+          Feat Availability
+        </span>
+        <span style={{ fontSize: "14px", color: theme.textSecondary }}>
+          {availableCount}/{totalCount} available
+        </span>
+      </div>
+
+      {unavailableCount > 0 && (
+        <div style={{ fontSize: "12px", color: theme.textSecondary }}>
+          {unavailableCount} feats require specific prerequisites (heritage,
+          casting styles, etc.)
+        </div>
+      )}
+
+      {character.innateHeritage && (
+        <div
+          style={{ fontSize: "12px", color: theme.primary, marginTop: "4px" }}
+        >
+          Your {character.innateHeritage} heritage unlocks additional feat
+          options
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CharacterEditor = ({
   character: originalCharacter,
   onSave,
   onCancel,
   user,
-  customUsername,
-  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
 
-  // ASI progression constants - same as CharacterCreator
   const ASI_LEVELS = [4, 8, 12, 16, 19];
 
   const getAvailableASILevels = (currentLevel) => {
@@ -56,15 +108,12 @@ const CharacterEditor = ({
       return "innate";
     }
 
-    // Check if there are feats that aren't from ASI choices
     if (character.standardFeats && character.standardFeats.length > 0) {
-      // If we have ASI choices, check if all feats are accounted for in ASI choices
       const asiChoices = character.asiChoices || {};
       const asiFeats = Object.values(asiChoices)
         .filter((choice) => choice.type === "feat" && choice.selectedFeat)
         .map((choice) => choice.selectedFeat);
 
-      // If there are more feats than ASI feats, then some must be from level 1
       if (character.standardFeats.length > asiFeats.length) {
         return "feat";
       }
@@ -73,17 +122,14 @@ const CharacterEditor = ({
     return "";
   };
 
-  // Separate level 1 feats from ASI feats
   const separateFeats = (character) => {
     const allFeats = character.standardFeats || [];
     const asiChoices = character.asiChoices || {};
 
-    // Get feats from ASI choices
     const asiFeats = Object.values(asiChoices)
       .filter((choice) => choice.type === "feat" && choice.selectedFeat)
       .map((choice) => choice.selectedFeat);
 
-    // Level 1 feats are those not in ASI choices
     const level1Feats = allFeats.filter((feat) => !asiFeats.includes(feat));
 
     return {
@@ -97,7 +143,7 @@ const CharacterEditor = ({
     const characterWithLevel1Choice = {
       ...originalCharacter,
       level1ChoiceType: inferLevel1ChoiceType(originalCharacter),
-      // Set standardFeats to only level 1 feats for proper display
+
       standardFeats:
         originalCharacter.level1ChoiceType === "feat" ? level1Feats : [],
     };
@@ -331,7 +377,7 @@ const CharacterEditor = ({
 
   const calculateMaxFeats = () => {
     if (character.level1ChoiceType !== "feat") return 0;
-    return 1; // Only level 1 feats in this section
+    return 1;
   };
 
   const toggleFieldLock = (fieldName) => {
@@ -341,7 +387,6 @@ const CharacterEditor = ({
     }));
   };
 
-  // ASI Choice handling functions
   const handleASIChoiceChange = (level, choiceType) => {
     setCharacter((prev) => ({
       ...prev,
@@ -385,7 +430,6 @@ const CharacterEditor = ({
     });
   };
 
-  // Collect all feats from both level 1 and ASI choices
   const collectAllFeatsFromChoices = () => {
     const allFeats = [];
 
@@ -407,7 +451,6 @@ const CharacterEditor = ({
     return allFeats;
   };
 
-  // Get feat progression info
   const getFeatProgressionInfo = () => {
     const currentLevel = character.level || 1;
     const availableASILevels = getAvailableASILevels(currentLevel);
@@ -454,6 +497,54 @@ const CharacterEditor = ({
     };
   };
 
+  const validateSelectedFeats = useCallback(() => {
+    const currentFeats = character.standardFeats || [];
+    const invalidFeats = currentFeats.filter((featName) => {
+      const feat = standardFeats.find((f) => f.name === featName);
+      return feat && !checkFeatPrerequisites(feat, character);
+    });
+
+    if (invalidFeats.length > 0) {
+      console.warn(
+        "Some selected feats no longer meet prerequisites:",
+        invalidFeats
+      );
+      setError(
+        `Warning: Some selected feats no longer meet prerequisites: ${invalidFeats.join(
+          ", "
+        )}`
+      );
+      return false;
+    }
+    return true;
+    // eslint-disable-next-line
+  }, [character, standardFeats]);
+
+  useEffect(() => {
+    if (character) {
+      validateSelectedFeats();
+    }
+    // eslint-disable-next-line
+  }, [
+    character.level,
+    character.castingStyle,
+    character.innateHeritage,
+    character.subclass,
+    validateSelectedFeats,
+  ]);
+
+  useEffect(() => {
+    if (character) {
+      validateSelectedFeats();
+    }
+    // eslint-disable-next-line
+  }, [
+    character.level,
+    character.castingStyle,
+    character.innateHeritage,
+    character.subclass,
+  ]);
+
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
@@ -464,7 +555,6 @@ const CharacterEditor = ({
       return;
     }
 
-    // Collect all feats from both level 1 and ASI choices
     const allFeats = collectAllFeatsFromChoices();
 
     const characterToSave = {
@@ -476,7 +566,7 @@ const CharacterEditor = ({
       innate_heritage: character.innateHeritage,
       background: character.background,
       game_session: character.gameSession,
-      standard_feats: allFeats, // Save all feats (level 1 + ASI feats)
+      standard_feats: allFeats,
       skill_proficiencies: character.skillProficiencies || [],
       ability_scores: character.abilityScores,
       hit_points: getCurrentHp(),
@@ -1171,19 +1261,22 @@ const CharacterEditor = ({
           isEditing={true}
         />
       )}
-
       {character.level1ChoiceType === "feat" && (
-        <StandardFeat
-          character={character}
-          setCharacter={setCharacter}
-          expandedFeats={expandedFeats}
-          setExpandedFeats={setExpandedFeats}
-          featFilter={featFilter}
-          setFeatFilter={setFeatFilter}
-          maxFeats={calculateMaxFeats()}
-          isLevel1Choice={true}
-          characterLevel={character.level}
-        />
+        <div style={styles.fieldContainer}>
+          <FeatRequirementsInfo character={character} />
+          <StandardFeat
+            character={character}
+            setCharacter={setCharacter}
+            expandedFeats={expandedFeats}
+            setExpandedFeats={setExpandedFeats}
+            featFilter={featFilter}
+            setFeatFilter={setFeatFilter}
+            maxFeats={calculateMaxFeats()}
+            isLevel1Choice={false}
+            characterLevel={character.level}
+            standardFeats={standardFeats}
+          />
+        </div>
       )}
 
       {/* ASI/Feat Choices for levels 4, 8, 12, 16, 19 */}
@@ -1195,15 +1288,11 @@ const CharacterEditor = ({
           <div key={level} style={styles.fieldContainer}>
             <div
               style={{
-                ...styles.skillsHeader,
-                cursor: "pointer",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: "12px",
-                backgroundColor: theme.surface,
-                border: `1px solid ${theme.border}`,
-                borderRadius: "8px",
+                cursor: "pointer",
+                marginBottom: "8px",
               }}
               onClick={() => {
                 const newExpanded = new Set(expandedASILevels);
@@ -1215,10 +1304,18 @@ const CharacterEditor = ({
                 setExpandedASILevels(newExpanded);
               }}
             >
-              <h3 style={{ margin: 0 }}>
+              <h3 style={styles.skillsHeader}>
                 Level {level} - Choose ASI or Feat *
               </h3>
-              <span>{isExpanded ? "▼" : "▶"}</span>
+              <span
+                style={{
+                  color: theme.textSecondary,
+                  fontSize: "16px",
+                  userSelect: "none",
+                }}
+              >
+                {isExpanded ? "▼" : "▶"}
+              </span>
             </div>
 
             {isExpanded && (

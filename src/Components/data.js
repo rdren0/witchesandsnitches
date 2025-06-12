@@ -866,6 +866,40 @@ export const standardFeats = [
     },
   },
   {
+    name: "Ember of the Fire Giant",
+    preview:
+      "Fire giant powers. +1 Str/Con/Wis, fire resistance, burning aura.",
+    description: [
+      "Increase Strength, Constitution, or Wisdom by 1.",
+      "Gain resistance to fire damage.",
+      "Searing Ignition: Replace one attack with 15-foot radius fire burst.",
+      "Targets make Dex save (DC 8 + prof + ability mod) or take 1d8 + prof fire damage and blinded until next turn.",
+      "Use prof bonus times per long rest, once per turn maximum.",
+    ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["strength", "constitution", "wisdom"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        fireResistance: true,
+        searingIgnition: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "castingStyle", value: "Vigor Caster" },
+        { type: "innateHeritage", value: "Giant's Blood" },
+        { type: "innateHeritage", value: "Troll Blood" },
+      ],
+    },
+  },
+  {
     name: "Empowered Restoration",
     preview: "Enhanced healing magic and metamagic options.",
     description: [
@@ -919,6 +953,105 @@ export const standardFeats = [
       },
     },
   },
+  {
+    name: "Fury of the Frost Giant",
+    preview:
+      "Frost giant powers. +1 Str/Con/Wis, cold resistance, icy retaliation.",
+    description: [
+      "Increase Strength, Constitution, or Wisdom by 1.",
+      "Gain resistance to cold damage.",
+      "Frigid Retaliation: When hit within 30 feet, use reaction for cold blast.",
+      "Target makes Con save (DC 8 + prof + ability mod) or take 1d8 + prof cold damage and speed becomes 0 until next turn.",
+      "Use prof bonus times per long rest.",
+    ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["strength", "constitution", "wisdom"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        coldResistance: true,
+        frigidRetaliation: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "castingStyle", value: "Vigor Caster" },
+        { type: "innateHeritage", value: "Giant's Blood" },
+        { type: "innateHeritage", value: "Troll Blood" },
+      ],
+    },
+  },
+  {
+    name: "Guile of the Cloud Giant",
+    preview: "Cloud giant powers. +1 Str/Con/Cha, defensive teleportation.",
+    description: [
+      "Increase Strength, Constitution, or Charisma by 1.",
+      "Cloudy Escape: When hit by attack, use reaction for resistance to damage.",
+      "Then teleport to unoccupied space within 30 feet that you can see.",
+      "Use prof bonus times per long rest.",
+    ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["strength", "constitution", "charisma"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        cloudyEscape: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "castingStyle", value: "Vigor Caster" },
+        { type: "innateHeritage", value: "Giant's Blood" },
+        { type: "innateHeritage", value: "Troll Blood" },
+      ],
+    },
+  },
+  {
+    name: "Keenness of the Stone Giant",
+    preview: "Stone giant powers. +1 Str/Con/Wis, darkvision, stone throwing.",
+    description: [
+      "Increase Strength, Constitution, or Wisdom by 1.",
+      "Gain darkvision 60 feet (or increase existing by 60 feet).",
+      "Stone Throw: As bonus action, make ranged spell attack (60 feet range).",
+      "Hit deals 1d10 force damage and target makes Str save or falls prone.",
+      "Use prof bonus times per long rest.",
+    ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["strength", "constitution", "wisdom"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        darkvision: 60,
+        stoneThrow: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "castingStyle", value: "Vigor Caster" },
+        { type: "innateHeritage", value: "Giant's Blood" },
+        { type: "innateHeritage", value: "Troll Blood" },
+      ],
+    },
+  },
+
   {
     name: "Lucky",
     preview: "Luck points for advantage/disadvantage manipulation.",
@@ -1196,6 +1329,160 @@ export const standardFeats = [
       other: {
         wandlessCasting: true,
       },
+    },
+  },
+
+  // Heritage-specific feats
+  {
+    name: "Mature Harpy",
+    preview: "Fully grown harpy wings and powers. Flying speed 50 feet.",
+    description: [
+      "Mighty Wings: Gain flying speed of 50 feet.",
+      "Choose one: Soulcall or Feather Barrage.",
+      "Soulcall: Action to sing, 30-foot radius Wisdom save or disadvantage on Perception vs others. Once per long rest.",
+      "Feather Barrage: 30-foot cone, Dex save or 6d8 piercing + prone. Recharge 5-6, can't fly until end of next turn.",
+    ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        flyingSpeed: 50,
+        harpyPowers: true,
+      },
+    },
+    prerequisites: {
+      allOf: [
+        { type: "innateHeritage", value: "Part-Harpy" },
+        { type: "level", value: 8 },
+      ],
+    },
+  },
+  {
+    name: "Mature Siren",
+    preview: "Powerful siren song to charm multiple beings.",
+    description: [
+      "Siren Song: As action, charm beings up to proficiency bonus within 30 feet, or one being within 60 feet.",
+      "Targets make Wisdom save vs spell save DC or charmed for 1 minute.",
+      "Targets can repeat save at end of their turn.",
+    ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        sirenSong: true,
+      },
+    },
+    prerequisites: {
+      allOf: [
+        { type: "innateHeritage", value: "Part-Siren" },
+        { type: "level", value: 8 },
+      ],
+    },
+  },
+  {
+    name: "Nimble",
+    preview: "Enhanced agility and escape abilities. +1 Str/Dex.",
+    description: [
+      "Increase Strength or Dexterity by 1.",
+      "+5 feet walking speed.",
+      "Gain proficiency in Acrobatics or Athletics.",
+      "Advantage on Strength (Athletics) or Dexterity (Acrobatics) to escape grapples.",
+    ],
+    modifiers: {
+      abilityIncreases: [
+        { type: "choice", abilities: ["strength", "dexterity"], amount: 1 },
+      ],
+      skillProficiencies: [
+        { type: "choice", skills: ["athletics", "acrobatics"], count: 1 },
+      ],
+      expertise: [],
+      other: {
+        speedBonus: 5,
+        escapeAdvantage: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "innateHeritage", value: "Elf Legacy" },
+        { type: "innateHeritage", value: "Goblin Cunning" },
+        { type: "innateHeritage", value: "Part-Leprechaun" },
+        { type: "innateHeritage", value: "Pukwudgie Ancestry" },
+      ],
+    },
+  },
+  {
+    name: "Pukwudgie Constitution",
+    preview: "Pukwudgie resilience. +1 Con, cold/poison resistance.",
+    description: [
+      "Increase Constitution by 1.",
+      "Resistance to cold and poison damage.",
+      "Advantage on saves against being poisoned.",
+    ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "constitution", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        coldResistance: true,
+        poisonResistance: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [{ type: "innateHeritage", value: "Pukwudgie Ancestry" }],
+    },
+  },
+  {
+    name: "Superior Wandless",
+    preview: "Cast all locked-in spells without a wand.",
+    description: [
+      "Prerequisites: Cantrip Master or Wandless Magic.",
+      "Can cast any locked-in spells wandlessly, not just cantrips.",
+    ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        superiorWandlessCasting: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "feat", value: "Cantrip Master" },
+        { type: "feat", value: "Wandless Magic" },
+      ],
+    },
+  },
+  {
+    name: "Telepathic",
+    preview: "Telepathic communication abilities. +1 Int/Wis/Cha.",
+    description: [
+      "Increase Intelligence, Wisdom, or Charisma by 1.",
+      "Telepathic Utterance: Speak telepathically to creatures within 60 feet.",
+      "Must share a language for understanding.",
+      "One-way communication only.",
+    ],
+    modifiers: {
+      abilityIncreases: [
+        {
+          type: "choice",
+          abilities: ["intelligence", "wisdom", "charisma"],
+          amount: 1,
+        },
+      ],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        telepathy: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [
+        { type: "subclass", value: "Divinations" },
+        { type: "subclass", value: "Grim Diviner" },
+      ],
     },
   },
 ];

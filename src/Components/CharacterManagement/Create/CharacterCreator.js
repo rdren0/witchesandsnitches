@@ -12,11 +12,12 @@ import {
   standardFeats,
   backgrounds,
 } from "../../data";
+import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { InnateHeritage } from "../Shared/InnateHeritage";
-import { StandardFeat } from "../Shared/StandardFeat";
+import StandardFeat from "../Shared/StandardFeat";
 import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 
@@ -319,6 +320,47 @@ const CharacterCreator = ({
           [field]: value,
         }));
       }
+    }
+  };
+
+  const getPrerequisiteText = (feat) => {
+    if (!feat.prerequisites) return null;
+
+    const { allOf, anyOf } = feat.prerequisites;
+    const requirements = [];
+
+    if (allOf && allOf.length > 0) {
+      requirements.push(...allOf.map((req) => formatRequirement(req)));
+    }
+
+    if (anyOf && anyOf.length > 0) {
+      const anyRequirements = anyOf.map((req) => formatRequirement(req));
+      if (anyRequirements.length > 1) {
+        requirements.push(`(${anyRequirements.join(" OR ")})`);
+      } else {
+        requirements.push(anyRequirements[0]);
+      }
+    }
+
+    return requirements.join(", ");
+  };
+
+  const formatRequirement = (requirement) => {
+    const { type, value } = requirement;
+
+    switch (type) {
+      case "level":
+        return `Level ${value}+`;
+      case "castingStyle":
+        return value;
+      case "innateHeritage":
+        return value;
+      case "subclass":
+        return value;
+      case "feat":
+        return `${value} feat`;
+      default:
+        return `${type}: ${value}`;
     }
   };
 
@@ -1023,7 +1065,7 @@ const CharacterCreator = ({
         <h3 style={styles.skillsHeader}>
           {character.level === 1
             ? "Level 1 Choice"
-            : "Starting Choice (Level 1)"}{" "}
+            : "Starting Choice (Level 1)"}
           *
         </h3>
         <div style={styles.helpText}>
@@ -1107,6 +1149,7 @@ const CharacterCreator = ({
             maxFeats={1}
             isLevel1Choice={true}
             characterLevel={character.level}
+            standardFeats={standardFeats}
           />
         </div>
       )}
@@ -1120,15 +1163,11 @@ const CharacterCreator = ({
           <div key={level} style={styles.fieldContainer}>
             <div
               style={{
-                ...styles.skillsHeader,
-                cursor: "pointer",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: "12px",
-                backgroundColor: theme.surface,
-                border: `1px solid ${theme.border}`,
-                borderRadius: "8px",
+                cursor: "pointer",
+                marginBottom: "8px",
               }}
               onClick={() => {
                 const newExpanded = new Set(expandedASILevels);
@@ -1140,10 +1179,18 @@ const CharacterCreator = ({
                 setExpandedASILevels(newExpanded);
               }}
             >
-              <h3 style={{ margin: 0 }}>
+              <h3 style={styles.skillsHeader}>
                 Level {level} - Choose ASI or Feat *
               </h3>
-              <span>{isExpanded ? "▼" : "▶"}</span>
+              <span
+                style={{
+                  color: theme.textSecondary,
+                  fontSize: "16px",
+                  userSelect: "none",
+                }}
+              >
+                {isExpanded ? "▼" : "▶"}
+              </span>
             </div>
 
             {isExpanded && (
@@ -1358,12 +1405,93 @@ const CharacterCreator = ({
                       style={styles.select}
                     >
                       <option value="">Select a feat...</option>
-                      {standardFeats.map((feat) => (
-                        <option key={feat.name} value={feat.name}>
-                          {feat.name}
-                        </option>
-                      ))}
+                      {standardFeats
+                        .filter((feat) =>
+                          checkFeatPrerequisites(feat, character)
+                        )
+                        .map((feat) => (
+                          <option key={feat.name} value={feat.name}>
+                            {feat.name}
+                          </option>
+                        ))}
                     </select>
+
+                    {/* Show unavailable feats count and details */}
+                    {standardFeats.filter(
+                      (feat) => !checkFeatPrerequisites(feat, character)
+                    ).length > 0 && (
+                      <details
+                        style={{
+                          marginTop: "8px",
+                          padding: "8px",
+                          backgroundColor: theme.surface,
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          color: theme.textSecondary,
+                        }}
+                      >
+                        <summary
+                          style={{ cursor: "pointer", fontWeight: "500" }}
+                        >
+                          {
+                            standardFeats.filter(
+                              (feat) => !checkFeatPrerequisites(feat, character)
+                            ).length
+                          }{" "}
+                          feats unavailable (prerequisites not met)
+                        </summary>
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                          }}
+                        >
+                          {standardFeats
+                            .filter(
+                              (feat) => !checkFeatPrerequisites(feat, character)
+                            )
+                            .map((feat) => (
+                              <div
+                                key={feat.name}
+                                style={{
+                                  margin: "4px 0",
+                                  padding: "4px",
+                                  borderLeft: `2px solid ${theme.error}`,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontWeight: "500",
+                                    color: theme.text,
+                                  }}
+                                >
+                                  {feat.name}
+                                </div>
+                                {feat.prerequisites && (
+                                  <div
+                                    style={{
+                                      color: theme.error,
+                                      fontSize: "11px",
+                                    }}
+                                  >
+                                    Requires: {getPrerequisiteText(feat)}
+                                  </div>
+                                )}
+                                <div
+                                  style={{
+                                    color: theme.textSecondary,
+                                    fontSize: "11px",
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  {feat.preview}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
                 )}
               </div>
