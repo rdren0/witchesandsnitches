@@ -38,15 +38,16 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
   const categories = [
     "General",
-    "Weapons",
     "Armor",
-    "Potions",
-    "Scrolls",
     "Books",
-    "Magical Items",
     "Currency",
-    "Tools",
     "Food",
+    "Magical Items",
+    "Potions",
+    "Recipes",
+    "Scrolls",
+    "Tools",
+    "Weapons",
   ];
 
   const fetchItems = useCallback(async () => {
