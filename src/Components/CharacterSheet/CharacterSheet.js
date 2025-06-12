@@ -271,7 +271,7 @@ const CharacterSheet = ({
         rollValue: hpRestored + hitDiceRestored,
         modifier: 0,
         total: hpRestored + hitDiceRestored,
-        isCriticalSuccess: true,
+        isCriticalSuccess: false,
         isCriticalFailure: false,
         type: "longrest",
         description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored • ${character.name} is fully rested!`,
