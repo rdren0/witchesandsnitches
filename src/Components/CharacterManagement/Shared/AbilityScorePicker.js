@@ -23,10 +23,7 @@ export const AbilityScorePicker = ({
 
   const toggleManualMode = () => {
     const newManualMode = !isManualMode;
-    console.log("Toggling manual mode:", {
-      current: isManualMode,
-      new: newManualMode,
-    });
+
     setIsManualMode(newManualMode);
 
     if (newManualMode) {
@@ -229,12 +226,6 @@ export const AbilityScorePicker = ({
 
       <div style={styles.abilityGrid}>
         {Object.entries(character.abilityScores).map(([ability, score]) => {
-          console.log(`Rendering ${ability}:`, {
-            score,
-            isManualMode,
-            tempValue: tempInputValues[ability],
-          });
-
           return (
             <div
               key={ability}

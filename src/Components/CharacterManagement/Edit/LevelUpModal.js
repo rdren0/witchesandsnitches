@@ -527,11 +527,6 @@ const LevelUpModal = ({
         updatedCharacter.asi_choices = asiChoices;
         updatedCharacter.asiChoices = asiChoices;
       }
-
-      console.log("Original character:", character);
-      console.log("Level up data:", levelUpData);
-      console.log("Saving updated character:", updatedCharacter);
-
       await onSave(updatedCharacter);
     } catch (error) {
       console.error("Error completing level up:", error);

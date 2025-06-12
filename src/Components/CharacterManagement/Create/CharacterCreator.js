@@ -75,6 +75,7 @@ const CharacterCreator = ({
       "Friday - Knights",
       "Saturday - Haunting",
       "Saturday - Knights",
+      "DEVELOPMENT",
     ];
     return sessions;
   };

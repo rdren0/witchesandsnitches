@@ -81,12 +81,10 @@ const ThemeSettings = () => {
   ];
 
   const handleThemeChange = (newTheme) => {
-    console.log("ThemeSettings: Changing theme to", newTheme);
     setThemeMode(newTheme);
   };
 
   const handleSchoolChange = (school) => {
-    console.log("ThemeSettings: Changing school to", school);
     setThemeHouse(school);
   };
 

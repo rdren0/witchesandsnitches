@@ -131,10 +131,6 @@ const CharacterList = ({
       }
 
       await loadCharacters();
-
-      console.log(
-        `Successfully duplicated ${character.name} as ${duplicateName}`
-      );
     } catch (err) {
       console.error("Error duplicating character:", err);
       alert("Failed to duplicate character: " + err.message);

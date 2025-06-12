@@ -158,6 +158,7 @@ const CharacterEditor = ({
     "Friday - Knights",
     "Saturday - Haunting",
     "Saturday - Knights",
+    "DEVELOPMENT",
   ];
 
   const rollHp = () => {

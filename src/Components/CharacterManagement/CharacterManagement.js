@@ -23,9 +23,7 @@ const CharacterManagement = ({
 
   const handleCharacterSaved = async (updatedCharacter) => {
     try {
-      console.log("Saving character to database:", updatedCharacter);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("characters")
         .update({
           level: updatedCharacter.level,
@@ -45,8 +43,6 @@ const CharacterManagement = ({
         console.error("Database error:", error);
         throw error;
       }
-
-      console.log("Character saved successfully:", data);
 
       onCharacterSaved();
       setActiveTab("list");
