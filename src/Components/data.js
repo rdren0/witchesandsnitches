@@ -403,27 +403,166 @@ export const skillsByCastingStyle = {
   ],
 };
 
-export const subclasses = [
-  "Charms",
-  "Jinxes, Hexes, and Curses",
-  "Transfigurations",
-  "Healing",
-  "Divinations",
-  "Magizoology",
-  "Dark Arts",
-  "Culinarian",
-  "Herbology & Potions",
-  "Arithmancy & Runes",
-  "Artisan",
-  "Obscurial Magic",
-  "Defender",
-  "Grim Diviner",
-  "Astronomy",
-  "Historian",
-  "Ghoul Studies and Ancient Studies",
-  "Quidditch",
-  "Trickery",
-];
+// Updated subclasses data structure for data.js
+export const subclassesData = {
+  Charms: {
+    name: "Charms",
+    description: "Masters of precision magic and enchantments",
+    level1Features: [
+      {
+        name: "Target Practice",
+        description:
+          "You've honed your aim to be able to strike very specifically with your dueling Charms. When casting a Charm, you can target specific items or body parts, as well as restrict the effects of the charm to only that specific item or body part.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Lightning Fast Wand",
+        description:
+          "You've honed your senses to be able to strike very specifically with your dueling Charms. Whenever you add your spellcasting ability modifier to a spell attack roll, add half your Dexterity modifier (rounded up) as a bonus as well. Additionally, you have advantage on initiative rolls.",
+      },
+      {
+        name: "Protective Enchantments",
+        description:
+          "You gain access to the Protego spell. Additionally, when you cast a Protego, you may choose to affect a friendly creature within 30 feet. When you or a friendly creature is affected by one of your protego spells, they may roll 1d4 and add that number to the AC bonus of the spell.",
+      },
+    ],
+    summary:
+      "Focus on precise targeting and protective magic with enhanced initiative and defensive capabilities.",
+  },
+
+  "Ghoul Studies and Ancient Studies": {
+    name: "Ghoul Studies and Ancient Studies",
+    description: "Scholars of dark creatures and ancient magical history",
+    level1Features: [
+      {
+        name: "Outward Expressions",
+        description:
+          "You gain proficiency in Magical Creatures or History of Magic and choose one of the following features.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Ghoulish Trick",
+        description:
+          "You use illusionary trickery to take on a Ghoulish form. As a bonus action, you transform for 1 minute. You gain temporary hit points equal to 1d10 + your level, can frighten enemies, and are immune to the frightened condition. You can transform a number of times equal to your proficiency bonus per long rest.",
+      },
+      {
+        name: "Ancestral Call",
+        description:
+          "As an action, you call upon Ancient historical figures to fight alongside you. One creature of your choice becomes the target of the Ancients, which hinder its attacks until the start of your next turn, forcing Intelligence saving throws to avoid wasting attacks and spells.",
+      },
+    ],
+    summary:
+      "Transform into frightening forms or call upon ancient spirits to hinder your enemies.",
+  },
+
+  "Defense Against the Dark Arts": {
+    name: "Defense Against the Dark Arts",
+    description: "Specialists in combating dark magic and protecting others",
+    level1Features: [
+      {
+        name: "Dark Studies",
+        description:
+          "You gain proficiency with dark magic detection and protective spells.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Dark Traces",
+        description:
+          "The presence of strong evil registers on your senses like a noxious odor. As an action, you can detect Dark Beings or Dark magics within 60 feet for one turn. You can use this a number of times equal to 1 + your Charisma modifier per long rest.",
+      },
+      {
+        name: "Ward-Breaker",
+        description:
+          "You have perfected your ability to break spells and enchantments. When a hostile creature casts a Dark spell with an area of effect, you can use your reaction to make a spellcasting ability check to redirect the origin of the spell to be centered on the caster.",
+      },
+    ],
+    summary:
+      "Detect and counter dark magic, with abilities to sense evil and redirect harmful spells.",
+  },
+
+  Transfigurations: {
+    name: "Transfigurations",
+    description: "Masters of transformation and elemental magic",
+    level1Features: [
+      {
+        name: "Scientific Studies",
+        description:
+          "Your scientific approach to transfiguration grants you enhanced understanding of magical transformations.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Anatomy Textbook",
+        description:
+          "Your knowledge of creature anatomy makes transfigurations easier. If a Transfiguration spell must be cast at a higher level to involve a living creature, you can involve a living creature and consume a spell slot one level lower than what's required.",
+      },
+      {
+        name: "Intuitive Conversion",
+        description:
+          "Conceptualizing a transfiguration just comes easily to you. When you cast Vera Verto, it automatically affects targets one size larger than specified by the spell slot level.",
+      },
+      {
+        name: "Elementalist",
+        description:
+          "Your study of Alchemy has given you insights into the nature of elements. Spells involving only fire, water, earth, or air are automatically cast one level higher, or you deal an additional 1d4 damage with acid, cold, fire, lightning, or thunder spells.",
+      },
+    ],
+    summary:
+      "Enhanced transformation abilities with options for creature mastery, size manipulation, or elemental focus.",
+  },
+
+  Obscurial: {
+    name: "Obscurial",
+    description: "Harbors dark, uncontrolled magical power",
+    level1Features: [
+      {
+        name: "Suppressed Magic",
+        description:
+          "Your magic has been suppressed, creating dangerous dark energy that you're learning to control.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Dark Energy Release",
+        description:
+          "You can unleash bursts of dark magical energy, dealing necrotic damage to enemies but also potentially harming yourself. This power grows stronger but more dangerous as you level up.",
+      },
+    ],
+    summary:
+      "Channel dangerous dark magic at the risk of self-harm, with devastating potential at higher levels.",
+  },
+
+  Defender: {
+    name: "Defender",
+    description: "Protective specialists focused on shielding allies",
+    level1Features: [
+      {
+        name: "Mitigating Defense",
+        description:
+          "You specialize in protecting yourself and your allies from harm.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Critical Deflection",
+        description:
+          "As a reaction when you or an ally within 20 feet suffers a critical hit, you can turn that attack into a normal hit. You can use this a number of times equal to your spellcasting ability modifier per long rest.",
+      },
+      {
+        name: "Shielding Presence",
+        description:
+          "When your allies are within 10 feet of you, they gain a +1 bonus to their Armor Class. At 6th level, this bonus increases to +2.",
+      },
+    ],
+    summary:
+      "Protect allies from critical hits or provide constant AC bonuses to nearby teammates.",
+  },
+};
+
+export const subclasses = Object.keys(subclassesData);
 
 export const innateHeritages = [
   "Centaurian Lineage",
@@ -1866,6 +2005,48 @@ export const templates = {
 
 ### 🎯 Future Plans
 
+
+---
+
+`,
+  creature: `## 🐉 [Creature Name]
+
+**📊 Basic Stats:**
+- **AC:** 
+- **HP:** 
+- **Speed:** 
+- **CR:** 
+- **Size:** 
+- **Type:** 
+
+**💪 Ability Scores:**
+| STR | DEX | CON | INT | WIS | CHA |
+|-----|-----|-----|-----|-----|-----|
+|     |     |     |     |     |     |
+
+**🎯 Skills & Senses:**
+- **Skills:** 
+- **Senses:** 
+- **Damage Resistances:** 
+- **Damage Immunities:** 
+- **Condition Immunities:** 
+
+**✨ Special Abilities:**
+
+
+**⚔️ Actions:**
+
+
+**🌟 Legendary Actions:** *(if applicable)*
+
+
+**📖 Lore & Description:**
+
+
+**🎯 Tactical Use:**
+- **Combat Role:** 
+- **Environment:** 
+- **Allies:** 
 
 ---
 

@@ -88,6 +88,21 @@ const CharacterSheet = ({
     return spellcastingAbilityMap[castingStyle] || null;
   };
 
+  const getArmorClassModifier = (
+    castingStyle,
+    initiativeAbility,
+    effectiveAbilityScores
+  ) => {
+    if (
+      castingStyle === "Intellect Caster" &&
+      initiativeAbility === "intelligence"
+    ) {
+      return Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
+    }
+
+    return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
+  };
+
   const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
     const effectiveScores = { ...baseScores };
     Object.entries(asiChoices).forEach(([level, choice]) => {
@@ -127,7 +142,7 @@ const CharacterSheet = ({
     try {
       const { data, error } = await supabase
         .from("characters")
-        .select("*")
+        .select("*, initiative_ability")
         .eq("id", selectedCharacter.id)
         .eq("discord_user_id", discordUserId)
         .single();
@@ -151,9 +166,14 @@ const CharacterSheet = ({
           id: data.id,
           abilityScores: data.ability_scores,
           allFeats: allFeats,
+
           armorClass:
             getBaseArmorClass(data.casting_style) +
-            (Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0),
+            getArmorClassModifier(
+              data.casting_style,
+              data.initiative_ability,
+              effectiveAbilityScores
+            ),
           asiChoices: asiChoices,
           background: data.background || "Unknown",
           baseAbilityScores: baseAbilityScores,
@@ -168,6 +188,8 @@ const CharacterSheet = ({
           hitDie: getHitDie(data.casting_style),
           hitPoints: data.hit_points || 1,
           house: data.house,
+
+          initiativeAbility: data.initiative_ability,
           initiative: 8,
           innateHeritage: data.innate_heritage,
           intelligence: effectiveAbilityScores.intelligence || 10,
@@ -766,7 +788,6 @@ const CharacterSheet = ({
                     <span style={styles.label}>Spell Casting Ability:</span>{" "}
                     {getSpellcastingAbility(character.castingStyle)}
                   </div>
-
                   <div style={styles.infoItem}>
                     <span style={styles.label}>Subclass:</span>{" "}
                     {character.subclass || "None"}
