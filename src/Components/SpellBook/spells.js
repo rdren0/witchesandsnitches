@@ -1989,6 +1989,66 @@ export const spellsData = {
       "5th Level": [],
     },
   },
+  Trickery: {
+    hasRestriction: true,
+    icon: "Zap",
+    color: "#97C00C",
+    description: "Mastery over the elements",
+    levels: {
+      Cantrips: [
+        {
+          name: "Manus",
+          level: "Cantrip",
+          restriction: false,
+          description:
+            "Create a spectral floating hand that can manipulate objects, open doors, and carry up to 10 pounds within 30 feet for 1 minute",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Tranquillitatem",
+          level: "2nd Level",
+          restriction: false,
+          description:
+            "Suppress strong emotions in a 20-foot radius. Remove charm/fear effects or make hostile creatures indifferent toward chosen targets. Concentration, up to 1 minute",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Fictus",
+          level: "3rd Level",
+          restriction: false,
+          description:
+            "Create a realistic illusion up to 20-foot cube with sounds, smells, and temperature. Lasts 10 minutes with concentration. Physical interaction reveals it's fake. At 6th level+, becomes permanent without concentration",
+        },
+        {
+          name: "Roboratum",
+          level: "3rd Level",
+          restriction: false,
+          description:
+            "Grant up to 5 creatures 5 temporary HP, advantage on Wisdom saves, and advantage on next attack after being hit. Lasts 1 hour. Higher levels add +5 temp HP per slot level",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Incarcerebra",
+          level: "6th Level",
+          restriction: false,
+          description:
+            "Bind a creature in an illusory cell only it perceives. Target takes 5d10 psychic damage and is restrained, unable to see/hear beyond the illusion. Moving through it deals 10d10 damage and ends the spell",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Dubium/Fiducium",
+          level: "8th Level",
+          restriction: false,
+          description:
+            "Enchant an object/area with an aura that repels (Dubium) or attracts (Fiducium) specified intelligent creatures. Lasts 10 days. Targets must save or be frightened away or compelled to approach within 60 feet",
+        },
+      ],
+    },
+  },
 };
 export const INDIVIDUAL_SPELL_MODIFIERS = {
   "Ferio*": SCHOOL_TO_MODIFIER_MAP.jhc,
