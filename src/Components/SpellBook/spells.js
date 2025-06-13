@@ -1991,9 +1991,9 @@ export const spellsData = {
   },
   Trickery: {
     hasRestriction: true,
-    icon: "Zap",
-    color: "#97C00C",
-    description: "Mastery over the elements",
+    icon: "Star",
+    color: "#d55713",
+    description: "Illusion and misdirection magic",
     levels: {
       Cantrips: [
         {
@@ -2004,6 +2004,7 @@ export const spellsData = {
             "Create a spectral floating hand that can manipulate objects, open doors, and carry up to 10 pounds within 30 feet for 1 minute",
         },
       ],
+      "1st Level": [],
       "2nd Level": [
         {
           name: "Tranquillitatem",
@@ -2029,6 +2030,8 @@ export const spellsData = {
             "Grant up to 5 creatures 5 temporary HP, advantage on Wisdom saves, and advantage on next attack after being hit. Lasts 1 hour. Higher levels add +5 temp HP per slot level",
         },
       ],
+      "4th Level": [],
+      "5th Level": [],
       "6th Level": [
         {
           name: "Incarcerebra",
@@ -2038,6 +2041,7 @@ export const spellsData = {
             "Bind a creature in an illusory cell only it perceives. Target takes 5d10 psychic damage and is restrained, unable to see/hear beyond the illusion. Moving through it deals 10d10 damage and ends the spell",
         },
       ],
+      "7th Level": [],
       "8th Level": [
         {
           name: "Dubium/Fiducium",
@@ -2047,6 +2051,7 @@ export const spellsData = {
             "Enchant an object/area with an aura that repels (Dubium) or attracts (Fiducium) specified intelligent creatures. Lasts 10 days. Targets must save or be frightened away or compelled to approach within 60 feet",
         },
       ],
+      "9th Level": [],
     },
   },
 };
