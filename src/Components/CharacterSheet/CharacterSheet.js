@@ -88,15 +88,12 @@ const CharacterSheet = ({
     return spellcastingAbilityMap[castingStyle] || null;
   };
 
-  const getArmorClassModifier = (
-    castingStyle,
-    initiativeAbility,
-    effectiveAbilityScores
-  ) => {
-    if (
-      castingStyle === "Intellect Caster" &&
-      initiativeAbility === "intelligence"
-    ) {
+  const getArmorClassModifier = (effectiveAbilityScores) => {
+    return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
+  };
+
+  const getInitiativeModifier = (initiativeAbility, effectiveAbilityScores) => {
+    if (initiativeAbility === "intelligence") {
       return Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
     }
 
@@ -167,13 +164,11 @@ const CharacterSheet = ({
           abilityScores: data.ability_scores,
           allFeats: allFeats,
 
+          // AC always uses dexterity modifier
           armorClass:
             getBaseArmorClass(data.casting_style) +
-            getArmorClassModifier(
-              data.casting_style,
-              data.initiative_ability,
-              effectiveAbilityScores
-            ),
+            getArmorClassModifier(effectiveAbilityScores),
+
           asiChoices: asiChoices,
           background: data.background || "Unknown",
           baseAbilityScores: baseAbilityScores,
@@ -190,6 +185,11 @@ const CharacterSheet = ({
           house: data.house,
 
           initiativeAbility: data.initiative_ability,
+          // Initiative modifier depends on chosen ability
+          initiativeModifier: getInitiativeModifier(
+            data.initiative_ability,
+            effectiveAbilityScores
+          ),
           initiative: 8,
           innateHeritage: data.innate_heritage,
           intelligence: effectiveAbilityScores.intelligence || 10,
@@ -809,6 +809,14 @@ const CharacterSheet = ({
                   <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
                     <span style={styles.label}>Wand:</span> {character.wand}
                   </div>
+                  {character.castingStyle === "Intellect Caster" && (
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Initiative Ability:</span>{" "}
+                      {character.initiativeAbility === "intelligence"
+                        ? "Intelligence"
+                        : "Dexterity"}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -866,7 +874,7 @@ const CharacterSheet = ({
               >
                 <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
                 <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
-                  {formatModifier(characterModifiers.dexterity)}
+                  {formatModifier(character.initiativeModifier)}
                 </div>
                 <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
                   Initiative
