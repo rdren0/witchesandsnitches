@@ -125,6 +125,7 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
           session: `Session ${new Date().toLocaleDateString()}`,
           combat: "Combat Tactics",
           relationship: "Character Relationship",
+          creature: "Magical Creature",
         };
         finalTitle = templateNames[templateType];
       } else {
@@ -303,6 +304,12 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
               style={styles.templateButton}
             >
               👥 Relationship
+            </button>
+            <button
+              onClick={() => createNewEntry(newEntryTitle, "", "creature")}
+              style={styles.templateButton}
+            >
+              🦄 Magical Creature
             </button>
           </div>
 
