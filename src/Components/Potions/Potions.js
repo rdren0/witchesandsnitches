@@ -11,6 +11,7 @@ import {
   Search,
   FlaskRound,
   ArrowRight,
+  Plus,
 } from "lucide-react";
 import { useRollFunctions } from "../../App/diceRoller";
 
@@ -37,6 +38,30 @@ const PotionBrewingSystem = ({ character }) => {
 
   const [ingredientQuality, setIngredientQuality] = useState("normal");
 
+  const getCharacterPotionModifier = () => {
+    const currentCharacter = character || selectedCharacter;
+    if (!currentCharacter) return 0;
+
+    console.log("Character object:", currentCharacter);
+
+    const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+    const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
+
+    const level = currentCharacter.level || 1;
+    const proficiencyBonus = Math.ceil(level / 4) + 1;
+
+    const skillProficiencies = currentCharacter.skillProficiencies || [];
+    const isProficientInPotionMaking =
+      skillProficiencies.includes("Potion Making") ||
+      skillProficiencies.includes("Potion-Making") ||
+      skillProficiencies.includes("potionMaking");
+
+    const skillModifier =
+      wisdomModifier + (isProficientInPotionMaking ? proficiencyBonus : 0);
+
+    return skillModifier;
+  };
+
   const ingredientModifiers = {
     flawed: 2,
     normal: 0,
@@ -44,51 +69,44 @@ const PotionBrewingSystem = ({ character }) => {
     superior: -4,
   };
 
-  // Transform raw ingredient quality based on proficiencies (Step 1)
   const transformIngredientQuality = (rawQuality, proficiencies) => {
     const hasKit = proficiencies.potioneersKit || proficiencies.herbologyKit;
 
     if (!hasKit) {
-      return null; // Can't brew without a kit
+      return null;
     }
 
     const profLevel = proficiencies.potionMaking;
 
-    // Based on the proficiency table
     const transformationTable = {
       0: {
-        // Have kit, 0 proficiency
         poor: "flawed",
         normal: "flawed",
-        exceptional: "normal", // This handles "superior" raw becoming "normal"
+        exceptional: "normal",
         superior: "normal",
       },
       1: {
-        // Have kit, 1 proficiency
         poor: "flawed",
         normal: "normal",
-        exceptional: "normal", // This handles "superior" raw becoming "normal"
+        exceptional: "normal",
         superior: "normal",
       },
       2: {
-        // Have kit, 2 profs or 1 expertise
         poor: "normal",
         normal: "normal",
-        exceptional: "exceptional", // This handles "superior" raw becoming "exceptional"
+        exceptional: "exceptional",
         superior: "exceptional",
       },
       3: {
-        // Have kit, 1 prof + 1 expertise (treating as level 3 for simplicity)
         poor: "normal",
         normal: "exceptional",
-        exceptional: "exceptional", // This handles "superior" raw becoming "exceptional"
+        exceptional: "exceptional",
         superior: "exceptional",
       },
       4: {
-        // Have kit, 2 expertise
         poor: "exceptional",
         normal: "exceptional",
-        exceptional: "superior", // This handles "superior" raw staying "superior"
+        exceptional: "superior",
         superior: "superior",
       },
     };
@@ -97,21 +115,17 @@ const PotionBrewingSystem = ({ character }) => {
     return transforms[rawQuality] || rawQuality;
   };
 
-  // Get the prepared ingredient quality
   const getPreparedIngredientQuality = () => {
     return transformIngredientQuality(ingredientQuality, proficiencies);
   };
 
-  // Get max achievable quality based on prepared ingredients
   const getMaxAchievableQuality = () => {
     const preparedQuality = getPreparedIngredientQuality();
     if (!preparedQuality) return "Cannot brew without kit";
 
-    // The best quality you can achieve is limited by your prepared ingredients
     const qualityHierarchy = ["flawed", "normal", "exceptional", "superior"];
     const preparedIndex = qualityHierarchy.indexOf(preparedQuality);
 
-    // You can achieve any quality up to and including your prepared ingredient quality
     return qualityHierarchy[
       Math.min(preparedIndex + 2, qualityHierarchy.length - 1)
     ];
@@ -139,16 +153,18 @@ const PotionBrewingSystem = ({ character }) => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
-      // Use the prepared ingredient quality for brewing
+      const characterModifier = getCharacterPotionModifier();
+
       const brewingResult = await rollBrewPotion({
         isRolling,
         setIsRolling,
-        character: selectedCharacter,
+        character: selectedCharacter || character,
         selectedPotion,
         proficiencies,
-        ingredientQuality: preparedQuality, // Use prepared quality, not raw
+        ingredientQuality: preparedQuality,
         qualityDCs,
         ingredientModifiers,
+        characterModifier,
       });
 
       if (brewingResult) {
@@ -156,6 +172,7 @@ const PotionBrewingSystem = ({ character }) => {
           ...brewingResult,
           rawIngredientQuality: ingredientQuality,
           preparedIngredientQuality: preparedQuality,
+          characterModifier,
           timestamp: new Date().toLocaleString(),
         };
         setLastResult(result);
@@ -189,6 +206,8 @@ const PotionBrewingSystem = ({ character }) => {
 
   const filteredPotions = getFilteredPotions();
   const preparedQuality = getPreparedIngredientQuality();
+  const characterModifier = getCharacterPotionModifier();
+  const currentCharacter = character || selectedCharacter;
 
   return (
     <div style={styles.container}>
@@ -362,6 +381,124 @@ const PotionBrewingSystem = ({ character }) => {
               <p style={styles.selectedPotionDescription}>
                 {selectedPotion.description}
               </p>
+
+              <div style={styles.rollPreview}>
+                <div style={styles.rollPreviewContent}></div>
+
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    marginTop: "8px",
+                  }}
+                >
+                  <div>
+                    <strong>Your Modifier Breakdown:</strong>
+                  </div>
+                  <div>
+                    • Wisdom Modifier:{" "}
+                    {Math.floor(
+                      ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+                    ) >= 0
+                      ? "+"
+                      : ""}
+                    {Math.floor(
+                      ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+                    )}
+                  </div>
+                  <div>
+                    • Proficiency Bonus:{" "}
+                    {(currentCharacter?.skillProficiencies || []).includes(
+                      "Potion Making"
+                    )
+                      ? `+${Math.ceil((currentCharacter?.level || 1) / 4) + 1}`
+                      : "+0 (not proficient)"}
+                  </div>
+                  <div>
+                    •{" "}
+                    <strong>
+                      Total Skill Modifier: {characterModifier >= 0 ? "+" : ""}
+                      {characterModifier}
+                    </strong>
+                  </div>
+                </div>
+
+                {selectedPotion.rarity && qualityDCs[selectedPotion.rarity] && (
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      marginTop: "12px",
+                      padding: "8px",
+                      backgroundColor:
+                        theme === "dark"
+                          ? "rgba(55, 65, 81, 0.5)"
+                          : "rgba(243, 244, 246, 0.8)",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    <div style={{ fontWeight: "bold", marginBottom: "6px" }}>
+                      Quality Thresholds:
+                    </div>
+                    {Object.entries(qualityDCs[selectedPotion.rarity])
+                      .reverse()
+                      .map(([quality, baseDC]) => {
+                        const adjustedDC =
+                          baseDC + (ingredientModifiers[preparedQuality] || 0);
+                        const neededRoll = Math.max(
+                          1,
+                          adjustedDC - characterModifier
+                        );
+                        const maxQuality = getMaxAchievableQuality();
+                        const isAchievable =
+                          quality !== "ruined" &&
+                          (maxQuality === "Cannot brew without kit" ||
+                            [
+                              "flawed",
+                              "normal",
+                              "exceptional",
+                              "superior",
+                            ].indexOf(quality) <=
+                              [
+                                "flawed",
+                                "normal",
+                                "exceptional",
+                                "superior",
+                              ].indexOf(maxQuality));
+
+                        return (
+                          <div
+                            key={quality}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              color: !isAchievable
+                                ? theme === "dark"
+                                  ? "#6b7280"
+                                  : "#9ca3af"
+                                : "inherit",
+                              fontStyle: !isAchievable ? "italic" : "normal",
+                            }}
+                          >
+                            <span>
+                              {quality.charAt(0).toUpperCase() +
+                                quality.slice(1)}
+                              :
+                            </span>
+                            <span>
+                              {!isAchievable
+                                ? "Not achievable"
+                                : neededRoll > 20
+                                ? "Impossible"
+                                : neededRoll <= 1
+                                ? "Automatic"
+                                : `${neededRoll}+ on the die`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -415,8 +552,24 @@ const PotionBrewingSystem = ({ character }) => {
                 <div style={styles.resultRow}>
                   <span style={styles.resultLabel}>Roll:</span>
                   <div style={styles.diceResult}>
-                    {getDiceIcon(Math.min(lastResult.roll, 6))}
-                    <span style={styles.diceValue}>{lastResult.roll}</span>
+                    {getDiceIcon(
+                      Math.min(lastResult.diceRoll || lastResult.roll, 6)
+                    )}
+                    <span style={styles.diceValue}>
+                      {lastResult.diceRoll || lastResult.roll}
+                      {/* FIXED: Always show character modifier */}
+                      <Plus size={12} style={{ margin: "0 2px" }} />
+                      {lastResult.characterModifier >= 0 ? "+" : ""}
+                      {lastResult.characterModifier}
+                      {lastResult.total &&
+                        lastResult.total !==
+                          (lastResult.diceRoll || lastResult.roll) && (
+                          <span style={styles.totalValue}>
+                            {" "}
+                            = {lastResult.total}
+                          </span>
+                        )}
+                    </span>
                   </div>
                 </div>
 
@@ -523,24 +676,6 @@ const PotionBrewingSystem = ({ character }) => {
                 -4 DC (easier)
               </span>
             </div>
-          </div>
-        </div>
-
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Ingredient Preparation Guide</h3>
-          <div style={styles.preparationGuide}>
-            <p style={styles.guideText}>
-              <strong>Step 1:</strong> Your proficiency level determines how
-              well you can prepare raw ingredients.
-            </p>
-            <p style={styles.guideText}>
-              <strong>Step 2:</strong> The prepared ingredient quality affects
-              the brewing DC.
-            </p>
-            <p style={styles.guideText}>
-              <strong>Note:</strong> You must have either a Potioneer's Kit or
-              Herbology Kit to brew potions.
-            </p>
           </div>
         </div>
       </div>

@@ -664,6 +664,7 @@ export const rollBrewPotion = async ({
   ingredientQuality,
   qualityDCs,
   ingredientModifiers,
+  characterModifier = 0,
   webhookUrl,
   showRollResult,
 }) => {
@@ -674,8 +675,10 @@ export const rollBrewPotion = async ({
   try {
     const diceResult = rollDice();
     const d20Roll = diceResult.total;
+    const skillModifier = characterModifier || 0;
+    const totalRoll = d20Roll + skillModifier;
 
-    const calculateBrewingResult = (roll) => {
+    const calculateBrewingResult = (roll, diceRoll, modifier) => {
       const baseDCs = qualityDCs[selectedPotion.rarity];
       const ingredientMod = ingredientModifiers[ingredientQuality];
 
@@ -718,7 +721,10 @@ export const rollBrewPotion = async ({
       return {
         achievedQuality,
         maxQuality,
-        roll,
+        diceRoll,
+        characterModifier: modifier,
+        total: roll,
+        roll: roll, // Keep for backwards compatibility
         targetDC: adjustedDCs[achievedQuality],
         baseDCs,
         adjustedDCs,
@@ -750,7 +756,10 @@ export const rollBrewPotion = async ({
       brewingResult = {
         achievedQuality: maxQuality,
         maxQuality: maxQuality,
-        roll: d20Roll,
+        diceRoll: d20Roll,
+        characterModifier: skillModifier,
+        total: totalRoll,
+        roll: totalRoll,
         targetDC: adjustedDCs[maxQuality],
         baseDCs,
         adjustedDCs,
@@ -776,7 +785,10 @@ export const rollBrewPotion = async ({
       brewingResult = {
         achievedQuality: "ruined",
         maxQuality: maxQuality,
-        roll: d20Roll,
+        diceRoll: d20Roll,
+        characterModifier: skillModifier,
+        total: totalRoll,
+        roll: totalRoll,
         targetDC: 0,
         baseDCs,
         adjustedDCs,
@@ -786,15 +798,15 @@ export const rollBrewPotion = async ({
         proficiencies,
       };
     } else {
-      brewingResult = calculateBrewingResult(d20Roll);
+      brewingResult = calculateBrewingResult(totalRoll, d20Roll, skillModifier);
     }
 
     if (showRollResult) {
       showRollResult({
         title: `Potion Brewing: \n ${selectedPotion.name}`,
         rollValue: d20Roll,
-        modifier: 0,
-        total: d20Roll,
+        modifier: skillModifier,
+        total: totalRoll,
         isCriticalSuccess,
         isCriticalFailure,
         type: "potion",
@@ -839,6 +851,11 @@ export const rollBrewPotion = async ({
         resultText = " - **CRITICAL FAILURE!** 💥";
       }
 
+      const rollDisplay =
+        skillModifier !== 0
+          ? `${d20Roll} + ${skillModifier} = ${totalRoll}`
+          : `${d20Roll}`;
+
       const embed = {
         title: `${character?.name || "Unknown"} Brewed: ${
           selectedPotion.name
@@ -848,13 +865,19 @@ export const rollBrewPotion = async ({
             ? " (Natural 20!)"
             : isCriticalFailure
             ? " (Natural 1!)"
-            : ""
+            : `Roll: ${rollDisplay}`
         }`,
         color: embedColor,
         fields: [
           {
             name: "Roll vs DC",
-            value: `${d20Roll} vs DC ${brewingResult.targetDC}`,
+            value: `${rollDisplay} vs DC ${brewingResult.targetDC}`,
+            inline: true,
+          },
+          {
+            name: "Skill Modifier",
+            value:
+              skillModifier >= 0 ? `+${skillModifier}` : `${skillModifier}`,
             inline: true,
           },
           {
