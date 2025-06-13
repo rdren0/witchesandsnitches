@@ -1,4 +1,3 @@
-// ==================== APP STYLES ====================
 export const createAppStyles = (theme) => ({
   appContainer: {
     fontFamily:
@@ -162,7 +161,6 @@ export const createAppStyles = (theme) => ({
   },
 });
 
-// ==================== CHARACTER SHEET STYLES ====================
 const createCharacterSheetStyles = (theme) => ({
   container: {
     maxWidth: "1200px",
@@ -328,7 +326,6 @@ const createCharacterSheetStyles = (theme) => ({
   },
 });
 
-// ==================== ABILITY SCORES STYLES ====================
 export const createAbilityScoresStyles = (theme) => ({
   abilityCard: {
     backgroundColor: theme.surface,
@@ -381,7 +378,6 @@ export const createAbilityScoresStyles = (theme) => ({
   },
 });
 
-// ==================== SKILLS STYLES ====================
 export const createSkillsStyles = (theme) => ({
   skillsCard: {
     backgroundColor: theme.surface,
@@ -504,8 +500,6 @@ export const createSkillsStyles = (theme) => ({
   },
 });
 
-// ==================== CHARACTER CREATION STYLES ====================
-// Complete createCharacterCreationStyles function with all missing styles
 export const createCharacterCreationStyles = (theme) => ({
   container: {
     padding: "20px",
@@ -795,7 +789,6 @@ export const createCharacterCreationStyles = (theme) => ({
     marginTop: "8px",
   },
 
-  // === SKILLS SECTION STYLES ===
   skillsHeader: {
     fontSize: "20px",
     fontWeight: "bold",
@@ -856,7 +849,6 @@ export const createCharacterCreationStyles = (theme) => ({
     marginTop: "12px",
   },
 
-  // === LEVEL 1 CHOICE STYLES ===
   level1ChoiceContainer: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -901,7 +893,6 @@ export const createCharacterCreationStyles = (theme) => ({
     color: theme.primary,
   },
 
-  // === ASI/FEAT CHOICE STYLES ===
   asiChoiceContainer: {
     border: `2px solid ${theme.border}`,
     borderRadius: "12px",
@@ -1018,7 +1009,6 @@ export const createCharacterCreationStyles = (theme) => ({
     gap: "4px",
   },
 
-  // === ENHANCED FEAT SELECTION STYLES ===
   featSelectionContainer: {
     background: theme.surface,
     border: `1px solid ${theme.border}`,
@@ -1105,7 +1095,7 @@ export const createCharacterCreationStyles = (theme) => ({
   featPreviewDefault: {
     color: theme.textSecondary,
   },
-  // === LEVEL AND HP GRID STYLES ===
+
   levelHpGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr 1fr",
@@ -1193,7 +1183,6 @@ export const createCharacterCreationStyles = (theme) => ({
     boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
   },
 
-  // === MAGIC MODIFIERS STYLES ===
   magicModifiersGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
@@ -1223,7 +1212,6 @@ export const createCharacterCreationStyles = (theme) => ({
     transition: "border-color 0.2s ease",
   },
 
-  // Character Editor Styles
   editingWarning: {
     display: "flex",
     alignItems: "center",
@@ -1325,7 +1313,6 @@ export const createCharacterCreationStyles = (theme) => ({
     fontSize: "14px",
   },
 
-  // === FEAT FILTER STYLES (for backwards compatibility) ===
   featFilterContainer: {
     position: "relative",
     marginBottom: "16px",
@@ -1455,7 +1442,6 @@ export const createCharacterCreationStyles = (theme) => ({
     border: "1px solid #D1FAE5",
   },
 
-  // Rest of your existing styles...
   levelUpWizard: {
     position: "fixed",
     top: 0,
@@ -1713,7 +1699,6 @@ export const createCharacterCreationStyles = (theme) => ({
     minHeight: "400px",
   },
 
-  // Character List Styles
   filtersContainer: {
     display: "flex",
     gap: "16px",
@@ -1780,7 +1765,6 @@ export const createCharacterCreationStyles = (theme) => ({
     borderColor: theme.primary,
   },
 
-  // Character Cards
   charactersGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
@@ -1943,7 +1927,6 @@ export const createCharacterCreationStyles = (theme) => ({
     display: "flex",
   },
 
-  // Empty State
   emptyState: {
     display: "flex",
     flexDirection: "column",
@@ -1965,7 +1948,6 @@ export const createCharacterCreationStyles = (theme) => ({
     maxWidth: "400px",
   },
 
-  // Summary
   summaryContainer: {
     padding: "16px",
     backgroundColor: theme.surface,
@@ -1995,7 +1977,6 @@ export const createCharacterCreationStyles = (theme) => ({
   },
 });
 
-// ==================== ABILITY SCORE PICKER STYLES ====================
 export const createAbilityScorePickerStyles = (theme) => ({
   fieldContainer: {
     marginBottom: "20px",
@@ -2159,7 +2140,6 @@ export const createAbilityScorePickerStyles = (theme) => ({
   },
 });
 
-// ==================== SPELLBOOK STYLES ====================
 export const createSpellBookStyles = (theme) => ({
   searchInputContainer: {
     position: "relative",
@@ -2170,6 +2150,7 @@ export const createSpellBookStyles = (theme) => ({
     position: "absolute",
     left: "12px",
     zIndex: 1,
+    color: theme.textSecondary,
   },
   searchInput: {
     width: "100%",
@@ -2182,6 +2163,7 @@ export const createSpellBookStyles = (theme) => ({
     color: theme.text,
     outline: "none",
     transition: "border-color 0.2s ease",
+    fontFamily: "inherit",
   },
   searchClearButton: {
     position: "absolute",
@@ -2195,35 +2177,85 @@ export const createSpellBookStyles = (theme) => ({
     alignItems: "center",
     justifyContent: "center",
     transition: "background-color 0.2s ease",
-  },
-  searchResultsHint: {
     color: theme.textSecondary,
-    opacity: 0.8,
+  },
+  searchSection: {
+    padding: "16px",
+    borderBottom: `1px solid ${theme.border}`,
+    backgroundColor: theme.background,
+  },
+  searchControls: {
+    display: "flex",
+    gap: "12px",
+    alignItems: "center",
+    marginBottom: "12px",
+  },
+  filterControls: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  filterIcon: {
+    color: theme.textSecondary,
+  },
+  filterSelect: {
+    padding: "8px 12px",
+    border: `2px solid ${theme.border}`,
+    borderRadius: "8px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    fontSize: "14px",
+    fontFamily: "inherit",
+  },
+  searchResultsInfo: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  searchResultsText: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+  },
+  clearSearchButton: {
+    padding: "4px 8px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    border: `1px solid ${theme.border}`,
+    borderRadius: "6px",
+    fontSize: "12px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    fontFamily: "inherit",
+  },
+  searchResultsContainer: {
+    backgroundColor: theme.surface,
   },
   noResultsContainer: {
     textAlign: "center",
-    padding: "60px 20px",
-    backgroundColor: theme.surface,
-    borderRadius: "12px",
-    border: `2px solid ${theme.border}`,
-    margin: "20px",
+    padding: "40px 20px",
+    color: theme.textSecondary,
   },
   noResultsIcon: {
-    fontSize: "48px",
     marginBottom: "16px",
+    opacity: 0.5,
   },
   noResultsTitle: {
-    fontSize: "24px",
+    fontSize: "20px",
     fontWeight: "600",
     color: theme.text,
-    marginBottom: "12px",
+    marginBottom: "8px",
+    margin: "0 0 8px 0",
   },
   noResultsMessage: {
     fontSize: "16px",
     color: theme.textSecondary,
     marginBottom: "20px",
     lineHeight: "1.5",
+    margin: "0 0 20px 0",
   },
+
   subjectCard: {
     backgroundColor: theme.surface,
     borderRadius: "16px",
@@ -2254,6 +2286,7 @@ export const createSpellBookStyles = (theme) => ({
     fontSize: "14px",
     color: theme.textSecondary,
     marginBottom: "16px",
+    margin: "0 0 16px 0",
   },
   subjectStats: {
     display: "flex",
@@ -2277,6 +2310,7 @@ export const createSpellBookStyles = (theme) => ({
   subjectContent: {
     backgroundColor: theme.background,
   },
+
   sectionContainer: {
     margin: "0",
   },
@@ -2292,9 +2326,7 @@ export const createSpellBookStyles = (theme) => ({
     alignItems: "center",
     fontSize: "16px",
     fontWeight: "600",
-  },
-  sectionButtonHover: {
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    fontFamily: "inherit",
   },
   sectionLeft: {
     display: "flex",
@@ -2305,6 +2337,10 @@ export const createSpellBookStyles = (theme) => ({
     display: "flex",
     alignItems: "center",
     gap: "12px",
+  },
+  sectionProgressText: {
+    fontSize: "14px",
+    fontWeight: "500",
   },
   sectionProgress: {
     width: "100px",
@@ -2319,6 +2355,7 @@ export const createSpellBookStyles = (theme) => ({
     borderRadius: "3px",
     transition: "width 0.3s ease",
   },
+
   table: {
     width: "100%",
     backgroundColor: theme.surface,
@@ -2350,9 +2387,9 @@ export const createSpellBookStyles = (theme) => ({
     transition: "all 0.2s ease",
   },
   tableRowMastered: {
-    backgroundColor: "#f0fdf4",
+    backgroundColor: (theme.success || "#10b981") + "10",
   },
-  tableRowHover: {
+  tableRowAttempted: {
     backgroundColor: theme.background,
   },
   tableCell: {
@@ -2361,10 +2398,23 @@ export const createSpellBookStyles = (theme) => ({
     color: theme.text,
     verticalAlign: "top",
   },
+  tableCellMenu: {
+    padding: "12px 16px",
+    fontSize: "14px",
+    color: theme.text,
+    textAlign: "center",
+    position: "relative",
+  },
+
   spellNameContainer: {
     display: "flex",
     flexDirection: "column",
     gap: "4px",
+  },
+  spellNameRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
   },
   spellName: {
     fontSize: "14px",
@@ -2374,7 +2424,37 @@ export const createSpellBookStyles = (theme) => ({
   spellNameMastered: {
     fontSize: "14px",
     fontWeight: "600",
-    color: "#059669",
+    color: theme.success || "#059669",
+  },
+  levelBadge: {
+    fontSize: "12px",
+    padding: "2px 6px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    borderRadius: "4px",
+    fontWeight: "500",
+  },
+  descriptionToggleButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "2px",
+    display: "flex",
+    alignItems: "center",
+    color: theme.textSecondary,
+  },
+
+  criticalMasteredBadge: {
+    fontSize: "10px",
+    fontWeight: "600",
+    padding: "2px 6px",
+    borderRadius: "10px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    alignSelf: "flex-start",
+    backgroundColor: theme.warning || "#fbbf24",
+    color: theme.surface,
+    border: "none",
   },
   masteredBadge: {
     fontSize: "10px",
@@ -2384,7 +2464,23 @@ export const createSpellBookStyles = (theme) => ({
     textTransform: "uppercase",
     letterSpacing: "0.5px",
     alignSelf: "flex-start",
+    backgroundColor: theme.success || "#10b981",
+    color: "white",
+    border: "none",
   },
+  attemptedBadge: {
+    fontSize: "10px",
+    fontWeight: "600",
+    padding: "2px 6px",
+    borderRadius: "10px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    alignSelf: "flex-start",
+    backgroundColor: "white",
+    color: theme.success || "#10b981",
+    border: `2px solid ${theme.success || "#10b981"}`,
+  },
+
   attemptsContainer: {
     display: "flex",
     gap: "12px",
@@ -2396,16 +2492,42 @@ export const createSpellBookStyles = (theme) => ({
     fontSize: "12px",
     color: theme.textSecondary,
   },
-  checkbox: {
+  checkboxFirst: {
     width: "16px",
     height: "16px",
+    accentColor: theme.primary || "#3b82f6",
+    cursor: "not-allowed",
+    opacity: 0.8,
+  },
+  checkboxSecond: {
+    width: "16px",
+    height: "16px",
+    accentColor: theme.success || "#10b981",
+    cursor: "not-allowed",
+    opacity: 0.8,
   },
   checkboxText: {
     fontSize: "12px",
     fontWeight: "500",
   },
+
+  criticalSuccessContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "4px",
+  },
+  criticalSuccessText: {
+    fontSize: "12px",
+    color: theme.warning || "#ffd700",
+    fontWeight: "bold",
+  },
+  noCriticalText: {
+    color: theme.textSecondary,
+  },
+
   attemptButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: theme.primary || "#3b82f6",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -2417,18 +2539,140 @@ export const createSpellBookStyles = (theme) => ({
     alignItems: "center",
     gap: "4px",
     transition: "all 0.2s ease",
+    fontFamily: "inherit",
   },
   attemptButtonDisabled: {
-    backgroundColor: "#9ca3af",
+    backgroundColor: theme.textSecondary,
     cursor: "not-allowed",
   },
-  searchContainer: {
-    margin: "0 20px 24px 20px",
-    padding: "20px",
+  menuButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "4px",
+    borderRadius: "4px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: theme.textSecondary,
+  },
+
+  dropdownMenu: {
+    position: "absolute",
+    right: "0",
+    top: "100%",
     backgroundColor: theme.surface,
+    border: `1px solid ${theme.border}`,
+    borderRadius: "8px",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+    zIndex: 1000,
+    minWidth: "160px",
+    padding: "4px",
+  },
+  dropdownMenuItem: {
+    width: "100%",
+    padding: "8px 12px",
+    border: "none",
+    background: "none",
+    cursor: "pointer",
+    textAlign: "left",
+    borderRadius: "4px",
+    fontSize: "14px",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: theme.text,
+    fontFamily: "inherit",
+    transition: "background-color 0.2s ease",
+  },
+
+  modalOverlay: {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    right: "0",
+    bottom: "0",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2000,
+  },
+  modalContent: {
+    backgroundColor: theme.surface,
+    padding: "24px",
     borderRadius: "12px",
-    border: `2px solid ${theme.border}`,
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+    minWidth: "400px",
+    maxWidth: "500px",
+  },
+  modalTitle: {
+    margin: "0 0 8px 0",
+    fontSize: "18px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  modalSubtitle: {
+    margin: "0 0 16px 0",
+    fontSize: "14px",
+    color: theme.textSecondary,
+  },
+  descriptionRowCell: {
+    padding: "0",
+    border: "none",
+  },
+  descriptionContainer: {
+    margin: "0 16px 12px 16px",
+    padding: "16px",
+    backgroundColor: theme.background,
+    border: `1px solid ${theme.border}`,
+    borderRadius: "8px",
+    fontSize: "14px",
+    lineHeight: "1.5",
+  },
+  descriptionTitle: {
+    fontWeight: "600",
+    color: theme.primary || "#60a5fa",
+    marginBottom: "8px",
+    fontSize: "16px",
+  },
+  descriptionMeta: {
+    fontStyle: "italic",
+    color: theme.textSecondary,
+    marginBottom: "12px",
+    fontSize: "13px",
+  },
+  descriptionText: {
+    whiteSpace: "pre-line",
+    color: theme.text,
+    marginBottom: "12px",
+    margin: "0 0 12px 0",
+  },
+  descriptionHigherLevels: {
+    marginBottom: "12px",
+    fontStyle: "italic",
+    color: theme.textSecondary,
+    margin: "0 0 12px 0",
+  },
+  descriptionTags: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "6px",
+  },
+  descriptionTag: {
+    display: "inline-block",
+    padding: "4px 8px",
+    backgroundColor: theme.background,
+    color: theme.text,
+    fontSize: "12px",
+    borderRadius: "4px",
+    fontWeight: "500",
+    border: `1px solid ${theme.border}`,
+  },
+
+  searchResultsHint: {
+    color: theme.textSecondary,
+    opacity: 0.8,
   },
   searchResults: {
     fontSize: "14px",
@@ -2439,21 +2683,16 @@ export const createSpellBookStyles = (theme) => ({
     textAlign: "left",
     display: "inline-block",
     margin: "0 0 24px 0",
-    padding: "0 0 0 20px",
-    listStyle: "disc",
-    color: theme.textSecondary,
+    padding: "0",
+    listStyle: "none",
   },
-
-  clearSearchButton: {
-    padding: "12px 24px",
-    backgroundColor: theme.primary,
-    color: theme.surface,
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "16px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
+  searchContainer: {
+    margin: "0 20px 24px 20px",
+    padding: "20px",
+    backgroundColor: theme.surface,
+    borderRadius: "12px",
+    border: `2px solid ${theme.border}`,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   },
   statsContainer: {
     display: "flex",
@@ -2466,7 +2705,6 @@ export const createSpellBookStyles = (theme) => ({
     border: `2px solid ${theme.border}`,
     flexWrap: "wrap",
   },
-
   statItem: {
     display: "flex",
     alignItems: "center",
@@ -2475,27 +2713,187 @@ export const createSpellBookStyles = (theme) => ({
     fontWeight: "500",
     color: theme.text,
   },
-
   statDot: {
     width: "8px",
     height: "8px",
     borderRadius: "50%",
   },
-
-  // Subjects Grid
   subjectsGrid: {
     display: "grid",
     gap: "20px",
     margin: "0 20px",
   },
+
+  researchButton: {
+    backgroundColor: theme.warning || "#f59e0b",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "6px 12px",
+    fontSize: "12px",
+    fontWeight: "500",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+
+  researchButtonDisabled: {
+    backgroundColor: theme.textSecondary,
+    cursor: "not-allowed",
+  },
+
+  failedBadge: {
+    fontSize: "10px",
+    fontWeight: "600",
+    padding: "2px 6px",
+    borderRadius: "10px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    backgroundColor: theme.error || "#ef4444",
+    color: "white",
+  },
+
+  researchedBadge: {
+    fontSize: "10px",
+    fontWeight: "600",
+    padding: "2px 6px",
+    borderRadius: "10px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    backgroundColor: theme.warning || "#f59e0b",
+    color: "white",
+  },
+  tableRowResearched: {
+    backgroundColor: (theme.warning || "#f59e0b") + "10",
+    borderLeft: `3px solid ${theme.warning || "#f59e0b"}`,
+  },
+  tableRowFailed: {
+    backgroundColor: (theme.error || "#ef4444") + "05",
+    borderLeft: `3px solid ${theme.error || "#ef4444"}`,
+  },
+  modalField: {
+    marginBottom: "16px",
+  },
+  modalLabel: {
+    display: "block",
+    marginBottom: "8px",
+    fontSize: "14px",
+    fontWeight: "500",
+    color: theme.text,
+  },
+  modalInput: {
+    width: "100%",
+    padding: "8px 12px",
+    border: `2px solid ${theme.border}`,
+    borderRadius: "6px",
+    fontSize: "14px",
+    backgroundColor: theme.surface,
+    color: theme.text,
+    fontFamily: "inherit",
+    boxSizing: "border-box",
+  },
+  modalInputDisabled: {
+    backgroundColor: theme.background,
+    cursor: "not-allowed",
+  },
+  modalCheckboxLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    cursor: "pointer",
+    color: theme.text,
+  },
+
+  modalCheckbox: {
+    width: "16px",
+    height: "16px",
+  },
+
+  modalCheckboxText: {
+    fontSize: "14px",
+    fontWeight: "500",
+  },
+
+  modalHelpText: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+    marginTop: "4px",
+  },
+
+  modalActions: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "flex-end",
+    marginTop: "24px",
+  },
+
+  modalCancelButton: {
+    padding: "8px 16px",
+    border: `2px solid ${theme.border}`,
+    backgroundColor: theme.surface,
+    color: theme.text,
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontFamily: "inherit",
+  },
+
+  modalSaveButton: {
+    padding: "8px 16px",
+    border: `2px solid ${theme.success || "#10b981"}`,
+    backgroundColor: theme.success || "#10b981",
+    color: "white",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontFamily: "inherit",
+  },
+
+  spellStateIndicators: {
+    display: "flex",
+    gap: "4px",
+    flexWrap: "wrap",
+    marginTop: "4px",
+  },
+
+  dropdownMenuItemResearch: {
+    width: "100%",
+    padding: "8px 12px",
+    border: "none",
+    background: "none",
+    cursor: "pointer",
+    textAlign: "left",
+    borderRadius: "4px",
+    fontSize: "14px",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: theme.warning || "#f59e0b",
+    fontFamily: "inherit",
+    transition: "background-color 0.2s ease",
+  },
+
+  searchHighlight: {
+    backgroundColor: (theme.warning || "#f59e0b") + "40",
+    color: theme.warning || "#f59e0b",
+    fontWeight: "bold",
+    padding: "1px 2px",
+    borderRadius: "2px",
+  },
 });
 
-// ==================== CHARACTER SELECTOR STYLES ====================
-// ==================== DEFENSIVE CHARACTER SELECTOR STYLES ====================
-// Replace your existing createCharacterSelectorStyles function with this one
-
 export const searchStyles = (theme) => ({
-  // Search Container
   searchContainer: {
     margin: "0 20px 24px 20px",
     padding: "20px",
@@ -2505,7 +2903,6 @@ export const searchStyles = (theme) => ({
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   },
 
-  // Search Input Container
   searchInputContainer: {
     position: "relative",
     display: "flex",
@@ -2513,7 +2910,6 @@ export const searchStyles = (theme) => ({
     marginBottom: "8px",
   },
 
-  // Search Icon
   searchIcon: {
     position: "absolute",
     left: "12px",
@@ -2521,7 +2917,6 @@ export const searchStyles = (theme) => ({
     pointerEvents: "none",
   },
 
-  // Search Input
   searchInput: {
     width: "100%",
     padding: "12px 12px 12px 44px",
@@ -2536,7 +2931,6 @@ export const searchStyles = (theme) => ({
     fontFamily: "inherit",
   },
 
-  // Search Clear Button
   searchClearButton: {
     position: "absolute",
     right: "8px",
@@ -2551,20 +2945,17 @@ export const searchStyles = (theme) => ({
     transition: "background-color 0.2s ease",
   },
 
-  // Search Results Info
   searchResults: {
     fontSize: "14px",
     color: theme.textSecondary,
     fontStyle: "italic",
   },
 
-  // Search Results Hint
   searchResultsHint: {
     color: theme.textSecondary,
     opacity: 0.8,
   },
 
-  // No Results Container
   noResultsContainer: {
     textAlign: "center",
     padding: "60px 20px",
@@ -2574,14 +2965,12 @@ export const searchStyles = (theme) => ({
     border: `2px solid ${theme.border}`,
   },
 
-  // No Results Icon
   noResultsIcon: {
     fontSize: "48px",
     marginBottom: "16px",
     opacity: 0.5,
   },
 
-  // No Results Title
   noResultsTitle: {
     fontSize: "24px",
     fontWeight: "600",
@@ -2590,7 +2979,6 @@ export const searchStyles = (theme) => ({
     margin: "0 0 12px 0",
   },
 
-  // No Results Message
   noResultsMessage: {
     fontSize: "16px",
     color: theme.textSecondary,
@@ -2598,7 +2986,6 @@ export const searchStyles = (theme) => ({
     lineHeight: "1.5",
   },
 
-  // Search Suggestions List
   searchSuggestions: {
     textAlign: "left",
     display: "inline-block",
@@ -2607,7 +2994,6 @@ export const searchStyles = (theme) => ({
     listStyle: "none",
   },
 
-  // Clear Search Button
   clearSearchButton: {
     padding: "12px 24px",
     backgroundColor: theme.primary,
@@ -2622,7 +3008,6 @@ export const searchStyles = (theme) => ({
 });
 
 export const createCharacterSelectorStyles = (theme) => {
-  // Create a fallback theme if theme is undefined
   const safeTheme = theme || {
     surface: "#ffffff",
     background: "#f8fafc",
@@ -2719,7 +3104,6 @@ export const createCharacterSelectorStyles = (theme) => {
   };
 };
 
-// ==================== POTIONS STYLES ====================
 export const createPotionsStyles = (theme) => ({
   container: {
     maxWidth: "1400px",
@@ -3138,7 +3522,6 @@ export const createPotionsStyles = (theme) => ({
   },
 });
 
-// ==================== FEAT STYLES (COMMON) ====================
 export const createFeatStyles = (theme) => ({
   fieldContainer: {
     marginBottom: "20px",
@@ -3289,7 +3672,6 @@ export const createFeatStyles = (theme) => ({
   },
 });
 
-// ==================== INVENTORY STYLES ====================
 export const createInventoryStyles = (theme) => ({
   container: {
     maxWidth: "1800px",
@@ -3669,16 +4051,13 @@ export const createInventoryStyles = (theme) => ({
   },
 });
 
-// ==================== NOTES STYLES ====================
 export const createCharacterNotesStyles = (theme) => ({
-  // === MAIN CONTAINER ===
   container: {
     maxWidth: "1200px",
     margin: "0 auto",
     padding: "20px",
   },
 
-  // === HEADER SECTION ===
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -3727,7 +4106,6 @@ export const createCharacterNotesStyles = (theme) => ({
     transition: "all 0.2s ease",
   },
 
-  // === NO CHARACTER SELECTED STATE ===
   noCharacterContainer: {
     display: "flex",
     flexDirection: "column",
@@ -3756,7 +4134,6 @@ export const createCharacterNotesStyles = (theme) => ({
     textAlign: "center",
   },
 
-  // === NEW ENTRY FORM ===
   newEntryForm: {
     backgroundColor: theme.surface,
     padding: "20px",
@@ -3813,7 +4190,6 @@ export const createCharacterNotesStyles = (theme) => ({
     color: theme.text,
   },
 
-  // === EDIT FORM ===
   editForm: {
     backgroundColor: theme.surface,
     borderRadius: "12px",
@@ -3893,7 +4269,6 @@ export const createCharacterNotesStyles = (theme) => ({
     color: theme.textSecondary,
   },
 
-  // === ENTRY CARDS ===
   entriesGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
@@ -3959,7 +4334,6 @@ export const createCharacterNotesStyles = (theme) => ({
     padding: "20px",
   },
 
-  // === LOADING AND EMPTY STATES ===
   loadingContainer: {
     padding: "60px 20px",
     textAlign: "center",
@@ -3979,7 +4353,6 @@ export const createCharacterNotesStyles = (theme) => ({
     border: `2px solid ${theme.border}`,
   },
 
-  // === IMPORT/EXPORT SECTION ===
   importExportSection: {
     backgroundColor: theme.surface,
     padding: "16px 20px",
@@ -4021,7 +4394,6 @@ export const createCharacterNotesStyles = (theme) => ({
     display: "none",
   },
 
-  // === HOVER EFFECTS ===
   templateButtonHover: {
     backgroundColor: theme.primary + "10",
     borderColor: theme.primary,
@@ -4508,7 +4880,6 @@ export const createDowntimeStyles = (theme) => ({
   },
 });
 
-// ==================== EXPORT ALL STYLES ====================
 export const getAllStyles = (theme) => ({
   app: createAppStyles(theme),
   characterSheet: createCharacterSheetStyles(theme),
@@ -4523,7 +4894,6 @@ export const getAllStyles = (theme) => ({
   feats: createFeatStyles(theme),
 });
 
-// Individual style exports for components that prefer specific functions
 export {
   createAppStyles as createThemedStyles,
   createCharacterSheetStyles as getCharacterSheetStyles,

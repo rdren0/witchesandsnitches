@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -56,6 +56,11 @@ export const SubjectCard = ({
   setExpandedSubjects,
   setSpellAttempts,
   spellAttempts,
+
+  failedAttempts,
+  setFailedAttempts,
+  researchedSpells,
+  setResearchedSpells,
   subjectData,
   subjectName,
   supabase,
@@ -71,9 +76,10 @@ export const SubjectCard = ({
   const [editFormData, setEditFormData] = useState({
     successfulAttempts: 0,
     hasCriticalSuccess: false,
+    hasFailedAttempt: false,
+    researched: false,
   });
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
-
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
 
@@ -83,26 +89,41 @@ export const SubjectCard = ({
       (total, spells) => total + spells.length,
       0
     );
-    const masteredSpells = Object.values(levels)
-      .flat()
-      .filter((spellObj) => {
-        const spellName = spellObj.name;
-        const attempts = spellAttempts?.[spellName] ?? {};
-        return Object.values(attempts).filter(Boolean).length >= 2;
-      }).length;
 
-    const attemptedSpells = Object.values(levels)
-      .flat()
-      .filter((spellObj) => {
-        const spellName = spellObj.name;
-        const attempts = spellAttempts[spellName] || {};
-        return (
-          Object.keys(attempts).length > 0 ||
-          Object.values(attempts).filter(Boolean).length > 0
-        );
-      }).length;
+    const allSpells = Object.values(levels).flat();
 
-    return { totalSpells, masteredSpells, attemptedSpells };
+    const masteredSpells = allSpells.filter((spellObj) => {
+      const spellName = spellObj.name;
+      const attempts = spellAttempts?.[spellName] ?? {};
+      return Object.values(attempts).filter(Boolean).length >= 2;
+    }).length;
+
+    const attemptedSpells = allSpells.filter((spellObj) => {
+      const spellName = spellObj.name;
+      const attempts = spellAttempts[spellName] || {};
+      return (
+        Object.keys(attempts).length > 0 ||
+        Object.values(attempts).filter(Boolean).length > 0
+      );
+    }).length;
+
+    const failedSpells = allSpells.filter((spellObj) => {
+      const spellName = spellObj.name;
+      return failedAttempts[spellName] || false;
+    }).length;
+
+    const researchedSpellsCount = allSpells.filter((spellObj) => {
+      const spellName = spellObj.name;
+      return researchedSpells[spellName] || false;
+    }).length;
+
+    return {
+      totalSpells,
+      masteredSpells,
+      attemptedSpells,
+      failedSpells,
+      researchedSpells: researchedSpellsCount,
+    };
   };
 
   const getAllSpells = () => {
@@ -146,12 +167,18 @@ export const SubjectCard = ({
         const isMastered = successCount >= 2;
         const hasAttempts =
           Object.keys(attempts).length > 0 || successCount > 0;
+        const hasFailedAttempt = failedAttempts[spellName] || false;
+        const isResearched = researchedSpells[spellName] || false;
 
         switch (searchFilter) {
           case "mastered":
             return isMastered;
           case "attempted":
-            return hasAttempts && !isMastered;
+            return (hasAttempts || hasFailedAttempt) && !isMastered;
+          case "failed":
+            return hasFailedAttempt && !hasAttempts;
+          case "researched":
+            return isResearched;
           case "unmastered":
             return !isMastered;
           default:
@@ -172,12 +199,18 @@ export const SubjectCard = ({
       const successCount = Object.values(attempts).filter(Boolean).length;
       const isMastered = successCount >= 2;
       const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
+      const hasFailedAttempt = failedAttempts[spellName] || false;
+      const isResearched = researchedSpells[spellName] || false;
 
       switch (searchFilter) {
         case "mastered":
           return isMastered;
         case "attempted":
-          return hasAttempts && !isMastered;
+          return (hasAttempts || hasFailedAttempt) && !isMastered;
+        case "failed":
+          return hasFailedAttempt && !hasAttempts;
+        case "researched":
+          return isResearched;
         case "unmastered":
           return !isMastered;
         default:
@@ -200,52 +233,130 @@ export const SubjectCard = ({
   const stats = getSubjectStats(subjectName);
   const isExpanded = expandedSubjects[subjectName];
   const hasStatusFilter = searchFilter !== "all";
-  const generateLevelColor = (baseColor, level) => {
-    const hex = baseColor.replace("#", "");
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
 
-    const levelIntensity = {
-      Cantrips: 0.1,
-      "1st Level": 0.15,
-      "2nd Level": 0.2,
-      "3rd Level": 0.25,
-      "4th Level": 0.3,
-      "5th Level": 0.35,
-      "6th Level": 0.4,
-      "7th Level": 0.45,
-      "8th Level": 0.5,
-      "9th Level": 0.55,
-    };
+  const isDarkTheme = useMemo(() => {
+    if (
+      theme.background === "#1f2937" ||
+      theme.background === "#111827" ||
+      theme.background === "#0f172a" ||
+      theme.background === "#1e293b"
+    ) {
+      return true;
+    }
 
-    const bgIntensity = levelIntensity[level] || 0.25;
+    if (theme.background && theme.text) {
+      const bgHex = theme.background.replace("#", "");
+      const textHex = theme.text.replace("#", "");
 
-    const lightR = Math.round(
-      r * bgIntensity + (255 - 255 * bgIntensity) * 0.9
-    );
-    const lightG = Math.round(
-      g * bgIntensity + (255 - 255 * bgIntensity) * 0.9
-    );
-    const lightB = Math.round(
-      b * bgIntensity + (255 - 255 * bgIntensity) * 0.9
-    );
+      const bgBrightness = parseInt(bgHex, 16);
+      const textBrightness = parseInt(textHex, 16);
 
-    const borderIntensity = bgIntensity * 2;
-    const borderR = Math.round(
-      r * borderIntensity + (255 - 255 * borderIntensity) * 0.7
-    );
-    const borderG = Math.round(
-      g * borderIntensity + (255 - 255 * borderIntensity) * 0.7
-    );
-    const borderB = Math.round(
-      b * borderIntensity + (255 - 255 * borderIntensity) * 0.7
-    );
+      return bgBrightness < textBrightness;
+    }
+
+    if (
+      theme.text === "#f9fafb" ||
+      theme.text === "#ffffff" ||
+      theme.text === "#e5e7eb" ||
+      theme.text === "#d1d5db"
+    ) {
+      return true;
+    }
+
+    return false;
+  }, [theme.background, theme.text]);
+
+  const SPELL_LEVEL_PALETTE = {
+    Cantrips: {
+      primary: isDarkTheme ? "#e5e7eb" : "#6b7280",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #404756 100%)"
+        : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#cbd5e1",
+    },
+    "1st Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#059669",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #3a4f47 100%)"
+        : "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#a7f3d0",
+    },
+    "2nd Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#2563eb",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #394856 100%)"
+        : "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#93c5fd",
+    },
+    "3rd Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#7c3aed",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #3f4356 100%)"
+        : "linear-gradient(135deg, #f5f3ff 0%, #e9d5ff 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#c4b5fd",
+    },
+    "4th Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#d97706",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #424051 100%)"
+        : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#fcd34d",
+    },
+    "5th Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#dc2626",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #423f51 100%)"
+        : "linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#fca5a5",
+    },
+    "6th Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#be185d",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #423f54 100%)"
+        : "linear-gradient(135deg, #fdf2f8 0%, #fbcfe8 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#f9a8d4",
+    },
+    "7th Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#0891b2",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #374854 100%)"
+        : "linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#67e8f9",
+    },
+    "8th Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#65a30d",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #3c4651 100%)"
+        : "linear-gradient(135deg, #f7fee7 0%, #d9f99d 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#bef264",
+    },
+    "9th Level": {
+      primary: isDarkTheme ? "#e5e7eb" : "#9333ea",
+      background: isDarkTheme
+        ? "linear-gradient(135deg, #374151 0%, #3e4156 100%)"
+        : "linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%)",
+      borderColor: isDarkTheme ? "#6b7280" : "#d8b4fe",
+    },
+  };
+
+  const generateLevelColor = (level) => {
+    const paletteColor = SPELL_LEVEL_PALETTE[level];
+    if (paletteColor) {
+      return {
+        background: paletteColor.background,
+        borderColor: paletteColor.borderColor,
+        color: paletteColor.primary,
+      };
+    }
 
     return {
-      backgroundColor: `rgb(${lightR}, ${lightG}, ${lightB})`,
-      borderColor: `rgb(${borderR}, ${borderG}, ${borderB})`,
-      color: baseColor,
+      background: isDarkTheme
+        ? `linear-gradient(135deg, ${subjectData.color}20 0%, ${subjectData.color}30 100%)`
+        : `linear-gradient(135deg, ${subjectData.color}10 0%, ${subjectData.color}20 100%)`,
+      borderColor: isDarkTheme
+        ? subjectData.color + "40"
+        : subjectData.color + "30",
+      color: subjectData.color,
     };
   };
 
@@ -262,16 +373,7 @@ export const SubjectCard = ({
 
     return parts.map((part, index) =>
       regex.test(part) ? (
-        <span
-          key={index}
-          style={{
-            backgroundColor: theme === "dark" ? "#fbbf24" : "#fef3c7",
-            color: theme === "dark" ? "#000" : "#92400e",
-            fontWeight: "bold",
-            padding: "1px 2px",
-            borderRadius: "2px",
-          }}
-        >
+        <span key={index} style={styles.searchHighlight}>
           {part}
         </span>
       ) : (
@@ -284,13 +386,76 @@ export const SubjectCard = ({
     const attempts = spellAttempts[spellName] || {};
     const successCount = Object.values(attempts).filter(Boolean).length;
     const hasCritical = criticalSuccesses[spellName] || false;
+    const hasFailed = failedAttempts[spellName] || false;
+    const isResearched = researchedSpells[spellName] || false;
 
     setEditFormData({
       successfulAttempts: successCount,
       hasCriticalSuccess: hasCritical,
+      hasFailedAttempt: hasFailed,
+      researched: isResearched,
     });
     setEditingSpell(spellName);
     closeAllMenus();
+  };
+
+  const markSpellAsResearched = async (spellName) => {
+    if (!selectedCharacter || !discordUserId) return;
+
+    try {
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("discord_user_id", discordUserId)
+        .eq("spell_name", spellName)
+        .single();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Error fetching spell progress:", fetchError);
+        return;
+      }
+
+      const updateData = {
+        researched: true,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (existingProgress) {
+        const { error: updateError } = await supabase
+          .from("spell_progress_summary")
+          .update(updateData)
+          .eq("id", existingProgress.id);
+
+        if (updateError) {
+          console.error("Error updating spell research:", updateError);
+          return;
+        }
+      } else {
+        const { error: insertError } = await supabase
+          .from("spell_progress_summary")
+          .insert([
+            {
+              character_id: selectedCharacter.id,
+              discord_user_id: discordUserId,
+              spell_name: spellName,
+              successful_attempts: 0,
+              has_natural_twenty: false,
+              has_failed_attempt: false,
+              researched: true,
+            },
+          ]);
+
+        if (insertError) {
+          console.error("Error inserting spell research:", insertError);
+          return;
+        }
+      }
+
+      await loadSpellProgress();
+    } catch (error) {
+      console.error("Error marking spell as researched:", error);
+    }
   };
 
   useEffect(() => {
@@ -303,7 +468,12 @@ export const SubjectCard = ({
 
   const cancelEditing = () => {
     setEditingSpell(null);
-    setEditFormData({ successfulAttempts: 0, hasCriticalSuccess: false });
+    setEditFormData({
+      successfulAttempts: 0,
+      hasCriticalSuccess: false,
+      hasFailedAttempt: false,
+      researched: false,
+    });
   };
 
   const saveEdit = async () => {
@@ -329,6 +499,8 @@ export const SubjectCard = ({
           2
         ),
         has_natural_twenty: editFormData.hasCriticalSuccess,
+        has_failed_attempt: editFormData.hasFailedAttempt,
+        researched: editFormData.researched,
         updated_at: new Date().toISOString(),
       };
 
@@ -362,28 +534,7 @@ export const SubjectCard = ({
         }
       }
 
-      const newAttempts = {};
-      const successCount = updateData.successful_attempts;
-
-      if (updateData.has_natural_twenty) {
-        newAttempts[1] = true;
-        newAttempts[2] = true;
-      } else {
-        for (let i = 1; i <= successCount; i++) {
-          newAttempts[i] = true;
-        }
-      }
-
-      setSpellAttempts((prev) => ({
-        ...prev,
-        [editingSpell]: newAttempts,
-      }));
-
-      setCriticalSuccesses((prev) => ({
-        ...prev,
-        [editingSpell]: updateData.has_natural_twenty,
-      }));
-
+      await loadSpellProgress();
       cancelEditing();
     } catch (error) {
       console.error("Error saving edit:", error);
@@ -420,7 +571,11 @@ export const SubjectCard = ({
     // eslint-disable-next-line
   }, [selectedCharacter, discordUserId]);
 
-  const updateSpellProgressSummary = async (spellName, isNaturalTwenty) => {
+  const updateSpellProgressSummary = async (
+    spellName,
+    isSuccess,
+    isNaturalTwenty = false
+  ) => {
     if (!selectedCharacter || !discordUserId) return;
 
     try {
@@ -437,49 +592,51 @@ export const SubjectCard = ({
         return;
       }
 
-      let newSuccessfulAttempts = 1;
-      let hasNaturalTwenty = isNaturalTwenty;
+      let updateData = {
+        updated_at: new Date().toISOString(),
+      };
 
       if (existingProgress) {
         if (existingProgress.has_natural_twenty) {
           return;
         }
 
-        if (isNaturalTwenty) {
-          newSuccessfulAttempts = 2;
+        if (isSuccess) {
+          if (isNaturalTwenty) {
+            updateData.successful_attempts = 2;
+            updateData.has_natural_twenty = true;
+          } else {
+            updateData.successful_attempts = Math.min(
+              existingProgress.successful_attempts + 1,
+              2
+            );
+          }
         } else {
-          newSuccessfulAttempts = Math.min(
-            existingProgress.successful_attempts + 1,
-            2
-          );
+          updateData.has_failed_attempt = true;
         }
 
         const { error: updateError } = await supabase
           .from("spell_progress_summary")
-          .update({
-            successful_attempts: newSuccessfulAttempts,
-            has_natural_twenty: hasNaturalTwenty,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("id", existingProgress.id);
 
         if (updateError) {
           console.error("Error updating spell progress:", updateError);
         }
       } else {
-        newSuccessfulAttempts = isNaturalTwenty ? 2 : 1;
+        const insertData = {
+          character_id: selectedCharacter.id,
+          discord_user_id: discordUserId,
+          spell_name: spellName,
+          successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
+          has_natural_twenty: isNaturalTwenty,
+          has_failed_attempt: !isSuccess,
+          researched: false,
+        };
 
         const { error: insertError } = await supabase
           .from("spell_progress_summary")
-          .insert([
-            {
-              character_id: selectedCharacter.id,
-              discord_user_id: discordUserId,
-              spell_name: spellName,
-              successful_attempts: newSuccessfulAttempts,
-              has_natural_twenty: hasNaturalTwenty,
-            },
-          ]);
+          .insert([insertData]);
 
         if (insertError) {
           console.error("Error inserting spell progress:", insertError);
@@ -523,6 +680,8 @@ export const SubjectCard = ({
 
       const formattedAttempts = {};
       const formattedCriticals = {};
+      const formattedFailures = {};
+      const formattedResearch = {};
 
       data?.forEach((progress) => {
         formattedAttempts[progress.spell_name] = {};
@@ -536,9 +695,19 @@ export const SubjectCard = ({
             formattedAttempts[progress.spell_name][i] = true;
           }
         }
+
+        if (progress.has_failed_attempt) {
+          formattedFailures[progress.spell_name] = true;
+        }
+        if (progress.researched) {
+          formattedResearch[progress.spell_name] = true;
+        }
       });
+
       setSpellAttempts(formattedAttempts);
       setCriticalSuccesses(formattedCriticals);
+      setFailedAttempts(formattedFailures);
+      setResearchedSpells(formattedResearch);
     } catch (error) {
       console.error("Error loading spell progress:", error);
       setError(`Failed to load spell progress: ${error.message}`);
@@ -548,27 +717,13 @@ export const SubjectCard = ({
   const renderSearchResults = () => {
     if (searchResults.length === 0) {
       return (
-        <div
-          style={{
-            padding: "40px 20px",
-            textAlign: "center",
-            color: theme === "dark" ? "#9ca3af" : "#6b7280",
-          }}
-        >
-          <Search size={48} style={{ marginBottom: "16px", opacity: 0.5 }} />
-          <p>No spells found matching your search criteria.</p>
-          <button
-            onClick={clearSearch}
-            style={{
-              marginTop: "12px",
-              padding: "8px 16px",
-              backgroundColor: theme === "dark" ? "#374151" : "#e5e7eb",
-              color: theme === "dark" ? "#f9fafb" : "#374151",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
+        <div style={styles.noResultsContainer}>
+          <Search size={48} style={styles.noResultsIcon} />
+          <p style={styles.noResultsTitle}>No spells found</p>
+          <p style={styles.noResultsMessage}>
+            No spells found matching your search criteria.
+          </p>
+          <button onClick={clearSearch} style={styles.clearSearchButton}>
             Clear Search
           </button>
         </div>
@@ -584,7 +739,8 @@ export const SubjectCard = ({
               <th style={styles.tableHeaderCell}>Spell Name</th>
               <th style={styles.tableHeaderCell}>Successful Attempts</th>
               <th style={styles.tableHeaderCellCenter}>Critical</th>
-              <th style={styles.tableHeaderCellCenter}>Action</th>
+              <th style={styles.tableHeaderCellCenter}>Attempt</th>
+              <th style={styles.tableHeaderCellCenter}>Research</th>
               <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
                 Menu
               </th>
@@ -607,50 +763,52 @@ export const SubjectCard = ({
     const attempts = spellAttempts[spellName] || {};
     const successCount = getSuccessfulAttempts(spellName);
     const hasCriticalSuccess = criticalSuccesses[spellName] || false;
+    const hasFailedAttempt = failedAttempts[spellName] || false;
+    const isResearched = researchedSpells[spellName] || false;
     const isMastered = successCount >= 2;
     const isRestricted = spellObj.restriction || false;
     const isAttempting = attemptingSpells[spellName];
     const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
     const isDescriptionExpanded = expandedDescriptions[spellName];
 
+    let rowStyle = { ...styles.tableRow };
+    if (isMastered) {
+      rowStyle = { ...rowStyle, ...styles.tableRowMastered };
+    } else if (isResearched) {
+      rowStyle = {
+        ...rowStyle,
+        backgroundColor: (theme.warning || "#f59e0b") + "10",
+      };
+    } else if (hasAttempts) {
+      rowStyle = {
+        ...rowStyle,
+        backgroundColor: (theme.success || "#10b981") + "05",
+      };
+    } else if (hasFailedAttempt) {
+      rowStyle = {
+        ...rowStyle,
+        backgroundColor: (theme.error || "#ef4444") + "05",
+      };
+    }
+
     const mainRow = (
-      <tr
-        key={spellName}
-        style={{
-          ...styles.tableRow,
-          ...(isMastered ? styles.tableRowMastered : {}),
-          ...(hasAttempts && !isMastered
-            ? { backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc" }
-            : {}),
-        }}
-      >
+      <tr key={spellName} style={rowStyle}>
         <td style={{ ...styles.tableCell, width: "3rem" }}>{index + 1}</td>
         <td style={styles.tableCell}>
           <div style={styles.spellNameContainer}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={styles.spellNameRow}>
               <span
                 style={isMastered ? styles.spellNameMastered : styles.spellName}
               >
                 {highlightSearchTerm(spellName)}
               </span>
               {showLevel && (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    padding: "2px 6px",
-                    backgroundColor: theme === "dark" ? "#4b5563" : "#e5e7eb",
-                    color: theme === "dark" ? "#d1d5db" : "#374151",
-                    borderRadius: "4px",
-                    fontWeight: "500",
-                  }}
-                >
-                  {spellObj.level}
-                </span>
+                <span style={styles.levelBadge}>{spellObj.level}</span>
               )}
               {isRestricted && (
                 <Star
                   size={16}
-                  color="#eab308"
+                  color={theme.warning || "#eab308"}
                   title="Restricted/Advanced Spell"
                 />
               )}
@@ -660,15 +818,7 @@ export const SubjectCard = ({
                     e.stopPropagation();
                     toggleDescription(spellName);
                   }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "2px",
-                    display: "flex",
-                    alignItems: "center",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                  }}
+                  style={styles.descriptionToggleButton}
                   title={
                     isDescriptionExpanded
                       ? "Hide description"
@@ -684,42 +834,57 @@ export const SubjectCard = ({
               )}
             </div>
 
-            {hasCriticalSuccess && (
-              <span
-                style={{
-                  ...styles.masteredBadge,
-                  backgroundColor: "#fbbf24",
-                  color: "#92400e",
-                  border: "none",
-                }}
-              >
-                Critically Mastered
-              </span>
-            )}
-            {isMastered && !hasCriticalSuccess && (
-              <span
-                style={{
-                  ...styles.masteredBadge,
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  border: "none",
-                }}
-              >
-                Mastered
-              </span>
-            )}
-            {hasAttempts && !isMastered && (
-              <span
-                style={{
-                  ...styles.masteredBadge,
-                  backgroundColor: "white",
-                  color: "#10b981",
-                  border: "2px solid #10b981",
-                }}
-              >
-                Attempted
-              </span>
-            )}
+            <div
+              style={{
+                display: "flex",
+                gap: "4px",
+                flexWrap: "wrap",
+                marginTop: "4px",
+              }}
+            >
+              {hasCriticalSuccess && (
+                <span style={styles.criticalMasteredBadge}>
+                  Critically Mastered
+                </span>
+              )}
+              {isMastered && !hasCriticalSuccess && (
+                <span style={styles.masteredBadge}>Mastered</span>
+              )}
+              {!isMastered && (hasAttempts || hasFailedAttempt) && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    backgroundColor: hasAttempts
+                      ? theme.success || "#10b981"
+                      : theme.error || "#ef4444",
+                    color: "white",
+                  }}
+                >
+                  Attempted
+                </span>
+              )}
+              {isResearched && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    backgroundColor: theme.warning || "#f59e0b",
+                    color: "white",
+                  }}
+                >
+                  Researched
+                </span>
+              )}
+            </div>
           </div>
         </td>
         <td style={styles.tableCell}>
@@ -730,12 +895,7 @@ export const SubjectCard = ({
                 checked={Boolean(attempts[1])}
                 disabled={true}
                 readOnly={true}
-                style={{
-                  ...styles.checkbox,
-                  accentColor: "#3b82f6",
-                  cursor: "not-allowed",
-                  opacity: 0.8,
-                }}
+                style={styles.checkboxFirst}
               />
               <span style={styles.checkboxText}>1st</span>
             </label>
@@ -745,12 +905,7 @@ export const SubjectCard = ({
                 checked={Boolean(attempts[2])}
                 disabled={true}
                 readOnly={true}
-                style={{
-                  ...styles.checkbox,
-                  accentColor: "#10b981",
-                  cursor: "not-allowed",
-                  opacity: 0.8,
-                }}
+                style={styles.checkboxSecond}
               />
               <span style={styles.checkboxText}>2nd</span>
             </label>
@@ -758,32 +913,17 @@ export const SubjectCard = ({
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
           {hasCriticalSuccess ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "4px",
-              }}
-            >
+            <div style={styles.criticalSuccessContainer}>
               <Star
                 size={20}
-                color="#ffd700"
-                fill="#ffd700"
+                color={theme.warning || "#ffd700"}
+                fill={theme.warning || "#ffd700"}
                 title="Critical Success - Mastered with Natural 20!"
               />
-              <span
-                style={{
-                  fontSize: "12px",
-                  color: "#ffd700",
-                  fontWeight: "bold",
-                }}
-              >
-                20
-              </span>
+              <span style={styles.criticalSuccessText}>20</span>
             </div>
           ) : (
-            <span style={{ color: "#9ca3af" }}>-</span>
+            <span style={styles.noCriticalText}>-</span>
           )}
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
@@ -813,67 +953,52 @@ export const SubjectCard = ({
             {isAttempting ? "Rolling..." : "Attempt"}
           </button>
         </td>
-        <td
-          style={{
-            ...styles.tableCell,
-            textAlign: "center",
-            position: "relative",
-          }}
-        >
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          <button
+            onClick={() => markSpellAsResearched(spellName)}
+            disabled={isMastered || !selectedCharacter}
+            style={{
+              backgroundColor: theme.warning || "#f59e0b",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: "500",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              transition: "all 0.2s ease",
+              fontFamily: "inherit",
+              ...(isMastered || !selectedCharacter
+                ? {
+                    backgroundColor: theme.textSecondary,
+                    cursor: "not-allowed",
+                  }
+                : {}),
+            }}
+          >
+            <BookOpen size={14} />
+            Research
+          </button>
+        </td>
+        <td style={styles.tableCellMenu}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               toggleMenu(spellName);
             }}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-              borderRadius: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            style={styles.menuButton}
           >
-            <MoreVertical
-              size={16}
-              color={theme === "dark" ? "#9ca3af" : "#6b7280"}
-            />
+            <MoreVertical size={16} />
           </button>
 
           {openMenus[spellName] && (
-            <div
-              style={{
-                position: "absolute",
-                right: "0",
-                top: "100%",
-                backgroundColor: theme === "dark" ? "#374151" : "white",
-                border: `1px solid ${theme === "dark" ? "#4b5563" : "#e5e7eb"}`,
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                zIndex: 1000,
-                minWidth: "160px",
-                padding: "4px",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div style={styles.dropdownMenu}>
               <button
                 onClick={() => startEditing(spellName)}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
-                }}
+                style={styles.dropdownMenuItem}
               >
                 <Edit3 size={14} />
                 Edit Progress
@@ -882,49 +1007,13 @@ export const SubjectCard = ({
           )}
 
           {editingSpell === spellName && (
-            <div
-              style={{
-                position: "fixed",
-                top: "0",
-                left: "0",
-                right: "0",
-                bottom: "0",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 2000,
-              }}
-              onClick={cancelEditing}
-            >
+            <div style={styles.modalOverlay} onClick={cancelEditing}>
               <div
-                style={{
-                  backgroundColor: theme === "dark" ? "#374151" : "white",
-                  padding: "24px",
-                  borderRadius: "12px",
-                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-                  minWidth: "400px",
-                  maxWidth: "500px",
-                }}
+                style={styles.modalContent}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h3
-                  style={{
-                    margin: "0 0 8px 0",
-                    fontSize: "18px",
-                    fontWeight: "600",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                  }}
-                >
-                  Edit Progress: {spellName}
-                </h3>
-                <p
-                  style={{
-                    margin: "0 0 16px 0",
-                    fontSize: "14px",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                  }}
-                >
+                <h3 style={styles.modalTitle}>Edit Progress: {spellName}</h3>
+                <p style={styles.modalSubtitle}>
                   Current:{" "}
                   {
                     Object.values(spellAttempts[spellName] || {}).filter(
@@ -933,18 +1022,12 @@ export const SubjectCard = ({
                   }{" "}
                   successful attempts
                   {criticalSuccesses[spellName] ? " (Critical Success)" : ""}
+                  {failedAttempts[spellName] ? " (Has Failed)" : ""}
+                  {researchedSpells[spellName] ? " (Researched)" : ""}
                 </p>
 
-                <div style={{ marginBottom: "16px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: theme === "dark" ? "#f9fafb" : "#374151",
-                    }}
-                  >
+                <div style={styles.modalField}>
+                  <label style={styles.modalLabel}>
                     Successful Attempts (0-2):
                   </label>
                   <input
@@ -964,49 +1047,21 @@ export const SubjectCard = ({
                     }
                     disabled={editFormData.hasCriticalSuccess}
                     style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      border: `2px solid ${
-                        theme === "dark" ? "#4b5563" : "#d1d5db"
-                      }`,
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      backgroundColor: editFormData.hasCriticalSuccess
-                        ? theme === "dark"
-                          ? "#1f2937"
-                          : "#f9fafb"
-                        : theme === "dark"
-                        ? "#374151"
-                        : "white",
-                      color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                      cursor: editFormData.hasCriticalSuccess
-                        ? "not-allowed"
-                        : "text",
+                      ...styles.modalInput,
+                      ...(editFormData.hasCriticalSuccess
+                        ? styles.modalInputDisabled
+                        : {}),
                     }}
                   />
                   {editFormData.hasCriticalSuccess && (
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                        marginTop: "4px",
-                      }}
-                    >
+                    <p style={styles.modalHelpText}>
                       Automatically set to 2 due to critical success
                     </p>
                   )}
                 </div>
 
-                <div style={{ marginBottom: "24px" }}>
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                      color: theme === "dark" ? "#f9fafb" : "#374151",
-                    }}
-                  >
+                <div style={styles.modalField}>
+                  <label style={styles.modalCheckboxLabel}>
                     <input
                       type="checkbox"
                       checked={editFormData.hasCriticalSuccess}
@@ -1019,69 +1074,70 @@ export const SubjectCard = ({
                             : prev.successfulAttempts,
                         }))
                       }
-                      style={{ width: "16px", height: "16px" }}
+                      style={styles.modalCheckbox}
                     />
-                    <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    <span style={styles.modalCheckboxText}>
                       Critical Success (Natural 20)
                     </span>
                   </label>
-                  <p
-                    style={{
-                      fontSize: "12px",
-                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                      marginTop: "4px",
-                      marginLeft: "24px",
-                    }}
-                  >
+                  <p style={styles.modalHelpText}>
                     Checking this will automatically set successful attempts to
                     2 (mastery)
                   </p>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    justifyContent: "flex-end",
-                  }}
-                >
+                <div style={styles.modalField}>
+                  <label style={styles.modalCheckboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={editFormData.hasFailedAttempt}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          hasFailedAttempt: e.target.checked,
+                        }))
+                      }
+                      style={styles.modalCheckbox}
+                    />
+                    <span style={styles.modalCheckboxText}>
+                      Has Failed Attempt
+                    </span>
+                  </label>
+                  <p style={styles.modalHelpText}>
+                    Mark if this spell has been attempted unsuccessfully
+                  </p>
+                </div>
+
+                <div style={styles.modalField}>
+                  <label style={styles.modalCheckboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={editFormData.researched}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          researched: e.target.checked,
+                        }))
+                      }
+                      style={styles.modalCheckbox}
+                    />
+                    <span style={styles.modalCheckboxText}>Researched</span>
+                  </label>
+                  <p style={styles.modalHelpText}>
+                    Mark if this spell has been researched (alternative to
+                    attempting)
+                  </p>
+                </div>
+
+                <div style={styles.modalActions}>
                   <button
                     onClick={cancelEditing}
-                    style={{
-                      padding: "8px 16px",
-                      border: `2px solid ${
-                        theme === "dark" ? "#4b5563" : "#d1d5db"
-                      }`,
-                      backgroundColor: theme === "dark" ? "#374151" : "white",
-                      color: theme === "dark" ? "#f9fafb" : "#374151",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
+                    style={styles.modalCancelButton}
                   >
                     <X size={14} />
                     Cancel
                   </button>
-                  <button
-                    onClick={saveEdit}
-                    style={{
-                      padding: "8px 16px",
-                      border: "2px solid #10b981",
-                      backgroundColor: "#10b981",
-                      color: "white",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
+                  <button onClick={saveEdit} style={styles.modalSaveButton}>
                     <Check size={14} />
                     Save Changes
                   </button>
@@ -1096,78 +1152,27 @@ export const SubjectCard = ({
     const descriptionRow =
       isDescriptionExpanded && spellObj.description ? (
         <tr key={`${spellName}-description`}>
-          <td colSpan="6" style={{ padding: "0", border: "none" }}>
-            <div
-              style={{
-                margin: "0 16px 12px 16px",
-                padding: "16px",
-                backgroundColor: theme === "dark" ? "#374151" : "#f8fafc",
-                border: `1px solid ${theme === "dark" ? "#4b5563" : "#e2e8f0"}`,
-                borderRadius: "8px",
-                fontSize: "14px",
-                lineHeight: "1.5",
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: "600",
-                  color: theme === "dark" ? "#60a5fa" : "#1e40af",
-                  marginBottom: "8px",
-                  fontSize: "16px",
-                }}
-              >
-                {spellName}
-              </div>
-              <div
-                style={{
-                  fontStyle: "italic",
-                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                  marginBottom: "12px",
-                  fontSize: "13px",
-                }}
-              >
+          <td colSpan="7" style={styles.descriptionRowCell}>
+            <div style={styles.descriptionContainer}>
+              <div style={styles.descriptionTitle}>{spellName}</div>
+              <div style={styles.descriptionMeta}>
                 {spellObj.level} •{" "}
                 {spellObj.castingTime || "Unknown casting time"} • Range:{" "}
                 {spellObj.range || "Unknown"} • Duration:{" "}
                 {spellObj.duration || "Unknown"}
               </div>
-              <div
-                style={{
-                  whiteSpace: "pre-line",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
-                  marginBottom: "12px",
-                }}
-              >
+              <div style={styles.descriptionText}>
                 {highlightSearchTerm(spellObj.description)}
               </div>
               {spellObj.higherLevels && (
-                <div
-                  style={{
-                    marginBottom: "12px",
-                    fontStyle: "italic",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                  }}
-                >
+                <div style={styles.descriptionHigherLevels}>
                   <strong>At Higher Levels:</strong> {spellObj.higherLevels}
                 </div>
               )}
               {spellObj.tags && spellObj.tags.length > 0 && (
-                <div>
+                <div style={styles.descriptionTags}>
                   {spellObj.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      style={{
-                        display: "inline-block",
-                        padding: "4px 8px",
-                        backgroundColor:
-                          theme === "dark" ? "#4b5563" : "#e5e7eb",
-                        color: theme === "dark" ? "#d1d5db" : "#374151",
-                        fontSize: "12px",
-                        borderRadius: "4px",
-                        marginRight: "6px",
-                        fontWeight: "500",
-                      }}
-                    >
+                    <span key={tag} style={styles.descriptionTag}>
                       {highlightSearchTerm(tag)}
                     </span>
                   ))}
@@ -1181,10 +1186,10 @@ export const SubjectCard = ({
     return [mainRow, descriptionRow].filter(Boolean);
   };
 
-  const renderSection = (subject, level, spells, subjectColor) => {
+  const renderSection = (subject, level, spells) => {
     const filteredSpells = filterSpellsByStatus(spells);
     const isExpanded = expandedSections[`${subject}-${level}`];
-    const levelColor = generateLevelColor(subjectColor, level);
+    const levelColor = generateLevelColor(level);
     const masteredCount = filteredSpells.filter(
       (spellObj) => getSuccessfulAttempts(spellObj.name) >= 2
     ).length;
@@ -1203,7 +1208,7 @@ export const SubjectCard = ({
           onClick={() => toggleSection(subject, level)}
           style={{
             ...styles.sectionButton,
-            backgroundColor: levelColor.backgroundColor,
+            background: levelColor.background,
             borderColor: levelColor.borderColor,
             color: levelColor.color,
           }}
@@ -1223,7 +1228,7 @@ export const SubjectCard = ({
             </span>
           </div>
           <div style={styles.sectionRight}>
-            <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
+            <span style={styles.sectionProgressText}>
               {masteredCount}/{filteredSpells.length} Mastered
             </span>
             <div style={styles.sectionProgress}>
@@ -1245,7 +1250,8 @@ export const SubjectCard = ({
                 <th style={styles.tableHeaderCell}>Spell Name</th>
                 <th style={styles.tableHeaderCell}>Successful Attempts</th>
                 <th style={styles.tableHeaderCellCenter}>Critical</th>
-                <th style={styles.tableHeaderCellCenter}>Action</th>
+                <th style={styles.tableHeaderCellCenter}>Attempt</th>
+                <th style={styles.tableHeaderCellCenter}>Research</th>
                 <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
                   Menu
                 </th>
@@ -1303,141 +1309,76 @@ export const SubjectCard = ({
             <span style={styles.subjectStatLabel}>Total Spells</span>
           </div>
           <div style={styles.subjectStatItem}>
-            <span style={{ ...styles.subjectStatNumber, color: "#10b981" }}>
+            <span
+              style={{
+                ...styles.subjectStatNumber,
+                color: theme.success || "#10b981",
+              }}
+            >
               {stats.masteredSpells}
             </span>
             <span style={styles.subjectStatLabel}>Mastered</span>
+          </div>
+          <div style={styles.subjectStatItem}>
+            <span
+              style={{
+                ...styles.subjectStatNumber,
+                color: theme.warning || "#f59e0b",
+              }}
+            >
+              {stats.researchedSpells}
+            </span>
+            <span style={styles.subjectStatLabel}>Researched</span>
           </div>
         </div>
       </div>
 
       {isExpanded && (
         <div style={styles.subjectContent}>
-          <div
-            style={{
-              padding: "16px",
-              borderBottom: `1px solid ${
-                theme === "dark" ? "#374151" : "#e2e8f0"
-              }`,
-              backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                alignItems: "center",
-                marginBottom: "12px",
-              }}
-            >
-              <div style={{ position: "relative", flex: 1 }}>
-                <Search
-                  size={18}
-                  style={{
-                    position: "absolute",
-                    left: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                  }}
-                />
+          <div style={styles.searchSection}>
+            <div style={styles.searchControls}>
+              <div style={styles.searchInputContainer}>
+                <Search size={18} style={styles.searchIcon} />
                 <input
                   type="text"
                   placeholder="Search spells by name, description, level, or tags..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px 8px 40px",
-                    border: `2px solid ${
-                      theme === "dark" ? "#374151" : "#e2e8f0"
-                    }`,
-                    borderRadius: "8px",
-                    backgroundColor: theme === "dark" ? "#374151" : "white",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                    fontSize: "14px",
-                  }}
+                  style={styles.searchInput}
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm("")}
-                    style={{
-                      position: "absolute",
-                      right: "8px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                    }}
+                    style={styles.searchClearButton}
                   >
                     <X size={16} />
                   </button>
                 )}
               </div>
 
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <Filter
-                  size={16}
-                  color={theme === "dark" ? "#9ca3af" : "#6b7280"}
-                />
+              <div style={styles.filterControls}>
+                <Filter size={16} style={styles.filterIcon} />
                 <select
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    border: `2px solid ${
-                      theme === "dark" ? "#374151" : "#e2e8f0"
-                    }`,
-                    borderRadius: "8px",
-                    backgroundColor: theme === "dark" ? "#374151" : "white",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                    fontSize: "14px",
-                  }}
+                  style={styles.filterSelect}
                 >
                   <option value="all">All Spells</option>
                   <option value="mastered">Mastered</option>
                   <option value="attempted">Attempted</option>
+                  <option value="failed">Failed Only</option>
+                  <option value="researched">Researched</option>
                   <option value="unmastered">Not Mastered</option>
                 </select>
               </div>
             </div>
 
             {hasActiveSearch && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "14px",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
-                  }}
-                >
+              <div style={styles.searchResultsInfo}>
+                <span style={styles.searchResultsText}>
                   {searchResults?.length || 0} spell(s) found
                 </span>
-                <button
-                  onClick={clearSearch}
-                  style={{
-                    padding: "4px 8px",
-                    backgroundColor: theme === "dark" ? "#374151" : "#e2e8f0",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                    border: "none",
-                    borderRadius: "6px",
-                    fontSize: "12px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
+                <button onClick={clearSearch} style={styles.clearSearchButton}>
                   <X size={12} />
                   Clear
                 </button>
@@ -1450,7 +1391,7 @@ export const SubjectCard = ({
             : Object.entries(subjectData.levels)
                 .filter(([level, spells]) => spells.length > 0)
                 .map(([level, spells]) =>
-                  renderSection(subjectName, level, spells, subjectData.color)
+                  renderSection(subjectName, level, spells)
                 )
                 .filter(Boolean)}
         </div>

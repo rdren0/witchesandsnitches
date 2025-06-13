@@ -341,7 +341,7 @@ export const styles = {
   warning: {
     marginTop: "0.5rem",
     fontSize: "0.75rem",
-    color: "#ea580c",
+    color: "#ee7230",
   },
 };
 

@@ -20,6 +20,8 @@ const SpellBook = ({
   const [error, setError] = useState(null);
   const [criticalSuccesses, setCriticalSuccesses] = useState({});
   const [spellAttempts, setSpellAttempts] = useState({});
+  const [failedAttempts, setFailedAttempts] = useState({});
+  const [researchedSpells, setResearchedSpells] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
 
   const discordUserId = user?.user_metadata?.provider_id;
@@ -27,6 +29,8 @@ const SpellBook = ({
   useEffect(() => {
     setSpellAttempts({});
     setCriticalSuccesses({});
+    setFailedAttempts({});
+    setResearchedSpells({});
   }, [selectedCharacter?.id]);
 
   const getFilteredSpellsData = () => {
@@ -94,10 +98,26 @@ const SpellBook = ({
     }).length;
   };
 
+  // New function to get total researched spells
+  const getTotalResearched = () => {
+    return Object.keys(researchedSpells).filter(
+      (spellName) => researchedSpells[spellName]
+    ).length;
+  };
+
+  // New function to get total failed attempts
+  const getTotalFailed = () => {
+    return Object.keys(failedAttempts).filter(
+      (spellName) => failedAttempts[spellName]
+    ).length;
+  };
+
   const filteredSpellsData = getFilteredSpellsData();
   const totalSpells = getTotalSpells();
   const totalFilteredSpells = getTotalSpells(filteredSpellsData);
   const totalMastered = getTotalMastered();
+  const totalResearched = getTotalResearched();
+  const totalFailed = getTotalFailed();
 
   const clearSearch = () => {
     setSearchTerm("");
@@ -229,6 +249,18 @@ const SpellBook = ({
           <span
             style={{ ...styles.statDot, backgroundColor: "#8b5cf6" }}
           ></span>
+          {totalResearched} Researched
+        </span>
+        <span style={styles.statItem}>
+          <span
+            style={{ ...styles.statDot, backgroundColor: "#ef4444" }}
+          ></span>
+          {totalFailed} Failed
+        </span>
+        <span style={styles.statItem}>
+          <span
+            style={{ ...styles.statDot, backgroundColor: "#f59e0b" }}
+          ></span>
           Playing as {selectedCharacter.name}
         </span>
       </div>
@@ -272,6 +304,11 @@ const SpellBook = ({
               setExpandedSubjects={setExpandedSubjects}
               setSpellAttempts={setSpellAttempts}
               spellAttempts={spellAttempts}
+              // Pass new state setters and values
+              failedAttempts={failedAttempts}
+              setFailedAttempts={setFailedAttempts}
+              researchedSpells={researchedSpells}
+              setResearchedSpells={setResearchedSpells}
               subjectData={subjectData}
               subjectName={subjectName}
               supabase={supabase}

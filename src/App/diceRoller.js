@@ -724,7 +724,7 @@ export const rollBrewPotion = async ({
         diceRoll,
         characterModifier: modifier,
         total: roll,
-        roll: roll, // Keep for backwards compatibility
+        roll: roll,
         targetDC: adjustedDCs[achievedQuality],
         baseDCs,
         adjustedDCs,
@@ -1290,9 +1290,7 @@ export const attemptSpell = async ({
       console.error("Error sending to Discord:", error);
     }
 
-    if (isSuccess) {
-      await updateSpellProgressSummary(spellName, isCriticalSuccess);
-    }
+    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
   } catch (error) {
     console.error("Error attempting spell:", error);
     alert("Error processing spell attempt. Please try again.");
