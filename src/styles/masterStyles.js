@@ -2224,7 +2224,6 @@ export const createSpellBookStyles = (theme) => ({
     marginBottom: "20px",
     lineHeight: "1.5",
   },
-
   subjectCard: {
     backgroundColor: theme.surface,
     borderRadius: "16px",

@@ -1741,9 +1741,9 @@ const CharacterCreator = ({
       />
 
       <div style={styles.fieldContainer}>
-        <h3 style={styles.skillsHeader}>Magic School Modifiers</h3>
+        <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
         <div style={styles.helpText}>
-          Enter your wand's bonuses/penalties for each school of magic
+          Enter your wand's bonuses/penalties for each subject of magic
         </div>
 
         <div style={styles.magicModifiersGrid}>
