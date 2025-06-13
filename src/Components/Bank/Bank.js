@@ -696,10 +696,9 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
         }}
       >
         <Coins size={18} />
-        {isSaving ? "Saving..." : "Reset to 0"}
+        {isSaving && "Saving..."}
       </button>
 
-      {/* Reference Card */}
       <div
         style={{
           backgroundColor: theme.background,
