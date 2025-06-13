@@ -55,6 +55,18 @@ export const spellsData = {
             "Choose a door or window that you can see within range, that uses mundane or magical means to prevent access. A target that is held shut by a mundane lock or that is stuck or barred becomes unlocked, unstuck, or unbarred. If the object has multiple locks, only one of them is unlocked. If you choose a target that is held shut with Colloportus, that spell is removed. When you cast the spell, the mechanism noisily turns and unlocks. This noise emanates from the target object and is audible from as far away as 100 feet.",
         },
         {
+          name: "Carpe Retractum",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Round",
+          year: 3,
+          description:
+            "A bond of light shoots out from the caster and attaches to anything you can see within range, and then retracts, pulling caster and target each 10 feet closer. If the caster or target doesn't move or would easily resist the force of the other being pulled, the other moves 20 feet. If the target is an unwilling creature that is able to be moved, it must make a Strength saving throw to resist being moved. The bond of light keeps the caster and target attached for the duration.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 1st level or higher, the range and pulling effect both increase by 5 feet for each slot level above 0.",
+        },
+        {
           name: "Capto",
           level: "Cantrip",
           castingTime: "Action",
@@ -207,6 +219,27 @@ export const spellsData = {
             "An object no larger than 5 cubic feet is flawlessly cleaned.",
         },
         {
+          name: "Spongify",
+          level: "Cantrip",
+          castingTime:
+            "1 action or reaction, which you take when a collision occurs within 30 feet",
+          range: "30 Feet",
+          duration: "1 Minute",
+          year: 2,
+          description:
+            "This spell makes an object become soft and bouncy, like a sponge or mattress. Any damage from falling on or colliding with this object is nullified. This spell can be cast as a reaction to a collision affecting a creature you can see within range or between two objects within range.",
+        },
+        {
+          name: "Periculum/Verdimillious",
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Instantaneous",
+          year: 2,
+          description:
+            "This spell sends red (periculum) or green (verdimillious) sparks shooting from the casters wand for signaling purposes. It may also appear as a flare, traveling a desired distance before exploding in light and hovering in the air.",
+        },
+        {
           name: "Sonorus/Quietus",
           level: "Cantrip",
           castingTime: "Action",
@@ -241,6 +274,20 @@ export const spellsData = {
       ],
       "1st Level": [
         {
+          name: "Arrest Momentum",
+          level: "1st Level",
+          castingTime:
+            "1 reaction, which you take when you or a creature within 60 feet of you falls",
+          range: "60 Feet",
+          duration: "1 minute",
+          year: 2,
+          tags: ["C", "R"],
+          description:
+            "Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends. If the creature lands before the spell ends, it takes no falling damage and can land on its feet, and the spell ends for that creature. This spell is particularly useful for preventing fall damage from great heights or during aerial combat situations.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, you can target two additional falling creatures for each slot level above 1st, and the duration increases by 1 minute for each slot level above 1st.",
+        },
+        {
           name: "Diffindo",
           level: "1st Level",
           castingTime: "Action",
@@ -252,6 +299,17 @@ export const spellsData = {
             "An object is precisely torn or cut, as if a magical blade extended from the tip of your wand. This spell was not designed to be used on creatures and only makes very shallow cuts. Choose a target you can see within range that fits within a 5-foot cube. If the target is a creature, it must make a Dexterity saving throw. It takes 4d4 slashing damage on a failed save or half as much damage on a successful one. This is the counterspell to incarcerous, immediately ending that spell's effects.",
           higherLevels:
             "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature or the cube's size increases by 5 feet for each slot level above 1st.",
+        },
+        {
+          name: "Exhilaro",
+          level: "1st Level (ritual)",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 3,
+          tags: ["R"],
+          description:
+            "A creature of your choice that you can see within range becomes quite cheerful. For the next 10 minutes, the target creature has advantage on any saving throw against becoming frightened. If concentration is maintained for one whole round, the creature perceives everything as hilariously funny and falls into fits of laughter if this spell affects it. The target must succeed on a Wisdom saving throw or fall prone, becoming incapacitated and unable to stand up for the duration. A creature with an Intelligence score of 5 or less isn't affected. At the end of each of its turns, and each time it takes damage, the target can make another Wisdom saving throw. The target has advantage on the saving throw if it's triggered by damage. On a success, the spell ends.",
         },
         {
           name: "Glacius",
@@ -298,6 +356,28 @@ export const spellsData = {
           tags: ["R"],
           description:
             "This spell alters an object of up to 500 pounds, changing its weight to be just barely heavier than the atmosphere around it. The slightest force is needed to move, pick up, or carry this object for the duration. It can be easily thrown as well.",
+        },
+        {
+          name: "Protego",
+          level: "1st Level",
+          castingTime:
+            "1 action or reaction, which you take when you are hit by an attack",
+          range: "Self",
+          duration: "Dedication, up to 10 minutes",
+          year: 2,
+          tags: ["Defensive"],
+          description:
+            "An invisible barrier of magical force appears in front of you and protects you. For the duration, you have a +5 bonus to AC, including against the triggering attack. If you are targeted by a spell that requires an attack roll and the spell's level is equal to or lower than half your proficiency bonus, the spell has no effect on you. You can use a bonus action to change which direction the shield is facing. If you are attacked from either of your sides or from behind while casting this spell, you must use your reaction to redirect the shield to point towards the threat. Otherwise, this spell doesn't protect you.",
+        },
+        {
+          name: "Riddikulus",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
+          year: 3,
+          description:
+            "This spell has a very specific application: forcing a boggart to transform into a comedic version of its current form. Only a boggart may be targeted by this spell.",
         },
         {
           name: "Reducio",
@@ -366,6 +446,18 @@ export const spellsData = {
             "You cause a creature or an object you can see within range to grow larger for the duration. Choose either a creature or an object that isn't being worn or carried. If the target is unwilling, it can make a Constitution saving throw. On a success, the spell has no effect. The target's size doubles in all dimensions, and its weight is multiplied by eight. This growth increases its size by one category - from Medium to Large, for example. Until the spell ends, the target also has advantage on Strength checks and Strength saving throws. While enlarged, the target deals 1d4 extra damage.",
         },
         {
+          name: "Expelliarmus",
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: 2,
+          description:
+            "Famous for being the spell that finally defeated Voldemort in the Second Wizarding War, this spell can harmlessly end duels by disarming a wizard of his wand. Make a ranged spell attack against a being within range. On a hit, you disarm the target, forcing it to drop one item of your choice that it's holding. The object lands 10 feet away from it in a random direction.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you can choose the direction the object travels and the object's distance increases by 10 feet for each slot level above 2nd.",
+        },
+        {
           name: "Finite Incantatem",
           level: "2nd Level",
           castingTime: "1 action",
@@ -377,6 +469,19 @@ export const spellsData = {
             "Choose any creature, object, or magical effect within range. One non-Transfiguration spell of 2nd level or lower on the target ends. If you are aware of at least one spell affecting the target, you can specify that spell in your mind. If you are unaware of what spells are affecting the target, one randomly selected spell ends. For a spell of a higher level on the target, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level.",
           higherLevels:
             "When you cast this spell using a spell slot of 3rd level or higher, you automatically end the effects of a non-Transfiguration spell on the target if the spell's level is equal to or less than the level of the spell slot you used.",
+        },
+        {
+          name: "Fumos",
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "Self (15 foot cube)",
+          duration: "Concentration, up to 1 minute",
+          year: 3,
+          tags: ["C"],
+          description:
+            "A thick spray of smoke billows out from your wand, filling a 15-foot cube originating from you. This smoke spreads around corners. It lasts for the duration or until strong wind disperses the smoke, ending the spell. Its area is heavily obscured. When a creature enters the spell's area for the first time on a turn or starts its turn there, that creature must make a Constitution saving throw. The creature takes 3d6 poison damage on a failed save, or half as much damage on a successful one. Constructs and undead are immune to this damage.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 2d6 and the area increases by 5 feet for each slot level above 2nd.",
         },
         {
           name: "Geminio",
@@ -439,6 +544,18 @@ export const spellsData = {
             "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd.",
         },
         {
+          name: "Protego Maxima",
+          level: "2nd Level",
+          castingTime:
+            "1 action or reaction, which you take when you are hit by an attack",
+          range: "Self",
+          duration: "Dedication, up to 10 minutes",
+          year: 4,
+          tags: ["Defensive"],
+          description:
+            "You cast a fully encompassing protego around yourself, sacrificing durability for coverage. For the duration, you have a +3 bonus to AC, including against the triggering attack. If you are subjected to an effect that allows you to make a Strength or Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail.",
+        },
+        {
           name: "Reparo",
           level: "2nd Level (ritual)",
           castingTime: "1 action",
@@ -451,8 +568,56 @@ export const spellsData = {
           higherLevels:
             "When you cast this spell using a spell slot of 3rd level or higher, the cube's size increases by 10 feet for each slot level above 2nd.",
         },
+        {
+          name: "Silencio",
+          level: "2nd Level (ritual)",
+          castingTime: "Action",
+          range: "90 Feet",
+          duration: "1 Minute",
+          year: 3,
+          tags: ["R"],
+          description:
+            "This charm is extremely effective against wizards unpracticed in non-verbal magic. Choose one target that you can see within range. If it's a creature, it must make a Wisdom saving throw. If it fails or if it's an object, all sound created by the target is made completely silent. Casting a spell that includes a verbal component is impossible while under the effect of this spell.",
+        },
+        {
+          name: "Stupefy",
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "10 Minutes",
+          year: 2,
+          description:
+            "This charm is the most common dueling spell in the wizarding world, harmlessly ending a duel between two wizards. Make a ranged spell attack against a being within range. On a hit, the target falls unconscious for the duration, or until they are revived with rennervate.",
+          higherLevels:
+            "If you cast this spell using a spell slot of 3rd level or higher, the duration increases to 1 hour (3rd level) or 8 hours (4th level). Alternatively, when you cast this spell using a spell slot of 4th level or higher, you can target a beast instead of a being, for a duration of 10 minutes (4th level), 1 hour (5th level) or 8 hours (6th level).",
+        },
       ],
       "3rd Level": [
+        {
+          name: "Deprimo",
+          level: "3rd Level (ritual)",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Instantaneous",
+          year: 4,
+          tags: ["R"],
+          description:
+            "You place immense downward pressure on a target. If the target is a creature, it must make a Strength saving throw. On a failed save, a creature takes 5d8 bludgeoning damage and is knocked prone. On a successful save, the creature takes half as much damage and isn't knocked prone. If the target is a flat surface, this will either create a crater or collapse the surface.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage is increased by 1d8 for each slot level above 3rd.",
+        },
+        {
+          name: "Depulso",
+          level: "3rd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: 4,
+          description:
+            "A target is pushed directly away from the caster as if shoved by an invisible hand, being thrown 5 feet away plus a number of feet equal to five times your spellcasting ability modifier. The target is selected by pointing at it with a wand. If targeting a creature or object that is being worn or carried, make a check with 26 Strength (+8) contested by the Strength (Athletics) check of the target creature. If the target is Medium or smaller, you have advantage on the check. If you succeed, the target is thrown the same distance.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the shove distance is increased by 10 feet for each slot level above 3rd.",
+        },
         {
           name: "Dissonus Ululatus",
           level: "3rd Level",
@@ -463,6 +628,19 @@ export const spellsData = {
           tags: ["Defensive"],
           description:
             "You set an alarm to emit a piercing shriek when an unauthorized person enters the area. Until the spell ends, an alarm sounds whenever a Tiny or larger creature touches or enters the warded area. When you cast the spell, you can designate creatures or areas within the hemisphere that won't set off the alarm. The alarm produces an unpleasant screaming sound for as long as the intruding creature is in the area of the spell, audible from as far away as 300 feet.",
+        },
+        {
+          name: "Expecto Patronum",
+          level: "3rd Level (ritual)",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 5,
+          tags: ["Defensive", "R"],
+          description:
+            "A Patronus Charm is a special bit of magic that requires a wizard to envision one of their happiest memories while casting the spell. The feeling of happiness must be genuine or strong enough to produce a radiant, ethereal beast, the embodiment of that wizard's positive emotions that serves as their protector. When you cast this spell, you can choose to conjure an incorporeal or corporeal patronus. If you attempt to cast this spell while frightened or within 60 feet of a dementor, you must make an ability check using your spellcasting ability. The DC equals 10 + the number of dementors within 60 feet of you. A roll of 19-20 on the die automatically succeeds. On a success, you cast the spell. On a failure, you can only conjure an incorporeal patronus, but if you fail the check by 5 or more, the spell fails entirely. At the end of your turn, if you are frightened or there are one or more dementors within 60 feet of you while concentrating on this spell, you must repeat the ability check. On a failure, your patronus vanishes and the spell ends. A patronus sheds light in a radius around it. You and friendly creatures can't be frightened while in your patronus's light. A dementor that starts its turn within this light or enters the light for the first time on a turn must succeed on a Wisdom saving throw or become frightened of the patronus until the start of its next turn. Incorporeal Patronus: Your patronus takes the form of a 5-foot burst of glowing mist in an unoccupied space adjacent to you, shedding bright light in its space and dim light in a 5-foot radius. Corporeal Patronus: Your patronus takes the form of a wispy silver animal in an unoccupied space that you can see within range, shedding bright light in a 10-foot radius and dim light for an additional 10 feet. When you cast the spell and as a bonus action on subsequent turns, you can move the patronus up to 60 feet (Medium or smaller), 45 feet (Large), or 30 feet (Huge). At any time during the patronus's movement, you can direct it to charge into a dementor within 5 feet of it. Make a melee spell attack for the patronus. On a hit, the target takes 5d10 radiant damage and the patronus pushes the target up to 5 feet plus a number of feet equal to five times your spellcasting ability modifier.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d10 and the radius of the dim light increases by 5 feet for each slot level above 3rd.",
         },
         {
           name: "Fianto Duri",
@@ -585,6 +763,19 @@ export const spellsData = {
             "When you cast this spell using a spell slot of 6th level or higher, you may select or stack one of the following effects for each slot level above 5th: Increase the spell radius by 20 feet, Increase the duration to 8 hours, Add the ability to completely block sounds, Add the ability to completely block smells.",
         },
         {
+          name: "Ne Ustio",
+          level: "5th Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 1 hour",
+          year: 6,
+          tags: ["Defensive"],
+          description:
+            "For the duration, the creature you touch or yourself has immunity to fire damage, excluding dragon fire and the azreth spell (Fiendfyre).",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th level or higher, the duration is doubled for each slot level above 5th. When you use a spell slot of 8th level or higher, concentration is no longer required and its effect applies to dragon fire.",
+        },
+        {
           name: "Obliviate",
           level: "5th Level",
           castingTime: "1 action",
@@ -609,6 +800,33 @@ export const spellsData = {
             "Objects come to life at your command. Choose up to five nonmagical objects within range that are not being worn or carried. Medium targets count as one object, Large targets count as two objects, Huge targets count as four objects. You can't animate any object larger than Huge. Each target animates and becomes a creature under your control until the spell ends or until reduced to 0 hit points.",
           higherLevels:
             "If you cast this spell using a spell slot of 6th level or higher, you can animate one additional object for each slot level above 5th.",
+        },
+        {
+          name: "Salvio Hexia",
+          level: "5th Level",
+          castingTime: "Action",
+          range: "Self (10-foot-radius sphere)",
+          duration: "Concentration, up to 1 minute",
+          year: 6,
+          tags: ["Defensive"],
+          description:
+            "Each creature within the spell's area gains temporary hit points equal to your spellcasting modifier at the beginning of its turn and advantage on all saving throws against spells.",
+        },
+      ],
+      "6th Level": [
+        {
+          name: "Protego Totalum",
+          level: "6th Level",
+          castingTime: "Action",
+          range: "Self (10-foot-radius sphere)",
+          duration: "Concentration, up to 1 minute",
+          year: 7,
+          restriction: true,
+          tags: ["Defensive"],
+          description:
+            "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th.",
         },
       ],
       "9th Level": [
