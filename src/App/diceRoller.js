@@ -339,9 +339,14 @@ export const useRollFunctions = () => {
 
 export const calculateSkillBonus = ({ skillName, abilityMod, character }) => {
   if (!character) return 0;
-  const isProficient = character.skills?.[skillName] || false;
-  const profBonus = isProficient ? character.proficiencyBonus : 0;
-  return abilityMod + profBonus;
+  const skillLevel = character.skills?.[skillName] || 0;
+  const profBonus = character.proficiencyBonus || 0;
+
+  if (skillLevel === 0) return abilityMod;
+  if (skillLevel === 1) return abilityMod + profBonus;
+  if (skillLevel === 2) return abilityMod + 2 * profBonus;
+
+  return abilityMod;
 };
 
 export const rollDice = () => {
