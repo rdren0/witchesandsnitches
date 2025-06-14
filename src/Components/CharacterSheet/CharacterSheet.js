@@ -11,6 +11,7 @@ import {
   Moon,
   Coffee,
   TrendingUp,
+  Star,
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -226,7 +227,10 @@ const CharacterSheet = ({
     // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId, supabase]);
 
-  const transformSkillProficiencies = (skillArray) => {
+  const transformSkillProficiencies = (
+    skillProficiencies = [],
+    skillExpertise = []
+  ) => {
     const skillMap = {
       Athletics: "athletics",
       Acrobatics: "acrobatics",
@@ -252,13 +256,20 @@ const CharacterSheet = ({
     const skills = {};
 
     Object.values(skillMap).forEach((skill) => {
-      skills[skill] = false;
+      skills[skill] = 0;
     });
 
-    skillArray.forEach((skillName) => {
+    skillProficiencies.forEach((skillName) => {
       const mappedSkill = skillMap[skillName];
       if (mappedSkill) {
-        skills[mappedSkill] = true;
+        skills[mappedSkill] = 1;
+      }
+    });
+
+    skillExpertise.forEach((skillName) => {
+      const mappedSkill = skillMap[skillName];
+      if (mappedSkill) {
+        skills[mappedSkill] = 2;
       }
     });
 
@@ -821,7 +832,12 @@ const CharacterSheet = ({
               </div>
             </div>
 
-            <div style={{ ...styles.combatStats }}>
+            <div
+              style={{
+                ...styles.combatStats,
+                gridTemplateColumns: "repeat(5, 1fr)",
+              }}
+            >
               <div
                 style={{
                   ...styles.statCard,
@@ -894,6 +910,36 @@ const CharacterSheet = ({
                 </div>
                 <div style={{ ...styles.statLabel, ...styles.statLabelPurple }}>
                   Hit Dice ({character.hitDie})
+                </div>
+              </div>
+              <div
+                style={{
+                  ...styles.statCard,
+                  backgroundColor: "#f0f9ff",
+                  borderColor: "#0ea5e9",
+                  cursor: "default",
+                }}
+                title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
+              >
+                <Star className="w-6 h-6 text-sky-600 mx-auto mb-1" />
+                <div
+                  style={{
+                    ...styles.statValue,
+                    color: "#0284c7",
+                    fontSize: "1.25rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  +{character.proficiencyBonus || 0}
+                </div>
+                <div
+                  style={{
+                    ...styles.statLabel,
+                    color: "#0369a1",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  Proficiency
                 </div>
               </div>
             </div>

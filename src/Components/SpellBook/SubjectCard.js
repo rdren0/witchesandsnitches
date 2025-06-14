@@ -56,7 +56,6 @@ export const SubjectCard = ({
   setExpandedSubjects,
   setSpellAttempts,
   spellAttempts,
-
   failedAttempts,
   setFailedAttempts,
   researchedSpells,
@@ -399,62 +398,160 @@ export const SubjectCard = ({
     closeAllMenus();
   };
 
+  const findSpellData = (spellName) => {
+    // eslint-disable-next-line
+    for (const [level, spells] of Object.entries(subjectData.levels)) {
+      const spell = spells.find((s) => s.name === spellName);
+      if (spell) return spell;
+    }
+    return null;
+  };
+
+  const calculateResearchDC = (playerYear, spellYear, spellName) => {
+    let baseDC = 8 + 2 * playerYear;
+
+    const yearDifference = spellYear - playerYear;
+    if (yearDifference > 0) {
+      baseDC += 2 * playerYear;
+    } else if (yearDifference < 0) {
+      baseDC += yearDifference * 2;
+    }
+
+    const difficultSpells = [
+      "Abscondi",
+      "Pellucidi Pellis",
+      "Sagittario",
+      "Confringo",
+      "Devieto",
+      "Stupefy",
+      "Petrificus Totalus",
+      "Protego",
+      "Protego Maxima",
+      "Finite Incantatem",
+      "Bombarda",
+      "Episkey",
+      "Expelliarmus",
+      "Incarcerous",
+    ];
+
+    if (difficultSpells.includes(spellName)) {
+      baseDC += 3;
+    }
+
+    return Math.max(5, baseDC);
+  };
+
   const markSpellAsResearched = async (spellName) => {
     if (!selectedCharacter || !discordUserId) return;
 
+    const spellData = findSpellData(spellName);
+    if (!spellData) {
+      setError("Could not find spell data for research check");
+      return;
+    }
+
+    const playerYear = selectedCharacter.year || 1;
+    const spellYear = spellData.year || 1;
+
+    const dc = calculateResearchDC(playerYear, spellYear, spellName);
+
+    const confirmMessage = `Research ${spellName}?\n\nPlayer Year: ${playerYear}\nSpell Year: ${spellYear}\nDC: ${dc}\n\nSuccess: Mark as researched\nNat 20: Mark as researched + 1 successful attempt`;
+
+    // eslint-disable-next-line no-restricted-globals
+    if (!confirm(confirmMessage)) return;
+
+    setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+
     try {
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
-        .eq("spell_name", spellName)
-        .single();
+      const modifier = getSpellModifier(
+        spellName,
+        subjectName,
+        selectedCharacter
+      );
 
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching spell progress:", fetchError);
-        return;
-      }
+      const d20Roll = Math.floor(Math.random() * 20) + 1;
+      const totalRoll = d20Roll + modifier;
+      const isNaturalTwenty = d20Roll === 20;
+      const isSuccess = totalRoll >= dc;
 
-      const updateData = {
-        researched: true,
-        updated_at: new Date().toISOString(),
-      };
+      const rollMessage = `Research Check: ${d20Roll}${
+        modifier >= 0 ? "+" : ""
+      }${modifier} = ${totalRoll} vs DC ${dc}`;
+      console.log(rollMessage);
 
-      if (existingProgress) {
-        const { error: updateError } = await supabase
+      if (isSuccess) {
+        const { data: existingProgress, error: fetchError } = await supabase
           .from("spell_progress_summary")
-          .update(updateData)
-          .eq("id", existingProgress.id);
+          .select("*")
+          .eq("character_id", selectedCharacter.id)
+          .eq("discord_user_id", discordUserId)
+          .eq("spell_name", spellName)
+          .single();
 
-        if (updateError) {
-          console.error("Error updating spell research:", updateError);
+        if (fetchError && fetchError.code !== "PGRST116") {
+          console.error("Error fetching spell progress:", fetchError);
           return;
         }
+
+        const updateData = {
+          researched: true,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (isNaturalTwenty) {
+          const currentAttempts = existingProgress?.successful_attempts || 0;
+          updateData.successful_attempts = Math.min(currentAttempts + 1, 2);
+        }
+
+        if (existingProgress) {
+          const { error: updateError } = await supabase
+            .from("spell_progress_summary")
+            .update(updateData)
+            .eq("id", existingProgress.id);
+
+          if (updateError) {
+            console.error("Error updating spell research:", updateError);
+            return;
+          }
+        } else {
+          const insertData = {
+            character_id: selectedCharacter.id,
+            discord_user_id: discordUserId,
+            spell_name: spellName,
+            successful_attempts: isNaturalTwenty ? 1 : 0,
+            has_natural_twenty: false,
+            has_failed_attempt: false,
+            researched: true,
+          };
+
+          const { error: insertError } = await supabase
+            .from("spell_progress_summary")
+            .insert([insertData]);
+
+          if (insertError) {
+            console.error("Error inserting spell research:", insertError);
+            return;
+          }
+        }
+
+        const successMessage = isNaturalTwenty
+          ? `🎯 EXCELLENT RESEARCH! (Nat 20)\n${rollMessage}\n\nYou gained deep understanding of ${spellName} and earned 1 successful attempt!`
+          : `✅ Research Successful!\n${rollMessage}\n\nYou learned about ${spellName} and marked it as researched.`;
+
+        // eslint-disable-next-line no-restricted-globals
+        alert(successMessage);
       } else {
-        const { error: insertError } = await supabase
-          .from("spell_progress_summary")
-          .insert([
-            {
-              character_id: selectedCharacter.id,
-              discord_user_id: discordUserId,
-              spell_name: spellName,
-              successful_attempts: 0,
-              has_natural_twenty: false,
-              has_failed_attempt: false,
-              researched: true,
-            },
-          ]);
-
-        if (insertError) {
-          console.error("Error inserting spell research:", insertError);
-          return;
-        }
+        const failMessage = `❌ Research Failed\n${rollMessage}\n\n${spellName} proved too difficult to understand at this time.`;
+        // eslint-disable-next-line no-restricted-globals
+        alert(failMessage);
       }
 
       await loadSpellProgress();
     } catch (error) {
-      console.error("Error marking spell as researched:", error);
+      console.error("Error during research attempt:", error);
+      setError("Error occurred during research attempt");
+    } finally {
+      setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
     }
   };
 
@@ -956,7 +1053,12 @@ export const SubjectCard = ({
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
           <button
             onClick={() => markSpellAsResearched(spellName)}
-            disabled={isMastered || !selectedCharacter}
+            disabled={
+              isMastered ||
+              !selectedCharacter ||
+              attemptingSpells[spellName] ||
+              !findSpellData(spellName).year
+            }
             style={{
               backgroundColor: theme.warning || "#f59e0b",
               color: "white",
@@ -971,16 +1073,20 @@ export const SubjectCard = ({
               gap: "4px",
               transition: "all 0.2s ease",
               fontFamily: "inherit",
-              ...(isMastered || !selectedCharacter
+              ...(isMastered ||
+              !selectedCharacter ||
+              attemptingSpells[spellName] ||
+              !findSpellData(spellName).year
                 ? {
                     backgroundColor: theme.textSecondary,
                     cursor: "not-allowed",
                   }
                 : {}),
             }}
+            title={`Research ${spellName} (History of Magic Check)`}
           >
             <BookOpen size={14} />
-            Research
+            {attemptingSpells[spellName] ? "Rolling..." : "Research"}
           </button>
         </td>
         <td style={styles.tableCellMenu}>

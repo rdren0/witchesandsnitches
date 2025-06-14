@@ -48,7 +48,6 @@ const getModifierInfo = (spellName, subject, character) => {
       wandType: "None",
     };
   }
-
   const abilityScore = character.abilityScores[mapping.abilityScore];
   const abilityModifier = getAbilityModifier(abilityScore);
   const wandModifier = character.magicModifiers[mapping.wandModifier] || 0;

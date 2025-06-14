@@ -403,12 +403,17 @@ export const skillsByCastingStyle = {
   ],
 };
 
-// Updated subclasses data structure for data.js
 export const subclassesData = {
   Charms: {
     name: "Charms",
-    description: "Masters of precision magic and enchantments",
+    description:
+      "Masters of precision magic and enchantments with advanced spell techniques",
     level1Features: [
+      {
+        name: "Bewitching Studies",
+        description:
+          "At 1st level, you gain Target Practice and choose one additional feature that defines your approach to charms magic.",
+      },
       {
         name: "Target Practice",
         description:
@@ -424,141 +429,1264 @@ export const subclassesData = {
       {
         name: "Protective Enchantments",
         description:
-          "You gain access to the Protego spell. Additionally, when you cast a Protego, you may choose to affect a friendly creature within 30 feet. When you or a friendly creature is affected by one of your protego spells, they may roll 1d4 and add that number to the AC bonus of the spell.",
+          "You gain access to the Protego spell. Additionally, when you cast a Protego, you may choose to affect a friendly creature within 30 feet. When you or a friendly creature is affected by one of your protego spells, they may roll 1d4 and add that number to the AC bonus of the spell. At 5th level, you gain access to Protego Maxima and can cast either spell twice per round as reactions.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 4,
+        name: "Mastered Charms (Optional)",
+        description:
+          "Choose five cantrips as Mastered Charms, each castable once per short rest as a bonus action. +1 Dexterity (max 20).",
+      },
+      {
+        level: 6,
+        name: "Advanced Charmswork",
+        description:
+          "Choose Rapid Casting (cast multiple charms per action) or Professional Charmer (enhanced spell versions).",
+      },
+      {
+        level: 9,
+        name: "Double Cast",
+        description:
+          "Target an additional creature with non-damage spells without using extra spell slots (once per long rest).",
       },
     ],
     summary:
-      "Focus on precise targeting and protective magic with enhanced initiative and defensive capabilities.",
+      "Precise targeting with enhanced initiative and defensive magic, progressing to rapid casting and professional spell enhancements.",
   },
 
-  "Ghoul Studies and Ancient Studies": {
-    name: "Ghoul Studies and Ancient Studies",
-    description: "Scholars of dark creatures and ancient magical history",
+  "Jinxes, Hexes, and Curses": {
+    name: "Jinxes, Hexes, and Curses",
+    description:
+      "Specialists in harmful magic, curse-breaking, and dark arts combat",
     level1Features: [
       {
-        name: "Outward Expressions",
+        name: "Practical Studies",
         description:
-          "You gain proficiency in Magical Creatures or History of Magic and choose one of the following features.",
+          "At 1st level, you choose a specialization that defines your approach to dark magic - either becoming an Auror-in-training or focusing on curse-breaking techniques.",
       },
     ],
     level1Choices: [
       {
-        name: "Ghoulish Trick",
+        name: "Auror Training",
         description:
-          "You use illusionary trickery to take on a Ghoulish form. As a bonus action, you transform for 1 minute. You gain temporary hit points equal to 1d10 + your level, can frighten enemies, and are immune to the frightened condition. You can transform a number of times equal to your proficiency bonus per long rest.",
+          "You've started practicing skills to become an Auror. You learn potion recipes, gain an Auror's kit with tracking tools and healing vials (1d4 HP per dose, proficiency bonus doses per long rest), and gain proficiency in two of: Investigation, Potion-Making, Stealth, Survival.",
       },
       {
-        name: "Ancestral Call",
+        name: "Curse-Breaking",
         description:
-          "As an action, you call upon Ancient historical figures to fight alongside you. One creature of your choice becomes the target of the Ancients, which hinder its attacks until the start of your next turn, forcing Intelligence saving throws to avoid wasting attacks and spells.",
+          "Your curiosity in dismantling spells has found an outlet. When you or an ally within 5 feet are targeted by any Jinx, Hex, Curse, or Dark spell, you can use your reaction to make a spellcasting ability check (DC 10 + spell level). On success, you change the spell into a different locked-in JHC or Dark spell of your choosing.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Combat-Ready",
+        description:
+          "Choose Forceful Magic (bonus action melee spell attacks) or Magical Adrenaline (heal 1d10 + level as bonus action).",
+      },
+      {
+        level: 9,
+        name: "Enhanced Curses",
+        description:
+          "When you hit with a Jinx, Hex, or Curse, bonus action for additional damage equal to JHC + Charisma modifier.",
+      },
+      {
+        level: 10,
+        name: "Specialized Skills",
+        description:
+          "Choose Dark Traces (detect dark beings/magic) or Ward-Breaker (redirect area spells back to caster - requires Curse-Breaking).",
+      },
+      {
+        level: 14,
+        name: "Cursemaster",
+        description:
+          "Choose Dark Duelist (advantage vs dark spells, cast JHC spells one level higher) or Defensive Arts (4d6 force damage when spells miss you).",
       },
     ],
     summary:
-      "Transform into frightening forms or call upon ancient spirits to hinder your enemies.",
+      "Auror training with tracking abilities or curse-breaking expertise, progressing to combat magic and dark arts mastery.",
   },
 
-  "Defense Against the Dark Arts": {
-    name: "Defense Against the Dark Arts",
-    description: "Specialists in combating dark magic and protecting others",
+  Healing: {
+    name: "Healing",
+    description:
+      "Compassionate healers and medical magic specialists with advanced support abilities",
     level1Features: [
       {
-        name: "Dark Studies",
+        name: "Medical Studies",
         description:
-          "You gain proficiency with dark magic detection and protective spells.",
+          "At 1st level, you gain Star Grass Salve and choose one specialization that defines your approach to healing magic and support.",
+      },
+      {
+        name: "Star Grass Salve",
+        description:
+          "You learn the star grass salve recipe. Use Intelligence (Potion Making) or Wisdom (Medicine) for brewing checks instead of Wisdom (Potion Making). When administering salve to others, it heals additional HP equal to your level.",
       },
     ],
     level1Choices: [
       {
-        name: "Dark Traces",
+        name: "Unshakable Nerves",
         description:
-          "The presence of strong evil registers on your senses like a noxious odor. As an action, you can detect Dark Beings or Dark magics within 60 feet for one turn. You can use this a number of times equal to 1 + your Charisma modifier per long rest.",
+          "Your study of injuries and diseases has strengthened your resolve. You cannot be frightened by non-magical effects and have advantage on Constitution saving throws.",
       },
       {
-        name: "Ward-Breaker",
+        name: "Powerful Healer",
         description:
-          "You have perfected your ability to break spells and enchantments. When a hostile creature casts a Dark spell with an area of effect, you can use your reaction to make a spellcasting ability check to redirect the origin of the spell to be centered on the caster.",
+          "Your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points, the creature regains additional hit points equal to 2 + the spell's level. Unlocks 'An Ounce of Prevention' at 6th level.",
+      },
+      {
+        name: "Therapeutic Friendship",
+        description:
+          "Create magical bonds among willing creatures (up to proficiency bonus) within 30 feet for 10 minutes. Bonded creatures can add 1d4 to attack rolls, ability checks, or saving throws when within 30 feet of each other (once per turn). Unlocks 'A Saving-People Thing' progression.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 4,
+        name: "Restorative Presence (Optional ASI)",
+        description:
+          "Choose Preserve Life (distribute healing points among multiple targets) or Life Balm (movement + area healing).",
+      },
+      {
+        level: 6,
+        name: "Dedicated Protector",
+        description:
+          "Choose An Ounce of Prevention (self-heal when healing others - requires Powerful Healer), A Saving-People Thing (protective teleportation for bonded allies), or Potent Spellcasting (bonus radiant damage).",
+      },
+      {
+        level: 9,
+        name: "Spell Breaker",
+        description:
+          "When healing with spells, can also end one spell on the target (spell level ≤ healing spell slot level).",
+      },
+      {
+        level: 10,
+        name: "Moral Support",
+        description:
+          "Choose Never Give Up (death save advantage + bonus healing), Emergency Care Plan (doubled healing ranges), or When It Matters (NPC rescue feature).",
+      },
+      {
+        level: 18,
+        name: "Savior",
+        description:
+          "Choose Empathic Bond (enhanced friendship abilities - requires A Saving-People Thing) or Supreme Healing (maximize all healing dice).",
       },
     ],
     summary:
-      "Detect and counter dark magic, with abilities to sense evil and redirect harmful spells.",
+      "Medical expertise with three paths: resilience training, enhanced healing power, or magical friendship bonds with protective abilities.",
   },
 
-  Transfigurations: {
-    name: "Transfigurations",
-    description: "Masters of transformation and elemental magic",
+  Divinations: {
+    name: "Divinations",
+    description: "Seers and prophets who glimpse the future and navigate minds",
     level1Features: [
       {
-        name: "Scientific Studies",
+        name: "Clairvoyant Studies",
         description:
-          "Your scientific approach to transfiguration grants you enhanced understanding of magical transformations.",
+          "At 1st level, you gain a Diviner's Kit and proficiency with it. You add half your proficiency bonus to Initiative and cannot be surprised while conscious. Choose one specialization that defines your prophetic abilities.",
       },
     ],
     level1Choices: [
       {
-        name: "Anatomy Textbook",
+        name: "Foresight",
         description:
-          "Your knowledge of creature anatomy makes transfigurations easier. If a Transfiguration spell must be cast at a higher level to involve a living creature, you can involve a living creature and consume a spell slot one level lower than what's required.",
+          "You start seeing omens everywhere. After a long rest, roll two d20s and record them as foresight rolls. You can expend these rolls to replace attack rolls, saving throws, or ability checks for yourself or visible creatures (once per turn). Gain a third foresight roll at 10th level. Unlocks Greater Foresight at 14th level.",
       },
       {
-        name: "Intuitive Conversion",
+        name: "Legilimency",
         description:
-          "Conceptualizing a transfiguration just comes easily to you. When you cast Vera Verto, it automatically affects targets one size larger than specified by the spell slot level.",
+          "You add Legilimens to your locked spells and can cast it at-will (verbally or non-verbally). Attempts to resist your Legilimens are made at disadvantage. Unlocks advanced mind control abilities: Skilled Occlumens (6th), Darting Eyes (14th), and Master of Minds (18th).",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Farseeing",
+        description:
+          "Choose Font of Divination (regain spell slots when casting divination spells) or Skilled Occlumens (immunity to mental intrusion + false information control - Legilimency path).",
       },
       {
-        name: "Elementalist",
+        level: 9,
+        name: "Sensing Danger",
         description:
-          "Your study of Alchemy has given you insights into the nature of elements. Spells involving only fire, water, earth, or air are automatically cast one level higher, or you deal an additional 1d4 damage with acid, cold, fire, lightning, or thunder spells.",
+          "Add full proficiency bonus to initiative and half your Divinations modifier to AC (minimum +1).",
+      },
+      {
+        level: 10,
+        name: "The Unseeable",
+        description:
+          "Choose Third Eye (enhanced perception abilities: darkvision, language comprehension, or see invisibility) or Mystic Sleep (dream communication, scrying, and portal creation).",
+      },
+      {
+        level: 14,
+        name: "Revealed Intentions",
+        description:
+          "Auto-succeed one failed downtime activity per downtime. Choose Greater Foresight (reroll one foresight die daily - requires Foresight) or Darting Eyes (combat mind control - requires Legilimency).",
+      },
+      {
+        level: 18,
+        name: "Mystical Knowledge",
+        description:
+          "Choose Vivid Visions (see and execute perfect future actions) or Master of Minds (weaponized Legilimens with psychic damage - requires Legilimency).",
       },
     ],
     summary:
-      "Enhanced transformation abilities with options for creature mastery, size manipulation, or elemental focus.",
+      "Two distinct paths: Foresight (probability manipulation and future sight) or Legilimency (mind reading and mental control), each with unique progression chains.",
   },
 
-  Obscurial: {
-    name: "Obscurial",
-    description: "Harbors dark, uncontrolled magical power",
+  Magizoology: {
+    name: "Magizoology",
+    description:
+      "Beast masters and creature experts with magical companions and nature magic",
     level1Features: [
       {
-        name: "Suppressed Magic",
+        name: "Biological Studies",
         description:
-          "Your magic has been suppressed, creating dangerous dark energy that you're learning to control.",
+          "At 1st level, your study of magical creatures allows you to cast any known Healing spells on beasts. You gain a small trunk that carries magical beasts inside. Choose one specialization that defines your approach to creature study.",
       },
     ],
     level1Choices: [
       {
-        name: "Dark Energy Release",
+        name: "Studious",
         description:
-          "You can unleash bursts of dark magical energy, dealing necrotic damage to enemies but also potentially harming yourself. This power grows stronger but more dangerous as you level up.",
+          "You maintain a personal notebook of beast findings. Whenever you add your Magical Creatures proficiency to an ability check, also add your Intelligence modifier. Focuses on academic knowledge and creature analysis.",
+      },
+      {
+        name: "Creature Empathy",
+        description:
+          "You have innate ability to communicate with bestial creatures. As an action, communicate simple ideas to creatures with Intelligence 3+ and read their basic mood, intent, emotional state, magical effects, needs, and how to avoid their attacks. Focuses on emotional connection and communication.",
       },
     ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Way of the Wild",
+        description:
+          "Core: Wizard's Best Friend (beast companion with Command Dice system). Choose: Basically a Disney Princess (Magizoo spell list access) or Prepared Ambush (magical trap weaving).",
+      },
+      {
+        level: 9,
+        name: "Call Beasts",
+        description:
+          "High-pitched wail summons swarms to attack moving creatures (2d12 slashing damage in 5-foot squares). Once per short rest reaction ability.",
+      },
+      {
+        level: 10,
+        name: "Outdoorswizard",
+        description:
+          "Core: Gentle Caretaker (enhanced beast companion stats). Choose: Survivalist (terrain mastery + group travel benefits) or Monster Hunting (analyze creature resistances/immunities).",
+      },
+      {
+        level: 14,
+        name: "Genus Genius",
+        description:
+          "Choose: Beast Whisperer (calm hostile beasts), Exploited Vulnerabilities (mark weaknesses for allies), Based Magizoologist (healing aura for companions), or Friend of All (natural creatures hesitant to attack).",
+      },
+      {
+        level: 18,
+        name: "Sixth Sense",
+        description:
+          "Choose: Draconic Empathy (dragon companions if you've raised one from egg - requires Wizard's Best Friend) or Hunter's Reflexes (reaction spellcasting to interrupt enemy actions).",
+      },
+    ],
+    beastCompanionSystem: {
+      description:
+        "Complex companion system with Command Dice (d6, becomes d8 at 14th), Beast Commands (Attack, Down, Find, Grab, Rush), and scaling companion stats.",
+      spellList:
+        "Magizoo Spell List includes creature communication, summoning, control, and transformation spells (Insectum, Bestia Vinculum, Obtestor, Imperio Creatura, Draconiverto, etc.)",
+    },
     summary:
-      "Channel dangerous dark magic at the risk of self-harm, with devastating potential at higher levels.",
+      "Two paths: Studious (academic analysis) or Creature Empathy (emotional bonds). Both gain beast companions and can specialize in spell access, trap-making, survivalism, or monster hunting.",
+  },
+
+  "Dark Arts": {
+    name: "Dark Arts",
+    description:
+      "Practitioners of forbidden magic with corruption-based power and dangerous abilities",
+    level1Features: [
+      {
+        name: "Tricks of the Trade",
+        description:
+          "At 1st level, you learn to create Liquid Darkness potions (magical smoke for concealment/area denial + brewing assistance using Charisma/Perception). Choose one dark specialization that defines your approach to forbidden magic.",
+      },
+      {
+        name: "Liquid Darkness",
+        description:
+          "You learn the Liquid Darkness potion recipe. When brewing, you can use Charisma (Persuasion) for asking help or Wisdom (Perception) for cheating instead of Wisdom (Potion Making). Creates concealing magical smoke when consumed or thrown.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Embracing the Darkness",
+        description:
+          "You gain power through corruption. Gain additional Sorcery Points equal to your Corruption Points, but take 1d4 psychic damage per corrupted sorcery point used. Higher corruption unlocks enhanced abilities at later levels.",
+      },
+      {
+        name: "Malice",
+        description:
+          "Channel anger into malicious curses. As a bonus action, curse a creature within 30 feet for 1 minute: gain proficiency bonus damage (once per spell), critical hits on 19-20, and heal when the target dies (level + spellcasting modifier HP). Once per short rest.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Acolyte of Shadows",
+        description:
+          "Core: Forbidden Knowledge (access Restricted Section for dark spells). Choose: Wrathful Magic (5 + 2×level necrotic damage reactions) or Dark Intentions (Frightening or Judging effects, 2/long rest).",
+      },
+      {
+        level: 9,
+        name: "Death Wish",
+        description:
+          "Mark creatures for termination - next attack against marked target has vulnerability to all damage. Uses equal to half spellcasting modifier per long rest.",
+      },
+      {
+        level: 10,
+        name: "Deeper Darkness",
+        description:
+          "Choose: Visions of Death (Wisdom save or deafened + 3d10/6d10 psychic damage) or Dark Duelist (auto-upcast dark spells + random metamagic if corrupted enough).",
+      },
+      {
+        level: 14,
+        name: "Precision Strike",
+        description:
+          "Choose: Advanced Defenses (dual-cast with protego), Dark Curse (spell attacks cause exhaustion), or Greater Judgment (reaction spell attacks - requires Dark Intentions).",
+      },
+      {
+        level: 18,
+        name: "Consumed By The Dark",
+        description:
+          "Choose: Punishment (attackers take psychic damage equal to Charisma modifier) or Suffering (double spell attack damage on failed Constitution saves based on corruption level).",
+      },
+    ],
+    corruptionSystem: {
+      description:
+        "Corruption Points enhance power but increase risks. Higher corruption unlocks random metamagic effects and determines save DCs for ultimate abilities.",
+    },
+    summary:
+      "Two paths: Embracing corruption for enhanced power with risks, or Malice for curse-based combat. Both progress toward forbidden knowledge and devastating late-game abilities.",
+  },
+
+  Culinarian: {
+    name: "Culinarian",
+    description:
+      "Masters of magical cooking with recipe-based buffs and culinary battlefield control",
+    level1Features: [
+      {
+        name: "Foodie",
+        description:
+          "At 1st level, you gain the Recipes feature (prepare proficiency bonus meals per long rest from 20+ magical recipes with quality levels) and proficiency in Survival and Constitution saves. Choose your culinary specialization approach.",
+      },
+      {
+        name: "Recipes System",
+        description:
+          "Learn 3 recipes initially from extensive list (Chocolate Frogs, Pepper Imps, magical steaks, etc.). Recipes have quality levels: Flawed, Regular, Exceptional, Superior. Creatures consume meals as bonus actions for various buffs, healing, and utility effects lasting minutes to hours.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Cooking by the Book",
+        description:
+          "Your culinary expertise overlaps with potion-making. Use Survival (Wisdom) instead of Potion-Making (Wisdom) when brewing potions. Gain advantage on Constitution saving throws due to fearless self-experimentation and iron stomach.",
+      },
+      {
+        name: "No Reservations",
+        description:
+          "You're a devoted lover of Muggle cuisine and cultural foods. Gain proficiency in Muggle Studies. When Culinarian features require Survival (Wisdom) checks, you can use Muggle Studies (Intelligence) instead for your broad culinary knowledge.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 4,
+        name: "Honorary House Elf (Optional ASI)",
+        description:
+          "Favorite Food: Learn creatures' favorite foods through Insight checks, then use Survival instead of Persuasion when giving them their preferred meals.",
+      },
+      {
+        level: 6,
+        name: "Worldly Insights",
+        description:
+          "Choose: Fast Food (summon completed locked-in recipes from kitchens as action, uses equal to spellcasting modifier) or Yes, Chef! (Help action as bonus + advantage if they yell 'Yes, Chef!').",
+      },
+      {
+        level: 9,
+        name: "Nourishment",
+        description:
+          "Whenever allies consume your recipes, they gain 2d6 + highest mental ability modifier temporary hit points in addition to the recipe's normal effects.",
+      },
+      {
+        level: 10,
+        name: "Main Dish",
+        description:
+          "Choose: Sugar Rush (meals grant extra action for spells/utility), Dinnertime Bonding (semester banquets grant attendees Foresight rolls for satisfactory answers).",
+      },
+      {
+        level: 14,
+        name: "Pièce de Résistance",
+        description:
+          "Enhanced versions: YES! CHEF! (force disadvantage on saves), Royal Banquet (2 Foresight rolls + secret bonuses), or Eating Contest Champion (consume 2 meals per bonus action).",
+      },
+      {
+        level: 18,
+        name: "Michelin Starred Chef",
+        description:
+          "Choose: It's F*cking Raw! (force-feed meals at range, choose positive/negative effects) or Where's The Lamb Sauce! (60ft psychic damage aura + thrown kitchen utensil attacks).",
+      },
+    ],
+    recipeSystem: {
+      description:
+        "20+ magical recipes with scaling quality levels. Effects include: ability bonuses, damage resistance/immunity, healing, speed boosts, special movement, damage auras, telepathic links, and unique utility effects.",
+      examples:
+        "Chocolate Frog (condition removal), Pepper Imp (damage aura), Diricawl Jerky (teleportation swapping), Longbottom Stew (damage resistance), Twinkie (healing)",
+    },
+    summary:
+      "Two paths: Traditional cooking expertise or Muggle cuisine mastery. Both create magical meals with extensive buff effects and can progress toward kitchen summoning, team coordination, or devastating culinary combat abilities.",
+  },
+
+  "Herbology & Potions": {
+    name: "Herbology & Potions",
+    description:
+      "Botanical experts and master brewers who specialize in plant cultivation and potion creation, known as 'Bottle Fame'",
+    level1Features: [
+      {
+        name: "Bottle Fame",
+        description:
+          "At 1st level, you gain expertise in either potions or herbology, developing a deep connection to the natural magical arts. Choose your specialization path between The Subtle Science (potions) or Green Thumb (herbology).",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "The Subtle Science",
+        description:
+          "You inherit a well-loved potions textbook filled with ancestral notes. Gain Potions Kit and proficiency in Potions Kit and Potion-Making. Add Intelligence modifier to Potion Making (Wisdom) checks. Access to 3 additional common potion recipes, learning 2 Uncommon at level 6, 1 Rare at level 10, and 1 Very Rare at level 14.",
+      },
+      {
+        name: "Green Thumb",
+        description:
+          "Gain Herbology Kit and proficiency in Herbology Kit and skill. Cast Orchideous wordlessly, wandlessly at will. Add Wisdom to Herbology (Intelligence) checks. Receive portable greenhouse and plant companions with combat abilities: Attack (extra 1d8 piercing damage once per turn), Symbiotic Connection (Herbology modifier to initiative), and enhanced movement/terrain ignoring during combat.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 3,
+        name: "Crafted Sorcerer",
+        description:
+          "Choose: Metapotions (Mastery Points instead of Sorcery Points to modify potions with special effects like Atomized, Delayed, Empowered, etc.) or Natural Evocations (Nature Points for abilities like Nature's Wrath, Tree Stride, Summon Spirit).",
+      },
+      {
+        level: 4,
+        name: "Toxic Presence (Optional ASI)",
+        description:
+          "Constant exposure to toxins makes you venomous. When creatures move within 10ft or start turn there, use reaction to deal 1d4 necrotic damage (Constitution save negates). Damage scales: 1d6 at 6th, 1d8 at 10th, 1d10 at 14th level.",
+      },
+      {
+        level: 6,
+        name: "Brew Glory",
+        description:
+          "Gain proficiency in Herbology/Potion-Making or Expertise if already proficient. Choose: Plant Veil (+10 Stealth when camouflaged, plant gains Defend/Deflect), Don't Waste a Drop (dilute potions to create multiple lower-quality versions), or Herbivify (heal allies with plant energy using d6s equal to level).",
+      },
+      {
+        level: 9,
+        name: "Delayed Sorcery",
+        description:
+          "Finally gain access to Sorcery Points and Metamagic abilities as shown on progression table, starting with 5 Sorcery Points and 1 Metamagic option.",
+      },
+      {
+        level: 10,
+        name: "Asphodel and Wormwood",
+        description:
+          "Gain Expertise in Herbology or Potion-Making. Choose: Entangle (create protective dome for allies), Whirlwind (plant attacks multiple targets), Designated Taste Tester (auto-identify harmful substances + immunity to blinded/deafened/frightened/poisoned), or Quick-Brew Mastery (brew potions in rounds using Mastery Points).",
+      },
+      {
+        level: 14,
+        name: "The Delicate Power of Liquids",
+        description:
+          "Choose: Metapotion Prodigy (unlimited metapotion effects per potion), My Friend Felix (brew lesser Felix Felicis once per semester for 3 monthly luck points), or Nature's Sanctuary (beasts/plants hesitant to attack + plant companion gains Dodge reaction).",
+      },
+      {
+        level: 18,
+        name: "Mind and Body",
+        description:
+          "Choose: Snape's Greasy Hair (immunity to disease + resistance to acid/necrotic/poison damage) or Plant Aspect (immunity to acid/necrotic/poison damage and disease + vulnerability to fire).",
+      },
+    ],
+    specialSystems: {
+      metapotions:
+        "15+ modification effects including Alluring, Atomized, Delayed, Diluted, Distilled, Empowered, Enhanced, Extended, Innocuous, Maximized Toxin, Potioneer's Dart, Quick-Brew, and Tailored Toxin",
+      naturalEvocations:
+        "Nature's Wrath (reroll missed attacks), Carnivorous Force (temp HP + spell bonuses), Tree Stride (teleport between trees), Summon Spirit (elemental spirits with damage auras)",
+      plantCompanions:
+        "Portable greenhouse with Walking Shrub, Bouncing Bulb Patch, Fire-Seed Bush, plus combat companions like Silver-Leaf Tree, Fanged Geranium, Devil's Snare, Venomous Tentacula",
+    },
+    summary:
+      "Two distinct paths: Potions mastery with Metapotion modifications and advanced brewing techniques, or Herbology expertise with plant companions and Natural Evocations. Both paths eventually gain delayed Sorcery abilities and can achieve immunity to various damage types at high levels.",
+  },
+  "Arithmancy & Runes": {
+    name: "Arithmancy & Runes",
+    description:
+      "Masters of ancient magical theory who specialize in runic inscriptions and mathematical spell manipulation, known as 'Alternate Spellcasters'",
+    level1Features: [
+      {
+        name: "Alternate Spellcaster",
+        description:
+          "Learn Flagrate spell (cast as free action, always subtle). Gain access to Ancient Spellbook containing Runic and Arithmantic spells that can be cast subtly without sorcery points. Choose your specialization approach between School of Magic Expert or Researcher.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "School of Magic Expert",
+        description:
+          "Choose one school for +1 modifier and special ability: Divinations (force rerolls 2/long rest), Charms (charm creatures within 5ft), Transfigurations (halve/double weight), Healing (magical ward from healing spells), or JHC (Dark Empowerment for AC/speed/concentration bonuses).",
+      },
+      {
+        name: "Researcher",
+        description:
+          "Extensive spell study grants early access to advanced magic. Add Devicto spell with both Arithmantic AND Runic tags to spellbook. Add half Wisdom modifier to spell research checks. All successfully researched spells gain both magical tags.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 4,
+        name: "Extended Downtime (Optional ASI)",
+        description:
+          "Increase Intelligence or Wisdom by 1 (max 20). Gain additional downtime slot for spell research, practice (two attempts), or teaching Ancient Spellbook spells to other characters.",
+      },
+      {
+        level: 6,
+        name: "Exhaustive Studies",
+        description:
+          "Choose: Enhanced Spellwork (spells cast in appropriate classes gain tags + special effects: Runic spells get dedication extension/psychic damage, Arithmantic get range extension/dedication to concentration) or Private Lessons (extra spell attempts, reduced DC, access to specialized spell lists).",
+      },
+      {
+        level: 9,
+        name: "Resilient Mind",
+        description:
+          "Gain proficiency in Wisdom saving throws. If already proficient, choose Intelligence or Charisma saving throws instead.",
+      },
+      {
+        level: 10,
+        name: "Distinctive Approach",
+        description:
+          "Choose: Spellmaker (create spells in 2 downtime slots, 19-20 completes in one slot, dual-tagged spells cast at -1 level) or Metamagical Application (5 Sorcery Points + unique metamagics: Converted, Controlled, Triggered, Continued Spell).",
+      },
+      {
+        level: 14,
+        name: "Rare Talents",
+        description:
+          "Choose: Nimble Fingers (Sleight of Hand proficiency/expertise + add half Dex modifier to dual-tagged spell attacks/saves) or School of Magic Prodigy (enhanced school abilities: guaranteed success/failure, twin charms, gravity field, spell resistance, extra Dark Empowerment).",
+      },
+      {
+        level: 18,
+        name: "Practiced and Prepared",
+        description:
+          "Choose: Perfected Spellwork (requires Enhanced Spellwork - maximize damage dice for Runic spells, maximize healing dice for Arithmantic spells once per round) or Spell Tome (requires Private Lessons - lock spells after one success, gain access to additional specialized spell lists).",
+      },
+    ],
+    specialSystems: {
+      ancientSpellbook:
+        "Unique spells with Runic/Arithmantic tags including Facias Infirmitatem, Utilitatem, Impulso, Exagitatus, Maledicto, Sagittario Maxima, Sanitatem, Potentia Spiculum",
+      runicEffects:
+        "Dedication extension (+1 minute), extra 1d6 psychic damage once per round",
+      arithmanticEffects:
+        "Range extension (+10 feet), reduce Dedication spells to Concentration",
+      schoolProgression:
+        "Each school of magic offers specialized abilities that scale from basic utility at level 1 to powerful prodigy effects at level 14",
+      spellSharing:
+        "Ancient Spellbook spells can be taught to other subclasses using downtime slots or free time during sessions",
+    },
+    summary:
+      "Two main paths: School specialization with scaling magical school abilities and enhanced spellcasting, or Research focus with spell creation and metamagical applications. Both paths utilize the Ancient Spellbook system with Runic and Arithmantic tagged spells that offer unique mechanical benefits and can be cast subtly.",
+  },
+
+  Artisan: {
+    name: "Artisan",
+    description:
+      "Creative masters and skilled performers known as 'Skill Monkeys' who excel in magical crafting or musical performance",
+    level1Features: [
+      {
+        name: "Skill Monkey",
+        description:
+          "Gain proficiency in Performance and choose your approach to mastery. Select between focused expertise in specific skills or broad competency across all abilities.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Practice Makes Perfect",
+        description:
+          "Gain proficiency in one skill of your choice. Choose one skill you're proficient in and gain expertise (double proficiency bonus) with that skill, representing dedicated focus and specialization.",
+      },
+      {
+        name: "Master of None",
+        description:
+          "Add half your proficiency bonus (rounded down) to any ability check that doesn't already include your proficiency bonus, representing broad knowledge and adaptability across all fields.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 2,
+        name: "Call to the Arts",
+        description:
+          "Choose your artistic specialization: Imbuement (magical item crafting with Artisanal Imbuements, learn 4 initially + more at levels 12/14/16, imbue items equal to spellcasting modifier) or Harmonancy (musical performance with charm abilities, use instruments as spellcasting focus).",
+      },
+      {
+        level: 4,
+        name: "Crafty (Optional ASI)",
+        description:
+          "Magically create artisan's tools in 1 hour (can coincide with rest). Double proficiency bonus for all tool-based ability checks, representing mastery over magical and mundane crafting.",
+      },
+      {
+        level: 6,
+        name: "Creative Muse",
+        description:
+          "Learn Animatus Locomotor spell (animate object familiars). Choose: Flash of Genius (add spellcasting modifier to ally checks/saves within 30ft) or Beguiling Performance (6 Harmonic Tunes powered by 5 d8 Harmonic dice for combat maneuvers).",
+      },
+      {
+        level: 8,
+        name: "Advanced Imbuement (Optional ASI)",
+        description:
+          "Attune to up to 4 magic items simultaneously. Craft common/uncommon magic items in quarter time at half cost, representing advanced understanding of magical item creation.",
+      },
+      {
+        level: 9,
+        name: "Art & Soul",
+        description:
+          "Choose: Song of Rest (extra 1d6 healing during short rests, scales to 1d12 at level 17) or Magic Jolt (familiar attacks deal extra 2d6 force damage or heal 2d6 HP, uses equal to spellcasting modifier).",
+      },
+      {
+        level: 10,
+        name: "Pure Talent",
+        description:
+          "Choose: Bombastic Rizz (majestic presence forces saves or attackers can't target you), Reliable Talent (treat d20 rolls of 9 or lower as 10), Spell-Storing Item (store 1st-2nd level spells in objects), or Magical Secrets (learn from specialist spell lists).",
+      },
+      {
+        level: 14,
+        name: "Avant-Garde",
+        description:
+          "Choose: Augmented Healer (imbued items grant temp HP, cast Reparifors for free), Imbuement Expert (attune to 5 items, ignore requirements), or Improved Performance (Harmonic dice become d10s, d12s at level 18).",
+      },
+      {
+        level: 18,
+        name: "Virtuoso",
+        description:
+          "Choose: Crafter's Spirit (+1 saves per attuned item, avoid death by ending imbuement), Imbuement Master (attune to 7 items), or Epic Performer (regain Harmonic die when rolling initiative with none remaining).",
+      },
+    ],
+    specialSystems: {
+      artisanalImbuements:
+        "15+ magical item effects including Enhanced Weapon/Defense, Item of Apparition, Homunculus Servant, Arcane Propulsion Item, Spell-Refueling Item, and Replicate Magic Item options",
+      harmonicTunes:
+        "20+ combat maneuvers including Annoying Lick, Face Melting Solo, Power Chord, Head Bangin' Riff, Jam Out, Share The Mic, and Shredding - powered by Harmonic dice for tactical battlefield control",
+      animatusLocomotor:
+        "3rd level spell creating animated object familiars from inanimate items within 5-foot cube, acts independently with telepathic communication and spell delivery capabilities",
+      progressionPaths:
+        "Two distinct specializations: Imbuement focuses on magical item creation and attunement mastery, Harmonancy focuses on performance-based buffs and musical combat techniques",
+    },
+    summary:
+      "Highly versatile subclass with two main paths: Imbuement specialists become master crafters with extensive magical item creation and up to 7 simultaneous attunements, while Harmonancy performers use musical magic for battlefield control and party support. Both paths offer significant skill expertise and unique magical abilities.",
+  },
+
+  "Obscurial Magic": {
+    name: "Obscurial Magic",
+    description:
+      "Dark practitioners afflicted with volatile, self-destructive magical energy known as 'The Afflicted' - masters of chaotic Obscurus power",
+    level1Features: [
+      {
+        name: "The Afflicted",
+        description:
+          "Manifestation of repressed magical abilities creating volatile Obscurus energy. The constant battle against one's own magic takes profound tolls on body and mind, requiring careful management of destructive power.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Obscurial Magic Initiate",
+        description:
+          "Sacrifice life force for spell power - take 1d4 damage to deal extra 1d6 damage with next spell (once per turn). Extra damage scales: 1d8 at 6th level, 1d10 at 10th level, 1d12 at 17th level. Wand glows with dark aura when activated.",
+      },
+      {
+        name: "Obscurial Illusion",
+        description:
+          "Create realistic illusions as action - 5-foot cube objects with sight, sound, smell lasting 10 minutes. Creatures need Intelligence (Investigation) vs spell save DC to detect. Uses equal to proficiency bonus per short/long rest.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "The Cursed",
+        description:
+          "Mental deterioration increases as Obscurus power grows. Lines between reality and illusion blur. Choose: Obscurial Maledict (curse enemies with 5 different effects, causes exhaustion) or Obscurial Concealment (shadow stealth, dark aura, mind shield abilities).",
+      },
+      {
+        level: 9,
+        name: "Shadow Walk",
+        description:
+          "Teleport up to 120 feet as bonus action between dim light or darkness areas while shrouded in Obscurus darkness, representing mastery over shadow manipulation.",
+      },
+      {
+        level: 10,
+        name: "The Beset",
+        description:
+          "Emotional turmoil intensifies with overwhelming negative emotions. Choose: Obscurial Spell Mastery (spend spell slots for +2d6 damage per level + paralysis effect) or Obscurial Magic Aura (10ft protective aura with necrotic damage to enemies, resistance for allies).",
+      },
+      {
+        level: 14,
+        name: "The Madness",
+        description:
+          "Obscurus takes firm hold, eroding mental balance. Choose: Obscurial Frenzy (1-minute berserk state with advantage, multi-attack, but loss of control and inability to cast spells) or Obscurial Consumption (drain life from slain creatures for HP and spell slot recovery).",
+      },
+      {
+        level: 18,
+        name: "The Malevolent",
+        description:
+          "Powers become fully tainted and warped. Choose: Obscurial Magic Annihilation (30ft radius 8d6 necrotic damage wave, take damage equal to level) or Obscurial Curse Mastery (enhanced 1-hour curses preventing healing with extra damage and advantage).",
+      },
+    ],
+    specialSystems: {
+      selfHarmMechanics:
+        "Most abilities require sacrificing health, taking exhaustion, or suffering penalties - representing the dangerous nature of Obscurus magic",
+      curseVarieties:
+        "5 different curse types: Moon (disadvantage/paranoia), Crimson (damage/poison), Domination (psychic damage/blind), Madness (friendly fire), Misdirection (fear/forced movement)",
+      progressiveInstability:
+        "Each tier represents increasing loss of control: Afflicted → Cursed → Beset → Madness → Malevolent",
+      darknessThemes:
+        "Shadow-based abilities including stealth bonuses, teleportation, and aura effects that interact with light levels",
+    },
+    summary:
+      "High-risk, high-reward subclass focused on dark magic with self-destructive elements. Two main paths: direct magical enhancement with increasing damage potential, or stealth/curse specialization. All abilities carry significant costs representing the dangerous nature of Obscurial magic, with progression showing increasing loss of control and mental deterioration.",
   },
 
   Defender: {
     name: "Defender",
-    description: "Protective specialists focused on shielding allies",
+    description:
+      "Protective specialists focused on shielding allies and controlling battlefield positioning through defensive magic and tactical support",
     level1Features: [
       {
         name: "Mitigating Defense",
         description:
-          "You specialize in protecting yourself and your allies from harm.",
+          "Master defensive techniques to protect yourself and allies from harm. Choose your approach between reactive critical hit prevention or passive protective presence.",
       },
     ],
     level1Choices: [
       {
         name: "Critical Deflection",
         description:
-          "As a reaction when you or an ally within 20 feet suffers a critical hit, you can turn that attack into a normal hit. You can use this a number of times equal to your spellcasting ability modifier per long rest.",
+          "As reaction, turn critical hits into normal hits for you or allies within 20 feet, canceling critical effects. Uses equal to spellcasting modifier per long rest, representing precise defensive timing.",
       },
       {
         name: "Shielding Presence",
         description:
-          "When your allies are within 10 feet of you, they gain a +1 bonus to their Armor Class. At 6th level, this bonus increases to +2.",
+          "Allies within 10 feet gain +1 AC (+2 at 6th level) from your protective aura, representing constant defensive awareness and positioning that shields nearby companions.",
       },
     ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Defensive Alliances",
+        description:
+          "Choose: Unbreakable Bonds (bind to proficiency bonus allies for temp HP, attack bonuses, reactive spells, or coordinated attacks) or Protective Distraction (impose disadvantage on attacks against allies within 30ft via mocking insults, proficiency bonus uses per short rest).",
+      },
+      {
+        level: 9,
+        name: "Constant Vigilance",
+        description:
+          "Emit alertness aura while conscious. You and chosen creatures within 10 feet gain bonus to initiative equal to spellcasting modifier. Range increases to 30 feet at 18th level.",
+      },
+      {
+        level: 10,
+        name: "Influential Tactics",
+        description:
+          "Choose: Provocative Strikes (successful attacks either grant advantage to next ally attack or force Wisdom save to goad target into focusing on you) or Bolster Confidence (Persuasion checks grant friendly creatures advantage on next ability check within hour).",
+      },
+      {
+        level: 14,
+        name: "Warding Sanctuary",
+        description:
+          "Choose: Warding Aura (requires Unbreakable Bonds - bound allies gain temp HP equal to your level per turn, protection from targeting at 0 HP, action for hour-long advantage on saves) or Guardian's Respite (30ft sanctuary spell-like effect for 10 minutes, complete protection but no spellcasting out).",
+      },
+    ],
+    specialSystems: {
+      unbreakableBonds:
+        "Bind to specific allies (proficiency bonus number) for enhanced cooperative abilities including temp HP, attack bonuses, reactive spell attacks, and coordinated strikes",
+      protectiveReactions:
+        "Multiple reaction-based abilities to prevent damage, reduce attack effectiveness, or redirect enemy focus away from vulnerable allies",
+      auraEffects:
+        "Passive benefits that scale with level, providing AC bonuses, initiative bonuses, and temporary hit points to allies within range",
+      sanctuaryMagic:
+        "Ultimate defensive ability creating zones of complete protection with sanctuary spell effects and anti-apparition properties",
+    },
     summary:
-      "Protect allies from critical hits or provide constant AC bonuses to nearby teammates.",
+      "Two main defensive paths: Unbreakable Bonds focuses on deep connections with specific allies for enhanced cooperative tactics, while general protection offers broader defensive coverage. Both paths emphasize reaction-based protection, battlefield control, and creating safe zones for allies while manipulating enemy targeting priorities.",
+  },
+  "Grim Diviner": {
+    name: "Grim Diviner",
+    description:
+      "Masters of dark divination magic who peer into forbidden futures and manipulate fate through shadow and fear",
+    level1Features: [
+      {
+        name: "Grim Presence",
+        description:
+          "Gain Diviner's Kit and proficiency. Your divination magic takes on dark, ominous overtones as you peer into forbidden aspects of fate and future. Choose your approach to manipulating destiny.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Dark Visionary",
+        description:
+          "Roll d20 daily for Visionary Roll, replace any attack/save/check with this result once per day. Scales: affect others at 6th level, gain 2nd roll at 10th level, roll 3 and keep 2 at 14th level.",
+      },
+      {
+        name: "Shadowy Influences",
+        description:
+          "Gain Fraudemo spell cast wandlessly/wordlessly with both sound and image. At 6th level, gain Fraudemo Maxima and ability to change illusion nature with action while maintaining concentration.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Grim Sight",
+        description:
+          "Gain Dark Legilimens (add Legilimens spell, witness worst fears instead of thoughts). Choose: Foresight Glimpse (bonus action for advantage on next roll, half proficiency bonus uses) or Soul Tether (regain HP equal to half damage dealt by dark-tagged spells).",
+      },
+      {
+        level: 9,
+        name: "Grim Psychometry",
+        description:
+          "Advantage on Intelligence (History) checks about sinister/tragic history of touched objects or current location. High rolls may trigger visions of dark past events at DM discretion.",
+      },
+      {
+        level: 10,
+        name: "Grim Control",
+        description:
+          "Gain Chambers of Forbidden Secrets (learn 2 dark spells of 5th level or lower). Choose: Emotional Manipulation (control emotions for 1 minute, advantage on Charisma checks), Mind of the Grave (command dead/Inferius for 24 hours), or Illusion of Self (reaction to make attacks auto-miss).",
+      },
+      {
+        level: 14,
+        name: "Grim Mastery",
+        description:
+          "Choose: Death Wish (mark creature for vulnerability to next attack + auto-succeed one save/check per long rest), Shadow Infusion (2d8 psychic damage start of next turn + disadvantage on next save), or Path of Rot (Mind of the Grave creatures gain damage bonus equal to Divinations modifier).",
+      },
+      {
+        level: 18,
+        name: "Grim Being",
+        description:
+          "Choose: Dreadful Aspect (30ft aura of gloom reducing light, frightening enemies for 4d10 psychic damage, bonus action shadow attacks for 3d10+modifier necrotic) or Mind Mastery (telepathy immunity, psychic resistance with reflection, touch charm incapacitated beings until cured).",
+      },
+    ],
+    specialSystems: {
+      divinersCurses:
+        "Access to unique dark divination spells: Fraudemo, Ignis Lunalis, Formidulosus, Exspiravit, Fraudemo Maxima, Timor, Relicium, Oculus Malus, Menus Eruptus",
+      visionaryRolls:
+        "Unique dice manipulation system allowing predetermined outcomes on important rolls, scaling from personal use to affecting others",
+      darkLegilimens:
+        "Enhanced mind reading focusing on fears rather than thoughts, representing twisted divination abilities",
+      forbiddenKnowledge:
+        "Access to restricted dark spells normally unavailable to regular casters",
+      emotionalControl:
+        "Manipulation of target emotions for social advantages and behavioral influence",
+    },
+    summary:
+      "Two main paths: Dark Visionary focuses on fate manipulation through predetermined dice rolls and future sight, while Shadowy Influences specializes in illusion magic and deception. Both paths converge on forbidden knowledge access and can progress toward either devastating area-effect abilities or complete mental domination. Heavy emphasis on dark magic, fear effects, and manipulation of both living and dead creatures.",
+  },
+
+  Astronomy: {
+    name: "Astronomy",
+    description:
+      "Celestial scholars who harness the power of stars, moons, and cosmic forces through astronomical knowledge and starlight magic",
+    level1Features: [
+      {
+        name: "Astronomer's Curiosity",
+        description:
+          "Gain proficiency with Astronomer's tools, access to Astronomic Spell list, and proficiency in Perception or Insight. Choose your approach to celestial magic and cosmic understanding.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Astrologer",
+        description:
+          "Gain magical Star Map serving as spellcasting focus. While holding it, all Astronomic spell list spells are considered locked in, representing deep study of celestial charts and stellar movements.",
+      },
+      {
+        name: "I'm not Afraid of the Dark",
+        description:
+          "Gain 80ft darkvision. As action, share darkvision with willing creatures within 10ft (Wisdom modifier number) for 1 hour. Once per long rest unless expending spell slot.",
+      },
+      {
+        name: "Moonlit Enchantment",
+        description:
+          "Spells imbued with moonlight essence are harder to resist. All spell save DCs increase by 2, representing the compelling power of lunar magic.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 5,
+        name: "Star Mapper (Astrologer Required)",
+        description:
+          "Enhanced Star Map abilities: cast Lux Maxima free (proficiency bonus times per long rest), target two creatures with Ignis Lunalis if within 5ft of each other, create astrological charts during long rest for 24-hour advantage grants.",
+      },
+      {
+        level: 6,
+        name: "Astrological Presence",
+        description:
+          "Choose: Centaur's Vision (requires Astrologer - daily divination with Weal/Woe reactions adding/subtracting d6 from rolls) or Astronomic Self (starry form with constellation choices: Archer attacks, Chalice healing, Dragon reliability, Shield protection).",
+      },
+      {
+        level: 8,
+        name: "Celestial Harmony (Optional ASI)",
+        description:
+          "Increase Wisdom or Intelligence by 1 (max 20). Add spellcasting modifier to one spell's damage per turn, uses equal to proficiency bonus, representing cosmic harmonization.",
+      },
+      {
+        level: 9,
+        name: "Blessing of the Stars",
+        description:
+          "Unarmored Defense while wearing no cloak and not wielding defensive items: AC = 10 + Dex modifier + Wisdom modifier, protected by starlight.",
+      },
+      {
+        level: 10,
+        name: "Heaven's Fortitude",
+        description:
+          "Choose: Astronomic Power (requires Astronomic Self - enhanced constellations with 2d8 damage, Dragon flight, Shield zone creation), Cosmic Blast (reaction 2d8+Wis radiant damage when saves succeed), or Cosmic Insight (reroll any d20 once per short rest).",
+      },
+      {
+        level: 14,
+        name: "Volatile Astronomy",
+        description:
+          "Choose: Gift of the Stars (Wisdom modifier to 3rd level or lower spell damage + radiant/fire resistance), Gift of the Moon (requires Astronomic Self - lunar phases with Full/New/Crescent benefits), Fate Unbound (reduce target ability score to 1), or Celestial Resistance (spells ignore damage resistance for 1 minute).",
+      },
+      {
+        level: 18,
+        name: "Cosmic Perfection",
+        description:
+          "Choose: Gift of the Sun (requires Gift of the Moon - enhanced lunar abilities with blinds, necrotic damage, teleportation) or Starry Desperation (maximum spell damage with escalating 1d12 per spell level self-damage).",
+      },
+    ],
+    specialSystems: {
+      astronomicSpells:
+        "Unique spell list including Lux, Ignis Lunalis, Lux Maxima, Trabem, Stellaro, Lunativia, Solativia - all celestial-themed divination magic",
+      starMap:
+        "Astrologer path's magical focus that locks in all Astronomic spells and enables advanced divination abilities",
+      starryForm:
+        "Astronomic Self transformation with four constellation choices each providing different tactical benefits",
+      lunarPhases:
+        "Advanced feature offering Full Moon (investigation/perception), New Moon (stealth/darkness), Crescent Moon (damage resistance) benefits",
+      cosmicProgression:
+        "Two main paths: Astrologer focuses on divination and chart reading, Astronomic Self focuses on stellar transformation and constellation powers",
+    },
+    summary:
+      "Two distinct paths: Astrologer specializes in divination magic through star charts and cosmic insight, while Astronomic Self focuses on personal transformation into starlight forms with constellation powers. Both paths can access powerful cosmic magic that manipulates light, deals radiant damage, and provides unique utility through celestial phenomena. High-level features offer reality-bending abilities like fate manipulation and damage resistance negation.",
+  },
+
+  Historian: {
+    name: "Historian",
+    description:
+      "Scholarly researchers who weaponize knowledge and use intellectual superiority to gain tactical advantages through extensive study and analysis",
+    level1Features: [
+      {
+        name: "Scholar's Mind",
+        description:
+          "Master the art of learning and knowledge acquisition. Choose your approach between focused academic study or rapid knowledge absorption for immediate application.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Study Buddy",
+        description:
+          "Learn one language and gain proficiency in academic skills (Herbology, History of Magic, Investigation, Magical Theory, Muggle Studies) or expertise if already proficient. Spending 1+ hours studying automatically improves grades by one category, can help others instead.",
+      },
+      {
+        name: "Quick Skim",
+        description:
+          "Master rapid text analysis for knowledge bursts. Once per short/long rest, gain proficiency with any skill or tool for 1 hour (expertise if already proficient), representing speed-reading mastery.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Intellect Advantage",
+        description:
+          "Choose: Um, Actually? (reaction Intelligence contest to reduce enemy rolls by proficiency bonus, half Int modifier uses per long rest) or Battle Studies (cantrip hits analyze enemies revealing all resistances/immunities + reaction cantrips on enemy misses).",
+      },
+      {
+        level: 9,
+        name: "I Was in the Library...",
+        description:
+          "Extensive research grants access to specialized knowledge. Automatically lock in 2 spells of choice from Elemental, Magizoo, Diviner's Curse, Forbidden, or Astronomic spell lists.",
+      },
+      {
+        level: 10,
+        name: "Dueling Tactics",
+        description:
+          "Choose: Intelligent Maneuver (additional reaction once per round after using first reaction, twice per long rest) or Wait... Hold on. (reroll skill checks adding half Intelligence modifier, use after roll but before success/failure determination).",
+      },
+      {
+        level: 14,
+        name: "Path of History",
+        description:
+          "Choose: Intelligent Casting (Intelligence modifier to 3rd level or lower spell damage + charm resistance) or Super Sleuth (object reading and area reading abilities - contemplate for Intelligence score minutes to see past events, owners, and significant occurrences).",
+      },
+      {
+        level: 18,
+        name: "Enlightened Mind",
+        description:
+          "Choose: Battle Expert (requires Battle Studies - cantrip hits grant vulnerability to chosen damage type for 1 minute, suppress resistance instead if present) or Perfected Communication (understand all spoken languages and be understood by any creature that knows a language).",
+      },
+    ],
+    specialSystems: {
+      academicProgression:
+        "Grade improvement mechanics allowing automatic advancement in subjects through dedicated study time",
+      intellectualCombat:
+        "Intelligence-based contested checks and analytical abilities that provide tactical advantages against enemies",
+      knowledgeAccess:
+        "Access to specialist spell lists normally restricted to other subclasses through extensive library research",
+      psychometry:
+        "Super Sleuth abilities allowing reading of object histories and area events through contemplative analysis",
+      temporaryExpertise:
+        "Quick Skim system providing flexible skill/tool proficiencies for short durations",
+    },
+    summary:
+      "Two main paths: Academic specialist focusing on study mechanics and knowledge acquisition, or Combat analyst using intelligence for tactical advantages. Both paths emphasize Intelligence as primary stat and offer unique access to restricted magical knowledge. Advanced features include either enhanced enemy analysis with vulnerability manipulation or complete linguistic mastery and historical sight abilities.",
+  },
+
+  "Ghoul Studies and Ancient Studies": {
+    name: "Ghoul Studies and Ancient Studies",
+    description:
+      "Scholars of the macabre and ancient who either transform into ghoulish forms or commune with spirits of historical figures",
+    level1Features: [
+      {
+        name: "Outward Expressions",
+        description:
+          "Gain proficiency in Magical Creatures or History of Magic. Choose your field of study between ghoulish transformation or ancient spirit communication. Note: Intellect casters gain ASI or Feat at 3rd level instead of opposite ability.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Ghoulish Trick",
+        description:
+          "Bonus action transformation for 1 minute (proficiency bonus uses per long rest). Gain 1d10+level temp HP, force Intelligence saves to avoid being frightened by horrifying visage, and immunity to frightened condition during transformation.",
+      },
+      {
+        name: "Ancestral Call",
+        description:
+          "Action to summon Ancient historical spirits that hinder one target. Target must make Intelligence saves when attacking or casting spells or waste the action hitting the spirits instead, lasting until start of next turn.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 6,
+        name: "Inner Reflections",
+        description:
+          "Choose: Inner Ghoul (requires Ghoulish Trick - 60ft darkvision, invisible to darkvision in darkness, psychic damage conversion with extra die during transformation) or Ancient Guardian (requires Ancestral Call - reaction to reduce ally damage by 1d6+modifier, scales to 2d6 at 10th, 4d6 at 14th).",
+      },
+      {
+        level: 9,
+        name: "Dark Shield",
+        description:
+          "Universal protection from otherworldly connections. Gain advantage on death saving throws and resistance to necrotic damage, representing fortification from exposure to undead and spirits.",
+      },
+      {
+        level: 10,
+        name: "Arcane Body",
+        description:
+          "Choose: Warped Mind (requires Inner Ghoul - psychic resistance/immunity during transformation, drop to 1 HP reaction with 2d10+level damage wail + 2 exhaustion) or Ancestral Guidance (requires Ancient Guardian - move through Unseen Realm as difficult terrain, see/affect ethereal creatures).",
+      },
+      {
+        level: 14,
+        name: "Talented Mind",
+        description:
+          "Choose: Spook (requires Warped Mind - reaction to impose disadvantage + fear on attackers without advantage) or Ancient Rebuke (requires Ancestral Guidance - damage prevented by Ancient Guardian rebounds to attacker).",
+      },
+      {
+        level: 18,
+        name: "Fearful Soul",
+        description:
+          "Choose: Ghoulish Existence (requires Spook - massive ghoul form with 10 temp HP per turn, bonus action spells, touch attack spending sorcery points, 10ft disadvantage aura) or Ancient Secrets (requires Ancient Rebuke - ask ancients one question per year, action to detect illusions/shapechangers within 30ft).",
+      },
+    ],
+    specialSystems: {
+      dualProgression:
+        "Two completely separate advancement paths that cannot be mixed - ghoul studies focuses on personal transformation, ancient studies focuses on spirit communication",
+      transformationMechanics:
+        "Ghoulish Trick provides temporary benefits including HP, fear effects, and condition immunity with scaling uses",
+      spiritGuardianship:
+        "Ancient Guardian system allows reactive damage mitigation for allies with scaling damage reduction",
+      unseeNRealm:
+        "Advanced ancient path feature allowing interaction with ethereal plane and otherworldly entities",
+      intellectCasterException:
+        "Special rule for Intellect casters who gain ASI/Feat at 3rd level instead of opposite path abilities",
+    },
+    summary:
+      "Dual-specialization subclass offering two mutually exclusive paths: Ghoul Studies transforms the character into increasingly ghoulish forms with fear abilities, psychic powers, and ultimate massive ghoul transformation; Ancient Studies focuses on spirit communication, protective abilities for allies, ethereal plane interaction, and ancient knowledge access. Both paths emphasize otherworldly connections but with completely different mechanical approaches.",
+  },
+  Quidditch: {
+    name: "Quidditch",
+    description:
+      "Athletic spellcasters who specialize in magical sports, combining broom mastery with position-based combat techniques and team coordination",
+    level1Features: [
+      {
+        name: "Quidditch Initiate",
+        description:
+          "Gain Vehicles (Broomstick) proficiency or expertise. Summon magical broom as bonus action (remains unless dismissed or separated 1+ hour). Choose your Quidditch position specialization approach.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Batter Up!",
+        description:
+          "Beater specialization - gain Athletics proficiency/expertise and weapon proficiency with Beater's Bat (1d4/1d6 versatile) and Bludger (1d6 ranged, scales to 4d6 at 17th level, 80/320 range). Use Strength for attack and damage rolls.",
+      },
+      {
+        name: "Think Fast!",
+        description:
+          "Chaser specialization - gain Acrobatics proficiency/expertise. Bonus action to pass Quaffle to creature within 30ft, forcing Wisdom save or they drop held item to catch it, representing tactical ball manipulation.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 4,
+        name: "Get Your Head In The Game (Optional ASI)",
+        description:
+          "Choose: Cheer (bonus action inspire proficiency bonus allies within 30ft for 1d4 bonus to next roll) or Chirp (bonus action discourage proficiency bonus enemies for 1d4 penalty to next roll). Each usable twice per long rest.",
+      },
+      {
+        level: 6,
+        name: "We're All In This Together",
+        description:
+          "Choose: Goalkeeper (Athletics/Acrobatics proficiency, +2 AC, reaction to force attack reroll within 15ft) or Eagle Eyes (Perception/Sleight of Hand proficiency, half Wisdom to Dex saves, advantage on sight-based Perception).",
+      },
+      {
+        level: 8,
+        name: "I'm Ok! (Optional ASI)",
+        description:
+          "Increase Dexterity by 1 (max 20). Advantage on Acrobatics while flying/mid-air. Reaction to reduce fall damage by 3×(Dex modifier + Str modifier), representing crash survival training.",
+      },
+      {
+        level: 9,
+        name: "Quidditch Robe",
+        description:
+          "Unarmored Defense while not wearing cloak or wielding defensive item: AC = 10 + Dex modifier + Str modifier, representing athletic conditioning and protective gear.",
+      },
+      {
+        level: 10,
+        name: "You Can't Catch Me!",
+        description:
+          "Choose: Zoomies! (teleport up to 60ft as part of broom/flying movement through walls, half proficiency bonus uses) or I Am Speed (60ft straight line creating wind tunnel with 5d6 force damage and pull effects).",
+      },
+      {
+        level: 14,
+        name: "Best Of The Best",
+        description:
+          "Choose based on prerequisites: Slugger (magical Bludger attacks + 4d8 force damage), Chaser's Strategy (command ally reaction attacks at advantage), Keeper's Wall (+5 AC or +3 save barrier for allies), or Seeker's Sight (treat 9 or lower as 10 + detect invisible).",
+      },
+      {
+        level: 18,
+        name: "Quidditch Team Captain",
+        description:
+          "Choose: All For One! (enhanced Cheer/Chirp with damage, AC bonuses, temp HP, or psychic damage), Bombs Away! (permanent 30ft fly speed + advantage on attacks vs creatures below), or All Rounder (expertise in athletics skills + extra Best of the Best feature).",
+      },
+    ],
+    specialSystems: {
+      broomMastery:
+        "Bonus action broom summoning and advanced flying maneuvers including teleportation and wind tunnel creation",
+      positionSpecialization:
+        "Four distinct Quidditch positions (Beater, Chaser, Keeper, Seeker) each with unique abilities and equipment proficiencies",
+      customWeapons:
+        "Beater's Bat and scaling Bludger with unique properties - Bludger damage increases from 1d6 to 4d6 over levels",
+      teamSupport:
+        "Cheer and Chirp mechanics for inspiring allies or discouraging enemies with dice modifiers",
+      athleticProgression:
+        "Multiple ability score dependencies (Strength, Dexterity, Wisdom) reflecting different athletic skills",
+      unarmoredDefense:
+        "Unique AC calculation using both Dexterity and Strength modifiers representing athletic conditioning",
+    },
+    summary:
+      "Highly athletic subclass with four distinct position-based progression paths: Beater (heavy hitters with magical weapons), Chaser (tactical ball control and team coordination), Keeper (defensive specialists with protection abilities), and Seeker (precision specialists with detection abilities). All paths emphasize flying mastery, team support, and unique unarmored defense combining physical conditioning with magical athleticism.",
+  },
+  Trickery: {
+    name: "Trickery",
+    description:
+      "Manipulative spellcasters who specialize in deception, illusion, and mental manipulation through subtle magic and psychological warfare",
+    level1Features: [
+      {
+        name: "Scoundrel",
+        description:
+          "Learn the Manus spell (all castings considered subtle). Gain access to the Trickery spellbook. Choose your approach to trickery and manipulation.",
+      },
+    ],
+    level1Choices: [
+      {
+        name: "Insidious Rumor",
+        description:
+          "After 1 minute of conversation with a creature alone, force Wisdom save or target becomes frightened of you or chosen creature for 1 hour (ends if attacked/damaged or allies attacked). Creatures with <4 Intelligence immune. Usable once per short/long rest.",
+      },
+      {
+        name: "Sticky Fingers",
+        description:
+          "Make Manus hand invisible and perform additional tasks unnoticed with contested Dexterity (Sleight of Hand) vs Wisdom (Perception): stow/retrieve objects from containers on others, use thieves' tools at range. Control hand with bonus action.",
+      },
+    ],
+    higherLevelFeatures: [
+      {
+        level: 4,
+        name: "Silver Tongue (Optional ASI)",
+        description:
+          "Master of perfect timing in conversation. Treat d20 rolls of 7 or lower as 8 on Charisma (Persuasion) or Charisma (Deception) checks, representing supernatural social manipulation.",
+      },
+      {
+        level: 6,
+        name: "Perjurer",
+        description:
+          "Gain Sneaky Studies (proficiency in two of: Deception, Intimidation, Sleight of Hand, or Stealth). Choose: Duplicate (perfect 1-minute illusion with spell casting and advantage), Make Nice (learn creature capabilities in 1 minute), or Deep Pockets (magical Capacious Extremis compartment).",
+      },
+      {
+        level: 8,
+        name: "Obliviator (Optional ASI)",
+        description:
+          "Enhanced memory manipulation. When casting Obliviate, can implant detailed false memories instead of erasing. False memories undetectable to target but may be detected by others examining memories through Legilimency or Pensieve.",
+      },
+      {
+        level: 9,
+        name: "Sneaky Bitch",
+        description:
+          "Enhanced action economy representing mastery of multitasking deception. Gain one additional bonus action per turn. Can use bonus actions to take Dash, Disengage, or Hide actions.",
+      },
+      {
+        level: 10,
+        name: "Manipulative Motives",
+        description:
+          "Choose: Look at me (Charisma vs Wisdom contest for attention control or charm effects lasting 1 minute) or Mirrored Memories (tell story to charm creatures into believing they experienced events, Intelligence save, lasts until long rest).",
+      },
+      {
+        level: 14,
+        name: "False Witness",
+        description:
+          "Choose: Misdirection (reaction to redirect attacks targeting you to creatures within 5ft) or Veiled Influence (10-minute conversation grants 24-hour advantage on Charisma checks + implant suggestion with 4d10 psychic damage for disobedience, max 3 times per day).",
+      },
+      {
+        level: 18,
+        name: "Blatant Exploitation",
+        description:
+          "Choose: Quintuplicate (requires Duplicate - create up to 4 duplicates, move multiple as bonus action, reaction to swap places within 60ft) or Yoink! (reaction steal spells targeting you, proficiency bonus uses per long rest, 8-hour duration).",
+      },
+    ],
+    specialSystems: {
+      dualProgression:
+        "Two distinct Level 1 paths that influence later feature availability - Insidious Rumor focuses on fear and social manipulation, Sticky Fingers emphasizes stealth and theft",
+      manusEnhancement:
+        "Specialized improvements to the Manus cantrip including invisibility, extended functionality, and bonus action control",
+      illusionMastery:
+        "Duplicate system allows creation of perfect self-illusions with spellcasting capabilities and tactical advantages",
+      memoryManipulation:
+        "Advanced Obliviate mechanics for implanting false memories and sophisticated mental manipulation",
+      spellTheft:
+        "Unique Yoink! ability allows reactive spell stealing from enemy casters with temporary knowledge acquisition",
+      socialDomination:
+        "Multiple features focused on conversation-based effects, charm abilities, and long-term psychological influence",
+      prerequisiteProgression:
+        "Some high-level features require specific earlier choices (Quintuplicate requires Duplicate)",
+    },
+    summary:
+      "Sophisticated manipulation subclass offering two primary approaches: fear-based psychological warfare through Insidious Rumor or stealth-based theft and infiltration through Sticky Fingers. Both paths converge on advanced social manipulation, memory alteration, and illusion mastery. Features emphasize bonus action economy, reactive abilities, and conversation-based magic. Ultimate abilities allow either perfect duplication with tactical positioning or reactive spell theft from enemies, representing mastery over deception and magical larceny.",
   },
 };
 

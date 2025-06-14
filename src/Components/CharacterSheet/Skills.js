@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { formatModifier, modifiers, skillMap, allSkills } from "./utils";
+import { ChevronDown, ChevronUp, Circle, Star } from "lucide-react";
+import { formatModifier, modifiers, allSkills } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
 import { useRollFunctions } from "../../App/diceRoller";
@@ -21,28 +21,64 @@ export const Skills = ({
 
   const calculateSkillBonus = (skillName, abilityMod) => {
     if (!character) return 0;
-    const isProficient = character.skills?.[skillName] || false;
-    const profBonus = isProficient ? character.proficiencyBonus : 0;
-    return abilityMod + profBonus;
+    const skillLevel = character.skills?.[skillName] || 0;
+    const profBonus = character.proficiencyBonus || 0;
+
+    if (skillLevel === 0) return abilityMod;
+    if (skillLevel === 1) return abilityMod + profBonus;
+    if (skillLevel === 2) return abilityMod + 2 * profBonus;
+
+    return abilityMod;
   };
 
   const skillsToDbFormat = (skillsObject) => {
+    const skillMap = {
+      athletics: "Athletics",
+      acrobatics: "Acrobatics",
+      sleightOfHand: "Sleight of Hand",
+      stealth: "Stealth",
+      herbology: "Herbology",
+      historyOfMagic: "History of Magic",
+      investigation: "Investigation",
+      magicalTheory: "Magical Theory",
+      muggleStudies: "Muggle Studies",
+      insight: "Insight",
+      magicalCreatures: "Magical Creatures",
+      medicine: "Medicine",
+      perception: "Perception",
+      potionMaking: "Potion Making",
+      survival: "Survival",
+      deception: "Deception",
+      intimidation: "Intimidation",
+      performance: "Performance",
+      persuasion: "Persuasion",
+    };
+
     const proficientSkills = [];
-    Object.entries(skillsObject).forEach(([skillKey, isProficient]) => {
-      if (isProficient && skillMap[skillKey]) {
-        proficientSkills.push(skillMap[skillKey]);
+    const expertiseSkills = [];
+
+    Object.entries(skillsObject).forEach(([skillKey, level]) => {
+      if (skillMap[skillKey]) {
+        if (level === 1) {
+          proficientSkills.push(skillMap[skillKey]);
+        } else if (level === 2) {
+          expertiseSkills.push(skillMap[skillKey]);
+        }
       }
     });
 
-    return proficientSkills;
+    return { proficientSkills, expertiseSkills };
   };
 
   const toggleSkillProficiency = async (skillName) => {
     if (!character || !selectedCharacterId) return;
 
+    const currentLevel = character.skills?.[skillName] || 0;
+    const newLevel = (currentLevel + 1) % 3;
+
     const updatedSkills = {
       ...character.skills,
-      [skillName]: !character.skills[skillName],
+      [skillName]: newLevel,
     };
 
     setCharacter((prev) => ({
@@ -51,11 +87,15 @@ export const Skills = ({
     }));
 
     try {
-      const skillProficiencies = skillsToDbFormat(updatedSkills);
+      const { proficientSkills, expertiseSkills } =
+        skillsToDbFormat(updatedSkills);
 
       const { error } = await supabase
         .from("characters")
-        .update({ skill_proficiencies: skillProficiencies })
+        .update({
+          skill_proficiencies: proficientSkills,
+          skill_expertise: expertiseSkills,
+        })
         .eq("id", selectedCharacterId)
         .eq("discord_user_id", discordUserId);
 
@@ -66,7 +106,7 @@ export const Skills = ({
           ...prev,
           skills: {
             ...prev.skills,
-            [skillName]: !updatedSkills[skillName],
+            [skillName]: currentLevel,
           },
         }));
 
@@ -79,13 +119,14 @@ export const Skills = ({
         ...prev,
         skills: {
           ...prev.skills,
-          [skillName]: !updatedSkills[skillName],
+          [skillName]: currentLevel,
         },
       }));
 
       alert("Failed to update skill proficiency. Please try again.");
     }
   };
+
   const handleSort = (column) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -101,11 +142,8 @@ export const Skills = ({
 
       switch (sortColumn) {
         case "proficiency":
-          aValue = character.skills?.[a.name] || false;
-          bValue = character.skills?.[b.name] || false;
-
-          aValue = aValue ? 1 : 0;
-          bValue = bValue ? 1 : 0;
+          aValue = character.skills?.[a.name] || 0;
+          bValue = character.skills?.[b.name] || 0;
           break;
         case "modifier":
           aValue = a.ability;
@@ -163,9 +201,85 @@ export const Skills = ({
     return abbrevMap[ability] || ability.slice(0, 3).toUpperCase();
   };
 
+  const getProficiencyIcon = (skillLevel) => {
+    const iconStyle = {
+      width: "16px",
+      height: "16px",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+    };
+
+    switch (skillLevel) {
+      case 0:
+        return (
+          <Circle
+            style={{
+              ...iconStyle,
+              color: theme.textSecondary || "#6b7280",
+              fill: "transparent",
+            }}
+          />
+        );
+      case 1:
+        return (
+          <Circle
+            style={{
+              ...iconStyle,
+              color: theme.primary || "#3b82f6",
+              fill: theme.primary || "#3b82f6",
+            }}
+          />
+        );
+      case 2:
+        return (
+          <Star
+            style={{
+              ...iconStyle,
+              color: theme.warning || "#f59e0b",
+              fill: theme.warning || "#f59e0b",
+            }}
+          />
+        );
+      default:
+        return (
+          <Circle
+            style={{
+              ...iconStyle,
+              color: theme.textSecondary || "#6b7280",
+              fill: "transparent",
+            }}
+          />
+        );
+    }
+  };
+
+  const getProficiencyTooltip = (skillLevel) => {
+    switch (skillLevel) {
+      case 0:
+        return "Not Proficient - Click to add proficiency";
+      case 1:
+        return "Proficient - Click to add expertise";
+      case 2:
+        return "Expertise (2x Proficiency) - Click to remove";
+      default:
+        return "Click to toggle proficiency";
+    }
+  };
+
   return (
     <div style={styles.skillsCard}>
       <h2 style={styles.skillsTitle}>SKILLS</h2>
+      <div
+        style={{
+          marginBottom: "12px",
+          fontSize: "12px",
+          color: theme.textSecondary,
+          textAlign: "center",
+          fontStyle: "italic",
+        }}
+      >
+        Click icons to cycle: None → Proficient → Expertise
+      </div>
       <table style={styles.skillsTable}>
         <thead>
           <tr style={styles.skillsHeaderRow}>
@@ -174,7 +288,7 @@ export const Skills = ({
                 ...styles.skillsHeaderCell,
               }}
               onClick={() => handleSort("proficiency")}
-              title="Click to sort by proficiency"
+              title="Click to sort by proficiency level"
             >
               <div style={styles.sortableHeader}>
                 PROF
@@ -223,7 +337,8 @@ export const Skills = ({
           {sortSkills(allSkills).map((skill) => {
             const abilityMod = modifiers(character)[skill.ability];
             const skillBonus = calculateSkillBonus(skill.name, abilityMod);
-            const isProficient = character.skills?.[skill.name] || false;
+            const skillLevel = character.skills?.[skill.name] || 0;
+
             return (
               <tr
                 key={skill.name}
@@ -233,13 +348,28 @@ export const Skills = ({
               >
                 <td style={styles.skillCell}>
                   <div
-                    style={{
-                      ...styles.proficiencyCircle,
-                      ...(isProficient ? styles.proficiencyCircleFilled : {}),
-                    }}
                     onClick={() => toggleSkillProficiency(skill.name)}
-                    title="Toggle Proficiency"
-                  />
+                    title={getProficiencyTooltip(skillLevel)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "4px",
+                      transition: "background-color 0.2s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor =
+                        theme.background || "#f3f4f6";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    {getProficiencyIcon(skillLevel)}
+                  </div>
                 </td>
                 <td style={styles.skillCell}>
                   <span style={styles.abilityMod}>
@@ -260,19 +390,57 @@ export const Skills = ({
                     disabled={isRolling}
                     style={{
                       ...styles.skillNameButton,
-                      ...(isProficient ? styles.skillNameButtonProficient : {}),
-
+                      ...(skillLevel > 0
+                        ? styles.skillNameButtonProficient
+                        : {}),
+                      ...(skillLevel === 2
+                        ? {
+                            fontWeight: "bold",
+                            color: theme.warning || "#f59e0b",
+                            borderColor: theme.warning || "#f59e0b",
+                          }
+                        : {}),
                       ...(isRolling
                         ? { opacity: 0.5, cursor: "not-allowed" }
                         : {}),
                     }}
-                    title={`Click to roll ${skill.displayName}`}
+                    title={`Click to roll ${skill.displayName}${
+                      skillLevel === 1
+                        ? " (Proficient)"
+                        : skillLevel === 2
+                        ? " (Expertise)"
+                        : ""
+                    }`}
                   >
                     {skill.displayName}
+                    {skillLevel === 2 && (
+                      <Star
+                        size={12}
+                        style={{
+                          marginLeft: "4px",
+                          color: theme.warning || "#f59e0b",
+                        }}
+                      />
+                    )}
                   </button>
                 </td>
                 <td style={styles.skillCellLast}>
-                  <span style={styles.bonusValue}>
+                  <span
+                    style={{
+                      ...styles.bonusValue,
+                      ...(skillLevel === 2
+                        ? {
+                            fontWeight: "bold",
+                            color: theme.warning || "#f59e0b",
+                          }
+                        : skillLevel === 1
+                        ? {
+                            fontWeight: "600",
+                            color: theme.primary || "#3b82f6",
+                          }
+                        : {}),
+                    }}
+                  >
                     {formatModifier(skillBonus)}
                   </span>
                 </td>
@@ -281,6 +449,48 @@ export const Skills = ({
           })}
         </tbody>
       </table>
+
+      <div
+        style={{
+          marginTop: "16px",
+          padding: "12px",
+          backgroundColor: theme.background || "#f9fafb",
+          borderRadius: "8px",
+          border: `1px solid ${theme.border || "#e5e7eb"}`,
+          fontSize: "12px",
+          color: theme.textSecondary,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <Circle size={12} color={theme.textSecondary} fill="transparent" />
+            <span>Not Proficient</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <Circle
+              size={12}
+              color={theme.primary || "#3b82f6"}
+              fill={theme.primary || "#3b82f6"}
+            />
+            <span>Proficient (+{character?.proficiencyBonus || 0})</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <Star
+              size={12}
+              color={theme.warning || "#f59e0b"}
+              fill={theme.warning || "#f59e0b"}
+            />
+            <span>Expertise (+{(character?.proficiencyBonus || 0) * 2})</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

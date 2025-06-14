@@ -60,7 +60,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "60 Feet",
           duration: "1 Round",
-          year: 3,
+          year: 2,
           description:
             "A bond of light shoots out from the caster and attaches to anything you can see within range, and then retracts, pulling caster and target each 10 feet closer. If the caster or target doesn't move or would easily resist the force of the other being pulled, the other moves 20 feet. If the target is an unwilling creature that is able to be moved, it must make a Strength saving throw to resist being moved. The bond of light keeps the caster and target attached for the duration.",
           higherLevels:
@@ -225,7 +225,7 @@ export const spellsData = {
             "1 action or reaction, which you take when a collision occurs within 30 feet",
           range: "30 Feet",
           duration: "1 Minute",
-          year: 2,
+          year: 1,
           description:
             "This spell makes an object become soft and bouncy, like a sponge or mattress. Any damage from falling on or colliding with this object is nullified. This spell can be cast as a reaction to a collision affecting a creature you can see within range or between two objects within range.",
         },
@@ -306,7 +306,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "30 Feet",
           duration: "Concentration, up to 1 minute",
-          year: 3,
+          year: 2,
           tags: ["R"],
           description:
             "A creature of your choice that you can see within range becomes quite cheerful. For the next 10 minutes, the target creature has advantage on any saving throw against becoming frightened. If concentration is maintained for one whole round, the creature perceives everything as hilariously funny and falls into fits of laughter if this spell affects it. The target must succeed on a Wisdom saving throw or fall prone, becoming incapacitated and unable to stand up for the duration. A creature with an Intelligence score of 5 or less isn't affected. At the end of each of its turns, and each time it takes damage, the target can make another Wisdom saving throw. The target has advantage on the saving throw if it's triggered by damage. On a success, the spell ends.",
@@ -364,7 +364,7 @@ export const spellsData = {
             "1 action or reaction, which you take when you are hit by an attack",
           range: "Self",
           duration: "Dedication, up to 10 minutes",
-          year: 2,
+          year: 3,
           tags: ["Defensive"],
           description:
             "An invisible barrier of magical force appears in front of you and protects you. For the duration, you have a +5 bonus to AC, including against the triggering attack. If you are targeted by a spell that requires an attack roll and the spell's level is equal to or lower than half your proficiency bonus, the spell has no effect on you. You can use a bonus action to change which direction the shield is facing. If you are attacked from either of your sides or from behind while casting this spell, you must use your reaction to redirect the shield to point towards the threat. Otherwise, this spell doesn't protect you.",
@@ -451,7 +451,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "60 Feet",
           duration: "Instantaneous",
-          year: 2,
+          year: 3,
           description:
             "Famous for being the spell that finally defeated Voldemort in the Second Wizarding War, this spell can harmlessly end duels by disarming a wizard of his wand. Make a ranged spell attack against a being within range. On a hit, you disarm the target, forcing it to drop one item of your choice that it's holding. The object lands 10 feet away from it in a random direction.",
           higherLevels:
@@ -532,7 +532,7 @@ export const spellsData = {
             "When you cast this spell using a spell slot of 3rd level or higher, you automatically create an opening in the spell if the spell's level is one level higher than, equal to or less than the level of the spell slot you used.",
         },
         {
-          name: "Pellucidi Pellis",
+          name: "Pelucidi Pellis",
           level: "2nd Level",
           castingTime: "1 action",
           range: "Touch",
@@ -574,7 +574,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "90 Feet",
           duration: "1 Minute",
-          year: 3,
+          year: 4,
           tags: ["R"],
           description:
             "This charm is extremely effective against wizards unpracticed in non-verbal magic. Choose one target that you can see within range. If it's a creature, it must make a Wisdom saving throw. If it fails or if it's an object, all sound created by the target is made completely silent. Casting a spell that includes a verbal component is impossible while under the effect of this spell.",
@@ -585,7 +585,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "60 Feet",
           duration: "10 Minutes",
-          year: 2,
+          year: 3,
           description:
             "This charm is the most common dueling spell in the wizarding world, harmlessly ending a duel between two wizards. Make a ranged spell attack against a being within range. On a hit, the target falls unconscious for the duration, or until they are revived with rennervate.",
           higherLevels:
@@ -599,7 +599,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "120 Feet",
           duration: "Instantaneous",
-          year: 4,
+          year: 5,
           tags: ["R"],
           description:
             "You place immense downward pressure on a target. If the target is a creature, it must make a Strength saving throw. On a failed save, a creature takes 5d8 bludgeoning damage and is knocked prone. On a successful save, the creature takes half as much damage and isn't knocked prone. If the target is a flat surface, this will either create a crater or collapse the surface.",
@@ -807,7 +807,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "Self (10-foot-radius sphere)",
           duration: "Concentration, up to 1 minute",
-          year: 6,
+          year: 7,
           tags: ["Defensive"],
           description:
             "Each creature within the spell's area gains temporary hit points equal to your spellcasting modifier at the beginning of its turn and advantage on all saving throws against spells.",
@@ -827,6 +827,19 @@ export const spellsData = {
             "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
           higherLevels:
             "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th.",
+        },
+      ],
+      "7th Level": [
+        {
+          name: "Herbarifors",
+          level: "7th Level",
+          castingTime: null,
+          range: null,
+          duration: null,
+          year: 7,
+          restriction: false,
+          description:
+            "You touch a creature, and magical healing plants begin to grow from its wounds stimulating its natural healing ability. The target regains 4d8 + 15 hit points. For the duration of the spell, the target regains 1 hit point at the start of each of its turns (10 hit points each minute). The target’s severed body members (fingers, legs, tails, and so on), if any, grow limb shaped vines, restoring the limb after 2 minutes. If you have the severed part and hold it to the stump, the spell instantaneously causes the plants to reach out to knit to the stump.",
         },
       ],
       "9th Level": [
@@ -851,52 +864,90 @@ export const spellsData = {
     description: "Offensive and mischievous magic",
     levels: {
       Cantrips: [
-        { name: "Bombarda", level: "Cantrip", description: "Explosive spell" },
-        { name: "Cantis", level: "Cantrip", description: "Jinx spell" },
-        { name: "Devicto", level: "Cantrip", description: "Hex spell" },
-        { name: "Furnunculus", level: "Cantrip", description: "Boil hex" },
+        {
+          name: "Bombarda",
+          level: "Cantrip",
+          year: 3,
+          description: "Explosive spell",
+        },
+        {
+          name: "Cantis",
+          level: "Cantrip",
+          year: 1,
+          description: "Jinx spell",
+        },
+        {
+          name: "Devicto",
+          level: "Cantrip",
+          year: 4,
+          description: "Hex spell",
+        },
+        {
+          name: "Furnunculus",
+          level: "Cantrip",
+          year: 2,
+          description: "Boil hex",
+        },
         {
           name: "Genu Recurvatum",
           level: "Cantrip",
+          year: 1,
           description: "Knee-reversal hex",
         },
         {
           name: "Infirma Cerebra",
           level: "Cantrip",
+          year: 2,
           description: "Mind-weakening jinx",
         },
         {
           name: "Locomotor Wibbly",
           level: "Cantrip",
+          year: 1,
           description: "Leg-locker curse",
         },
       ],
       "1st Level": [
-        { name: "Colloshoo", level: "1st Level", description: "Stickfast hex" },
+        {
+          name: "Colloshoo",
+          level: "1st Level",
+          year: 1,
+          description: "Stickfast hex",
+        },
         {
           name: "Densaugeo",
           level: "1st Level",
+          year: 2,
           description: "Tooth-growing hex",
         },
         {
           name: "Digitus Wibbly",
           level: "1st Level",
+          year: 1,
           description: "Finger-removal jinx",
         },
-        { name: "Flipendo", level: "1st Level", description: "Knockback jinx" },
+        {
+          name: "Flipendo",
+          level: "1st Level",
+          year: 3,
+          description: "Knockback jinx",
+        },
         {
           name: "Locomotor Mortis",
           level: "1st Level",
+          year: 2,
           description: "Leg-locker curse",
         },
         {
           name: "Mimblewimble",
           level: "1st Level",
+          year: 1,
           description: "Tongue-tying curse",
         },
         {
           name: "Petrificus Totalus",
           level: "1st Level",
+          year: 3,
           description: "Full body-bind curse",
         },
       ],
@@ -904,23 +955,37 @@ export const spellsData = {
         {
           name: "Arania Exumai",
           level: "2nd Level",
+          year: 3,
           description: "Spider repelling charm",
         },
-        { name: "Oppugno", level: "2nd Level", description: "Oppugning charm" },
-        { name: "Relashio", level: "2nd Level", description: "Revulsion jinx" },
+        {
+          name: "Oppugno",
+          level: "2nd Level",
+          year: 4,
+          description: "Oppugning charm",
+        },
+        {
+          name: "Relashio",
+          level: "2nd Level",
+          year: 2,
+          description: "Revulsion jinx",
+        },
         {
           name: "Slugulus Eructo",
           level: "2nd Level",
+          year: 5,
           description: "Slug-vomiting charm",
         },
         {
           name: "Tarantallegra",
           level: "2nd Level",
+          year: 2,
           description: "Dancing feet spell",
         },
         {
           name: "Ventus",
           level: "2nd Level",
+          year: 3,
           tags: ["R"],
           description: "Wind jinx",
         },
@@ -929,22 +994,31 @@ export const spellsData = {
         {
           name: "Confringo",
           level: "3rd Level",
+          year: 5,
           description: "Blasting curse",
         },
         {
           name: "Conjunctivia",
           level: "3rd Level",
+          year: null,
           description: "Conjunctivitis curse",
         },
-        { name: "Expulso", level: "3rd Level", description: "Exploding curse" },
+        {
+          name: "Expulso",
+          level: "3rd Level",
+          year: 3,
+          description: "Exploding curse",
+        },
         {
           name: "Impedimenta",
           level: "3rd Level",
+          year: 6,
           description: "Impediment jinx",
         },
         {
           name: "Langlock",
           level: "3rd Level",
+          year: 4,
           restriction: true,
           description: "Tongue-tying curse",
         },
@@ -953,32 +1027,47 @@ export const spellsData = {
         {
           name: "Levicorpus/Liberacorpus",
           level: "4th Level",
+          year: 4,
           description: "Dangles target by ankle",
         },
         {
           name: "Muco Volatilis",
           level: "4th Level",
+          year: 5,
           description: "Bat-bogey hex",
         },
-        { name: "Reducto", level: "4th Level", description: "Reductor curse" },
+        {
+          name: "Reducto",
+          level: "4th Level",
+          year: 4,
+          description: "Reductor curse",
+        },
         {
           name: "Sectumsempra",
           level: "4th Level",
+          year: 6,
           restriction: true,
           description: "Slashing curse",
         },
       ],
       "5th Level": [
-        { name: "Imperio", level: "5th Level", description: "Imperius curse" },
+        {
+          name: "Imperio",
+          level: "5th Level",
+          year: null,
+          description: "Imperius curse",
+        },
         {
           name: "Nullum Effugium",
           level: "5th Level",
+          year: 7,
           restriction: true,
           description: "No escape curse",
         },
         {
           name: "Omnifracto",
           level: "5th Level",
+          year: 7,
           restriction: true,
           description: "Breaking curse",
         },
@@ -987,14 +1076,21 @@ export const spellsData = {
         {
           name: "Azreth",
           level: "7th Level",
+          year: null,
           description: "Killing curse variant",
         },
-        { name: "Crucio", level: "7th Level", description: "Cruciatus curse" },
+        {
+          name: "Crucio",
+          level: "7th Level",
+          year: null,
+          description: "Cruciatus curse",
+        },
       ],
       "8th Level": [
         {
           name: "Avada Kedavra",
           level: "8th Level",
+          year: null,
           description: "Killing curse",
         },
       ],
@@ -1010,27 +1106,37 @@ export const spellsData = {
         {
           name: "Aguamenti",
           level: "Cantrip",
+          year: 1,
           description: "Water-making spell",
         },
         {
           name: "Crinus Muto",
           level: "Cantrip",
+          year: 1,
           description: "Hair color change",
         },
-        { name: "Epoximise", level: "Cantrip", description: "Bonding agent" },
+        {
+          name: "Epoximise",
+          level: "Cantrip",
+          year: 1,
+          description: "Bonding agent",
+        },
         {
           name: "Incendio Glacia",
           level: "Cantrip",
+          year: 1,
           description: "Fire and ice spell",
         },
         {
           name: "Orchideous",
           level: "Cantrip",
+          year: 1,
           description: "Orchid conjuration",
         },
         {
           name: "Vera Verto",
           level: "Cantrip",
+          year: 2,
           description: "True transformation",
         },
       ],
@@ -1038,25 +1144,34 @@ export const spellsData = {
         {
           name: "Inanimatus Conjurus",
           level: "1st Level",
+          year: 2,
           tags: ["R"],
           description: "Conjures inanimate objects",
         },
         {
           name: "Incendio",
           level: "1st Level",
+          year: 2,
           tags: ["R"],
           description: "Fire-making spell",
         },
-        { name: "Nebulus", level: "1st Level", description: "Fog creation" },
+        {
+          name: "Nebulus",
+          level: "1st Level",
+          year: 3,
+          description: "Fog creation",
+        },
         {
           name: "Obscuro",
           level: "1st Level",
+          year: 2,
           tags: ["R"],
           description: "Blindfold hex",
         },
         {
           name: "Sagittario",
           level: "1st Level",
+          year: 4,
           description: "Arrow conjuration",
         },
       ],
@@ -1064,43 +1179,55 @@ export const spellsData = {
         {
           name: "Incarcerous",
           level: "2nd Level",
+          year: 3,
           tags: ["R"],
           description: "Rope binding",
         },
         {
           name: "Orbis",
           level: "2nd Level",
+          year: 3,
           restriction: true,
           description: "Orb creation",
         },
         {
           name: "Reparifarge",
           level: "2nd Level",
+          year: 3,
           restriction: true,
           description: "Untransfiguration",
         },
         {
           name: "Serpensortia",
           level: "2nd Level",
+          year: 4,
           description: "Snake conjuration",
         },
       ],
       "3rd Level": [
-        { name: "Avis", level: "3rd Level", description: "Bird conjuration" },
+        {
+          name: "Avis",
+          level: "3rd Level",
+          year: 5,
+          description: "Bird conjuration",
+        },
         {
           name: "Evanesco",
           level: "3rd Level",
+          year: 5,
           description: "Vanishing spell",
         },
         {
           name: "Ignis Laquis",
           level: "3rd Level",
+          year: 5,
           restriction: true,
           description: "Fire rope",
         },
         {
           name: "Melofors",
           level: "3rd Level",
+          year: 4,
           description: "Pumpkin head jinx",
         },
       ],
@@ -1108,12 +1235,14 @@ export const spellsData = {
         {
           name: "Ebublio",
           level: "4th Level",
+          year: 6,
           tags: ["R"],
           description: "Bubble creation",
         },
         {
           name: "Lapifors",
           level: "4th Level",
+          year: 6,
           restriction: true,
           description: "Rabbit transformation",
         },
@@ -1122,11 +1251,13 @@ export const spellsData = {
         {
           name: "Draconifors",
           level: "5th Level",
+          year: 7,
           description: "Dragon transformation",
         },
         {
           name: "Transmogrify",
           level: "5th Level",
+          year: null,
           description: "Complete transformation",
         },
       ],
@@ -1134,6 +1265,7 @@ export const spellsData = {
         {
           name: "Ignis Furore",
           level: "6th Level",
+          year: 7,
           description: "Raging fire",
         },
       ],
@@ -1149,13 +1281,20 @@ export const spellsData = {
         {
           name: "Mumblio",
           level: "Cantrip",
+          year: 3,
           restriction: true,
           description: "Mumbling charm",
         },
-        { name: "Point Me", level: "Cantrip", description: "Four-point spell" },
+        {
+          name: "Point Me",
+          level: "Cantrip",
+          year: 3,
+          description: "Four-point spell",
+        },
         {
           name: "Prior Incantato",
           level: "Cantrip",
+          year: 3,
           description: "Reveals last spell cast",
         },
       ],
@@ -1163,34 +1302,40 @@ export const spellsData = {
         {
           name: "Linguarium",
           level: "1st Level",
+          year: 3,
           tags: ["R"],
           description: "Language comprehension",
         },
         {
           name: "Luxus Manus",
           level: "1st Level",
+          year: 4,
           tags: ["R"],
           description: "Hand of light",
         },
         {
           name: "Martem",
           level: "1st Level",
+          year: 3,
           restriction: true,
           description: "War sight",
         },
         {
           name: "Motus Revelio",
           level: "1st Level",
+          year: 3,
           description: "Motion detection",
         },
         {
           name: "Specialis Revelio",
           level: "1st Level",
+          year: 4,
           description: "Reveals magical properties",
         },
         {
           name: "Venenum Revelio",
           level: "1st Level",
+          year: 3,
           tags: ["R"],
           description: "Poison detection",
         },
@@ -1199,22 +1344,26 @@ export const spellsData = {
         {
           name: "Absconditus Revelio",
           level: "2nd Level",
+          year: 4,
           description: "Reveals hidden objects",
         },
         {
           name: "Facultatem",
           level: "2nd Level",
+          year: 4,
           restriction: true,
           description: "Ability detection",
         },
         {
           name: "Inanimatus Revelio",
           level: "2nd Level",
+          year: 4,
           description: "Inanimate detection",
         },
         {
           name: "Secundio",
           level: "2nd Level",
+          year: 4,
           description: "Secondary sight",
         },
       ],
@@ -1222,28 +1371,33 @@ export const spellsData = {
         {
           name: "Annotatem",
           level: "3rd Level",
+          year: 5,
           description: "Note-taking charm",
         },
         {
           name: "Legilimens",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Mind reading",
         },
         {
           name: "Linguarium Maxima",
           level: "3rd Level",
+          year: 5,
           description: "Enhanced language comprehension",
         },
         {
           name: "Mumblio Maxima",
           level: "3rd Level",
+          year: 5,
           restriction: true,
           description: "Enhanced mumbling",
         },
         {
           name: "Revelio",
           level: "3rd Level",
+          year: 5,
           description: "General revealing charm",
         },
       ],
@@ -1251,22 +1405,26 @@ export const spellsData = {
         {
           name: "Appare Vestigium",
           level: "4th Level",
+          year: 7,
           tags: ["R"],
           description: "Tracking spell",
         },
         {
           name: "Creatura Revelio",
           level: "4th Level",
+          year: 6,
           description: "Creature detection",
         },
         {
           name: "Homenum Revelio",
           level: "4th Level",
+          year: 7,
           description: "Human detection",
         },
         {
           name: "Oculus Speculatem",
           level: "4th Level",
+          year: 6,
           description: "Scrying eye",
         },
       ],
@@ -1274,18 +1432,21 @@ export const spellsData = {
         {
           name: "Annotatem Maxima",
           level: "5th Level",
+          year: 6,
           restriction: true,
           description: "Superior note-taking",
         },
         {
           name: "Augurium",
           level: "5th Level",
+          year: 6,
           tags: ["R"],
           description: "Divination spell",
         },
         {
           name: "Mumblio Totalum",
           level: "5th Level",
+          year: 6,
           tags: ["R"],
           restriction: true,
           description: "Total mumbling",
@@ -1295,12 +1456,14 @@ export const spellsData = {
         {
           name: "Invenire Viam",
           level: "6th Level",
+          year: 7,
           restriction: true,
           description: "Path finding",
         },
         {
           name: "Verum Aspectum",
           level: "6th Level",
+          year: 7,
           description: "True sight",
         },
       ],
@@ -1308,6 +1471,7 @@ export const spellsData = {
         {
           name: "Providentum",
           level: "9th Level",
+          year: 7,
           restriction: true,
           description: "Providence spell",
         },
@@ -1324,6 +1488,7 @@ export const spellsData = {
         {
           name: "Incendio Ruptis",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Enhanced fire spell with explosive properties",
         },
@@ -1332,6 +1497,7 @@ export const spellsData = {
         {
           name: "Diffindo Glacia",
           level: "1st Level",
+          year: null,
           restriction: true,
           description:
             "Ice-cutting spell that combines slicing and freezing effects",
@@ -1339,6 +1505,7 @@ export const spellsData = {
         {
           name: "Intonuit Fluctus",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Thunder wave spell",
         },
@@ -1347,12 +1514,14 @@ export const spellsData = {
         {
           name: "Fulgur",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Lightning spell",
         },
         {
           name: "Respersio",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Elemental spray or splash spell",
         },
@@ -1361,6 +1530,7 @@ export const spellsData = {
         {
           name: "Glacius Maxima",
           level: "4th Level",
+          year: null,
           restriction: true,
           description:
             "Enhanced version of Glacius with greater freezing power",
@@ -1370,6 +1540,7 @@ export const spellsData = {
         {
           name: "Tempestus",
           level: "8th Level",
+          year: null,
           restriction: true,
           description: "Storm conjuration spell",
         },
@@ -1378,6 +1549,7 @@ export const spellsData = {
         {
           name: "Fulgur Maxima",
           level: "9th Level",
+          year: null,
           restriction: true,
           description: "Maximum power lightning spell",
         },
@@ -1394,6 +1566,7 @@ export const spellsData = {
         {
           name: "Magno",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Magnification or enhancement spell",
         },
@@ -1402,30 +1575,35 @@ export const spellsData = {
         {
           name: "Clario",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Clarity or illumination spell for combat",
         },
         {
           name: "Ignis Ictus",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Fire strike spell",
         },
         {
           name: "Irus Ictus",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Anger strike spell",
         },
         {
           name: "Pererro",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Wandering or erratic movement spell",
         },
         {
           name: "Tonitrus Ictus",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Thunder strike spell",
         },
@@ -1434,6 +1612,7 @@ export const spellsData = {
         {
           name: "Notam Ictus",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Mark strike spell",
         },
@@ -1442,6 +1621,7 @@ export const spellsData = {
         {
           name: "Inanus Ictus",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Void or empty strike spell",
         },
@@ -1450,6 +1630,7 @@ export const spellsData = {
         {
           name: "Titubo Ictus",
           level: "4th Level",
+          year: null,
           restriction: true,
           description: "Staggering strike spell",
         },
@@ -1458,6 +1639,7 @@ export const spellsData = {
         {
           name: "Clario Maxima",
           level: "5th Level",
+          year: null,
           restriction: true,
           description: "Maximum clarity spell for combat enhancement",
         },
@@ -1474,12 +1656,14 @@ export const spellsData = {
         {
           name: "Anapneo",
           level: "Cantrip",
+          year: 2,
           restriction: true,
           description: "Clears breathing passages and airways",
         },
         {
           name: "Rennervate",
           level: "Cantrip",
+          year: 2,
           description: "Revives unconscious persons",
         },
       ],
@@ -1487,16 +1671,19 @@ export const spellsData = {
         {
           name: "Episkey",
           level: "1st Level",
+          year: 3,
           description: "Heals minor injuries",
         },
         {
           name: "Ferula",
           level: "1st Level",
+          year: 4,
           description: "Conjures bandages and splints",
         },
         {
           name: "Reparifors",
           level: "1st Level",
+          year: 3,
           description: "Heals magical transformations",
         },
       ],
@@ -1504,6 +1691,7 @@ export const spellsData = {
         {
           name: "Adversus Interitus",
           level: "2nd Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Protection against death",
@@ -1513,18 +1701,21 @@ export const spellsData = {
         {
           name: "Aculeo Sanentur",
           level: "3rd Level",
+          year: 5,
           restriction: true,
           description: "Heals puncture wounds and stings",
         },
         {
           name: "Animatem",
           level: "3rd Level",
+          year: 4,
           restriction: true,
           description: "Restores life force or animation",
         },
         {
           name: "Intus Sunt",
           level: "3rd Level (ritual)",
+          year: 4,
           restriction: true,
           tags: ["R"],
           description: "Internal healing spell",
@@ -1534,6 +1725,7 @@ export const spellsData = {
         {
           name: "Brackium Emendo",
           level: "4th Level",
+          year: 5,
           description: "Mends broken bones",
         },
       ],
@@ -1541,6 +1733,7 @@ export const spellsData = {
         {
           name: "Pervivo",
           level: "5th Level",
+          year: 6,
           restriction: true,
           description: "Survival or life extension spell",
         },
@@ -1549,6 +1742,7 @@ export const spellsData = {
         {
           name: "Vulnera Sanentur",
           level: "6th Level",
+          year: 6,
           restriction: true,
           description: "Heals serious wounds and cuts",
         },
@@ -1566,6 +1760,7 @@ export const spellsData = {
         {
           name: "Insectum",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Insect control or summoning spell",
         },
@@ -1574,12 +1769,14 @@ export const spellsData = {
         {
           name: "Beastia Vinculum",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Creates a bond with beasts",
         },
         {
           name: "Beastia Amicatum",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Befriends beasts and creatures",
         },
@@ -1588,6 +1785,7 @@ export const spellsData = {
         {
           name: "Beastia Nuntium",
           level: "2nd Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Allows communication with beasts",
@@ -1595,6 +1793,7 @@ export const spellsData = {
         {
           name: "Beastia Sensibus",
           level: "2nd Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Shares senses with beasts",
@@ -1604,6 +1803,7 @@ export const spellsData = {
         {
           name: "Obtestor",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Implores or commands creatures",
         },
@@ -1612,12 +1812,14 @@ export const spellsData = {
         {
           name: "Imperio Creatura",
           level: "4th Level",
+          year: null,
           restriction: true,
           description: "Commands creatures (creature-specific Imperius)",
         },
         {
           name: "Engorgio Insectum",
           level: "4th Level",
+          year: null,
           restriction: true,
           description: "Enlarges insects to massive size",
         },
@@ -1626,6 +1828,7 @@ export const spellsData = {
         {
           name: "Insectum Maxima",
           level: "5th Level",
+          year: null,
           restriction: true,
           description: "Maximum insect control or summoning",
         },
@@ -1634,6 +1837,7 @@ export const spellsData = {
         {
           name: "Natura Incantatem",
           level: "6th Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Enchants nature itself",
@@ -1643,6 +1847,7 @@ export const spellsData = {
         {
           name: "Draconiverto",
           level: "7th Level",
+          year: null,
           restriction: true,
           description: "Dragon transformation or control",
         },
@@ -1651,6 +1856,7 @@ export const spellsData = {
         {
           name: "Animato Maxima",
           level: "8th Level",
+          year: null,
           restriction: true,
           description: "Maximum animation of creatures",
         },
@@ -1667,12 +1873,14 @@ export const spellsData = {
         {
           name: "Ignis Lunalis",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Moonfire or eerie flame spell",
         },
         {
           name: "Fraudemo",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Deception or illusion spell",
         },
@@ -1681,6 +1889,7 @@ export const spellsData = {
         {
           name: "Formidulosus",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Induces fear and dread",
         },
@@ -1689,6 +1898,7 @@ export const spellsData = {
         {
           name: "Exspiravit",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Expiration or breath-stealing spell",
         },
@@ -1697,12 +1907,14 @@ export const spellsData = {
         {
           name: "Fraudemo Maxima",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Enhanced deception spell",
         },
         {
           name: "Timor",
           level: "3rd Level",
+          year: null,
           description: "Fear spell",
         },
       ],
@@ -1710,6 +1922,7 @@ export const spellsData = {
         {
           name: "Relicuum",
           level: "4th Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Relic or remnant spell",
@@ -1719,6 +1932,7 @@ export const spellsData = {
         {
           name: "Oculus Malus",
           level: "6th Level",
+          year: null,
           restriction: true,
           description: "Evil eye curse",
         },
@@ -1727,6 +1941,7 @@ export const spellsData = {
         {
           name: "Menus Eruptus",
           level: "9th Level",
+          year: null,
           restriction: true,
           description: "Mind eruption or mental explosion spell",
         },
@@ -1743,6 +1958,7 @@ export const spellsData = {
         {
           name: "Ferio",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Strike or wound spell",
         },
@@ -1751,12 +1967,14 @@ export const spellsData = {
         {
           name: "Tenebris",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Darkness spell",
         },
         {
           name: "Ferio Maxima",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Enhanced wounding spell",
         },
@@ -1765,6 +1983,7 @@ export const spellsData = {
         {
           name: "Sagittario Virius",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Poisoned arrow spell",
         },
@@ -1773,6 +1992,7 @@ export const spellsData = {
         {
           name: "Gehennus Conjurus",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Conjures hellish flames",
         },
@@ -1781,6 +2001,7 @@ export const spellsData = {
         {
           name: "Combustio",
           level: "5th Level",
+          year: null,
           restriction: true,
           description: "Spontaneous combustion spell",
         },
@@ -1789,12 +2010,14 @@ export const spellsData = {
         {
           name: "Inmoritatem",
           level: "6th Level",
+          year: null,
           restriction: true,
           description: "Immortality or undeath spell",
         },
         {
           name: "Undanem",
           level: "6th Level",
+          year: null,
           restriction: true,
           description: "Wave or flood spell",
         },
@@ -1803,12 +2026,14 @@ export const spellsData = {
         {
           name: "Tenebris Maxima",
           level: "8th Level",
+          year: null,
           restriction: true,
           description: "Maximum darkness spell",
         },
         {
           name: "Insanio",
           level: "8th Level",
+          year: null,
           restriction: true,
           description: "Madness spell",
         },
@@ -1825,6 +2050,7 @@ export const spellsData = {
         {
           name: "Utilitatem",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Utility or usefulness spell",
         },
@@ -1833,6 +2059,7 @@ export const spellsData = {
         {
           name: "Facias Infirmitatem",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Causes weakness or infirmity",
         },
@@ -1841,12 +2068,14 @@ export const spellsData = {
         {
           name: "Exagitatus",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Agitation or disturbance spell",
         },
         {
           name: "Impulso",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Impulse or driving force spell",
         },
@@ -1855,12 +2084,14 @@ export const spellsData = {
         {
           name: "Maledicto",
           level: "4th Level",
+          year: null,
           restriction: true,
           description: "Curse or malediction spell",
         },
         {
           name: "Sagittario Maxima",
           level: "4th Level",
+          year: null,
           restriction: true,
           description: "Maximum arrow spell",
         },
@@ -1869,6 +2100,7 @@ export const spellsData = {
         {
           name: "Sanitatem",
           level: "6th Level",
+          year: null,
           restriction: true,
           description: "Health or sanity spell",
         },
@@ -1877,6 +2109,7 @@ export const spellsData = {
         {
           name: "Portentia Spiculum",
           level: "7th Level",
+          year: null,
           restriction: true,
           description: "Portent spike or omen dart spell",
         },
@@ -1893,12 +2126,14 @@ export const spellsData = {
         {
           name: "Lux",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Light spell with celestial properties",
         },
         {
           name: "Ignis Lunalis",
           level: "Cantrip",
+          year: null,
           restriction: true,
           description: "Moonfire spell",
         },
@@ -1907,6 +2142,7 @@ export const spellsData = {
         {
           name: "Lux Maxima",
           level: "1st Level",
+          year: null,
           restriction: true,
           description: "Maximum celestial light",
         },
@@ -1915,6 +2151,7 @@ export const spellsData = {
         {
           name: "Trabem",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Beam or ray spell",
         },
@@ -1923,6 +2160,7 @@ export const spellsData = {
         {
           name: "Stellaro",
           level: "3rd Level",
+          year: null,
           restriction: true,
           description: "Star-based spell",
         },
@@ -1931,6 +2169,7 @@ export const spellsData = {
         {
           name: "Lunativia",
           level: "5th Level",
+          year: null,
           restriction: true,
           description: "Lunar path or moon magic",
         },
@@ -1939,6 +2178,7 @@ export const spellsData = {
         {
           name: "Solativia",
           level: "8th Level",
+          year: null,
           restriction: true,
           description: "Solar path or sun magic",
         },
@@ -1955,6 +2195,7 @@ export const spellsData = {
         {
           name: "Diffindo",
           level: "1st Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Professional version of the cutting spell",
@@ -1964,6 +2205,7 @@ export const spellsData = {
         {
           name: "Immobulus",
           level: "2nd Level",
+          year: null,
           restriction: true,
           description: "Professional version of the freezing spell",
         },
@@ -1972,6 +2214,7 @@ export const spellsData = {
         {
           name: "Deprimo",
           level: "3rd Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Depression or lowering spell",
@@ -1981,6 +2224,7 @@ export const spellsData = {
         {
           name: "Confundo",
           level: "4th Level (ritual)",
+          year: null,
           restriction: true,
           tags: ["R"],
           description: "Professional version of the confusion charm",
@@ -1999,6 +2243,7 @@ export const spellsData = {
         {
           name: "Manus",
           level: "Cantrip",
+          year: null,
           restriction: false,
           description:
             "Create a spectral floating hand that can manipulate objects, open doors, and carry up to 10 pounds within 30 feet for 1 minute",
@@ -2009,6 +2254,7 @@ export const spellsData = {
         {
           name: "Tranquillitatem",
           level: "2nd Level",
+          year: null,
           restriction: false,
           description:
             "Suppress strong emotions in a 20-foot radius. Remove charm/fear effects or make hostile creatures indifferent toward chosen targets. Concentration, up to 1 minute",
@@ -2018,6 +2264,7 @@ export const spellsData = {
         {
           name: "Fictus",
           level: "3rd Level",
+          year: null,
           restriction: false,
           description:
             "Create a realistic illusion up to 20-foot cube with sounds, smells, and temperature. Lasts 10 minutes with concentration. Physical interaction reveals it's fake. At 6th level+, becomes permanent without concentration",
@@ -2025,6 +2272,7 @@ export const spellsData = {
         {
           name: "Roboratum",
           level: "3rd Level",
+          year: null,
           restriction: false,
           description:
             "Grant up to 5 creatures 5 temporary HP, advantage on Wisdom saves, and advantage on next attack after being hit. Lasts 1 hour. Higher levels add +5 temp HP per slot level",
@@ -2036,6 +2284,7 @@ export const spellsData = {
         {
           name: "Incarcerebra",
           level: "6th Level",
+          year: null,
           restriction: false,
           description:
             "Bind a creature in an illusory cell only it perceives. Target takes 5d10 psychic damage and is restrained, unable to see/hear beyond the illusion. Moving through it deals 10d10 damage and ends the spell",
@@ -2046,6 +2295,7 @@ export const spellsData = {
         {
           name: "Dubium/Fiducium",
           level: "8th Level",
+          year: null,
           restriction: false,
           description:
             "Enchant an object/area with an aura that repels (Dubium) or attracts (Fiducium) specified intelligent creatures. Lasts 10 days. Targets must save or be frightened away or compelled to approach within 60 feet",
@@ -2055,6 +2305,7 @@ export const spellsData = {
     },
   },
 };
+
 export const INDIVIDUAL_SPELL_MODIFIERS = {
   "Ferio*": SCHOOL_TO_MODIFIER_MAP.jhc,
   "Tenebris*": SCHOOL_TO_MODIFIER_MAP.jhc,

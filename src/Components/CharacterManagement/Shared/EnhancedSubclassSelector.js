@@ -1,324 +1,246 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import { subclassesData } from "../../data";
+import { createFeatStyles } from "../../../styles/masterStyles";
+import { useTheme } from "../../../contexts/ThemeContext";
 
-const EnhancedSubclassSelector = ({
-  value,
-  onChange,
-  styles,
-  theme,
-  disabled = false,
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedSubclass, setSelectedSubclass] = useState(value);
+const EnhancedSubclassSelector = ({ value, onChange, disabled = false }) => {
+  const { theme } = useTheme();
+  const styles = createFeatStyles(theme);
+  const [expandedSubclasses, setExpandedSubclasses] = useState(new Set());
 
-  const handleSubclassSelect = (subclassName) => {
-    setSelectedSubclass(subclassName);
-    onChange(subclassName);
-    setIsExpanded(false);
+  const handleSubclassToggle = (subclassName) => {
+    const newValue = value === subclassName ? "" : subclassName;
+    onChange(newValue);
   };
 
-  const selectedSubclassData = selectedSubclass
-    ? subclassesData[selectedSubclass]
-    : null;
+  const toggleSubclassExpansion = (subclassName) => {
+    setExpandedSubclasses((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(subclassName)) {
+        newSet.delete(subclassName);
+      } else {
+        newSet.add(subclassName);
+      }
+      return newSet;
+    });
+  };
+
+  const hasSelectedSubclass = value ? 1 : 0;
 
   return (
     <div style={styles.fieldContainer}>
-      <label style={styles.label}>Subclass</label>
+      <h3 style={styles.skillsHeader}>
+        Subclass ({hasSelectedSubclass}/1 selected)
+      </h3>
 
-      {/* Custom Dropdown */}
-      <div style={{ position: "relative" }}>
-        <button
-          type="button"
-          onClick={() => setIsExpanded(!isExpanded)}
-          disabled={disabled}
-          style={{
-            ...styles.select,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            cursor: disabled ? "not-allowed" : "pointer",
-            opacity: disabled ? 0.6 : 1,
-          }}
-        >
-          <span
-            style={{
-              color: selectedSubclass ? theme.text : theme.textSecondary,
-            }}
-          >
-            {selectedSubclass || "Select Subclass..."}
-          </span>
-          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-
-        {/* Dropdown Menu */}
-        {isExpanded && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              backgroundColor: theme.surface,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              zIndex: 1000,
-              maxHeight: "400px",
-              overflowY: "auto",
-            }}
-          >
-            {/* Clear Selection Option */}
-            <button
-              type="button"
-              onClick={() => handleSubclassSelect("")}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                textAlign: "left",
-                border: "none",
-                backgroundColor: "transparent",
-                color: theme.textSecondary,
-                cursor: "pointer",
-                borderBottom: `1px solid ${theme.border}`,
-                fontStyle: "italic",
-              }}
-              onMouseEnter={(e) =>
-                (e.target.style.backgroundColor = theme.background)
-              }
-              onMouseLeave={(e) =>
-                (e.target.style.backgroundColor = "transparent")
-              }
-            >
-              Clear Selection
-            </button>
-
-            {/* Subclass Options */}
-            {Object.values(subclassesData).map((subclass) => (
-              <div key={subclass.name}>
-                <button
-                  type="button"
-                  onClick={() => handleSubclassSelect(subclass.name)}
-                  style={{
-                    width: "100%",
-                    padding: "16px",
-                    textAlign: "left",
-                    border: "none",
-                    backgroundColor:
-                      selectedSubclass === subclass.name
-                        ? theme.primary + "20"
-                        : "transparent",
-                    color: theme.text,
-                    cursor: "pointer",
-                    transition: "background-color 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedSubclass !== subclass.name) {
-                      e.target.style.backgroundColor = theme.background;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedSubclass !== subclass.name) {
-                      e.target.style.backgroundColor = "transparent";
-                    }
-                  }}
-                >
-                  <div style={{ marginBottom: "4px" }}>
-                    <strong style={{ fontSize: "14px", color: theme.primary }}>
-                      {subclass.name}
-                    </strong>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: theme.textSecondary,
-                      lineHeight: "1.4",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    {subclass.description}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: theme.text,
-                      fontWeight: "500",
-                      padding: "4px 8px",
-                      backgroundColor: theme.background,
-                      borderRadius: "4px",
-                      display: "inline-block",
-                    }}
-                  >
-                    {subclass.summary}
-                  </div>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+      <div style={styles.helpText}>
+        Choose a subclass to specialize your character's abilities and features.
       </div>
 
-      {/* Selected Subclass Details */}
-      {selectedSubclassData && (
-        <div
-          style={{
-            marginTop: "12px",
-            padding: "16px",
-            backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`,
-            borderRadius: "8px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "12px",
-            }}
-          >
-            <Info size={16} color={theme.primary} />
-            <h4
-              style={{
-                margin: 0,
-                fontSize: "16px",
-                fontWeight: "600",
-                color: theme.primary,
-              }}
+      {hasSelectedSubclass === 1 && (
+        <div style={styles.completionMessage}>
+          ✓ Subclass selected! Click the checkbox to unselect and choose a
+          different subclass.
+        </div>
+      )}
+
+      <div style={styles.featsContainer}>
+        {Object.values(subclassesData).map((subclass) => {
+          const isSelected = value === subclass.name;
+          const isExpanded = expandedSubclasses.has(subclass.name);
+
+          return (
+            <div
+              key={subclass.name}
+              style={isSelected ? styles.featCardSelected : styles.featCard}
             >
-              {selectedSubclassData.name} Details
-            </h4>
-          </div>
-
-          <p
-            style={{
-              margin: "0 0 16px 0",
-              fontSize: "14px",
-              color: theme.text,
-              lineHeight: "1.5",
-            }}
-          >
-            {selectedSubclassData.description}
-          </p>
-
-          {/* Level 1 Features */}
-          <div style={{ marginBottom: "16px" }}>
-            <h5
-              style={{
-                margin: "0 0 8px 0",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: theme.text,
-              }}
-            >
-              Level 1 Features:
-            </h5>
-            {selectedSubclassData.level1Features.map((feature, index) => (
-              <div key={index} style={{ marginBottom: "8px" }}>
-                <strong
-                  style={{
-                    fontSize: "13px",
-                    color: theme.primary,
-                  }}
-                >
-                  {feature.name}:
-                </strong>
-                <span
-                  style={{
-                    fontSize: "13px",
-                    color: theme.text,
-                    marginLeft: "6px",
-                  }}
-                >
-                  {feature.description}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Level 1 Choices */}
-          {selectedSubclassData.level1Choices &&
-            selectedSubclassData.level1Choices.length > 0 && (
-              <div>
-                <h5
-                  style={{
-                    margin: "0 0 8px 0",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: theme.text,
-                  }}
-                >
-                  Choose One at Level 1:
-                </h5>
-                {selectedSubclassData.level1Choices.map((choice, index) => (
-                  <div
-                    key={index}
+              <div style={styles.featHeader}>
+                <label style={styles.featLabelClickable}>
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => handleSubclassToggle(subclass.name)}
+                    disabled={disabled}
                     style={{
-                      marginBottom: "12px",
+                      width: "18px",
+                      height: "18px",
+                      marginRight: "8px",
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      accentColor: "#8B5CF6",
+                      transform: "scale(1.2)",
+                    }}
+                  />
+                  <span
+                    style={
+                      isSelected ? styles.featNameSelected : styles.featName
+                    }
+                  >
+                    {subclass.name}
+                  </span>
+                </label>
+                <button
+                  onClick={() => toggleSubclassExpansion(subclass.name)}
+                  style={styles.expandButton}
+                  type="button"
+                  disabled={disabled}
+                >
+                  {isExpanded ? "▲" : "▼"}
+                </button>
+              </div>
+
+              <div
+                style={
+                  isSelected ? styles.featPreviewSelected : styles.featPreview
+                }
+              >
+                {subclass.description}
+              </div>
+
+              {isExpanded && (
+                <div
+                  style={
+                    isSelected
+                      ? styles.featDescriptionSelected
+                      : styles.featDescription
+                  }
+                >
+                  {/* Level 1 Features */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <h5
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: isSelected ? "#047857" : theme.text,
+                      }}
+                    >
+                      Level 1 Features:
+                    </h5>
+                    {subclass.level1Features.map((feature, index) => (
+                      <div key={index} style={{ marginBottom: "8px" }}>
+                        <strong
+                          style={{
+                            fontSize: "13px",
+                            color: isSelected ? "#10B981" : theme.primary,
+                          }}
+                        >
+                          {feature.name}:
+                        </strong>
+                        <span
+                          style={{
+                            fontSize: "13px",
+                            color: isSelected ? "#1F2937" : theme.text,
+                            marginLeft: "6px",
+                          }}
+                        >
+                          {feature.description}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Level 1 Choices */}
+                  {subclass.level1Choices &&
+                    subclass.level1Choices.length > 0 && (
+                      <div style={{ marginBottom: "16px" }}>
+                        <h5
+                          style={{
+                            margin: "0 0 8px 0",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: isSelected ? "#047857" : theme.text,
+                          }}
+                        >
+                          Choose One at Level 1:
+                        </h5>
+                        {subclass.level1Choices.map((choice, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              marginBottom: "12px",
+                              padding: "12px",
+                              backgroundColor: isSelected
+                                ? "#F0FDF4"
+                                : theme.surface,
+                              borderRadius: "6px",
+                              border: `1px solid ${
+                                isSelected ? "#D1FAE5" : theme.border
+                              }`,
+                            }}
+                          >
+                            <strong
+                              style={{
+                                fontSize: "13px",
+                                color: isSelected ? "#10B981" : theme.primary,
+                                display: "block",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              {choice.name}
+                            </strong>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: "12px",
+                                color: isSelected ? "#1F2937" : theme.text,
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              {choice.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                  {/* Summary */}
+                  <div
+                    style={{
                       padding: "12px",
-                      backgroundColor: theme.background,
+                      backgroundColor: isSelected
+                        ? "#ECFDF5"
+                        : theme.primary + "10",
                       borderRadius: "6px",
-                      border: `1px solid ${theme.border}`,
+                      borderLeft: `4px solid ${
+                        isSelected ? "#10B981" : theme.primary
+                      }`,
                     }}
                   >
                     <strong
                       style={{
-                        fontSize: "13px",
-                        color: theme.primary,
+                        fontSize: "12px",
+                        color: isSelected ? "#10B981" : theme.primary,
                         display: "block",
                         marginBottom: "4px",
                       }}
                     >
-                      {choice.name}
+                      Summary:
                     </strong>
                     <p
                       style={{
                         margin: 0,
                         fontSize: "12px",
-                        color: theme.text,
+                        color: isSelected ? "#1F2937" : theme.text,
+                        fontStyle: "italic",
                         lineHeight: "1.4",
                       }}
                     >
-                      {choice.description}
+                      {subclass.summary}
                     </p>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-          {/* Summary */}
-          <div
-            style={{
-              marginTop: "16px",
-              padding: "12px",
-              backgroundColor: theme.primary + "10",
-              borderRadius: "6px",
-              borderLeft: `4px solid ${theme.primary}`,
-            }}
-          >
-            <strong
-              style={{
-                fontSize: "12px",
-                color: theme.primary,
-                display: "block",
-                marginBottom: "4px",
-              }}
-            >
-              Summary:
-            </strong>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "12px",
-                color: theme.text,
-                fontStyle: "italic",
-              }}
-            >
-              {selectedSubclassData.summary}
-            </p>
-          </div>
-        </div>
-      )}
+      <div style={styles.helpText}>
+        Note: Subclass is optional and represents your character's specialized
+        training path. You can select one subclass that provides unique
+        abilities and features. Click the checkbox to select/unselect a subclass
+        and use the arrow to expand details.
+      </div>
     </div>
   );
 };
