@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Heart, Dices, Plus, Minus, X, Coffee } from "lucide-react";
 import { formatModifier } from "./utils";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
