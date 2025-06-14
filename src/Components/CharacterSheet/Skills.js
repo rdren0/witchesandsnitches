@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Circle, Star } from "lucide-react";
-import { formatModifier, modifiers, allSkills } from "./utils";
+import { formatModifier, modifiers, skillMap, allSkills } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
 import { useRollFunctions } from "../../App/diceRoller";
@@ -32,28 +32,6 @@ export const Skills = ({
   };
 
   const skillsToDbFormat = (skillsObject) => {
-    const skillMap = {
-      athletics: "Athletics",
-      acrobatics: "Acrobatics",
-      sleightOfHand: "Sleight of Hand",
-      stealth: "Stealth",
-      herbology: "Herbology",
-      historyOfMagic: "History of Magic",
-      investigation: "Investigation",
-      magicalTheory: "Magical Theory",
-      muggleStudies: "Muggle Studies",
-      insight: "Insight",
-      magicalCreatures: "Magical Creatures",
-      medicine: "Medicine",
-      perception: "Perception",
-      potionMaking: "Potion Making",
-      survival: "Survival",
-      deception: "Deception",
-      intimidation: "Intimidation",
-      performance: "Performance",
-      persuasion: "Persuasion",
-    };
-
     const proficientSkills = [];
     const expertiseSkills = [];
 

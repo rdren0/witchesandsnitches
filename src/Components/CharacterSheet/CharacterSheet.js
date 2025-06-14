@@ -128,109 +128,7 @@ const CharacterSheet = ({
     return allFeats;
   };
 
-  const fetchCharacterDetails = async () => {
-    if (!selectedCharacter?.id) {
-      setCharacter(null);
-      return;
-    }
-
-    setCharacterLoading(true);
-    setError(null);
-
-    try {
-      const { data, error } = await supabase
-        .from("characters")
-        .select("*, initiative_ability")
-        .eq("id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        const baseAbilityScores = data.ability_scores || {};
-        const asiChoices = data.asi_choices || {};
-        const effectiveAbilityScores = calculateEffectiveAbilityScores(
-          baseAbilityScores,
-          asiChoices
-        );
-
-        const allFeats = getAllCharacterFeats(
-          data.standard_feats || [],
-          asiChoices
-        );
-
-        const transformedCharacter = {
-          id: data.id,
-          abilityScores: data.ability_scores,
-          allFeats: allFeats,
-
-          // AC always uses dexterity modifier
-          armorClass:
-            getBaseArmorClass(data.casting_style) +
-            getArmorClassModifier(effectiveAbilityScores),
-
-          asiChoices: asiChoices,
-          background: data.background || "Unknown",
-          baseAbilityScores: baseAbilityScores,
-          bloodStatus: data.innate_heritage || "Unknown",
-          castingStyle: data.casting_style,
-          charisma: effectiveAbilityScores.charisma || 10,
-          constitution: effectiveAbilityScores.constitution || 10,
-          currentHitDice: data.current_hit_dice || data.level,
-          currentHitPoints: data.current_hit_points || data.hit_points || 1,
-          dexterity: effectiveAbilityScores.dexterity || 10,
-          gameSession: data.game_session || "",
-          hitDie: getHitDie(data.casting_style),
-          hitPoints: data.hit_points || 1,
-          house: data.house,
-
-          initiativeAbility: data.initiative_ability,
-          // Initiative modifier depends on chosen ability
-          initiativeModifier: getInitiativeModifier(
-            data.initiative_ability,
-            effectiveAbilityScores
-          ),
-          initiative: 8,
-          innateHeritage: data.innate_heritage,
-          intelligence: effectiveAbilityScores.intelligence || 10,
-          level: data.level,
-          magicModifiers: data.magic_modifiers || {},
-          maxHitDice: data.level,
-          maxHitPoints: data.hit_points || 1,
-          name: data.name,
-          proficiencyBonus: Math.ceil(data.level / 4) + 1,
-          skillProficiencies: data.skill_proficiencies || [],
-          skills: transformSkillProficiencies(data.skill_proficiencies || []),
-          speed: 30,
-          standardFeats: data.standard_feats || [],
-          strength: effectiveAbilityScores.strength || 10,
-          subclass: data.subclass,
-          wand: data.wand_type || "Unknown wand",
-          wandType: data.wand_type,
-          wisdom: effectiveAbilityScores.wisdom || 10,
-          year: `Level ${data.level}`,
-        };
-
-        setCharacter(transformedCharacter);
-      }
-    } catch (err) {
-      console.error("Error fetching character:", err);
-      setError(err.message);
-    } finally {
-      setCharacterLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCharacterDetails();
-    // eslint-disable-next-line
-  }, [selectedCharacter?.id, discordUserId, supabase]);
-
-  const transformSkillProficiencies = (
-    skillProficiencies = [],
-    skillExpertise = []
-  ) => {
+  const transformSkillData = (skillProficiencies = [], skillExpertise = []) => {
     const skillMap = {
       Athletics: "athletics",
       Acrobatics: "acrobatics",
@@ -275,6 +173,105 @@ const CharacterSheet = ({
 
     return skills;
   };
+
+  const fetchCharacterDetails = async () => {
+    if (!selectedCharacter?.id) {
+      setCharacter(null);
+      return;
+    }
+
+    setCharacterLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from("characters")
+        .select("*, initiative_ability")
+        .eq("id", selectedCharacter.id)
+        .eq("discord_user_id", discordUserId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const baseAbilityScores = data.ability_scores || {};
+        const asiChoices = data.asi_choices || {};
+        const effectiveAbilityScores = calculateEffectiveAbilityScores(
+          baseAbilityScores,
+          asiChoices
+        );
+
+        const allFeats = getAllCharacterFeats(
+          data.standard_feats || [],
+          asiChoices
+        );
+
+        const transformedCharacter = {
+          id: data.id,
+          abilityScores: data.ability_scores,
+          allFeats: allFeats,
+          armorClass:
+            getBaseArmorClass(data.casting_style) +
+            getArmorClassModifier(effectiveAbilityScores),
+
+          asiChoices: asiChoices,
+          background: data.background || "Unknown",
+          baseAbilityScores: baseAbilityScores,
+          bloodStatus: data.innate_heritage || "Unknown",
+          castingStyle: data.casting_style,
+          charisma: effectiveAbilityScores.charisma || 10,
+          constitution: effectiveAbilityScores.constitution || 10,
+          currentHitDice: data.current_hit_dice || data.level,
+          currentHitPoints: data.current_hit_points || data.hit_points || 1,
+          dexterity: effectiveAbilityScores.dexterity || 10,
+          gameSession: data.game_session || "",
+          hitDie: getHitDie(data.casting_style),
+          hitPoints: data.hit_points || 1,
+          house: data.house,
+          imageUrl: data.image_url || "",
+          initiativeAbility: data.initiative_ability,
+          initiativeModifier: getInitiativeModifier(
+            data.initiative_ability,
+            effectiveAbilityScores
+          ),
+          initiative: 8,
+          innateHeritage: data.innate_heritage,
+          intelligence: effectiveAbilityScores.intelligence || 10,
+          level: data.level,
+          magicModifiers: data.magic_modifiers || {},
+          maxHitDice: data.level,
+          maxHitPoints: data.hit_points || 1,
+          name: data.name,
+          proficiencyBonus: Math.ceil(data.level / 4) + 1,
+          skillProficiencies: data.skill_proficiencies || [],
+          skills: transformSkillData(
+            data.skill_proficiencies || [],
+            data.skill_expertise || []
+          ),
+          speed: 30,
+          standardFeats: data.standard_feats || [],
+          strength: effectiveAbilityScores.strength || 10,
+          subclass: data.subclass,
+          wand: data.wand_type || "Unknown wand",
+          wandType: data.wand_type,
+          wisdom: effectiveAbilityScores.wisdom || 10,
+          year: `Level ${data.level}`,
+        };
+
+        setCharacter(transformedCharacter);
+      }
+    } catch (err) {
+      console.error("Error fetching character:", err);
+      setError(err.message);
+    } finally {
+      setCharacterLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCharacterDetails();
+    // eslint-disable-next-line
+  }, [selectedCharacter?.id, discordUserId, supabase]);
 
   const handleShortRestClick = () => {
     if (!character || character.currentHitDice <= 0) {
@@ -915,19 +912,26 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.statCard,
-                  backgroundColor: "#f0f9ff",
-                  borderColor: "#0ea5e9",
                   cursor: "default",
                 }}
                 title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
               >
-                <Star className="w-6 h-6 text-sky-600 mx-auto mb-1" />
+                <Star
+                  size={24}
+                  style={{
+                    color: theme.warning || "#f59e0b",
+                    marginBottom: "4px",
+                    display: "block",
+                    margin: "0 auto 4px auto",
+                  }}
+                />
                 <div
                   style={{
                     ...styles.statValue,
-                    color: "#0284c7",
+                    color: theme.warning || "#d97706",
                     fontSize: "1.25rem",
                     fontWeight: "bold",
+                    marginBottom: "0.25rem",
                   }}
                 >
                   +{character.proficiencyBonus || 0}
@@ -935,7 +939,7 @@ const CharacterSheet = ({
                 <div
                   style={{
                     ...styles.statLabel,
-                    color: "#0369a1",
+                    color: theme.warning || "#92400e",
                     fontSize: "0.875rem",
                   }}
                 >
