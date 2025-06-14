@@ -814,9 +814,6 @@ const CharacterSheet = ({
                       {character.gameSession}
                     </div>
                   )}
-                  <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
-                    <span style={styles.label}>Wand:</span> {character.wand}
-                  </div>
                   {character.castingStyle === "Intellect Caster" && (
                     <div style={styles.infoItem}>
                       <span style={styles.label}>Initiative Ability:</span>{" "}
@@ -825,6 +822,9 @@ const CharacterSheet = ({
                         : "Dexterity"}
                     </div>
                   )}
+                  <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
+                    <span style={styles.label}>Wand:</span> {character.wand}
+                  </div>
                 </div>
               </div>
             </div>
@@ -857,22 +857,6 @@ const CharacterSheet = ({
                   Hit Points
                 </div>
               </div>
-
-              <div
-                style={{
-                  ...styles.statCard,
-                  ...styles.statCardBlue,
-                  cursor: "default",
-                }}
-              >
-                <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
-                  {character.armorClass}
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelBlue }}>
-                  Armor Class
-                </div>
-              </div>
               <div
                 style={{ ...styles.statCard, ...styles.statCardGreen }}
                 onClick={() =>
@@ -891,6 +875,21 @@ const CharacterSheet = ({
                 </div>
                 <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
                   Initiative
+                </div>
+              </div>
+              <div
+                style={{
+                  ...styles.statCard,
+                  ...styles.statCardBlue,
+                  cursor: "default",
+                }}
+              >
+                <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
+                  {character.armorClass}
+                </div>
+                <div style={{ ...styles.statLabel, ...styles.statLabelBlue }}>
+                  Armor Class
                 </div>
               </div>
               <div
