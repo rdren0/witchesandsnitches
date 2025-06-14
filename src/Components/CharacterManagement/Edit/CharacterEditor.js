@@ -947,6 +947,7 @@ const CharacterEditor = ({
         level: updatedCharacter.level,
         level1ChoiceType: updatedCharacter.level1_choice_type || "",
         name: updatedCharacter.name,
+        skillExpertise: updatedCharacter.skill_expertise || [],
         skillProficiencies: updatedCharacter.skill_proficiencies || [],
         standardFeats: updatedCharacter.standard_feats || [],
         subclass: updatedCharacter.subclass,

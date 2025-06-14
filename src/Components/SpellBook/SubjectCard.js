@@ -477,7 +477,6 @@ export const SubjectCard = ({
       const rollMessage = `Research Check: ${d20Roll}${
         modifier >= 0 ? "+" : ""
       }${modifier} = ${totalRoll} vs DC ${dc}`;
-      console.log(rollMessage);
 
       if (isSuccess) {
         const { data: existingProgress, error: fetchError } = await supabase

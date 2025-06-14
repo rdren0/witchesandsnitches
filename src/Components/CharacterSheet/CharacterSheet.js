@@ -243,6 +243,7 @@ const CharacterSheet = ({
           maxHitPoints: data.hit_points || 1,
           name: data.name,
           proficiencyBonus: Math.ceil(data.level / 4) + 1,
+          skillExpertise: data.skill_expertise || [],
           skillProficiencies: data.skill_proficiencies || [],
           skills: transformSkillData(
             data.skill_proficiencies || [],

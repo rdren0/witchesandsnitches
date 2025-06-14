@@ -951,6 +951,7 @@ const CharacterCreator = ({
         background: savedCharacter.background,
         gameSession: savedCharacter.game_session || "",
         standardFeats: savedCharacter.standard_feats || [],
+        skillExpertise: savedCharacter.skill_expertise || [],
         skillProficiencies: savedCharacter.skill_proficiencies || [],
         abilityScores: savedCharacter.ability_scores,
         hitPoints: savedCharacter.hit_points,

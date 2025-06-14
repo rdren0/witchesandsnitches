@@ -611,6 +611,7 @@ function AppContent() {
         level1ChoiceType: char.level1_choice_type || "",
         name: char.name,
         skillProficiencies: char.skill_proficiencies || [],
+        skillExpertise: char.skill_expertise || [],
         standardFeats: char.standard_feats || [],
         subclass: char.subclass,
         wandType: char.wand_type || "",

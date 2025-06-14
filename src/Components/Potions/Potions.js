@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dice1,
   Dice2,
@@ -38,11 +38,24 @@ const PotionBrewingSystem = ({ character }) => {
 
   const [ingredientQuality, setIngredientQuality] = useState("normal");
 
-  const getCharacterPotionModifier = () => {
-    const currentCharacter = character || selectedCharacter;
-    if (!currentCharacter) return 0;
+  const currentCharacter = useMemo(() => {
+    return character || selectedCharacter;
+  }, [character, selectedCharacter]);
 
-    console.log("Character object:", currentCharacter);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, [
+    currentCharacter?.skills,
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    currentCharacter?.abilityScores,
+    currentCharacter?.level,
+  ]);
+
+  const getCharacterPotionModifier = useMemo(() => {
+    if (!currentCharacter) return 0;
 
     const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
     const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
@@ -50,17 +63,43 @@ const PotionBrewingSystem = ({ character }) => {
     const level = currentCharacter.level || 1;
     const proficiencyBonus = Math.ceil(level / 4) + 1;
 
+    const skillLevel = currentCharacter.skills?.potionMaking || 0;
+
     const skillProficiencies = currentCharacter.skillProficiencies || [];
+    const skillExpertise = currentCharacter.skillExpertise || [];
+
     const isProficientInPotionMaking =
       skillProficiencies.includes("Potion Making") ||
       skillProficiencies.includes("Potion-Making") ||
       skillProficiencies.includes("potionMaking");
 
-    const skillModifier =
-      wisdomModifier + (isProficientInPotionMaking ? proficiencyBonus : 0);
+    const hasExpertiseInPotionMaking =
+      skillExpertise.includes("Potion Making") ||
+      skillExpertise.includes("Potion-Making") ||
+      skillExpertise.includes("potionMaking");
 
-    return skillModifier;
-  };
+    let skillBonus = 0;
+    if (skillLevel === 1) {
+      skillBonus = proficiencyBonus;
+    } else if (skillLevel === 2) {
+      skillBonus = proficiencyBonus * 2;
+    } else if (hasExpertiseInPotionMaking) {
+      skillBonus = proficiencyBonus * 2;
+    } else if (isProficientInPotionMaking) {
+      skillBonus = proficiencyBonus;
+    }
+
+    const totalModifier = wisdomModifier + skillBonus;
+
+    return totalModifier;
+  }, [
+    currentCharacter?.skills?.potionMaking,
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    currentCharacter?.abilityScores?.wisdom,
+    currentCharacter?.level,
+    refreshTrigger,
+  ]);
 
   const ingredientModifiers = {
     flawed: 2,
@@ -153,7 +192,7 @@ const PotionBrewingSystem = ({ character }) => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
-      const characterModifier = getCharacterPotionModifier();
+      const characterModifier = getCharacterPotionModifier;
 
       const brewingResult = await rollBrewPotion({
         isRolling,
@@ -204,10 +243,64 @@ const PotionBrewingSystem = ({ character }) => {
     return allPotions;
   };
 
+  const getSkillProficiencyInfo = useMemo(() => {
+    const skillLevel = currentCharacter?.skills?.potionMaking || 0;
+    const skillProficiencies = currentCharacter?.skillProficiencies || [];
+    const skillExpertise = currentCharacter?.skillExpertise || [];
+
+    const isProficientInPotionMaking =
+      skillProficiencies.includes("Potion Making") ||
+      skillProficiencies.includes("Potion-Making") ||
+      skillProficiencies.includes("potionMaking");
+
+    const hasExpertiseInPotionMaking =
+      skillExpertise.includes("Potion Making") ||
+      skillExpertise.includes("Potion-Making") ||
+      skillExpertise.includes("potionMaking");
+
+    const proficiencyBonus = Math.ceil((currentCharacter?.level || 1) / 4) + 1;
+
+    if (skillLevel === 2) {
+      return {
+        status: "expertise",
+        bonus: proficiencyBonus * 2,
+        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
+      };
+    } else if (skillLevel === 1) {
+      return {
+        status: "proficient",
+        bonus: proficiencyBonus,
+        description: `+${proficiencyBonus} (proficient)`,
+      };
+    } else if (hasExpertiseInPotionMaking) {
+      return {
+        status: "expertise",
+        bonus: proficiencyBonus * 2,
+        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
+      };
+    } else if (isProficientInPotionMaking) {
+      return {
+        status: "proficient",
+        bonus: proficiencyBonus,
+        description: `+${proficiencyBonus} (proficient)`,
+      };
+    } else {
+      return {
+        status: "not proficient",
+        bonus: 0,
+        description: "+0 (not proficient)",
+      };
+    }
+  }, [
+    currentCharacter?.skills?.potionMaking,
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    currentCharacter?.level,
+  ]);
+
   const filteredPotions = getFilteredPotions();
   const preparedQuality = getPreparedIngredientQuality();
-  const characterModifier = getCharacterPotionModifier();
-  const currentCharacter = character || selectedCharacter;
+  const characterModifier = getCharacterPotionModifier;
 
   return (
     <div style={styles.container}>
@@ -407,12 +500,7 @@ const PotionBrewingSystem = ({ character }) => {
                     )}
                   </div>
                   <div>
-                    • Proficiency Bonus:{" "}
-                    {(currentCharacter?.skillProficiencies || []).includes(
-                      "Potion Making"
-                    )
-                      ? `+${Math.ceil((currentCharacter?.level || 1) / 4) + 1}`
-                      : "+0 (not proficient)"}
+                    • Potion Making Skill: {getSkillProficiencyInfo.description}
                   </div>
                   <div>
                     •{" "}

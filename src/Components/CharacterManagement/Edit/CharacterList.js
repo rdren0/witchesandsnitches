@@ -67,6 +67,7 @@ const CharacterList = ({
         level: char.level,
         level1ChoiceType: char.level1_choice_type || "",
         name: char.name,
+        skillExpertise: char.skill_expertise || [],
         skillProficiencies: char.skill_proficiencies || [],
         standardFeats: char.standard_feats || [],
         subclass: char.subclass,
