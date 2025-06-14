@@ -1832,74 +1832,10 @@ const CharacterEditor = ({
       </div>
 
       <div style={styles.fieldContainer}>
-        <div style={styles.lockedFieldHeader}>
-          <h3 style={styles.skillsHeader}>
-            Ability Scores
-            {lockedFields.abilityScores && (
-              <span style={styles.lockedBadge}>
-                <Lock size={12} />
-                Locked
-              </span>
-            )}
-          </h3>
-          <button
-            onClick={() => toggleFieldLock("abilityScores")}
-            style={{
-              ...styles.lockButton,
-              backgroundColor: lockedFields.abilityScores
-                ? "#ef4444"
-                : "#10b981",
-            }}
-          >
-            {lockedFields.abilityScores ? (
-              <Unlock size={14} />
-            ) : (
-              <Lock size={14} />
-            )}
-            {lockedFields.abilityScores ? "Unlock" : "Lock"}
-          </button>
-        </div>
-        {lockedFields.abilityScores ? (
-          <div style={styles.lockedAbilityScores}>
-            {Object.entries(character.abilityScores || {}).map(
-              ([ability, score]) => (
-                <div key={ability} style={styles.lockedAbilityScore}>
-                  <span style={styles.abilityName}>
-                    {ability.charAt(0).toUpperCase() + ability.slice(1)}:
-                  </span>
-                  <span style={styles.abilityValue}>{score || 0}</span>
-                </div>
-              )
-            )}
-            <div style={styles.lockedFieldInfo}>
-              Ability scores are locked. Use the unlock button to modify them.
-            </div>
-          </div>
-        ) : (
-          <AbilityScorePicker
-            character={character}
-            setRolledStats={setRolledStats}
-            setAvailableStats={setAvailableStats}
-            setCharacter={setCharacter}
-            rollAllStats={() => {}}
-            setTempInputValues={setTempInputValues}
-            allStatsAssigned={allStatsAssigned}
-            availableStats={availableStats}
-            tempInputValues={tempInputValues}
-            clearStat={clearStat}
-            assignStat={assignStat}
-            isManualMode={isManualMode}
-            setIsManualMode={setIsManualMode}
-            rolledStats={rolledStats}
-            isEditing={true}
-          />
-        )}
-      </div>
-
-      <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
         <div style={styles.helpText}>
-          Enter your wand's bonuses/penalties for each subject of magic
+          Enter your wand's bonuses/penalties for each subject of magic (The DM
+          will provide these values)
         </div>
         <div style={styles.magicModifiersGrid}>
           {[
@@ -1954,6 +1890,72 @@ const CharacterEditor = ({
             </div>
           ))}
         </div>
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <div style={styles.lockedFieldHeader}>
+          <h3 style={styles.skillsHeader}>
+            Ability Scores
+            {lockedFields.abilityScores && (
+              <span style={styles.lockedBadge}>
+                <Lock size={12} />
+                Locked
+              </span>
+            )}
+            <div style={styles.lockedFieldInfo}>
+              Ability scores are locked. Use the unlock button to modify them.
+            </div>
+          </h3>
+
+          <button
+            onClick={() => toggleFieldLock("abilityScores")}
+            style={{
+              ...styles.lockButton,
+              backgroundColor: lockedFields.abilityScores
+                ? "#ef4444"
+                : "#10b981",
+            }}
+          >
+            {lockedFields.abilityScores ? (
+              <Unlock size={14} />
+            ) : (
+              <Lock size={14} />
+            )}
+            {lockedFields.abilityScores ? "Unlock" : "Lock"}
+          </button>
+        </div>
+        {lockedFields.abilityScores ? (
+          <div style={styles.lockedAbilityScores}>
+            {Object.entries(character.abilityScores || {}).map(
+              ([ability, score]) => (
+                <div key={ability} style={styles.lockedAbilityScore}>
+                  <span style={styles.abilityName}>
+                    {ability.charAt(0).toUpperCase() + ability.slice(1)}:
+                  </span>
+                  <span style={styles.abilityValue}>{score || 0}</span>
+                </div>
+              )
+            )}
+          </div>
+        ) : (
+          <AbilityScorePicker
+            character={character}
+            setRolledStats={setRolledStats}
+            setAvailableStats={setAvailableStats}
+            setCharacter={setCharacter}
+            rollAllStats={() => {}}
+            setTempInputValues={setTempInputValues}
+            allStatsAssigned={allStatsAssigned}
+            availableStats={availableStats}
+            tempInputValues={tempInputValues}
+            clearStat={clearStat}
+            assignStat={assignStat}
+            isManualMode={isManualMode}
+            setIsManualMode={setIsManualMode}
+            rolledStats={rolledStats}
+            isEditing={true}
+          />
+        )}
       </div>
 
       <div style={styles.actionButtons}>

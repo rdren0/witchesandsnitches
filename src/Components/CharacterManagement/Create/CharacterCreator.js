@@ -1102,29 +1102,12 @@ const CharacterCreator = ({
         </select>
       </div>
 
-      {/* Ability Scores */}
-      <AbilityScorePicker
-        character={character}
-        setRolledStats={setRolledStats}
-        setAvailableStats={setAvailableStats}
-        setCharacter={setCharacter}
-        rollAllStats={rollAllStats}
-        setTempInputValues={setTempInputValues}
-        allStatsAssigned={allStatsAssigned}
-        availableStats={availableStats}
-        tempInputValues={tempInputValues}
-        clearStat={clearStat}
-        assignStat={assignStat}
-        isManualMode={isManualMode}
-        setIsManualMode={setIsManualMode}
-        rolledStats={rolledStats}
-      />
-
       {/* Magic Subject Modifiers */}
       <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
         <div style={styles.helpText}>
-          Enter your wand's bonuses/penalties for each subject of magic
+          Enter your wand's bonuses/penalties for each subject of magic (The DM
+          will provide these values)
         </div>
 
         <div style={styles.magicModifiersGrid}>
@@ -1183,6 +1166,24 @@ const CharacterCreator = ({
           ))}
         </div>
       </div>
+
+      {/* Ability Scores */}
+      <AbilityScorePicker
+        character={character}
+        setRolledStats={setRolledStats}
+        setAvailableStats={setAvailableStats}
+        setCharacter={setCharacter}
+        rollAllStats={rollAllStats}
+        setTempInputValues={setTempInputValues}
+        allStatsAssigned={allStatsAssigned}
+        availableStats={availableStats}
+        tempInputValues={tempInputValues}
+        clearStat={clearStat}
+        assignStat={assignStat}
+        isManualMode={isManualMode}
+        setIsManualMode={setIsManualMode}
+        rolledStats={rolledStats}
+      />
 
       {/* Action Buttons */}
       <div style={styles.actionButtons}>

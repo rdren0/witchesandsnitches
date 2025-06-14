@@ -1241,6 +1241,7 @@ export const createCharacterCreationStyles = (theme) => ({
     fontWeight: "600",
     textTransform: "uppercase",
     marginLeft: "8px",
+    width: "80px",
   },
   lockButton: {
     display: "flex",
@@ -1264,6 +1265,7 @@ export const createCharacterCreationStyles = (theme) => ({
     backgroundColor: theme.background,
     borderRadius: "6px",
     border: `1px solid ${theme.border}`,
+    fontWeight: 400,
   },
   lockedAbilityScores: {
     display: "grid",
