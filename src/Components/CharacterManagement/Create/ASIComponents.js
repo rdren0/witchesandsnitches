@@ -199,14 +199,17 @@ export const ASIFeatSelector = ({
     checkFeatPrerequisites(feat, character)
   );
 
-  const filteredFeats = availableFeats.filter(
-    (feat) =>
-      feat.name.toLowerCase().includes(featFilter.toLowerCase()) ||
-      (feat.preview &&
-        feat.preview.toLowerCase().includes(featFilter.toLowerCase())) ||
-      (feat.description &&
-        feat.description.toLowerCase().includes(featFilter.toLowerCase()))
-  );
+  const filteredFeats = availableFeats?.filter((feat) => {
+    const searchTerm = featFilter.toLowerCase();
+
+    return (
+      feat.name?.toLowerCase().includes(searchTerm) ||
+      feat.preview?.toLowerCase().includes(searchTerm) ||
+      (Array.isArray(feat.description)
+        ? feat.description.join(" ").toLowerCase().includes(searchTerm)
+        : feat.description?.toLowerCase?.().includes(searchTerm))
+    );
+  });
 
   return (
     <div>

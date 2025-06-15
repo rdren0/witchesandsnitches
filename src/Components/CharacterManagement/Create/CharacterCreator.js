@@ -957,7 +957,6 @@ const CharacterCreator = ({
           </div>
         )}
       </div>
-
       {/* Subclass */}
       <EnhancedSubclassSelector
         value={character.subclass}
@@ -965,6 +964,7 @@ const CharacterCreator = ({
         styles={styles}
         theme={theme}
         disabled={false}
+        characterLevel={character.level}
       />
 
       {/* Character Progression Summary */}

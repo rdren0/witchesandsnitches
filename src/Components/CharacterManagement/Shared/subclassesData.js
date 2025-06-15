@@ -3197,172 +3197,464 @@ export const subclassesData = {
   Quidditch: {
     name: "Quidditch",
     description:
-      "Athletic spellcasters who specialize in magical sports, combining broom mastery with position-based combat techniques and team coordination",
+      "Athletic spellcasters who channel their magical abilities through the sport of Quidditch, specializing in aerial combat, team coordination, and position-specific magical techniques inspired by the legendary wizarding sport",
     level1Features: [
       {
         name: "Quidditch Initiate",
         description:
-          "Gain Vehicles (Broomstick) proficiency or expertise. Summon magical broom as bonus action (remains unless dismissed or separated 1+ hour). Choose your Quidditch position specialization approach.",
+          "At 1st level, you gain Vehicles (Broomstick) proficiency (expertise if already proficient). Summon magical broom as bonus action. Choose your primary Quidditch position specialty.",
       },
     ],
     level1Choices: [
       {
         name: "Batter Up!",
         description:
-          "Beater specialization - gain Athletics proficiency/expertise and weapon proficiency with Beater's Bat (1d4/1d6 versatile) and Bludger (1d6 ranged, scales to 4d6 at 17th level, 80/320 range). Use Strength for attack and damage rolls.",
+          "Beater specialization. Gain Athletics proficiency (expertise if already proficient). Weapon proficiency with Beater's Bats (1d4/1d6 versatile) and Bludgers (1d6 ranged, scaling to 4d6 at 17th level). Use Strength for attack and damage rolls.",
       },
       {
         name: "Think Fast!",
         description:
-          "Chaser specialization - gain Acrobatics proficiency/expertise. Bonus action to pass Quaffle to creature within 30ft, forcing Wisdom save or they drop held item to catch it, representing tactical ball manipulation.",
+          "Chaser specialization. Gain Acrobatics proficiency (expertise if already proficient). As bonus action, target within 30 feet holding item must make Wisdom save or drop item to catch your Quaffle.",
       },
     ],
     higherLevelFeatures: [
       {
         level: 4,
-        name: "Get Your Head In The Game (Optional ASI)",
+        name: "Get Your Head In The Game (Optional)",
         description:
-          "Choose: Cheer (bonus action inspire proficiency bonus allies within 30ft for 1d4 bonus to next roll) or Chirp (bonus action discourage proficiency bonus enemies for 1d4 penalty to next roll). Each usable twice per long rest.",
+          "Can take instead of ASI/Feat. Choose a team support specialization.",
+        choices: [
+          {
+            name: "Cheer",
+            description:
+              "As bonus action, inspire proficiency bonus allies within 30 feet with 1d4 to add to one ability check, attack roll, or saving throw before end of next turn. Twice per long rest.",
+          },
+          {
+            name: "Chirp",
+            description:
+              "As bonus action, discourage proficiency bonus enemies within 30 feet to subtract 1d4 from next ability check, attack roll, or saving throw before end of your next turn. Twice per long rest.",
+          },
+        ],
       },
       {
         level: 6,
         name: "We're All In This Together",
-        description:
-          "Choose: Goalkeeper (Athletics/Acrobatics proficiency, +2 AC, reaction to force attack reroll within 15ft) or Eagle Eyes (Perception/Sleight of Hand proficiency, half Wisdom to Dex saves, advantage on sight-based Perception).",
+        description: "Choose an advanced Quidditch position specialization.",
+        choices: [
+          {
+            name: "Goalkeeper",
+            description:
+              "Keeper specialization. Gain Athletics or Acrobatics proficiency, +2 AC bonus. As reaction, force enemy within 15 feet to reroll attack (take lower). Use proficiency bonus times per short rest.",
+          },
+          {
+            name: "Eagle Eyes",
+            description:
+              "Seeker specialization. Gain Perception or Sleight of Hand proficiency. Add half Wisdom modifier to Dexterity saves, advantage on sight-based Perception checks.",
+          },
+        ],
       },
       {
         level: 8,
-        name: "I'm Ok! (Optional ASI)",
+        name: "I'm Ok! (Optional)",
         description:
-          "Increase Dexterity by 1 (max 20). Advantage on Acrobatics while flying/mid-air. Reaction to reduce fall damage by 3×(Dex modifier + Str modifier), representing crash survival training.",
+          "Can take instead of ASI/Feat. Dexterity +1 (max 20). Advantage on Acrobatics while flying/mid-air. Reaction to reduce fall damage by 3×(Dex mod + Str mod).",
       },
       {
         level: 9,
         name: "Quidditch Robe",
         description:
-          "Unarmored Defense while not wearing cloak or wielding defensive item: AC = 10 + Dex modifier + Str modifier, representing athletic conditioning and protective gear.",
+          "While not wearing cloak or wielding defensive item, AC equals 10 + Dex modifier + Str modifier.",
       },
       {
         level: 10,
         name: "You Can't Catch Me!",
-        description:
-          "Choose: Zoomies! (teleport up to 60ft as part of broom/flying movement through walls, half proficiency bonus uses) or I Am Speed (60ft straight line creating wind tunnel with 5d6 force damage and pull effects).",
+        description: "Choose an advanced aerial maneuver technique.",
+        choices: [
+          {
+            name: "Zoomies!",
+            description:
+              "While on broom or flying, teleport up to 60 feet as part of movement, passing through walls/barriers without opportunity attacks. Half proficiency bonus uses per long rest.",
+          },
+          {
+            name: "I Am Speed",
+            description:
+              "As action while on broom, fly 60 feet in straight line creating 60×20 foot wind tunnel for 1 minute. Creatures entering or starting turn inside make Strength save or take 5d6 force damage and be pulled 15 feet toward center. Various environmental effects. Once per long rest.",
+          },
+        ],
       },
       {
         level: 14,
         name: "Best Of The Best",
         description:
-          "Choose based on prerequisites: Slugger (magical Bludger attacks + 4d8 force damage), Chaser's Strategy (command ally reaction attacks at advantage), Keeper's Wall (+5 AC or +3 save barrier for allies), or Seeker's Sight (treat 9 or lower as 10 + detect invisible).",
+          "Choose a master-level position ability based on your specialization.",
+        choices: [
+          {
+            name: "Slugger",
+            description:
+              "Requires Batter Up!. Bludger and Beater's Bat attacks count as magical. Bludger hits can deal 4d8 additional force damage (Strength modifier uses per long rest) and force Strength save for knockback/prone.",
+            requirements: ["Batter Up!"],
+          },
+          {
+            name: "Chaser's Strategy",
+            description:
+              "Requires Think Fast!. As action, command ally within 30 feet to use reaction for attack or spell with advantage.",
+            requirements: ["Think Fast!"],
+          },
+          {
+            name: "Keeper's Wall",
+            description:
+              "Requires Goalkeeper. As reaction, create ethereal barrier for ally within 30 feet (+5 AC or +3 saves until next turn, Dedication extends to 1 minute). Can affect two allies if within 5 feet of each other. Dexterity modifier uses per long rest.",
+            requirements: ["Goalkeeper"],
+          },
+          {
+            name: "Seeker's Sight",
+            description:
+              "Requires Eagle Eyes. Treat d20 rolls of 9 or lower as 10 for Acrobatics, Sleight of Hand, or Perception. Automatically detect invisible creatures/objects within 30 feet unless behind total cover.",
+            requirements: ["Eagle Eyes"],
+          },
+        ],
       },
       {
         level: 18,
         name: "Quidditch Team Captain",
         description:
-          "Choose: All For One! (enhanced Cheer/Chirp with damage, AC bonuses, temp HP, or psychic damage), Bombs Away! (permanent 30ft fly speed + advantage on attacks vs creatures below), or All Rounder (expertise in athletics skills + extra Best of the Best feature).",
+          "Choose the ultimate expression of your Quidditch mastery.",
+        choices: [
+          {
+            name: "All For One!",
+            description:
+              "Requires Get Your Head in the Game. Gain additional use of Cheer/Chirp. Cheer: add die to damage/AC, temp HP equal to 10 + 2×spellcasting modifier. Chirp: Wisdom save or 2d4 psychic damage + d4 penalty for two rounds.",
+            requirements: ["Get Your Head in the Game"],
+          },
+          {
+            name: "Bombs Away!",
+            description:
+              "Gain permanent 30-foot magical flying speed. While flying, advantage on attack rolls against creatures in 30-foot cone directly below you.",
+          },
+          {
+            name: "All Rounder",
+            description:
+              "Gain expertise in Athletics, Acrobatics, Perception, and Sleight of Hand (if already proficient). Choose one additional feature from Best Of The Best section.",
+          },
+        ],
       },
     ],
-    specialSystems: {
-      broomMastery:
-        "Bonus action broom summoning and advanced flying maneuvers including teleportation and wind tunnel creation",
-      positionSpecialization:
-        "Four distinct Quidditch positions (Beater, Chaser, Keeper, Seeker) each with unique abilities and equipment proficiencies",
-      customWeapons:
-        "Beater's Bat and scaling Bludger with unique properties - Bludger damage increases from 1d6 to 4d6 over levels",
-      teamSupport:
-        "Cheer and Chirp mechanics for inspiring allies or discouraging enemies with dice modifiers",
-      athleticProgression:
-        "Multiple ability score dependencies (Strength, Dexterity, Wisdom) reflecting different athletic skills",
-      unarmoredDefense:
-        "Unique AC calculation using both Dexterity and Strength modifiers representing athletic conditioning",
+    progressionPaths: {
+      beater: {
+        description: "Focus on combat prowess with Beater equipment",
+        keyFeatures: [
+          "Batter Up! (Athletics, Beater weapons, Strength-based)",
+          "Position flexibility at higher levels",
+          "Slugger (magical attacks, enhanced Bludger damage)",
+          "Ultimate: All Rounder or Bombs Away!",
+        ],
+      },
+      chaser: {
+        description: "Focus on agility and tactical coordination",
+        keyFeatures: [
+          "Think Fast! (Acrobatics, Quaffle tactics)",
+          "Position flexibility at higher levels",
+          "Chaser's Strategy (ally coordination)",
+          "Ultimate: All Rounder or Bombs Away!",
+        ],
+      },
+      keeper: {
+        description: "Focus on defensive protection and positioning",
+        keyFeatures: [
+          "Any Level 1 choice (position flexibility)",
+          "Goalkeeper (AC bonus, reaction rerolls)",
+          "Keeper's Wall (barrier creation)",
+          "Ultimate: All Rounder or Bombs Away!",
+        ],
+      },
+      seeker: {
+        description: "Focus on perception, agility, and precision",
+        keyFeatures: [
+          "Any Level 1 choice (position flexibility)",
+          "Eagle Eyes (enhanced senses and saves)",
+          "Seeker's Sight (reliable talent, invisible detection)",
+          "Ultimate: All Rounder or Bombs Away!",
+        ],
+      },
+      teamCaptain: {
+        description: "Focus on team support and leadership",
+        keyFeatures: [
+          "Any Level 1 choice (leadership foundation)",
+          "Get Your Head in the Game (Cheer or Chirp)",
+          "Any position choice at Level 6",
+          "All For One! (enhanced team support)",
+        ],
+      },
+    },
+    keyMechanics: {
+      broomstickMastery: {
+        description: "Core aerial combat and movement system",
+        features: [
+          "Vehicles (Broomstick) expertise",
+          "Bonus action broom summoning",
+          "Enhanced aerial maneuvers (Zoomies!/I Am Speed)",
+          "Permanent flight at 18th level (Bombs Away!)",
+        ],
+      },
+      positionSpecialization: {
+        description: "Quidditch position-based ability progression",
+        positions: [
+          "Beater (Athletics, weapon combat, Strength focus)",
+          "Chaser (Acrobatics, tactical coordination, item manipulation)",
+          "Keeper (Defense, reaction abilities, protection)",
+          "Seeker (Perception, precision, invisible detection)",
+        ],
+      },
+      teamSupport: {
+        description: "Leadership abilities affecting multiple allies/enemies",
+        mechanics: [
+          "Cheer (ally bonuses and temporary HP)",
+          "Chirp (enemy penalties and psychic damage)",
+          "Scalable target numbers based on proficiency bonus",
+          "Enhanced effects at 18th level",
+        ],
+      },
+      quiddirchRobe: {
+        description: "Unique unarmored defense calculation",
+        formula:
+          "AC = 10 + Dex modifier + Str modifier (requires no cloak/defensive item)",
+      },
+    },
+    specialEquipment: {
+      beatersEquipment: {
+        beatersBat: {
+          damage: "1d4 bludgeoning (1d6 versatile)",
+          properties: ["Light", "Versatile"],
+          range: "5 feet",
+        },
+        bludger: {
+          damage: "1d6 bludgeoning (scales to 4d6 at 17th level)",
+          range: "80/320 feet",
+          scaling: "Increases by 1d6 at 5th, 11th, and 17th level",
+        },
+      },
+      quaffle: {
+        description: "Used for Think Fast! ability to force item dropping",
+        mechanics: "Bonus action, 30-foot range, Wisdom save or drop held item",
+      },
     },
     summary:
-      "Highly athletic subclass with four distinct position-based progression paths: Beater (heavy hitters with magical weapons), Chaser (tactical ball control and team coordination), Keeper (defensive specialists with protection abilities), and Seeker (precision specialists with detection abilities). All paths emphasize flying mastery, team support, and unique unarmored defense combining physical conditioning with magical athleticism.",
+      "Four main position paths with flexible multispecialization. Level 1 choice between Beater (Batter Up!) or Chaser (Think Fast!). Optional team support at Level 4 (Cheer/Chirp). Level 6 choice between Keeper (Goalkeeper) or Seeker (Eagle Eyes). Advanced aerial abilities at Level 10. Position mastery at Level 14 requires specific earlier choices. Ultimate choices at Level 18 include enhanced team support, permanent flight, or multi-position mastery. Unique mechanics include Str+Dex unarmored defense, scaling Bludger damage, and comprehensive team support systems. Emphasizes aerial combat, positioning, and team coordination.",
   },
   Trickery: {
     name: "Trickery",
     description:
-      "Manipulative spellcasters who specialize in deception, illusion, and mental manipulation through subtle magic and psychological warfare",
+      "Deceptive spellcasters who specialize in illusion, manipulation, and stealth magic, using subtle enchantments, false memories, and duplicity to control situations and misdirect opponents through cunning rather than force",
     level1Features: [
       {
         name: "Scoundrel",
         description:
-          "Learn the Manus spell (all castings considered subtle). Gain access to the Trickery spellbook. Choose your approach to trickery and manipulation.",
+          "At 1st level, you learn the Manus spell (all castings considered subtle) and gain access to the Trickery spellbook. Choose your primary approach to deception.",
       },
     ],
     level1Choices: [
       {
         name: "Insidious Rumor",
         description:
-          "After 1 minute of conversation with a creature alone, force Wisdom save or target becomes frightened of you or chosen creature for 1 hour (ends if attacked/damaged or allies attacked). Creatures with <4 Intelligence immune. Usable once per short/long rest.",
+          "After speaking alone with a creature for 1 minute, target makes Wisdom save or becomes frightened of you or chosen creature for 1 hour (ends if attacked/damaged or sees allies attacked). No hint on successful save. Once per short/long rest.",
       },
       {
         name: "Sticky Fingers",
         description:
-          "Make Manus hand invisible and perform additional tasks unnoticed with contested Dexterity (Sleight of Hand) vs Wisdom (Perception): stow/retrieve objects from containers on others, use thieves' tools at range. Control hand with bonus action.",
+          "When casting Manus, make spectral hand invisible. With contested Sleight of Hand vs Perception: stow objects in others' containers, retrieve objects from others, use thieves' tools at range. Control hand with bonus action.",
       },
     ],
     higherLevelFeatures: [
       {
         level: 4,
-        name: "Silver Tongue (Optional ASI)",
+        name: "Silver Tongue (Optional)",
         description:
-          "Master of perfect timing in conversation. Treat d20 rolls of 7 or lower as 8 on Charisma (Persuasion) or Charisma (Deception) checks, representing supernatural social manipulation.",
+          "Can take instead of ASI/Feat. Master of saying the right thing. Treat d20 rolls of 7 or lower as 8 for Charisma (Persuasion) and Charisma (Deception) checks.",
       },
       {
         level: 6,
         name: "Perjurer",
         description:
-          "Gain Sneaky Studies (proficiency in two of: Deception, Intimidation, Sleight of Hand, or Stealth). Choose: Duplicate (perfect 1-minute illusion with spell casting and advantage), Make Nice (learn creature capabilities in 1 minute), or Deep Pockets (magical Capacious Extremis compartment).",
+          "Gain stealth expertise and choose an advanced deception technique.",
+        universalFeature: {
+          name: "Sneaky Studies",
+          description:
+            "Gain proficiency in two of the following: Deception, Intimidation, Sleight of Hand, or Stealth.",
+        },
+        choices: [
+          {
+            name: "Duplicate",
+            description:
+              "As action, create perfect illusion of yourself for 1 minute within 30 feet (120-foot max range). Move 30 feet as bonus action. Cast spells through illusion space. Advantage on attacks when both you and illusion within 5 feet of target. Once per long rest.",
+          },
+          {
+            name: "Make Nice",
+            description:
+              "After 1+ minutes observing/interacting outside combat, learn if creature is equal/superior/inferior in Intelligence/Wisdom/Charisma scores or their subclass (choose 2). May learn history/personality traits.",
+          },
+          {
+            name: "Deep Pockets",
+            description:
+              "One garment gains 1-foot diameter compartment visible only to you, permanently affected by Capacious Extremis charm. Temporarily inaccessible in magically extended spaces.",
+          },
+        ],
       },
       {
         level: 8,
-        name: "Obliviator (Optional ASI)",
+        name: "Obliviator (Optional)",
         description:
-          "Enhanced memory manipulation. When casting Obliviate, can implant detailed false memories instead of erasing. False memories undetectable to target but may be detected by others examining memories through Legilimency or Pensieve.",
+          "Can take instead of ASI/Feat. When casting obliviate, can implant detailed false memories instead of erasing. Undetectable to target but might be detected by external memory examination.",
       },
       {
         level: 9,
         name: "Sneaky Bitch",
         description:
-          "Enhanced action economy representing mastery of multitasking deception. Gain one additional bonus action per turn. Can use bonus actions to take Dash, Disengage, or Hide actions.",
+          "On your turn, take one additional bonus action. Can use bonus actions for Dash, Disengage, or Hide actions.",
       },
       {
         level: 10,
         name: "Manipulative Motives",
-        description:
-          "Choose: Look at me (Charisma vs Wisdom contest for attention control or charm effects lasting 1 minute) or Mirrored Memories (tell story to charm creatures into believing they experienced events, Intelligence save, lasts until long rest).",
+        description: "Choose an advanced method of mental manipulation.",
+        choices: [
+          {
+            name: "Look at me",
+            description:
+              "As action, Persuasion vs Insight contest. Success on hostile: disadvantage on attacks vs others, no opportunity attacks vs others (1 minute, various end conditions). Success on non-hostile: charmed for 1 minute (ends if harmed).",
+          },
+          {
+            name: "Mirrored Memories",
+            description:
+              "Once per long rest, as action tell vivid story to creatures within 60 feet. Intelligence save or charmed and believe they experienced the story until completing long rest.",
+          },
+        ],
       },
       {
         level: 14,
         name: "False Witness",
-        description:
-          "Choose: Misdirection (reaction to redirect attacks targeting you to creatures within 5ft) or Veiled Influence (10-minute conversation grants 24-hour advantage on Charisma checks + implant suggestion with 4d10 psychic damage for disobedience, max 3 times per day).",
+        description: "Choose a master-level deception technique.",
+        choices: [
+          {
+            name: "Misdirection",
+            description:
+              "When targeted by attack while creature within 5 feet, use reaction to redirect attack to that creature instead.",
+          },
+          {
+            name: "Veiled Influence",
+            description:
+              "After 10-minute conversation, gain 24-hour advantage on Charisma checks vs target. Can implant suggestion: Wisdom save or take 4d10 psychic damage when acting counter to instructions (max 3 times per 24 hours). No suicidal commands.",
+          },
+        ],
       },
       {
         level: 18,
         name: "Blatant Exploitation",
-        description:
-          "Choose: Quintuplicate (requires Duplicate - create up to 4 duplicates, move multiple as bonus action, reaction to swap places within 60ft) or Yoink! (reaction steal spells targeting you, proficiency bonus uses per long rest, 8-hour duration).",
+        description: "Choose the ultimate expression of your trickery mastery.",
+        choices: [
+          {
+            name: "Quintuplicate",
+            description:
+              "Requires Duplicate. Create up to 4 duplicates instead of 1. Bonus action to move any number up to 30 feet (120-foot max). When targeted by spell/attack, reaction to swap places with duplicate within 60 feet.",
+            requirements: ["Duplicate"],
+          },
+          {
+            name: "Yoink!",
+            description:
+              "When creature casts spell targeting you or including you in area, reaction to force spellcasting ability save (DC = your spell save DC). Success negates effect on you and steals spell knowledge for 8 hours if 1st+ level and you can cast it. Caster can't use spell for 8 hours. Proficiency bonus uses per long rest.",
+          },
+        ],
       },
     ],
-    specialSystems: {
-      dualProgression:
-        "Two distinct Level 1 paths that influence later feature availability - Insidious Rumor focuses on fear and social manipulation, Sticky Fingers emphasizes stealth and theft",
-      manusEnhancement:
-        "Specialized improvements to the Manus cantrip including invisibility, extended functionality, and bonus action control",
-      illusionMastery:
-        "Duplicate system allows creation of perfect self-illusions with spellcasting capabilities and tactical advantages",
-      memoryManipulation:
-        "Advanced Obliviate mechanics for implanting false memories and sophisticated mental manipulation",
-      spellTheft:
-        "Unique Yoink! ability allows reactive spell stealing from enemy casters with temporary knowledge acquisition",
-      socialDomination:
-        "Multiple features focused on conversation-based effects, charm abilities, and long-term psychological influence",
-      prerequisiteProgression:
-        "Some high-level features require specific earlier choices (Quintuplicate requires Duplicate)",
+    progressionPaths: {
+      insidiousManipulator: {
+        description: "Focus on fear, rumors, and mental control",
+        keyFeatures: [
+          "Insidious Rumor (fear through conversation)",
+          "Advanced social manipulation techniques",
+          "Look at me or Mirrored Memories (charm/false memories)",
+          "Veiled Influence (suggestion with consequences)",
+          "Ultimate spell theft or duplicate mastery",
+        ],
+      },
+      duplicatemaster: {
+        description: "Focus on illusion creation and misdirection",
+        keyFeatures: [
+          "Any Level 1 choice (flexible foundation)",
+          "Duplicate (perfect self-illusion)",
+          "Enhanced stealth and deception",
+          "Misdirection (attack redirection)",
+          "Quintuplicate (multiple duplicates + teleportation)",
+        ],
+      },
+      stickyFingersThief: {
+        description: "Focus on stealth, theft, and practical trickery",
+        keyFeatures: [
+          "Sticky Fingers (enhanced Manus with theft)",
+          "Deep Pockets (magical storage)",
+          "Sneaky Studies and enhanced actions",
+          "Any manipulation technique",
+          "Ultimate spell theft or social control",
+        ],
+      },
+    },
+    keyMechanics: {
+      subtleCasting: {
+        description: "Enhanced spellcasting concealment",
+        features: [
+          "All Manus castings considered subtle",
+          "Invisible spectral hand options",
+          "Bonus action hand control",
+          "Access to Trickery spellbook",
+        ],
+      },
+      memoryManipulation: {
+        description: "False memory creation and modification",
+        progression: [
+          "Level 8: Enhanced obliviate with false memory implantation",
+          "Level 10: Mirrored Memories (story-based false experiences)",
+          "Level 14: Veiled Influence (suggestion with consequences)",
+        ],
+      },
+      duplicateSystem: {
+        description: "Self-illusion creation and manipulation",
+        mechanics: [
+          "Level 6: Single duplicate with spellcasting",
+          "Level 18: Up to 4 duplicates with teleportation",
+          "Advantage when flanking with duplicate",
+          "120-foot maximum range limitation",
+        ],
+      },
+      socialEngineering: {
+        description: "Conversation-based abilities requiring time investment",
+        timeRequirements: [
+          "Insidious Rumor: 1 minute alone",
+          "Make Nice: 1 minute observation/interaction",
+          "Veiled Influence: 10 minutes conversation",
+        ],
+      },
+      spellTheft: {
+        description: "Ultimate ability to steal and use enemy spells",
+        mechanics: [
+          "Reaction when targeted by spells",
+          "Contested save vs spellcasting ability",
+          "8-hour knowledge duration",
+          "Prevents caster from using stolen spell",
+          "Limited to spells you can normally cast",
+        ],
+      },
+    },
+    trickerySpells: {
+      description: "Exclusive spell list focusing on manipulation and illusion",
+      cantrips: ["Manus (spectral hand manipulation)"],
+      spells: [
+        "Tranquillitatem (2nd - suppress emotions or hostility)",
+        "Fictus (3rd - major illusion creation)",
+        "Roboratum (3rd - temporary HP and advantage on Wisdom saves)",
+        "Incarcerebra (6th - illusory prison with psychic damage)",
+        "Dubium/Fiducium (8th - long-term attraction/repulsion auras)",
+      ],
     },
     summary:
-      "Sophisticated manipulation subclass offering two primary approaches: fear-based psychological warfare through Insidious Rumor or stealth-based theft and infiltration through Sticky Fingers. Both paths converge on advanced social manipulation, memory alteration, and illusion mastery. Features emphasize bonus action economy, reactive abilities, and conversation-based magic. Ultimate abilities allow either perfect duplication with tactical positioning or reactive spell theft from enemies, representing mastery over deception and magical larceny.",
+      "Two initial approaches: Insidious Rumor (fear through conversation) or Sticky Fingers (enhanced theft through Manus). Optional Silver Tongue for social reliability. At 6th level, gain stealth skills plus choice of Duplicate (self-illusion), Make Nice (social analysis), or Deep Pockets (magical storage). Enhanced memory manipulation at 8th level. Additional bonus actions at 9th level. At 10th level, choose Look at me (combat/social control) or Mirrored Memories (false experience implantation). At 14th level, choose Misdirection (attack redirection) or Veiled Influence (suggestion with consequences). Culminates in either Quintuplicate (multiple duplicates) or Yoink! (spell theft). Unique mechanics include subtle casting, time-based social abilities, duplicate coordination, and progressive memory manipulation.",
   },
 };
 

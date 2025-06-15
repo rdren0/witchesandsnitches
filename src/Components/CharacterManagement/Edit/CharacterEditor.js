@@ -1437,6 +1437,7 @@ const CharacterEditor = ({
         styles={styles}
         theme={theme}
         disabled={false}
+        characterLevel={character.level}
       />
 
       {/* Character Progression Summary */}
