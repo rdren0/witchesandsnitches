@@ -3595,6 +3595,7 @@ export const createFeatStyles = (theme) => ({
   featCardSelected: {
     backgroundColor: "#F0FDF4",
     border: "2px solid #10B981",
+    borderRadius: "12px",
   },
   featHeader: {
     display: "flex",
