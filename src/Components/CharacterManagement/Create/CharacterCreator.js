@@ -4,13 +4,8 @@ import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { Wand, Save, RefreshCw, AlertCircle } from "lucide-react";
 import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
 
-import {
-  castingStyles,
-  skillsByCastingStyle,
-  hpData,
-  standardFeats,
-} from "../../data";
-
+import { castingStyles, skillsByCastingStyle, hpData } from "../../data";
+import { standardFeats } from "../../standardFeatData";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { InnateHeritage } from "../Shared/InnateHeritage";

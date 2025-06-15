@@ -3585,18 +3585,6 @@ export const createFeatStyles = (theme) => ({
     overflowY: "auto",
     padding: "4px",
   },
-  featCard: {
-    backgroundColor: theme.background,
-    border: `2px solid ${theme.border}`,
-    borderRadius: "12px",
-    padding: "16px",
-    transition: "all 0.2s ease",
-  },
-  featCardSelected: {
-    backgroundColor: "#F0FDF4",
-    border: "2px solid #10B981",
-    borderRadius: "12px",
-  },
   featHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -3610,12 +3598,6 @@ export const createFeatStyles = (theme) => ({
     fontSize: "16px",
     fontWeight: "600",
   },
-  featName: {
-    color: theme.text,
-  },
-  featNameSelected: {
-    color: "#059669",
-  },
   expandButton: {
     backgroundColor: theme.background,
     border: `1px solid ${theme.border}`,
@@ -3625,38 +3607,6 @@ export const createFeatStyles = (theme) => ({
     fontSize: "12px",
     color: theme.textSecondary,
     transition: "all 0.2s ease",
-  },
-  featPreview: {
-    fontSize: "14px",
-    color: theme.textSecondary,
-    lineHeight: "1.4",
-    fontStyle: "italic",
-  },
-  featPreviewSelected: {
-    fontSize: "14px",
-    color: "#047857",
-    lineHeight: "1.4",
-    fontStyle: "italic",
-  },
-  featDescription: {
-    marginTop: "12px",
-    fontSize: "14px",
-    color: theme.text,
-    lineHeight: "1.5",
-    backgroundColor: theme.surface,
-    padding: "12px",
-    borderRadius: "8px",
-    border: `1px solid ${theme.border}`,
-  },
-  featDescriptionSelected: {
-    marginTop: "12px",
-    fontSize: "14px",
-    color: "#1F2937",
-    lineHeight: "1.5",
-    backgroundColor: "#F0FDF4",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #D1FAE5",
   },
   noFeatsFound: {
     textAlign: "center",
@@ -3861,6 +3811,65 @@ export const createFeatStyles = (theme) => ({
     fontSize: "12px",
     color: theme.textSecondary,
     marginLeft: "4px",
+  },
+  featCard: {
+    backgroundColor: theme.background,
+    border: `2px solid ${theme.border}`,
+    borderRadius: "12px",
+    padding: "16px",
+    transition: "all 0.2s ease",
+  },
+
+  featCardSelected: {
+    backgroundColor: theme.surface,
+    border: `2px solid ${theme.primary}`,
+    borderRadius: "12px",
+    boxShadow: `0 0 0 1px ${theme.primary}20`,
+  },
+
+  featName: {
+    color: theme.text,
+  },
+
+  featNameSelected: {
+    color: theme.primary,
+    fontWeight: "600",
+  },
+
+  featPreview: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+    lineHeight: "1.4",
+    fontStyle: "italic",
+  },
+
+  featPreviewSelected: {
+    fontSize: "14px",
+    color: theme.primary,
+    lineHeight: "1.4",
+    fontStyle: "italic",
+  },
+
+  featDescription: {
+    marginTop: "12px",
+    fontSize: "14px",
+    color: theme.text,
+    lineHeight: "1.5",
+    padding: "12px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+  },
+  featDescriptionSelected: {
+    marginTop: "12px",
+    fontSize: "14px",
+    color: theme.text,
+    lineHeight: "1.5",
+    padding: "12px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${theme.primary}`,
+    boxShadow: `0 0 0 1px ${theme.primary}20`,
   },
 });
 

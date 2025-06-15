@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { standardFeats } from "../../data";
+import { standardFeats } from "../../standardFeatData";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
 

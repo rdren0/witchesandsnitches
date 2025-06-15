@@ -11,12 +11,8 @@ import {
   Unlock,
   Star,
 } from "lucide-react";
-import {
-  castingStyles,
-  skillsByCastingStyle,
-  hpData,
-  standardFeats as importedStandardFeats,
-} from "../../data";
+import { castingStyles, skillsByCastingStyle, hpData } from "../../data";
+import { standardFeats as importedStandardFeats } from "../../standardFeatData";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";

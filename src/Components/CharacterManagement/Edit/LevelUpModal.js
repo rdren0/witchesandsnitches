@@ -8,15 +8,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Dice6,
-  RotateCcw,
   Search,
-  Filter,
 } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-
-import { standardFeats, hpData } from "../../data";
+import { standardFeats } from "../../standardFeatData";
+import { hpData } from "../../data";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { getAllSelectedFeats } from "../Create/ASIComponents";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const LevelUpModal = ({
   character,
@@ -26,6 +25,7 @@ const LevelUpModal = ({
   user,
   supabase,
 }) => {
+  const { theme } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedFeat, setExpandedFeat] = useState(null);
@@ -41,6 +41,55 @@ const LevelUpModal = ({
     asiChoice: "asi",
     featChoices: {},
   });
+
+  // FIXED: Robust ability score retrieval that works with database format
+  const getAbilityScore = (abilityName) => {
+    const lowerName = abilityName.toLowerCase();
+
+    // Primary source: ability_scores JSONB field from database
+    if (
+      character.ability_scores &&
+      typeof character.ability_scores === "object"
+    ) {
+      const score = character.ability_scores[lowerName];
+      if (score !== undefined && score !== null) {
+        const numScore = parseInt(score, 10);
+        if (!isNaN(numScore) && numScore > 0 && numScore <= 30) {
+          return numScore;
+        }
+      }
+    }
+
+    // Fallback: check camelCase version (might exist in frontend transforms)
+    if (
+      character.abilityScores &&
+      typeof character.abilityScores === "object"
+    ) {
+      const score = character.abilityScores[lowerName];
+      if (score !== undefined && score !== null) {
+        const numScore = parseInt(score, 10);
+        if (!isNaN(numScore) && numScore > 0 && numScore <= 30) {
+          return numScore;
+        }
+      }
+    }
+
+    // Last fallback: individual properties (legacy support)
+    if (character[lowerName] !== undefined && character[lowerName] !== null) {
+      const numScore = parseInt(character[lowerName], 10);
+      if (!isNaN(numScore) && numScore > 0 && numScore <= 30) {
+        return numScore;
+      }
+    }
+
+    // If all else fails, log the issue and return default
+    console.error(
+      `Could not find valid ability score for ${abilityName}. Character object:`,
+      character
+    );
+    console.error(`Available ability_scores:`, character.ability_scores);
+    return 10;
+  };
 
   // Filter feats based on search term and exclude already selected feats
   const getFilteredFeats = () => {
@@ -105,23 +154,129 @@ const LevelUpModal = ({
     );
   };
 
-  const getSpellcastingAbility = () => {
-    const spellcastingAbilities = {
-      Charms: "charisma",
-      Transfiguration: "intelligence",
-      "Defense Against the Dark Arts": "wisdom",
-      Healing: "wisdom",
-      Divination: "wisdom",
-      Magizoology: "wisdom",
-    };
-    return spellcastingAbilities[character.castingStyle] || "intelligence";
+  const rollHitPoints = () => {
+    const roller = new DiceRoller();
+    const baseHitDie = getBaseHPIncrease();
+    const result = roller.roll(`1d${baseHitDie}`);
+    const rolledValue = result.total;
+    const constitution = getAbilityScore("constitution");
+    const conMod = Math.floor((constitution - 10) / 2);
+    const finalHP = Math.max(1, rolledValue + conMod);
+
+    setLevelUpData((prev) => ({
+      ...prev,
+      hitPointIncrease: finalHP,
+      hitPointMethod: "roll",
+      rolledHP: rolledValue,
+      manualHP: 0,
+    }));
   };
 
-  const featDescriptions = standardFeats.reduce((acc, feat) => {
-    acc[feat.name] =
-      feat.preview || (feat.description ? feat.description.join(" • ") : "");
-    return acc;
-  }, {});
+  const useAverageHitPoints = () => {
+    const baseHitDie = getBaseHPIncrease();
+    const averageRoll = Math.floor(baseHitDie / 2) + 1;
+    const constitution = getAbilityScore("constitution");
+    const conMod = Math.floor((constitution - 10) / 2);
+    const finalHP = Math.max(1, averageRoll + conMod);
+
+    setLevelUpData((prev) => ({
+      ...prev,
+      hitPointIncrease: finalHP,
+      hitPointMethod: "average",
+      rolledHP: null,
+      manualHP: 0,
+    }));
+  };
+
+  const handleManualHitPoints = (value) => {
+    setLevelUpData((prev) => ({
+      ...prev,
+      hitPointIncrease: Math.max(1, value),
+      hitPointMethod: "manual",
+      manualHP: value,
+      rolledHP: null,
+    }));
+  };
+
+  // FIXED: Improved ability score increase handling
+  const toggleAbilityIncrease = (ability) => {
+    setLevelUpData((prev) => {
+      const existing = prev.abilityIncreases.find(
+        (inc) => inc.ability === ability
+      );
+
+      if (existing) {
+        // Remove existing increase
+        return {
+          ...prev,
+          abilityIncreases: prev.abilityIncreases.filter(
+            (inc) => inc.ability !== ability
+          ),
+        };
+      } else if (prev.abilityIncreases.length < 2) {
+        const currentScore = getAbilityScore(ability);
+
+        // Prevent increasing if already at max
+        if (currentScore >= 20) {
+          console.warn(
+            `${ability} is already at maximum (20), current score: ${currentScore}`
+          );
+          return prev;
+        }
+
+        // Add new increase
+        const newIncrease = {
+          ability,
+          from: currentScore,
+          to: currentScore + 1,
+        };
+
+        console.log(
+          `Adding ability increase for ${ability}: ${currentScore} → ${
+            currentScore + 1
+          }`
+        );
+
+        return {
+          ...prev,
+          abilityIncreases: [...prev.abilityIncreases, newIncrease],
+        };
+      }
+      return prev;
+    });
+  };
+
+  const toggleFeat = (featName) => {
+    setLevelUpData((prev) => {
+      const isSelected = prev.selectedFeats.includes(featName);
+      if (isSelected) {
+        return {
+          ...prev,
+          selectedFeats: [],
+          featChoices: {},
+        };
+      } else {
+        return {
+          ...prev,
+          selectedFeats: [featName],
+          featChoices: {},
+        };
+      }
+    });
+  };
+
+  const handleAsiChoiceChange = (choice) => {
+    setLevelUpData((prev) => ({
+      ...prev,
+      asiChoice: choice,
+      abilityIncreases: choice === "feat" ? [] : prev.abilityIncreases,
+      selectedFeats: choice === "asi" ? [] : prev.selectedFeats,
+    }));
+    // Clear feat filter when switching away from feat selection
+    if (choice === "asi") {
+      setFeatFilter("");
+    }
+  };
 
   const getFeatChoicesNeeded = (feat) => {
     if (!feat || !feat.modifiers) return [];
@@ -197,7 +352,12 @@ const LevelUpModal = ({
   };
 
   const getCurrentSkillProficiencies = () => {
-    return character.skillProficiencies || [];
+    return character.skill_proficiencies || character.skillProficiencies || [];
+  };
+
+  const getSpellcastingAbility = () => {
+    // Default to intelligence for magical characters
+    return "intelligence";
   };
 
   const updateFeatChoice = (choiceId, value) => {
@@ -243,27 +403,11 @@ const LevelUpModal = ({
   const asiLevels = [4, 8, 12, 16, 19];
   const isAsiLevel = asiLevels.includes(newLevel);
 
-  const getAbilityScore = (abilityName) => {
-    const lowerName = abilityName.toLowerCase();
-
-    if (character[lowerName] !== undefined) {
-      return character[lowerName];
-    }
-
-    if (
-      character.abilityScores &&
-      character.abilityScores[lowerName] !== undefined
-    ) {
-      return character.abilityScores[lowerName];
-    }
-
-    return 10;
-  };
-
   const getBaseHPIncrease = () => {
-    if (!character.castingStyle) return 6;
+    if (!character.casting_style && !character.castingStyle) return 6;
 
-    const castingData = hpData[character.castingStyle];
+    const castingStyle = character.casting_style || character.castingStyle;
+    const castingData = hpData[castingStyle];
     if (!castingData) return 6;
 
     return castingData.hitDie || 6;
@@ -290,7 +434,7 @@ const LevelUpModal = ({
         },
         {
           number: 3,
-          title: "Summary",
+          title: "Review",
           completed: false,
           active: currentStep === 3,
         },
@@ -305,7 +449,7 @@ const LevelUpModal = ({
         },
         {
           number: 2,
-          title: "Summary",
+          title: "Review",
           completed: false,
           active: currentStep === 2,
         },
@@ -315,112 +459,6 @@ const LevelUpModal = ({
 
   const steps = getSteps();
   const maxSteps = steps.length;
-
-  const rollHitPoints = () => {
-    const roller = new DiceRoller();
-    const rollResult = roller.roll(`1d${baseHitDie}`);
-
-    const rollValue = rollResult.total;
-    const total = rollValue + conMod;
-
-    setLevelUpData((prev) => ({
-      ...prev,
-      rolledHP: rollValue,
-      rollDetails: {
-        notation: rollResult.notation,
-        output: rollResult.output,
-        rollValue: rollValue,
-        modifier: conMod,
-        total: Math.max(1, total),
-      },
-      hitPointIncrease: Math.max(1, total),
-      hitPointMethod: "roll",
-    }));
-  };
-
-  const useAverageHP = () => {
-    const average = Math.floor(baseHitDie / 2) + 1;
-    const total = average + conMod;
-    setLevelUpData((prev) => ({
-      ...prev,
-      hitPointIncrease: Math.max(1, total),
-      hitPointMethod: "average",
-      rolledHP: null,
-    }));
-  };
-
-  const setManualHP = (value) => {
-    setLevelUpData((prev) => ({
-      ...prev,
-      hitPointIncrease: Math.max(1, value),
-      hitPointMethod: "manual",
-      manualHP: value,
-      rolledHP: null,
-    }));
-  };
-
-  const toggleAbilityIncrease = (ability) => {
-    setLevelUpData((prev) => {
-      const existing = prev.abilityIncreases.find(
-        (inc) => inc.ability === ability
-      );
-      if (existing) {
-        return {
-          ...prev,
-          abilityIncreases: prev.abilityIncreases.filter(
-            (inc) => inc.ability !== ability
-          ),
-        };
-      } else if (prev.abilityIncreases.length < 2) {
-        const currentScore = getAbilityScore(ability);
-        if (currentScore >= 20) return prev;
-        return {
-          ...prev,
-          abilityIncreases: [
-            ...prev.abilityIncreases,
-            {
-              ability,
-              from: currentScore,
-              to: currentScore + 1,
-            },
-          ],
-        };
-      }
-      return prev;
-    });
-  };
-
-  const toggleFeat = (featName) => {
-    setLevelUpData((prev) => {
-      const isSelected = prev.selectedFeats.includes(featName);
-      if (isSelected) {
-        return {
-          ...prev,
-          selectedFeats: [],
-          featChoices: {},
-        };
-      } else {
-        return {
-          ...prev,
-          selectedFeats: [featName],
-          featChoices: {},
-        };
-      }
-    });
-  };
-
-  const handleAsiChoiceChange = (choice) => {
-    setLevelUpData((prev) => ({
-      ...prev,
-      asiChoice: choice,
-      abilityIncreases: choice === "feat" ? [] : prev.abilityIncreases,
-      selectedFeats: choice === "asi" ? [] : prev.selectedFeats,
-    }));
-    // Clear feat filter when switching away from feat selection
-    if (choice === "asi") {
-      setFeatFilter("");
-    }
-  };
 
   const canProceed = () => {
     switch (currentStep) {
@@ -459,43 +497,79 @@ const LevelUpModal = ({
     }
   };
 
+  // FIXED: Complete rewrite of handleComplete with proper database format handling
   const handleComplete = async () => {
     if (!onSave) return;
 
     setIsSaving(true);
     try {
-      const currentHP = character.hitPoints || character.hit_points || 0;
+      const currentHP = character.hit_points || character.hitPoints || 0;
 
       const updatedCharacter = {
         ...character,
         level: newLevel,
         hit_points: currentHP + levelUpData.hitPointIncrease,
-        hitPoints: currentHP + levelUpData.hitPointIncrease,
+        hitPoints: currentHP + levelUpData.hitPointIncrease, // Keep both for compatibility
       };
 
+      // Handle ASI (Ability Score Improvement)
       if (
         isAsiLevel &&
         levelUpData.asiChoice === "asi" &&
         levelUpData.abilityIncreases.length > 0
       ) {
+        // Start with current ability scores from database
+        const currentAbilityScores = character.ability_scores || {};
+
+        // Create new ability scores object with all current values
         const newAbilityScores = {
-          ...(character.ability_scores || character.abilityScores || {}),
+          strength: getAbilityScore("strength"),
+          dexterity: getAbilityScore("dexterity"),
+          constitution: getAbilityScore("constitution"),
+          intelligence: getAbilityScore("intelligence"),
+          wisdom: getAbilityScore("wisdom"),
+          charisma: getAbilityScore("charisma"),
+          // Ensure we preserve any existing scores
+          ...currentAbilityScores,
         };
 
+        // Apply the ability increases
         levelUpData.abilityIncreases.forEach((increase) => {
           const abilityKey = increase.ability.toLowerCase();
-          newAbilityScores[abilityKey] = increase.to;
+
+          // Validate the increase.to value
+          const newScore = parseInt(increase.to, 10);
+          if (!isNaN(newScore) && newScore > 0 && newScore <= 30) {
+            newAbilityScores[abilityKey] = newScore;
+            console.log(
+              `Applied ability increase: ${abilityKey} = ${newScore}`
+            );
+          } else {
+            console.error(
+              `Invalid ability score increase for ${abilityKey}: ${increase.to}`
+            );
+            // Fallback: just add 1 to current score
+            const currentScore = getAbilityScore(abilityKey);
+            newAbilityScores[abilityKey] = Math.min(20, currentScore + 1);
+            console.log(
+              `Fallback ability increase: ${abilityKey} = ${newAbilityScores[abilityKey]}`
+            );
+          }
         });
 
+        // Set the ability scores in database format
         updatedCharacter.ability_scores = newAbilityScores;
+
+        // Also set camelCase version for frontend compatibility
         updatedCharacter.abilityScores = newAbilityScores;
 
-        levelUpData.abilityIncreases.forEach((increase) => {
-          const abilityKey = increase.ability.toLowerCase();
-          updatedCharacter[abilityKey] = increase.to;
+        // Set individual properties for backward compatibility
+        Object.keys(newAbilityScores).forEach((ability) => {
+          updatedCharacter[ability] = newAbilityScores[ability];
         });
       }
 
+      // Handle Feat selection
       if (
         isAsiLevel &&
         levelUpData.asiChoice === "feat" &&
@@ -504,8 +578,19 @@ const LevelUpModal = ({
         const selectedFeat = getSelectedFeat();
 
         if (selectedFeat && selectedFeat.modifiers) {
-          const newAbilityScores = { ...updatedCharacter.ability_scores };
+          // Start with current ability scores
+          const newAbilityScores = {
+            strength: getAbilityScore("strength"),
+            dexterity: getAbilityScore("dexterity"),
+            constitution: getAbilityScore("constitution"),
+            intelligence: getAbilityScore("intelligence"),
+            wisdom: getAbilityScore("wisdom"),
+            charisma: getAbilityScore("charisma"),
+            // Preserve existing scores
+            ...(updatedCharacter.ability_scores || {}),
+          };
 
+          // Apply feat ability increases
           selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
             let abilityToIncrease;
 
@@ -526,30 +611,38 @@ const LevelUpModal = ({
 
             if (abilityToIncrease) {
               const currentScore = newAbilityScores[abilityToIncrease] || 10;
-              newAbilityScores[abilityToIncrease] = Math.min(
-                20,
-                currentScore + increase.amount
+              const newScore = Math.min(20, currentScore + increase.amount);
+              newAbilityScores[abilityToIncrease] = newScore;
+              console.log(
+                `Feat ability increase: ${abilityToIncrease} = ${newScore}`
               );
-              updatedCharacter[abilityToIncrease] =
-                newAbilityScores[abilityToIncrease];
             }
           });
 
+          // Update ability scores in all formats
           updatedCharacter.ability_scores = newAbilityScores;
           updatedCharacter.abilityScores = newAbilityScores;
+          Object.keys(newAbilityScores).forEach((ability) => {
+            updatedCharacter[ability] = newAbilityScores[ability];
+          });
 
+          // Handle skill proficiencies from feat
           const currentSkills = [
-            ...(updatedCharacter.skill_proficiencies ||
-              updatedCharacter.skillProficiencies ||
-              []),
+            ...(updatedCharacter.skill_proficiencies || []),
           ];
 
           selectedFeat.modifiers.skillProficiencies.forEach(
-            (skillGrant, index) => {
-              if (skillGrant.type === "choice") {
-                const chosenSkills =
+            (skillMod, index) => {
+              if (skillMod.type === "choice") {
+                const selectedSkills =
                   levelUpData.featChoices[`skill_${index}`] || [];
-                chosenSkills.forEach((skill) => {
+                selectedSkills.forEach((skill) => {
+                  if (!currentSkills.includes(skill)) {
+                    currentSkills.push(skill);
+                  }
+                });
+              } else if (skillMod.type === "fixed") {
+                skillMod.skills.forEach((skill) => {
                   if (!currentSkills.includes(skill)) {
                     currentSkills.push(skill);
                   }
@@ -559,261 +652,286 @@ const LevelUpModal = ({
           );
 
           updatedCharacter.skill_proficiencies = currentSkills;
-          updatedCharacter.skillProficiencies = currentSkills;
 
-          if (selectedFeat.name === "Tough") {
-            const toughBonus = 2 * newLevel;
-            updatedCharacter.hit_points += toughBonus;
-            updatedCharacter.hitPoints += toughBonus;
+          // Handle expertise from feat
+          const currentExpertise = [
+            ...(updatedCharacter.skill_expertise || []),
+          ];
+
+          selectedFeat.modifiers.expertise.forEach((expertiseMod, index) => {
+            if (expertiseMod.type === "choice") {
+              const selectedExpertise =
+                levelUpData.featChoices[`expertise_${index}`] || [];
+              selectedExpertise.forEach((skill) => {
+                if (!currentExpertise.includes(skill)) {
+                  currentExpertise.push(skill);
+                }
+              });
+            }
+          });
+
+          updatedCharacter.skill_expertise = currentExpertise;
+
+          // Update standard feats array
+          const currentFeats = [...(updatedCharacter.standard_feats || [])];
+          if (!currentFeats.includes(selectedFeat.name)) {
+            currentFeats.push(selectedFeat.name);
           }
+          updatedCharacter.standard_feats = currentFeats;
         }
-
-        const currentFeats =
-          character.standard_feats || character.standardFeats || [];
-        updatedCharacter.standard_feats = [
-          ...currentFeats,
-          ...levelUpData.selectedFeats,
-        ];
-        updatedCharacter.standardFeats = [
-          ...currentFeats,
-          ...levelUpData.selectedFeats,
-        ];
       }
 
-      if (isAsiLevel) {
-        const asiChoices = character.asi_choices || character.asiChoices || {};
-        asiChoices[newLevel] = {
-          choice: levelUpData.asiChoice,
-          ...(levelUpData.asiChoice === "asi" && {
-            abilityIncreases: levelUpData.abilityIncreases,
-          }),
-          ...(levelUpData.asiChoice === "feat" && {
-            selectedFeat: levelUpData.selectedFeats[0],
-            featChoices: levelUpData.featChoices,
-          }),
-        };
-        updatedCharacter.asi_choices = asiChoices;
-        updatedCharacter.asiChoices = asiChoices;
-      }
+      console.log("Level up data being applied:", levelUpData);
+      console.log("Updated character being saved:", updatedCharacter);
+      console.log("Final ability_scores:", updatedCharacter.ability_scores);
+
       await onSave(updatedCharacter);
+      setIsSaving(false);
     } catch (error) {
-      console.error("Error completing level up:", error);
-      alert("Failed to save level up changes. Please try again.");
-    } finally {
+      console.error("Error during level up:", error);
+      alert("Failed to save level up: " + error.message);
       setIsSaving(false);
     }
   };
-
-  // Get info about excluded feats for display
-  const allSelectedFeats = getAllSelectedFeats(character);
-  const excludedFeats = allSelectedFeats.filter(
-    (featName) => !levelUpData.selectedFeats.includes(featName)
-  );
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div style={{ display: "grid", gap: "24px" }}>
-            <div style={{ textAlign: "center", marginBottom: "16px" }}>
-              <h3
-                style={{
-                  margin: "0 0 8px 0",
-                  fontSize: "20px",
-                  fontWeight: "600",
-                }}
-              >
-                Choose Hit Point Increase
-              </h3>
-              <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-                Hit Die: d{baseHitDie} + Constitution modifier (
-                {conMod >= 0 ? "+" : ""}
-                {conMod})
-              </p>
-            </div>
+          <div>
+            <h3
+              style={{
+                fontSize: "20px",
+                fontWeight: "700",
+                color: theme.text,
+                marginBottom: "24px",
+                textAlign: "center",
+              }}
+            >
+              Choose Your Hit Point Increase
+            </h3>
 
             <div
               style={{
-                border: `2px solid ${
-                  levelUpData.hitPointMethod === "average"
-                    ? "#3b82f6"
-                    : "#e5e7eb"
-                }`,
-                borderRadius: "12px",
-                padding: "20px",
-                cursor: "pointer",
-                backgroundColor:
-                  levelUpData.hitPointMethod === "average"
-                    ? "#dbeafe"
-                    : "white",
-                transition: "all 0.2s ease",
-              }}
-              onClick={useAverageHP}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "8px",
-                }}
-              >
-                <Heart size={20} color="#3b82f6" />
-                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>
-                  Take Average ({Math.floor(baseHitDie / 2) + 1} + {conMod})
-                </h4>
-              </div>
-              <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-                Guaranteed{" "}
-                {Math.max(1, Math.floor(baseHitDie / 2) + 1 + conMod)} hit
-                points
-              </p>
-            </div>
-
-            <div
-              style={{
-                border: `2px solid ${
-                  levelUpData.hitPointMethod === "roll" ? "#10b981" : "#e5e7eb"
-                }`,
-                borderRadius: "12px",
-                padding: "20px",
-                backgroundColor:
-                  levelUpData.hitPointMethod === "roll" ? "#ecfdf5" : "white",
+                display: "grid",
+                gap: "16px",
+                maxWidth: "600px",
+                margin: "0 auto",
               }}
             >
+              {/* Average Option */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "12px",
+                  border: `2px solid ${
+                    levelUpData.hitPointMethod === "average"
+                      ? theme.primary
+                      : theme.border
+                  }`,
+                  borderRadius: "12px",
+                  padding: "20px",
+                  cursor: "pointer",
+                  backgroundColor:
+                    levelUpData.hitPointMethod === "average"
+                      ? `${theme.primary}15`
+                      : theme.surface,
+                  transition: "all 0.2s ease",
                 }}
+                onClick={useAverageHitPoints}
               >
-                <Dice6 size={20} color="#10b981" />
-                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>
-                  Roll for Hit Points
-                </h4>
-              </div>
-              {levelUpData.rolledHP && (
                 <div
                   style={{
-                    marginBottom: "12px",
-                    padding: "12px",
-                    backgroundColor: "#f0fdf4",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                      color: "#065f46",
-                    }}
-                  >
-                    Rolled: {levelUpData.rolledHP} + {conMod} ={" "}
-                    {levelUpData.hitPointIncrease} HP
-                  </p>
-                </div>
-              )}
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={rollHitPoints}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#10b981",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "500",
                     display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    gap: "6px",
                   }}
                 >
-                  <Dice6 size={16} />
-                  {levelUpData.rolledHP ? "Reroll" : "Roll"} d{baseHitDie}
-                </button>
-                {levelUpData.rolledHP && (
-                  <button
-                    onClick={() =>
-                      setLevelUpData((prev) => ({
-                        ...prev,
-                        rolledHP: null,
-                        hitPointIncrease: 0,
-                        hitPointMethod: "",
-                      }))
-                    }
+                  <div>
+                    <h4
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      Average ({Math.floor(baseHitDie / 2) + 1})
+                    </h4>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "14px",
+                        color: theme.textSecondary,
+                      }}
+                    >
+                      Reliable choice - take the average roll
+                    </p>
+                  </div>
+                  <div
                     style={{
-                      padding: "8px 16px",
-                      backgroundColor: "#6b7280",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      color: theme.primary,
                     }}
                   >
-                    <RotateCcw size={16} />
-                    Clear
-                  </button>
-                )}
+                    +{Math.max(1, Math.floor(baseHitDie / 2) + 1 + conMod)}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div
-              style={{
-                border: `2px solid ${
-                  levelUpData.hitPointMethod === "manual"
-                    ? "#f59e0b"
-                    : "#e5e7eb"
-                }`,
-                borderRadius: "12px",
-                padding: "20px",
-                backgroundColor:
-                  levelUpData.hitPointMethod === "manual" ? "#fef3c7" : "white",
-              }}
-            >
+              {/* Roll Option */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "12px",
+                  border: `2px solid ${
+                    levelUpData.hitPointMethod === "roll"
+                      ? theme.primary
+                      : theme.border
+                  }`,
+                  borderRadius: "12px",
+                  padding: "20px",
+                  cursor: "pointer",
+                  backgroundColor:
+                    levelUpData.hitPointMethod === "roll"
+                      ? `${theme.primary}15`
+                      : theme.surface,
+                  transition: "all 0.2s ease",
+                }}
+                onClick={rollHitPoints}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <h4
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        color: theme.text,
+                      }}
+                    >
+                      <Dice6 size={20} />
+                      Roll (1d{baseHitDie})
+                    </h4>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "14px",
+                        color: theme.textSecondary,
+                      }}
+                    >
+                      Take your chances with the dice
+                    </p>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      color: theme.primary,
+                    }}
+                  >
+                    {levelUpData.hitPointMethod === "roll"
+                      ? `+${levelUpData.hitPointIncrease}`
+                      : `+?`}
+                  </div>
+                </div>
+                {levelUpData.hitPointMethod === "roll" && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      fontSize: "12px",
+                      color: theme.textSecondary,
+                    }}
+                  >
+                    Rolled: {levelUpData.rolledHP} + {conMod} (CON) = +
+                    {levelUpData.hitPointIncrease}
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Option */}
+              <div
+                style={{
+                  border: `2px solid ${
+                    levelUpData.hitPointMethod === "manual"
+                      ? theme.primary
+                      : theme.border
+                  }`,
+                  borderRadius: "12px",
+                  padding: "20px",
+                  backgroundColor:
+                    levelUpData.hitPointMethod === "manual"
+                      ? `${theme.primary}15`
+                      : theme.surface,
+                  transition: "all 0.2s ease",
                 }}
               >
-                <Star size={20} color="#f59e0b" />
-                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>
-                  Set Manually
-                </h4>
-              </div>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <input
-                  type="number"
-                  min="1"
-                  max={baseHitDie + conMod}
-                  value={levelUpData.manualHP || ""}
-                  onChange={(e) => setManualHP(parseInt(e.target.value) || 0)}
-                  placeholder={`Enter 1-${baseHitDie + conMod}`}
+                <div
                   style={{
-                    padding: "8px 12px",
-                    border: "2px solid #d1d5db",
-                    borderRadius: "6px",
-                    width: "120px",
-                    fontSize: "14px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
-                />
-                <span style={{ fontSize: "14px", color: "#6b7280" }}>
-                  hit points
-                </span>
+                >
+                  <div style={{ flex: 1 }}>
+                    <h4
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      Manual Entry
+                    </h4>
+                    <p
+                      style={{
+                        margin: "0 0 12px 0",
+                        fontSize: "14px",
+                        color: theme.textSecondary,
+                      }}
+                    >
+                      Enter your own value
+                    </p>
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={levelUpData.manualHP}
+                      onChange={(e) =>
+                        handleManualHitPoints(parseInt(e.target.value) || 0)
+                      }
+                      placeholder="Enter HP increase"
+                      style={{
+                        width: "150px",
+                        padding: "8px 12px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        backgroundColor: theme.surface,
+                        color: theme.text,
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      color: theme.primary,
+                    }}
+                  >
+                    +
+                    {levelUpData.hitPointMethod === "manual"
+                      ? levelUpData.hitPointIncrease
+                      : 0}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -822,44 +940,44 @@ const LevelUpModal = ({
       case 2:
         if (isAsiLevel) {
           return (
-            <div style={{ display: "grid", gap: "24px" }}>
-              <div style={{ textAlign: "center" }}>
-                <h3
-                  style={{
-                    margin: "0 0 8px 0",
-                    fontSize: "20px",
-                    fontWeight: "600",
-                  }}
-                >
-                  🌟 Ability Score Improvement or Feat
-                </h3>
-                <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>
-                  At level {newLevel}, choose either an Ability Score
-                  Improvement or a Feat
-                </p>
-              </div>
+            <div>
+              <h3
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: theme.text,
+                  marginBottom: "24px",
+                  textAlign: "center",
+                }}
+              >
+                Ability Score Improvement or Feat
+              </h3>
 
               {/* Choice Selection */}
               <div
                 style={{
-                  display: "flex",
+                  display: "grid",
                   gap: "16px",
-                  justifyContent: "center",
-                  marginBottom: "24px",
+                  maxWidth: "600px",
+                  margin: "0 auto 32px auto",
                 }}
               >
                 <label
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    padding: "12px 20px",
+                    gap: "12px",
+                    padding: "16px 24px",
                     border: `2px solid ${
-                      levelUpData.asiChoice === "asi" ? "#3b82f6" : "#d1d5db"
+                      levelUpData.asiChoice === "asi"
+                        ? theme.primary
+                        : theme.border
                     }`,
                     borderRadius: "8px",
                     backgroundColor:
-                      levelUpData.asiChoice === "asi" ? "#dbeafe" : "white",
+                      levelUpData.asiChoice === "asi"
+                        ? `${theme.primary}15`
+                        : theme.surface,
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
@@ -870,7 +988,7 @@ const LevelUpModal = ({
                     checked={levelUpData.asiChoice === "asi"}
                     onChange={(e) => handleAsiChoiceChange(e.target.value)}
                   />
-                  <span style={{ fontWeight: "500" }}>
+                  <span style={{ fontWeight: "500", color: theme.text }}>
                     Ability Score Improvement (+2 points)
                   </span>
                 </label>
@@ -879,14 +997,18 @@ const LevelUpModal = ({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    padding: "12px 20px",
+                    gap: "12px",
+                    padding: "16px 24px",
                     border: `2px solid ${
-                      levelUpData.asiChoice === "feat" ? "#3b82f6" : "#d1d5db"
+                      levelUpData.asiChoice === "feat"
+                        ? theme.primary
+                        : theme.border
                     }`,
                     borderRadius: "8px",
                     backgroundColor:
-                      levelUpData.asiChoice === "feat" ? "#dbeafe" : "white",
+                      levelUpData.asiChoice === "feat"
+                        ? `${theme.primary}15`
+                        : theme.surface,
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
@@ -897,22 +1019,35 @@ const LevelUpModal = ({
                     checked={levelUpData.asiChoice === "feat"}
                     onChange={(e) => handleAsiChoiceChange(e.target.value)}
                   />
-                  <span style={{ fontWeight: "500" }}>Feat</span>
+                  <span style={{ fontWeight: "500", color: theme.text }}>
+                    Choose a Feat
+                  </span>
                 </label>
               </div>
 
-              {/* ASI Content */}
+              {/* ASI Selection */}
               {levelUpData.asiChoice === "asi" && (
                 <div>
-                  <h4 style={{ margin: "0 0 16px 0", textAlign: "center" }}>
-                    Select Two Ability Score Increases
+                  <h4
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      marginBottom: "16px",
+                      textAlign: "center",
+                      color: theme.text,
+                    }}
+                  >
+                    Select Two Ability Scores to Increase
                   </h4>
 
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      gap: "16px",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(200px, 1fr))",
+                      gap: "12px",
+                      maxWidth: "800px",
+                      margin: "0 auto",
                     }}
                   >
                     {[
@@ -923,14 +1058,16 @@ const LevelUpModal = ({
                       "Wisdom",
                       "Charisma",
                     ].map((ability) => {
-                      const currentScore = getAbilityScore(ability);
-                      const isSelected = levelUpData.abilityIncreases.find(
+                      const currentScore = getAbilityScore(
+                        ability.toLowerCase()
+                      );
+                      const isSelected = levelUpData.abilityIncreases.some(
                         (inc) => inc.ability === ability
                       );
                       const canSelect =
-                        isSelected ||
-                        (levelUpData.abilityIncreases.length < 2 &&
-                          currentScore < 20);
+                        !isSelected &&
+                        levelUpData.abilityIncreases.length < 2 &&
+                        currentScore < 20;
 
                       return (
                         <div
@@ -938,15 +1075,17 @@ const LevelUpModal = ({
                           style={{
                             border: `2px solid ${
                               isSelected
-                                ? "#10b981"
+                                ? theme.success
                                 : canSelect
-                                ? "#d1d5db"
-                                : "#e5e7eb"
+                                ? theme.border
+                                : theme.textSecondary
                             }`,
                             borderRadius: "8px",
                             padding: "16px",
                             cursor: canSelect ? "pointer" : "not-allowed",
-                            backgroundColor: isSelected ? "#ecfdf5" : "white",
+                            backgroundColor: isSelected
+                              ? `${theme.success}15`
+                              : theme.surface,
                             opacity: canSelect ? 1 : 0.5,
                             transition: "all 0.2s ease",
                           }}
@@ -961,9 +1100,17 @@ const LevelUpModal = ({
                               alignItems: "center",
                             }}
                           >
-                            <span style={{ fontWeight: "500" }}>{ability}</span>
                             <span
-                              style={{ fontSize: "18px", fontWeight: "bold" }}
+                              style={{ fontWeight: "500", color: theme.text }}
+                            >
+                              {ability}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "18px",
+                                fontWeight: "bold",
+                                color: theme.text,
+                              }}
                             >
                               {currentScore}{" "}
                               {isSelected && "→ " + (currentScore + 1)}
@@ -973,7 +1120,7 @@ const LevelUpModal = ({
                             <div
                               style={{
                                 fontSize: "12px",
-                                color: "#ef4444",
+                                color: theme.error,
                                 marginTop: "4px",
                               }}
                             >
@@ -989,152 +1136,71 @@ const LevelUpModal = ({
                     style={{
                       textAlign: "center",
                       fontSize: "14px",
-                      color: "#6b7280",
+                      color: theme.textSecondary,
                       marginTop: "16px",
                     }}
                   >
                     Selected: {levelUpData.abilityIncreases.length}/2
                     {levelUpData.abilityIncreases.length < 2 && (
-                      <div style={{ color: "#f59e0b", marginTop: "8px" }}>
-                        ⚠️ You must select exactly 2 ability score increases
+                      <div style={{ color: theme.warning, marginTop: "8px" }}>
+                        ⚠️ You must select exactly 2 abilities to increase
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Feat Content */}
+              {/* Feat Selection */}
               {levelUpData.asiChoice === "feat" && (
                 <div>
-                  <h4 style={{ margin: "0 0 16px 0", textAlign: "center" }}>
-                    Select One Feat
-                  </h4>
-
-                  {/* Exclusion Info */}
-                  {excludedFeats.length > 0 && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "#6b7280",
-                        backgroundColor: "#f9fafb",
-                        padding: "8px 12px",
-                        borderRadius: "6px",
-                        marginBottom: "12px",
-                        border: "1px solid #e5e7eb",
-                      }}
-                    >
-                      <strong>Note:</strong> {excludedFeats.length} feat
-                      {excludedFeats.length > 1 ? "s" : ""} already selected
-                      elsewhere: {excludedFeats.join(", ")}
-                    </div>
-                  )}
-
-                  {/* Feat Filter Input */}
-                  <div style={{ marginBottom: "16px" }}>
-                    <div
-                      style={{
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <div style={{ position: "relative", flex: 1 }}>
-                        <Search
-                          size={16}
-                          style={{
-                            position: "absolute",
-                            left: "12px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            color: "#6b7280",
-                            pointerEvents: "none",
-                          }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Search feats by name, preview, or description..."
-                          value={featFilter}
-                          onChange={(e) => setFeatFilter(e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "10px 12px 10px 36px",
-                            border: "2px solid #d1d5db",
-                            borderRadius: "8px",
-                            fontSize: "14px",
-                            outline: "none",
-                            transition: "border-color 0.2s ease",
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = "#3b82f6";
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = "#d1d5db";
-                          }}
-                        />
-                      </div>
-                      {featFilter && (
-                        <button
-                          onClick={() => setFeatFilter("")}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#ef4444",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                          }}
-                          title="Clear filter"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Filter Results Info */}
-                    <div
-                      style={{
-                        marginTop: "8px",
-                        fontSize: "12px",
-                        color: "#6b7280",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <Filter size={12} />
-                      {featFilter ? (
-                        <>
-                          Showing {getFilteredFeats().length} of{" "}
-                          {getAvailableFeats().length} available feats
-                          {getFilteredFeats().length === 0 && (
-                            <span
-                              style={{ color: "#ef4444", marginLeft: "8px" }}
-                            >
-                              No feats match your search
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        `${getAvailableFeats().length} feats available (${
-                          standardFeats.length - excludedFeats.length
-                        } total after exclusions)`
-                      )}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      marginBottom: "20px",
+                      maxWidth: "600px",
+                      margin: "0 auto 20px auto",
+                    }}
+                  >
+                    <div style={{ position: "relative", flex: 1 }}>
+                      <Search
+                        size={20}
+                        style={{
+                          position: "absolute",
+                          left: "12px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: theme.textSecondary,
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search feats..."
+                        value={featFilter}
+                        onChange={(e) => setFeatFilter(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "12px 12px 12px 44px",
+                          border: `2px solid ${theme.border}`,
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          outline: "none",
+                          transition: "all 0.2s ease",
+                          backgroundColor: theme.surface,
+                          color: theme.text,
+                        }}
+                      />
                     </div>
                   </div>
 
                   <div
                     style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(300px, 1fr))",
-                      gap: "12px",
                       maxHeight: "400px",
                       overflowY: "auto",
-                      padding: "8px",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: "8px",
+                      backgroundColor: theme.background,
                     }}
                   >
                     {getFilteredFeats().map((feat) => {
@@ -1142,427 +1208,450 @@ const LevelUpModal = ({
                         feat.name
                       );
                       const isExpanded = expandedFeat === feat.name;
-                      const choicesNeeded = getFeatChoicesNeeded(feat);
-                      const isChoiceComplete = isFeatChoiceComplete(feat);
 
                       return (
                         <div
                           key={feat.name}
                           style={{
                             border: `2px solid ${
-                              isSelected ? "#3b82f6" : "#d1d5db"
+                              isSelected ? theme.success : "transparent"
                             }`,
                             borderRadius: "8px",
-                            padding: "12px",
-                            backgroundColor: isSelected ? "#dbeafe" : "white",
+                            margin: "8px",
+                            backgroundColor: isSelected
+                              ? `${theme.success}15`
+                              : theme.surface,
+                            overflow: "hidden",
                             transition: "all 0.2s ease",
                           }}
                         >
                           <div
                             style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
+                              padding: "16px",
                               cursor: "pointer",
-                              marginBottom: isExpanded ? "12px" : "0",
+                              borderBottom: isExpanded
+                                ? `1px solid ${theme.border}`
+                                : "none",
                             }}
-                            onClick={() =>
-                              setExpandedFeat(isExpanded ? null : feat.name)
-                            }
+                            onClick={() => toggleFeat(feat.name)}
                           >
-                            <div>
-                              <span
-                                style={{
-                                  fontSize: "14px",
-                                  fontWeight: isSelected ? "600" : "500",
-                                  color: isSelected ? "#1e40af" : "#374151",
-                                  display: "block",
-                                }}
-                              >
-                                {feat.name}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#6b7280",
-                                  fontStyle: "italic",
-                                }}
-                              >
-                                {feat.preview}
-                              </span>
-                            </div>
-                            <span
-                              style={{ fontSize: "12px", color: "#6b7280" }}
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                gap: "12px",
+                              }}
                             >
-                              {isExpanded ? "−" : "+"}
-                            </span>
+                              <div style={{ flex: 1 }}>
+                                <h4
+                                  style={{
+                                    margin: "0 0 8px 0",
+                                    fontSize: "16px",
+                                    fontWeight: "600",
+                                    color: theme.text,
+                                  }}
+                                >
+                                  {feat.name}
+                                </h4>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "14px",
+                                    color: theme.textSecondary,
+                                    lineHeight: "1.4",
+                                  }}
+                                >
+                                  {feat.preview}
+                                </p>
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                }}
+                              >
+                                {isSelected && (
+                                  <Star
+                                    size={20}
+                                    fill={theme.success}
+                                    color={theme.success}
+                                  />
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedFeat(
+                                      isExpanded ? null : feat.name
+                                    );
+                                  }}
+                                  style={{
+                                    padding: "4px 8px",
+                                    border: `1px solid ${theme.border}`,
+                                    borderRadius: "4px",
+                                    backgroundColor: theme.surface,
+                                    fontSize: "12px",
+                                    cursor: "pointer",
+                                    color: theme.text,
+                                  }}
+                                >
+                                  {isExpanded ? "Less" : "More"}
+                                </button>
+                              </div>
+                            </div>
                           </div>
 
                           {isExpanded && (
-                            <div>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#4b5563",
-                                  lineHeight: "1.4",
-                                  marginBottom: "12px",
-                                  padding: "8px",
-                                  backgroundColor: "#f9fafb",
-                                  borderRadius: "4px",
-                                  border: "1px solid #e5e7eb",
-                                }}
-                              >
-                                {feat.description.map((line, index) => (
-                                  <div
+                            <div
+                              style={{
+                                padding: "16px",
+                                backgroundColor: theme.background,
+                                fontSize: "14px",
+                                lineHeight: "1.5",
+                                color: theme.text,
+                              }}
+                            >
+                              {Array.isArray(feat.description) ? (
+                                feat.description.map((desc, index) => (
+                                  <p
                                     key={index}
                                     style={{
-                                      marginBottom:
-                                        index < feat.description.length - 1
-                                          ? "4px"
-                                          : "0",
+                                      margin: "0 0 12px 0",
                                     }}
                                   >
-                                    • {line}
-                                  </div>
-                                ))}
-                              </div>
+                                    {desc}
+                                  </p>
+                                ))
+                              ) : (
+                                <p style={{ margin: 0 }}>{feat.description}</p>
+                              )}
+                            </div>
+                          )}
 
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleFeat(feat.name);
-                                }}
-                                style={{
-                                  width: "100%",
-                                  padding: "8px 12px",
-                                  backgroundColor: isSelected
-                                    ? "#ef4444"
-                                    : "#3b82f6",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  fontSize: "12px",
-                                  fontWeight: "500",
-                                  cursor: "pointer",
-                                  transition: "all 0.2s ease",
-                                  marginBottom:
-                                    isSelected && choicesNeeded.length > 0
-                                      ? "12px"
-                                      : "0",
-                                }}
-                              >
-                                {isSelected ? "Remove Feat" : "Select Feat"}
-                              </button>
-
-                              {/* Feat Choices Interface */}
-                              {isSelected && choicesNeeded.length > 0 && (
+                          {/* Feat Choices */}
+                          {isSelected && (
+                            <div style={{ padding: "16px" }}>
+                              {getFeatChoicesNeeded(feat).map((choice) => (
                                 <div
-                                  style={{
-                                    padding: "12px",
-                                    backgroundColor: "#f0f9ff",
-                                    borderRadius: "6px",
-                                    border: "1px solid #0ea5e9",
-                                  }}
+                                  key={choice.id}
+                                  style={{ marginBottom: "16px" }}
                                 >
-                                  <h5
-                                    style={{
-                                      margin: "0 0 8px 0",
-                                      fontSize: "13px",
-                                      fontWeight: "600",
-                                    }}
-                                  >
-                                    Make Your Choices:
-                                  </h5>
-
-                                  {choicesNeeded.map((choice) => (
-                                    <div
-                                      key={choice.id}
-                                      style={{ marginBottom: "8px" }}
-                                    >
-                                      {choice.type === "abilityChoice" && (
-                                        <div>
-                                          <label
-                                            style={{
-                                              fontSize: "12px",
-                                              fontWeight: "500",
-                                            }}
-                                          >
-                                            Choose ability (+{choice.amount}):
-                                          </label>
-                                          <select
-                                            value={
-                                              levelUpData.featChoices[
-                                                choice.id
-                                              ] || ""
-                                            }
-                                            onChange={(e) =>
-                                              updateFeatChoice(
-                                                choice.id,
-                                                e.target.value
-                                              )
-                                            }
-                                            style={{
-                                              width: "100%",
-                                              padding: "4px 8px",
-                                              fontSize: "12px",
-                                              border: "1px solid #d1d5db",
-                                              borderRadius: "4px",
-                                              marginTop: "4px",
-                                            }}
-                                          >
-                                            <option value="">
-                                              Select ability...
-                                            </option>
-                                            {choice.abilities.map((ability) => (
-                                              <option
-                                                key={ability}
-                                                value={ability}
-                                              >
-                                                {ability
-                                                  .charAt(0)
-                                                  .toUpperCase() +
-                                                  ability.slice(1)}
-                                              </option>
-                                            ))}
-                                          </select>
-                                        </div>
-                                      )}
-
-                                      {choice.type === "abilityCustom" && (
-                                        <div>
-                                          <label
-                                            style={{
-                                              fontSize: "12px",
-                                              fontWeight: "500",
-                                            }}
-                                          >
-                                            Choose any ability (+{choice.amount}
-                                            ):
-                                          </label>
-                                          <select
-                                            value={
-                                              levelUpData.featChoices[
-                                                choice.id
-                                              ] || ""
-                                            }
-                                            onChange={(e) =>
-                                              updateFeatChoice(
-                                                choice.id,
-                                                e.target.value
-                                              )
-                                            }
-                                            style={{
-                                              width: "100%",
-                                              padding: "4px 8px",
-                                              fontSize: "12px",
-                                              border: "1px solid #d1d5db",
-                                              borderRadius: "4px",
-                                              marginTop: "4px",
-                                            }}
-                                          >
-                                            <option value="">
-                                              Select ability...
-                                            </option>
-                                            <option value="strength">
-                                              Strength
-                                            </option>
-                                            <option value="dexterity">
-                                              Dexterity
-                                            </option>
-                                            <option value="constitution">
-                                              Constitution
-                                            </option>
-                                            <option value="intelligence">
-                                              Intelligence
-                                            </option>
-                                            <option value="wisdom">
-                                              Wisdom
-                                            </option>
-                                            <option value="charisma">
-                                              Charisma
-                                            </option>
-                                          </select>
-                                        </div>
-                                      )}
-
-                                      {choice.type === "skillChoice" && (
-                                        <div>
-                                          <label
-                                            style={{
-                                              fontSize: "12px",
-                                              fontWeight: "500",
-                                            }}
-                                          >
-                                            Choose {choice.count} skill(s):
-                                          </label>
-                                          <div
-                                            style={{
-                                              marginTop: "4px",
-                                              display: "grid",
-                                              gridTemplateColumns:
-                                                "repeat(2, 1fr)",
-                                              gap: "4px",
-                                            }}
-                                          >
-                                            {getAvailableSkills()
-                                              .filter(
-                                                (skill) =>
-                                                  !getCurrentSkillProficiencies().includes(
-                                                    skill
-                                                  )
-                                              )
-                                              .map((skill) => {
-                                                const currentChoices =
-                                                  levelUpData.featChoices[
-                                                    choice.id
-                                                  ] || [];
-                                                const isChosen =
-                                                  currentChoices.includes(
-                                                    skill
-                                                  );
-                                                const canChoose =
-                                                  isChosen ||
-                                                  currentChoices.length <
-                                                    choice.count;
-
-                                                return (
-                                                  <label
-                                                    key={skill}
-                                                    style={{
-                                                      fontSize: "11px",
-                                                      display: "flex",
-                                                      alignItems: "center",
-                                                      gap: "4px",
-                                                      cursor: canChoose
-                                                        ? "pointer"
-                                                        : "not-allowed",
-                                                      opacity: canChoose
-                                                        ? 1
-                                                        : 0.5,
-                                                    }}
-                                                  >
-                                                    <input
-                                                      type="checkbox"
-                                                      checked={isChosen}
-                                                      disabled={!canChoose}
-                                                      onChange={(e) => {
-                                                        const newChoices = e
-                                                          .target.checked
-                                                          ? [
-                                                              ...currentChoices,
-                                                              skill,
-                                                            ]
-                                                          : currentChoices.filter(
-                                                              (s) => s !== skill
-                                                            );
-                                                        updateFeatChoice(
-                                                          choice.id,
-                                                          newChoices
-                                                        );
-                                                      }}
-                                                      style={{
-                                                        width: "12px",
-                                                        height: "12px",
-                                                      }}
-                                                    />
-                                                    {skill}
-                                                  </label>
-                                                );
-                                              })}
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {choice.type === "expertiseChoice" && (
-                                        <div>
-                                          <label
-                                            style={{
-                                              fontSize: "12px",
-                                              fontWeight: "500",
-                                            }}
-                                          >
-                                            Choose {choice.count} skill(s) for
-                                            expertise:
-                                          </label>
-                                          <div style={{ marginTop: "4px" }}>
-                                            <select
-                                              value={
-                                                levelUpData.featChoices[
-                                                  choice.id
-                                                ] || ""
-                                              }
-                                              onChange={(e) =>
-                                                updateFeatChoice(choice.id, [
-                                                  e.target.value,
-                                                ])
-                                              }
-                                              style={{
-                                                width: "100%",
-                                                padding: "4px 8px",
-                                                fontSize: "12px",
-                                                border: "1px solid #d1d5db",
-                                                borderRadius: "4px",
-                                              }}
-                                            >
-                                              <option value="">
-                                                Select skill...
-                                              </option>
-                                              {getCurrentSkillProficiencies().map(
-                                                (skill) => (
-                                                  <option
-                                                    key={skill}
-                                                    value={skill}
-                                                  >
-                                                    {skill}
-                                                  </option>
-                                                )
-                                              )}
-                                            </select>
-                                          </div>
-                                        </div>
-                                      )}
+                                  {choice.type === "abilityChoice" && (
+                                    <div>
+                                      <label
+                                        style={{
+                                          display: "block",
+                                          marginBottom: "8px",
+                                          fontSize: "14px",
+                                          fontWeight: "500",
+                                          color: theme.text,
+                                        }}
+                                      >
+                                        Choose an ability to increase by{" "}
+                                        {choice.amount}:
+                                      </label>
+                                      <select
+                                        value={
+                                          levelUpData.featChoices[choice.id] ||
+                                          ""
+                                        }
+                                        onChange={(e) =>
+                                          updateFeatChoice(
+                                            choice.id,
+                                            e.target.value
+                                          )
+                                        }
+                                        style={{
+                                          width: "100%",
+                                          padding: "8px 12px",
+                                          border: `1px solid ${theme.border}`,
+                                          borderRadius: "6px",
+                                          fontSize: "14px",
+                                          backgroundColor: theme.surface,
+                                          color: theme.text,
+                                        }}
+                                      >
+                                        <option value="">
+                                          Select an ability...
+                                        </option>
+                                        {choice.abilities.map((ability) => (
+                                          <option key={ability} value={ability}>
+                                            {ability}
+                                          </option>
+                                        ))}
+                                      </select>
                                     </div>
-                                  ))}
+                                  )}
 
-                                  {!isChoiceComplete && (
-                                    <div
-                                      style={{
-                                        color: "#dc2626",
-                                        fontSize: "11px",
-                                        marginTop: "4px",
-                                      }}
-                                    >
-                                      ⚠️ Complete all choices to proceed
+                                  {choice.type === "abilityCustom" && (
+                                    <div>
+                                      <label
+                                        style={{
+                                          display: "block",
+                                          marginBottom: "8px",
+                                          fontSize: "14px",
+                                          fontWeight: "500",
+                                          color: theme.text,
+                                        }}
+                                      >
+                                        Choose any ability to increase by{" "}
+                                        {choice.amount}:
+                                      </label>
+                                      <select
+                                        value={
+                                          levelUpData.featChoices[choice.id] ||
+                                          ""
+                                        }
+                                        onChange={(e) =>
+                                          updateFeatChoice(
+                                            choice.id,
+                                            e.target.value
+                                          )
+                                        }
+                                        style={{
+                                          width: "100%",
+                                          padding: "8px 12px",
+                                          border: `1px solid ${theme.border}`,
+                                          borderRadius: "6px",
+                                          fontSize: "14px",
+                                          backgroundColor: theme.surface,
+                                          color: theme.text,
+                                        }}
+                                      >
+                                        <option value="">
+                                          Select an ability...
+                                        </option>
+                                        {[
+                                          "strength",
+                                          "dexterity",
+                                          "constitution",
+                                          "intelligence",
+                                          "wisdom",
+                                          "charisma",
+                                        ].map((ability) => (
+                                          <option key={ability} value={ability}>
+                                            {ability}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
+
+                                  {choice.type === "skillChoice" && (
+                                    <div>
+                                      <label
+                                        style={{
+                                          display: "block",
+                                          marginBottom: "8px",
+                                          fontSize: "14px",
+                                          fontWeight: "500",
+                                          color: theme.text,
+                                        }}
+                                      >
+                                        Choose {choice.count} skill
+                                        {choice.count > 1 ? "s" : ""}:
+                                      </label>
+                                      <div
+                                        style={{
+                                          display: "grid",
+                                          gridTemplateColumns:
+                                            "repeat(auto-fit, minmax(200px, 1fr))",
+                                          gap: "8px",
+                                        }}
+                                      >
+                                        {getAvailableSkills()
+                                          .filter(
+                                            (skill) =>
+                                              !getCurrentSkillProficiencies().includes(
+                                                skill
+                                              )
+                                          )
+                                          .map((skill) => {
+                                            const isSelected = (
+                                              levelUpData.featChoices[
+                                                choice.id
+                                              ] || []
+                                            ).includes(skill);
+                                            const currentSelections =
+                                              levelUpData.featChoices[
+                                                choice.id
+                                              ] || [];
+
+                                            return (
+                                              <label
+                                                key={skill}
+                                                style={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: "8px",
+                                                  padding: "8px",
+                                                  border: `1px solid ${theme.border}`,
+                                                  borderRadius: "4px",
+                                                  backgroundColor: isSelected
+                                                    ? `${theme.primary}15`
+                                                    : theme.surface,
+                                                  cursor:
+                                                    !isSelected &&
+                                                    currentSelections.length >=
+                                                      choice.count
+                                                      ? "not-allowed"
+                                                      : "pointer",
+                                                  opacity:
+                                                    !isSelected &&
+                                                    currentSelections.length >=
+                                                      choice.count
+                                                      ? 0.5
+                                                      : 1,
+                                                }}
+                                              >
+                                                <input
+                                                  type="checkbox"
+                                                  checked={isSelected}
+                                                  disabled={
+                                                    !isSelected &&
+                                                    currentSelections.length >=
+                                                      choice.count
+                                                  }
+                                                  onChange={(e) => {
+                                                    const newSelections = e
+                                                      .target.checked
+                                                      ? [
+                                                          ...currentSelections,
+                                                          skill,
+                                                        ]
+                                                      : currentSelections.filter(
+                                                          (s) => s !== skill
+                                                        );
+                                                    updateFeatChoice(
+                                                      choice.id,
+                                                      newSelections
+                                                    );
+                                                  }}
+                                                />
+                                                <span
+                                                  style={{
+                                                    fontSize: "14px",
+                                                    color: theme.text,
+                                                  }}
+                                                >
+                                                  {skill}
+                                                </span>
+                                              </label>
+                                            );
+                                          })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {choice.type === "expertiseChoice" && (
+                                    <div>
+                                      <label
+                                        style={{
+                                          display: "block",
+                                          marginBottom: "8px",
+                                          fontSize: "14px",
+                                          fontWeight: "500",
+                                          color: theme.text,
+                                        }}
+                                      >
+                                        Choose {choice.count} skill
+                                        {choice.count > 1 ? "s" : ""} for
+                                        expertise:
+                                      </label>
+                                      <div
+                                        style={{
+                                          display: "grid",
+                                          gridTemplateColumns:
+                                            "repeat(auto-fit, minmax(200px, 1fr))",
+                                          gap: "8px",
+                                        }}
+                                      >
+                                        {getCurrentSkillProficiencies().map(
+                                          (skill) => {
+                                            const isSelected = (
+                                              levelUpData.featChoices[
+                                                choice.id
+                                              ] || []
+                                            ).includes(skill);
+                                            const currentSelections =
+                                              levelUpData.featChoices[
+                                                choice.id
+                                              ] || [];
+
+                                            return (
+                                              <label
+                                                key={skill}
+                                                style={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: "8px",
+                                                  padding: "8px",
+                                                  border: `1px solid ${theme.border}`,
+                                                  borderRadius: "4px",
+                                                  backgroundColor: isSelected
+                                                    ? `${theme.primary}15`
+                                                    : theme.surface,
+                                                  cursor:
+                                                    !isSelected &&
+                                                    currentSelections.length >=
+                                                      choice.count
+                                                      ? "not-allowed"
+                                                      : "pointer",
+                                                  opacity:
+                                                    !isSelected &&
+                                                    currentSelections.length >=
+                                                      choice.count
+                                                      ? 0.5
+                                                      : 1,
+                                                }}
+                                              >
+                                                <input
+                                                  type="checkbox"
+                                                  checked={isSelected}
+                                                  disabled={
+                                                    !isSelected &&
+                                                    currentSelections.length >=
+                                                      choice.count
+                                                  }
+                                                  onChange={(e) => {
+                                                    const newSelections = e
+                                                      .target.checked
+                                                      ? [
+                                                          ...currentSelections,
+                                                          skill,
+                                                        ]
+                                                      : currentSelections.filter(
+                                                          (s) => s !== skill
+                                                        );
+                                                    updateFeatChoice(
+                                                      choice.id,
+                                                      newSelections
+                                                    );
+                                                  }}
+                                                />
+                                                <span
+                                                  style={{
+                                                    fontSize: "14px",
+                                                    color: theme.text,
+                                                  }}
+                                                >
+                                                  {skill}
+                                                </span>
+                                              </label>
+                                            );
+                                          }
+                                        )}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
-                              )}
+                              ))}
                             </div>
                           )}
                         </div>
                       );
                     })}
-                  </div>
-
-                  <div
-                    style={{
-                      textAlign: "center",
-                      fontSize: "14px",
-                      color: "#6b7280",
-                      marginTop: "16px",
-                    }}
-                  >
-                    {levelUpData.selectedFeats.length > 0 ? (
-                      `Selected: ${levelUpData.selectedFeats[0]}${
-                        !isFeatChoiceComplete(getSelectedFeat())
-                          ? " (incomplete)"
-                          : ""
-                      }`
-                    ) : (
-                      <div style={{ color: "#f59e0b" }}>
-                        ⚠️ You must select exactly 1 feat
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -1570,69 +1659,62 @@ const LevelUpModal = ({
           );
         } else {
           return (
-            <div style={{ display: "grid", gap: "24px" }}>
-              <div
+            <div
+              style={{
+                textAlign: "center",
+                padding: "40px 20px",
+              }}
+            >
+              <h3
                 style={{
-                  backgroundColor: "#fef3c7",
-                  border: "2px solid #f59e0b",
-                  borderRadius: "12px",
-                  padding: "20px",
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: theme.text,
+                  marginBottom: "16px",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <Heart size={20} color="#f59e0b" />
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#92400e",
-                    }}
-                  >
-                    Hit Points
-                  </h3>
-                </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "18px",
-                    fontWeight: "700",
-                    color: "#92400e",
-                  }}
-                >
-                  +{levelUpData.hitPointIncrease} HP (Total:{" "}
-                  {(character.hitPoints || character.hit_points || 0) +
-                    levelUpData.hitPointIncrease}
-                  )
-                </p>
-                <p
-                  style={{
-                    margin: "8px 0 0 0",
-                    fontSize: "14px",
-                    color: "#92400e",
-                    opacity: 0.8,
-                  }}
-                >
-                  Method:{" "}
-                  {levelUpData.hitPointMethod === "average"
-                    ? "Average"
-                    : levelUpData.hitPointMethod === "roll"
-                    ? `Rolled (${levelUpData.rolledHP})`
-                    : "Manual"}
-                </p>
-              </div>
+                Ready to Level Up!
+              </h3>
+              <p
+                style={{
+                  fontSize: "16px",
+                  color: theme.textSecondary,
+                  margin: 0,
+                }}
+              >
+                No additional choices needed for this level.
+              </p>
+            </div>
+          );
+        }
 
+      case 3:
+        return (
+          <div>
+            <h3
+              style={{
+                fontSize: "20px",
+                fontWeight: "700",
+                color: theme.text,
+                marginBottom: "24px",
+                textAlign: "center",
+              }}
+            >
+              Review Your Choices
+            </h3>
+
+            <div
+              style={{
+                display: "grid",
+                gap: "20px",
+                maxWidth: "600px",
+                margin: "0 auto",
+              }}
+            >
               <div
                 style={{
-                  backgroundColor: "#f3f4f6",
-                  border: "2px solid #6b7280",
+                  backgroundColor: `${theme.primary}15`,
+                  border: `2px solid ${theme.primary}`,
                   borderRadius: "12px",
                   padding: "20px",
                 }}
@@ -1645,345 +1727,183 @@ const LevelUpModal = ({
                     marginBottom: "12px",
                   }}
                 >
-                  <TrendingUp size={20} color="#6b7280" />
+                  <Heart size={20} color={theme.primary} />
                   <h3
                     style={{
                       margin: 0,
                       fontSize: "16px",
                       fontWeight: "600",
-                      color: "#374151",
+                      color: theme.text,
                     }}
                   >
-                    Character Progression
+                    Hit Points
                   </h3>
                 </div>
-                <div
+                <p
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "16px",
+                    margin: 0,
+                    fontSize: "16px",
+                    color: theme.text,
+                    fontWeight: "500",
                   }}
                 >
-                  <div>
-                    <span style={{ fontSize: "14px", color: "#6b7280" }}>
-                      Current Level
-                    </span>
-                    <div
-                      style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        color: "#374151",
-                      }}
-                    >
-                      {currentLevel}
-                    </div>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: "14px", color: "#6b7280" }}>
-                      New Level
-                    </span>
-                    <div
-                      style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        color: "#10b981",
-                      }}
-                    >
-                      {newLevel}
-                    </div>
-                  </div>
-                </div>
+                  +{levelUpData.hitPointIncrease} HP (
+                  {levelUpData.hitPointMethod === "average"
+                    ? "Average"
+                    : levelUpData.hitPointMethod === "roll"
+                    ? `Rolled (${levelUpData.rolledHP})`
+                    : "Manual"}
+                  )
+                </p>
               </div>
+
+              {levelUpData.asiChoice === "asi" &&
+                levelUpData.abilityIncreases.length > 0 && (
+                  <div
+                    style={{
+                      backgroundColor: `${theme.success}15`,
+                      border: `2px solid ${theme.success}`,
+                      borderRadius: "12px",
+                      padding: "20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <Zap size={20} color={theme.success} />
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: theme.text,
+                        }}
+                      >
+                        Ability Score Increases
+                      </h3>
+                    </div>
+                    {levelUpData.abilityIncreases.map((increase, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 0",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "6px",
+                            height: "6px",
+                            borderRadius: "50%",
+                            backgroundColor: theme.success,
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: "16px",
+                            color: theme.text,
+                            fontWeight: "500",
+                          }}
+                        >
+                          {increase.ability}: {increase.from} → {increase.to}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              {levelUpData.asiChoice === "feat" &&
+                levelUpData.selectedFeats.length > 0 && (
+                  <div
+                    style={{
+                      backgroundColor: `${theme.warning}15`,
+                      border: `2px solid ${theme.warning}`,
+                      borderRadius: "12px",
+                      padding: "20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <Star size={20} color={theme.warning} />
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: theme.text,
+                        }}
+                      >
+                        Selected Feat
+                      </h3>
+                    </div>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "16px",
+                        color: theme.text,
+                        fontWeight: "500",
+                      }}
+                    >
+                      {levelUpData.selectedFeats[0]}
+                    </p>
+                  </div>
+                )}
 
               <div
                 style={{
-                  backgroundColor: "#e0f2fe",
-                  border: "2px solid #0284c7",
+                  backgroundColor: theme.surface,
+                  border: `2px solid ${theme.border}`,
                   borderRadius: "12px",
                   padding: "20px",
                   textAlign: "center",
                 }}
               >
-                <h3
-                  style={{
-                    margin: "0 0 8px 0",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    color: "#0c4a6e",
-                  }}
-                >
-                  📚 Level {newLevel} Benefits
-                </h3>
-                <p style={{ margin: 0, color: "#0c4a6e", fontSize: "14px" }}>
-                  You gain class features and improvements based on your casting
-                  style.
-                  <br />
-                  ASI or Feat choices are only available at levels 4, 8, 12, 16,
-                  and 19.
-                </p>
-              </div>
-            </div>
-          );
-        }
-
-      case 3:
-        return (
-          <div style={{ display: "grid", gap: "24px" }}>
-            <div
-              style={{
-                backgroundColor: "#fef3c7",
-                border: "2px solid #f59e0b",
-                borderRadius: "12px",
-                padding: "20px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "8px",
-                }}
-              >
-                <Heart size={20} color="#f59e0b" />
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    color: "#92400e",
-                  }}
-                >
-                  Hit Points
-                </h3>
-              </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "18px",
-                  fontWeight: "700",
-                  color: "#92400e",
-                }}
-              >
-                +{levelUpData.hitPointIncrease} HP (Total:{" "}
-                {(character.hitPoints || character.hit_points || 0) +
-                  levelUpData.hitPointIncrease}
-                )
-              </p>
-              <p
-                style={{
-                  margin: "8px 0 0 0",
-                  fontSize: "14px",
-                  color: "#92400e",
-                  opacity: 0.8,
-                }}
-              >
-                Method:{" "}
-                {levelUpData.hitPointMethod === "average"
-                  ? "Average"
-                  : levelUpData.hitPointMethod === "roll"
-                  ? `Rolled (${levelUpData.rolledHP})`
-                  : "Manual"}
-              </p>
-            </div>
-
-            {levelUpData.asiChoice === "asi" &&
-              levelUpData.abilityIncreases.length > 0 && (
                 <div
                   style={{
-                    backgroundColor: "#ecfdf5",
-                    border: "2px solid #10b981",
-                    borderRadius: "12px",
-                    padding: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "16px",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    <Zap size={20} color="#10b981" />
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#065f46",
-                      }}
-                    >
-                      Ability Score Increases
-                    </h3>
-                  </div>
-                  {levelUpData.abilityIncreases.map((increase, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "8px 0",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          backgroundColor: "#10b981",
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "16px",
-                          color: "#065f46",
-                          fontWeight: "500",
-                        }}
-                      >
-                        {increase.ability}: {increase.from} → {increase.to}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-            {levelUpData.asiChoice === "feat" &&
-              levelUpData.selectedFeats.length > 0 && (
-                <div
-                  style={{
-                    backgroundColor: "#dbeafe",
-                    border: "2px solid #3b82f6",
-                    borderRadius: "12px",
-                    padding: "20px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    <Star size={20} color="#3b82f6" />
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#1e40af",
-                      }}
-                    >
-                      New Feat
-                    </h3>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "8px",
-                      padding: "8px 0",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        backgroundColor: "#3b82f6",
-                        marginTop: "6px",
-                      }}
-                    />
-                    <div>
-                      <span
-                        style={{
-                          fontSize: "16px",
-                          color: "#1e40af",
-                          fontWeight: "500",
-                          display: "block",
-                        }}
-                      >
-                        {levelUpData.selectedFeats[0]}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#6b7280",
-                          lineHeight: "1.4",
-                          marginTop: "4px",
-                          display: "block",
-                        }}
-                      >
-                        {featDescriptions[levelUpData.selectedFeats[0]]}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            <div
-              style={{
-                backgroundColor: "#f3f4f6",
-                border: "2px solid #6b7280",
-                borderRadius: "12px",
-                padding: "20px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "12px",
-                }}
-              >
-                <TrendingUp size={20} color="#6b7280" />
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    color: "#374151",
-                  }}
-                >
-                  Character Progression
-                </h3>
-              </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "16px",
-                }}
-              >
-                <div>
-                  <span style={{ fontSize: "14px", color: "#6b7280" }}>
-                    Current Level
-                  </span>
                   <div
                     style={{
                       fontSize: "24px",
                       fontWeight: "bold",
-                      color: "#374151",
+                      color: theme.text,
                     }}
                   >
-                    {currentLevel}
+                    Level {currentLevel}
                   </div>
-                </div>
-                <div>
-                  <span style={{ fontSize: "14px", color: "#6b7280" }}>
-                    New Level
-                  </span>
                   <div
                     style={{
-                      fontSize: "24px",
-                      fontWeight: "bold",
-                      color: "#10b981",
+                      fontSize: "20px",
+                      color: theme.textSecondary,
                     }}
                   >
-                    {newLevel}
+                    →
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "28px",
+                      fontWeight: "bold",
+                      color: theme.success,
+                    }}
+                  >
+                    Level {newLevel}
                   </div>
                 </div>
               </div>
@@ -1995,6 +1915,8 @@ const LevelUpModal = ({
         return null;
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -2014,22 +1936,23 @@ const LevelUpModal = ({
     >
       <div
         style={{
-          backgroundColor: "white",
+          backgroundColor: theme.surface,
           borderRadius: "16px",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           width: "100%",
-          maxWidth: "700px",
+          maxWidth: "800px",
           maxHeight: "95vh",
           overflow: "hidden",
           position: "relative",
           display: "flex",
           flexDirection: "column",
+          border: `1px solid ${theme.border}`,
         }}
       >
         <div
           style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "white",
+            background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`,
+            color: theme.surface,
             padding: "24px 32px",
             position: "relative",
           }}
@@ -2065,83 +1988,49 @@ const LevelUpModal = ({
           >
             <TrendingUp size={24} />
             <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "700" }}>
-              Level Up: {character.name}
+              Level Up {character.name}
             </h2>
           </div>
 
-          <p style={{ margin: 0, fontSize: "18px", opacity: 0.9 }}>
-            Advancing from Level {currentLevel} to Level {newLevel}
-            {isAsiLevel && (
-              <span
-                style={{
-                  fontSize: "14px",
-                  marginTop: "4px",
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  display: "inline-block",
-                }}
-              >
-                🌟 ASI Level - Choose ASI or Feat
-              </span>
-            )}
-          </p>
-        </div>
-
-        <div
-          style={{ padding: "20px 32px", borderBottom: "1px solid #e5e7eb" }}
-        >
+          {/* Progress Steps */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              position: "relative",
+              gap: "24px",
+              justifyContent: "center",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: "16px",
-                left: "16px",
-                right: "16px",
-                height: "2px",
-                backgroundColor: "#e5e7eb",
-                zIndex: 1,
-              }}
-            >
-              <div
-                style={{
-                  height: "100%",
-                  backgroundColor: "#10b981",
-                  width: `${((currentStep - 1) / (maxSteps - 1)) * 100}%`,
-                  transition: "width 0.3s ease",
-                }}
-              />
-            </div>
-
-            {steps.map((step) => (
+            {steps.map((step, index) => (
               <div
                 key={step.number}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  position: "relative",
-                  zIndex: 2,
+                  gap: "8px",
                 }}
               >
                 <div
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: "40px",
+                    height: "40px",
                     borderRadius: "50%",
+                    border: `2px solid ${
+                      step.completed || step.active
+                        ? "rgba(255, 255, 255, 1)"
+                        : "rgba(255, 255, 255, 0.5)"
+                    }`,
                     backgroundColor: step.completed
-                      ? "#10b981"
+                      ? "rgba(255, 255, 255, 1)"
                       : step.active
-                      ? "#3b82f6"
-                      : "#e5e7eb",
-                    color: step.completed || step.active ? "white" : "#6b7280",
+                      ? "rgba(255, 255, 255, 0.2)"
+                      : "transparent",
+                    color: step.completed
+                      ? theme.primary
+                      : step.active
+                      ? "white"
+                      : "rgba(255, 255, 255, 0.7)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -2155,8 +2044,10 @@ const LevelUpModal = ({
                 <span
                   style={{
                     fontSize: "12px",
-                    color: step.active ? "#3b82f6" : "#6b7280",
-                    marginTop: "8px",
+                    color: step.active
+                      ? "rgba(255, 255, 255, 1)"
+                      : "rgba(255, 255, 255, 0.7)",
+                    marginTop: "4px",
                     fontWeight: step.active ? "600" : "400",
                   }}
                 >
@@ -2171,7 +2062,7 @@ const LevelUpModal = ({
           style={{
             padding: "32px",
             flex: 1,
-            overflow: "visible",
+            overflow: "auto",
           }}
         >
           {renderStepContent()}
@@ -2180,11 +2071,11 @@ const LevelUpModal = ({
         <div
           style={{
             padding: "24px 32px",
-            borderTop: "1px solid #e5e7eb",
+            borderTop: `1px solid ${theme.border}`,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            backgroundColor: "#f9fafb",
+            backgroundColor: theme.background,
           }}
         >
           <button
@@ -2195,8 +2086,9 @@ const LevelUpModal = ({
               alignItems: "center",
               gap: "8px",
               padding: "12px 20px",
-              backgroundColor: currentStep === 1 ? "#e5e7eb" : "#6b7280",
-              color: currentStep === 1 ? "#9ca3af" : "white",
+              backgroundColor:
+                currentStep === 1 ? theme.textSecondary : theme.textSecondary,
+              color: currentStep === 1 ? theme.textSecondary : theme.surface,
               border: "none",
               borderRadius: "8px",
               fontSize: "14px",
@@ -2216,8 +2108,8 @@ const LevelUpModal = ({
               style={{
                 padding: "12px 20px",
                 backgroundColor: "transparent",
-                color: "#6b7280",
-                border: "2px solid #d1d5db",
+                color: theme.textSecondary,
+                border: `2px solid ${theme.border}`,
                 borderRadius: "8px",
                 fontSize: "14px",
                 fontWeight: "600",
@@ -2237,8 +2129,10 @@ const LevelUpModal = ({
                   alignItems: "center",
                   gap: "8px",
                   padding: "12px 24px",
-                  backgroundColor: canProceed() ? "#3b82f6" : "#9ca3af",
-                  color: "white",
+                  backgroundColor: canProceed()
+                    ? theme.primary
+                    : theme.textSecondary,
+                  color: theme.surface,
                   border: "none",
                   borderRadius: "8px",
                   fontSize: "14px",
@@ -2259,8 +2153,10 @@ const LevelUpModal = ({
                   alignItems: "center",
                   gap: "8px",
                   padding: "12px 24px",
-                  backgroundColor: isSaving ? "#9ca3af" : "#10b981",
-                  color: "white",
+                  backgroundColor: isSaving
+                    ? theme.textSecondary
+                    : theme.success,
+                  color: theme.surface,
                   border: "none",
                   borderRadius: "8px",
                   fontSize: "14px",

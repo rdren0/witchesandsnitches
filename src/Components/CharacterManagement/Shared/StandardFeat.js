@@ -1,4 +1,4 @@
-import { standardFeats } from "../../data";
+import { standardFeats } from "../../standardFeatData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { allSkills } from "../../CharacterSheet/utils";
