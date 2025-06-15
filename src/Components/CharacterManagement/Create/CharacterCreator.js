@@ -10,7 +10,6 @@ import {
   skillsByCastingStyle,
   hpData,
   standardFeats,
-  backgrounds,
 } from "../../data";
 
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -22,15 +21,15 @@ import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { FeatRequirementsInfo } from "./ASIComponents";
 import ASILevelChoices from "./ASILevelChoices";
 import CharacterProgressionSummary from "./CharacterProgressionSummary";
+import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
+import { StepIndicator } from "../Shared/StepIndicator";
 
 const CharacterCreator = ({
   user,
-  customUsername,
   onCharacterSaved,
   maxCharacters = 10,
   activeCharacterCount = 0,
   isLoadingCharacterCount,
-  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -656,6 +655,7 @@ const CharacterCreator = ({
       )}
 
       {/* Basic Character Information */}
+      <StepIndicator step={1} totalSteps={4} label="Basic Information" />
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Name *</label>
         <input
@@ -706,7 +706,6 @@ const CharacterCreator = ({
           ))}
         </select>
       </div>
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Casting Style *</label>
         <select
@@ -726,7 +725,6 @@ const CharacterCreator = ({
         </div>
       </div>
 
-      {/* Initiative Ability for Intellect Casters */}
       {character.castingStyle === "Intellect Caster" && (
         <div style={styles.fieldContainer}>
           <label style={styles.label}>Initiative Ability *</label>
@@ -890,6 +888,11 @@ const CharacterCreator = ({
           </div>
         )}
       </div>
+      <StepIndicator
+        step={2}
+        totalSteps={4}
+        label="Skills & Features & Backgrounds"
+      />
 
       {/* Skills */}
       <div style={styles.fieldContainer}>
@@ -1086,21 +1089,32 @@ const CharacterCreator = ({
       />
 
       {/* Background */}
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Background</label>
-        <select
-          value={character.background}
-          onChange={(e) => handleInputChange("background", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Background...</option>
-          {backgrounds.map((background) => (
-            <option key={background} value={background}>
-              {background}
-            </option>
-          ))}
-        </select>
-      </div>
+      <EnhancedBackgroundSelector
+        value={character.background}
+        onChange={(value) => handleInputChange("background", value)}
+        disabled={false}
+      />
+
+      <StepIndicator step={3} totalSteps={4} label="Ability Scores" />
+
+      {/* Ability Scores */}
+      <AbilityScorePicker
+        character={character}
+        setRolledStats={setRolledStats}
+        setAvailableStats={setAvailableStats}
+        setCharacter={setCharacter}
+        rollAllStats={rollAllStats}
+        setTempInputValues={setTempInputValues}
+        allStatsAssigned={allStatsAssigned}
+        availableStats={availableStats}
+        tempInputValues={tempInputValues}
+        clearStat={clearStat}
+        assignStat={assignStat}
+        isManualMode={isManualMode}
+        setIsManualMode={setIsManualMode}
+        rolledStats={rolledStats}
+      />
+      <StepIndicator step={4} totalSteps={4} label="Wand Modifiers" />
 
       {/* Magic Subject Modifiers */}
       <div style={styles.fieldContainer}>
@@ -1166,25 +1180,6 @@ const CharacterCreator = ({
           ))}
         </div>
       </div>
-
-      {/* Ability Scores */}
-      <AbilityScorePicker
-        character={character}
-        setRolledStats={setRolledStats}
-        setAvailableStats={setAvailableStats}
-        setCharacter={setCharacter}
-        rollAllStats={rollAllStats}
-        setTempInputValues={setTempInputValues}
-        allStatsAssigned={allStatsAssigned}
-        availableStats={availableStats}
-        tempInputValues={tempInputValues}
-        clearStat={clearStat}
-        assignStat={assignStat}
-        isManualMode={isManualMode}
-        setIsManualMode={setIsManualMode}
-        rolledStats={rolledStats}
-      />
-
       {/* Action Buttons */}
       <div style={styles.actionButtons}>
         <button

@@ -623,26 +623,6 @@ export const heritageDescriptions = {
   },
 };
 
-export const backgrounds = [
-  "Activist",
-  "Artist",
-  "Bookworm",
-  "Bully",
-  "Camper",
-  "Class Clown",
-  "Dreamer",
-  "Follower",
-  "Groundskeeper",
-  "Investigator",
-  "Klutz",
-  "Loser",
-  "Potioneer",
-  "Protector",
-  "Quidditch Fan",
-  "Socialite",
-  "Troublemaker",
-];
-
 export const hpData = {
   "Willpower Caster": {
     hitDie: 10,

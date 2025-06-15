@@ -17,7 +17,6 @@ import {
   skillsByCastingStyle,
   hpData,
   standardFeats as importedStandardFeats,
-  backgrounds,
 } from "../../data";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -27,6 +26,8 @@ import StandardFeat from "../Shared/StandardFeat";
 import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
+import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
+import StepIndicator from "../Shared/StepIndicator";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -1054,7 +1055,7 @@ const CharacterEditor = ({
           </p>
         </div>
       </div>
-
+      <StepIndicator step={1} totalSteps={4} label="Basic Information" />
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Name *</label>
         <input
@@ -1370,7 +1371,11 @@ const CharacterEditor = ({
           </div>
         )}
       </div>
-
+      <StepIndicator
+        step={2}
+        totalSteps={4}
+        label="Skills & Features & Backgrounds"
+      />
       <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>
           Skill Proficiencies ({(character.skillProficiencies || []).length}/2
@@ -1815,84 +1820,13 @@ const CharacterEditor = ({
           </div>
         );
       })}
-
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Background</label>
-        <select
-          value={character.background || ""}
-          onChange={(e) => handleInputChange("background", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Background...</option>
-          {(backgrounds || []).map((background) => (
-            <option key={background} value={background}>
-              {background}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div style={styles.fieldContainer}>
-        <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
-        <div style={styles.helpText}>
-          Enter your wand's bonuses/penalties for each subject of magic (The DM
-          will provide these values)
-        </div>
-        <div style={styles.magicModifiersGrid}>
-          {[
-            { key: "divinations", label: "Divinations" },
-            { key: "charms", label: "Charms" },
-            { key: "transfiguration", label: "Transfiguration" },
-            { key: "healing", label: "Healing" },
-            { key: "jinxesHexesCurses", label: "JHC" },
-          ].map(({ key, label }) => (
-            <div key={key} style={styles.magicModifierItem}>
-              <label style={styles.magicModifierLabel}>{label}</label>
-              <input
-                type="number"
-                value={
-                  magicModifierTempValues.hasOwnProperty(key)
-                    ? magicModifierTempValues[key]
-                    : (character.magicModifiers || {})[key] || 0
-                }
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setMagicModifierTempValues((prev) => ({
-                    ...prev,
-                    [key]: value,
-                  }));
-                }}
-                onBlur={() => {
-                  const tempValue = magicModifierTempValues[key];
-                  if (tempValue !== undefined) {
-                    const numValue =
-                      tempValue === "" || tempValue === "-"
-                        ? 0
-                        : parseInt(tempValue, 10);
-                    const finalValue = isNaN(numValue) ? 0 : numValue;
-                    handleInputChange(`magicModifiers.${key}`, finalValue);
-                    setMagicModifierTempValues((prev) => {
-                      const newState = { ...prev };
-                      delete newState[key];
-                      return newState;
-                    });
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.target.blur();
-                  }
-                }}
-                style={styles.magicModifierInput}
-                min="-99"
-                max="99"
-                step="1"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
+      {/* Background */}
+      <EnhancedBackgroundSelector
+        value={character.background}
+        onChange={(value) => handleInputChange("background", value)}
+        disabled={false}
+      />
+      <StepIndicator step={3} totalSteps={4} label="Ability Scores" />
       <div style={styles.fieldContainer}>
         <div style={styles.lockedFieldHeader}>
           <h3 style={styles.skillsHeader}>
@@ -1957,6 +1891,67 @@ const CharacterEditor = ({
             isEditing={true}
           />
         )}
+      </div>
+      <StepIndicator step={4} totalSteps={4} label="Wand Modifiers" />
+      <div style={styles.fieldContainer}>
+        <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
+        <div style={styles.helpText}>
+          Enter your wand's bonuses/penalties for each subject of magic (The DM
+          will provide these values)
+        </div>
+        <div style={styles.magicModifiersGrid}>
+          {[
+            { key: "divinations", label: "Divinations" },
+            { key: "charms", label: "Charms" },
+            { key: "transfiguration", label: "Transfiguration" },
+            { key: "healing", label: "Healing" },
+            { key: "jinxesHexesCurses", label: "JHC" },
+          ].map(({ key, label }) => (
+            <div key={key} style={styles.magicModifierItem}>
+              <label style={styles.magicModifierLabel}>{label}</label>
+              <input
+                type="number"
+                value={
+                  magicModifierTempValues.hasOwnProperty(key)
+                    ? magicModifierTempValues[key]
+                    : (character.magicModifiers || {})[key] || 0
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setMagicModifierTempValues((prev) => ({
+                    ...prev,
+                    [key]: value,
+                  }));
+                }}
+                onBlur={() => {
+                  const tempValue = magicModifierTempValues[key];
+                  if (tempValue !== undefined) {
+                    const numValue =
+                      tempValue === "" || tempValue === "-"
+                        ? 0
+                        : parseInt(tempValue, 10);
+                    const finalValue = isNaN(numValue) ? 0 : numValue;
+                    handleInputChange(`magicModifiers.${key}`, finalValue);
+                    setMagicModifierTempValues((prev) => {
+                      const newState = { ...prev };
+                      delete newState[key];
+                      return newState;
+                    });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.target.blur();
+                  }
+                }}
+                style={styles.magicModifierInput}
+                min="-99"
+                max="99"
+                step="1"
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div style={styles.actionButtons}>

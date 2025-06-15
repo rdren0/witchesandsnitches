@@ -561,7 +561,9 @@ const EnhancedSubclassSelector = ({
               <div style={styles.featHeader}>
                 <label style={styles.featLabelClickable}>
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="subclass"
+                    value={subclass.name}
                     checked={isSelected}
                     onChange={() => handleSubclassToggle(subclass.name)}
                     disabled={disabled}
@@ -570,7 +572,7 @@ const EnhancedSubclassSelector = ({
                       height: "18px",
                       marginRight: "8px",
                       cursor: disabled ? "not-allowed" : "pointer",
-                      accentColor: "#8B5CF6",
+                      accentColor: theme.primary,
                       transform: "scale(1.2)",
                     }}
                   />
