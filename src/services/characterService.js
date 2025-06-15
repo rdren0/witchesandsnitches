@@ -1,9 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import {
-  getStartingEquipment,
-  addStartingEquipment,
-  hasStartingEquipment,
-} from "./inventoryService";
+import { getStartingEquipment, addStartingEquipment } from "./inventoryService";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
