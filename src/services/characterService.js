@@ -25,7 +25,8 @@ const getCharacters = async (discordUserId) => {
   return data || [];
 };
 
-const saveCharacter = async (characterData, discordUserId, supabase) => {
+// Fixed: Remove supabase parameter since we use the one from top of file
+const saveCharacter = async (characterData, discordUserId) => {
   try {
     const { data: savedCharacter, error: characterError } = await supabase
       .from("characters")
@@ -58,6 +59,7 @@ const saveCharacter = async (characterData, discordUserId, supabase) => {
       throw characterError;
     }
 
+    // Add starting equipment based on background
     if (characterData.background && savedCharacter.id) {
       try {
         const startingEquipment = getStartingEquipment(
@@ -78,6 +80,7 @@ const saveCharacter = async (characterData, discordUserId, supabase) => {
         }
       } catch (equipmentError) {
         console.error("Failed to add starting equipment:", equipmentError);
+        // Don't fail character creation if equipment fails
       }
     }
 
@@ -88,13 +91,10 @@ const saveCharacter = async (characterData, discordUserId, supabase) => {
   }
 };
 
-const updateCharacter = async (
-  characterId,
-  characterData,
-  discordUserId,
-  supabase
-) => {
+// Fixed: Remove supabase parameter since we use the one from top of file
+const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
+    // Get current character to check if background changed
     const { data: currentCharacter } = await supabase
       .from("characters")
       .select("background")
@@ -102,6 +102,7 @@ const updateCharacter = async (
       .eq("discord_user_id", discordUserId)
       .single();
 
+    // Update the character
     const { data: updatedCharacter, error: updateError } = await supabase
       .from("characters")
       .update({
@@ -133,40 +134,40 @@ const updateCharacter = async (
       throw updateError;
     }
 
+    // Check if background changed and add new starting equipment
     const backgroundChanged =
       currentCharacter?.background !== characterData.background;
 
     if (backgroundChanged && characterData.background) {
       try {
-        const alreadyHasEquipment = await hasStartingEquipment(
-          discordUserId,
-          characterId,
-          supabase
+        const startingEquipment = getStartingEquipment(
+          characterData.background
         );
 
-        if (!alreadyHasEquipment) {
-          const startingEquipment = getStartingEquipment(
-            characterData.background
+        if (startingEquipment.length > 0) {
+          await addStartingEquipment(
+            discordUserId,
+            characterId,
+            startingEquipment,
+            supabase
           );
 
-          if (startingEquipment.length > 0) {
-            await addStartingEquipment(
-              discordUserId,
-              characterId,
-              startingEquipment,
-              supabase
-            );
-
-            console.log(
-              `Added ${startingEquipment.length} starting equipment items for new background: ${characterData.background}`
-            );
-          }
+          console.log(
+            `Added ${
+              startingEquipment.length
+            } starting equipment items for new background: ${
+              characterData.background
+            } (background changed from ${
+              currentCharacter?.background || "none"
+            })`
+          );
         }
       } catch (equipmentError) {
         console.error(
           "Failed to add starting equipment on background change:",
           equipmentError
         );
+        // Don't fail the character update if equipment fails
       }
     }
 

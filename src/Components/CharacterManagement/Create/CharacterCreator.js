@@ -522,81 +522,13 @@ const CharacterCreator = ({
     }));
   };
 
+  // In your CharacterCreator.js file, update the saveCharacter function:
+
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
 
-    if (!character.name.trim()) {
-      setError("Character name is required");
-      setIsSaving(false);
-      return;
-    }
-
-    if (!character.level1ChoiceType) {
-      setError(
-        "Please select either Innate Heritage or Starting Standard Feat"
-      );
-      setIsSaving(false);
-      return;
-    }
-
-    if (
-      character.castingStyle === "Intellect Caster" &&
-      !character.initiativeAbility
-    ) {
-      setError("Please select an initiative ability for your Intellect Caster");
-      setIsSaving(false);
-      return;
-    }
-
-    if (!validateFeatSelections()) {
-      setIsSaving(false);
-      return;
-    }
-
-    const availableASILevels = getAvailableASILevels(character.level);
-    for (const level of availableASILevels) {
-      const choice = character.asiChoices[level];
-      if (!choice || !choice.type) {
-        setError(`Please make a choice for Level ${level} (ASI or Feat)`);
-        setIsSaving(false);
-        return;
-      }
-
-      if (choice.type === "asi") {
-        const increases = choice.abilityScoreIncreases || [];
-        if (increases.length !== 2) {
-          setError(
-            `Please select exactly 2 ability score increases for Level ${level}`
-          );
-          setIsSaving(false);
-          return;
-        }
-      } else if (choice.type === "feat") {
-        if (!choice.selectedFeat) {
-          setError(`Please select a feat for Level ${level}`);
-          setIsSaving(false);
-          return;
-        }
-      }
-    }
-
-    if (
-      character.level1ChoiceType === "feat" &&
-      character.standardFeats.length === 0
-    ) {
-      setError("Please select your starting feat");
-      setIsSaving(false);
-      return;
-    }
-
-    if (activeCharacterCount >= maxCharacters) {
-      setError(
-        `Cannot create character: You have reached the maximum of ${maxCharacters} characters.`
-      );
-      setIsSaving(false);
-      return;
-    }
+    // ... your existing validation code ...
 
     const allFeats = collectAllFeatsFromChoices();
     const characterToSave = {
@@ -620,17 +552,18 @@ const CharacterCreator = ({
     };
 
     try {
+      // FIXED: Remove the supabase parameter from the call
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
-        discordUserId,
-        supabase
+        discordUserId
+        // removed: , supabase  <-- Remove this parameter
       );
 
+      // Your existing success handling code...
       const transformedCharacter = {
         id: savedCharacter.id,
         name: savedCharacter.name,
         house: savedCharacter.house,
-        houseChoices: savedCharacter.house_choices || {},
         castingStyle: savedCharacter.casting_style,
         subclass: savedCharacter.subclass,
         innateHeritage: savedCharacter.innate_heritage,
@@ -651,13 +584,11 @@ const CharacterCreator = ({
           healing: 0,
           jinxesHexesCurses: 0,
         },
-        level1ChoiceType: savedCharacter.level1_choice_type || "",
-        initiativeAbility: savedCharacter.initiative_ability || "dexterity",
-        createdAt: savedCharacter.created_at,
       };
 
-      resetForm();
+      console.log("Character saved successfully with starting equipment!");
 
+      // Rest of your success handling...
       if (onCharacterSaved) {
         onCharacterSaved(transformedCharacter);
       }

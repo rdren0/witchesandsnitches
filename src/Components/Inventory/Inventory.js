@@ -9,6 +9,7 @@ import {
   Check,
   Loader,
   Star,
+  RefreshCw,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getInventoryStyles } from "../../styles/masterStyles";
@@ -26,6 +27,8 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(Date.now()); // NEW: Track last refresh
+  const [isRefreshing, setIsRefreshing] = useState(false); // NEW: Track manual refresh state
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,12 +53,17 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     "Weapons",
   ];
 
+  // UPDATED: Enhanced fetchItems with better logging and refresh tracking
   const fetchItems = useCallback(async () => {
     if (!supabase || !selectedCharacter?.id) return;
 
     try {
       setIsLoading(true);
       setError(null);
+
+      console.log(
+        `Fetching inventory for character ${selectedCharacter.id} (${selectedCharacter.name})...`
+      );
 
       const { data, error: fetchError } = await supabase
         .from("inventory_items")
@@ -65,18 +73,74 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
       if (fetchError) throw fetchError;
 
+      console.log(
+        `Loaded ${data?.length || 0} inventory items for ${
+          selectedCharacter.name
+        }`
+      );
       setItems(data || []);
+      setLastRefresh(Date.now());
     } catch (err) {
       console.error("Error fetching inventory items:", err);
       setError("Failed to load inventory items. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [supabase, selectedCharacter?.id]);
+  }, [supabase, selectedCharacter?.id, selectedCharacter?.name]);
 
+  // NEW: Manual refresh function
+  const handleManualRefresh = useCallback(async () => {
+    console.log("Manual inventory refresh triggered by user");
+    setIsRefreshing(true);
+    await fetchItems();
+  }, [fetchItems]);
+
+  // UPDATED: Original useEffect
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // NEW: Auto-refresh when tab becomes visible (user might have edited character in another tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && selectedCharacter?.id) {
+        console.log("Tab became visible, checking for new inventory items...");
+        fetchItems();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [fetchItems, selectedCharacter?.id]);
+
+  // NEW: Periodic refresh every 30 seconds when tab is active
+  useEffect(() => {
+    if (!selectedCharacter?.id) return;
+
+    const interval = setInterval(() => {
+      if (
+        !document.hidden &&
+        !isLoading &&
+        !isSaving &&
+        !editingId &&
+        !showAddForm
+      ) {
+        console.log("Auto-refreshing inventory (background check)...");
+        fetchItems();
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [
+    fetchItems,
+    selectedCharacter?.id,
+    isLoading,
+    isSaving,
+    editingId,
+    showAddForm,
+  ]);
 
   const addItem = useCallback(async () => {
     if (!formData.name.trim() || !supabase || !selectedCharacter?.id) return;
@@ -287,6 +351,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         />
 
         <div style={styles.inventorySection}>
+          {/* UPDATED: Header with refresh indicator */}
           <div style={styles.header}>
             <h1 style={styles.title}>
               <Package size={28} color={theme.primary} />
@@ -294,10 +359,28 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </h1>
             <p style={styles.subtitle}>
               Manage your character's items, equipment, and possessions
+              {lastRefresh && (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: theme.textSecondary,
+                    marginLeft: "8px",
+                    display: "block",
+                    marginTop: "4px",
+                  }}
+                >
+                  Last updated: {new Date(lastRefresh).toLocaleTimeString()}
+                  {isRefreshing && (
+                    <span style={{ color: theme.primary, marginLeft: "8px" }}>
+                      • Refreshing...
+                    </span>
+                  )}
+                </span>
+              )}
             </p>
           </div>
 
-          {isLoading && (
+          {isLoading && !isRefreshing && (
             <div style={styles.loadingMessage}>
               <Loader size={16} />
               Loading inventory items...
@@ -347,13 +430,41 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           {!isLoading && (
             <div style={styles.controls}>
               {!showAddForm && !editingId && (
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  style={styles.addButton}
-                >
-                  <Plus size={18} />
-                  Add New Item
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    style={styles.addButton}
+                  >
+                    <Plus size={18} />
+                    Add New Item
+                  </button>
+
+                  {/* NEW: Check for new items button */}
+                  <button
+                    onClick={handleManualRefresh}
+                    disabled={isRefreshing}
+                    style={{
+                      ...styles.addButton,
+                      backgroundColor: theme.success || "#10B981",
+                      marginLeft: "8px",
+                      opacity: isRefreshing ? 0.7 : 1,
+                      cursor: isRefreshing ? "not-allowed" : "pointer",
+                    }}
+                    title="Check for new items from background changes or other updates"
+                  >
+                    {isRefreshing ? (
+                      <>
+                        <Loader size={18} />
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={18} />
+                        Check for New Items
+                      </>
+                    )}
+                  </button>
+                </>
               )}
 
               {items.length > 0 && (
@@ -677,6 +788,16 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                   />
                   <p style={styles.emptyText}>
                     Your inventory is empty. Add some items to get started!
+                  </p>
+                  <p
+                    style={{
+                      ...styles.emptyText,
+                      fontSize: "14px",
+                      marginTop: "8px",
+                    }}
+                  >
+                    💡 Items from your character's background will appear here
+                    automatically when you create or edit characters.
                   </p>
                 </div>
               )}
