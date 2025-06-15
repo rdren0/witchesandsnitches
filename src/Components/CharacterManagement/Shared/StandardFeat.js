@@ -2,7 +2,7 @@ import { standardFeats } from "../../data";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { allSkills } from "../../CharacterSheet/utils";
-
+import { useMemo } from "react";
 export const StandardFeat = ({
   character,
   setCharacter,
@@ -47,8 +47,8 @@ export const StandardFeat = ({
     });
   };
 
-  const getFilteredFeats = () => {
-    if (character.standardFeats.length === maxFeats) {
+  const filteredFeats = useMemo(() => {
+    if (character.standardFeats.length >= maxFeats) {
       return standardFeats.filter((feat) =>
         character.standardFeats.includes(feat.name)
       );
@@ -111,9 +111,7 @@ export const StandardFeat = ({
 
       return basicMatch || descriptionMatch || skillMatch || skillTermMatch;
     });
-  };
-
-  const filteredFeats = getFilteredFeats();
+  }, [character.standardFeats, maxFeats, featFilter]); // Dependencies for memoization
 
   const getHelpText = () => {
     if (characterLevel === 1) {
@@ -285,10 +283,8 @@ export const StandardFeat = ({
       <div style={styles.helpText}>
         Note: You can select {maxFeats} feat{maxFeats > 1 ? "s" : ""} total
         {isLevel1Choice
-          ? ` for a Level ${characterLevel} character`
-          : " at Level 1"}
-        . Search supports skill names like "deception", "athletics",
-        "perception", etc.
+          ? " for a Level 1 character."
+          : ` for your character level (${characterLevel}). Search supports skill names like "deception", "athletics", "perception", etc. Feats already selected at other levels are not available here.`}
       </div>
     </div>
   );

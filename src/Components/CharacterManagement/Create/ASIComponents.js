@@ -3,6 +3,26 @@ import { standardFeats } from "../../data";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
 
+// Utility function to collect all selected feats from all sources
+export const getAllSelectedFeats = (character) => {
+  const allSelectedFeats = [];
+
+  // Get feats from level 1 choice
+  if (character.level1ChoiceType === "feat" && character.standardFeats) {
+    allSelectedFeats.push(...character.standardFeats);
+  }
+
+  // Get feats from ASI choices
+  const asiChoices = character.asiChoices || {};
+  Object.values(asiChoices).forEach((choice) => {
+    if (choice.type === "feat" && choice.selectedFeat) {
+      allSelectedFeats.push(choice.selectedFeat);
+    }
+  });
+
+  return [...new Set(allSelectedFeats)]; // Remove any duplicates
+};
+
 // Component for handling ability score increments in ASI choices
 export const AbilityScoreIncrements = ({
   level,
@@ -195,9 +215,28 @@ export const ASIFeatSelector = ({
 }) => {
   const safeStandardFeats = standardFeats || [];
 
-  const availableFeats = safeStandardFeats.filter((feat) =>
-    checkFeatPrerequisites(feat, character)
+  // Get all currently selected feats to filter out duplicates
+  const allSelectedFeats = getAllSelectedFeats(character);
+
+  // Remove the currently selected feat for this level from the exclusion list
+  // so it can remain selected
+  const excludedFeats = allSelectedFeats.filter(
+    (featName) => featName !== choice.selectedFeat
   );
+
+  const availableFeats = safeStandardFeats.filter((feat) => {
+    // Check prerequisites
+    if (!checkFeatPrerequisites(feat, character)) {
+      return false;
+    }
+
+    // Check if feat is already selected elsewhere
+    if (excludedFeats.includes(feat.name)) {
+      return false;
+    }
+
+    return true;
+  });
 
   const filteredFeats = availableFeats?.filter((feat) => {
     const searchTerm = featFilter.toLowerCase();
@@ -210,6 +249,10 @@ export const ASIFeatSelector = ({
         : feat.description?.toLowerCase?.().includes(searchTerm))
     );
   });
+
+  // Check if currently selected feat is no longer available (already selected elsewhere)
+  const currentlySelectedUnavailable =
+    choice.selectedFeat && excludedFeats.includes(choice.selectedFeat);
 
   return (
     <div>
@@ -244,92 +287,137 @@ export const ASIFeatSelector = ({
         )}
         {featFilter.trim() && (
           <div style={styles.featFilterResults}>
-            Showing {filteredFeats.length} of {availableFeats.length} feats
+            Showing {filteredFeats.length} of {availableFeats.length} available
+            feats
           </div>
         )}
       </div>
 
+      {/* Duplicate Warning */}
+      {currentlySelectedUnavailable && (
+        <div
+          style={{
+            ...styles.errorContainer,
+            backgroundColor: theme.warning + "20",
+            borderColor: theme.warning,
+            marginBottom: "12px",
+          }}
+        >
+          ⚠️ Currently selected feat "{choice.selectedFeat}" is already chosen
+          elsewhere. Please select a different feat.
+        </div>
+      )}
+
+      {/* Exclusion Info */}
+      {excludedFeats.length > 0 && (
+        <div
+          style={{
+            fontSize: "12px",
+            color: theme.textSecondary,
+            backgroundColor: theme.surface,
+            padding: "8px 12px",
+            borderRadius: "6px",
+            marginBottom: "12px",
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <strong>Note:</strong> {excludedFeats.length} feat
+          {excludedFeats.length > 1 ? "s" : ""} already selected elsewhere:{" "}
+          {excludedFeats.join(", ")}
+        </div>
+      )}
+
       {/* Feat List */}
       <div style={styles.featContainer}>
-        {filteredFeats.map((feat) => {
-          const isSelected = choice.selectedFeat === feat.name;
-          const isExpanded = expandedFeats.has(feat.name);
+        {filteredFeats.length === 0 ? (
+          <div style={styles.noFeatsMessage}>
+            {featFilter.trim()
+              ? `No available feats match "${featFilter}"`
+              : "No feats available (all eligible feats are already selected)"}
+          </div>
+        ) : (
+          filteredFeats.map((feat) => {
+            const isSelected = choice.selectedFeat === feat.name;
+            const isExpanded = expandedFeats.has(feat.name);
 
-          return (
-            <div
-              key={feat.name}
-              style={isSelected ? styles.featItemSelected : styles.featItem}
-            >
-              <div style={styles.featHeader}>
-                <label style={styles.featLabel}>
-                  <input
-                    type="radio"
-                    name={`asiLevel${level}Feat`}
-                    value={feat.name}
-                    checked={isSelected}
-                    onChange={(e) => handleASIFeatChange(level, e.target.value)}
-                    style={styles.featCheckbox}
-                  />
-                  <div>
-                    <div
-                      style={
-                        isSelected ? styles.featNameSelected : styles.featName
+            return (
+              <div
+                key={feat.name}
+                style={isSelected ? styles.featItemSelected : styles.featItem}
+              >
+                <div style={styles.featHeader}>
+                  <label style={styles.featLabel}>
+                    <input
+                      type="radio"
+                      name={`asiLevel${level}Feat`}
+                      value={feat.name}
+                      checked={isSelected}
+                      onChange={(e) =>
+                        handleASIFeatChange(level, e.target.value)
                       }
-                    >
-                      {feat.name}
-                    </div>
-                    {feat.preview && (
+                      style={styles.featCheckbox}
+                    />
+                    <div>
                       <div
                         style={
-                          isSelected
-                            ? styles.featPreviewSelected
-                            : styles.featPreview
+                          isSelected ? styles.featNameSelected : styles.featName
                         }
                       >
-                        {feat.preview}
+                        {feat.name}
                       </div>
-                    )}
-                  </div>
-                </label>
+                      {feat.preview && (
+                        <div
+                          style={
+                            isSelected
+                              ? styles.featPreviewSelected
+                              : styles.featPreview
+                          }
+                        >
+                          {feat.preview}
+                        </div>
+                      )}
+                    </div>
+                  </label>
 
-                <button
-                  onClick={() => {
-                    const newExpanded = new Set(expandedFeats);
-                    if (isExpanded) {
-                      newExpanded.delete(feat.name);
-                    } else {
-                      newExpanded.add(feat.name);
-                    }
-                    setExpandedFeats(newExpanded);
-                  }}
-                  style={styles.featExpandButton}
-                  type="button"
-                  title={isExpanded ? "Collapse" : "Expand details"}
-                >
-                  {isExpanded ? "−" : "+"}
-                </button>
-              </div>
-
-              {isExpanded && (
-                <div
-                  style={
-                    isSelected
-                      ? styles.featDescriptionSelected
-                      : styles.featDescription
-                  }
-                >
-                  {feat.description || "No description available."}
+                  <button
+                    onClick={() => {
+                      const newExpanded = new Set(expandedFeats);
+                      if (isExpanded) {
+                        newExpanded.delete(feat.name);
+                      } else {
+                        newExpanded.add(feat.name);
+                      }
+                      setExpandedFeats(newExpanded);
+                    }}
+                    style={styles.featExpandButton}
+                    type="button"
+                    title={isExpanded ? "Collapse" : "Expand details"}
+                  >
+                    {isExpanded ? "−" : "+"}
+                  </button>
                 </div>
-              )}
-            </div>
-          );
-        })}
+
+                {isExpanded && (
+                  <div
+                    style={
+                      isSelected
+                        ? styles.featDescriptionSelected
+                        : styles.featDescription
+                    }
+                  >
+                    {feat.description || "No description available."}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
 
       <div style={styles.helpText}>
         Level {level} ASI/Feat Choice: Select one feat that meets your
-        character's prerequisites. This choice represents your character's
-        growth and training at this level.
+        character's prerequisites and hasn't been selected elsewhere. This
+        choice represents your character's growth and training at this level.
       </div>
     </div>
   );
@@ -340,11 +428,16 @@ export const FeatRequirementsInfo = ({ character }) => {
   const { theme } = useTheme();
   const safeStandardFeats = standardFeats || [];
 
+  // Get all currently selected feats
+  const allSelectedFeats = getAllSelectedFeats(character);
+
   const availableCount = safeStandardFeats.filter((feat) =>
     checkFeatPrerequisites(feat, character)
   ).length;
+
   const totalCount = safeStandardFeats.length;
   const unavailableCount = totalCount - availableCount;
+  const alreadySelectedCount = allSelectedFeats.length;
 
   return (
     <div
@@ -368,13 +461,21 @@ export const FeatRequirementsInfo = ({ character }) => {
           Feat Availability
         </span>
         <span style={{ fontSize: "14px", color: theme.textSecondary }}>
-          {availableCount}/{totalCount} available
+          {availableCount - alreadySelectedCount}/{totalCount} available
         </span>
       </div>
       {unavailableCount > 0 && (
         <div style={{ fontSize: "12px", color: theme.textSecondary }}>
           {unavailableCount} feats require specific prerequisites (heritage,
           casting styles, etc.)
+        </div>
+      )}
+      {alreadySelectedCount > 0 && (
+        <div
+          style={{ fontSize: "12px", color: theme.warning, marginTop: "4px" }}
+        >
+          {alreadySelectedCount} feat{alreadySelectedCount > 1 ? "s" : ""}{" "}
+          already selected: {allSelectedFeats.join(", ")}
         </div>
       )}
       {character.innateHeritage && (

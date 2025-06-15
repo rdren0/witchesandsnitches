@@ -52,6 +52,7 @@ const CharacterList = ({
         discordUserId
       );
 
+      console.log({ charactersData });
       const transformedCharacters = charactersData.map((char) => ({
         abilityScores: char.ability_scores,
         asiChoices: char.asi_choices || {},
@@ -61,6 +62,7 @@ const CharacterList = ({
         gameSession: char.game_session,
         hitPoints: char.hit_points,
         house: char.house,
+        houseChoices: char.house_choices || {},
         id: char.id,
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
@@ -80,7 +82,7 @@ const CharacterList = ({
           jinxesHexesCurses: 0,
         },
       }));
-
+      console.log({ transformedCharacters });
       setSavedCharacters(transformedCharacters);
     } catch (err) {
       setError("Failed to load characters: " + err.message);
@@ -264,7 +266,7 @@ const CharacterList = ({
   };
 
   const filteredCharacters = getSortedAndFilteredCharacters();
-
+  console.log(editingCharacter);
   if (editingCharacter) {
     return (
       <CharacterEditor

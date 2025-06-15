@@ -1,4 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  getStartingEquipment,
+  addStartingEquipment,
+  hasStartingEquipment,
+} from "./inventoryService";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -20,58 +25,156 @@ const getCharacters = async (discordUserId) => {
   return data || [];
 };
 
-const saveCharacter = async (characterData, discordUserId) => {
-  if (
-    characterData.subclass_choices &&
-    typeof characterData.subclass_choices !== "object"
-  ) {
-    throw new Error("Invalid subclass choices format - must be an object");
-  }
-
-  const { data, error } = await supabase
-    .from("characters")
-    .insert([
-      {
-        ...characterData,
+const saveCharacter = async (characterData, discordUserId, supabase) => {
+  try {
+    const { data: savedCharacter, error: characterError } = await supabase
+      .from("characters")
+      .insert({
         discord_user_id: discordUserId,
-        active: true,
-        created_at: new Date().toISOString(),
-        subclass_choices: characterData.subclass_choices || {},
-      },
-    ])
-    .select();
+        name: characterData.name,
+        house: characterData.house,
+        casting_style: characterData.casting_style,
+        initiative_ability: characterData.initiative_ability,
+        subclass: characterData.subclass,
+        innate_heritage: characterData.innate_heritage,
+        background: characterData.background,
+        game_session: characterData.game_session,
+        standard_feats: characterData.standard_feats,
+        skill_proficiencies: characterData.skill_proficiencies,
+        ability_scores: characterData.ability_scores,
+        hit_points: characterData.hit_points,
+        level: characterData.level,
+        wand_type: characterData.wand_type,
+        magic_modifiers: characterData.magic_modifiers,
+        level1_choice_type: characterData.level1_choice_type,
+        asi_choices: characterData.asi_choices,
+        current_hit_points: characterData.hit_points,
+        current_hit_dice: characterData.level,
+      })
+      .select()
+      .single();
 
-  if (error) {
-    throw new Error(`Failed to save character: ${error.message}`);
+    if (characterError) {
+      throw characterError;
+    }
+
+    if (characterData.background && savedCharacter.id) {
+      try {
+        const startingEquipment = getStartingEquipment(
+          characterData.background
+        );
+
+        if (startingEquipment.length > 0) {
+          await addStartingEquipment(
+            discordUserId,
+            savedCharacter.id,
+            startingEquipment,
+            supabase
+          );
+
+          console.log(
+            `Added ${startingEquipment.length} starting equipment items for ${characterData.background} background`
+          );
+        }
+      } catch (equipmentError) {
+        console.error("Failed to add starting equipment:", equipmentError);
+      }
+    }
+
+    return savedCharacter;
+  } catch (error) {
+    console.error("Error in saveCharacter:", error);
+    throw error;
   }
-
-  return data[0];
 };
 
-const updateCharacter = async (characterId, characterData, discordUserId) => {
-  if (
-    characterData.subclass_choices &&
-    typeof characterData.subclass_choices !== "object"
-  ) {
-    throw new Error("Invalid subclass choices format - must be an object");
+const updateCharacter = async (
+  characterId,
+  characterData,
+  discordUserId,
+  supabase
+) => {
+  try {
+    const { data: currentCharacter } = await supabase
+      .from("characters")
+      .select("background")
+      .eq("id", characterId)
+      .eq("discord_user_id", discordUserId)
+      .single();
+
+    const { data: updatedCharacter, error: updateError } = await supabase
+      .from("characters")
+      .update({
+        name: characterData.name,
+        house: characterData.house,
+        casting_style: characterData.casting_style,
+        initiative_ability: characterData.initiative_ability,
+        subclass: characterData.subclass,
+        innate_heritage: characterData.innate_heritage,
+        background: characterData.background,
+        game_session: characterData.game_session,
+        standard_feats: characterData.standard_feats,
+        skill_proficiencies: characterData.skill_proficiencies,
+        ability_scores: characterData.ability_scores,
+        hit_points: characterData.hit_points,
+        asi_choices: characterData.asi_choices,
+        level: characterData.level,
+        wand_type: characterData.wand_type,
+        magic_modifiers: characterData.magic_modifiers,
+        level1_choice_type: characterData.level1_choice_type,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", characterId)
+      .eq("discord_user_id", discordUserId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    const backgroundChanged =
+      currentCharacter?.background !== characterData.background;
+
+    if (backgroundChanged && characterData.background) {
+      try {
+        const alreadyHasEquipment = await hasStartingEquipment(
+          discordUserId,
+          characterId,
+          supabase
+        );
+
+        if (!alreadyHasEquipment) {
+          const startingEquipment = getStartingEquipment(
+            characterData.background
+          );
+
+          if (startingEquipment.length > 0) {
+            await addStartingEquipment(
+              discordUserId,
+              characterId,
+              startingEquipment,
+              supabase
+            );
+
+            console.log(
+              `Added ${startingEquipment.length} starting equipment items for new background: ${characterData.background}`
+            );
+          }
+        }
+      } catch (equipmentError) {
+        console.error(
+          "Failed to add starting equipment on background change:",
+          equipmentError
+        );
+      }
+    }
+
+    return updatedCharacter;
+  } catch (error) {
+    console.error("Error in updateCharacter:", error);
+    throw error;
   }
-
-  const { data, error } = await supabase
-    .from("characters")
-    .update({
-      ...characterData,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", characterId)
-    .eq("discord_user_id", discordUserId)
-    .eq("active", true)
-    .select();
-
-  if (error) {
-    throw new Error(`Failed to update character: ${error.message}`);
-  }
-
-  return data[0];
 };
 
 const updateCharacterSubclass = async (

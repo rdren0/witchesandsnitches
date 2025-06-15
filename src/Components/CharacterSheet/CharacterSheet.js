@@ -226,6 +226,7 @@ const CharacterSheet = ({
           hitDie: getHitDie(data.casting_style),
           hitPoints: data.hit_points || 1,
           house: data.house,
+          houseChoices: data.house_choices || {},
           imageUrl: data.image_url || "",
           initiativeAbility: data.initiative_ability,
           initiativeModifier: getInitiativeModifier(
@@ -911,17 +912,6 @@ const CharacterSheet = ({
               marginBottom: "20px",
             }}
           >
-            <h3
-              style={{
-                margin: "0 0 16px 0",
-                fontSize: "18px",
-                fontWeight: "600",
-                color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                textAlign: "center",
-              }}
-            >
-              Rest Actions
-            </h3>
             <div
               style={{
                 display: "flex",
@@ -968,7 +958,6 @@ const CharacterSheet = ({
                 <Coffee size={16} />
                 Short Rest
               </button>
-
               <button
                 style={{
                   padding: "12px 24px",

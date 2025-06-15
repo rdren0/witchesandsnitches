@@ -1392,28 +1392,6 @@ export const standardFeats = [
     },
   },
   {
-    name: "Superior Wandless",
-    preview: "Cast all locked-in spells without a wand.",
-    description: [
-      "Prerequisites: Cantrip Master or Wandless Magic.",
-      "Can cast any locked-in spells wandlessly, not just cantrips.",
-    ],
-    modifiers: {
-      abilityIncreases: [],
-      skillProficiencies: [],
-      expertise: [],
-      other: {
-        superiorWandlessCasting: true,
-      },
-    },
-    prerequisites: {
-      anyOf: [
-        { type: "feat", value: "Cantrip Master" },
-        { type: "feat", value: "Wandless Magic" },
-      ],
-    },
-  },
-  {
     name: "Telepathic",
     preview: "Telepathic communication abilities. +1 Int/Wis/Cha.",
     description: [

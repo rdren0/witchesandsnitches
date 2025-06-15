@@ -15,6 +15,8 @@ import {
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
 import { standardFeats, hpData } from "../../data";
+import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
+import { getAllSelectedFeats } from "../Create/ASIComponents";
 
 const LevelUpModal = ({
   character,
@@ -27,7 +29,7 @@ const LevelUpModal = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedFeat, setExpandedFeat] = useState(null);
-  const [featFilter, setFeatFilter] = useState(""); // Add feat filter state
+  const [featFilter, setFeatFilter] = useState("");
 
   const [levelUpData, setLevelUpData] = useState({
     hitPointIncrease: 0,
@@ -40,14 +42,14 @@ const LevelUpModal = ({
     featChoices: {},
   });
 
-  // Filter feats based on search term
+  // Filter feats based on search term and exclude already selected feats
   const getFilteredFeats = () => {
     if (!featFilter.trim()) {
-      return standardFeats;
+      return getAvailableFeats();
     }
 
     const searchTerm = featFilter.toLowerCase();
-    return standardFeats.filter((feat) => {
+    return getAvailableFeats().filter((feat) => {
       // Search in name
       if (feat.name.toLowerCase().includes(searchTerm)) {
         return true;
@@ -67,6 +69,32 @@ const LevelUpModal = ({
       }
 
       return false;
+    });
+  };
+
+  // Get available feats excluding already selected ones
+  const getAvailableFeats = () => {
+    // Get all currently selected feats
+    const allSelectedFeats = getAllSelectedFeats(character);
+
+    // Filter out feats that are already selected elsewhere
+    // (but allow the currently selected feat in this level up to remain available)
+    const excludedFeats = allSelectedFeats.filter(
+      (featName) => !levelUpData.selectedFeats.includes(featName)
+    );
+
+    return standardFeats.filter((feat) => {
+      // Check prerequisites
+      if (!checkFeatPrerequisites(feat, character)) {
+        return false;
+      }
+
+      // Check if feat is already selected elsewhere
+      if (excludedFeats.includes(feat.name)) {
+        return false;
+      }
+
+      return true;
     });
   };
 
@@ -576,6 +604,12 @@ const LevelUpModal = ({
     }
   };
 
+  // Get info about excluded feats for display
+  const allSelectedFeats = getAllSelectedFeats(character);
+  const excludedFeats = allSelectedFeats.filter(
+    (featName) => !levelUpData.selectedFeats.includes(featName)
+  );
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -976,6 +1010,25 @@ const LevelUpModal = ({
                     Select One Feat
                   </h4>
 
+                  {/* Exclusion Info */}
+                  {excludedFeats.length > 0 && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        backgroundColor: "#f9fafb",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        marginBottom: "12px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <strong>Note:</strong> {excludedFeats.length} feat
+                      {excludedFeats.length > 1 ? "s" : ""} already selected
+                      elsewhere: {excludedFeats.join(", ")}
+                    </div>
+                  )}
+
                   {/* Feat Filter Input */}
                   <div style={{ marginBottom: "16px" }}>
                     <div
@@ -1056,7 +1109,7 @@ const LevelUpModal = ({
                       {featFilter ? (
                         <>
                           Showing {getFilteredFeats().length} of{" "}
-                          {standardFeats.length} feats
+                          {getAvailableFeats().length} available feats
                           {getFilteredFeats().length === 0 && (
                             <span
                               style={{ color: "#ef4444", marginLeft: "8px" }}
@@ -1066,7 +1119,9 @@ const LevelUpModal = ({
                           )}
                         </>
                       ) : (
-                        `${standardFeats.length} feats available`
+                        `${getAvailableFeats().length} feats available (${
+                          standardFeats.length - excludedFeats.length
+                        } total after exclusions)`
                       )}
                     </div>
                   </div>

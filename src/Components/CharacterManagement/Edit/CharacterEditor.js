@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import {
   castingStyles,
-  housesBySchool,
   skillsByCastingStyle,
   hpData,
   standardFeats as importedStandardFeats,
@@ -28,6 +27,13 @@ import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
 import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
 import StepIndicator from "../Shared/StepIndicator";
+import {
+  AbilityScoreIncrements,
+  ASIFeatSelector,
+  FeatRequirementsInfo,
+  getAllSelectedFeats,
+} from "../Create/ASIComponents";
+import EnhancedHouseSelector from "../Create/EnhancedHouseSelector";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -36,387 +42,6 @@ if (!importedStandardFeats) {
     "Warning: standardFeats is undefined from data import. Using empty array as fallback."
   );
 }
-
-const AbilityScoreIncrements = ({
-  level,
-  choice,
-  character,
-  handleASIAbilityChange,
-  theme,
-  styles,
-}) => {
-  const abilities = [
-    "strength",
-    "dexterity",
-    "constitution",
-    "intelligence",
-    "wisdom",
-    "charisma",
-  ];
-  const [localIncreases, setLocalIncreases] = useState(
-    choice.abilityScoreIncreases || []
-  );
-
-  const getTotalIncreases = () => {
-    return localIncreases.reduce((sum, inc) => sum + (inc.increase || 1), 0);
-  };
-
-  const getAbilityIncrease = (ability) => {
-    const existing = localIncreases.find((inc) => inc.ability === ability);
-    return existing ? existing.increase || 1 : 0;
-  };
-
-  const getCurrentAbilityScore = (ability) => {
-    return character.abilityScores?.[ability] || 10;
-  };
-
-  const canIncreaseAbility = (ability) => {
-    const currentIncrease = getAbilityIncrease(ability);
-    const totalIncreases = getTotalIncreases();
-    return currentIncrease < 1 && totalIncreases < 2;
-  };
-
-  const canDecreaseAbility = (ability) => {
-    return getAbilityIncrease(ability) > 0;
-  };
-
-  const updateAbilityIncrease = (ability, newIncrease) => {
-    const newIncreases = localIncreases.filter(
-      (inc) => inc.ability !== ability
-    );
-    if (newIncrease > 0) {
-      newIncreases.push({ ability, increase: newIncrease });
-    }
-    setLocalIncreases(newIncreases);
-    handleASIAbilityChange(level, newIncreases);
-  };
-
-  return (
-    <div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "12px",
-          marginBottom: "12px",
-        }}
-      >
-        {abilities.map((ability) => {
-          const currentScore = getCurrentAbilityScore(ability);
-          const increase = getAbilityIncrease(ability);
-          const newScore = currentScore + increase;
-
-          return (
-            <div
-              key={ability}
-              style={{
-                background: increase > 0 ? theme.primaryLight : theme.surface,
-                border: `1px solid ${
-                  increase > 0 ? theme.primary : theme.border
-                }`,
-                borderRadius: "6px",
-                padding: "8px",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  color: theme.text,
-                  textTransform: "capitalize",
-                  marginBottom: "4px",
-                }}
-              >
-                {ability}
-              </div>
-              <div
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  color: theme.text,
-                  marginBottom: "4px",
-                }}
-              >
-                {currentScore} → {newScore}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <button
-                  onClick={() => updateAbilityIncrease(ability, increase - 1)}
-                  disabled={!canDecreaseAbility(ability)}
-                  style={{
-                    ...styles.button,
-                    width: "24px",
-                    height: "24px",
-                    fontSize: "16px",
-                    padding: "0",
-                    opacity: canDecreaseAbility(ability) ? 1 : 0.5,
-                  }}
-                  type="button"
-                >
-                  −
-                </button>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    color: theme.text,
-                    minWidth: "20px",
-                  }}
-                >
-                  +{increase}
-                </span>
-                <button
-                  onClick={() => updateAbilityIncrease(ability, increase + 1)}
-                  disabled={!canIncreaseAbility(ability)}
-                  style={{
-                    ...styles.button,
-                    width: "24px",
-                    height: "24px",
-                    fontSize: "16px",
-                    padding: "0",
-                    opacity: canIncreaseAbility(ability) ? 1 : 0.5,
-                  }}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          fontSize: "12px",
-          color: theme.textSecondary,
-          textAlign: "center",
-        }}
-      >
-        Total increases used: {getTotalIncreases()}/2
-        {getTotalIncreases() < 2 && (
-          <span style={{ color: theme.warning }}>
-            {" "}
-            (Select {2 - getTotalIncreases()} more)
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const ASIFeatSelector = ({
-  level,
-  character,
-  choice,
-  handleASIFeatChange,
-  expandedFeats,
-  setExpandedFeats,
-  featFilter,
-  setFeatFilter,
-  theme,
-  styles,
-}) => {
-  const safeStandardFeats = standardFeats || [];
-
-  const availableFeats = safeStandardFeats.filter((feat) =>
-    checkFeatPrerequisites(feat, character)
-  );
-
-  const filteredFeats = availableFeats.filter(
-    (feat) =>
-      feat.name.toLowerCase().includes(featFilter.toLowerCase()) ||
-      (feat.preview &&
-        feat.preview.toLowerCase().includes(featFilter.toLowerCase())) ||
-      (feat.description &&
-        feat.description.toLowerCase().includes(featFilter.toLowerCase()))
-  );
-
-  return (
-    <div>
-      {/* Search Filter */}
-      <div style={styles.featFilterContainer}>
-        <input
-          type="text"
-          placeholder="Search feats by name, preview, or description..."
-          value={featFilter}
-          onChange={(e) => setFeatFilter(e.target.value)}
-          style={styles.featFilterInput}
-          onFocus={(e) => {
-            e.target.style.borderColor = "#FBBF24";
-            e.target.style.boxShadow =
-              "inset 0 2px 6px rgba(245,158,11,0.2), 0 0 0 3px rgba(251,191,36,0.3)";
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = "#F59E0B";
-            e.target.style.boxShadow =
-              "inset 0 2px 6px rgba(245,158,11,0.2), 0 2px 4px rgba(0,0,0,0.1)";
-          }}
-        />
-        {featFilter.trim() && (
-          <button
-            onClick={() => setFeatFilter("")}
-            style={styles.featFilterClearButton}
-            type="button"
-            title="Clear search"
-          >
-            ×
-          </button>
-        )}
-        {featFilter.trim() && (
-          <div style={styles.featFilterResults}>
-            Showing {filteredFeats.length} of {availableFeats.length} feats
-          </div>
-        )}
-      </div>
-
-      {/* Feat List */}
-      <div style={styles.featContainer}>
-        {filteredFeats.map((feat) => {
-          const isSelected = choice.selectedFeat === feat.name;
-          const isExpanded = expandedFeats.has(feat.name);
-
-          return (
-            <div
-              key={feat.name}
-              style={isSelected ? styles.featItemSelected : styles.featItem}
-            >
-              <div style={styles.featHeader}>
-                <label style={styles.featLabel}>
-                  <input
-                    type="radio"
-                    name={`asiLevel${level}Feat`}
-                    value={feat.name}
-                    checked={isSelected}
-                    onChange={(e) => handleASIFeatChange(level, e.target.value)}
-                    style={styles.featCheckbox}
-                  />
-                  <div>
-                    <div
-                      style={
-                        isSelected ? styles.featNameSelected : styles.featName
-                      }
-                    >
-                      {feat.name}
-                    </div>
-                    {feat.preview && (
-                      <div
-                        style={
-                          isSelected
-                            ? styles.featPreviewSelected
-                            : styles.featPreview
-                        }
-                      >
-                        {feat.preview}
-                      </div>
-                    )}
-                  </div>
-                </label>
-
-                <button
-                  onClick={() => {
-                    const newExpanded = new Set(expandedFeats);
-                    if (isExpanded) {
-                      newExpanded.delete(feat.name);
-                    } else {
-                      newExpanded.add(feat.name);
-                    }
-                    setExpandedFeats(newExpanded);
-                  }}
-                  style={styles.featExpandButton}
-                  type="button"
-                  title={isExpanded ? "Collapse" : "Expand details"}
-                >
-                  {isExpanded ? "−" : "+"}
-                </button>
-              </div>
-
-              {isExpanded && (
-                <div
-                  style={
-                    isSelected
-                      ? styles.featDescriptionSelected
-                      : styles.featDescription
-                  }
-                >
-                  {feat.description || "No description available."}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={styles.helpText}>
-        Level {level} ASI/Feat Choice: Select one feat that meets your
-        character's prerequisites. This choice represents your character's
-        growth and training at this level.
-      </div>
-    </div>
-  );
-};
-
-const FeatRequirementsInfo = ({ character }) => {
-  const { theme } = useTheme();
-
-  const safeStandardFeats = standardFeats || [];
-
-  const availableCount = safeStandardFeats.filter((feat) =>
-    checkFeatPrerequisites(feat, character)
-  ).length;
-  const totalCount = safeStandardFeats.length;
-  const unavailableCount = totalCount - availableCount;
-
-  return (
-    <div
-      style={{
-        padding: "12px",
-        backgroundColor: theme.surface,
-        borderRadius: "6px",
-        border: `1px solid ${theme.border}`,
-        marginBottom: "16px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "8px",
-        }}
-      >
-        <span style={{ fontWeight: "600", color: theme.text }}>
-          Feat Availability
-        </span>
-        <span style={{ fontSize: "14px", color: theme.textSecondary }}>
-          {availableCount}/{totalCount} available
-        </span>
-      </div>
-      {unavailableCount > 0 && (
-        <div style={{ fontSize: "12px", color: theme.textSecondary }}>
-          {unavailableCount} feats require specific prerequisites (heritage,
-          casting styles, etc.)
-        </div>
-      )}
-      {character.innateHeritage && (
-        <div
-          style={{ fontSize: "12px", color: theme.primary, marginTop: "4px" }}
-        >
-          Your {character.innateHeritage} heritage unlocks additional feat
-          options
-        </div>
-      )}
-    </div>
-  );
-};
 
 const CharacterEditor = ({
   character: originalCharacter,
@@ -434,6 +59,7 @@ const CharacterEditor = ({
         level: 1,
         castingStyle: "",
         house: "",
+        houseChoices: {},
         standardFeats: [],
         asiChoices: {},
         abilityScores: {
@@ -538,12 +164,65 @@ const CharacterEditor = ({
   const [rolledStats, setRolledStats] = useState([]);
   const [availableStats, setAvailableStats] = useState([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [selectedHouse, setSelectedHouse] = useState(
+    safeOriginalCharacter.house || ""
+  );
+  const [houseChoices, setHouseChoices] = useState(
+    safeOriginalCharacter.houseChoices || {}
+  );
+
+  useEffect(() => {
+    if (character) {
+      setSelectedHouse(character.house || "");
+      setHouseChoices(character.houseChoices || {});
+    }
+    // eslint-disable-next-line
+  }, [character.house, character.houseChoices]);
+
   const [lockedFields, setLockedFields] = useState({
     level1ChoiceType: true,
     abilityScores: true,
   });
 
   const discordUserId = user?.user_metadata?.provider_id;
+
+  const validateFeatSelections = useCallback(() => {
+    const allSelectedFeats = getAllSelectedFeats(character);
+    const uniqueFeats = [...new Set(allSelectedFeats)];
+
+    if (allSelectedFeats.length !== uniqueFeats.length) {
+      const duplicates = allSelectedFeats.filter(
+        (feat, index) => allSelectedFeats.indexOf(feat) !== index
+      );
+      setError(
+        `Duplicate feats detected: ${duplicates.join(
+          ", "
+        )}. Each feat can only be selected once.`
+      );
+      return false;
+    }
+
+    const safeStandardFeats = standardFeats || [];
+    const invalidFeats = allSelectedFeats.filter((featName) => {
+      const feat = safeStandardFeats.find((f) => f.name === featName);
+      return feat && !checkFeatPrerequisites(feat, character);
+    });
+
+    if (invalidFeats.length > 0) {
+      console.warn(
+        "Some selected feats no longer meet prerequisites:",
+        invalidFeats
+      );
+      setError(
+        `Warning: Some selected feats no longer meet prerequisites: ${invalidFeats.join(
+          ", "
+        )}`
+      );
+      return false;
+    }
+
+    return true;
+  }, [character]);
 
   const handleASIChoiceChange = (level, choiceType) => {
     setCharacter((prev) => ({
@@ -553,7 +232,6 @@ const CharacterEditor = ({
         [level]: {
           ...prev.asiChoices[level],
           type: choiceType,
-
           ...(choiceType === "asi"
             ? {
                 abilityScoreIncreases: [],
@@ -619,6 +297,21 @@ const CharacterEditor = ({
     setHasUnsavedChanges(hasChanges);
   }, [character, safeOriginalCharacter]);
 
+  useEffect(() => {
+    if (character) {
+      validateFeatSelections();
+    }
+    // eslint-disable-next-line
+  }, [
+    character.level,
+    character.castingStyle,
+    character.innateHeritage,
+    character.subclass,
+    character.standardFeats,
+    character.asiChoices,
+    validateFeatSelections,
+  ]);
+
   const gameSessionOptions = [
     "Sunday - Knights",
     "Monday - Haunting",
@@ -630,6 +323,32 @@ const CharacterEditor = ({
     "Saturday - Knights",
     "DEVELOPMENT",
   ];
+
+  const handleHouseSelect = (house) => {
+    setSelectedHouse(house);
+    handleInputChange("house", house);
+  };
+
+  const handleHouseChoiceSelect = (house, featureName, optionName) => {
+    setHouseChoices((prev) => ({
+      ...prev,
+      [house]: {
+        ...prev[house],
+        [featureName]: optionName,
+      },
+    }));
+
+    setCharacter((prev) => ({
+      ...prev,
+      houseChoices: {
+        ...prev.houseChoices,
+        [house]: {
+          ...prev.houseChoices[house],
+          [featureName]: optionName,
+        },
+      },
+    }));
+  };
 
   const rollHp = () => {
     if (!character.castingStyle) return;
@@ -854,42 +573,6 @@ const CharacterEditor = ({
     };
   };
 
-  const validateSelectedFeats = useCallback(() => {
-    const safeStandardFeats = standardFeats || [];
-
-    const currentFeats = character.standardFeats || [];
-    const invalidFeats = currentFeats.filter((featName) => {
-      const feat = safeStandardFeats.find((f) => f.name === featName);
-      return feat && !checkFeatPrerequisites(feat, character);
-    });
-    if (invalidFeats.length > 0) {
-      console.warn(
-        "Some selected feats no longer meet prerequisites:",
-        invalidFeats
-      );
-      setError(
-        `Warning: Some selected feats no longer meet prerequisites: ${invalidFeats.join(
-          ", "
-        )}`
-      );
-      return false;
-    }
-    return true;
-  }, [character]);
-
-  useEffect(() => {
-    if (character) {
-      validateSelectedFeats();
-    }
-    // eslint-disable-next-line
-  }, [
-    character.level,
-    character.castingStyle,
-    character.innateHeritage,
-    character.subclass,
-    validateSelectedFeats,
-  ]);
-
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
@@ -906,10 +589,16 @@ const CharacterEditor = ({
       return;
     }
 
+    if (!validateFeatSelections()) {
+      setIsSaving(false);
+      return;
+    }
+
     const allFeats = collectAllFeatsFromChoices();
     const characterToSave = {
       name: character.name.trim(),
       house: character.house,
+      house_choices: houseChoices,
       casting_style: character.castingStyle,
       initiative_ability: character.initiativeAbility || "dexterity",
       subclass: character.subclass,
@@ -926,12 +615,20 @@ const CharacterEditor = ({
       magic_modifiers: character.magicModifiers,
       level1_choice_type: character.level1ChoiceType,
     };
-
+    console.log("Saving houseChoices:", houseChoices);
+    console.log("Full characterToSave:", characterToSave);
     try {
       const updatedCharacter = await characterService.updateCharacter(
         character.id,
         characterToSave,
         discordUserId
+      );
+
+      console.log("Returned from database:", updatedCharacter);
+      console.log("originalCharacter in edit:", originalCharacter);
+      console.log(
+        "originalCharacter.houseChoices:",
+        originalCharacter.houseChoices
       );
       const transformedCharacter = {
         abilityScores: updatedCharacter.ability_scores,
@@ -942,6 +639,7 @@ const CharacterEditor = ({
         gameSession: updatedCharacter.game_session || "",
         hitPoints: updatedCharacter.hit_points,
         house: updatedCharacter.house,
+        houseChoices: updatedCharacter.house_choices || {},
         id: updatedCharacter.id,
         initiativeAbility: updatedCharacter.initiative_ability || "dexterity",
         innateHeritage: updatedCharacter.innate_heritage,
@@ -1086,22 +784,12 @@ const CharacterEditor = ({
 
       <div style={styles.fieldContainer}>
         <label style={styles.label}>House</label>
-        <select
-          value={character.house || ""}
-          onChange={(e) => handleInputChange("house", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select House...</option>
-          {Object.entries(housesBySchool).map(([school, houses]) => (
-            <optgroup key={school} label={school}>
-              {houses.map((house) => (
-                <option key={house} value={house}>
-                  {house}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <EnhancedHouseSelector
+          selectedHouse={selectedHouse}
+          onHouseSelect={handleHouseSelect}
+          houseChoices={houseChoices}
+          onHouseChoiceSelect={handleHouseChoiceSelect}
+        />
       </div>
 
       <div style={styles.fieldContainer}>
@@ -1962,14 +1650,14 @@ const CharacterEditor = ({
             backgroundColor: theme.border,
             color: theme.textSecondary,
           }}
-          disabled={isSaving}
+          disabled={isSaving || !hasUnsavedChanges}
         >
           <X size={16} />
           Cancel
         </button>
         <button
           onClick={saveCharacter}
-          disabled={isSaving}
+          disabled={isSaving || !hasUnsavedChanges}
           style={{
             ...styles.saveButton,
             backgroundColor: theme.primary,

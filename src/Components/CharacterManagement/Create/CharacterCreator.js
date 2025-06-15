@@ -6,7 +6,6 @@ import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
 
 import {
   castingStyles,
-  housesBySchool,
   skillsByCastingStyle,
   hpData,
   standardFeats,
@@ -18,11 +17,12 @@ import { InnateHeritage } from "../Shared/InnateHeritage";
 import StandardFeat from "../Shared/StandardFeat";
 import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { FeatRequirementsInfo } from "./ASIComponents";
+import { FeatRequirementsInfo, getAllSelectedFeats } from "./ASIComponents";
 import ASILevelChoices from "./ASILevelChoices";
 import CharacterProgressionSummary from "./CharacterProgressionSummary";
 import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
 import { StepIndicator } from "../Shared/StepIndicator";
+import EnhancedHouseSelector from "./EnhancedHouseSelector";
 
 const CharacterCreator = ({
   user,
@@ -30,6 +30,7 @@ const CharacterCreator = ({
   maxCharacters = 10,
   activeCharacterCount = 0,
   isLoadingCharacterCount,
+  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -37,6 +38,7 @@ const CharacterCreator = ({
   const getInitialCharacterState = () => ({
     name: "",
     house: "",
+    houseChoices: {},
     asiChoices: {},
     castingStyle: "",
     initiativeAbility: "dexterity",
@@ -84,7 +86,6 @@ const CharacterCreator = ({
 
   const gameSessionOptions = getGameSessionOptions();
 
-  // State variables
   const [character, setCharacter] = useState(getInitialCharacterState());
   const [rolledStats, setRolledStats] = useState([]);
   const [availableStats, setAvailableStats] = useState([]);
@@ -94,6 +95,8 @@ const CharacterCreator = ({
   const [tempInputValues, setTempInputValues] = useState({});
   const [isManualMode, setIsManualMode] = useState(false);
   const [isHpManualMode, setIsHpManualMode] = useState(false);
+  const [selectedHouse, setSelectedHouse] = useState("");
+  const [houseChoices, setHouseChoices] = useState({});
   const [rolledHp, setRolledHp] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -103,7 +106,6 @@ const CharacterCreator = ({
 
   const ASI_LEVELS = [4, 8, 12, 16, 19];
 
-  // Helper functions
   const setASILevelFilter = (level, filter) => {
     setASILevelFilters((prev) => ({
       ...prev,
@@ -179,7 +181,24 @@ const CharacterCreator = ({
     };
   };
 
-  // Core functionality functions
+  const validateFeatSelections = () => {
+    const allSelectedFeats = getAllSelectedFeats(character);
+    const uniqueFeats = [...new Set(allSelectedFeats)];
+
+    if (allSelectedFeats.length !== uniqueFeats.length) {
+      const duplicates = allSelectedFeats.filter(
+        (feat, index) => allSelectedFeats.indexOf(feat) !== index
+      );
+      setError(
+        `Duplicate feats detected: ${duplicates.join(
+          ", "
+        )}. Each feat can only be selected once.`
+      );
+      return false;
+    }
+    return true;
+  };
+
   const rollAllStats = () => {
     const newStats = [];
     for (let i = 0; i < 6; i++) {
@@ -228,6 +247,8 @@ const CharacterCreator = ({
 
   const resetForm = () => {
     setCharacter(getInitialCharacterState());
+    setSelectedHouse("");
+    setHouseChoices({});
     setExpandedFeats(new Set());
     setFeatFilter("");
     setASILevelFilters({});
@@ -249,7 +270,20 @@ const CharacterCreator = ({
     rollAllStats();
   }, []);
 
-  // Event handlers
+  useEffect(() => {
+    if (
+      character.level1ChoiceType === "feat" &&
+      character.standardFeats.length > 0
+    ) {
+      validateFeatSelections();
+    }
+    // eslint-disable-next-line
+  }, [
+    character.standardFeats,
+    character.asiChoices,
+    character.level1ChoiceType,
+  ]);
+
   const assignStat = (ability, statValue) => {
     const oldValue = character.abilityScores[ability];
 
@@ -340,6 +374,8 @@ const CharacterCreator = ({
       ...prev,
       level1ChoiceType: choiceType,
       innateHeritage: choiceType === "feat" ? "" : prev.innateHeritage,
+
+      standardFeats: choiceType === "feat" ? prev.standardFeats : [],
     }));
   };
 
@@ -387,7 +423,6 @@ const CharacterCreator = ({
     }
   };
 
-  // ASI choice handlers
   const handleASIChoiceChange = (level, choiceType) => {
     setCharacter((prev) => ({
       ...prev,
@@ -459,6 +494,34 @@ const CharacterCreator = ({
     return allFeats;
   };
 
+  const handleHouseSelect = (house) => {
+    setSelectedHouse(house);
+    handleInputChange("house", house);
+
+    setHouseChoices({});
+  };
+
+  const handleHouseChoiceSelect = (house, featureName, optionName) => {
+    setHouseChoices((prev) => ({
+      ...prev,
+      [house]: {
+        ...prev[house],
+        [featureName]: optionName,
+      },
+    }));
+
+    setCharacter((prev) => ({
+      ...prev,
+      houseChoices: {
+        ...prev.houseChoices,
+        [house]: {
+          ...prev.houseChoices[house],
+          [featureName]: optionName,
+        },
+      },
+    }));
+  };
+
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
@@ -482,6 +545,11 @@ const CharacterCreator = ({
       !character.initiativeAbility
     ) {
       setError("Please select an initiative ability for your Intellect Caster");
+      setIsSaving(false);
+      return;
+    }
+
+    if (!validateFeatSelections()) {
       setIsSaving(false);
       return;
     }
@@ -531,7 +599,6 @@ const CharacterCreator = ({
     }
 
     const allFeats = collectAllFeatsFromChoices();
-
     const characterToSave = {
       name: character.name.trim(),
       house: character.house,
@@ -555,13 +622,15 @@ const CharacterCreator = ({
     try {
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
-        discordUserId
+        discordUserId,
+        supabase
       );
 
       const transformedCharacter = {
         id: savedCharacter.id,
         name: savedCharacter.name,
         house: savedCharacter.house,
+        houseChoices: savedCharacter.house_choices || {},
         castingStyle: savedCharacter.casting_style,
         subclass: savedCharacter.subclass,
         innateHeritage: savedCharacter.innate_heritage,
@@ -689,22 +758,12 @@ const CharacterCreator = ({
 
       <div style={styles.fieldContainer}>
         <label style={styles.label}>House *</label>
-        <select
-          value={character.house}
-          onChange={(e) => handleInputChange("house", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select House...</option>
-          {Object.entries(housesBySchool).map(([school, houses]) => (
-            <optgroup key={school} label={school}>
-              {houses.map((house) => (
-                <option key={house} value={house}>
-                  {house}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <EnhancedHouseSelector
+          selectedHouse={selectedHouse}
+          onHouseSelect={handleHouseSelect}
+          houseChoices={houseChoices}
+          onHouseChoiceSelect={handleHouseChoiceSelect}
+        />
       </div>
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Casting Style *</label>

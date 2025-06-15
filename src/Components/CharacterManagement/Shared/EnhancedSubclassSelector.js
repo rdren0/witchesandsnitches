@@ -118,14 +118,10 @@ const EnhancedSubclassSelector = ({
   };
 
   const handleSubclassChoiceChange = (level, choiceName) => {
-    console.log(
-      `Subclass choice changed - Level: ${level}, Choice: ${choiceName}`
-    );
     const newChoices = {
       ...subclassChoices,
       [level]: choiceName,
     };
-    console.log("New choices:", newChoices);
     setSubclassChoices(newChoices);
   };
 
@@ -197,9 +193,6 @@ const EnhancedSubclassSelector = ({
       });
     }
 
-    console.log(`Character Level: ${characterLevel}`);
-    console.log("Parsed features by level:", featuresByLevel);
-
     return featuresByLevel;
   };
 
@@ -214,12 +207,6 @@ const EnhancedSubclassSelector = ({
       (level) => level <= characterLevel
     );
 
-    console.log(`All levels for ${subclassData.name}:`, allLevels);
-    console.log(
-      `Available levels (character level ${characterLevel}):`,
-      availableLevels
-    );
-
     return availableLevels.sort((a, b) => a - b);
   };
 
@@ -231,11 +218,6 @@ const EnhancedSubclassSelector = ({
       parseInt(level)
     );
     const lockedLevels = allLevels.filter((level) => level > characterLevel);
-
-    console.log(
-      `Locked levels for ${subclassData.name} (character level ${characterLevel}):`,
-      lockedLevels
-    );
 
     return lockedLevels.sort((a, b) => a - b);
   };
@@ -357,7 +339,6 @@ const EnhancedSubclassSelector = ({
                       checked={selectedChoice === choice.name}
                       onChange={(e) => {
                         if (!disabled) {
-                          console.log(`Radio onChange: ${e.target.value}`);
                           handleSubclassChoiceChange(level, e.target.value);
                         }
                       }}
@@ -369,7 +350,6 @@ const EnhancedSubclassSelector = ({
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log(`Radio button clicked: ${choice.name}`);
                       }}
                     />
                     <div style={{ flex: 1 }}>
@@ -409,9 +389,6 @@ const EnhancedSubclassSelector = ({
   const renderLockedFeatures = (subclassData) => {
     const lockedLevels = getLockedLevels(subclassData);
     const featuresByLevel = parseAllFeaturesByLevel(subclassData);
-
-    console.log(`Locked levels for ${subclassData.name}:`, lockedLevels);
-    console.log(`Character level: ${characterLevel}`);
 
     if (lockedLevels.length === 0) return null;
 
