@@ -532,7 +532,7 @@ export const spellsData = {
             "When you cast this spell using a spell slot of 3rd level or higher, you automatically create an opening in the spell if the spell's level is one level higher than, equal to or less than the level of the spell slot you used.",
         },
         {
-          name: "Pelucidi Pellis",
+          name: "Pellucidi Pellis",
           level: "2nd Level",
           castingTime: "1 action",
           range: "Touch",

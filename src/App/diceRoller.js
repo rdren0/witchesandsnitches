@@ -1150,10 +1150,33 @@ export const attemptSpell = async ({
       selectedCharacter
     );
     const total = d20Roll + totalModifier;
-
+    let goal = 11;
+    if (
+      [
+        "ABSCONDI",
+        "PELLUCIDI PELLIS",
+        "SAGITTARIO",
+        "CONFRINGO",
+        "DEVICTO",
+        "STUPEFY",
+        "PETRIFICUS TOTALUS",
+        "PROTEGO",
+        "PROTEGO MAXIMA",
+        "FINITE INCANTATEM",
+        "CONFUNDO",
+        "BOMBARDA",
+        "EPISKY",
+        "EXPELLIARMUS",
+        "INCARCEROUS",
+      ].includes(spellName.toUpperCase())
+    ) {
+      goal += 3;
+    }
+    console.log({ spellName, goal });
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
-    const isSuccess = (total >= 11 || isCriticalSuccess) && !isCriticalFailure;
+    const isSuccess =
+      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
 
     if (showRollResult) {
       showRollResult({
