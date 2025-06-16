@@ -92,6 +92,7 @@ const PotionBrewingSystem = ({ character }) => {
     const totalModifier = wisdomModifier + skillBonus;
 
     return totalModifier;
+    // eslint-disable-next-line
   }, [
     currentCharacter?.skills?.potionMaking,
     currentCharacter?.skillProficiencies,

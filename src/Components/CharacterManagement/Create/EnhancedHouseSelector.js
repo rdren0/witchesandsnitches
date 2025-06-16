@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   schoolGroups,
   houseFeatures,
@@ -8,8 +8,227 @@ import {
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 
+const calculateHouseAbilityModifiers = (house, houseChoices = {}) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const bonusDetails = {};
+
+  if (!house || !houseAbilityBonuses[house]) return { modifiers, bonusDetails };
+
+  const houseBonuses = houseAbilityBonuses[house];
+
+  if (houseBonuses.fixed) {
+    houseBonuses.fixed.forEach((ability) => {
+      if (modifiers.hasOwnProperty(ability)) {
+        modifiers[ability] += 1;
+
+        if (!bonusDetails[ability]) {
+          bonusDetails[ability] = [];
+        }
+        bonusDetails[ability].push({
+          source: `${house} (Fixed)`,
+          amount: 1,
+        });
+      }
+    });
+  }
+
+  if (houseBonuses.choice && houseChoices[house]?.abilityChoice) {
+    const chosenAbility = houseChoices[house].abilityChoice;
+    if (modifiers.hasOwnProperty(chosenAbility)) {
+      modifiers[chosenAbility] += 1;
+
+      if (!bonusDetails[chosenAbility]) {
+        bonusDetails[chosenAbility] = [];
+      }
+      bonusDetails[chosenAbility].push({
+        source: `${house} (Choice)`,
+        amount: 1,
+      });
+    }
+  }
+
+  return { modifiers, bonusDetails };
+};
+
+const HouseAbilityModifierPills = ({ house, houseChoices, styles }) => {
+  const { modifiers, bonusDetails } = useMemo(() => {
+    console.log(
+      "Calculating house ability modifiers for:",
+      house,
+      "with choices:",
+      houseChoices
+    );
+    const result = calculateHouseAbilityModifiers(house, houseChoices);
+    console.log("House modifiers result:", result);
+    return result;
+  }, [house, houseChoices]);
+
+  const modifiedAbilities = Object.entries(modifiers).filter(
+    ([_, value]) => value > 0
+  );
+
+  if (modifiedAbilities.length === 0) return null;
+
+  return (
+    <div style={styles.modifierPillsContainer}>
+      <div style={styles.pillsLabel}>House Ability Score Bonuses:</div>
+      <div style={styles.pillsRow}>
+        {modifiedAbilities.map(([ability, totalBonus]) => {
+          const details = bonusDetails[ability] || [];
+          const tooltipText = details
+            .map((d) => `+${d.amount} from ${d.source}`)
+            .join(", ");
+
+          return (
+            <div key={ability} style={styles.modifierPill} title={tooltipText}>
+              <span style={styles.pillAbility}>
+                {ability.slice(0, 3).toUpperCase()}
+              </span>
+              <span style={styles.pillModifier}>+{totalBonus}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const HouseAbilityChoice = ({
+  house,
+  houseChoices,
+  onHouseChoiceSelect,
+  styles,
+}) => {
+  if (!house || !houseAbilityBonuses[house]?.choice) return null;
+
+  const handleAbilityChoice = (ability) => {
+    console.log("House ability choice changed for", house, "to:", ability);
+    onHouseChoiceSelect(house, "abilityChoice", ability);
+  };
+
+  const currentChoice = houseChoices[house]?.abilityChoice;
+  const abilities = [
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
+  ];
+
+  const fixedAbilities = houseAbilityBonuses[house]?.fixed || [];
+  const availableAbilities = abilities.filter(
+    (ability) => !fixedAbilities.includes(ability)
+  );
+
+  return (
+    <div style={styles.houseChoiceContainer}>
+      <div style={styles.houseChoiceLabel}>
+        Choose additional +1 ability score increase:
+      </div>
+      <div style={styles.abilityChoiceGroup}>
+        {availableAbilities.map((ability) => (
+          <label key={ability} style={styles.abilityChoiceLabel}>
+            <input
+              type="radio"
+              name={`${house}_ability_choice`}
+              value={ability}
+              checked={currentChoice === ability}
+              onChange={(e) => handleAbilityChoice(e.target.value)}
+              style={styles.abilityChoiceRadio}
+            />
+            <span style={styles.abilityChoiceName}>
+              {ability.charAt(0).toUpperCase() + ability.slice(1)} (+1)
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const createHouseSpecificStyles = (theme, baseStyles) => ({
   ...baseStyles,
+
+  modifierPillsContainer: {
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    border: "1px solid rgba(16, 185, 129, 0.3)",
+    borderRadius: "8px",
+    padding: "12px",
+    marginBottom: "16px",
+  },
+  pillsLabel: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#10b981",
+    marginBottom: "8px",
+  },
+  pillsRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+  },
+  modifierPill: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    backgroundColor: "#10b981",
+    color: "white",
+    padding: "4px 8px",
+    borderRadius: "12px",
+    fontSize: "11px",
+    fontWeight: "600",
+    cursor: "help",
+  },
+  pillAbility: {
+    opacity: 0.9,
+  },
+  pillModifier: {
+    fontWeight: "bold",
+  },
+  houseChoiceContainer: {
+    backgroundColor: theme.surfaceHover,
+    border: `1px solid ${theme.border}`,
+    borderRadius: "6px",
+    padding: "12px",
+    marginBottom: "12px",
+  },
+  houseChoiceLabel: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: theme.text,
+    marginBottom: "8px",
+  },
+  abilityChoiceGroup: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+  },
+  abilityChoiceLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    fontSize: "12px",
+    cursor: "pointer",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    border: `1px solid ${theme.border}`,
+    backgroundColor: theme.surface,
+  },
+  abilityChoiceRadio: {
+    margin: 0,
+  },
+  abilityChoiceName: {
+    color: theme.text,
+  },
 
   infoCard: {
     marginBottom: "16px",
@@ -238,6 +457,16 @@ const EnhancedHouseSelector = ({
     return ability.charAt(0).toUpperCase() + ability.slice(1);
   };
 
+  const getThemeAwareHouseColor = (house, theme) => {
+    const baseHouseColors = houseColors[house];
+
+    return {
+      primary: theme.primary,
+      secondary: theme.surface,
+      accent: baseHouseColors?.primary || theme.primary,
+    };
+  };
+
   useEffect(() => {
     if (selectedHouse) {
       const allSchools = {
@@ -294,10 +523,7 @@ const EnhancedHouseSelector = ({
             <div style={styles.schoolContent}>
               {houses.map((house) => {
                 const isSelected = selectedHouse === house;
-                const houseColor = houseColors[house] || {
-                  primary: theme.primary,
-                  secondary: theme.surface,
-                };
+                const houseColor = getThemeAwareHouseColor(house, theme);
 
                 return (
                   <div key={house} style={styles.houseContainer}>
@@ -306,15 +532,19 @@ const EnhancedHouseSelector = ({
                       style={{
                         ...styles.houseButton,
                         backgroundColor: isSelected
-                          ? houseColor.primary
+                          ? theme.primary
                           : styles.houseButton.backgroundColor,
                         border: `2px solid ${
-                          isSelected ? houseColor.primary : theme.border
+                          isSelected ? theme.primary : theme.border
                         }`,
                         color: isSelected
-                          ? houseColor.secondary
+                          ? theme.surface
                           : styles.houseButton.color,
                         fontWeight: isSelected ? "600" : "500",
+
+                        ...(isSelected && {
+                          boxShadow: `0 0 0 1px ${houseColor.accent}33`,
+                        }),
                       }}
                     >
                       <div style={styles.houseButtonContent}>
@@ -322,10 +552,10 @@ const EnhancedHouseSelector = ({
                           style={{
                             ...styles.houseRadio,
                             borderColor: isSelected
-                              ? houseColor.primary
+                              ? theme.primary
                               : theme.border,
                             backgroundColor: isSelected
-                              ? houseColor.primary
+                              ? theme.primary
                               : "transparent",
                           }}
                         >
@@ -333,7 +563,7 @@ const EnhancedHouseSelector = ({
                             <div
                               style={{
                                 ...styles.houseRadioDot,
-                                backgroundColor: houseColor.secondary,
+                                backgroundColor: theme.surface,
                               }}
                             />
                           )}
@@ -347,10 +577,27 @@ const EnhancedHouseSelector = ({
                       houseFeatures[house] &&
                       houseAbilityBonuses[house] && (
                         <div style={styles.houseDetails}>
-                          {/* Ability Score Bonuses */}
+                          {/* House ASI Modifier Pills */}
+                          <HouseAbilityModifierPills
+                            house={house}
+                            houseChoices={houseChoices}
+                            styles={styles}
+                          />
+
+                          {/* House Ability Choice */}
+                          {!readOnly && (
+                            <HouseAbilityChoice
+                              house={house}
+                              houseChoices={houseChoices}
+                              onHouseChoiceSelect={onHouseChoiceSelect}
+                              styles={styles}
+                            />
+                          )}
+
+                          {/* Ability Score Bonuses (Traditional Display) */}
                           <div style={styles.sectionContainer}>
                             <h4 style={styles.sectionTitle}>
-                              ➕ Ability Score Increases
+                              ➕ Ability Score Details
                             </h4>
                             <div style={styles.abilityBonusContainer}>
                               {houseAbilityBonuses[house]?.fixed.map(
@@ -359,13 +606,25 @@ const EnhancedHouseSelector = ({
                                     key={ability}
                                     style={{
                                       ...styles.abilityBonus,
-                                      backgroundColor: houseColor.primary,
-                                      color: houseColor.secondary,
+                                      backgroundColor: theme.primary,
+                                      color: theme.surface,
                                     }}
                                   >
-                                    +1 {formatAbilityName(ability)}
+                                    +1 {formatAbilityName(ability)} (Fixed)
                                   </span>
                                 )
+                              )}
+                              {houseAbilityBonuses[house]?.choice && (
+                                <span
+                                  style={{
+                                    ...styles.abilityBonus,
+                                    backgroundColor: theme.surfaceHover,
+                                    color: theme.text,
+                                    border: `1px solid ${theme.border}`,
+                                  }}
+                                >
+                                  +1 Any Ability (Choice)
+                                </span>
                               )}
                             </div>
                           </div>
@@ -383,12 +642,7 @@ const EnhancedHouseSelector = ({
                                   style={styles.featureContainer}
                                 >
                                   <div style={styles.featureCard}>
-                                    <h5
-                                      style={{
-                                        ...styles.featureName,
-                                        color: houseColor.primary,
-                                      }}
-                                    >
+                                    <h5 style={styles.featureName}>
                                       {feature.name}
                                     </h5>
 
@@ -420,7 +674,7 @@ const EnhancedHouseSelector = ({
                                                         feature.name,
                                                         option.name
                                                       )
-                                                        ? "#fef3c7"
+                                                        ? `${theme.primary}15`
                                                         : theme.background,
                                                     borderColor:
                                                       isChoiceSelected(
@@ -428,7 +682,7 @@ const EnhancedHouseSelector = ({
                                                         feature.name,
                                                         option.name
                                                       )
-                                                        ? "#f59e0b"
+                                                        ? theme.primary
                                                         : theme.border,
                                                   }}
                                                 >

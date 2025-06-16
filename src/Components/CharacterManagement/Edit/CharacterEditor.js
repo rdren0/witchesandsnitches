@@ -17,7 +17,7 @@ import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { InnateHeritage } from "../Shared/InnateHeritage";
-import StandardFeat from "../Shared/StandardFeat";
+import EnhancedFeatureSelector from "../Shared/EnhancedFeatureSelector";
 import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
@@ -328,20 +328,13 @@ const CharacterEditor = ({
   const handleHouseChoiceSelect = (house, featureName, optionName) => {
     setHouseChoices((prev) => ({
       ...prev,
-      [house]: {
-        ...prev[house],
-        [featureName]: optionName,
-      },
+      [house]: { ...prev[house], [featureName]: optionName },
     }));
-
     setCharacter((prev) => ({
       ...prev,
       houseChoices: {
         ...prev.houseChoices,
-        [house]: {
-          ...prev.houseChoices[house],
-          [featureName]: optionName,
-        },
+        [house]: { ...prev.houseChoices[house], [featureName]: optionName },
       },
     }));
   };
@@ -592,27 +585,28 @@ const CharacterEditor = ({
 
     const allFeats = collectAllFeatsFromChoices();
     const characterToSave = {
-      name: character.name.trim(),
-      house: character.house,
-      house_choices: houseChoices,
-      casting_style: character.castingStyle,
-      initiative_ability: character.initiativeAbility || "dexterity",
-      subclass: character.subclass,
-      innate_heritage: character.innateHeritage,
-      background: character.background,
-      game_session: character.gameSession,
-      standard_feats: allFeats,
-      skill_proficiencies: character.skillProficiencies || [],
       ability_scores: character.abilityScores,
-      hit_points: getCurrentHp(),
       asi_choices: character.asiChoices || {},
+      background: character.background,
+      casting_style: character.castingStyle,
+      feat_choices: character.featChoices || {},
+      game_session: character.gameSession,
+      hit_points: getCurrentHp(),
+      house_choices: houseChoices,
+      house: character.house,
+      initiative_ability: character.initiativeAbility || "dexterity",
+      innate_heritage: character.innateHeritage,
       level: character.level,
-      wand_type: character.wandType,
-      magic_modifiers: character.magicModifiers,
       level1_choice_type: character.level1ChoiceType,
+      magic_modifiers: character.magicModifiers,
+      name: character.name.trim(),
+      skill_proficiencies: character.skillProficiencies || [],
+      standard_feats: allFeats,
+      subclass_choices: character.subclassChoices || {},
+      subclass: character.subclass,
+      wand_type: character.wandType,
     };
-    console.log("Saving houseChoices:", houseChoices);
-    console.log("Full characterToSave:", characterToSave);
+
     try {
       const updatedCharacter = await characterService.updateCharacter(
         character.id,
@@ -627,6 +621,7 @@ const CharacterEditor = ({
         originalCharacter.houseChoices
       );
       const transformedCharacter = {
+        id: updatedCharacter.id,
         abilityScores: updatedCharacter.ability_scores,
         asiChoices: updatedCharacter.asi_choices || {},
         background: updatedCharacter.background,
@@ -636,7 +631,6 @@ const CharacterEditor = ({
         hitPoints: updatedCharacter.hit_points,
         house: updatedCharacter.house,
         houseChoices: updatedCharacter.house_choices || {},
-        id: updatedCharacter.id,
         initiativeAbility: updatedCharacter.initiative_ability || "dexterity",
         innateHeritage: updatedCharacter.innate_heritage,
         level: updatedCharacter.level,
@@ -646,6 +640,7 @@ const CharacterEditor = ({
         skillProficiencies: updatedCharacter.skill_proficiencies || [],
         standardFeats: updatedCharacter.standard_feats || [],
         subclass: updatedCharacter.subclass,
+        subclassChoices: updatedCharacter.subclass_choices || {},
         wandType: updatedCharacter.wand_type || "",
         magicModifiers: updatedCharacter.magic_modifiers || {
           divinations: 0,
@@ -749,7 +744,7 @@ const CharacterEditor = ({
           </p>
         </div>
       </div>
-      <StepIndicator step={1} totalSteps={4} label="Basic Information" />
+      <StepIndicator step={1} totalSteps={5} label="Basic Information" />
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Name *</label>
         <input
@@ -777,17 +772,6 @@ const CharacterEditor = ({
           ))}
         </select>
       </div>
-
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>House</label>
-        <EnhancedHouseSelector
-          selectedHouse={selectedHouse}
-          onHouseSelect={handleHouseSelect}
-          houseChoices={houseChoices}
-          onHouseChoiceSelect={handleHouseChoiceSelect}
-        />
-      </div>
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Casting Style</label>
         <select
@@ -1055,9 +1039,21 @@ const CharacterEditor = ({
           </div>
         )}
       </div>
+      <StepIndicator step={2} totalSteps={5} label="House Selection" />
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>House</label>
+        <EnhancedHouseSelector
+          selectedHouse={selectedHouse}
+          onHouseSelect={handleHouseSelect}
+          houseChoices={houseChoices}
+          onHouseChoiceSelect={handleHouseChoiceSelect}
+        />
+      </div>
+
       <StepIndicator
-        step={2}
-        totalSteps={4}
+        step={3}
+        totalSteps={5}
         label="Skills & Features & Backgrounds"
       />
       <div style={styles.fieldContainer}>
@@ -1127,6 +1123,10 @@ const CharacterEditor = ({
         theme={theme}
         disabled={false}
         characterLevel={character.level}
+        subclassChoices={character.subclassChoices || {}}
+        onSubclassChoicesChange={(choices) =>
+          setCharacter((prev) => ({ ...prev, subclassChoices: choices }))
+        }
       />
 
       {/* Character Progression Summary */}
@@ -1298,7 +1298,7 @@ const CharacterEditor = ({
       {character.level1ChoiceType === "feat" && (
         <div style={styles.fieldContainer}>
           <FeatRequirementsInfo character={character} />
-          <StandardFeat
+          <EnhancedFeatureSelector
             character={character}
             setCharacter={setCharacter}
             expandedFeats={expandedFeats}
@@ -1510,7 +1510,7 @@ const CharacterEditor = ({
         onChange={(value) => handleInputChange("background", value)}
         disabled={false}
       />
-      <StepIndicator step={3} totalSteps={4} label="Ability Scores" />
+      <StepIndicator step={4} totalSteps={5} label="Ability Scores" />
       <div style={styles.fieldContainer}>
         <div style={styles.lockedFieldHeader}>
           <h3 style={styles.skillsHeader}>
@@ -1558,25 +1558,28 @@ const CharacterEditor = ({
           </div>
         ) : (
           <AbilityScorePicker
+            allStatsAssigned={allStatsAssigned}
+            assignStat={assignStat}
+            availableStats={availableStats}
             character={character}
-            setRolledStats={setRolledStats}
+            clearStat={clearStat}
+            featChoices={character.featChoices || {}}
+            houseChoices={character.houseChoices || houseChoices}
+            isEditing={true}
+            isManualMode={isManualMode}
+            rollAllStats={() => {}}
+            rolledStats={rolledStats}
+            showModifiers={true}
             setAvailableStats={setAvailableStats}
             setCharacter={setCharacter}
-            rollAllStats={() => {}}
-            setTempInputValues={setTempInputValues}
-            allStatsAssigned={allStatsAssigned}
-            availableStats={availableStats}
-            tempInputValues={tempInputValues}
-            clearStat={clearStat}
-            assignStat={assignStat}
-            isManualMode={isManualMode}
             setIsManualMode={setIsManualMode}
-            rolledStats={rolledStats}
-            isEditing={true}
+            setRolledStats={setRolledStats}
+            setTempInputValues={setTempInputValues}
+            tempInputValues={tempInputValues}
           />
         )}
       </div>
-      <StepIndicator step={4} totalSteps={4} label="Wand Modifiers" />
+      <StepIndicator step={5} totalSteps={5} label="Wand Modifiers" />
       <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
         <div style={styles.helpText}>

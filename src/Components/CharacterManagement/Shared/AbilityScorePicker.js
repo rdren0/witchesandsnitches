@@ -1,6 +1,239 @@
 import { RefreshCw, Trash } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { createAbilityScorePickerStyles } from "../../../styles/masterStyles";
+import { standardFeats } from "../../standardFeatData";
+import { backgroundsData } from "../Shared/backgroundsData";
+import { houseAbilityBonuses } from "../Shared/houseData";
+import { getAllSelectedFeats } from "../Create/ASIComponents";
+
+const getSpellcastingAbility = (character) => {
+  const castingStyle = character.castingStyle;
+  const abilityMap = {
+    "Grace Caster": "charisma",
+    "Vigor Caster": "constitution",
+    "Wit Caster": "intelligence",
+    "Wisdom Caster": "wisdom",
+  };
+  return abilityMap[castingStyle] || "intelligence";
+};
+
+const calculateHouseModifiers = (character, houseChoices = {}) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const houseDetails = {};
+
+  if (!character.house || !houseAbilityBonuses[character.house]) {
+    return { modifiers, houseDetails };
+  }
+
+  const houseBonuses = houseAbilityBonuses[character.house];
+
+  if (houseBonuses.fixed) {
+    houseBonuses.fixed.forEach((ability) => {
+      if (modifiers.hasOwnProperty(ability)) {
+        modifiers[ability] += 1;
+
+        if (!houseDetails[ability]) {
+          houseDetails[ability] = [];
+        }
+        houseDetails[ability].push({
+          source: "house",
+          houseName: character.house,
+          type: "fixed",
+          amount: 1,
+        });
+      }
+    });
+  }
+
+  if (houseBonuses.choice && houseChoices[character.house]?.abilityChoice) {
+    const chosenAbility = houseChoices[character.house].abilityChoice;
+    if (modifiers.hasOwnProperty(chosenAbility)) {
+      modifiers[chosenAbility] += 1;
+
+      if (!houseDetails[chosenAbility]) {
+        houseDetails[chosenAbility] = [];
+      }
+      houseDetails[chosenAbility].push({
+        source: "house",
+        houseName: character.house,
+        type: "choice",
+        amount: 1,
+      });
+    }
+  }
+
+  return { modifiers, houseDetails };
+};
+
+const calculateFeatModifiers = (character, featChoices = {}) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const featDetails = {};
+
+  const allSelectedFeats = getAllSelectedFeats(character);
+
+  if (character.level1ChoiceType === "feat" && character.standardFeats) {
+    allSelectedFeats.push(...character.standardFeats);
+  }
+
+  const uniqueFeats = [...new Set(allSelectedFeats)];
+
+  uniqueFeats.forEach((featName) => {
+    const feat = standardFeats.find((f) => f.name === featName);
+    if (!feat?.modifiers?.abilityIncreases) return;
+
+    feat.modifiers.abilityIncreases.forEach((increase, index) => {
+      let abilityToIncrease;
+      const choiceKey = `${featName}_ability_${index}`;
+
+      switch (increase.type) {
+        case "fixed":
+          abilityToIncrease = increase.ability;
+          break;
+        case "choice":
+          abilityToIncrease = featChoices[choiceKey] || increase.abilities[0];
+          break;
+        case "spellcastingAbility":
+          abilityToIncrease = getSpellcastingAbility(character);
+          break;
+        default:
+          break;
+      }
+
+      if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
+        modifiers[abilityToIncrease] += increase.amount;
+
+        if (!featDetails[abilityToIncrease]) {
+          featDetails[abilityToIncrease] = [];
+        }
+        featDetails[abilityToIncrease].push({
+          source: "feat",
+          featName,
+          amount: increase.amount,
+        });
+      }
+    });
+  });
+
+  return { modifiers, featDetails };
+};
+
+const calculateBackgroundModifiers = (character) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const backgroundDetails = {};
+
+  if (!character.background) return { modifiers, backgroundDetails };
+
+  const background = backgroundsData[character.background];
+  if (!background?.modifiers?.abilityIncreases)
+    return { modifiers, backgroundDetails };
+
+  background.modifiers.abilityIncreases.forEach((increase) => {
+    if (
+      increase.type === "fixed" &&
+      modifiers.hasOwnProperty(increase.ability)
+    ) {
+      modifiers[increase.ability] += increase.amount;
+
+      if (!backgroundDetails[increase.ability]) {
+        backgroundDetails[increase.ability] = [];
+      }
+      backgroundDetails[increase.ability].push({
+        source: "background",
+        backgroundName: background.name,
+        amount: increase.amount,
+      });
+    }
+  });
+
+  return { modifiers, backgroundDetails };
+};
+
+const calculateTotalModifiers = (
+  character,
+  featChoices = {},
+  houseChoices = {}
+) => {
+  console.log("Calculating total modifiers with house choices:", houseChoices);
+
+  const featResult = calculateFeatModifiers(character, featChoices);
+  const backgroundResult = calculateBackgroundModifiers(character);
+  const houseResult = calculateHouseModifiers(character, houseChoices);
+
+  const totalModifiers = {
+    strength:
+      featResult.modifiers.strength +
+      backgroundResult.modifiers.strength +
+      houseResult.modifiers.strength,
+    dexterity:
+      featResult.modifiers.dexterity +
+      backgroundResult.modifiers.dexterity +
+      houseResult.modifiers.dexterity,
+    constitution:
+      featResult.modifiers.constitution +
+      backgroundResult.modifiers.constitution +
+      houseResult.modifiers.constitution,
+    intelligence:
+      featResult.modifiers.intelligence +
+      backgroundResult.modifiers.intelligence +
+      houseResult.modifiers.intelligence,
+    wisdom:
+      featResult.modifiers.wisdom +
+      backgroundResult.modifiers.wisdom +
+      houseResult.modifiers.wisdom,
+    charisma:
+      featResult.modifiers.charisma +
+      backgroundResult.modifiers.charisma +
+      houseResult.modifiers.charisma,
+  };
+
+  const allDetails = {};
+  Object.keys(totalModifiers).forEach((ability) => {
+    allDetails[ability] = [
+      ...(featResult.featDetails[ability] || []),
+      ...(backgroundResult.backgroundDetails[ability] || []),
+      ...(houseResult.houseDetails[ability] || []),
+    ];
+  });
+
+  console.log("Total modifiers result:", {
+    totalModifiers,
+    houseModifiers: houseResult.modifiers,
+    featModifiers: featResult.modifiers,
+    backgroundModifiers: backgroundResult.modifiers,
+  });
+
+  return {
+    totalModifiers,
+    allDetails,
+    featModifiers: featResult.modifiers,
+    backgroundModifiers: backgroundResult.modifiers,
+    houseModifiers: houseResult.modifiers,
+  };
+};
 
 export const AbilityScorePicker = ({
   character,
@@ -17,9 +250,56 @@ export const AbilityScorePicker = ({
   isManualMode,
   setIsManualMode,
   rollAllStats,
+  featChoices = {},
+  houseChoices = {},
+  showModifiers = true,
 }) => {
   const { theme } = useTheme();
   const styles = createAbilityScorePickerStyles(theme);
+
+  const {
+    totalModifiers,
+    allDetails,
+    featModifiers,
+    backgroundModifiers,
+    houseModifiers,
+  } = showModifiers
+    ? calculateTotalModifiers(character, featChoices, houseChoices)
+    : {
+        totalModifiers: {
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        },
+        allDetails: {},
+        featModifiers: {
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        },
+        backgroundModifiers: {
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        },
+        houseModifiers: {
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        },
+      };
 
   const toggleManualMode = () => {
     const newManualMode = !isManualMode;
@@ -68,6 +348,35 @@ export const AbilityScorePicker = ({
     return Math.floor((score - 10) / 2);
   };
 
+  const getEffectiveAbilityScore = (ability) => {
+    const baseScore = character.abilityScores[ability] || 0;
+    const totalBonus = totalModifiers[ability] || 0;
+    return baseScore + totalBonus;
+  };
+
+  const getEffectiveModifier = (ability) => {
+    const effectiveScore = getEffectiveAbilityScore(ability);
+    return getAbilityModifier(effectiveScore);
+  };
+
+  const getTooltipText = (ability) => {
+    const details = allDetails[ability] || [];
+    if (details.length === 0) return null;
+
+    return details
+      .map((detail) => {
+        if (detail.source === "feat") {
+          return `+${detail.amount} from ${detail.featName}`;
+        } else if (detail.source === "background") {
+          return `+${detail.amount} from ${detail.backgroundName} background`;
+        } else if (detail.source === "house") {
+          return `+${detail.amount} from ${detail.houseName} (${detail.type})`;
+        }
+        return `+${detail.amount}`;
+      })
+      .join(", ");
+  };
+
   const handleManualScoreBlur = (ability) => {
     const tempValue = tempInputValues[ability];
     if (tempValue && tempValue !== "") {
@@ -113,12 +422,88 @@ export const AbilityScorePicker = ({
     }
   };
 
-  return (
-    <div style={styles.fieldContainer}>
-      <div style={styles.abilityScoresHeader}>
-        <h3 style={styles.abilityScoresTitle}>Ability Scores</h3>
+  const enhancedStyles = {
+    ...styles,
+    abilityCardWithModifier: {
+      ...styles.abilityCard,
+      backgroundColor: "rgba(16, 185, 129, 0.2)",
+      borderColor: "#10B981",
+      borderWidth: "2px",
+    },
+    abilityCardWithBackground: {
+      ...styles.abilityCard,
+      backgroundColor: "rgba(59, 130, 246, 0.2)",
+      borderColor: "#3b82f6",
+      borderWidth: "2px",
+    },
+    abilityCardWithHouse: {
+      ...styles.abilityCard,
+      backgroundColor: "rgba(168, 85, 247, 0.2)",
+      borderColor: "#a855f7",
+      borderWidth: "2px",
+    },
+    abilityCardWithMultiple: {
+      ...styles.abilityCard,
+      background:
+        "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(168, 85, 247, 0.2) 100%)",
+      borderColor: "#8b5cf6",
+      borderWidth: "2px",
+    },
+    modifierBonus: {
+      color: "#10B981",
+      fontSize: "10px",
+      fontWeight: "bold",
+      marginLeft: "2px",
+    },
+    backgroundBonus: {
+      color: "#3b82f6",
+      fontSize: "10px",
+      fontWeight: "bold",
+      marginLeft: "2px",
+    },
+    houseBonus: {
+      color: "#a855f7",
+      fontSize: "10px",
+      fontWeight: "bold",
+      marginLeft: "2px",
+    },
+    effectiveScore: {
+      fontSize: "14px",
+      fontWeight: "bold",
+      color: "#8b5cf6",
+    },
+    scoreBreakdown: {
+      fontSize: "10px",
+      color: theme.textSecondary,
+      lineHeight: "1.2",
+    },
+    modifierComparison: {
+      fontSize: "9px",
+      color: "#8b5cf6",
+      fontWeight: "600",
+    },
+  };
 
-        <div style={styles.buttonGroup}>
+  return (
+    <div style={enhancedStyles.fieldContainer}>
+      <div style={enhancedStyles.abilityScoresHeader}>
+        <h3 style={enhancedStyles.abilityScoresTitle}>
+          Ability Scores
+          {showModifiers &&
+            Object.values(totalModifiers).some((mod) => mod > 0) && (
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "#8b5cf6",
+                  marginLeft: "8px",
+                }}
+              >
+                (Including All Bonuses)
+              </span>
+            )}
+        </h3>
+
+        <div style={enhancedStyles.buttonGroup}>
           <div
             style={{
               display: "flex",
@@ -130,7 +515,7 @@ export const AbilityScorePicker = ({
               <button
                 onClick={rollAllStats}
                 style={{
-                  ...styles.button,
+                  ...enhancedStyles.button,
                   backgroundColor: "#EF4444",
                 }}
               >
@@ -175,9 +560,9 @@ export const AbilityScorePicker = ({
         </div>
       </div>
 
-      <div style={styles.helpText}>
+      <div style={enhancedStyles.helpText}>
         {isManualMode
-          ? "Manual input mode - enter ability scores directly (1-30)"
+          ? "Manual input mode - enter base ability scores directly (1-30)"
           : "Roll mode - assign generated stats to abilities"}
         <span
           style={{
@@ -192,75 +577,143 @@ export const AbilityScorePicker = ({
         >
           {isManualMode ? "MANUAL" : "ROLL"}
         </span>
+        {showModifiers &&
+          Object.values(totalModifiers).some((mod) => mod > 0) && (
+            <span
+              style={{ marginLeft: "8px", fontSize: "11px", color: "#8b5cf6" }}
+            >
+              📈 All bonuses included in final scores
+            </span>
+          )}
       </div>
 
       {!isManualMode && (
-        <div style={styles.availableStats}>
-          <div style={styles.availableStatsHeader}>
+        <div style={enhancedStyles.availableStats}>
+          <div style={enhancedStyles.availableStatsHeader}>
             {availableStats.length > 0 && (
-              <span style={styles.availableStatsLabel}>
-                Available Stats to Assign:
+              <span style={enhancedStyles.availableStatsLabel}>
+                Available Base Stats to Assign:
               </span>
             )}
-            <span style={styles.availableStatsTotal}>
+            <span style={enhancedStyles.availableStatsTotal}>
               Total: {rolledStats.reduce((sum, stat) => sum + stat, 0)}
               {allStatsAssigned() && (
-                <span style={styles.completeIndicator}>✓ Complete</span>
+                <span style={enhancedStyles.completeIndicator}>✓ Complete</span>
               )}
             </span>
           </div>
-          <div style={styles.statsContainer}>
+          <div style={enhancedStyles.statsContainer}>
             {availableStats.length > 0 ? (
               availableStats.map((stat, index) => (
-                <span key={index} style={styles.statBadge}>
+                <span key={index} style={enhancedStyles.statBadge}>
                   {stat} ({getAbilityModifier(stat) >= 0 ? "+" : ""}
                   {getAbilityModifier(stat)})
                 </span>
               ))
             ) : (
-              <span style={styles.allAssignedText}>All stats assigned!</span>
+              <span style={enhancedStyles.allAssignedText}>
+                All stats assigned!
+              </span>
             )}
           </div>
         </div>
       )}
 
-      <div style={styles.abilityGrid}>
+      <div style={enhancedStyles.abilityGrid}>
         {Object.entries(character.abilityScores).map(([ability, score]) => {
+          const totalBonus = totalModifiers[ability] || 0;
+          const featBonus = featModifiers[ability] || 0;
+          const backgroundBonus = backgroundModifiers[ability] || 0;
+          const houseBonus = houseModifiers[ability] || 0;
+          const effectiveScore = score !== null ? score + totalBonus : null;
+          const hasModifier = totalBonus > 0;
+          const hasFeatModifier = featBonus > 0;
+          const hasBackgroundModifier = backgroundBonus > 0;
+          const hasHouseModifier = houseBonus > 0;
+          const baseModifier = getAbilityModifier(score);
+          const effectiveModifier = getEffectiveModifier(ability);
+          const tooltipText = getTooltipText(ability);
+
+          let cardStyle = enhancedStyles.abilityCard;
+          const modifierSources = [
+            hasFeatModifier,
+            hasBackgroundModifier,
+            hasHouseModifier,
+          ].filter(Boolean).length;
+
+          if (modifierSources > 1) {
+            cardStyle = enhancedStyles.abilityCardWithMultiple;
+          } else if (hasFeatModifier) {
+            cardStyle = enhancedStyles.abilityCardWithModifier;
+          } else if (hasBackgroundModifier) {
+            cardStyle = enhancedStyles.abilityCardWithBackground;
+          } else if (hasHouseModifier) {
+            cardStyle = enhancedStyles.abilityCardWithHouse;
+          }
+
           return (
             <div
               key={ability}
               style={{
-                ...styles.abilityCard,
+                ...cardStyle,
                 backgroundColor:
                   score !== null
-                    ? `${theme.success || "#10B981"}20`
+                    ? hasModifier
+                      ? cardStyle.backgroundColor
+                      : `${theme.success || "#10B981"}20`
                     : theme.surface,
                 borderColor:
-                  score !== null ? theme.success || "#10B981" : theme.border,
+                  score !== null
+                    ? hasModifier
+                      ? cardStyle.borderColor
+                      : theme.success || "#10B981"
+                    : theme.border,
               }}
+              title={tooltipText}
             >
-              <div style={styles.abilityName}>
+              <div style={enhancedStyles.abilityName}>
                 {ability.charAt(0).toUpperCase() + ability.slice(1)}
+                {hasFeatModifier && (
+                  <span style={enhancedStyles.modifierBonus}>+{featBonus}</span>
+                )}
+                {hasBackgroundModifier && (
+                  <span style={enhancedStyles.backgroundBonus}>
+                    +{backgroundBonus}
+                  </span>
+                )}
+                {hasHouseModifier && (
+                  <span style={enhancedStyles.houseBonus}>+{houseBonus}</span>
+                )}
               </div>
 
+              {/* Show effective modifier prominently */}
               <div
                 style={
-                  score !== null
-                    ? styles.abilityModifier
-                    : styles.abilityModifierEmpty
+                  effectiveScore !== null
+                    ? hasModifier
+                      ? enhancedStyles.effectiveScore
+                      : enhancedStyles.abilityModifier
+                    : enhancedStyles.abilityModifierEmpty
                 }
               >
-                {score !== null ? (
+                {effectiveScore !== null ? (
                   <>
-                    {getAbilityModifier(score) >= 0 ? "+" : ""}
-                    {getAbilityModifier(score)}
+                    {effectiveModifier >= 0 ? "+" : ""}
+                    {effectiveModifier}
+                    {hasModifier && baseModifier !== effectiveModifier && (
+                      <div style={enhancedStyles.modifierComparison}>
+                        {baseModifier >= 0 ? "+" : ""}
+                        {baseModifier} → {effectiveModifier >= 0 ? "+" : ""}
+                        {effectiveModifier}
+                      </div>
+                    )}
                   </>
                 ) : (
                   "--"
                 )}
               </div>
 
-              <div style={styles.abilityScoreContainer}>
+              <div style={enhancedStyles.abilityScoreContainer}>
                 {isManualMode ? (
                   <>
                     <input
@@ -277,7 +730,7 @@ export const AbilityScorePicker = ({
                       }
                       onKeyDown={(e) => handleManualScoreKeyDown(e, ability)}
                       style={{
-                        ...styles.input,
+                        ...enhancedStyles.input,
                         textAlign: "center",
                         fontSize: score !== null ? "18px" : "16px",
                         fontWeight: score !== null ? "bold" : "normal",
@@ -297,10 +750,20 @@ export const AbilityScorePicker = ({
                       }}
                       placeholder="Enter..."
                     />
+                    {/* Show breakdown for manual mode */}
+                    {score !== null && hasModifier && (
+                      <div style={enhancedStyles.scoreBreakdown}>
+                        Base: {score}
+                        {featBonus > 0 && ` + Feat: ${featBonus}`}
+                        {backgroundBonus > 0 && ` + Bg: ${backgroundBonus}`}
+                        {houseBonus > 0 && ` + House: ${houseBonus}`}
+                        {` = ${effectiveScore}`}
+                      </div>
+                    )}
                     {score !== null && (
                       <button
                         onClick={() => clearStat(ability)}
-                        style={styles.trashButton}
+                        style={enhancedStyles.trashButton}
                         title="Clear this ability score"
                       >
                         <Trash size={16} />
@@ -311,10 +774,31 @@ export const AbilityScorePicker = ({
                   <>
                     {score !== null ? (
                       <>
-                        <div style={styles.abilityScore}>{score}</div>
+                        <div style={enhancedStyles.abilityScore}>
+                          {hasModifier ? (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: theme.textSecondary,
+                                }}
+                              >
+                                {score}
+                                {featBonus > 0 && ` + ${featBonus}`}
+                                {backgroundBonus > 0 && ` + ${backgroundBonus}`}
+                                {houseBonus > 0 && ` + ${houseBonus}`}
+                              </div>
+                              <div style={enhancedStyles.effectiveScore}>
+                                = {effectiveScore}
+                              </div>
+                            </div>
+                          ) : (
+                            score
+                          )}
+                        </div>
                         <button
                           onClick={() => clearStat(ability)}
-                          style={styles.trashButton}
+                          style={enhancedStyles.trashButton}
                           title="Clear this ability score"
                         >
                           <Trash size={16} />
@@ -327,7 +811,7 @@ export const AbilityScorePicker = ({
                           assignStat(ability, parseInt(e.target.value))
                         }
                         style={{
-                          ...styles.assignSelect,
+                          ...enhancedStyles.assignSelect,
                           borderColor: theme.border,
                         }}
                         onFocus={(e) => {
@@ -347,6 +831,10 @@ export const AbilityScorePicker = ({
                           <option key={index} value={stat}>
                             {stat} ({getAbilityModifier(stat) >= 0 ? "+" : ""}
                             {getAbilityModifier(stat)})
+                            {totalBonus > 0 &&
+                              ` → ${stat + totalBonus} (+${getAbilityModifier(
+                                stat + totalBonus
+                              )})`}
                           </option>
                         ))}
                       </select>
@@ -358,6 +846,71 @@ export const AbilityScorePicker = ({
           );
         })}
       </div>
+
+      {/* Show modifier summary */}
+      {showModifiers &&
+        Object.values(totalModifiers).some((mod) => mod > 0) && (
+          <div
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 50%, rgba(168, 85, 247, 0.1) 100%)",
+              border: "1px solid rgba(139, 92, 246, 0.3)",
+              borderRadius: "6px",
+              padding: "12px",
+              marginTop: "12px",
+            }}
+          >
+            <h4
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: "12px",
+                color: "#8b5cf6",
+              }}
+            >
+              📋 Active Bonuses:
+            </h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {Object.entries(totalModifiers)
+                .filter(([_, bonus]) => bonus > 0)
+                .map(([ability, bonus]) => {
+                  const details = allDetails[ability] || [];
+                  const featTotal = featModifiers[ability] || 0;
+                  const backgroundTotal = backgroundModifiers[ability] || 0;
+                  const houseTotal = houseModifiers[ability] || 0;
+                  const sources = [
+                    featTotal > 0,
+                    backgroundTotal > 0,
+                    houseTotal > 0,
+                  ].filter(Boolean).length;
+
+                  let backgroundColor = "#8b5cf6";
+                  if (sources === 1) {
+                    if (featTotal > 0) backgroundColor = "#10B981";
+                    else if (backgroundTotal > 0) backgroundColor = "#3b82f6";
+                    else if (houseTotal > 0) backgroundColor = "#a855f7";
+                  }
+
+                  return (
+                    <span
+                      key={ability}
+                      style={{
+                        fontSize: "11px",
+                        padding: "2px 6px",
+                        backgroundColor,
+                        color: "white",
+                        borderRadius: "4px",
+                        cursor: "help",
+                      }}
+                      title={getTooltipText(ability)}
+                    >
+                      {ability.charAt(0).toUpperCase() + ability.slice(1)} +
+                      {bonus}
+                    </span>
+                  );
+                })}
+            </div>
+          </div>
+        )}
 
       {isManualMode && (
         <div
@@ -371,6 +924,8 @@ export const AbilityScorePicker = ({
         >
           💡 Tip: Press Enter to confirm a value, Escape to cancel. Valid range:
           1-30
+          {showModifiers &&
+            " • House, feat, and background bonuses are automatically added to your base scores"}
         </div>
       )}
     </div>

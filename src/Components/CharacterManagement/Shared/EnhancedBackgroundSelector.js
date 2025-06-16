@@ -3,11 +3,145 @@ import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { backgroundsData } from "./backgroundsData";
 
+// Utility function to calculate background modifiers
+const calculateBackgroundModifiers = (selectedBackground, character) => {
+  const defaultInitiativeChanges = {
+    bonus: 0,
+    abilityChange: null,
+    description: null,
+  };
+
+  if (!selectedBackground)
+    return {
+      abilityModifiers: {},
+      initiativeChanges: defaultInitiativeChanges,
+    };
+
+  const background = backgroundsData[selectedBackground];
+  if (!background?.modifiers)
+    return {
+      abilityModifiers: {},
+      initiativeChanges: defaultInitiativeChanges,
+    };
+
+  const abilityModifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const initiativeChanges = { ...defaultInitiativeChanges };
+
+  // Calculate ability score increases
+  if (background.modifiers.abilityIncreases) {
+    background.modifiers.abilityIncreases.forEach((increase) => {
+      if (
+        increase.type === "fixed" &&
+        abilityModifiers.hasOwnProperty(increase.ability)
+      ) {
+        abilityModifiers[increase.ability] += increase.amount;
+      }
+      // Note: Choice-based increases would need additional handling similar to feats
+    });
+  }
+
+  // Calculate initiative changes
+  if (background.modifiers.other) {
+    if (background.modifiers.other.initiativeBonus) {
+      initiativeChanges.bonus = background.modifiers.other.initiativeBonus;
+      initiativeChanges.description = `+${background.modifiers.other.initiativeBonus} Initiative`;
+    }
+
+    if (background.modifiers.other.initiativeAbility) {
+      const newAbility = background.modifiers.other.initiativeAbility;
+      const currentAbility = character.initiativeAbility || "dexterity";
+
+      if (newAbility !== currentAbility) {
+        initiativeChanges.abilityChange = newAbility;
+        initiativeChanges.description = initiativeChanges.description
+          ? `${initiativeChanges.description}, Use ${
+              newAbility.charAt(0).toUpperCase() + newAbility.slice(1)
+            }`
+          : `Use ${
+              newAbility.charAt(0).toUpperCase() + newAbility.slice(1)
+            } for Initiative`;
+      }
+    }
+  }
+
+  return { abilityModifiers, initiativeChanges };
+};
+
+// Component to display background modifier pills
+const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
+  const { abilityModifiers, initiativeChanges } = calculateBackgroundModifiers(
+    selectedBackground,
+    character
+  );
+
+  // Check if there are any modifiers to show
+  const hasAbilityModifiers = Object.values(abilityModifiers).some(
+    (mod) => mod > 0
+  );
+  const hasInitiativeChanges =
+    initiativeChanges.bonus > 0 || initiativeChanges.abilityChange;
+
+  if (!hasAbilityModifiers && !hasInitiativeChanges) return null;
+
+  return (
+    <div style={styles.modifierPillsContainer}>
+      <div style={styles.pillsLabel}>Background Bonuses:</div>
+      <div style={styles.pillsRow}>
+        {/* Ability Score Pills */}
+        {Object.entries(abilityModifiers)
+          .filter(([_, value]) => value > 0)
+          .map(([ability, bonus]) => (
+            <div
+              key={ability}
+              style={styles.modifierPill}
+              title={`+${bonus} ${
+                ability.charAt(0).toUpperCase() + ability.slice(1)
+              } from background`}
+            >
+              <span style={styles.pillAbility}>
+                {ability.slice(0, 3).toUpperCase()}
+              </span>
+              <span style={styles.pillModifier}>+{bonus}</span>
+            </div>
+          ))}
+
+        {/* Initiative Pills */}
+        {hasInitiativeChanges && (
+          <div
+            style={styles.initiativePill}
+            title={initiativeChanges.description}
+          >
+            <span style={styles.pillAbility}>INIT</span>
+            <span style={styles.pillModifier}>
+              {initiativeChanges.bonus > 0 && `+${initiativeChanges.bonus}`}
+              {initiativeChanges.abilityChange && (
+                <span style={styles.abilityChange}>
+                  {initiativeChanges.bonus > 0 ? ", " : ""}
+                  {initiativeChanges.abilityChange.slice(0, 3).toUpperCase()}
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const EnhancedBackgroundSelector = ({
   value,
   onChange,
   disabled = false,
   backgrounds: backgroundsList = [],
+  character = {}, // Add character prop for modifier calculations
 }) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
@@ -15,10 +149,68 @@ const EnhancedBackgroundSelector = ({
 
   const selectedBackground = value || "";
 
+  // Enhanced styles for the modifier pills
+  const enhancedStyles = {
+    ...styles,
+    modifierPillsContainer: {
+      backgroundColor: "rgba(59, 130, 246, 0.1)",
+      border: "1px solid rgba(59, 130, 246, 0.3)",
+      borderRadius: "8px",
+      padding: "12px",
+      marginBottom: "16px",
+    },
+    pillsLabel: {
+      fontSize: "12px",
+      fontWeight: "600",
+      color: "#3b82f6",
+      marginBottom: "8px",
+    },
+    pillsRow: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "8px",
+    },
+    modifierPill: {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+      backgroundColor: "#3b82f6",
+      color: "white",
+      padding: "4px 8px",
+      borderRadius: "12px",
+      fontSize: "11px",
+      fontWeight: "600",
+      cursor: "help",
+    },
+    initiativePill: {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+      backgroundColor: "#f59e0b",
+      color: "white",
+      padding: "4px 8px",
+      borderRadius: "12px",
+      fontSize: "11px",
+      fontWeight: "600",
+      cursor: "help",
+    },
+    pillAbility: {
+      opacity: 0.9,
+    },
+    pillModifier: {
+      fontWeight: "bold",
+    },
+    abilityChange: {
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      padding: "1px 4px",
+      borderRadius: "4px",
+      fontSize: "9px",
+    },
+  };
+
   const handleBackgroundToggle = (backgroundName) => {
     if (selectedBackground === backgroundName) {
       onChange("");
-
       setExpandedBackgrounds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(backgroundName);
@@ -26,7 +218,6 @@ const EnhancedBackgroundSelector = ({
       });
     } else {
       onChange(backgroundName);
-
       setExpandedBackgrounds((prev) => {
         const newSet = new Set(prev);
         newSet.add(backgroundName);
@@ -65,7 +256,6 @@ const EnhancedBackgroundSelector = ({
         },
       }));
     }
-
     return Object.values(backgroundsData).map((bg) => ({
       name: bg.name,
       data: bg,
@@ -75,28 +265,46 @@ const EnhancedBackgroundSelector = ({
   const availableBackgrounds = getAvailableBackgrounds();
 
   return (
-    <div style={styles.container}>
-      <div style={styles.sectionHeader}>
-        <h3 style={styles.skillsHeader}>Background</h3>
+    <div style={enhancedStyles.container}>
+      <div style={enhancedStyles.sectionHeader}>
+        <h3 style={enhancedStyles.skillsHeader}>Background</h3>
         {selectedBackground && (
-          <span style={styles.selectionStatus}>
+          <span style={enhancedStyles.selectionStatus}>
             Selected: {selectedBackground}
           </span>
         )}
       </div>
 
-      <div style={styles.featsContainer}>
+      {/* Background Modifier Pills */}
+      {selectedBackground && (
+        <BackgroundModifierPills
+          selectedBackground={selectedBackground}
+          character={character}
+          styles={enhancedStyles}
+        />
+      )}
+
+      <div style={enhancedStyles.featsContainer}>
         {availableBackgrounds.map(({ name, data }) => {
           const isSelected = selectedBackground === name;
           const isExpanded = expandedBackgrounds.has(name);
+          const hasModifiers =
+            data.modifiers &&
+            (data.modifiers.abilityIncreases?.length > 0 ||
+              data.modifiers.other?.initiativeBonus ||
+              data.modifiers.other?.initiativeAbility);
 
           return (
             <div
               key={name}
-              style={isSelected ? styles.featCardSelected : styles.featCard}
+              style={
+                isSelected
+                  ? enhancedStyles.featCardSelected
+                  : enhancedStyles.featCard
+              }
             >
-              <div style={styles.featHeader}>
-                <label style={styles.featLabelClickable}>
+              <div style={enhancedStyles.featHeader}>
+                <label style={enhancedStyles.featLabelClickable}>
                   <input
                     type="radio"
                     name="background"
@@ -114,21 +322,34 @@ const EnhancedBackgroundSelector = ({
                   />
                   <span
                     style={
-                      isSelected ? styles.featNameSelected : styles.featName
+                      isSelected
+                        ? enhancedStyles.featNameSelected
+                        : enhancedStyles.featName
                     }
                   >
                     {data.name}
                     {data.skillProficiencies && (
-                      <span style={styles.availableChoicesIndicator}>
+                      <span style={enhancedStyles.availableChoicesIndicator}>
                         ({data.skillProficiencies.length} skill
                         {data.skillProficiencies.length > 1 ? "s" : ""})
+                      </span>
+                    )}
+                    {hasModifiers && (
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#3b82f6",
+                          marginLeft: "4px",
+                        }}
+                      >
+                        (+MOD)
                       </span>
                     )}
                   </span>
                 </label>
                 <button
                   onClick={() => toggleBackgroundExpansion(name)}
-                  style={styles.expandButton}
+                  style={enhancedStyles.expandButton}
                   type="button"
                   disabled={disabled}
                 >
@@ -138,7 +359,9 @@ const EnhancedBackgroundSelector = ({
 
               <div
                 style={
-                  isSelected ? styles.featPreviewSelected : styles.featPreview
+                  isSelected
+                    ? enhancedStyles.featPreviewSelected
+                    : enhancedStyles.featPreview
                 }
               >
                 {data.preview || data.description}
@@ -148,8 +371,8 @@ const EnhancedBackgroundSelector = ({
                 <div
                   style={
                     isSelected
-                      ? styles.featDescriptionSelected
-                      : styles.featDescription
+                      ? enhancedStyles.featDescriptionSelected
+                      : enhancedStyles.featDescription
                   }
                 >
                   {/* Full Description */}
@@ -165,6 +388,55 @@ const EnhancedBackgroundSelector = ({
                       {data.description}
                     </p>
                   </div>
+
+                  {/* Show modifiers in expanded view */}
+                  {hasModifiers && (
+                    <div
+                      style={{
+                        marginTop: "8px",
+                        marginBottom: "16px",
+                        padding: "8px",
+                        backgroundColor: "rgba(59, 130, 246, 0.1)",
+                        borderRadius: "4px",
+                        border: "1px solid rgba(59, 130, 246, 0.3)",
+                      }}
+                    >
+                      <strong style={{ color: "#3b82f6" }}>
+                        Background Modifiers:
+                      </strong>
+                      <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px" }}>
+                        {data.modifiers.abilityIncreases?.map(
+                          (increase, index) => (
+                            <li
+                              key={index}
+                              style={{ fontSize: "12px", color: "#3b82f6" }}
+                            >
+                              +{increase.amount}{" "}
+                              {increase.ability.charAt(0).toUpperCase() +
+                                increase.ability.slice(1)}
+                            </li>
+                          )
+                        )}
+                        {data.modifiers.other?.initiativeBonus && (
+                          <li style={{ fontSize: "12px", color: "#f59e0b" }}>
+                            +{data.modifiers.other.initiativeBonus} Initiative
+                          </li>
+                        )}
+                        {data.modifiers.other?.initiativeAbility && (
+                          <li style={{ fontSize: "12px", color: "#f59e0b" }}>
+                            Use{" "}
+                            {data.modifiers.other.initiativeAbility
+                              .charAt(0)
+                              .toUpperCase() +
+                              data.modifiers.other.initiativeAbility.slice(
+                                1
+                              )}{" "}
+                            for Initiative
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Skill Proficiencies */}
                   {data.skillProficiencies && (
@@ -351,11 +623,13 @@ const EnhancedBackgroundSelector = ({
         })}
       </div>
 
-      <div style={styles.helpText}>
+      <div style={enhancedStyles.helpText}>
         Your background represents your character's life before attending magic
         school. It provides skill proficiencies, special features, and roleplay
         opportunities that help define who your character is beyond their
         magical abilities.
+        {selectedBackground &&
+          " Mechanical bonuses from your background are shown above."}
       </div>
     </div>
   );

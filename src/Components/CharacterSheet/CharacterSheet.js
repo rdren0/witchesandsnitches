@@ -252,6 +252,7 @@ const CharacterSheet = ({
           standardFeats: data.standard_feats || [],
           strength: effectiveAbilityScores.strength || 10,
           subclass: data.subclass,
+          subclassChoices: data.subclass_choices || {},
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,
@@ -1035,6 +1036,7 @@ const CharacterSheet = ({
             character={character}
             discordWebhookUrl={discordWebhookUrl}
           />
+
           <div
             style={{
               display: "grid",
