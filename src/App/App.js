@@ -27,6 +27,7 @@ import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
 import logo from "./../Images/logo/Thumbnail-01.png";
+import BetaBanner from "./BetaBanner";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -455,6 +456,7 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
       <div
         style={{ textAlign: "center", marginBottom: "3rem", color: theme.text }}
       >
+        <BetaBanner />
         <h1>Welcome to Your D&D Character Manager</h1>
         {user ? (
           <p>Welcome back, {displayName}! Ready for your next adventure?</p>
