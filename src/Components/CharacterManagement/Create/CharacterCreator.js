@@ -272,6 +272,7 @@ const CharacterCreator = ({
     ) {
       validateFeatSelections();
     }
+    // eslint-disable-next-line
   }, [
     character.standardFeats,
     character.asiChoices,

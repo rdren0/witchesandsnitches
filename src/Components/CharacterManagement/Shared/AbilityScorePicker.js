@@ -873,7 +873,7 @@ export const AbilityScorePicker = ({
               {Object.entries(totalModifiers)
                 .filter(([_, bonus]) => bonus > 0)
                 .map(([ability, bonus]) => {
-                  const details = allDetails[ability] || [];
+                  // const details = allDetails[ability] || [];
                   const featTotal = featModifiers[ability] || 0;
                   const backgroundTotal = backgroundModifiers[ability] || 0;
                   const houseTotal = houseModifiers[ability] || 0;

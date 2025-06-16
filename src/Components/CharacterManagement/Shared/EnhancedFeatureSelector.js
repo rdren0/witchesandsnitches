@@ -2,7 +2,7 @@ import { standardFeats } from "../../standardFeatData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { allSkills } from "../../CharacterSheet/utils";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 const getSpellcastingAbility = (character) => {
   const castingStyle = character.castingStyle;
