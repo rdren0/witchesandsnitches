@@ -212,7 +212,7 @@ const CharacterSheet = ({
   };
 
   const getHPColor = (character) => {
-    const currentHP = character.currentHitPoints || character.hitPoints;
+    const currentHP = character.currentHitPoints ?? character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const percentage = currentHP / maxHP;
 
@@ -223,7 +223,7 @@ const CharacterSheet = ({
   };
 
   const getEnhancedHPStyle = (character, baseStyle) => {
-    const currentHP = character.currentHitPoints || character.hitPoints;
+    const currentHP = character.currentHitPoints ?? character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const hpColor = getHPColor(character);
 
@@ -360,7 +360,7 @@ const CharacterSheet = ({
           charisma: effectiveAbilityScores.charisma || 10,
           constitution: effectiveAbilityScores.constitution || 10,
           currentHitDice: data.current_hit_dice || data.level,
-          currentHitPoints: data.current_hit_points || data.hit_points || 1,
+          currentHitPoints: data.current_hit_points ?? (data.hit_points || 1),
           dexterity: effectiveAbilityScores.dexterity || 10,
           gameSession: data.game_session || "",
           hitDie: getHitDie(data.casting_style),
@@ -426,7 +426,7 @@ const CharacterSheet = ({
   const handleLongRest = async () => {
     if (!character) return;
 
-    const currentHP = character.currentHitPoints || character.hitPoints;
+    const currentHP = character.currentHitPoints ?? character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const currentHitDice = character.currentHitDice;
     const maxHitDice = character.maxHitDice;
@@ -531,7 +531,7 @@ const CharacterSheet = ({
   const fullHeal = async () => {
     if (!character) return;
 
-    const currentHP = character.currentHitPoints || character.hitPoints;
+    const currentHP = character.currentHitPoints ?? character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
 
     if (currentHP >= maxHP) {
@@ -818,13 +818,13 @@ const CharacterSheet = ({
                       color: getHPColor(character),
                       fontSize:
                         character.currentHitPoints !==
-                        (character.maxHitPoints || character.hitPoints)
+                        (character.maxHitPoints ?? character.hitPoints)
                           ? "1rem"
                           : "1.25rem",
                     }}
                   >
-                    {character.currentHitPoints || character.hitPoints}/
-                    {character.maxHitPoints || character.hitPoints}
+                    {character.currentHitPoints ?? character.hitPoints}/
+                    {character.maxHitPoints ?? character.hitPoints}
                   </div>
                   <div
                     style={{
@@ -835,7 +835,7 @@ const CharacterSheet = ({
                     Hit Points
                   </div>
                   {/* Unconscious indicator */}
-                  {(character.currentHitPoints || character.hitPoints) ===
+                  {(character.currentHitPoints ?? character.hitPoints) ===
                     0 && (
                     <div
                       style={{
@@ -859,9 +859,9 @@ const CharacterSheet = ({
                     </div>
                   )}
                   {/* Low health warning */}
-                  {(character.currentHitPoints || character.hitPoints) > 0 &&
-                    (character.currentHitPoints || character.hitPoints) /
-                      (character.maxHitPoints || character.hitPoints) <=
+                  {(character.currentHitPoints ?? character.hitPoints) > 0 &&
+                    (character.currentHitPoints ?? character.hitPoints) /
+                      (character.maxHitPoints ?? character.hitPoints) <=
                       0.25 && (
                       <div
                         style={{

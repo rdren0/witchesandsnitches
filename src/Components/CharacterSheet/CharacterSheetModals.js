@@ -146,8 +146,8 @@ const CharacterSheetModals = ({
     setIsApplyingDamage(true);
 
     try {
-      const currentHP = character.currentHitPoints || character.hitPoints;
-      const maxHP = character.maxHitPoints || character.hitPoints;
+      const currentHP = character.currentHitPoints ?? character.hitPoints;
+      const maxHP = character.maxHitPoints ?? character.hitPoints;
 
       let newCurrentHP;
       let changeAmount;
@@ -273,8 +273,8 @@ const CharacterSheetModals = ({
   };
 
   const handleFullHeal = () => {
-    const currentHP = character.currentHitPoints || character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const currentHP = character.currentHitPoints ?? character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const healAmount = maxHP - currentHP;
 
     if (healAmount > 0) {
@@ -283,8 +283,8 @@ const CharacterSheetModals = ({
   };
 
   const getHPColor = () => {
-    const currentHP = character.currentHitPoints || character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const currentHP = character.currentHitPoints ?? character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const percentage = currentHP / maxHP;
 
     if (percentage <= 0.25) return "#EF4444"; // Red
@@ -363,8 +363,8 @@ const CharacterSheetModals = ({
               >
                 <span>Current HP:</span>
                 <span>
-                  {character.currentHitPoints || character.hitPoints}/
-                  {character.maxHitPoints || character.hitPoints}
+                  {character.currentHitPoints ?? character.hitPoints}/
+                  {character.maxHitPoints ?? character.hitPoints}
                 </span>
               </div>
               <div
@@ -619,8 +619,8 @@ const CharacterSheetModals = ({
                   marginBottom: "4px",
                 }}
               >
-                {character.currentHitPoints || character.hitPoints} /{" "}
-                {character.maxHitPoints || character.hitPoints}
+                {character.currentHitPoints ?? character.hitPoints} /{" "}
+                {character.maxHitPoints ?? character.hitPoints}
               </div>
               <div
                 style={{
@@ -656,7 +656,7 @@ const CharacterSheetModals = ({
                 <button
                   onClick={() => handleQuickAction(1, "damage")}
                   disabled={
-                    (character.currentHitPoints || character.hitPoints) === 0 ||
+                    (character.currentHitPoints ?? character.hitPoints) === 0 ||
                     isApplyingDamage
                   }
                   style={{
@@ -667,12 +667,12 @@ const CharacterSheetModals = ({
                     borderRadius: "6px",
                     fontSize: "12px",
                     cursor:
-                      (character.currentHitPoints || character.hitPoints) ===
+                      (character.currentHitPoints ?? character.hitPoints) ===
                         0 || isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
-                      (character.currentHitPoints || character.hitPoints) ===
+                      (character.currentHitPoints ?? character.hitPoints) ===
                         0 || isApplyingDamage
                         ? 0.5
                         : 1,
@@ -683,7 +683,7 @@ const CharacterSheetModals = ({
                 <button
                   onClick={() => handleQuickAction(5, "damage")}
                   disabled={
-                    (character.currentHitPoints || character.hitPoints) === 0 ||
+                    (character.currentHitPoints ?? character.hitPoints) === 0 ||
                     isApplyingDamage
                   }
                   style={{
@@ -694,12 +694,12 @@ const CharacterSheetModals = ({
                     borderRadius: "6px",
                     fontSize: "12px",
                     cursor:
-                      (character.currentHitPoints || character.hitPoints) ===
+                      (character.currentHitPoints ?? character.hitPoints) ===
                         0 || isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
-                      (character.currentHitPoints || character.hitPoints) ===
+                      (character.currentHitPoints ?? character.hitPoints) ===
                         0 || isApplyingDamage
                         ? 0.5
                         : 1,
@@ -710,8 +710,8 @@ const CharacterSheetModals = ({
                 <button
                   onClick={() => handleQuickAction(1, "healing")}
                   disabled={
-                    (character.currentHitPoints || character.hitPoints) ===
-                      (character.maxHitPoints || character.hitPoints) ||
+                    (character.currentHitPoints ?? character.hitPoints) ===
+                      (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
                   }
                   style={{
@@ -722,14 +722,14 @@ const CharacterSheetModals = ({
                     borderRadius: "6px",
                     fontSize: "12px",
                     cursor:
-                      (character.currentHitPoints || character.hitPoints) ===
-                        (character.maxHitPoints || character.hitPoints) ||
+                      (character.currentHitPoints ?? character.hitPoints) ===
+                        (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
-                      (character.currentHitPoints || character.hitPoints) ===
-                        (character.maxHitPoints || character.hitPoints) ||
+                      (character.currentHitPoints ?? character.hitPoints) ===
+                        (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? 0.5
                         : 1,
@@ -740,8 +740,8 @@ const CharacterSheetModals = ({
                 <button
                   onClick={() => handleQuickAction(5, "healing")}
                   disabled={
-                    (character.currentHitPoints || character.hitPoints) ===
-                      (character.maxHitPoints || character.hitPoints) ||
+                    (character.currentHitPoints ?? character.hitPoints) ===
+                      (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
                   }
                   style={{
@@ -752,14 +752,14 @@ const CharacterSheetModals = ({
                     borderRadius: "6px",
                     fontSize: "12px",
                     cursor:
-                      (character.currentHitPoints || character.hitPoints) ===
-                        (character.maxHitPoints || character.hitPoints) ||
+                      (character.currentHitPoints ?? character.hitPoints) ===
+                        (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
-                      (character.currentHitPoints || character.hitPoints) ===
-                        (character.maxHitPoints || character.hitPoints) ||
+                      (character.currentHitPoints ?? character.hitPoints) ===
+                        (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? 0.5
                         : 1,
@@ -786,7 +786,7 @@ const CharacterSheetModals = ({
                 <input
                   type="number"
                   min="1"
-                  max={character.currentHitPoints || character.hitPoints}
+                  max={character.currentHitPoints ?? character.hitPoints}
                   value={damageAmount || ""}
                   onChange={(e) => {
                     const value = parseInt(e.target.value) || 0;
@@ -809,7 +809,7 @@ const CharacterSheetModals = ({
                   onClick={handleCustomDamage}
                   disabled={
                     !damageAmount ||
-                    (character.currentHitPoints || character.hitPoints) === 0 ||
+                    (character.currentHitPoints ?? character.hitPoints) === 0 ||
                     isApplyingDamage
                   }
                   style={{
@@ -821,14 +821,14 @@ const CharacterSheetModals = ({
                     fontSize: "14px",
                     cursor:
                       !damageAmount ||
-                      (character.currentHitPoints || character.hitPoints) ===
+                      (character.currentHitPoints ?? character.hitPoints) ===
                         0 ||
                       isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
                       !damageAmount ||
-                      (character.currentHitPoints || character.hitPoints) ===
+                      (character.currentHitPoints ?? character.hitPoints) ===
                         0 ||
                       isApplyingDamage
                         ? 0.5
@@ -861,8 +861,8 @@ const CharacterSheetModals = ({
                   type="number"
                   min="1"
                   max={
-                    (character.maxHitPoints || character.hitPoints) -
-                    (character.currentHitPoints || character.hitPoints)
+                    (character.maxHitPoints ?? character.hitPoints) -
+                    (character.currentHitPoints ?? character.hitPoints)
                   }
                   value={damageAmount || ""}
                   onChange={(e) => {
@@ -886,8 +886,8 @@ const CharacterSheetModals = ({
                   onClick={handleCustomHeal}
                   disabled={
                     !damageAmount ||
-                    (character.currentHitPoints || character.hitPoints) ===
-                      (character.maxHitPoints || character.hitPoints) ||
+                    (character.currentHitPoints ?? character.hitPoints) ===
+                      (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
                   }
                   style={{
@@ -899,15 +899,15 @@ const CharacterSheetModals = ({
                     fontSize: "14px",
                     cursor:
                       !damageAmount ||
-                      (character.currentHitPoints || character.hitPoints) ===
-                        (character.maxHitPoints || character.hitPoints) ||
+                      (character.currentHitPoints ?? character.hitPoints) ===
+                        (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
                       !damageAmount ||
-                      (character.currentHitPoints || character.hitPoints) ===
-                        (character.maxHitPoints || character.hitPoints) ||
+                      (character.currentHitPoints ?? character.hitPoints) ===
+                        (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? 0.5
                         : 1,
@@ -927,24 +927,24 @@ const CharacterSheetModals = ({
               <button
                 onClick={handleFullHeal}
                 disabled={
-                  (character.currentHitPoints || character.hitPoints) ===
-                    (character.maxHitPoints || character.hitPoints) ||
+                  (character.currentHitPoints ?? character.hitPoints) ===
+                    (character.maxHitPoints ?? character.hitPoints) ||
                   isApplyingDamage
                 }
                 style={{
                   width: "100%",
                   padding: "12px",
                   backgroundColor:
-                    (character.currentHitPoints || character.hitPoints) ===
-                      (character.maxHitPoints || character.hitPoints) ||
+                    (character.currentHitPoints ?? character.hitPoints) ===
+                      (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
                       ? theme === "dark"
                         ? "#4b5563"
                         : "#e5e7eb"
                       : "#10B981",
                   color:
-                    (character.currentHitPoints || character.hitPoints) ===
-                      (character.maxHitPoints || character.hitPoints) ||
+                    (character.currentHitPoints ?? character.hitPoints) ===
+                      (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
                       ? theme === "dark"
                         ? "#9ca3af"
@@ -955,8 +955,8 @@ const CharacterSheetModals = ({
                   fontSize: "14px",
                   fontWeight: "600",
                   cursor:
-                    (character.currentHitPoints || character.hitPoints) ===
-                      (character.maxHitPoints || character.hitPoints) ||
+                    (character.currentHitPoints ?? character.hitPoints) ===
+                      (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
                       ? "not-allowed"
                       : "pointer",
@@ -970,7 +970,7 @@ const CharacterSheetModals = ({
                 {isApplyingDamage
                   ? "Applying..."
                   : `Full Heal to ${
-                      character.maxHitPoints || character.hitPoints
+                      character.maxHitPoints ?? character.hitPoints
                     } HP`}
               </button>
             </div>
