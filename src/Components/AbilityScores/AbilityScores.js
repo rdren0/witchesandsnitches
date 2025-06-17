@@ -9,6 +9,7 @@ const AbilityScores = ({ character }) => {
   const { theme } = useTheme();
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
+  // eslint-disable-next-line
   const [hoveredButton, setHoveredButton] = useState(null);
   const characterModifiers = modifiers(character);
 
@@ -91,8 +92,6 @@ const AbilityScores = ({ character }) => {
                 ability.key,
                 hoveredButton === ability.key
               )}
-              onMouseEnter={() => setHoveredButton(ability.key)}
-              onMouseLeave={() => setHoveredButton(null)}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isRolling) {

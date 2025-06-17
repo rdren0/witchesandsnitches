@@ -338,13 +338,6 @@ export const Skills = ({
                       transition: "background-color 0.2s ease",
                       cursor: "pointer",
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor =
-                        theme.background || "#f3f4f6";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = "transparent";
-                    }}
                   >
                     {getProficiencyIcon(skillLevel)}
                   </div>

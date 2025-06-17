@@ -31,6 +31,7 @@ const hitDiceData = {
   default: "d8",
 };
 
+// CSS keyframes for animations
 const pulseKeyframes = `
   @keyframes pulse {
     0%, 100% {
@@ -95,7 +96,7 @@ const CharacterSheet = ({
       "Technique Caster": "Wisdom",
       "Intellect Caster": "Intelligence",
       "Vigor Caster": "Constitution",
-
+      // Also handle casting styles without "Caster" suffix
       Willpower: "Charisma",
       Technique: "Wisdom",
       Intellect: "Intelligence",
@@ -104,6 +105,7 @@ const CharacterSheet = ({
     return spellcastingAbilityMap[castingStyle] || null;
   };
 
+  // New function to get the spellcasting ability modifier
   const getSpellcastingAbilityModifier = (character) => {
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
     if (!spellcastingAbility) return 0;
@@ -113,6 +115,7 @@ const CharacterSheet = ({
     return Math.floor((abilityScore - 10) / 2);
   };
 
+  // New function to handle spellcasting ability check rolls
   const rollSpellcastingAbilityCheck = async () => {
     if (!character || isRolling) return;
 
@@ -123,8 +126,9 @@ const CharacterSheet = ({
 
     try {
       const spellcastingModifier = getSpellcastingAbilityModifier(character);
-      const totalModifier = spellcastingModifier;
+      const totalModifier = spellcastingModifier; // No proficiency bonus
 
+      // Roll d20
       const rollValue = Math.floor(Math.random() * 20) + 1;
       const total = rollValue + totalModifier;
 
@@ -211,15 +215,16 @@ const CharacterSheet = ({
     return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
   };
 
+  // Enhanced HP Management helper functions
   const getHPColor = (character) => {
     const currentHP = character.currentHitPoints || character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const percentage = currentHP / maxHP;
 
-    if (percentage <= 0.25) return "#EF4444";
-    if (percentage <= 0.5) return "#F59E0B";
-    if (percentage <= 0.75) return "#EAB308";
-    return "#10B981";
+    if (percentage <= 0.25) return "#EF4444"; // Red
+    if (percentage <= 0.5) return "#F59E0B"; // Orange
+    if (percentage <= 0.75) return "#EAB308"; // Yellow
+    return "#10B981"; // Green
   };
 
   const getEnhancedHPStyle = (character, baseStyle) => {
@@ -232,12 +237,15 @@ const CharacterSheet = ({
       color: hpColor,
       backgroundColor:
         currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}10`,
-      borderColor: currentHP === maxHP ? baseStyle.borderColor : hpColor,
+      borderColor: hpColor, // Always use HP-based color for border
       transition: "all 0.2s ease",
       position: "relative",
       userSelect: "none",
     };
   };
+
+  // ... (keeping all the existing helper functions like calculateEffectiveAbilityScores,
+  // getAllCharacterFeats, transformSkillData, fetchCharacterDetails, etc. - unchanged)
 
   const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
     const effectiveScores = { ...baseScores };
@@ -414,6 +422,9 @@ const CharacterSheet = ({
     // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId, supabase]);
 
+  // ... (keeping all the existing handler functions like handleShortRestClick,
+  // handleLongRest, handleDamageClick, fullHeal, handleCharacterUpdated - unchanged)
+
   const handleShortRestClick = () => {
     if (!character || character.currentHitDice <= 0) {
       alert("No hit dice available for short rest!");
@@ -524,7 +535,7 @@ const CharacterSheet = ({
 
   const handleDamageClick = () => {
     if (!character) return;
-    setDamageAmount(0);
+    setDamageAmount(0); // Reset to 0 when opening modal
     setShowDamageModal(true);
   };
 
@@ -789,7 +800,7 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.combatStats,
-                  gridTemplateColumns: "repeat(6, 1fr)",
+                  gridTemplateColumns: "repeat(6, 1fr)", // Changed to 6 columns to accommodate new tile
                 }}
               >
                 {/* Enhanced HP Tile */}
@@ -806,27 +817,16 @@ const CharacterSheet = ({
                     e.preventDefault();
                     fullHeal();
                   }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = "scale(1.02)";
-                    e.target.style.boxShadow = `0 4px 8px ${getHPColor(
-                      character
-                    )}30`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = "scale(1)";
-                    e.target.style.boxShadow = "none";
-                  }}
                   title="Left click to manage HP • Right click to full heal"
                 >
                   <Heart
                     className="w-6 h-6 mx-auto mb-1"
-                    style={{ color: "#eee" }}
+                    style={{ color: "#ef4444" }}
                   />
                   <div
                     style={{
                       ...styles.statValue,
-                      ...styles.statValueRed,
-                      color: "white",
+                      color: "#ef4444",
                       fontSize:
                         character.currentHitPoints !==
                         (character.maxHitPoints || character.hitPoints)
@@ -840,8 +840,7 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statLabel,
-                      ...styles.statLabelRed,
-                      color: "white",
+                      color: "#ef4444",
                     }}
                   >
                     Hit Points
@@ -1010,22 +1009,6 @@ const CharacterSheet = ({
                     transition: "all 0.2s ease",
                   }}
                   onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
-                  onMouseEnter={(e) => {
-                    if (!isRolling) {
-                      // eslint-disable-next-line
-                      e.target.style.backgroundColor = "#8b5cf6" + "10";
-                      e.target.style.transform = "scale(1.02)";
-                      e.target.style.boxShadow =
-                        "0 4px 8px rgba(139, 92, 246, 0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isRolling) {
-                      e.target.style.backgroundColor = "transparent";
-                      e.target.style.transform = "scale(1)";
-                      e.target.style.boxShadow = "none";
-                    }
-                  }}
                   title={`Click to make a spellcasting ability check using ${
                     getSpellcastingAbility(character.castingStyle) ||
                     "no spellcasting ability"
@@ -1243,18 +1226,6 @@ const CharacterSheet = ({
                   onClick={handleShortRestClick}
                   disabled={character.currentHitDice <= 0}
                   title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
-                  onMouseEnter={(e) => {
-                    if (character.currentHitDice > 0) {
-                      e.target.style.backgroundColor = "#8b5cf6";
-                      e.target.style.transform = "translateY(-1px)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (character.currentHitDice > 0) {
-                      e.target.style.backgroundColor = "#9d4edd";
-                      e.target.style.transform = "translateY(0)";
-                    }
-                  }}
                 >
                   <Coffee size={16} />
                   Short Rest
@@ -1280,18 +1251,6 @@ const CharacterSheet = ({
                   onClick={handleLongRest}
                   disabled={isLongResting}
                   title="Restore all HP and hit dice with a long rest"
-                  onMouseEnter={(e) => {
-                    if (!isLongResting) {
-                      e.target.style.backgroundColor = "#2563eb";
-                      e.target.style.transform = "translateY(-1px)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isLongResting) {
-                      e.target.style.backgroundColor = "#3b82f6";
-                      e.target.style.transform = "translateY(0)";
-                    }
-                  }}
                 >
                   <Moon size={16} />
                   {isLongResting ? "Resting..." : "Long Rest"}

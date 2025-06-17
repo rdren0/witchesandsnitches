@@ -123,18 +123,6 @@ const CharacterManagement = ({
                     ? `3px solid ${theme.primary}`
                     : "3px solid transparent",
                 }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.target.style.backgroundColor = theme.surface;
-                    e.target.style.color = theme.text;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.target.style.backgroundColor = "transparent";
-                    e.target.style.color = theme.textSecondary;
-                  }
-                }}
               >
                 <Icon size={16} />
                 {tab.label}
