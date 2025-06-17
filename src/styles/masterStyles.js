@@ -241,9 +241,7 @@ const createCharacterSheetStyles = (theme) => ({
   statCardRed: {
     borderColor: "#ef4444",
   },
-  statCardBlue: {
-    borderColor: "#3b82f6",
-  },
+  statCardBlue: {},
   statCardGreen: {
     borderColor: "#10b981",
   },
