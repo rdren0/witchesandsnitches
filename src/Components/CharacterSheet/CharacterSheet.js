@@ -9,6 +9,7 @@ import {
   Coffee,
   TrendingUp,
   Star,
+  Sparkles,
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -30,7 +31,6 @@ const hitDiceData = {
   default: "d8",
 };
 
-// CSS keyframes for animations
 const pulseKeyframes = `
   @keyframes pulse {
     0%, 100% {
@@ -95,8 +95,108 @@ const CharacterSheet = ({
       "Technique Caster": "Wisdom",
       "Intellect Caster": "Intelligence",
       "Vigor Caster": "Constitution",
+
+      Willpower: "Charisma",
+      Technique: "Wisdom",
+      Intellect: "Intelligence",
+      Vigor: "Constitution",
     };
     return spellcastingAbilityMap[castingStyle] || null;
+  };
+
+  const getSpellcastingAbilityModifier = (character) => {
+    const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
+    if (!spellcastingAbility) return 0;
+
+    const abilityKey = spellcastingAbility.toLowerCase();
+    const abilityScore = character[abilityKey] || 10;
+    return Math.floor((abilityScore - 10) / 2);
+  };
+
+  const rollSpellcastingAbilityCheck = async () => {
+    if (!character || isRolling) return;
+
+    const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
+    if (!spellcastingAbility) return;
+
+    setIsRolling(true);
+
+    try {
+      const spellcastingModifier = getSpellcastingAbilityModifier(character);
+      const totalModifier = spellcastingModifier;
+
+      const rollValue = Math.floor(Math.random() * 20) + 1;
+      const total = rollValue + totalModifier;
+
+      const isCriticalSuccess = rollValue === 20;
+      const isCriticalFailure = rollValue === 1;
+
+      showRollResult({
+        title: "Spellcasting Ability Check",
+        rollValue: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+        type: "abilitycheck",
+        description: `d20 + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+      });
+
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${character.name} - Spellcasting Ability Check`,
+          color: isCriticalSuccess
+            ? 0x00ff00
+            : isCriticalFailure
+            ? 0xff0000
+            : 0x3b82f6,
+          fields: [
+            {
+              name: "Roll",
+              value: `d20: ${rollValue}`,
+              inline: true,
+            },
+            {
+              name: "Modifier",
+              value: `${spellcastingAbility}: ${formatModifier(
+                spellcastingModifier
+              )}`,
+              inline: true,
+            },
+            {
+              name: "Total",
+              value: `${total}`,
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Spellcasting Ability Check",
+          },
+        };
+
+        if (isCriticalSuccess) {
+          embed.description = "🌟 **Critical Success!**";
+        } else if (isCriticalFailure) {
+          embed.description = "💥 **Critical Failure!**";
+        }
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending to Discord:", discordError);
+        }
+      }
+    } catch (error) {
+      console.error("Error rolling spellcasting ability check:", error);
+      alert("Error rolling dice. Please try again.");
+    } finally {
+      setIsRolling(false);
+    }
   };
 
   const getArmorClassModifier = (effectiveAbilityScores) => {
@@ -111,16 +211,15 @@ const CharacterSheet = ({
     return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
   };
 
-  // Enhanced HP Management helper functions
   const getHPColor = (character) => {
     const currentHP = character.currentHitPoints || character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const percentage = currentHP / maxHP;
 
-    if (percentage <= 0.25) return "#EF4444"; // Red
-    if (percentage <= 0.5) return "#F59E0B"; // Orange
-    if (percentage <= 0.75) return "#EAB308"; // Yellow
-    return "#10B981"; // Green
+    if (percentage <= 0.25) return "#EF4444";
+    if (percentage <= 0.5) return "#F59E0B";
+    if (percentage <= 0.75) return "#EAB308";
+    return "#10B981";
   };
 
   const getEnhancedHPStyle = (character, baseStyle) => {
@@ -425,7 +524,7 @@ const CharacterSheet = ({
 
   const handleDamageClick = () => {
     if (!character) return;
-    setDamageAmount(0); // Reset to 0 when opening modal
+    setDamageAmount(0);
     setShowDamageModal(true);
   };
 
@@ -690,7 +789,7 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.combatStats,
-                  gridTemplateColumns: "repeat(5, 1fr)",
+                  gridTemplateColumns: "repeat(6, 1fr)",
                 }}
               >
                 {/* Enhanced HP Tile */}
@@ -822,6 +921,7 @@ const CharacterSheet = ({
                     Initiative
                   </div>
                 </div>
+
                 <div
                   style={{
                     ...styles.statCard,
@@ -837,6 +937,7 @@ const CharacterSheet = ({
                     Armor Class
                   </div>
                 </div>
+
                 <div
                   style={{
                     ...styles.statCard,
@@ -857,6 +958,7 @@ const CharacterSheet = ({
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
+
                 <div
                   style={{
                     ...styles.statCard,
@@ -892,6 +994,69 @@ const CharacterSheet = ({
                     }}
                   >
                     Proficiency
+                  </div>
+                </div>
+
+                {/* NEW: Spellcasting Ability Check Tile - Debug Version */}
+                <div
+                  style={{
+                    ...styles.statCard,
+                    cursor: isRolling ? "wait" : "pointer",
+                    borderColor: "#8b5cf6",
+                    backgroundColor: isRolling
+                      ? // eslint-disable-next-line
+                        "#8b5cf6" + "20"
+                      : "transparent",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
+                  onMouseEnter={(e) => {
+                    if (!isRolling) {
+                      // eslint-disable-next-line
+                      e.target.style.backgroundColor = "#8b5cf6" + "10";
+                      e.target.style.transform = "scale(1.02)";
+                      e.target.style.boxShadow =
+                        "0 4px 8px rgba(139, 92, 246, 0.3)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isRolling) {
+                      e.target.style.backgroundColor = "transparent";
+                      e.target.style.transform = "scale(1)";
+                      e.target.style.boxShadow = "none";
+                    }
+                  }}
+                  title={`Click to make a spellcasting ability check using ${
+                    getSpellcastingAbility(character.castingStyle) ||
+                    "no spellcasting ability"
+                  }`}
+                >
+                  <Sparkles className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                  <div
+                    style={{
+                      fontSize: "1.25rem",
+                      fontWeight: "bold",
+                      color: "#8b5cf6",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    {getSpellcastingAbility(character.castingStyle)
+                      ? formatModifier(
+                          getSpellcastingAbilityModifier(character)
+                        )
+                      : "N/A"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.65rem",
+                      color: "#8b5cf6",
+                      textAlign: "center",
+                      lineHeight: "1.1",
+                    }}
+                  >
+                    Spellcasting
+                    <br />
+                    Ability Check
                   </div>
                 </div>
               </div>
@@ -1244,6 +1409,13 @@ const CharacterSheet = ({
                   <TrendingUp className="w-4 h-4 text-green-500" />
                   <span>
                     Level Up: Advance your character and gain new abilities
+                  </span>
+                </div>
+                <div style={styles.instructionItem}>
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <span>
+                    Click Spellcasting tile to roll ability check (no
+                    proficiency)
                   </span>
                 </div>
               </div>
