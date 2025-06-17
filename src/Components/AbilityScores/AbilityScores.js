@@ -10,7 +10,6 @@ const AbilityScores = ({ character }) => {
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
   // eslint-disable-next-line
-  const [hoveredButton, setHoveredButton] = useState(null);
   const characterModifiers = modifiers(character);
 
   const getSavingThrowProficiencies = (castingStyle) => {
@@ -35,16 +34,9 @@ const AbilityScores = ({ character }) => {
 
   const getSavingThrowButtonStyle = (abilityKey, isHovered) => ({
     ...styles.savingThrowButton,
-    backgroundColor: isHovered
-      ? styles.savingThrowButtonHover?.backgroundColor
-      : styles.savingThrowButton?.backgroundColor,
-    borderColor: isHovered
-      ? styles.savingThrowButtonHover?.borderColor
-      : styles.savingThrowButton?.borderColor,
-    boxShadow:
-      isHovered && !isRolling
-        ? styles.savingThrowButtonHover?.boxShadow
-        : "none",
+    backgroundColor: styles.savingThrowButton?.backgroundColor,
+    borderColor: styles.savingThrowButton?.borderColor,
+    boxShadow: "none",
     transform: isHovered && !isRolling ? "translateY(-1px)" : "none",
     cursor: isRolling ? "not-allowed" : "pointer",
     opacity: isRolling ? 0.5 : 1,
@@ -101,10 +93,7 @@ const AbilityScores = ({ character }) => {
             </div>
 
             <button
-              style={getSavingThrowButtonStyle(
-                ability.key,
-                hoveredButton === ability.key
-              )}
+              style={getSavingThrowButtonStyle(ability.key)}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isRolling) {
