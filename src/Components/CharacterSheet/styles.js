@@ -116,9 +116,9 @@ export const styles = {
     backgroundColor: "#eff6ff",
     borderColor: "#bfdbfe",
   },
-  statCardGreen: {
+  statCardBrown: {
     backgroundColor: "#f0fdf4",
-    borderColor: "#bbf7d0",
+    borderColor: "#755224",
   },
   statValue: {
     fontSize: "1.25rem",
@@ -131,7 +131,7 @@ export const styles = {
   statValueBlue: {
     color: "#1d4ed8",
   },
-  statValueGreen: {
+  statValueBrown: {
     color: "#166534",
   },
   statLabel: {
@@ -143,7 +143,7 @@ export const styles = {
   statLabelBlue: {
     color: "#2563eb",
   },
-  statLabelGreen: {
+  statLabelBrown: {
     color: "#16a34a",
   },
   abilityCard: {
@@ -475,11 +475,11 @@ export const createThemedStyles = (theme) => ({
     backgroundColor: theme.primary + "20",
     borderColor: theme.primary + "60",
   },
-  statCardGreen: {
+  statCardBrown: {
     backgroundColor: theme.success + "20",
     borderColor: theme.success + "60",
   },
-  statCardGreenHover: {
+  statCardBrownHover: {
     backgroundColor: theme.success + "60",
     borderColor: theme.success + "100",
   },
@@ -494,7 +494,7 @@ export const createThemedStyles = (theme) => ({
   statValueBlue: {
     color: theme.primary,
   },
-  statValueGreen: {
+  statValueBrown: {
     color: theme.success,
   },
   statLabel: {
@@ -506,7 +506,7 @@ export const createThemedStyles = (theme) => ({
   statLabelBlue: {
     color: theme.primary,
   },
-  statLabelGreen: {
+  statLabelBrown: {
     color: theme.success,
   },
   abilityCard: {

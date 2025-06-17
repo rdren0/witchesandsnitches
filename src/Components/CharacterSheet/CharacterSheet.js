@@ -31,7 +31,6 @@ const hitDiceData = {
   default: "d8",
 };
 
-// CSS keyframes for animations
 const pulseKeyframes = `
   @keyframes pulse {
     0%, 100% {
@@ -96,7 +95,7 @@ const CharacterSheet = ({
       "Technique Caster": "Wisdom",
       "Intellect Caster": "Intelligence",
       "Vigor Caster": "Constitution",
-      // Also handle casting styles without "Caster" suffix
+
       Willpower: "Charisma",
       Technique: "Wisdom",
       Intellect: "Intelligence",
@@ -105,7 +104,6 @@ const CharacterSheet = ({
     return spellcastingAbilityMap[castingStyle] || null;
   };
 
-  // New function to get the spellcasting ability modifier
   const getSpellcastingAbilityModifier = (character) => {
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
     if (!spellcastingAbility) return 0;
@@ -115,7 +113,6 @@ const CharacterSheet = ({
     return Math.floor((abilityScore - 10) / 2);
   };
 
-  // New function to handle spellcasting ability check rolls
   const rollSpellcastingAbilityCheck = async () => {
     if (!character || isRolling) return;
 
@@ -126,9 +123,8 @@ const CharacterSheet = ({
 
     try {
       const spellcastingModifier = getSpellcastingAbilityModifier(character);
-      const totalModifier = spellcastingModifier; // No proficiency bonus
+      const totalModifier = spellcastingModifier;
 
-      // Roll d20
       const rollValue = Math.floor(Math.random() * 20) + 1;
       const total = rollValue + totalModifier;
 
@@ -215,16 +211,15 @@ const CharacterSheet = ({
     return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
   };
 
-  // Enhanced HP Management helper functions
   const getHPColor = (character) => {
     const currentHP = character.currentHitPoints || character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const percentage = currentHP / maxHP;
 
-    if (percentage <= 0.25) return "#EF4444"; // Red
-    if (percentage <= 0.5) return "#F59E0B"; // Orange
-    if (percentage <= 0.75) return "#EAB308"; // Yellow
-    return "#10B981"; // Green
+    if (percentage <= 0.25) return "#EF4444";
+    if (percentage <= 0.5) return "#F59E0B";
+    if (percentage <= 0.75) return "#EAB308";
+    return "#10B981";
   };
 
   const getEnhancedHPStyle = (character, baseStyle) => {
@@ -237,15 +232,12 @@ const CharacterSheet = ({
       color: hpColor,
       backgroundColor:
         currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}10`,
-      borderColor: hpColor, // Always use HP-based color for border
+      borderColor: hpColor,
       transition: "all 0.2s ease",
       position: "relative",
       userSelect: "none",
     };
   };
-
-  // ... (keeping all the existing helper functions like calculateEffectiveAbilityScores,
-  // getAllCharacterFeats, transformSkillData, fetchCharacterDetails, etc. - unchanged)
 
   const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
     const effectiveScores = { ...baseScores };
@@ -422,9 +414,6 @@ const CharacterSheet = ({
     // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId, supabase]);
 
-  // ... (keeping all the existing handler functions like handleShortRestClick,
-  // handleLongRest, handleDamageClick, fullHeal, handleCharacterUpdated - unchanged)
-
   const handleShortRestClick = () => {
     if (!character || character.currentHitDice <= 0) {
       alert("No hit dice available for short rest!");
@@ -535,7 +524,7 @@ const CharacterSheet = ({
 
   const handleDamageClick = () => {
     if (!character) return;
-    setDamageAmount(0); // Reset to 0 when opening modal
+    setDamageAmount(0);
     setShowDamageModal(true);
   };
 
@@ -800,7 +789,7 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.combatStats,
-                  gridTemplateColumns: "repeat(6, 1fr)", // Changed to 6 columns to accommodate new tile
+                  gridTemplateColumns: "repeat(6, 1fr)",
                 }}
               >
                 {/* Enhanced HP Tile */}
@@ -821,12 +810,12 @@ const CharacterSheet = ({
                 >
                   <Heart
                     className="w-6 h-6 mx-auto mb-1"
-                    style={{ color: "#ef4444" }}
+                    style={{ color: getHPColor(character) }}
                   />
                   <div
                     style={{
                       ...styles.statValue,
-                      color: "#ef4444",
+                      color: getHPColor(character),
                       fontSize:
                         character.currentHitPoints !==
                         (character.maxHitPoints || character.hitPoints)
@@ -840,7 +829,7 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statLabel,
-                      color: "#ef4444",
+                      color: getHPColor(character),
                     }}
                   >
                     Hit Points
@@ -895,9 +884,8 @@ const CharacterSheet = ({
                       </div>
                     )}
                 </div>
-
                 <div
-                  style={{ ...styles.statCard, ...styles.statCardGreen }}
+                  style={{ ...styles.statCard, ...styles.statCardBrown }}
                   onClick={() =>
                     !isRolling &&
                     rollInitiative({
@@ -908,19 +896,21 @@ const CharacterSheet = ({
                     })
                   }
                 >
-                  <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                  <Swords
+                    className="w-6 h-6 text-green-600 mx-auto mb-1"
+                    style={{ color: "#755224" }}
+                  />
                   <div
-                    style={{ ...styles.statValue, ...styles.statValueGreen }}
+                    style={{ ...styles.statValue, ...styles.statValueBrown }}
                   >
                     {formatModifier(character.initiativeModifier)}
                   </div>
                   <div
-                    style={{ ...styles.statLabel, ...styles.statLabelGreen }}
+                    style={{ ...styles.statLabel, ...styles.statLabelBrown }}
                   >
                     Initiative
                   </div>
                 </div>
-
                 <div
                   style={{
                     ...styles.statCard,
@@ -928,7 +918,10 @@ const CharacterSheet = ({
                     cursor: "default",
                   }}
                 >
-                  <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                  <Shield
+                    className="w-6 h-6 text-blue-600 mx-auto mb-1"
+                    style={{ color: "#3b82f6" }}
+                  />
                   <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
                     {character.armorClass}
                   </div>
@@ -936,7 +929,6 @@ const CharacterSheet = ({
                     Armor Class
                   </div>
                 </div>
-
                 <div
                   style={{
                     ...styles.statCard,
@@ -957,7 +949,6 @@ const CharacterSheet = ({
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
-
                 <div
                   style={{
                     ...styles.statCard,
@@ -995,7 +986,6 @@ const CharacterSheet = ({
                     Proficiency
                   </div>
                 </div>
-
                 {/* NEW: Spellcasting Ability Check Tile - Debug Version */}
                 <div
                   style={{
@@ -1014,7 +1004,10 @@ const CharacterSheet = ({
                     "no spellcasting ability"
                   }`}
                 >
-                  <Sparkles className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                  <Sparkles
+                    className="w-6 h-6 text-purple-600 mx-auto mb-1"
+                    style={{ color: "#8b5cf6" }}
+                  />
                   <div
                     style={{
                       fontSize: "1.25rem",

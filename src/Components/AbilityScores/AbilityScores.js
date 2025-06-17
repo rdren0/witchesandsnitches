@@ -13,6 +13,17 @@ const AbilityScores = ({ character }) => {
   const [hoveredButton, setHoveredButton] = useState(null);
   const characterModifiers = modifiers(character);
 
+  const getSavingThrowProficiencies = (castingStyle) => {
+    const proficiencyMap = {
+      "Willpower Caster": ["constitution", "charisma"],
+      "Technique Caster": ["dexterity", "wisdom"],
+      "Intellect Caster": ["wisdom", "intelligence"],
+      "Vigor Caster": ["constitution", "strength"],
+    };
+
+    return proficiencyMap[castingStyle] || [];
+  };
+
   const getClickableAbilityStyle = (ability) => ({
     ...styles.abilityItem,
     cursor: isRolling ? "not-allowed" : "pointer",
@@ -43,7 +54,9 @@ const AbilityScores = ({ character }) => {
     const baseModifier = characterModifiers[abilityKey];
     const proficiencyBonus = character.proficiencyBonus || 0;
 
-    const savingThrowProficiencies = character.savingThrowProficiencies || [];
+    const savingThrowProficiencies = getSavingThrowProficiencies(
+      character.castingStyle
+    );
     const isProficient = savingThrowProficiencies.includes(abilityKey);
 
     return isProficient ? baseModifier + proficiencyBonus : baseModifier;

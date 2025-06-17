@@ -242,12 +242,12 @@ const createCharacterSheetStyles = (theme) => ({
     borderColor: "#ef4444",
   },
   statCardBlue: {},
-  statCardGreen: {
-    borderColor: "#10b981",
+  statCardBrown: {
+    borderColor: "#755224",
   },
-  statCardGreenHover: {
+  statCardBrownHover: {
     // eslint-disable-next-line
-    backgroundColor: "#10b981" + "10",
+    backgroundColor: "#755224" + "10",
     transform: "translateY(-2px)",
     boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
   },
@@ -262,8 +262,8 @@ const createCharacterSheetStyles = (theme) => ({
   statValueBlue: {
     color: "#3b82f6",
   },
-  statValueGreen: {
-    color: "#10b981",
+  statValueBrown: {
+    color: "#755224",
   },
   statLabel: {
     fontSize: "12px",
@@ -277,8 +277,8 @@ const createCharacterSheetStyles = (theme) => ({
   statLabelBlue: {
     color: "#3b82f6",
   },
-  statLabelGreen: {
-    color: "#10b981",
+  statLabelBrown: {
+    color: "#755224",
   },
   instructionsCard: {
     backgroundColor: theme.surface,
