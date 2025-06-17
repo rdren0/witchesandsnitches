@@ -4550,6 +4550,17 @@ export const createCharacterNotesStyles = (theme) => ({
     color: "#dc2626",
     transition: "all 0.2s ease",
   },
+  duplicateEntryButton: {
+    padding: "6px",
+    backgroundColor: "#c1eef5",
+    border: `1px solid #457880`,
+    borderRadius: "4px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    color: theme.text,
+    transition: "all 0.2s ease",
+  },
   entryContent: {
     padding: "20px",
   },

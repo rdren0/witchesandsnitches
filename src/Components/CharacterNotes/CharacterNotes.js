@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
   Check,
+  Copy,
 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
@@ -27,6 +28,7 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
   const [editingEntry, setEditingEntry] = useState(null);
   const [newEntryTitle, setNewEntryTitle] = useState("");
   const [showNewEntryForm, setShowNewEntryForm] = useState(false);
+  const [duplicatingEntryId, setDuplicatingEntryId] = useState(null);
 
   const loadCharacterNotes = useCallback(async () => {
     if (!selectedCharacter?.id || !user) return;
@@ -153,6 +155,42 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
     } catch (err) {
       console.error("Error creating entry:", err);
       alert("Failed to create entry. Please try again.");
+    }
+  };
+
+  const duplicateEntry = async (entry) => {
+    if (!entry || !selectedCharacter?.id || !user) return;
+
+    setDuplicatingEntryId(entry.id);
+
+    try {
+      const baseName = entry.title;
+      const existingTitles = entries.map((e) => e.title.toLowerCase());
+      let duplicateTitle = `${baseName} (Copy)`;
+      let counter = 1;
+
+      while (existingTitles.includes(duplicateTitle.toLowerCase())) {
+        counter++;
+        duplicateTitle = `${baseName} (Copy ${counter})`;
+      }
+
+      const now = new Date().toISOString();
+      const duplicatedEntry = {
+        id: Date.now(),
+        title: duplicateTitle,
+        content: entry.content,
+        created_at: now,
+        updated_at: now,
+      };
+
+      const newEntries = [duplicatedEntry, ...entries];
+      await saveEntriesToDatabase(newEntries);
+      setEntries(newEntries);
+    } catch (err) {
+      console.error("Error duplicating entry:", err);
+      alert("Failed to duplicate entry. Please try again.");
+    } finally {
+      setDuplicatingEntryId(null);
     }
   };
 
@@ -355,6 +393,8 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
                   entry={entry}
                   onEdit={() => setEditingEntry(entry.id)}
                   onDelete={() => deleteEntry(entry.id)}
+                  onDuplicate={() => duplicateEntry(entry)}
+                  isDuplicating={duplicatingEntryId === entry.id}
                   styles={styles}
                 />
               </div>
@@ -496,7 +536,14 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
   );
 };
 
-const EntryCard = ({ entry, onEdit, onDelete, styles }) => {
+const EntryCard = ({
+  entry,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  isDuplicating,
+  styles,
+}) => {
   return (
     <>
       <div style={styles.entryHeader}>
@@ -513,6 +560,18 @@ const EntryCard = ({ entry, onEdit, onDelete, styles }) => {
             title="Edit entry"
           >
             <Edit2 size={14} />
+          </button>
+          <button
+            onClick={onDuplicate}
+            disabled={isDuplicating}
+            style={styles.duplicateEntryButton}
+            title="Duplicate entry"
+          >
+            {isDuplicating ? (
+              <span style={{ fontSize: "12px" }}>...</span>
+            ) : (
+              <Copy size={14} />
+            )}
           </button>
           <button
             onClick={onDelete}
