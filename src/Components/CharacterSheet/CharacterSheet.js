@@ -30,6 +30,18 @@ const hitDiceData = {
   default: "d8",
 };
 
+// CSS keyframes for animations
+const pulseKeyframes = `
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+`;
+
 const CharacterSheet = ({
   user,
   supabase,
@@ -97,6 +109,35 @@ const CharacterSheet = ({
     }
 
     return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
+  };
+
+  // Enhanced HP Management helper functions
+  const getHPColor = (character) => {
+    const currentHP = character.currentHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints || character.hitPoints;
+    const percentage = currentHP / maxHP;
+
+    if (percentage <= 0.25) return "#EF4444"; // Red
+    if (percentage <= 0.5) return "#F59E0B"; // Orange
+    if (percentage <= 0.75) return "#EAB308"; // Yellow
+    return "#10B981"; // Green
+  };
+
+  const getEnhancedHPStyle = (character, baseStyle) => {
+    const currentHP = character.currentHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints || character.hitPoints;
+    const hpColor = getHPColor(character);
+
+    return {
+      ...baseStyle,
+      color: hpColor,
+      backgroundColor:
+        currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}10`,
+      borderColor: currentHP === maxHP ? baseStyle.borderColor : hpColor,
+      transition: "all 0.2s ease",
+      position: "relative",
+      userSelect: "none",
+    };
   };
 
   const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
@@ -384,7 +425,7 @@ const CharacterSheet = ({
 
   const handleDamageClick = () => {
     if (!character) return;
-    setDamageAmount(0);
+    setDamageAmount(0); // Reset to 0 when opening modal
     setShowDamageModal(true);
   };
 
@@ -555,241 +596,378 @@ const CharacterSheet = ({
   }
 
   return (
-    <div style={{ ...styles.container, ...{ className } }}>
-      {characterLoading && (
-        <div style={styles.loadingContainer}>
-          <h3>Loading Character Sheet...</h3>
-        </div>
-      )}
+    <>
+      <style>{pulseKeyframes}</style>
+      <div style={{ ...styles.container, ...{ className } }}>
+        {characterLoading && (
+          <div style={styles.loadingContainer}>
+            <h3>Loading Character Sheet...</h3>
+          </div>
+        )}
 
-      {character && !characterLoading && (
-        <>
-          <div style={styles.headerCard}>
-            <div style={styles.headerFlex}>
-              <div style={styles.avatar}>
-                {character.imageUrl ? (
-                  <img
-                    src={character.imageUrl}
-                    alt={`${character.name}'s portrait`}
+        {character && !characterLoading && (
+          <>
+            <div style={styles.headerCard}>
+              <div style={styles.headerFlex}>
+                <div style={styles.avatar}>
+                  {character.imageUrl ? (
+                    <img
+                      src={character.imageUrl}
+                      alt={`${character.name}'s portrait`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <User
+                    className="w-8 h-8 text-indigo-600"
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "50%",
-                    }}
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
+                      display: character.imageUrl ? "none" : "flex",
                     }}
                   />
-                ) : null}
-                <User
-                  className="w-8 h-8 text-indigo-600"
-                  style={{
-                    display: character.imageUrl ? "none" : "flex",
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <h1 style={styles.characterName}>{character.name}</h1>
                 </div>
-                <div style={styles.infoGrid}>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>House:</span> {character.house}
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <h1 style={styles.characterName}>{character.name}</h1>
                   </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>Level:</span> {character.year}
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>Class:</span>{" "}
-                    {character.castingStyle}
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>Spell Casting Ability:</span>{" "}
-                    {getSpellcastingAbility(character.castingStyle)}
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>Subclass:</span>{" "}
-                    {character.subclass || "None"}
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>Background:</span>{" "}
-                    {character.background}
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.label}>Heritage:</span>{" "}
-                    {character.bloodStatus}
-                  </div>
-                  {character.gameSession && (
+                  <div style={styles.infoGrid}>
                     <div style={styles.infoItem}>
-                      <span style={styles.label}>Game Session:</span>{" "}
-                      {character.gameSession}
+                      <span style={styles.label}>House:</span> {character.house}
                     </div>
-                  )}
-                  {character.castingStyle === "Intellect Caster" && (
                     <div style={styles.infoItem}>
-                      <span style={styles.label}>Initiative Ability:</span>{" "}
-                      {character.initiativeAbility === "intelligence"
-                        ? "Intelligence"
-                        : "Dexterity"}
+                      <span style={styles.label}>Level:</span> {character.year}
                     </div>
-                  )}
-                  <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
-                    <span style={styles.label}>Wand:</span> {character.wand}
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Class:</span>{" "}
+                      {character.castingStyle}
+                    </div>
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Spell Casting Ability:</span>{" "}
+                      {getSpellcastingAbility(character.castingStyle)}
+                    </div>
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Subclass:</span>{" "}
+                      {character.subclass || "None"}
+                    </div>
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Background:</span>{" "}
+                      {character.background}
+                    </div>
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Heritage:</span>{" "}
+                      {character.bloodStatus}
+                    </div>
+                    {character.gameSession && (
+                      <div style={styles.infoItem}>
+                        <span style={styles.label}>Game Session:</span>{" "}
+                        {character.gameSession}
+                      </div>
+                    )}
+                    {character.castingStyle === "Intellect Caster" && (
+                      <div style={styles.infoItem}>
+                        <span style={styles.label}>Initiative Ability:</span>{" "}
+                        {character.initiativeAbility === "intelligence"
+                          ? "Intelligence"
+                          : "Dexterity"}
+                      </div>
+                    )}
+                    <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
+                      <span style={styles.label}>Wand:</span> {character.wand}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div
-              style={{
-                ...styles.combatStats,
-                gridTemplateColumns: "repeat(5, 1fr)",
-              }}
-            >
               <div
                 style={{
-                  ...styles.statCard,
-                  ...styles.statCardRed,
-                  cursor: "pointer",
-                }}
-                onClick={handleDamageClick}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  fullHeal();
-                }}
-                title="Left click to apply damage • Right click to full heal"
-              >
-                <Heart className="w-6 h-6 text-red-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValueRed }}>
-                  {character.currentHitPoints || character.hitPoints}/
-                  {character.maxHitPoints || character.hitPoints}
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelRed }}>
-                  Hit Points
-                </div>
-              </div>
-              <div
-                style={{ ...styles.statCard, ...styles.statCardGreen }}
-                onClick={() =>
-                  !isRolling &&
-                  rollInitiative({
-                    character,
-                    isRolling,
-                    setIsRolling,
-                    characterModifiers,
-                  })
-                }
-              >
-                <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValueGreen }}>
-                  {formatModifier(character.initiativeModifier)}
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelGreen }}>
-                  Initiative
-                </div>
-              </div>
-              <div
-                style={{
-                  ...styles.statCard,
-                  ...styles.statCardBlue,
-                  cursor: "default",
+                  ...styles.combatStats,
+                  gridTemplateColumns: "repeat(5, 1fr)",
                 }}
               >
-                <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
-                  {character.armorClass}
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelBlue }}>
-                  Armor Class
-                </div>
-              </div>
-              <div
-                style={{
-                  ...styles.statCard,
-                  ...styles.statCardPurple,
-                  cursor: "default",
-                }}
-                title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
-              >
-                <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
-                <div style={{ ...styles.statValue, ...styles.statValuePurple }}>
-                  {character.currentHitDice}/{character.maxHitDice}
-                </div>
-                <div style={{ ...styles.statLabel, ...styles.statLabelPurple }}>
-                  Hit Dice ({character.hitDie})
-                </div>
-              </div>
-              <div
-                style={{
-                  ...styles.statCard,
-                  cursor: "default",
-                }}
-                title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
-              >
-                <Star
-                  size={24}
-                  style={{
-                    color: theme.warning || "#f59e0b",
-                    marginBottom: "4px",
-                    display: "block",
-                    margin: "0 auto 4px auto",
-                  }}
-                />
+                {/* Enhanced HP Tile */}
                 <div
                   style={{
-                    ...styles.statValue,
-                    color: theme.warning || "#d97706",
-                    fontSize: "1.25rem",
-                    fontWeight: "bold",
-                    marginBottom: "0.25rem",
+                    ...getEnhancedHPStyle(character, {
+                      ...styles.statCard,
+                      ...styles.statCardRed,
+                      cursor: "pointer",
+                    }),
                   }}
-                >
-                  +{character.proficiencyBonus || 0}
-                </div>
-                <div
-                  style={{
-                    ...styles.statLabel,
-                    color: theme.warning || "#92400e",
-                    fontSize: "0.875rem",
+                  onClick={handleDamageClick}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    fullHeal();
                   }}
-                >
-                  Proficiency
-                </div>
-              </div>
-            </div>
-
-            {character &&
-              !characterLoading &&
-              Object.keys(character.asiChoices || {}).length > 0 && (
-                <div
-                  style={{
-                    ...styles.headerCard,
-                    marginTop: "16px",
-                    padding: "20px",
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = "scale(1.02)";
+                    e.target.style.boxShadow = `0 4px 8px ${getHPColor(
+                      character
+                    )}30`;
                   }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = "scale(1)";
+                    e.target.style.boxShadow = "none";
+                  }}
+                  title="Left click to manage HP • Right click to full heal"
                 >
-                  <h3
+                  <Heart
+                    className="w-6 h-6 mx-auto mb-1"
+                    style={{ color: "#eee" }}
+                  />
+                  <div
                     style={{
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                      marginBottom: "16px",
-                      borderBottom: `1px solid ${
-                        theme === "dark" ? "#4b5563" : "#e5e7eb"
-                      }`,
-                      paddingBottom: "8px",
+                      ...styles.statValue,
+                      ...styles.statValueRed,
+                      color: "white",
+                      fontSize:
+                        character.currentHitPoints !==
+                        (character.maxHitPoints || character.hitPoints)
+                          ? "1rem"
+                          : "1.25rem",
                     }}
                   >
-                    Character Progression
-                  </h3>
+                    {character.currentHitPoints || character.hitPoints}/
+                    {character.maxHitPoints || character.hitPoints}
+                  </div>
+                  <div
+                    style={{
+                      ...styles.statLabel,
+                      ...styles.statLabelRed,
+                      color: "white",
+                    }}
+                  >
+                    Hit Points
+                  </div>
+                  {/* Unconscious indicator */}
+                  {(character.currentHitPoints || character.hitPoints) ===
+                    0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        right: "-8px",
+                        background: "#EF4444",
+                        color: "white",
+                        borderRadius: "50%",
+                        width: "20px",
+                        height: "20px",
+                        fontSize: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: "bold",
+                        animation: "pulse 2s infinite",
+                      }}
+                    >
+                      💀
+                    </div>
+                  )}
+                  {/* Low health warning */}
+                  {(character.currentHitPoints || character.hitPoints) > 0 &&
+                    (character.currentHitPoints || character.hitPoints) /
+                      (character.maxHitPoints || character.hitPoints) <=
+                      0.25 && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-4px",
+                          right: "-4px",
+                          background: "#EF4444",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: "16px",
+                          height: "16px",
+                          fontSize: "10px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        !
+                      </div>
+                    )}
+                </div>
 
-                  {/* Show all feats if any */}
-                  {character.allFeats && character.allFeats.length > 0 && (
-                    <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{ ...styles.statCard, ...styles.statCardGreen }}
+                  onClick={() =>
+                    !isRolling &&
+                    rollInitiative({
+                      character,
+                      isRolling,
+                      setIsRolling,
+                      characterModifiers,
+                    })
+                  }
+                >
+                  <Swords className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                  <div
+                    style={{ ...styles.statValue, ...styles.statValueGreen }}
+                  >
+                    {formatModifier(character.initiativeModifier)}
+                  </div>
+                  <div
+                    style={{ ...styles.statLabel, ...styles.statLabelGreen }}
+                  >
+                    Initiative
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...styles.statCard,
+                    ...styles.statCardBlue,
+                    cursor: "default",
+                  }}
+                >
+                  <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                  <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
+                    {character.armorClass}
+                  </div>
+                  <div style={{ ...styles.statLabel, ...styles.statLabelBlue }}>
+                    Armor Class
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...styles.statCard,
+                    ...styles.statCardPurple,
+                    cursor: "default",
+                  }}
+                  title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
+                >
+                  <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+                  <div
+                    style={{ ...styles.statValue, ...styles.statValuePurple }}
+                  >
+                    {character.currentHitDice}/{character.maxHitDice}
+                  </div>
+                  <div
+                    style={{ ...styles.statLabel, ...styles.statLabelPurple }}
+                  >
+                    Hit Dice ({character.hitDie})
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...styles.statCard,
+                    cursor: "default",
+                  }}
+                  title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
+                >
+                  <Star
+                    size={24}
+                    style={{
+                      color: theme.warning || "#f59e0b",
+                      marginBottom: "4px",
+                      display: "block",
+                      margin: "0 auto 4px auto",
+                    }}
+                  />
+                  <div
+                    style={{
+                      ...styles.statValue,
+                      color: theme.warning || "#d97706",
+                      fontSize: "1.25rem",
+                      fontWeight: "bold",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    +{character.proficiencyBonus || 0}
+                  </div>
+                  <div
+                    style={{
+                      ...styles.statLabel,
+                      color: theme.warning || "#92400e",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Proficiency
+                  </div>
+                </div>
+              </div>
+
+              {character &&
+                !characterLoading &&
+                Object.keys(character.asiChoices || {}).length > 0 && (
+                  <div
+                    style={{
+                      ...styles.headerCard,
+                      marginTop: "16px",
+                      padding: "20px",
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontSize: "18px",
+                        fontWeight: "600",
+                        color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                        marginBottom: "16px",
+                        borderBottom: `1px solid ${
+                          theme === "dark" ? "#4b5563" : "#e5e7eb"
+                        }`,
+                        paddingBottom: "8px",
+                      }}
+                    >
+                      Character Progression
+                    </h3>
+
+                    {/* Show all feats if any */}
+                    {character.allFeats && character.allFeats.length > 0 && (
+                      <div style={{ marginBottom: "16px" }}>
+                        <h4
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: theme === "dark" ? "#f9fafb" : "#374151",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          Feats
+                        </h4>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
+                        >
+                          {character.allFeats.map((feat, index) => (
+                            <span
+                              key={index}
+                              style={{
+                                display: "inline-block",
+                                padding: "4px 12px",
+                                backgroundColor: `${
+                                  theme === "dark" ? "#3b82f6" : "#3b82f6"
+                                }20`,
+                                color: theme === "dark" ? "#60a5fa" : "#3b82f6",
+                                borderRadius: "16px",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                                border: `1px solid ${
+                                  theme === "dark" ? "#3b82f6" : "#3b82f6"
+                                }40`,
+                              }}
+                            >
+                              {feat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show ASI history */}
+                    <div>
                       <h4
                         style={{
                           fontSize: "14px",
@@ -798,360 +976,321 @@ const CharacterSheet = ({
                           marginBottom: "8px",
                         }}
                       >
-                        Feats
+                        Ability Score Improvements
                       </h4>
                       <div
                         style={{
                           display: "flex",
-                          flexWrap: "wrap",
-                          gap: "8px",
+                          flexDirection: "column",
+                          gap: "4px",
                         }}
                       >
-                        {character.allFeats.map((feat, index) => (
-                          <span
-                            key={index}
-                            style={{
-                              display: "inline-block",
-                              padding: "4px 12px",
-                              backgroundColor: `${
-                                theme === "dark" ? "#3b82f6" : "#3b82f6"
-                              }20`,
-                              color: theme === "dark" ? "#60a5fa" : "#3b82f6",
-                              borderRadius: "16px",
-                              fontSize: "12px",
-                              fontWeight: "500",
-                              border: `1px solid ${
-                                theme === "dark" ? "#3b82f6" : "#3b82f6"
-                              }40`,
-                            }}
-                          >
-                            {feat}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Show ASI history */}
-                  <div>
-                    <h4
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        color: theme === "dark" ? "#f9fafb" : "#374151",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Ability Score Improvements
-                    </h4>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "4px",
-                      }}
-                    >
-                      {Object.entries(character.asiChoices)
-                        .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                        .map(([level, choice]) => (
-                          <div
-                            key={level}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              fontSize: "13px",
-                            }}
-                          >
-                            <span
+                        {Object.entries(character.asiChoices)
+                          .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                          .map(([level, choice]) => (
+                            <div
+                              key={level}
                               style={{
-                                fontWeight: "600",
-                                color: theme === "dark" ? "#60a5fa" : "#3b82f6",
-                                minWidth: "60px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                fontSize: "13px",
                               }}
                             >
-                              Level {level}:
-                            </span>
-                            {choice.type === "asi" ? (
                               <span
                                 style={{
+                                  fontWeight: "600",
                                   color:
-                                    theme === "dark" ? "#9ca3af" : "#6b7280",
+                                    theme === "dark" ? "#60a5fa" : "#3b82f6",
+                                  minWidth: "60px",
                                 }}
                               >
-                                {choice.abilityScoreIncreases
-                                  ?.map(
-                                    (inc) =>
-                                      inc.ability.charAt(0).toUpperCase() +
-                                      inc.ability.slice(1)
-                                  )
-                                  .join(", ")}{" "}
-                                +1
+                                Level {level}:
                               </span>
-                            ) : (
-                              <span
-                                style={{
-                                  color:
-                                    theme === "dark" ? "#9ca3af" : "#6b7280",
-                                }}
-                              >
-                                Feat: {choice.selectedFeat}
-                              </span>
-                            )}
-                          </div>
-                        ))}
+                              {choice.type === "asi" ? (
+                                <span
+                                  style={{
+                                    color:
+                                      theme === "dark" ? "#9ca3af" : "#6b7280",
+                                  }}
+                                >
+                                  {choice.abilityScoreIncreases
+                                    ?.map(
+                                      (inc) =>
+                                        inc.ability.charAt(0).toUpperCase() +
+                                        inc.ability.slice(1)
+                                    )
+                                    .join(", ")}{" "}
+                                  +1
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    color:
+                                      theme === "dark" ? "#9ca3af" : "#6b7280",
+                                  }}
+                                >
+                                  Feat: {choice.selectedFeat}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-          </div>
+                )}
+            </div>
 
-          <div
-            style={{
-              ...styles.headerCard,
-              padding: "20px",
-              marginBottom: "20px",
-            }}
-          >
             <div
               style={{
-                display: "flex",
-                gap: "16px",
-                justifyContent: "center",
-                flexWrap: "wrap",
+                ...styles.headerCard,
+                padding: "20px",
+                marginBottom: "20px",
               }}
             >
-              <button
+              <div
                 style={{
-                  padding: "12px 24px",
-                  backgroundColor: "#9d4edd",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor:
-                    character.currentHitDice <= 0 ? "not-allowed" : "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600",
                   display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  opacity: character.currentHitDice <= 0 ? 0.6 : 1,
-                  transition: "all 0.2s ease",
-                  minWidth: "140px",
+                  gap: "16px",
                   justifyContent: "center",
-                }}
-                onClick={handleShortRestClick}
-                disabled={character.currentHitDice <= 0}
-                title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
-                onMouseEnter={(e) => {
-                  if (character.currentHitDice > 0) {
-                    e.target.style.backgroundColor = "#8b5cf6";
-                    e.target.style.transform = "translateY(-1px)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (character.currentHitDice > 0) {
-                    e.target.style.backgroundColor = "#9d4edd";
-                    e.target.style.transform = "translateY(0)";
-                  }
+                  flexWrap: "wrap",
                 }}
               >
-                <Coffee size={16} />
-                Short Rest
-              </button>
-              <button
-                style={{
-                  padding: "12px 24px",
-                  backgroundColor: "#3b82f6",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: isLongResting ? "wait" : "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  opacity: isLongResting ? 0.7 : 1,
-                  transition: "all 0.2s ease",
-                  minWidth: "140px",
-                  justifyContent: "center",
-                }}
-                onClick={handleLongRest}
-                disabled={isLongResting}
-                title="Restore all HP and hit dice with a long rest"
-                onMouseEnter={(e) => {
-                  if (!isLongResting) {
-                    e.target.style.backgroundColor = "#2563eb";
-                    e.target.style.transform = "translateY(-1px)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isLongResting) {
-                    e.target.style.backgroundColor = "#3b82f6";
-                    e.target.style.transform = "translateY(0)";
-                  }
-                }}
-              >
-                <Moon size={16} />
-                {isLongResting ? "Resting..." : "Long Rest"}
-              </button>
-              <button
-                style={{
-                  padding: "12px 24px",
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "all 0.2s ease",
-                  minWidth: "140px",
-                  justifyContent: "center",
-                }}
-                onClick={() => setShowLevelUp(true)}
-                title={`Level up ${character.name} to level ${
-                  (character.level || 1) + 1
-                }`}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#059669";
-                  e.target.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#10b981";
-                  e.target.style.transform = "translateY(0)";
-                }}
-              >
-                <TrendingUp size={16} />
-                Level Up
-              </button>
-            </div>
-          </div>
-
-          <AbilityScores
-            character={character}
-            discordWebhookUrl={discordWebhookUrl}
-          />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr auto",
-              gap: "20px",
-              alignItems: "start",
-              marginBottom: "20px",
-            }}
-          >
-            <Skills
-              character={character}
-              supabase={supabase}
-              discordUserId={discordUserId}
-              setCharacter={setCharacter}
-              selectedCharacterId={selectedCharacter.id}
-              isRolling={isRolling}
-              modifiers={modifiers(character)}
-            />
-
-            <GenericD20Roller
-              title="Custom Roll"
-              description={`Rolling for ${character.name}`}
-              style={{ width: "100%" }}
-              character={character}
-            />
-          </div>
-
-          <div style={styles.instructionsCard}>
-            <div style={styles.instructionsGrid}>
-              <div style={styles.instructionItem}>
-                <Heart className="w-4 h-4 text-red-500" />
-                <span>
-                  Click Hit Points to apply damage • Right-click to full heal
-                </span>
-              </div>
-              <div style={styles.instructionItem}>
-                <div
+                <button
                   style={{
-                    width: "12px",
-                    height: "12px",
-                    borderRadius: "50%",
-                    backgroundColor: "#1f2937",
-                    border: "2px solid #1f2937",
+                    padding: "12px 24px",
+                    backgroundColor: "#9d4edd",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor:
+                      character.currentHitDice <= 0 ? "not-allowed" : "pointer",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+                    transition: "all 0.2s ease",
+                    minWidth: "140px",
+                    justifyContent: "center",
                   }}
-                />
-                <span>
-                  Click circle to add proficiency bonus (+
-                  {character.proficiencyBonus})
-                </span>
-              </div>
-              <div style={styles.instructionItem}>
-                <span>Click skill or ability name to roll d20 + modifier</span>
-              </div>
-              <div style={styles.instructionItem}>
-                <Coffee className="w-4 h-4 text-purple-500" />
-                <span>Short Rest: Use hit dice to recover HP</span>
-              </div>
-              <div style={styles.instructionItem}>
-                <Moon className="w-4 h-4 text-blue-500" />
-                <span>Long Rest: Restore all HP and hit dice</span>
-              </div>
-
-              <div style={styles.instructionItem}>
-                <span>Click column headers to sort skills</span>
-              </div>
-              <div style={styles.instructionItem}>
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span>
-                  Level Up: Advance your character and gain new abilities
-                </span>
+                  onClick={handleShortRestClick}
+                  disabled={character.currentHitDice <= 0}
+                  title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
+                  onMouseEnter={(e) => {
+                    if (character.currentHitDice > 0) {
+                      e.target.style.backgroundColor = "#8b5cf6";
+                      e.target.style.transform = "translateY(-1px)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (character.currentHitDice > 0) {
+                      e.target.style.backgroundColor = "#9d4edd";
+                      e.target.style.transform = "translateY(0)";
+                    }
+                  }}
+                >
+                  <Coffee size={16} />
+                  Short Rest
+                </button>
+                <button
+                  style={{
+                    padding: "12px 24px",
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: isLongResting ? "wait" : "pointer",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    opacity: isLongResting ? 0.7 : 1,
+                    transition: "all 0.2s ease",
+                    minWidth: "140px",
+                    justifyContent: "center",
+                  }}
+                  onClick={handleLongRest}
+                  disabled={isLongResting}
+                  title="Restore all HP and hit dice with a long rest"
+                  onMouseEnter={(e) => {
+                    if (!isLongResting) {
+                      e.target.style.backgroundColor = "#2563eb";
+                      e.target.style.transform = "translateY(-1px)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isLongResting) {
+                      e.target.style.backgroundColor = "#3b82f6";
+                      e.target.style.transform = "translateY(0)";
+                    }
+                  }}
+                >
+                  <Moon size={16} />
+                  {isLongResting ? "Resting..." : "Long Rest"}
+                </button>
+                <button
+                  style={{
+                    padding: "12px 24px",
+                    backgroundColor: "#10b981",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.2s ease",
+                    minWidth: "140px",
+                    justifyContent: "center",
+                  }}
+                  onClick={() => setShowLevelUp(true)}
+                  title={`Level up ${character.name} to level ${
+                    (character.level || 1) + 1
+                  }`}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#059669";
+                    e.target.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#10b981";
+                    e.target.style.transform = "translateY(0)";
+                  }}
+                >
+                  <TrendingUp size={16} />
+                  Level Up
+                </button>
               </div>
             </div>
-            {!discordWebhookUrl && (
-              <div style={styles.warning}>
-                ⚠️ No Discord webhook configured - rolls will show as alerts
+
+            <AbilityScores
+              character={character}
+              discordWebhookUrl={discordWebhookUrl}
+            />
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "2fr auto",
+                gap: "20px",
+                alignItems: "start",
+                marginBottom: "20px",
+              }}
+            >
+              <Skills
+                character={character}
+                supabase={supabase}
+                discordUserId={discordUserId}
+                setCharacter={setCharacter}
+                selectedCharacterId={selectedCharacter.id}
+                isRolling={isRolling}
+                modifiers={modifiers(character)}
+              />
+
+              <GenericD20Roller
+                title="Custom Roll"
+                description={`Rolling for ${character.name}`}
+                style={{ width: "100%" }}
+                character={character}
+              />
+            </div>
+
+            <div style={styles.instructionsCard}>
+              <div style={styles.instructionsGrid}>
+                <div style={styles.instructionItem}>
+                  <Heart className="w-4 h-4 text-red-500" />
+                  <span>
+                    Click Hit Points to manage HP (heal/damage) • Right-click to
+                    full heal
+                  </span>
+                </div>
+                <div style={styles.instructionItem}>
+                  <div
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      borderRadius: "50%",
+                      backgroundColor: "#1f2937",
+                      border: "2px solid #1f2937",
+                    }}
+                  />
+                  <span>
+                    Click circle to add proficiency bonus (+
+                    {character.proficiencyBonus})
+                  </span>
+                </div>
+                <div style={styles.instructionItem}>
+                  <span>
+                    Click skill or ability name to roll d20 + modifier
+                  </span>
+                </div>
+                <div style={styles.instructionItem}>
+                  <Coffee className="w-4 h-4 text-purple-500" />
+                  <span>Short Rest: Use hit dice to recover HP</span>
+                </div>
+                <div style={styles.instructionItem}>
+                  <Moon className="w-4 h-4 text-blue-500" />
+                  <span>Long Rest: Restore all HP and hit dice</span>
+                </div>
+
+                <div style={styles.instructionItem}>
+                  <span>Click column headers to sort skills</span>
+                </div>
+                <div style={styles.instructionItem}>
+                  <TrendingUp className="w-4 h-4 text-green-500" />
+                  <span>
+                    Level Up: Advance your character and gain new abilities
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
-        </>
-      )}
+              {!discordWebhookUrl && (
+                <div style={styles.warning}>
+                  ⚠️ No Discord webhook configured - rolls will show as alerts
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
-      <CharacterSheetModals
-        character={character}
-        theme={theme}
-        discordUserId={discordUserId}
-        supabase={supabase}
-        discordWebhookUrl={discordWebhookUrl}
-        characterModifiers={characterModifiers}
-        showRollResult={showRollResult}
-        fetchCharacterDetails={fetchCharacterDetails}
-        showHitDiceModal={showHitDiceModal}
-        setShowHitDiceModal={setShowHitDiceModal}
-        selectedHitDiceCount={selectedHitDiceCount}
-        setSelectedHitDiceCount={setSelectedHitDiceCount}
-        isRollingHitDice={isRollingHitDice}
-        setIsRollingHitDice={setIsRollingHitDice}
-        showDamageModal={showDamageModal}
-        setShowDamageModal={setShowDamageModal}
-        damageAmount={damageAmount}
-        setDamageAmount={setDamageAmount}
-        isApplyingDamage={isApplyingDamage}
-        setIsApplyingDamage={setIsApplyingDamage}
-      />
-
-      {showLevelUp && character && (
-        <LevelUpModal
+        <CharacterSheetModals
           character={character}
-          isOpen={showLevelUp}
-          onSave={handleCharacterUpdated}
-          onCancel={() => setShowLevelUp(false)}
-          user={user}
+          theme={theme}
+          discordUserId={discordUserId}
           supabase={supabase}
+          discordWebhookUrl={discordWebhookUrl}
+          characterModifiers={characterModifiers}
+          showRollResult={showRollResult}
+          fetchCharacterDetails={fetchCharacterDetails}
+          showHitDiceModal={showHitDiceModal}
+          setShowHitDiceModal={setShowHitDiceModal}
+          selectedHitDiceCount={selectedHitDiceCount}
+          setSelectedHitDiceCount={setSelectedHitDiceCount}
+          isRollingHitDice={isRollingHitDice}
+          setIsRollingHitDice={setIsRollingHitDice}
+          showDamageModal={showDamageModal}
+          setShowDamageModal={setShowDamageModal}
+          damageAmount={damageAmount}
+          setDamageAmount={setDamageAmount}
+          isApplyingDamage={isApplyingDamage}
+          setIsApplyingDamage={setIsApplyingDamage}
         />
-      )}
-    </div>
+
+        {showLevelUp && character && (
+          <LevelUpModal
+            character={character}
+            isOpen={showLevelUp}
+            onSave={handleCharacterUpdated}
+            onCancel={() => setShowLevelUp(false)}
+            user={user}
+            supabase={supabase}
+          />
+        )}
+      </div>
+    </>
   );
 };
 

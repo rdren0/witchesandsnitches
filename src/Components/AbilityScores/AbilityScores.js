@@ -5,17 +5,48 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "../../styles/masterStyles";
 
 const AbilityScores = ({ character }) => {
-  const { rollAbility } = useRollFunctions();
+  const { rollAbility, rollSavingThrow } = useRollFunctions();
   const { theme } = useTheme();
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
+  const [hoveredButton, setHoveredButton] = useState(null);
   const characterModifiers = modifiers(character);
 
   const getClickableAbilityStyle = (ability) => ({
     ...styles.abilityItem,
     cursor: isRolling ? "not-allowed" : "pointer",
     opacity: isRolling ? 0.5 : 1,
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
   });
+
+  const getSavingThrowButtonStyle = (abilityKey, isHovered) => ({
+    ...styles.savingThrowButton,
+    backgroundColor: isHovered
+      ? styles.savingThrowButtonHover?.backgroundColor
+      : styles.savingThrowButton?.backgroundColor,
+    borderColor: isHovered
+      ? styles.savingThrowButtonHover?.borderColor
+      : styles.savingThrowButton?.borderColor,
+    boxShadow:
+      isHovered && !isRolling
+        ? styles.savingThrowButtonHover?.boxShadow
+        : "none",
+    transform: isHovered && !isRolling ? "translateY(-1px)" : "none",
+    cursor: isRolling ? "not-allowed" : "pointer",
+    opacity: isRolling ? 0.5 : 1,
+  });
+
+  const getSavingThrowModifier = (abilityKey) => {
+    const baseModifier = characterModifiers[abilityKey];
+    const proficiencyBonus = character.proficiencyBonus || 0;
+
+    const savingThrowProficiencies = character.savingThrowProficiencies || [];
+    const isProficient = savingThrowProficiencies.includes(abilityKey);
+
+    return isProficient ? baseModifier + proficiencyBonus : baseModifier;
+  };
 
   return (
     <div style={styles.abilityCard}>
@@ -29,28 +60,58 @@ const AbilityScores = ({ character }) => {
           { name: "Wisdom", key: "wisdom" },
           { name: "Charisma", key: "charisma" },
         ].map((ability) => (
-          <div
-            key={ability.key}
-            style={getClickableAbilityStyle(ability)}
-            onClick={() =>
-              !isRolling &&
-              rollAbility({
-                ability,
-                isRolling,
-                setIsRolling,
-                characterModifiers,
-                character,
-              })
-            }
-            title={`Click to roll ${ability.name} check (d20 + ${formatModifier(
-              characterModifiers[ability.key]
-            )})`}
-          >
-            <span style={styles.abilityName}>{ability.name}</span>
-            <div style={styles.abilityModifier}>
-              {formatModifier(characterModifiers[ability.key])}
+          <div key={ability.key} style={getClickableAbilityStyle(ability)}>
+            <div
+              onClick={() =>
+                !isRolling &&
+                rollAbility({
+                  ability,
+                  isRolling,
+                  setIsRolling,
+                  characterModifiers,
+                  character,
+                })
+              }
+              title={`Click to roll ${
+                ability.name
+              } check (d20 + ${formatModifier(
+                characterModifiers[ability.key]
+              )})`}
+              style={{ cursor: isRolling ? "not-allowed" : "pointer", flex: 1 }}
+            >
+              <span style={styles.abilityName}>{ability.name}</span>
+              <div style={styles.abilityModifier}>
+                {formatModifier(characterModifiers[ability.key])}
+              </div>
+              <div style={styles.abilityScore}>{character[ability.key]}</div>
             </div>
-            <div style={styles.abilityScore}>{character[ability.key]}</div>
+
+            <button
+              style={getSavingThrowButtonStyle(
+                ability.key,
+                hoveredButton === ability.key
+              )}
+              onMouseEnter={() => setHoveredButton(ability.key)}
+              onMouseLeave={() => setHoveredButton(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isRolling) {
+                  rollSavingThrow({
+                    ability,
+                    isRolling,
+                    setIsRolling,
+                    character,
+                    savingThrowModifier: getSavingThrowModifier(ability.key),
+                  });
+                }
+              }}
+              title={`Roll ${ability.name} saving throw (d20 + ${formatModifier(
+                getSavingThrowModifier(ability.key)
+              )})`}
+              disabled={isRolling}
+            >
+              Save {formatModifier(getSavingThrowModifier(ability.key))}
+            </button>
           </div>
         ))}
       </div>

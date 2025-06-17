@@ -36,6 +36,8 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         return "#ef4444";
       case "heal":
         return "#10b981";
+      case "saving_throw":
+        return "#8b5cf6";
       default:
         return "#6b7280";
     }
@@ -334,6 +336,7 @@ export const useRollFunctions = () => {
     attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
     rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
     rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
+    rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),
   };
 };
 
@@ -1331,4 +1334,115 @@ export const rollAbilityStat = () => {
   const roller = new DiceRoller();
   const result = roller.roll("4d6kh3");
   return result.total;
+};
+
+export const rollSavingThrow = async ({
+  ability,
+  isRolling,
+  setIsRolling,
+  character,
+  savingThrowModifier,
+  showRollResult,
+}) => {
+  if (isRolling) return;
+
+  setIsRolling(true);
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+    const modifier = savingThrowModifier;
+    const total = d20Roll + modifier;
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${ability.name} Saving Throw`,
+        rollValue: d20Roll,
+        modifier: modifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "saving_throw",
+        description: `Rolling ${ability.name} saving throw for ${character.name}`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      alert(
+        `${ability.name} Saving Throw: d20(${d20Roll}) + ${modifier} = ${total}${criticalText}`
+      );
+    }
+
+    let embedColor = 0x8b5cf6;
+    let resultText = "";
+
+    if (isCriticalSuccess) {
+      embedColor = 0xffd700;
+      resultText = " - **CRITICAL SUCCESS!** 🎉";
+    } else if (isCriticalFailure) {
+      embedColor = 0xff0000;
+      resultText = " - **CRITICAL FAILURE!** 💥";
+    }
+
+    const message = {
+      embeds: [
+        {
+          title: `${character.name} Rolled: ${ability.name} Saving Throw${resultText}`,
+          description: `${
+            isCriticalSuccess
+              ? "Natural 20!"
+              : isCriticalFailure
+              ? "Natural 1!"
+              : ""
+          }`,
+          color: embedColor,
+          fields: [
+            {
+              name: "Roll Details",
+              value: `Roll: ${d20Roll} ${
+                modifier >= 0 ? "+" : ""
+              }${modifier} = **${total}**${
+                isCriticalSuccess
+                  ? "\n✨ **Exceptional success regardless of DC!**"
+                  : isCriticalFailure
+                  ? "\n💀 **Spectacular failure regardless of modifier!**"
+                  : ""
+              }`,
+              inline: false,
+            },
+          ],
+          footer: {
+            text: `Witches and Snitches - Saving Throw • Today at ${new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}`,
+          },
+        },
+      ],
+    };
+
+    if (discordWebhookUrl) {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
+    }
+  } catch (error) {
+    console.error("Error sending Discord message:", error);
+    alert("Failed to send roll to Discord");
+  } finally {
+    setIsRolling(false);
+  }
 };

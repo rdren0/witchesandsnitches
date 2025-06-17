@@ -327,6 +327,27 @@ const createCharacterSheetStyles = (theme) => ({
 });
 
 export const createAbilityScoresStyles = (theme) => ({
+  savingThrowButton: {
+    padding: "4px 8px",
+    fontSize: "10px",
+    fontWeight: "500",
+    border: `1px solid ${theme === "dark" ? "#333333" : "#d1d5db"}`,
+    borderRadius: "4px",
+    backgroundColor: theme === "dark" ? "#1a1a1a" : "#f9fafb",
+    color: theme === "dark" ? "#ffffff" : "#374151",
+    transition: "all 0.2s ease-in-out",
+    outline: "none",
+    fontFamily: "inherit",
+  },
+
+  savingThrowButtonHover: {
+    backgroundColor: theme === "dark" ? "#2a2a2a" : "#e5e7eb",
+    borderColor: theme === "dark" ? "#444444" : "#9ca3af",
+    boxShadow:
+      theme === "dark"
+        ? "0 2px 8px rgba(0, 0, 0, 0.5)"
+        : "0 2px 4px rgba(0, 0, 0, 0.1)",
+  },
   abilityCard: {
     backgroundColor: theme.surface,
     borderRadius: "12px",

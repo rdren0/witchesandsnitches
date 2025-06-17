@@ -1,4 +1,4 @@
-import { Heart, Dices, Plus, Minus, X, Coffee } from "lucide-react";
+import { Heart, Dices, Plus, Minus, X, Coffee, RotateCcw } from "lucide-react";
 import { formatModifier } from "./utils";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
@@ -140,30 +140,51 @@ const CharacterSheetModals = ({
     }
   };
 
-  const applyDamage = async () => {
-    if (!character || damageAmount < 0) return;
+  const applyHPChange = async (amount, type) => {
+    if (!character || amount <= 0) return;
 
     setIsApplyingDamage(true);
 
     try {
-      const newCurrentHP = Math.max(
-        0,
-        (character.currentHitPoints || character.hitPoints) - damageAmount
-      );
-      const actualDamage =
-        (character.currentHitPoints || character.hitPoints) - newCurrentHP;
+      const currentHP = character.currentHitPoints || character.hitPoints;
+      const maxHP = character.maxHitPoints || character.hitPoints;
+
+      let newCurrentHP;
+      let changeAmount;
+      let changeType;
+
+      if (type === "damage") {
+        // Ensure we don't go below 0 HP
+        newCurrentHP = Math.max(0, currentHP - amount);
+        changeAmount = currentHP - newCurrentHP; // Actual damage dealt
+        changeType = "damage";
+      } else {
+        // Ensure we don't go above max HP
+        newCurrentHP = Math.min(maxHP, currentHP + amount);
+        changeAmount = newCurrentHP - currentHP; // Actual healing done
+        changeType = "healing";
+      }
+
+      // Validate the result
+      if (newCurrentHP < 0) newCurrentHP = 0;
+      if (newCurrentHP > maxHP) newCurrentHP = maxHP;
+
+      const resultDescription =
+        type === "damage"
+          ? `${changeAmount} damage taken • HP: ${currentHP} → ${newCurrentHP}${
+              newCurrentHP === 0 ? " (Unconscious!)" : ""
+            }`
+          : `${changeAmount} HP restored • HP: ${currentHP} → ${newCurrentHP}`;
 
       showRollResult({
-        title: `Damage Applied`,
-        rollValue: actualDamage,
+        title: type === "damage" ? "Damage Applied" : "Healing Applied",
+        rollValue: changeAmount,
         modifier: 0,
-        total: actualDamage,
-        isCriticalSuccess: false,
-        isCriticalFailure: newCurrentHP === 0,
-        type: "damage",
-        description: `${actualDamage} damage taken • HP: ${
-          character.currentHitPoints || character.hitPoints
-        } → ${newCurrentHP}${newCurrentHP === 0 ? " (Unconscious!)" : ""}`,
+        total: changeAmount,
+        isCriticalSuccess: type === "healing" && newCurrentHP === maxHP,
+        isCriticalFailure: type === "damage" && newCurrentHP === 0,
+        type: changeType,
+        description: resultDescription,
       });
 
       const { error } = await supabase
@@ -183,31 +204,35 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} took damage!`,
-          color: 0xef4444,
+          title: `${character.name} ${
+            type === "damage" ? "took damage" : "was healed"
+          }!`,
+          color: type === "damage" ? 0xef4444 : 0x10b981,
           fields: [
             {
-              name: "Damage Taken",
-              value: `${actualDamage} damage`,
+              name: type === "damage" ? "Damage Taken" : "HP Restored",
+              value: `${changeAmount} ${type === "damage" ? "damage" : "HP"}`,
               inline: true,
             },
             {
-              name: "HP Remaining",
-              value: `${newCurrentHP}/${
-                character.maxHitPoints || character.hitPoints
-              }`,
+              name: "Current HP",
+              value: `${newCurrentHP}/${maxHP}`,
               inline: true,
             },
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Damage Taken",
+            text: `Witches and Snitches - ${
+              type === "damage" ? "Damage Taken" : "Healing Applied"
+            }`,
           },
         };
 
-        if (newCurrentHP === 0) {
+        if (type === "damage" && newCurrentHP === 0) {
           embed.description = "⚠️ **Character is unconscious!**";
           embed.color = 0x7f1d1d;
+        } else if (type === "healing" && newCurrentHP === maxHP) {
+          embed.description = "✨ **Character is at full health!**";
         }
 
         try {
@@ -224,11 +249,48 @@ const CharacterSheetModals = ({
       await fetchCharacterDetails();
       setShowDamageModal(false);
     } catch (error) {
-      console.error("Error applying damage:", error);
-      alert("Error applying damage. Please try again.");
+      console.error("Error applying HP change:", error);
+      alert("Error applying HP change. Please try again.");
     } finally {
       setIsApplyingDamage(false);
     }
+  };
+
+  const handleQuickAction = (amount, type) => {
+    applyHPChange(amount, type);
+  };
+
+  const handleCustomDamage = () => {
+    if (damageAmount > 0) {
+      applyHPChange(Math.abs(damageAmount), "damage");
+    }
+  };
+
+  const handleCustomHeal = () => {
+    if (damageAmount > 0) {
+      applyHPChange(Math.abs(damageAmount), "healing");
+    }
+  };
+
+  const handleFullHeal = () => {
+    const currentHP = character.currentHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints || character.hitPoints;
+    const healAmount = maxHP - currentHP;
+
+    if (healAmount > 0) {
+      applyHPChange(healAmount, "healing");
+    }
+  };
+
+  const getHPColor = () => {
+    const currentHP = character.currentHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints || character.hitPoints;
+    const percentage = currentHP / maxHP;
+
+    if (percentage <= 0.25) return "#EF4444"; // Red
+    if (percentage <= 0.5) return "#F59E0B"; // Orange
+    if (percentage <= 0.75) return "#EAB308"; // Yellow
+    return "#10B981"; // Green
   };
 
   return (
@@ -473,7 +535,7 @@ const CharacterSheetModals = ({
         </div>
       )}
 
-      {/* Damage Modal */}
+      {/* Enhanced HP Management Modal */}
       {showDamageModal && character && (
         <div
           style={{
@@ -503,181 +565,413 @@ const CharacterSheetModals = ({
           >
             <div
               style={{
-                fontSize: "20px",
-                fontWeight: "600",
-                marginBottom: "16px",
-                color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                textAlign: "center",
-              }}
-            >
-              <Heart
-                size={24}
-                style={{
-                  display: "inline",
-                  marginRight: "8px",
-                  color: "#ef4444",
-                }}
-              />
-              Apply Damage
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
-                }}
-              >
-                <span>Character:</span>
-                <span>{character.name}</span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
-                }}
-              >
-                <span>Current HP:</span>
-                <span>
-                  {character.currentHitPoints || character.hitPoints}/
-                  {character.maxHitPoints || character.hitPoints}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
-                }}
-              >
-                <span>Damage Amount:</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={damageAmount}
-                  onChange={(e) =>
-                    setDamageAmount(Math.max(0, parseInt(e.target.value) || 0))
-                  }
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      damageAmount > 0 &&
-                      !isApplyingDamage
-                    ) {
-                      applyDamage();
-                    }
-                    if (e.key === "Escape") {
-                      setShowDamageModal(false);
-                    }
-                  }}
-                  style={{
-                    padding: "4px 8px",
-                    border: `1px solid ${
-                      theme === "dark" ? "#4b5563" : "#d1d5db"
-                    }`,
-                    borderRadius: "4px",
-                    backgroundColor: theme === "dark" ? "#374151" : "white",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                    width: "80px",
-                    textAlign: "right",
-                  }}
-                  autoFocus
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
-                }}
-              >
-                <span>Resulting HP:</span>
-                <span
-                  style={{
-                    color:
-                      Math.max(
-                        0,
-                        (character.currentHitPoints || character.hitPoints) -
-                          damageAmount
-                      ) === 0
-                        ? "#ef4444"
-                        : "inherit",
-                  }}
-                >
-                  {Math.max(
-                    0,
-                    (character.currentHitPoints || character.hitPoints) -
-                      damageAmount
-                  )}
-                  /{character.maxHitPoints || character.hitPoints}
-                  {Math.max(
-                    0,
-                    (character.currentHitPoints || character.hitPoints) -
-                      damageAmount
-                  ) === 0 && " (Unconscious!)"}
-                </span>
-              </div>
-            </div>
-
-            <div
-              style={{
                 display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
               }}
             >
-              <button
+              <h3
                 style={{
-                  padding: "10px 20px",
-                  border: `2px solid ${
-                    theme === "dark" ? "#4b5563" : "#d1d5db"
-                  }`,
-                  backgroundColor: theme === "dark" ? "#374151" : "white",
-                  color: theme === "dark" ? "#f9fafb" : "#374151",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                }}
-                onClick={() => setShowDamageModal(false)}
-                disabled={isApplyingDamage}
-              >
-                <X size={16} style={{ marginRight: "6px" }} />
-                Cancel
-              </button>
-              <button
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#ef4444",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor:
-                    isApplyingDamage || damageAmount <= 0
-                      ? "not-allowed"
-                      : "pointer",
-                  fontSize: "14px",
-                  fontWeight: "500",
+                  margin: 0,
+                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  fontSize: "18px",
+                  fontWeight: "600",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  opacity: isApplyingDamage || damageAmount <= 0 ? 0.7 : 1,
                 }}
-                onClick={applyDamage}
-                disabled={isApplyingDamage || damageAmount <= 0}
               >
-                <Heart size={16} />
-                {isApplyingDamage ? "Applying..." : "Apply Damage"}
+                <Heart size={20} color={getHPColor()} />
+                Manage Hit Points
+              </h3>
+              <button
+                onClick={() => setShowDamageModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  cursor: "pointer",
+                  padding: "4px",
+                  borderRadius: "4px",
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Current HP Display */}
+            <div
+              style={{
+                textAlign: "center",
+                marginBottom: "20px",
+                padding: "12px",
+                backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
+                borderRadius: "8px",
+                border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  color: getHPColor(),
+                  marginBottom: "4px",
+                }}
+              >
+                {character.currentHitPoints || character.hitPoints} /{" "}
+                {character.maxHitPoints || character.hitPoints}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Current / Maximum HP
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{ marginBottom: "20px" }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  marginBottom: "8px",
+                }}
+              >
+                Quick Actions
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: "8px",
+                }}
+              >
+                <button
+                  onClick={() => handleQuickAction(1, "damage")}
+                  disabled={
+                    (character.currentHitPoints || character.hitPoints) === 0 ||
+                    isApplyingDamage
+                  }
+                  style={{
+                    padding: "8px 4px",
+                    backgroundColor: "#EF444410",
+                    color: "#EF4444",
+                    border: "1px solid #EF4444",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    cursor:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        0 || isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        0 || isApplyingDamage
+                        ? 0.5
+                        : 1,
+                  }}
+                >
+                  -1
+                </button>
+                <button
+                  onClick={() => handleQuickAction(5, "damage")}
+                  disabled={
+                    (character.currentHitPoints || character.hitPoints) === 0 ||
+                    isApplyingDamage
+                  }
+                  style={{
+                    padding: "8px 4px",
+                    backgroundColor: "#EF444410",
+                    color: "#EF4444",
+                    border: "1px solid #EF4444",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    cursor:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        0 || isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        0 || isApplyingDamage
+                        ? 0.5
+                        : 1,
+                  }}
+                >
+                  -5
+                </button>
+                <button
+                  onClick={() => handleQuickAction(1, "healing")}
+                  disabled={
+                    (character.currentHitPoints || character.hitPoints) ===
+                      (character.maxHitPoints || character.hitPoints) ||
+                    isApplyingDamage
+                  }
+                  style={{
+                    padding: "8px 4px",
+                    backgroundColor: "#10B98110",
+                    color: "#10B981",
+                    border: "1px solid #10B981",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    cursor:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        (character.maxHitPoints || character.hitPoints) ||
+                      isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        (character.maxHitPoints || character.hitPoints) ||
+                      isApplyingDamage
+                        ? 0.5
+                        : 1,
+                  }}
+                >
+                  +1
+                </button>
+                <button
+                  onClick={() => handleQuickAction(5, "healing")}
+                  disabled={
+                    (character.currentHitPoints || character.hitPoints) ===
+                      (character.maxHitPoints || character.hitPoints) ||
+                    isApplyingDamage
+                  }
+                  style={{
+                    padding: "8px 4px",
+                    backgroundColor: "#10B98110",
+                    color: "#10B981",
+                    border: "1px solid #10B981",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    cursor:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        (character.maxHitPoints || character.hitPoints) ||
+                      isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      (character.currentHitPoints || character.hitPoints) ===
+                        (character.maxHitPoints || character.hitPoints) ||
+                      isApplyingDamage
+                        ? 0.5
+                        : 1,
+                  }}
+                >
+                  +5
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Damage */}
+            <div style={{ marginBottom: "16px" }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  marginBottom: "8px",
+                }}
+              >
+                Take Damage
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="number"
+                  min="1"
+                  max={character.currentHitPoints || character.hitPoints}
+                  value={damageAmount || ""}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    setDamageAmount(Math.max(0, value));
+                  }}
+                  placeholder="Amount"
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    border: `1px solid ${
+                      theme === "dark" ? "#4b5563" : "#d1d5db"
+                    }`,
+                    borderRadius: "6px",
+                    backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    fontSize: "14px",
+                  }}
+                />
+                <button
+                  onClick={handleCustomDamage}
+                  disabled={
+                    !damageAmount ||
+                    (character.currentHitPoints || character.hitPoints) === 0 ||
+                    isApplyingDamage
+                  }
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#EF4444",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    cursor:
+                      !damageAmount ||
+                      (character.currentHitPoints || character.hitPoints) ===
+                        0 ||
+                      isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      !damageAmount ||
+                      (character.currentHitPoints || character.hitPoints) ===
+                        0 ||
+                      isApplyingDamage
+                        ? 0.5
+                        : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <Minus size={14} />
+                  Damage
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Heal */}
+            <div style={{ marginBottom: "16px" }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  marginBottom: "8px",
+                }}
+              >
+                Restore Health
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="number"
+                  min="1"
+                  max={
+                    (character.maxHitPoints || character.hitPoints) -
+                    (character.currentHitPoints || character.hitPoints)
+                  }
+                  value={damageAmount || ""}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    setDamageAmount(Math.max(0, value));
+                  }}
+                  placeholder="Amount"
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    border: `1px solid ${
+                      theme === "dark" ? "#4b5563" : "#d1d5db"
+                    }`,
+                    borderRadius: "6px",
+                    backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
+                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    fontSize: "14px",
+                  }}
+                />
+                <button
+                  onClick={handleCustomHeal}
+                  disabled={
+                    !damageAmount ||
+                    (character.currentHitPoints || character.hitPoints) ===
+                      (character.maxHitPoints || character.hitPoints) ||
+                    isApplyingDamage
+                  }
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#10B981",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    cursor:
+                      !damageAmount ||
+                      (character.currentHitPoints || character.hitPoints) ===
+                        (character.maxHitPoints || character.hitPoints) ||
+                      isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      !damageAmount ||
+                      (character.currentHitPoints || character.hitPoints) ===
+                        (character.maxHitPoints || character.hitPoints) ||
+                      isApplyingDamage
+                        ? 0.5
+                        : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <Plus size={14} />
+                  Heal
+                </button>
+              </div>
+            </div>
+
+            {/* Full Heal */}
+            <div>
+              <button
+                onClick={handleFullHeal}
+                disabled={
+                  (character.currentHitPoints || character.hitPoints) ===
+                    (character.maxHitPoints || character.hitPoints) ||
+                  isApplyingDamage
+                }
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  backgroundColor:
+                    (character.currentHitPoints || character.hitPoints) ===
+                      (character.maxHitPoints || character.hitPoints) ||
+                    isApplyingDamage
+                      ? theme === "dark"
+                        ? "#4b5563"
+                        : "#e5e7eb"
+                      : "#10B981",
+                  color:
+                    (character.currentHitPoints || character.hitPoints) ===
+                      (character.maxHitPoints || character.hitPoints) ||
+                    isApplyingDamage
+                      ? theme === "dark"
+                        ? "#9ca3af"
+                        : "#6b7280"
+                      : "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor:
+                    (character.currentHitPoints || character.hitPoints) ===
+                      (character.maxHitPoints || character.hitPoints) ||
+                    isApplyingDamage
+                      ? "not-allowed"
+                      : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                }}
+              >
+                <RotateCcw size={16} />
+                {isApplyingDamage
+                  ? "Applying..."
+                  : `Full Heal to ${
+                      character.maxHitPoints || character.hitPoints
+                    } HP`}
               </button>
             </div>
           </div>

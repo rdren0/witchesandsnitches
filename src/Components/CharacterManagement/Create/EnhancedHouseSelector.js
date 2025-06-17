@@ -584,16 +584,6 @@ const EnhancedHouseSelector = ({
                             styles={styles}
                           />
 
-                          {/* House Ability Choice */}
-                          {!readOnly && (
-                            <HouseAbilityChoice
-                              house={house}
-                              houseChoices={houseChoices}
-                              onHouseChoiceSelect={onHouseChoiceSelect}
-                              styles={styles}
-                            />
-                          )}
-
                           {/* Ability Score Bonuses (Traditional Display) */}
                           <div style={styles.sectionContainer}>
                             <h4 style={styles.sectionTitle}>
@@ -628,7 +618,15 @@ const EnhancedHouseSelector = ({
                               )}
                             </div>
                           </div>
-
+                          {/* House Ability Choice */}
+                          {!readOnly && (
+                            <HouseAbilityChoice
+                              house={house}
+                              houseChoices={houseChoices}
+                              onHouseChoiceSelect={onHouseChoiceSelect}
+                              styles={styles}
+                            />
+                          )}
                           {/* Features */}
                           <div style={styles.sectionContainer}>
                             <h4 style={styles.sectionTitle}>
