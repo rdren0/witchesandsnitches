@@ -1,7 +1,7 @@
 import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6, Star, Skull } from "lucide-react";
-import { getModifierInfo } from "../Components/SpellBook/utils";
+import { getModifierInfo } from "../SpellBook/utils";
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
 const RollModalContext = createContext();
@@ -953,7 +953,8 @@ export const rollInitiative = async ({
   try {
     const diceResult = rollDice();
     const d20Roll = diceResult.total;
-    const mod = characterModifiers.dexterity;
+    // ✅ Use the character's pre-calculated initiative modifier instead
+    const mod = character.initiativeModifier;
     const total = d20Roll + mod;
 
     if (showRollResult) {

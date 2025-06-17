@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Plus,
 } from "lucide-react";
-import { useRollFunctions } from "../../App/diceRoller";
+import { useRollFunctions } from "../utils/diceRoller";
 
 import { useTheme } from "../../contexts/ThemeContext";
 import { potions, qualityDCs } from "../data";

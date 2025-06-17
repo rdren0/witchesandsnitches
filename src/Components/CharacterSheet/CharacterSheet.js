@@ -18,7 +18,7 @@ import CharacterSheetModals from "./CharacterSheetModals";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
-import { useRollFunctions, useRollModal } from "../../App/diceRoller";
+import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import GenericD20Roller from "../GenericD20Roller/GenericD20Roller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;

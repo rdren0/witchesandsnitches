@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Dice6, Plus, Minus } from "lucide-react";
-import { useRollFunctions } from "../../App/diceRoller";
+import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const GenericD20Roller = ({

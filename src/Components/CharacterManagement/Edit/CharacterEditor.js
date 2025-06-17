@@ -1344,14 +1344,6 @@ const CharacterEditor = ({
           />
         </div>
       )}
-      {/* Skills Section - Placed early in Step 3 */}
-      <EnhancedSkillsSection
-        character={character}
-        handleSkillToggle={handleSkillToggle}
-        getAvailableSkills={getAvailableSkills}
-        styles={styles}
-        theme={theme}
-      />
 
       {/* ASI/Feat Choices for levels 4, 8, 12, 16, 19 */}
       {getAvailableASILevels(character.level).map((level) => {
@@ -1556,6 +1548,14 @@ const CharacterEditor = ({
         }}
         character={character}
         disabled={false}
+      />
+      {/* Skills Section - Placed early in Step 3 */}
+      <EnhancedSkillsSection
+        character={character}
+        handleSkillToggle={handleSkillToggle}
+        getAvailableSkills={getAvailableSkills}
+        styles={styles}
+        theme={theme}
       />
 
       <StepIndicator step={4} totalSteps={5} label="Ability Scores" />

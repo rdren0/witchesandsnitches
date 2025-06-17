@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formatModifier, modifiers } from "../CharacterSheet/utils";
-import { useRollFunctions } from "../../App/diceRoller";
+import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "../../styles/masterStyles";
 

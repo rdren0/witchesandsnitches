@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, Circle, Star } from "lucide-react";
 import { formatModifier, modifiers, skillMap, allSkills } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
-import { useRollFunctions } from "../../App/diceRoller";
+import { useRollFunctions } from "../utils/diceRoller";
 
 export const Skills = ({
   character,

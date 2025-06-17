@@ -23,7 +23,7 @@ import {
 import { spellsData } from "./spells";
 import { getSpellModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useRollFunctions } from "../../App/diceRoller";
+import { useRollFunctions } from "../utils/diceRoller";
 import { createSpellBookStyles } from "../../styles/masterStyles";
 
 const getIcon = (iconName) => {

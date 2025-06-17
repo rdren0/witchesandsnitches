@@ -19,7 +19,7 @@ import CharacterSelector from "../Components/CharacterSelector/CharacterSelector
 import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
-import { RollModalProvider } from "./diceRoller";
+import { RollModalProvider } from "../Components/utils/diceRoller";
 
 import { createAppStyles } from "../styles/masterStyles";
 import DowntimeSheet from "../Components/Downtime/DowntimeSheet";

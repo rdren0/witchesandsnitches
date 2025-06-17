@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { rollAbilityStat } from "../../../App/diceRoller";
+import { rollAbilityStat } from "../../utils/diceRoller";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { Wand, Save, RefreshCw, AlertCircle } from "lucide-react";
 import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
