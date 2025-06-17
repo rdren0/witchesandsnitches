@@ -18,6 +18,7 @@ import CharacterProgressionSummary from "./CharacterProgressionSummary";
 import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
 import { StepIndicator } from "../Shared/StepIndicator";
 import EnhancedHouseSelector from "./EnhancedHouseSelector";
+import EnhancedSkillsSection from "../Shared/EnhancedSkillsSection";
 
 const CharacterCreator = ({
   user,
@@ -40,6 +41,7 @@ const CharacterCreator = ({
     subclass: "",
     innateHeritage: "",
     background: "",
+    backgroundSkills: [],
     gameSession: "",
     standardFeats: [],
     skillProficiencies: [],
@@ -369,17 +371,27 @@ const CharacterCreator = ({
       ...prev,
       level1ChoiceType: choiceType,
       innateHeritage: choiceType === "feat" ? "" : prev.innateHeritage,
-
       standardFeats: choiceType === "feat" ? prev.standardFeats : [],
     }));
   };
 
   const handleSkillToggle = (skill) => {
     setCharacter((prev) => {
-      const currentSkills = prev.skillProficiencies;
+      const currentSkills = prev.skillProficiencies || [];
+      const backgroundSkills = prev.backgroundSkills || [];
+      const castingStyleSkills = getAvailableSkills();
+
+      if (backgroundSkills.includes(skill)) {
+        return prev;
+      }
+
+      const selectedCastingStyleSkills = currentSkills.filter(
+        (s) => castingStyleSkills.includes(s) && !backgroundSkills.includes(s)
+      );
+
       const isCurrentlySelected = currentSkills.includes(skill);
 
-      if (!isCurrentlySelected && currentSkills.length >= 2) {
+      if (!isCurrentlySelected && selectedCastingStyleSkills.length >= 2) {
         return prev;
       }
 
@@ -492,7 +504,6 @@ const CharacterCreator = ({
   const handleHouseSelect = (house) => {
     setSelectedHouse(house);
     handleInputChange("house", house);
-
     setHouseChoices({});
   };
 
@@ -519,6 +530,7 @@ const CharacterCreator = ({
       ability_scores: character.abilityScores,
       asi_choices: character.asiChoices || {},
       background: character.background,
+      background_skills: character.backgroundSkills || [],
       casting_style: character.castingStyle,
       feat_choices: character.featChoices || {},
       game_session: character.gameSession,
@@ -549,6 +561,7 @@ const CharacterCreator = ({
         abilityScores: savedCharacter.ability_scores,
         asiChoices: savedCharacter.asi_choices || {},
         background: savedCharacter.background,
+        backgroundSkills: savedCharacter.background_skills || [],
         castingStyle: savedCharacter.casting_style,
         gameSession: savedCharacter.game_session || "",
         hitPoints: savedCharacter.hit_points,
@@ -864,78 +877,8 @@ const CharacterCreator = ({
         />
       </div>
 
-      <StepIndicator
-        step={3}
-        totalSteps={5}
-        label="Skills & Features & Backgrounds"
-      />
+      <StepIndicator step={3} totalSteps={5} label="Features & Backgrounds" />
 
-      {/* Skills */}
-      <div style={styles.fieldContainer}>
-        <h3 style={styles.skillsHeader}>
-          Skill Proficiencies ({character.skillProficiencies.length}/2 selected)
-          *
-        </h3>
-
-        {!character.castingStyle ? (
-          <div style={styles.skillsPlaceholder}>
-            Please select a Casting Style first to see available skills.
-          </div>
-        ) : (
-          <div style={styles.skillsContainer}>
-            <h4 style={styles.skillsSubheader}>
-              {character.castingStyle} Skills (Choose 2)
-            </h4>
-            <div style={styles.skillsGrid}>
-              {getAvailableSkills().map((skill) => {
-                const isSelected = character.skillProficiencies.includes(skill);
-                const canSelect =
-                  isSelected || character.skillProficiencies.length < 2;
-
-                return (
-                  <label
-                    key={skill}
-                    style={{
-                      ...styles.skillOptionBase,
-                      cursor: canSelect ? "pointer" : "not-allowed",
-                      backgroundColor: isSelected
-                        ? theme.success + "20"
-                        : theme.surface,
-                      border: isSelected
-                        ? `2px solid ${theme.success}`
-                        : `2px solid ${theme.border}`,
-                      opacity: canSelect ? 1 : 0.5,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSkillToggle(skill)}
-                      disabled={!canSelect}
-                      style={styles.skillCheckbox}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        color: isSelected ? theme.success : theme.text,
-                        fontWeight: isSelected ? "bold" : "normal",
-                      }}
-                    >
-                      {skill}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-
-            {character.skillProficiencies.length === 2 && (
-              <div style={styles.skillsComplete}>
-                ✓ Skill selection complete! You've chosen your 2 skills.
-              </div>
-            )}
-          </div>
-        )}
-      </div>
       {/* Subclass */}
       <EnhancedSubclassSelector
         value={character.subclass}
@@ -1054,6 +997,14 @@ const CharacterCreator = ({
         </div>
       )}
 
+      <EnhancedSkillsSection
+        character={character}
+        handleSkillToggle={handleSkillToggle}
+        getAvailableSkills={getAvailableSkills}
+        styles={styles}
+        theme={theme}
+      />
+
       {/* ASI Level Choices */}
       <ASILevelChoices
         character={character}
@@ -1071,7 +1022,13 @@ const CharacterCreator = ({
       {/* Background */}
       <EnhancedBackgroundSelector
         value={character.background}
-        onChange={(value) => handleInputChange("background", value)}
+        onChange={(backgroundName) => {
+          handleInputChange("background", backgroundName);
+        }}
+        onCharacterUpdate={(updatedCharacter) => {
+          setCharacter(updatedCharacter);
+        }}
+        character={character}
         disabled={false}
       />
 

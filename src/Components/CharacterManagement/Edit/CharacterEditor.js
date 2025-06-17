@@ -22,6 +22,7 @@ import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
 import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
+import EnhancedSkillsSection from "../Shared/EnhancedSkillsSection";
 import StepIndicator from "../Shared/StepIndicator";
 import {
   AbilityScoreIncrements,
@@ -30,6 +31,7 @@ import {
   getAllSelectedFeats,
 } from "../Create/ASIComponents";
 import EnhancedHouseSelector from "../Create/EnhancedHouseSelector";
+import { backgroundsData } from "../Shared/backgroundsData";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -39,6 +41,27 @@ if (!importedStandardFeats) {
   );
 }
 
+const migrateBackgroundSkills = (character) => {
+  if (character.backgroundSkills && character.backgroundSkills.length > 0) {
+    return character;
+  }
+
+  if (character.background && character.background !== "") {
+    const background = backgroundsData[character.background];
+    if (background && background.skillProficiencies) {
+      return {
+        ...character,
+        backgroundSkills: background.skillProficiencies,
+      };
+    }
+  }
+
+  return {
+    ...character,
+    backgroundSkills: [],
+  };
+};
+
 const CharacterEditor = ({
   character: originalCharacter,
   onSave,
@@ -47,44 +70,46 @@ const CharacterEditor = ({
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
-  const safeOriginalCharacter = useMemo(
-    () =>
-      originalCharacter || {
-        id: null,
-        name: "",
-        level: 1,
-        castingStyle: "",
-        house: "",
-        houseChoices: {},
-        standardFeats: [],
-        asiChoices: {},
-        abilityScores: {
-          strength: 10,
-          dexterity: 10,
-          constitution: 10,
-          intelligence: 10,
-          wisdom: 10,
-          charisma: 10,
-        },
-        skillProficiencies: [],
-        innateHeritage: "",
-        level1ChoiceType: "",
-        hitPoints: 1,
-        initiativeAbility: "dexterity",
-        subclass: "",
-        background: "",
-        gameSession: "",
-        wandType: "",
-        magicModifiers: {
-          divinations: 0,
-          charms: 0,
-          transfiguration: 0,
-          healing: 0,
-          jinxesHexesCurses: 0,
-        },
+
+  const safeOriginalCharacter = useMemo(() => {
+    const baseCharacter = originalCharacter || {
+      id: null,
+      name: "",
+      level: 1,
+      castingStyle: "",
+      house: "",
+      houseChoices: {},
+      standardFeats: [],
+      asiChoices: {},
+      abilityScores: {
+        strength: 10,
+        dexterity: 10,
+        constitution: 10,
+        intelligence: 10,
+        wisdom: 10,
+        charisma: 10,
       },
-    [originalCharacter]
-  );
+      skillProficiencies: [],
+      backgroundSkills: [],
+      innateHeritage: "",
+      level1ChoiceType: "",
+      hitPoints: 1,
+      initiativeAbility: "dexterity",
+      subclass: "",
+      background: "",
+      gameSession: "",
+      wandType: "",
+      magicModifiers: {
+        divinations: 0,
+        charms: 0,
+        transfiguration: 0,
+        healing: 0,
+        jinxesHexesCurses: 0,
+      },
+    };
+
+    return migrateBackgroundSkills(baseCharacter);
+  }, [originalCharacter]);
 
   const [asiLevelFilters, setASILevelFilters] = useState({});
 
@@ -174,6 +199,26 @@ const CharacterEditor = ({
     }
     // eslint-disable-next-line
   }, [character.house, character.houseChoices]);
+
+  useEffect(() => {
+    if (
+      character.background &&
+      (!character.backgroundSkills || character.backgroundSkills.length === 0)
+    ) {
+      const background = backgroundsData[character.background];
+      if (background && background.skillProficiencies) {
+        console.log(
+          "Migrating background skills for existing character:",
+          background.skillProficiencies
+        );
+        setCharacter((prev) => ({
+          ...prev,
+          backgroundSkills: background.skillProficiencies,
+        }));
+      }
+    }
+    // eslint-disable-next-line
+  }, [character.background]);
 
   const [lockedFields, setLockedFields] = useState({
     level1ChoiceType: true,
@@ -433,6 +478,37 @@ const CharacterEditor = ({
           [field]: newLevel,
         }));
         setRolledHp(null);
+      } else if (field === "background") {
+        const background = backgroundsData[value];
+        const newBackgroundSkills =
+          background && background.skillProficiencies
+            ? background.skillProficiencies
+            : [];
+
+        setCharacter((prev) => {
+          const currentSkills = prev.skillProficiencies || [];
+          const oldBackgroundSkills = prev.backgroundSkills || [];
+
+          const skillsWithoutOldBackground = currentSkills.filter(
+            (skill) => !oldBackgroundSkills.includes(skill)
+          );
+
+          const updatedSkills = [
+            ...skillsWithoutOldBackground,
+            ...newBackgroundSkills,
+          ];
+
+          console.log("Background changed to:", value);
+          console.log("New background skills:", newBackgroundSkills);
+          console.log("Updated skill proficiencies:", updatedSkills);
+
+          return {
+            ...prev,
+            [field]: value,
+            backgroundSkills: newBackgroundSkills,
+            skillProficiencies: [...new Set(updatedSkills)],
+          };
+        });
       } else {
         setCharacter((prev) => ({
           ...prev,
@@ -455,10 +531,23 @@ const CharacterEditor = ({
   const handleSkillToggle = (skill) => {
     setCharacter((prev) => {
       const currentSkills = prev.skillProficiencies || [];
-      const isCurrentlySelected = currentSkills.includes(skill);
-      if (!isCurrentlySelected && currentSkills.length >= 2) {
+      const backgroundSkills = prev.backgroundSkills || [];
+      const castingStyleSkills = getAvailableSkills();
+
+      if (backgroundSkills.includes(skill)) {
         return prev;
       }
+
+      const selectedCastingStyleSkills = currentSkills.filter(
+        (s) => castingStyleSkills.includes(s) && !backgroundSkills.includes(s)
+      );
+
+      const isCurrentlySelected = currentSkills.includes(skill);
+
+      if (!isCurrentlySelected && selectedCastingStyleSkills.length >= 2) {
+        return prev;
+      }
+
       return {
         ...prev,
         skillProficiencies: isCurrentlySelected
@@ -588,6 +677,7 @@ const CharacterEditor = ({
       ability_scores: character.abilityScores,
       asi_choices: character.asiChoices || {},
       background: character.background,
+      background_skills: character.backgroundSkills || [],
       casting_style: character.castingStyle,
       feat_choices: character.featChoices || {},
       game_session: character.gameSession,
@@ -625,6 +715,7 @@ const CharacterEditor = ({
         abilityScores: updatedCharacter.ability_scores,
         asiChoices: updatedCharacter.asi_choices || {},
         background: updatedCharacter.background,
+        backgroundSkills: updatedCharacter.background_skills || [],
         castingStyle: updatedCharacter.casting_style,
         createdAt: updatedCharacter.created_at,
         gameSession: updatedCharacter.game_session || "",
@@ -1056,65 +1147,6 @@ const CharacterEditor = ({
         totalSteps={5}
         label="Skills & Features & Backgrounds"
       />
-      <div style={styles.fieldContainer}>
-        <h3 style={styles.skillsHeader}>
-          Skill Proficiencies ({(character.skillProficiencies || []).length}/2
-          selected)
-        </h3>
-        {!character.castingStyle ? (
-          <div style={styles.skillsPlaceholder}>
-            Please select a Casting Style first to see available skills.
-          </div>
-        ) : (
-          <div style={styles.skillsContainer}>
-            <h4 style={styles.skillsSubheader}>
-              {character.castingStyle} Skills (Choose 2)
-            </h4>
-            <div style={styles.skillsGrid}>
-              {getAvailableSkills().map((skill) => {
-                const isSelected = (
-                  character.skillProficiencies || []
-                ).includes(skill);
-                const canSelect =
-                  isSelected || (character.skillProficiencies || []).length < 2;
-                return (
-                  <label
-                    key={skill}
-                    style={{
-                      ...styles.skillOptionBase,
-                      cursor: canSelect ? "pointer" : "not-allowed",
-                      backgroundColor: isSelected
-                        ? theme.success + "20"
-                        : theme.surface,
-                      border: isSelected
-                        ? `2px solid ${theme.success}`
-                        : `2px solid ${theme.border}`,
-                      opacity: canSelect ? 1 : 0.5,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSkillToggle(skill)}
-                      disabled={!canSelect}
-                      style={styles.skillCheckbox}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        color: isSelected ? theme.success : theme.text,
-                        fontWeight: isSelected ? "bold" : "normal",
-                      }}
-                    >
-                      {skill}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
 
       <EnhancedSubclassSelector
         value={character.subclass}
@@ -1312,6 +1344,14 @@ const CharacterEditor = ({
           />
         </div>
       )}
+      {/* Skills Section - Placed early in Step 3 */}
+      <EnhancedSkillsSection
+        character={character}
+        handleSkillToggle={handleSkillToggle}
+        getAvailableSkills={getAvailableSkills}
+        styles={styles}
+        theme={theme}
+      />
 
       {/* ASI/Feat Choices for levels 4, 8, 12, 16, 19 */}
       {getAvailableASILevels(character.level).map((level) => {
@@ -1504,12 +1544,20 @@ const CharacterEditor = ({
           </div>
         );
       })}
+
       {/* Background */}
       <EnhancedBackgroundSelector
         value={character.background}
-        onChange={(value) => handleInputChange("background", value)}
+        onChange={(backgroundName) => {
+          handleInputChange("background", backgroundName);
+        }}
+        onCharacterUpdate={(updatedCharacter) => {
+          setCharacter(updatedCharacter);
+        }}
+        character={character}
         disabled={false}
       />
+
       <StepIndicator step={4} totalSteps={5} label="Ability Scores" />
       <div style={styles.fieldContainer}>
         <div style={styles.lockedFieldHeader}>

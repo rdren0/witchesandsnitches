@@ -3,7 +3,6 @@ import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { backgroundsData } from "./backgroundsData";
 
-// Utility function to calculate background modifiers
 const calculateBackgroundModifiers = (selectedBackground, character) => {
   const defaultInitiativeChanges = {
     bonus: 0,
@@ -35,7 +34,6 @@ const calculateBackgroundModifiers = (selectedBackground, character) => {
 
   const initiativeChanges = { ...defaultInitiativeChanges };
 
-  // Calculate ability score increases
   if (background.modifiers.abilityIncreases) {
     background.modifiers.abilityIncreases.forEach((increase) => {
       if (
@@ -44,11 +42,9 @@ const calculateBackgroundModifiers = (selectedBackground, character) => {
       ) {
         abilityModifiers[increase.ability] += increase.amount;
       }
-      // Note: Choice-based increases would need additional handling similar to feats
     });
   }
 
-  // Calculate initiative changes
   if (background.modifiers.other) {
     if (background.modifiers.other.initiativeBonus) {
       initiativeChanges.bonus = background.modifiers.other.initiativeBonus;
@@ -75,14 +71,91 @@ const calculateBackgroundModifiers = (selectedBackground, character) => {
   return { abilityModifiers, initiativeChanges };
 };
 
-// Component to display background modifier pills
+const applyBackgroundProficiencies = (character, backgroundName) => {
+  if (!backgroundName || !backgroundsData[backgroundName]) {
+    return {
+      ...character,
+      background: "",
+      skillProficiencies: removeBackgroundProficiencies(
+        character.skillProficiencies || [],
+        character.background
+      ),
+      backgroundSkills: [],
+      toolProficiencies: removeBackgroundToolProficiencies(
+        character.toolProficiencies || [],
+        character.background
+      ),
+    };
+  }
+
+  const background = backgroundsData[backgroundName];
+  const currentSkillProficiencies = character.skillProficiencies || [];
+  const currentToolProficiencies = character.toolProficiencies || [];
+
+  const cleanedSkillProficiencies = removeBackgroundProficiencies(
+    currentSkillProficiencies,
+    character.background
+  );
+  const cleanedToolProficiencies = removeBackgroundToolProficiencies(
+    currentToolProficiencies,
+    character.background
+  );
+
+  const newBackgroundSkills = background.skillProficiencies || [];
+  const newSkillProficiencies = [
+    ...cleanedSkillProficiencies,
+    ...newBackgroundSkills,
+  ];
+
+  const newToolProficiencies = background.toolProficiencies
+    ? [...cleanedToolProficiencies, ...background.toolProficiencies]
+    : cleanedToolProficiencies;
+
+  return {
+    ...character,
+    background: backgroundName,
+    skillProficiencies: [...new Set(newSkillProficiencies)],
+    backgroundSkills: newBackgroundSkills,
+    toolProficiencies: [...new Set(newToolProficiencies)],
+  };
+};
+
+const removeBackgroundProficiencies = (
+  currentProficiencies,
+  backgroundName
+) => {
+  if (!backgroundName || !backgroundsData[backgroundName]) {
+    return currentProficiencies;
+  }
+
+  const background = backgroundsData[backgroundName];
+  const backgroundSkills = background.skillProficiencies || [];
+
+  return currentProficiencies.filter(
+    (skill) => !backgroundSkills.includes(skill)
+  );
+};
+
+const removeBackgroundToolProficiencies = (
+  currentProficiencies,
+  backgroundName
+) => {
+  if (!backgroundName || !backgroundsData[backgroundName]) {
+    return currentProficiencies;
+  }
+
+  const background = backgroundsData[backgroundName];
+  const backgroundTools = background.toolProficiencies || [];
+
+  return currentProficiencies.filter((tool) => !backgroundTools.includes(tool));
+};
+
 const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
   const { abilityModifiers, initiativeChanges } = calculateBackgroundModifiers(
     selectedBackground,
     character
   );
 
-  // Check if there are any modifiers to show
   const hasAbilityModifiers = Object.values(abilityModifiers).some(
     (mod) => mod > 0
   );
@@ -139,9 +212,10 @@ const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
 const EnhancedBackgroundSelector = ({
   value,
   onChange,
+  onCharacterUpdate,
   disabled = false,
   backgrounds: backgroundsList = [],
-  character = {}, // Add character prop for modifier calculations
+  character = {},
 }) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
@@ -149,7 +223,6 @@ const EnhancedBackgroundSelector = ({
 
   const selectedBackground = value || "";
 
-  // Enhanced styles for the modifier pills
   const enhancedStyles = {
     ...styles,
     modifierPillsContainer: {
@@ -209,20 +282,30 @@ const EnhancedBackgroundSelector = ({
   };
 
   const handleBackgroundToggle = (backgroundName) => {
+    let updatedCharacter;
+
     if (selectedBackground === backgroundName) {
-      onChange("");
+      updatedCharacter = applyBackgroundProficiencies(character, "");
       setExpandedBackgrounds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(backgroundName);
         return newSet;
       });
     } else {
-      onChange(backgroundName);
+      updatedCharacter = applyBackgroundProficiencies(
+        character,
+        backgroundName
+      );
       setExpandedBackgrounds((prev) => {
         const newSet = new Set(prev);
         newSet.add(backgroundName);
         return newSet;
       });
+    }
+
+    onChange(updatedCharacter.background);
+    if (onCharacterUpdate) {
+      onCharacterUpdate(updatedCharacter);
     }
   };
 
@@ -629,7 +712,7 @@ const EnhancedBackgroundSelector = ({
         opportunities that help define who your character is beyond their
         magical abilities.
         {selectedBackground &&
-          " Mechanical bonuses from your background are shown above."}
+          " Mechanical bonuses from your background are shown above and automatically applied."}
       </div>
     </div>
   );
