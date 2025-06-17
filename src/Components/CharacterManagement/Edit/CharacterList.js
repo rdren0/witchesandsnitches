@@ -540,12 +540,12 @@ const CharacterList = ({
                   )}
                   <button
                     onClick={() => handleDuplicate(character)}
-                    disabled={isDuplicating}
+                    disabled={true}
                     style={{
                       ...styles.actionButton,
-                      backgroundColor: isDuplicating ? "#9ca3af" : "#8b5cf6",
+                      backgroundColor: true ? "#9ca3af" : "#8b5cf6",
                       color: "white",
-                      cursor: isDuplicating ? "not-allowed" : "pointer",
+                      cursor: true ? "not-allowed" : "pointer",
                       opacity: isDuplicating ? 0.7 : 1,
                     }}
                     title="Duplicate character"
