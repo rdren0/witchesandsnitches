@@ -10,13 +10,11 @@ const SavingThrows = ({ character }) => {
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
 
-  // Calculate ability modifier from score
   const getAbilityModifier = (score) => {
     if (score === null || score === undefined || isNaN(score)) return 0;
     return Math.floor((score - 10) / 2);
   };
 
-  // Get proficiency bonus based on character level
   const getProficiencyBonus = (level) => {
     if (level <= 4) return 2;
     if (level <= 8) return 3;
@@ -25,7 +23,6 @@ const SavingThrows = ({ character }) => {
     return 6;
   };
 
-  // Determine saving throw proficiencies based on casting style
   const getSavingThrowProficiencies = (castingStyle) => {
     const proficiencies = {
       "Grace Caster": ["charisma", "wisdom"],
@@ -36,7 +33,6 @@ const SavingThrows = ({ character }) => {
     return proficiencies[castingStyle] || [];
   };
 
-  // Calculate saving throw modifier for each ability
   const getSavingThrowModifiers = () => {
     const modifiers = {};
     const proficiencies = getSavingThrowProficiencies(character.castingStyle);
@@ -72,7 +68,7 @@ const SavingThrows = ({ character }) => {
       ...styles.abilityItem,
       cursor: isRolling ? "not-allowed" : "pointer",
       opacity: isRolling ? 0.5 : 1,
-      // Add visual indicator for proficient saves
+
       backgroundColor: isProficient
         ? `${theme.success}15`
         : styles.abilityItem.backgroundColor,
@@ -88,7 +84,6 @@ const SavingThrows = ({ character }) => {
   const handleSavingThrowRoll = (ability) => {
     if (isRolling) return;
 
-    // Use the existing rollSavingThrow function if it exists, otherwise create a basic one
     if (rollSavingThrow) {
       rollSavingThrow({
         ability,
@@ -98,14 +93,8 @@ const SavingThrows = ({ character }) => {
         character,
       });
     } else {
-      // Fallback if rollSavingThrow doesn't exist
       setIsRolling(true);
-      // You can implement a basic roll here or just log for now
-      console.log(
-        `Rolling ${ability.name} saving throw with modifier: ${formatModifier(
-          savingThrowModifiers[ability.key].total
-        )}`
-      );
+
       setTimeout(() => setIsRolling(false), 1000);
     }
   };

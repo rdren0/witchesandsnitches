@@ -607,6 +607,7 @@ function AppContent() {
         gameSession: char.game_session,
         hitPoints: char.hit_points,
         house: char.house,
+        houseChoices: char.house_choices || {}, // ADD THIS LINE
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
         level: char.level,
@@ -616,6 +617,7 @@ function AppContent() {
         skillExpertise: char.skill_expertise || [],
         standardFeats: char.standard_feats || [],
         subclass: char.subclass,
+        subclassChoices: char.subclass_choices || {}, // ADD THIS LINE
         wandType: char.wand_type || "",
         magicModifiers: char.magic_modifiers || {
           divinations: 0,

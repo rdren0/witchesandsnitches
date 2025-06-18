@@ -45,9 +45,7 @@ const calculateTotalFeatModifiers = (
           break;
         case "choice":
           abilityToIncrease = featChoices[choiceKey] || increase.abilities[0];
-          console.log(
-            `Feat ${featName} choice ${index}: key=${choiceKey}, chosen=${featChoices[choiceKey]}, using=${abilityToIncrease}`
-          );
+
           break;
         case "spellcastingAbility":
           abilityToIncrease = getSpellcastingAbility(character);
@@ -80,16 +78,11 @@ const AbilityModifierPills = ({
   styles,
 }) => {
   const { modifiers, featDetails } = useMemo(() => {
-    console.log(
-      "Calculating ability modifiers with feat choices:",
-      featChoices
-    );
     const result = calculateTotalFeatModifiers(
       selectedFeats,
       character,
       featChoices
     );
-    console.log("Calculated modifiers:", result.modifiers);
     return result;
   }, [selectedFeats, character, featChoices]);
 

@@ -17,7 +17,7 @@ import ASILevelChoices from "./ASILevelChoices";
 import CharacterProgressionSummary from "./CharacterProgressionSummary";
 import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
 import { StepIndicator } from "../Shared/StepIndicator";
-import EnhancedHouseSelector from "./EnhancedHouseSelector";
+import EnhancedHouseSelector from "../Shared/EnhancedHouseSelector";
 import EnhancedSkillsSection from "../Shared/EnhancedSkillsSection";
 
 const CharacterCreator = ({
@@ -566,6 +566,11 @@ const CharacterCreator = ({
         gameSession: savedCharacter.game_session || "",
         hitPoints: savedCharacter.hit_points,
         house: savedCharacter.house,
+        house_choices:
+          Object.keys(houseChoices).length > 0
+            ? houseChoices
+            : character.houseChoices || {},
+
         innateHeritage: savedCharacter.innate_heritage,
         level: savedCharacter.level,
         name: savedCharacter.name,
@@ -583,8 +588,6 @@ const CharacterCreator = ({
           jinxesHexesCurses: 0,
         },
       };
-
-      console.log("Character saved successfully with starting equipment!");
 
       if (onCharacterSaved) {
         onCharacterSaved(transformedCharacter);

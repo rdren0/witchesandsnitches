@@ -34,6 +34,51 @@ const EnhancedSubclassSelector = ({
     ? subclassesData[selectedSubclass]
     : null;
 
+  const normalizeSubclassChoices = (choices) => {
+    if (!choices || typeof choices !== "object") return {};
+
+    const normalized = {};
+    Object.entries(choices).forEach(([level, choice]) => {
+      if (choice) {
+        if (typeof choice === "string") {
+          normalized[level] = choice;
+        } else if (typeof choice === "object" && choice.name) {
+          normalized[level] = choice.name;
+        } else if (typeof choice === "object" && choice.selectedChoice) {
+          normalized[level] = choice.selectedChoice;
+        } else if (typeof choice === "object" && choice.choice) {
+          normalized[level] = choice.choice;
+        } else {
+          normalized[level] = String(choice);
+        }
+      }
+    });
+
+    return normalized;
+  };
+
+  const normalizedSubclassChoices = normalizeSubclassChoices(subclassChoices);
+
+  useEffect(() => {
+    if (
+      externalSubclassChoices &&
+      Object.keys(externalSubclassChoices).length > 0
+    ) {
+      const normalized = normalizeSubclassChoices(externalSubclassChoices);
+      setInternalSubclassChoices(normalized);
+    }
+  }, [externalSubclassChoices]);
+
+  useEffect(() => {
+    if (selectedSubclass && selectedSubclass.trim() !== "") {
+      setExpandedSubclasses((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(selectedSubclass);
+        return newSet;
+      });
+    }
+  }, [selectedSubclass]);
+
   const saveToDatabase = useCallback(
     async (subclass, choices) => {
       if (!autoSave || !characterId || !discordUserId) return;
@@ -42,10 +87,11 @@ const EnhancedSubclassSelector = ({
       setSaveError(null);
 
       try {
+        const normalizedChoices = normalizeSubclassChoices(choices);
         await characterService.updateCharacterSubclass(
           characterId,
           subclass,
-          choices,
+          normalizedChoices,
           discordUserId
         );
         onSaveSuccess && onSaveSuccess();
@@ -64,11 +110,11 @@ const EnhancedSubclassSelector = ({
     if (!autoSave) return;
 
     const timeoutId = setTimeout(() => {
-      saveToDatabase(selectedSubclass, subclassChoices);
+      saveToDatabase(selectedSubclass, normalizedSubclassChoices);
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [selectedSubclass, subclassChoices, saveToDatabase, autoSave]);
+  }, [selectedSubclass, normalizedSubclassChoices, saveToDatabase, autoSave]);
 
   useEffect(() => {
     const loadCharacterData = async () => {
@@ -82,8 +128,16 @@ const EnhancedSubclassSelector = ({
         if (character.subclass && !value) {
           onChange && onChange(character.subclass);
         }
-        if (character.subclass_choices && !externalSubclassChoices) {
-          setInternalSubclassChoices(character.subclass_choices);
+
+        const characterSubclassChoices =
+          character.subclass_choices || character.subclassChoices || {};
+
+        if (
+          Object.keys(characterSubclassChoices).length > 0 &&
+          !externalSubclassChoices
+        ) {
+          const normalized = normalizeSubclassChoices(characterSubclassChoices);
+          setInternalSubclassChoices(normalized);
         }
       } catch (error) {
         console.error("Failed to load character data:", error);
@@ -107,7 +161,6 @@ const EnhancedSubclassSelector = ({
       });
     } else {
       onChange(subclassName);
-      setSubclassChoices({});
 
       setExpandedSubclasses((prev) => {
         const newSet = new Set(prev);
@@ -119,7 +172,7 @@ const EnhancedSubclassSelector = ({
 
   const handleSubclassChoiceChange = (level, choiceName) => {
     const newChoices = {
-      ...subclassChoices,
+      ...normalizedSubclassChoices,
       [level]: choiceName,
     };
     setSubclassChoices(newChoices);
@@ -234,7 +287,7 @@ const EnhancedSubclassSelector = ({
     );
 
     const missingChoices = levelsWithChoices.filter(
-      (level) => !subclassChoices[level]
+      (level) => !normalizedSubclassChoices[level]
     );
 
     return {
@@ -251,7 +304,7 @@ const EnhancedSubclassSelector = ({
     if (!levelData) return null;
 
     const isSelected = selectedSubclass === subclassData.name;
-    const selectedChoice = subclassChoices[level];
+    const selectedChoice = normalizedSubclassChoices[level];
     const hasChoices = levelData.choices.length > 0;
 
     return (
@@ -314,72 +367,78 @@ const EnhancedSubclassSelector = ({
               </div>
             )}
 
-            {levelData.choices.map((choice, index) => (
-              <div
-                key={`choice-${index}`}
-                style={
-                  isSelected
-                    ? selectedChoice === choice.name
-                      ? styles.choiceContainerSelectedOption
-                      : styles.choiceContainerSelected
-                    : styles.choiceContainer
-                }
-              >
-                {isSelected ? (
-                  <label
-                    style={
-                      disabled ? styles.choiceLabelDisabled : styles.choiceLabel
-                    }
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="radio"
-                      name={`subclass-level${level}-choice`}
-                      value={choice.name}
-                      checked={selectedChoice === choice.name}
-                      onChange={(e) => {
-                        if (!disabled) {
-                          handleSubclassChoiceChange(level, e.target.value);
-                        }
-                      }}
-                      disabled={disabled}
+            {levelData.choices.map((choice, index) => {
+              const isChoiceSelected = selectedChoice === choice.name;
+
+              return (
+                <div
+                  key={`choice-${index}`}
+                  style={
+                    isSelected
+                      ? isChoiceSelected
+                        ? styles.choiceContainerSelectedOption
+                        : styles.choiceContainerSelected
+                      : styles.choiceContainer
+                  }
+                >
+                  {isSelected ? (
+                    <label
                       style={
                         disabled
-                          ? styles.radioButtonDisabled
-                          : styles.radioButton
+                          ? styles.choiceLabelDisabled
+                          : styles.choiceLabel
                       }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <strong
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="radio"
+                        name={`subclass-level${level}-choice`}
+                        value={choice.name}
+                        checked={isChoiceSelected}
+                        onChange={(e) => {
+                          if (!disabled) {
+                            handleSubclassChoiceChange(level, e.target.value);
+                          }
+                        }}
+                        disabled={disabled}
                         style={
-                          selectedChoice === choice.name
-                            ? styles.featureNameSelected
-                            : {
-                                ...styles.featureName,
-                                color: theme.success,
-                              }
+                          disabled
+                            ? styles.radioButtonDisabled
+                            : styles.radioButton
                         }
-                      >
-                        {choice.name}
-                      </strong>
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <strong
+                          style={
+                            isChoiceSelected
+                              ? styles.featureNameSelected
+                              : {
+                                  ...styles.featureName,
+                                  color: theme.success,
+                                }
+                          }
+                        >
+                          {choice.name}
+                        </strong>
+                        <p style={styles.featureDescription}>
+                          {choice.description}
+                        </p>
+                      </div>
+                    </label>
+                  ) : (
+                    <>
+                      <strong style={styles.featureName}>{choice.name}</strong>
                       <p style={styles.featureDescription}>
                         {choice.description}
                       </p>
-                    </div>
-                  </label>
-                ) : (
-                  <>
-                    <strong style={styles.featureName}>{choice.name}</strong>
-                    <p style={styles.featureDescription}>
-                      {choice.description}
-                    </p>
-                  </>
-                )}
-              </div>
-            ))}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </>
         )}
       </div>

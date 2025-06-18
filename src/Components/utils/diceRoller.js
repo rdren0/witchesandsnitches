@@ -1176,7 +1176,6 @@ export const attemptSpell = async ({
     ) {
       goal += 3;
     }
-    console.log({ spellName, goal });
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
     const isSuccess =

@@ -4,7 +4,7 @@ import {
   houseFeatures,
   houseAbilityBonuses,
   houseColors,
-} from "../Shared/houseData";
+} from "./houseData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 
@@ -60,14 +60,7 @@ const calculateHouseAbilityModifiers = (house, houseChoices = {}) => {
 
 const HouseAbilityModifierPills = ({ house, houseChoices, styles }) => {
   const { modifiers, bonusDetails } = useMemo(() => {
-    console.log(
-      "Calculating house ability modifiers for:",
-      house,
-      "with choices:",
-      houseChoices
-    );
     const result = calculateHouseAbilityModifiers(house, houseChoices);
-    console.log("House modifiers result:", result);
     return result;
   }, [house, houseChoices]);
 
@@ -110,7 +103,6 @@ const HouseAbilityChoice = ({
   if (!house || !houseAbilityBonuses[house]?.choice) return null;
 
   const handleAbilityChoice = (ability) => {
-    console.log("House ability choice changed for", house, "to:", ability);
     onHouseChoiceSelect(house, "abilityChoice", ability);
   };
 

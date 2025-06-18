@@ -42,11 +42,9 @@ const LevelUpModal = ({
     featChoices: {},
   });
 
-  // FIXED: Robust ability score retrieval that works with database format
   const getAbilityScore = (abilityName) => {
     const lowerName = abilityName.toLowerCase();
 
-    // Primary source: ability_scores JSONB field from database
     if (
       character.ability_scores &&
       typeof character.ability_scores === "object"
@@ -60,7 +58,6 @@ const LevelUpModal = ({
       }
     }
 
-    // Fallback: check camelCase version (might exist in frontend transforms)
     if (
       character.abilityScores &&
       typeof character.abilityScores === "object"
@@ -74,7 +71,6 @@ const LevelUpModal = ({
       }
     }
 
-    // Last fallback: individual properties (legacy support)
     if (character[lowerName] !== undefined && character[lowerName] !== null) {
       const numScore = parseInt(character[lowerName], 10);
       if (!isNaN(numScore) && numScore > 0 && numScore <= 30) {
@@ -82,7 +78,6 @@ const LevelUpModal = ({
       }
     }
 
-    // If all else fails, log the issue and return default
     console.error(
       `Could not find valid ability score for ${abilityName}. Character object:`,
       character
@@ -91,7 +86,6 @@ const LevelUpModal = ({
     return 10;
   };
 
-  // Filter feats based on search term and exclude already selected feats
   const getFilteredFeats = () => {
     if (!featFilter.trim()) {
       return getAvailableFeats();
@@ -99,17 +93,14 @@ const LevelUpModal = ({
 
     const searchTerm = featFilter.toLowerCase();
     return getAvailableFeats().filter((feat) => {
-      // Search in name
       if (feat.name.toLowerCase().includes(searchTerm)) {
         return true;
       }
 
-      // Search in preview
       if (feat.preview && feat.preview.toLowerCase().includes(searchTerm)) {
         return true;
       }
 
-      // Search in description
       if (
         feat.description &&
         feat.description.some((desc) => desc.toLowerCase().includes(searchTerm))
@@ -121,24 +112,18 @@ const LevelUpModal = ({
     });
   };
 
-  // Get available feats excluding already selected ones
   const getAvailableFeats = () => {
-    // Get all currently selected feats
     const allSelectedFeats = getAllSelectedFeats(character);
 
-    // Filter out feats that are already selected elsewhere
-    // (but allow the currently selected feat in this level up to remain available)
     const excludedFeats = allSelectedFeats.filter(
       (featName) => !levelUpData.selectedFeats.includes(featName)
     );
 
     return standardFeats.filter((feat) => {
-      // Check prerequisites
       if (!checkFeatPrerequisites(feat, character)) {
         return false;
       }
 
-      // Check if feat is already selected elsewhere
       if (excludedFeats.includes(feat.name)) {
         return false;
       }
@@ -198,7 +183,6 @@ const LevelUpModal = ({
     }));
   };
 
-  // FIXED: Improved ability score increase handling
   const toggleAbilityIncrease = (ability) => {
     setLevelUpData((prev) => {
       const existing = prev.abilityIncreases.find(
@@ -206,7 +190,6 @@ const LevelUpModal = ({
       );
 
       if (existing) {
-        // Remove existing increase
         return {
           ...prev,
           abilityIncreases: prev.abilityIncreases.filter(
@@ -216,7 +199,6 @@ const LevelUpModal = ({
       } else if (prev.abilityIncreases.length < 2) {
         const currentScore = getAbilityScore(ability);
 
-        // Prevent increasing if already at max
         if (currentScore >= 20) {
           console.warn(
             `${ability} is already at maximum (20), current score: ${currentScore}`
@@ -224,18 +206,11 @@ const LevelUpModal = ({
           return prev;
         }
 
-        // Add new increase
         const newIncrease = {
           ability,
           from: currentScore,
           to: currentScore + 1,
         };
-
-        console.log(
-          `Adding ability increase for ${ability}: ${currentScore} → ${
-            currentScore + 1
-          }`
-        );
 
         return {
           ...prev,
@@ -272,7 +247,7 @@ const LevelUpModal = ({
       abilityIncreases: choice === "feat" ? [] : prev.abilityIncreases,
       selectedFeats: choice === "asi" ? [] : prev.selectedFeats,
     }));
-    // Clear feat filter when switching away from feat selection
+
     if (choice === "asi") {
       setFeatFilter("");
     }
@@ -356,7 +331,6 @@ const LevelUpModal = ({
   };
 
   const getSpellcastingAbility = () => {
-    // Default to intelligence for magical characters
     return "intelligence";
   };
 
@@ -497,7 +471,6 @@ const LevelUpModal = ({
     }
   };
 
-  // FIXED: Complete rewrite of handleComplete with proper database format handling
   const handleComplete = async () => {
     if (!onSave) return;
 
@@ -509,19 +482,16 @@ const LevelUpModal = ({
         ...character,
         level: newLevel,
         hit_points: currentHP + levelUpData.hitPointIncrease,
-        hitPoints: currentHP + levelUpData.hitPointIncrease, // Keep both for compatibility
+        hitPoints: currentHP + levelUpData.hitPointIncrease,
       };
 
-      // Handle ASI (Ability Score Improvement)
       if (
         isAsiLevel &&
         levelUpData.asiChoice === "asi" &&
         levelUpData.abilityIncreases.length > 0
       ) {
-        // Start with current ability scores from database
         const currentAbilityScores = character.ability_scores || {};
 
-        // Create new ability scores object with all current values
         const newAbilityScores = {
           strength: getAbilityScore("strength"),
           dexterity: getAbilityScore("dexterity"),
@@ -529,47 +499,33 @@ const LevelUpModal = ({
           intelligence: getAbilityScore("intelligence"),
           wisdom: getAbilityScore("wisdom"),
           charisma: getAbilityScore("charisma"),
-          // Ensure we preserve any existing scores
           ...currentAbilityScores,
         };
 
-        // Apply the ability increases
         levelUpData.abilityIncreases.forEach((increase) => {
           const abilityKey = increase.ability.toLowerCase();
 
-          // Validate the increase.to value
           const newScore = parseInt(increase.to, 10);
           if (!isNaN(newScore) && newScore > 0 && newScore <= 30) {
             newAbilityScores[abilityKey] = newScore;
-            console.log(
-              `Applied ability increase: ${abilityKey} = ${newScore}`
-            );
           } else {
             console.error(
               `Invalid ability score increase for ${abilityKey}: ${increase.to}`
             );
-            // Fallback: just add 1 to current score
             const currentScore = getAbilityScore(abilityKey);
             newAbilityScores[abilityKey] = Math.min(20, currentScore + 1);
-            console.log(
-              `Fallback ability increase: ${abilityKey} = ${newAbilityScores[abilityKey]}`
-            );
           }
         });
 
-        // Set the ability scores in database format
         updatedCharacter.ability_scores = newAbilityScores;
 
-        // Also set camelCase version for frontend compatibility
         updatedCharacter.abilityScores = newAbilityScores;
 
-        // Set individual properties for backward compatibility
         Object.keys(newAbilityScores).forEach((ability) => {
           updatedCharacter[ability] = newAbilityScores[ability];
         });
       }
 
-      // Handle Feat selection
       if (
         isAsiLevel &&
         levelUpData.asiChoice === "feat" &&
@@ -578,7 +534,6 @@ const LevelUpModal = ({
         const selectedFeat = getSelectedFeat();
 
         if (selectedFeat && selectedFeat.modifiers) {
-          // Start with current ability scores
           const newAbilityScores = {
             strength: getAbilityScore("strength"),
             dexterity: getAbilityScore("dexterity"),
@@ -586,11 +541,10 @@ const LevelUpModal = ({
             intelligence: getAbilityScore("intelligence"),
             wisdom: getAbilityScore("wisdom"),
             charisma: getAbilityScore("charisma"),
-            // Preserve existing scores
+
             ...(updatedCharacter.ability_scores || {}),
           };
 
-          // Apply feat ability increases
           selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
             let abilityToIncrease;
 
@@ -613,20 +567,15 @@ const LevelUpModal = ({
               const currentScore = newAbilityScores[abilityToIncrease] || 10;
               const newScore = Math.min(20, currentScore + increase.amount);
               newAbilityScores[abilityToIncrease] = newScore;
-              console.log(
-                `Feat ability increase: ${abilityToIncrease} = ${newScore}`
-              );
             }
           });
 
-          // Update ability scores in all formats
           updatedCharacter.ability_scores = newAbilityScores;
           updatedCharacter.abilityScores = newAbilityScores;
           Object.keys(newAbilityScores).forEach((ability) => {
             updatedCharacter[ability] = newAbilityScores[ability];
           });
 
-          // Handle skill proficiencies from feat
           const currentSkills = [
             ...(updatedCharacter.skill_proficiencies || []),
           ];
@@ -653,7 +602,6 @@ const LevelUpModal = ({
 
           updatedCharacter.skill_proficiencies = currentSkills;
 
-          // Handle expertise from feat
           const currentExpertise = [
             ...(updatedCharacter.skill_expertise || []),
           ];
@@ -672,7 +620,6 @@ const LevelUpModal = ({
 
           updatedCharacter.skill_expertise = currentExpertise;
 
-          // Update standard feats array
           const currentFeats = [...(updatedCharacter.standard_feats || [])];
           if (!currentFeats.includes(selectedFeat.name)) {
             currentFeats.push(selectedFeat.name);
@@ -681,11 +628,7 @@ const LevelUpModal = ({
         }
       }
 
-      console.log("Level up data being applied:", levelUpData);
-      console.log("Updated character being saved:", updatedCharacter);
-      console.log("Final ability_scores:", updatedCharacter.ability_scores);
-
-      await onSave(updatedCharacter);
+     await onSave(updatedCharacter);
       setIsSaving(false);
     } catch (error) {
       console.error("Error during level up:", error);

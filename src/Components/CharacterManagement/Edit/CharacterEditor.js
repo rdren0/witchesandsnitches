@@ -30,7 +30,7 @@ import {
   FeatRequirementsInfo,
   getAllSelectedFeats,
 } from "../Create/ASIComponents";
-import EnhancedHouseSelector from "../Create/EnhancedHouseSelector";
+import EnhancedHouseSelector from "../Shared/EnhancedHouseSelector";
 import { backgroundsData } from "../Shared/backgroundsData";
 
 const standardFeats = importedStandardFeats || [];
@@ -79,6 +79,7 @@ const CharacterEditor = ({
       castingStyle: "",
       house: "",
       houseChoices: {},
+      subclassChoices: {},
       standardFeats: [],
       asiChoices: {},
       abilityScores: {
@@ -107,6 +108,15 @@ const CharacterEditor = ({
         jinxesHexesCurses: 0,
       },
     };
+
+    if (originalCharacter) {
+      baseCharacter.houseChoices =
+        originalCharacter.houseChoices || originalCharacter.house_choices || {};
+      baseCharacter.subclassChoices =
+        originalCharacter.subclassChoices ||
+        originalCharacter.subclass_choices ||
+        {};
+    }
 
     return migrateBackgroundSkills(baseCharacter);
   }, [originalCharacter]);
@@ -169,6 +179,10 @@ const CharacterEditor = ({
       level1ChoiceType: inferLevel1ChoiceType(safeOriginalCharacter),
       standardFeats:
         safeOriginalCharacter.level1ChoiceType === "feat" ? level1Feats : [],
+      subclassChoices:
+        safeOriginalCharacter.subclassChoices ||
+        safeOriginalCharacter.subclass_choices ||
+        {},
     };
     return characterWithLevel1Choice;
   });
@@ -189,16 +203,43 @@ const CharacterEditor = ({
     safeOriginalCharacter.house || ""
   );
   const [houseChoices, setHouseChoices] = useState(
-    safeOriginalCharacter.houseChoices || {}
+    safeOriginalCharacter.houseChoices ||
+      safeOriginalCharacter.house_choices ||
+      {}
   );
 
   useEffect(() => {
-    if (character) {
-      setSelectedHouse(character.house || "");
-      setHouseChoices(character.houseChoices || {});
+    const initialHouseChoices =
+      originalCharacter?.houseChoices || originalCharacter?.house_choices || {};
+
+    if (Object.keys(initialHouseChoices).length > 0) {
+      setHouseChoices(initialHouseChoices);
     }
-    // eslint-disable-next-line
-  }, [character.house, character.houseChoices]);
+
+    const initialSubclassChoices =
+      originalCharacter?.subclassChoices ||
+      originalCharacter?.subclass_choices ||
+      {};
+
+    if (Object.keys(initialSubclassChoices).length > 0) {
+      setCharacter((prev) => ({
+        ...prev,
+        subclassChoices: initialSubclassChoices,
+      }));
+    }
+  }, [
+    originalCharacter?.id,
+    originalCharacter?.houseChoices,
+    originalCharacter?.house_choices,
+    originalCharacter?.subclassChoices,
+    originalCharacter?.subclass_choices,
+  ]);
+
+  useEffect(() => {
+    if (character?.house && character.house !== selectedHouse) {
+      setSelectedHouse(character.house);
+    }
+  }, [character?.house, selectedHouse]);
 
   useEffect(() => {
     if (
@@ -207,10 +248,6 @@ const CharacterEditor = ({
     ) {
       const background = backgroundsData[character.background];
       if (background && background.skillProficiencies) {
-        console.log(
-          "Migrating background skills for existing character:",
-          background.skillProficiencies
-        );
         setCharacter((prev) => ({
           ...prev,
           backgroundSkills: background.skillProficiencies,
@@ -498,10 +535,6 @@ const CharacterEditor = ({
             ...newBackgroundSkills,
           ];
 
-          console.log("Background changed to:", value);
-          console.log("New background skills:", newBackgroundSkills);
-          console.log("Updated skill proficiencies:", updatedSkills);
-
           return {
             ...prev,
             [field]: value,
@@ -682,7 +715,10 @@ const CharacterEditor = ({
       feat_choices: character.featChoices || {},
       game_session: character.gameSession,
       hit_points: getCurrentHp(),
-      house_choices: houseChoices,
+      house_choices:
+        Object.keys(houseChoices).length > 0
+          ? houseChoices
+          : character.houseChoices || {},
       house: character.house,
       initiative_ability: character.initiativeAbility || "dexterity",
       innate_heritage: character.innateHeritage,
@@ -704,12 +740,6 @@ const CharacterEditor = ({
         discordUserId
       );
 
-      console.log("Returned from database:", updatedCharacter);
-      console.log("originalCharacter in edit:", originalCharacter);
-      console.log(
-        "originalCharacter.houseChoices:",
-        originalCharacter.houseChoices
-      );
       const transformedCharacter = {
         id: updatedCharacter.id,
         abilityScores: updatedCharacter.ability_scores,
@@ -1155,10 +1185,12 @@ const CharacterEditor = ({
         theme={theme}
         disabled={false}
         characterLevel={character.level}
-        subclassChoices={character.subclassChoices || {}}
-        onSubclassChoicesChange={(choices) =>
-          setCharacter((prev) => ({ ...prev, subclassChoices: choices }))
-        }
+        subclassChoices={(() => {
+          return character.subclassChoices || {};
+        })()}
+        onSubclassChoicesChange={(choices) => {
+          setCharacter((prev) => ({ ...prev, subclassChoices: choices }));
+        }}
       />
 
       {/* Character Progression Summary */}

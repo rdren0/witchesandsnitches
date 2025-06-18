@@ -27,26 +27,28 @@ const saveCharacter = async (characterData, discordUserId) => {
     const { data: savedCharacter, error: characterError } = await supabase
       .from("characters")
       .insert({
-        discord_user_id: discordUserId,
-        name: characterData.name,
-        house: characterData.house,
-        casting_style: characterData.casting_style,
-        initiative_ability: characterData.initiative_ability,
-        subclass: characterData.subclass,
-        innate_heritage: characterData.innate_heritage,
-        background: characterData.background,
-        game_session: characterData.game_session,
-        standard_feats: characterData.standard_feats,
-        skill_proficiencies: characterData.skill_proficiencies,
         ability_scores: characterData.ability_scores,
-        hit_points: characterData.hit_points,
-        level: characterData.level,
-        wand_type: characterData.wand_type,
-        magic_modifiers: characterData.magic_modifiers,
-        level1_choice_type: characterData.level1_choice_type,
         asi_choices: characterData.asi_choices,
-        current_hit_points: characterData.hit_points,
+        background: characterData.background,
+        casting_style: characterData.casting_style,
         current_hit_dice: characterData.level,
+        current_hit_points: characterData.hit_points,
+        discord_user_id: discordUserId,
+        game_session: characterData.game_session,
+        hit_points: characterData.hit_points,
+        house: characterData.house,
+        house_choices: characterData.house_choices,
+        initiative_ability: characterData.initiative_ability,
+        innate_heritage: characterData.innate_heritage,
+        level: characterData.level,
+        level1_choice_type: characterData.level1_choice_type,
+        magic_modifiers: characterData.magic_modifiers,
+        name: characterData.name,
+        skill_proficiencies: characterData.skill_proficiencies,
+        standard_feats: characterData.standard_feats,
+        subclass: characterData.subclass,
+        subclass_choices: characterData.subclass_choices,
+        wand_type: characterData.wand_type,
       })
       .select()
       .single();
@@ -68,10 +70,6 @@ const saveCharacter = async (characterData, discordUserId) => {
             savedCharacter.id,
             startingEquipment,
             supabase
-          );
-
-          console.log(
-            `Added ${startingEquipment.length} starting equipment items for ${characterData.background} background`
           );
         }
       } catch (equipmentError) {
@@ -102,24 +100,26 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
     const { data: updatedCharacter, error: updateError } = await supabase
       .from("characters")
       .update({
-        name: characterData.name,
-        house: characterData.house,
-        casting_style: characterData.casting_style,
-        initiative_ability: characterData.initiative_ability,
-        subclass: characterData.subclass,
-        innate_heritage: characterData.innate_heritage,
-        background: characterData.background,
-        game_session: characterData.game_session,
-        standard_feats: characterData.standard_feats,
-        skill_proficiencies: characterData.skill_proficiencies,
         ability_scores: characterData.ability_scores,
-        hit_points: characterData.hit_points,
         asi_choices: characterData.asi_choices,
+        background: characterData.background,
+        casting_style: characterData.casting_style,
+        game_session: characterData.game_session,
+        hit_points: characterData.hit_points,
+        house: characterData.house,
+        house_choices: characterData.house_choices,
+        initiative_ability: characterData.initiative_ability,
+        innate_heritage: characterData.innate_heritage,
         level: characterData.level,
-        wand_type: characterData.wand_type,
-        magic_modifiers: characterData.magic_modifiers,
         level1_choice_type: characterData.level1_choice_type,
+        magic_modifiers: characterData.magic_modifiers,
+        name: characterData.name,
+        skill_proficiencies: characterData.skill_proficiencies,
+        standard_feats: characterData.standard_feats,
+        subclass: characterData.subclass,
+        subclass_choices: characterData.subclass_choices,
         updated_at: new Date().toISOString(),
+        wand_type: characterData.wand_type,
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
@@ -146,16 +146,6 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
             characterId,
             startingEquipment,
             supabase
-          );
-
-          console.log(
-            `Added ${
-              startingEquipment.length
-            } starting equipment items for new background: ${
-              characterData.background
-            } (background changed from ${
-              currentCharacter?.background || "none"
-            })`
           );
         }
       } catch (equipmentError) {

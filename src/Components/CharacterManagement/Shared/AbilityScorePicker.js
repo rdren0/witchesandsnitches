@@ -177,8 +177,6 @@ const calculateTotalModifiers = (
   featChoices = {},
   houseChoices = {}
 ) => {
-  console.log("Calculating total modifiers with house choices:", houseChoices);
-
   const featResult = calculateFeatModifiers(character, featChoices);
   const backgroundResult = calculateBackgroundModifiers(character);
   const houseResult = calculateHouseModifiers(character, houseChoices);
@@ -217,13 +215,6 @@ const calculateTotalModifiers = (
       ...(backgroundResult.backgroundDetails[ability] || []),
       ...(houseResult.houseDetails[ability] || []),
     ];
-  });
-
-  console.log("Total modifiers result:", {
-    totalModifiers,
-    houseModifiers: houseResult.modifiers,
-    featModifiers: featResult.modifiers,
-    backgroundModifiers: backgroundResult.modifiers,
   });
 
   return {

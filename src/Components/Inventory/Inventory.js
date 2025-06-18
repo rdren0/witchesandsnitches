@@ -27,8 +27,8 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [lastRefresh, setLastRefresh] = useState(Date.now()); // NEW: Track last refresh
-  const [isRefreshing, setIsRefreshing] = useState(false); // NEW: Track manual refresh state
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -53,17 +53,12 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     "Weapons",
   ];
 
-  // UPDATED: Enhanced fetchItems with better logging and refresh tracking
   const fetchItems = useCallback(async () => {
     if (!supabase || !selectedCharacter?.id) return;
 
     try {
       setIsLoading(true);
       setError(null);
-
-      console.log(
-        `Fetching inventory for character ${selectedCharacter.id} (${selectedCharacter.name})...`
-      );
 
       const { data, error: fetchError } = await supabase
         .from("inventory_items")
@@ -73,11 +68,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
       if (fetchError) throw fetchError;
 
-      console.log(
-        `Loaded ${data?.length || 0} inventory items for ${
-          selectedCharacter.name
-        }`
-      );
       setItems(data || []);
       setLastRefresh(Date.now());
     } catch (err) {
@@ -87,25 +77,20 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [supabase, selectedCharacter?.id, selectedCharacter?.name]);
+  }, [supabase, selectedCharacter?.id]);
 
-  // NEW: Manual refresh function
   const handleManualRefresh = useCallback(async () => {
-    console.log("Manual inventory refresh triggered by user");
     setIsRefreshing(true);
     await fetchItems();
   }, [fetchItems]);
 
-  // UPDATED: Original useEffect
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
-  // NEW: Auto-refresh when tab becomes visible (user might have edited character in another tab)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && selectedCharacter?.id) {
-        console.log("Tab became visible, checking for new inventory items...");
         fetchItems();
       }
     };
@@ -115,7 +100,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchItems, selectedCharacter?.id]);
 
-  // NEW: Periodic refresh every 30 seconds when tab is active
   useEffect(() => {
     if (!selectedCharacter?.id) return;
 
@@ -127,10 +111,9 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         !editingId &&
         !showAddForm
       ) {
-        console.log("Auto-refreshing inventory (background check)...");
         fetchItems();
       }
-    }, 30000); // 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [
@@ -184,8 +167,13 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     } finally {
       setIsSaving(false);
     }
-    // eslint-disable-next-line
-  }, [formData, supabase, selectedCharacter?.id, user?.id]);
+  }, [
+    formData,
+    supabase,
+    selectedCharacter?.id,
+    user?.id,
+    user?.discord_user_id,
+  ]);
 
   const deleteItem = useCallback(
     async (id) => {
