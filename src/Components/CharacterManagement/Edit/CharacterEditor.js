@@ -1,37 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import {
-  Save,
-  X,
-  AlertTriangle,
-  RefreshCw,
-  ArrowLeft,
-  Settings,
-  Lock,
-  Unlock,
-  Star,
-} from "lucide-react";
-import { castingStyles, skillsByCastingStyle, hpData } from "../../data";
+import { Save, X, AlertTriangle, ArrowLeft, Settings } from "lucide-react";
+import { skillsByCastingStyle, hpData } from "../../data";
 import { standardFeats as importedStandardFeats } from "../../standardFeatData";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
-import { InnateHeritage } from "../Shared/InnateHeritage";
-import EnhancedFeatureSelector from "../Shared/EnhancedFeatureSelector";
-import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
-import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
-import EnhancedSkillsSection from "../Shared/EnhancedSkillsSection";
-import StepIndicator from "../Shared/StepIndicator";
-import {
-  AbilityScoreIncrements,
-  ASIFeatSelector,
-  FeatRequirementsInfo,
-  getAllSelectedFeats,
-} from "../Create/ASIComponents";
-import EnhancedHouseSelector from "../Shared/EnhancedHouseSelector";
+import { getAllSelectedFeats } from "../Create/ASIComponents";
 import { backgroundsData } from "../Shared/backgroundsData";
+
+// Import the new section components
+import BasicInformationSection from "./BasicInformationSection";
+import HouseAndSubclassSection from "./HouseAndSubclassSection";
+import Level1AndProgressionSection from "./Level1AndProgressionSection";
+import AbilityScoresSection from "./AbilityScoresSection";
+import MagicModifiersSection from "./MagicModifiersSection";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -121,6 +105,7 @@ const CharacterEditor = ({
     return migrateBackgroundSkills(baseCharacter);
   }, [originalCharacter]);
 
+  // State for ASI filters
   const [asiLevelFilters, setASILevelFilters] = useState({});
 
   const setASILevelFilter = (level, filter) => {
@@ -136,6 +121,7 @@ const CharacterEditor = ({
     return ASI_LEVELS.filter((level) => level <= currentLevel);
   };
 
+  // Helper functions for character setup
   const inferLevel1ChoiceType = (character) => {
     if (character.level1ChoiceType) {
       return character.level1ChoiceType;
@@ -172,6 +158,7 @@ const CharacterEditor = ({
     };
   };
 
+  // Main character state
   const [character, setCharacter] = useState(() => {
     const { level1Feats } = separateFeats(safeOriginalCharacter);
     const characterWithLevel1Choice = {
@@ -187,6 +174,7 @@ const CharacterEditor = ({
     return characterWithLevel1Choice;
   });
 
+  // UI state
   const [expandedFeats, setExpandedFeats] = useState(new Set());
   const [featFilter, setFeatFilter] = useState("");
   const [tempInputValues, setTempInputValues] = useState({});
@@ -208,55 +196,7 @@ const CharacterEditor = ({
       {}
   );
 
-  useEffect(() => {
-    const initialHouseChoices =
-      originalCharacter?.houseChoices || originalCharacter?.house_choices || {};
-
-    if (Object.keys(initialHouseChoices).length > 0) {
-      setHouseChoices(initialHouseChoices);
-    }
-
-    const initialSubclassChoices =
-      originalCharacter?.subclassChoices ||
-      originalCharacter?.subclass_choices ||
-      {};
-
-    if (Object.keys(initialSubclassChoices).length > 0) {
-      setCharacter((prev) => ({
-        ...prev,
-        subclassChoices: initialSubclassChoices,
-      }));
-    }
-  }, [
-    originalCharacter?.id,
-    originalCharacter?.houseChoices,
-    originalCharacter?.house_choices,
-    originalCharacter?.subclassChoices,
-    originalCharacter?.subclass_choices,
-  ]);
-
-  useEffect(() => {
-    if (character?.house && character.house !== selectedHouse) {
-      setSelectedHouse(character.house);
-    }
-  }, [character?.house, selectedHouse]);
-
-  useEffect(() => {
-    if (
-      character.background &&
-      (!character.backgroundSkills || character.backgroundSkills.length === 0)
-    ) {
-      const background = backgroundsData[character.background];
-      if (background && background.skillProficiencies) {
-        setCharacter((prev) => ({
-          ...prev,
-          backgroundSkills: background.skillProficiencies,
-        }));
-      }
-    }
-    // eslint-disable-next-line
-  }, [character.background]);
-
+  // Lock state
   const [lockedFields, setLockedFields] = useState({
     level1ChoiceType: true,
     abilityScores: true,
@@ -264,6 +204,7 @@ const CharacterEditor = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
+  // Validation
   const validateFeatSelections = useCallback(() => {
     const allSelectedFeats = getAllSelectedFeats(character);
     const uniqueFeats = [...new Set(allSelectedFeats)];
@@ -302,6 +243,7 @@ const CharacterEditor = ({
     return true;
   }, [character]);
 
+  // Event handlers
   const handleASIChoiceChange = (level, choiceType) => {
     setCharacter((prev) => ({
       ...prev,
@@ -351,56 +293,6 @@ const CharacterEditor = ({
       },
     }));
   };
-
-  useEffect(() => {
-    const hasAllScores = Object.values(character.abilityScores || {}).every(
-      (score) => score !== null && score !== undefined
-    );
-    if (hasAllScores) {
-      setIsManualMode(true);
-      setRolledStats([]);
-      setAvailableStats([]);
-    }
-    setLockedFields({
-      level1ChoiceType:
-        character.level > 1 ||
-        Boolean(character.innateHeritage || character.standardFeats?.length),
-      abilityScores: hasAllScores,
-    });
-  }, [character]);
-
-  useEffect(() => {
-    const hasChanges =
-      JSON.stringify(character) !== JSON.stringify(safeOriginalCharacter);
-    setHasUnsavedChanges(hasChanges);
-  }, [character, safeOriginalCharacter]);
-
-  useEffect(() => {
-    if (character) {
-      validateFeatSelections();
-    }
-    // eslint-disable-next-line
-  }, [
-    character.level,
-    character.castingStyle,
-    character.innateHeritage,
-    character.subclass,
-    character.standardFeats,
-    character.asiChoices,
-    validateFeatSelections,
-  ]);
-
-  const gameSessionOptions = [
-    "Sunday - Knights",
-    "Monday - Haunting",
-    "Tuesday - Knights",
-    "Wednesday - Haunting",
-    "Thursday - Knights",
-    "Friday - Knights",
-    "Saturday - Haunting",
-    "Saturday - Knights",
-    "DEVELOPMENT",
-  ];
 
   const handleHouseSelect = (house) => {
     setSelectedHouse(house);
@@ -835,7 +727,93 @@ const CharacterEditor = ({
     onCancel();
   };
 
-  const featInfo = getFeatProgressionInfo();
+  // Effects
+  useEffect(() => {
+    const initialHouseChoices =
+      originalCharacter?.houseChoices || originalCharacter?.house_choices || {};
+
+    if (Object.keys(initialHouseChoices).length > 0) {
+      setHouseChoices(initialHouseChoices);
+    }
+
+    const initialSubclassChoices =
+      originalCharacter?.subclassChoices ||
+      originalCharacter?.subclass_choices ||
+      {};
+
+    if (Object.keys(initialSubclassChoices).length > 0) {
+      setCharacter((prev) => ({
+        ...prev,
+        subclassChoices: initialSubclassChoices,
+      }));
+    }
+  }, [
+    originalCharacter?.id,
+    originalCharacter?.houseChoices,
+    originalCharacter?.house_choices,
+    originalCharacter?.subclassChoices,
+    originalCharacter?.subclass_choices,
+  ]);
+
+  useEffect(() => {
+    if (character?.house && character.house !== selectedHouse) {
+      setSelectedHouse(character.house);
+    }
+  }, [character?.house, selectedHouse]);
+
+  useEffect(() => {
+    if (
+      character.background &&
+      (!character.backgroundSkills || character.backgroundSkills.length === 0)
+    ) {
+      const background = backgroundsData[character.background];
+      if (background && background.skillProficiencies) {
+        setCharacter((prev) => ({
+          ...prev,
+          backgroundSkills: background.skillProficiencies,
+        }));
+      }
+    }
+    // eslint-disable-next-line
+  }, [character.background]);
+
+  useEffect(() => {
+    const hasAllScores = Object.values(character.abilityScores || {}).every(
+      (score) => score !== null && score !== undefined
+    );
+    if (hasAllScores) {
+      setIsManualMode(true);
+      setRolledStats([]);
+      setAvailableStats([]);
+    }
+    setLockedFields({
+      level1ChoiceType:
+        character.level > 1 ||
+        Boolean(character.innateHeritage || character.standardFeats?.length),
+      abilityScores: hasAllScores,
+    });
+  }, [character]);
+
+  useEffect(() => {
+    const hasChanges =
+      JSON.stringify(character) !== JSON.stringify(safeOriginalCharacter);
+    setHasUnsavedChanges(hasChanges);
+  }, [character, safeOriginalCharacter]);
+
+  useEffect(() => {
+    if (character) {
+      validateFeatSelections();
+    }
+    // eslint-disable-next-line
+  }, [
+    character.level,
+    character.castingStyle,
+    character.innateHeritage,
+    character.subclass,
+    character.standardFeats,
+    character.asiChoices,
+    validateFeatSelections,
+  ]);
 
   if (!originalCharacter) {
     return (
@@ -852,6 +830,7 @@ const CharacterEditor = ({
 
   return (
     <div style={styles.panel}>
+      {/* Header */}
       <div
         style={{
           ...styles.header,
@@ -888,6 +867,7 @@ const CharacterEditor = ({
         </div>
       </div>
 
+      {/* Error Display */}
       {error && (
         <div style={styles.errorContainer}>
           <AlertTriangle size={16} />
@@ -895,6 +875,7 @@ const CharacterEditor = ({
         </div>
       )}
 
+      {/* Editing Warning */}
       <div style={styles.editingWarning}>
         <AlertTriangle size={16} />
         <div>
@@ -905,862 +886,94 @@ const CharacterEditor = ({
           </p>
         </div>
       </div>
-      <StepIndicator step={1} totalSteps={5} label="Basic Information" />
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Character Name *</label>
-        <input
-          type="text"
-          value={character.name || ""}
-          onChange={(e) => handleInputChange("name", e.target.value)}
-          placeholder="Enter character name..."
-          style={styles.input}
-          maxLength={50}
-        />
-      </div>
 
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Game Session</label>
-        <select
-          value={character.gameSession || ""}
-          onChange={(e) => handleInputChange("gameSession", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Game Session...</option>
-          {gameSessionOptions.map((session) => (
-            <option key={session} value={session}>
-              {session}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Casting Style</label>
-        <select
-          value={character.castingStyle || ""}
-          onChange={(e) => handleInputChange("castingStyle", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Casting Style...</option>
-          {castingStyles.map((style) => (
-            <option key={style} value={style}>
-              {style}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {character.castingStyle === "Intellect Caster" && (
-        <div style={styles.fieldContainer}>
-          <label style={styles.label}>Initiative Ability *</label>
-          <div style={styles.helpText}>
-            As an intellect caster, you may choose to use Intelligence or
-            Dexterity for initiative.
-            {character.abilityScores &&
-              character.abilityScores.dexterity &&
-              character.abilityScores.intelligence && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    fontSize: "12px",
-                    fontStyle: "italic",
-                    color: theme.primary,
-                  }}
-                >
-                  {Math.floor((character.abilityScores.intelligence - 10) / 2) >
-                  Math.floor((character.abilityScores.dexterity - 10) / 2)
-                    ? "💡 Intelligence gives a higher modifier"
-                    : Math.floor((character.abilityScores.dexterity - 10) / 2) >
-                      Math.floor(
-                        (character.abilityScores.intelligence - 10) / 2
-                      )
-                    ? "⚡ Dexterity gives a higher modifier"
-                    : "⚖️ Both abilities give the same modifier"}
-                </div>
-              )}
-          </div>
-          <div style={styles.level1ChoiceContainer}>
-            <label
-              style={
-                character.initiativeAbility === "dexterity"
-                  ? styles.level1ChoiceLabelSelected
-                  : styles.level1ChoiceLabel
-              }
-            >
-              <input
-                type="radio"
-                name="initiativeAbility"
-                value="dexterity"
-                checked={character.initiativeAbility === "dexterity"}
-                onChange={(e) =>
-                  handleInputChange("initiativeAbility", e.target.value)
-                }
-                style={styles.level1ChoiceRadio}
-              />
-              <span
-                style={
-                  character.initiativeAbility === "dexterity"
-                    ? styles.level1ChoiceTextSelected
-                    : styles.level1ChoiceText
-                }
-              >
-                Dexterity (Standard)
-                {character.abilityScores &&
-                  character.abilityScores.dexterity && (
-                    <span
-                      style={{
-                        color:
-                          character.abilityScores.intelligence &&
-                          Math.floor(
-                            (character.abilityScores.dexterity - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.intelligence - 10) / 2
-                            )
-                            ? theme.success
-                            : theme.textSecondary,
-                        fontWeight:
-                          character.abilityScores.intelligence &&
-                          Math.floor(
-                            (character.abilityScores.dexterity - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.intelligence - 10) / 2
-                            )
-                            ? "bold"
-                            : "normal",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      {Math.floor(
-                        (character.abilityScores.dexterity - 10) / 2
-                      ) >= 0
-                        ? "+"
-                        : ""}
-                      {Math.floor((character.abilityScores.dexterity - 10) / 2)}
-                    </span>
-                  )}
-              </span>
-            </label>
-            <label
-              style={
-                character.initiativeAbility === "intelligence"
-                  ? styles.level1ChoiceLabelSelected
-                  : styles.level1ChoiceLabel
-              }
-            >
-              <input
-                type="radio"
-                name="initiativeAbility"
-                value="intelligence"
-                checked={character.initiativeAbility === "intelligence"}
-                onChange={(e) =>
-                  handleInputChange("initiativeAbility", e.target.value)
-                }
-                style={styles.level1ChoiceRadio}
-              />
-              <span
-                style={
-                  character.initiativeAbility === "intelligence"
-                    ? styles.level1ChoiceTextSelected
-                    : styles.level1ChoiceText
-                }
-              >
-                Intelligence (Intellect Caster)
-                {character.abilityScores &&
-                  character.abilityScores.intelligence && (
-                    <span
-                      style={{
-                        color:
-                          character.abilityScores.dexterity &&
-                          Math.floor(
-                            (character.abilityScores.intelligence - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.dexterity - 10) / 2
-                            )
-                            ? theme.success
-                            : theme.textSecondary,
-                        fontWeight:
-                          character.abilityScores.dexterity &&
-                          Math.floor(
-                            (character.abilityScores.intelligence - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.dexterity - 10) / 2
-                            )
-                            ? "bold"
-                            : "normal",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      {Math.floor(
-                        (character.abilityScores.intelligence - 10) / 2
-                      ) >= 0
-                        ? "+"
-                        : ""}
-                      {Math.floor(
-                        (character.abilityScores.intelligence - 10) / 2
-                      )}
-                    </span>
-                  )}
-              </span>
-            </label>
-          </div>
-        </div>
-      )}
-
-      <div style={styles.levelHpGrid}>
-        <div style={styles.levelContainer}>
-          <label style={styles.label}>Level</label>
-          <input
-            type="number"
-            min="1"
-            max="20"
-            value={character.level || 1}
-            onChange={(e) =>
-              handleInputChange("level", parseInt(e.target.value) || 1)
-            }
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.hpFieldContainer}>
-          <label style={styles.label}>Hit Points</label>
-          {!character.castingStyle ? (
-            <div style={styles.skillsPlaceholder}>
-              Select a Casting Style first
-            </div>
-          ) : (
-            <div style={styles.hpValueContainer}>
-              {isHpManualMode ? (
-                <input
-                  type="number"
-                  min="1"
-                  value={character.hitPoints || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "hitPoints",
-                      parseInt(e.target.value) || 1
-                    )
-                  }
-                  placeholder="--"
-                  style={styles.hpManualInput}
-                />
-              ) : rolledHp !== null ? (
-                <div style={styles.hpRollDisplay}>{rolledHp}</div>
-              ) : (
-                <div style={styles.hpDisplay}>{calculateHitPoints()}</div>
-              )}
-            </div>
-          )}
-        </div>
-        {character.castingStyle && (
-          <div style={styles.hpControlsContainer}>
-            <div style={styles.hpControlsInline}>
-              {!isHpManualMode && (
-                <button
-                  onClick={rollHp}
-                  style={{
-                    ...styles.button,
-                    backgroundColor: "#EF4444",
-                    fontSize: "12px",
-                  }}
-                >
-                  <RefreshCw size={14} />
-                  Roll
-                </button>
-              )}
-              <div
-                onClick={() => {
-                  setIsHpManualMode(!isHpManualMode);
-                  setRolledHp(null);
-                }}
-                style={{
-                  ...styles.hpToggle,
-                  backgroundColor: isHpManualMode
-                    ? theme.success
-                    : theme.border,
-                  borderColor: isHpManualMode
-                    ? theme.success
-                    : theme.textSecondary,
-                }}
-                title={
-                  isHpManualMode
-                    ? "Switch to Auto/Roll mode"
-                    : "Switch to Manual mode"
-                }
-              >
-                <div
-                  style={{
-                    ...styles.hpToggleKnob,
-                    left: isHpManualMode ? "22px" : "2px",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <StepIndicator step={2} totalSteps={5} label="House Selection" />
-
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>House</label>
-        <EnhancedHouseSelector
-          selectedHouse={selectedHouse}
-          onHouseSelect={handleHouseSelect}
-          houseChoices={houseChoices}
-          onHouseChoiceSelect={handleHouseChoiceSelect}
-        />
-      </div>
-
-      <StepIndicator
-        step={3}
-        totalSteps={5}
-        label="Skills & Features & Backgrounds"
-      />
-
-      <EnhancedSubclassSelector
-        value={character.subclass}
-        onChange={(value) => handleInputChange("subclass", value)}
+      {/* Section 1: Basic Information */}
+      <BasicInformationSection
+        character={character}
+        handleInputChange={handleInputChange}
+        calculateHitPoints={calculateHitPoints}
+        getCurrentHp={getCurrentHp}
+        isHpManualMode={isHpManualMode}
+        setIsHpManualMode={setIsHpManualMode}
+        rolledHp={rolledHp}
+        setRolledHp={setRolledHp}
+        rollHp={rollHp}
         styles={styles}
         theme={theme}
-        disabled={false}
-        characterLevel={character.level}
-        subclassChoices={(() => {
-          return character.subclassChoices || {};
-        })()}
-        onSubclassChoicesChange={(choices) => {
-          setCharacter((prev) => ({ ...prev, subclassChoices: choices }));
-        }}
       />
 
-      {/* Character Progression Summary */}
-      {character.level > 1 && (
-        <div style={styles.fieldContainer}>
-          <div
-            style={{
-              ...styles.fieldContainer,
-              backgroundColor: theme.surface,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "8px",
-              padding: "16px",
-              marginBottom: "16px",
-            }}
-          >
-            <h4
-              style={{
-                ...styles.skillsSubheader,
-                margin: "0 0 12px 0",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <Star size={16} color={theme.primary} />
-              Character Progression Summary
-            </h4>
-            <div style={{ fontSize: "14px", lineHeight: "1.5" }}>
-              <div style={{ marginBottom: "8px" }}>
-                <strong>Level {character.level} Character Choices:</strong>
-              </div>
-              {featInfo.choices.map((choice, index) => (
-                <div
-                  key={index}
-                  style={{
-                    marginBottom: "4px",
-                    color:
-                      choice.type === "feat"
-                        ? theme.primary
-                        : choice.type === "asi"
-                        ? theme.success
-                        : choice.type === "innate"
-                        ? theme.warning
-                        : theme.text,
-                  }}
-                >
-                  ✓ Level {choice.level}: {choice.choice}
-                </div>
-              ))}
-              {featInfo.nextASILevel && (
-                <div
-                  style={{ marginBottom: "4px", color: theme.textSecondary }}
-                >
-                  ○ Level {featInfo.nextASILevel}: Next ASI/Feat Choice
-                </div>
-              )}
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: theme.textSecondary,
-                  marginTop: "8px",
-                  fontStyle: "italic",
-                }}
-              >
-                Total Feats Selected: {featInfo.totalFeatsSelected}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div style={styles.fieldContainer}>
-        <div style={styles.lockedFieldHeader}>
-          <h3 style={styles.skillsHeader}>
-            Starting Choice (Level 1)
-            {lockedFields.level1ChoiceType && (
-              <span style={styles.lockedBadge}>
-                <Lock size={12} />
-                Locked
-              </span>
-            )}
-          </h3>
-          <button
-            onClick={() => toggleFieldLock("level1ChoiceType")}
-            style={{
-              ...styles.lockButton,
-              backgroundColor: lockedFields.level1ChoiceType
-                ? "#ef4444"
-                : "#10b981",
-            }}
-          >
-            {lockedFields.level1ChoiceType ? (
-              <Unlock size={14} />
-            ) : (
-              <Lock size={14} />
-            )}
-            {lockedFields.level1ChoiceType ? "Unlock" : "Lock"}
-          </button>
-        </div>
-        {lockedFields.level1ChoiceType && (
-          <div style={styles.lockedFieldInfo}>
-            This field is locked to preserve character integrity. Changing your
-            Level 1 choice may affect character balance.
-          </div>
-        )}
-        <div style={styles.level1ChoiceContainer}>
-          <label
-            style={
-              character.level1ChoiceType === "innate"
-                ? styles.level1ChoiceLabelSelected
-                : styles.level1ChoiceLabel
-            }
-          >
-            <input
-              type="radio"
-              name="level1Choice"
-              value="innate"
-              checked={character.level1ChoiceType === "innate"}
-              onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
-              style={styles.level1ChoiceRadio}
-              disabled={lockedFields.level1ChoiceType}
-            />
-            <span
-              style={
-                character.level1ChoiceType === "innate"
-                  ? styles.level1ChoiceTextSelected
-                  : styles.level1ChoiceText
-              }
-            >
-              Innate Heritage
-            </span>
-          </label>
-          <label
-            style={
-              character.level1ChoiceType === "feat"
-                ? styles.level1ChoiceLabelSelected
-                : styles.level1ChoiceLabel
-            }
-          >
-            <input
-              type="radio"
-              name="level1Choice"
-              value="feat"
-              checked={character.level1ChoiceType === "feat"}
-              onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
-              style={styles.level1ChoiceRadio}
-              disabled={lockedFields.level1ChoiceType}
-            />
-            <span
-              style={
-                character.level1ChoiceType === "feat"
-                  ? styles.level1ChoiceTextSelected
-                  : styles.level1ChoiceText
-              }
-            >
-              Starting Standard Feat
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {character.level1ChoiceType === "innate" && (
-        <InnateHeritage
-          character={character}
-          handleInputChange={handleInputChange}
-          isEditing={true}
-        />
-      )}
-      {character.level1ChoiceType === "feat" && (
-        <div style={styles.fieldContainer}>
-          <FeatRequirementsInfo character={character} />
-          <EnhancedFeatureSelector
-            character={character}
-            setCharacter={setCharacter}
-            expandedFeats={expandedFeats}
-            setExpandedFeats={setExpandedFeats}
-            featFilter={featFilter}
-            setFeatFilter={setFeatFilter}
-            maxFeats={calculateMaxFeats()}
-            isLevel1Choice={false}
-            characterLevel={character.level}
-            standardFeats={standardFeats}
-          />
-        </div>
-      )}
-
-      {/* ASI/Feat Choices for levels 4, 8, 12, 16, 19 */}
-      {getAvailableASILevels(character.level).map((level) => {
-        const choice = character.asiChoices?.[level] || {};
-        const hasSelectedChoice =
-          choice.type === "asi" ||
-          (choice.type === "feat" && choice.selectedFeat);
-
-        return (
-          <div key={level} style={styles.fieldContainer}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "8px",
-              }}
-            >
-              <h3 style={styles.skillsHeader}>
-                Level {level} Choice (
-                {hasSelectedChoice ? "1/1 selected" : "0/1 selected"}) *
-              </h3>
-              {character.level > level && (
-                <div style={styles.warningBadge}>
-                  ⚠️ Editing Level {character.level} Character
-                </div>
-              )}
-            </div>
-
-            <div style={styles.helpText}>
-              At level {level}, choose either an Ability Score Improvement (+2
-              total, max +1 per ability) or a Standard Feat.
-            </div>
-
-            {/* Choice Type Selection */}
-            <div style={styles.level1ChoiceContainer}>
-              <label
-                style={
-                  choice.type === "asi"
-                    ? styles.level1ChoiceLabelSelected
-                    : styles.level1ChoiceLabel
-                }
-              >
-                <input
-                  type="radio"
-                  name={`level${level}Choice`}
-                  value="asi"
-                  checked={choice.type === "asi"}
-                  onChange={(e) => handleASIChoiceChange(level, "asi")}
-                  style={styles.level1ChoiceRadio}
-                />
-                <span
-                  style={
-                    choice.type === "asi"
-                      ? styles.level1ChoiceTextSelected
-                      : styles.level1ChoiceText
-                  }
-                >
-                  Ability Score Improvement
-                </span>
-              </label>
-
-              <label
-                style={
-                  choice.type === "feat"
-                    ? styles.level1ChoiceLabelSelected
-                    : styles.level1ChoiceLabel
-                }
-              >
-                <input
-                  type="radio"
-                  name={`level${level}Choice`}
-                  value="feat"
-                  checked={choice.type === "feat"}
-                  onChange={(e) => handleASIChoiceChange(level, "feat")}
-                  style={styles.level1ChoiceRadio}
-                />
-                <span
-                  style={
-                    choice.type === "feat"
-                      ? styles.level1ChoiceTextSelected
-                      : styles.level1ChoiceText
-                  }
-                >
-                  Standard Feat
-                </span>
-              </label>
-            </div>
-
-            {/* ASI Selection */}
-            {choice.type === "asi" && (
-              <div style={{ marginTop: "16px" }}>
-                <div style={styles.completionMessage}>
-                  ✓ Ability Score Improvement selected!
-                </div>
-
-                <div
-                  style={{
-                    background: theme.surface,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "8px",
-                    padding: "12px",
-                    marginTop: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: theme.text,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Select Ability Score Increases (+2 total, max +1 per
-                    ability):
-                  </div>
-
-                  <AbilityScoreIncrements
-                    level={level}
-                    choice={choice}
-                    character={character}
-                    handleASIAbilityChange={handleASIAbilityChange}
-                    theme={theme}
-                    styles={styles}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Feat Selection */}
-            {choice.type === "feat" && (
-              <div style={{ marginTop: "16px" }}>
-                {choice.selectedFeat ? (
-                  <div style={styles.completionMessage}>
-                    ✓ Feat selected: {choice.selectedFeat}
-                  </div>
-                ) : (
-                  <div style={styles.helpText}>
-                    Select a Standard Feat from the options below:
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    background: theme.surface,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "8px",
-                    padding: "12px",
-                    marginTop: "8px",
-                  }}
-                >
-                  <FeatRequirementsInfo character={character} />
-                  <ASIFeatSelector
-                    level={level}
-                    character={character}
-                    choice={choice}
-                    handleASIFeatChange={handleASIFeatChange}
-                    expandedFeats={expandedFeats}
-                    setExpandedFeats={setExpandedFeats}
-                    featFilter={asiLevelFilters[level] || ""}
-                    setFeatFilter={(filter) => setASILevelFilter(level, filter)}
-                    theme={theme}
-                    styles={styles}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Show selection status */}
-            {!choice.type && (
-              <div
-                style={{
-                  background: theme.surfaceHover,
-                  border: `1px dashed ${theme.border}`,
-                  borderRadius: "8px",
-                  padding: "16px",
-                  marginTop: "8px",
-                  textAlign: "center",
-                  color: theme.textSecondary,
-                }}
-              >
-                <div style={{ fontSize: "16px", marginBottom: "4px" }}>
-                  ⚪ No choice selected yet
-                </div>
-                <div style={{ fontSize: "12px" }}>
-                  Choose either Ability Score Improvement or Standard Feat above
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      {/* Background */}
-      <EnhancedBackgroundSelector
-        value={character.background}
-        onChange={(backgroundName) => {
-          handleInputChange("background", backgroundName);
-        }}
-        onCharacterUpdate={(updatedCharacter) => {
-          setCharacter(updatedCharacter);
-        }}
+      {/* Section 2: House and Subclass */}
+      <HouseAndSubclassSection
         character={character}
-        disabled={false}
-      />
-      {/* Skills Section - Placed early in Step 3 */}
-      <EnhancedSkillsSection
-        character={character}
+        handleInputChange={handleInputChange}
+        selectedHouse={selectedHouse}
+        handleHouseSelect={handleHouseSelect}
+        houseChoices={houseChoices}
+        handleHouseChoiceSelect={handleHouseChoiceSelect}
+        setCharacter={setCharacter}
         handleSkillToggle={handleSkillToggle}
         getAvailableSkills={getAvailableSkills}
         styles={styles}
         theme={theme}
       />
 
-      <StepIndicator step={4} totalSteps={5} label="Ability Scores" />
-      <div style={styles.fieldContainer}>
-        <div style={styles.lockedFieldHeader}>
-          <h3 style={styles.skillsHeader}>
-            Ability Scores
-            {lockedFields.abilityScores && (
-              <span style={styles.lockedBadge}>
-                <Lock size={12} />
-                Locked
-              </span>
-            )}
-            <div style={styles.lockedFieldInfo}>
-              Ability scores are locked. Use the unlock button to modify them.
-            </div>
-          </h3>
+      {/* Section 3: Level 1 Choice and Progression */}
+      <Level1AndProgressionSection
+        character={character}
+        handleInputChange={handleInputChange}
+        handleLevel1ChoiceChange={handleLevel1ChoiceChange}
+        lockedFields={lockedFields}
+        toggleFieldLock={toggleFieldLock}
+        expandedFeats={expandedFeats}
+        setExpandedFeats={setExpandedFeats}
+        featFilter={featFilter}
+        setFeatFilter={setFeatFilter}
+        calculateMaxFeats={calculateMaxFeats}
+        getAvailableASILevels={getAvailableASILevels}
+        handleASIChoiceChange={handleASIChoiceChange}
+        handleASIFeatChange={handleASIFeatChange}
+        handleASIAbilityChange={handleASIAbilityChange}
+        asiLevelFilters={asiLevelFilters}
+        setASILevelFilter={setASILevelFilter}
+        getFeatProgressionInfo={getFeatProgressionInfo}
+        standardFeats={standardFeats}
+        styles={styles}
+        theme={theme}
+      />
 
-          <button
-            onClick={() => toggleFieldLock("abilityScores")}
-            style={{
-              ...styles.lockButton,
-              backgroundColor: lockedFields.abilityScores
-                ? "#ef4444"
-                : "#10b981",
-            }}
-          >
-            {lockedFields.abilityScores ? (
-              <Unlock size={14} />
-            ) : (
-              <Lock size={14} />
-            )}
-            {lockedFields.abilityScores ? "Unlock" : "Lock"}
-          </button>
-        </div>
-        {lockedFields.abilityScores ? (
-          <div style={styles.lockedAbilityScores}>
-            {Object.entries(character.abilityScores || {}).map(
-              ([ability, score]) => (
-                <div key={ability} style={styles.lockedAbilityScore}>
-                  <span style={styles.abilityName}>
-                    {ability.charAt(0).toUpperCase() + ability.slice(1)}:
-                  </span>
-                  <span style={styles.abilityValue}>{score || 0}</span>
-                </div>
-              )
-            )}
-          </div>
-        ) : (
-          <AbilityScorePicker
-            allStatsAssigned={allStatsAssigned}
-            assignStat={assignStat}
-            availableStats={availableStats}
-            character={character}
-            clearStat={clearStat}
-            featChoices={character.featChoices || {}}
-            houseChoices={character.houseChoices || houseChoices}
-            isEditing={true}
-            isManualMode={isManualMode}
-            rollAllStats={() => {}}
-            rolledStats={rolledStats}
-            showModifiers={true}
-            setAvailableStats={setAvailableStats}
-            setCharacter={setCharacter}
-            setIsManualMode={setIsManualMode}
-            setRolledStats={setRolledStats}
-            setTempInputValues={setTempInputValues}
-            tempInputValues={tempInputValues}
-          />
-        )}
-      </div>
-      <StepIndicator step={5} totalSteps={5} label="Wand Modifiers" />
-      <div style={styles.fieldContainer}>
-        <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
-        <div style={styles.helpText}>
-          Enter your wand's bonuses/penalties for each subject of magic (The DM
-          will provide these values)
-        </div>
-        <div style={styles.magicModifiersGrid}>
-          {[
-            { key: "divinations", label: "Divinations" },
-            { key: "charms", label: "Charms" },
-            { key: "transfiguration", label: "Transfiguration" },
-            { key: "healing", label: "Healing" },
-            { key: "jinxesHexesCurses", label: "JHC" },
-          ].map(({ key, label }) => (
-            <div key={key} style={styles.magicModifierItem}>
-              <label style={styles.magicModifierLabel}>{label}</label>
-              <input
-                type="number"
-                value={
-                  magicModifierTempValues.hasOwnProperty(key)
-                    ? magicModifierTempValues[key]
-                    : (character.magicModifiers || {})[key] || 0
-                }
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setMagicModifierTempValues((prev) => ({
-                    ...prev,
-                    [key]: value,
-                  }));
-                }}
-                onBlur={() => {
-                  const tempValue = magicModifierTempValues[key];
-                  if (tempValue !== undefined) {
-                    const numValue =
-                      tempValue === "" || tempValue === "-"
-                        ? 0
-                        : parseInt(tempValue, 10);
-                    const finalValue = isNaN(numValue) ? 0 : numValue;
-                    handleInputChange(`magicModifiers.${key}`, finalValue);
-                    setMagicModifierTempValues((prev) => {
-                      const newState = { ...prev };
-                      delete newState[key];
-                      return newState;
-                    });
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.target.blur();
-                  }
-                }}
-                style={styles.magicModifierInput}
-                min="-99"
-                max="99"
-                step="1"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Section 4: Ability Scores */}
+      <AbilityScoresSection
+        character={character}
+        setCharacter={setCharacter}
+        lockedFields={lockedFields}
+        toggleFieldLock={toggleFieldLock}
+        allStatsAssigned={allStatsAssigned}
+        assignStat={assignStat}
+        availableStats={availableStats}
+        clearStat={clearStat}
+        houseChoices={houseChoices}
+        isManualMode={isManualMode}
+        setIsManualMode={setIsManualMode}
+        rolledStats={rolledStats}
+        setRolledStats={setRolledStats}
+        setAvailableStats={setAvailableStats}
+        tempInputValues={tempInputValues}
+        setTempInputValues={setTempInputValues}
+        styles={styles}
+        theme={theme}
+      />
 
+      {/* Section 5: Magic Modifiers */}
+      <MagicModifiersSection
+        character={character}
+        handleInputChange={handleInputChange}
+        magicModifierTempValues={magicModifierTempValues}
+        setMagicModifierTempValues={setMagicModifierTempValues}
+        styles={styles}
+        theme={theme}
+      />
+
+      {/* Action Buttons */}
       <div style={styles.actionButtons}>
         <button
           onClick={handleCancel}
