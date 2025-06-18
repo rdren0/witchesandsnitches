@@ -490,30 +490,70 @@ const CharacterEditor = ({
     return skillsByCastingStyle[character.castingStyle] || [];
   };
 
+  const calculateHPForCharacter = (char) => {
+    if (!char.castingStyle) return 1;
+
+    const castingData = hpData[char.castingStyle];
+    if (!castingData) return 1;
+
+    const conScore = char.abilityScores?.constitution;
+    const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
+    const level = char.level || 1;
+
+    const baseHP = castingData.base + conMod;
+    const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
+
+    return Math.max(1, baseHP + additionalHP);
+  };
+
   const handleInputChange = (field, value) => {
     if (field.includes(".")) {
       const [parent, child] = field.split(".");
-      setCharacter((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
+      setCharacter((prev) => {
+        const newCharacter = {
+          ...prev,
+          [parent]: {
+            ...prev[parent],
+            [child]: value,
+          },
+        };
+
+        if (parent === "abilityScores" && child === "constitution") {
+          newCharacter.hitPoints = calculateHPForCharacter(newCharacter);
+        }
+
+        return newCharacter;
+      });
     } else {
       if (field === "castingStyle") {
-        setCharacter((prev) => ({
-          ...prev,
-          [field]: value,
-          skillProficiencies: [],
-        }));
+        setCharacter((prev) => {
+          const newCharacter = {
+            ...prev,
+            [field]: value,
+            skillProficiencies: [],
+          };
+
+          if (value) {
+            newCharacter.hitPoints = calculateHPForCharacter(newCharacter);
+          }
+
+          return newCharacter;
+        });
         setRolledHp(null);
       } else if (field === "level") {
         const newLevel = parseInt(value) || 1;
-        setCharacter((prev) => ({
-          ...prev,
-          [field]: newLevel,
-        }));
+
+        setCharacter((prev) => {
+          const newCharacter = {
+            ...prev,
+            level: newLevel,
+          };
+
+          newCharacter.hitPoints = calculateHPForCharacter(newCharacter);
+
+          return newCharacter;
+        });
+
         setRolledHp(null);
       } else if (field === "background") {
         const background = backgroundsData[value];

@@ -2,7 +2,7 @@ import { standardFeats } from "../../standardFeatData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { allSkills } from "../../CharacterSheet/utils";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 
 const getSpellcastingAbility = (character) => {
   const castingStyle = character.castingStyle;
@@ -192,6 +192,26 @@ export const EnhancedFeatureSelector = ({
   const styles = createFeatStyles(theme);
 
   const featChoices = character.featChoices || {};
+  const selectedFeats = useMemo(
+    () => character.standardFeats || [],
+    [character.standardFeats]
+  );
+
+  useEffect(() => {
+    if (selectedFeats.length > 0) {
+      let featToExpand;
+
+      if (isLevel1Choice || selectedFeats.length === 1) {
+        featToExpand = selectedFeats[0];
+      } else {
+        featToExpand = selectedFeats[selectedFeats.length - 1];
+      }
+
+      if (featToExpand && expandedFeats.size === 0) {
+        setExpandedFeats(new Set([featToExpand]));
+      }
+    }
+  }, [selectedFeats, isLevel1Choice, setExpandedFeats, expandedFeats.size]);
 
   const setFeatChoices = (updater) => {
     setCharacter((prev) => ({
@@ -270,11 +290,32 @@ export const EnhancedFeatureSelector = ({
       border: `1px solid ${theme.border}`,
       backgroundColor: theme.surface,
     },
-    abilityChoiceRadio: {
-      margin: 0,
-    },
     abilityChoiceName: {
       color: theme.text,
+    },
+    featCheckbox: {
+      width: "18px",
+      height: "18px",
+      marginRight: "8px",
+      cursor: "pointer",
+      accentColor: "#10b981",
+      transform: "scale(1.2)",
+    },
+    abilityChoiceRadio: {
+      width: "16px",
+      height: "16px",
+      marginRight: "6px",
+      cursor: "pointer",
+      accentColor: "#10b981",
+    },
+    customCheckbox: {
+      left: "5px",
+      width: "16px",
+      height: "16px",
+      marginRight: "8px",
+      cursor: "pointer",
+      accentColor: "#10b981",
+      transform: "scale(1.2)",
     },
   };
 
@@ -301,6 +342,12 @@ export const EnhancedFeatureSelector = ({
           });
           return newChoices;
         });
+
+        setExpandedFeats((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(featName);
+          return newSet;
+        });
       } else {
         const feat = standardFeats.find((f) => f.name === featName);
         if (feat?.modifiers?.abilityIncreases) {
@@ -317,6 +364,8 @@ export const EnhancedFeatureSelector = ({
             return newChoices;
           });
         }
+
+        setExpandedFeats(new Set([featName]));
       }
 
       return {
@@ -417,8 +466,6 @@ export const EnhancedFeatureSelector = ({
       }. Ability score bonuses will be shown below.`;
     }
   };
-
-  const selectedFeats = character.standardFeats || [];
 
   return (
     <div style={enhancedStyles.fieldContainer}>
@@ -528,19 +575,40 @@ export const EnhancedFeatureSelector = ({
               >
                 <div style={enhancedStyles.featHeader}>
                   <label style={enhancedStyles.featLabelClickable}>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleFeatToggle(feat.name)}
+                    <div
                       style={{
-                        width: "18px",
-                        height: "18px",
-                        marginRight: "8px",
-                        cursor: "pointer",
-                        accentColor: "#8B5CF6",
-                        transform: "scale(1.2)",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
                       }}
-                    />
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleFeatToggle(feat.name)}
+                        style={enhancedStyles.customCheckbox}
+                        onMouseEnter={(e) => {
+                          if (!isSelected) {
+                            e.target.style.borderColor = "#8B5CF6";
+                            e.target.style.backgroundColor =
+                              "rgba(139, 92, 246, 0.1)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected) {
+                            e.target.style.borderColor = theme.border;
+                            e.target.style.backgroundColor = theme.surface;
+                          }
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.boxShadow =
+                            "0 0 0 3px rgba(139, 92, 246, 0.3)";
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.boxShadow = "none";
+                        }}
+                      />
+                    </div>
                     <span
                       style={
                         isSelected

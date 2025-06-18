@@ -476,13 +476,33 @@ const LevelUpModal = ({
 
     setIsSaving(true);
     try {
-      const currentHP = character.hit_points || character.hitPoints || 0;
+      const castingStyle = character.casting_style || character.castingStyle;
+      const castingData = hpData[castingStyle];
+
+      let newFullHP = 1;
+
+      if (castingData) {
+        const finalConstitution =
+          isAsiLevel &&
+          levelUpData.asiChoice === "asi" &&
+          levelUpData.abilityIncreases.some(
+            (inc) => inc.ability === "Constitution"
+          )
+            ? getAbilityScore("constitution") + 1
+            : getAbilityScore("constitution");
+
+        const conMod = Math.floor((finalConstitution - 10) / 2);
+        const baseHP = castingData.base + conMod;
+        const additionalHP =
+          (newLevel - 1) * (castingData.avgPerLevel + conMod);
+        newFullHP = Math.max(1, baseHP + additionalHP);
+      }
 
       const updatedCharacter = {
         ...character,
         level: newLevel,
-        hit_points: currentHP + levelUpData.hitPointIncrease,
-        hitPoints: currentHP + levelUpData.hitPointIncrease,
+        hit_points: newFullHP,
+        hitPoints: newFullHP,
       };
 
       if (
@@ -504,7 +524,6 @@ const LevelUpModal = ({
 
         levelUpData.abilityIncreases.forEach((increase) => {
           const abilityKey = increase.ability.toLowerCase();
-
           const newScore = parseInt(increase.to, 10);
           if (!isNaN(newScore) && newScore > 0 && newScore <= 30) {
             newAbilityScores[abilityKey] = newScore;
@@ -518,12 +537,28 @@ const LevelUpModal = ({
         });
 
         updatedCharacter.ability_scores = newAbilityScores;
-
         updatedCharacter.abilityScores = newAbilityScores;
 
         Object.keys(newAbilityScores).forEach((ability) => {
           updatedCharacter[ability] = newAbilityScores[ability];
         });
+
+        if (
+          levelUpData.abilityIncreases.some(
+            (inc) => inc.ability.toLowerCase() === "constitution"
+          )
+        ) {
+          const newConMod = Math.floor(
+            (newAbilityScores.constitution - 10) / 2
+          );
+          const newBaseHP = castingData.base + newConMod;
+          const newAdditionalHP =
+            (newLevel - 1) * (castingData.avgPerLevel + newConMod);
+          const recalculatedFullHP = Math.max(1, newBaseHP + newAdditionalHP);
+
+          updatedCharacter.hit_points = recalculatedFullHP;
+          updatedCharacter.hitPoints = recalculatedFullHP;
+        }
       }
 
       if (
@@ -541,9 +576,10 @@ const LevelUpModal = ({
             intelligence: getAbilityScore("intelligence"),
             wisdom: getAbilityScore("wisdom"),
             charisma: getAbilityScore("charisma"),
-
             ...(updatedCharacter.ability_scores || {}),
           };
+
+          let constitutionChanged = false;
 
           selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
             let abilityToIncrease;
@@ -564,6 +600,9 @@ const LevelUpModal = ({
             }
 
             if (abilityToIncrease) {
+              if (abilityToIncrease.toLowerCase() === "constitution") {
+                constitutionChanged = true;
+              }
               const currentScore = newAbilityScores[abilityToIncrease] || 10;
               const newScore = Math.min(20, currentScore + increase.amount);
               newAbilityScores[abilityToIncrease] = newScore;
@@ -576,10 +615,22 @@ const LevelUpModal = ({
             updatedCharacter[ability] = newAbilityScores[ability];
           });
 
+          if (constitutionChanged && castingData) {
+            const newConMod = Math.floor(
+              (newAbilityScores.constitution - 10) / 2
+            );
+            const newBaseHP = castingData.base + newConMod;
+            const newAdditionalHP =
+              (newLevel - 1) * (castingData.avgPerLevel + newConMod);
+            const recalculatedFullHP = Math.max(1, newBaseHP + newAdditionalHP);
+
+            updatedCharacter.hit_points = recalculatedFullHP;
+            updatedCharacter.hitPoints = recalculatedFullHP;
+          }
+
           const currentSkills = [
             ...(updatedCharacter.skill_proficiencies || []),
           ];
-
           selectedFeat.modifiers.skillProficiencies.forEach(
             (skillMod, index) => {
               if (skillMod.type === "choice") {
@@ -599,13 +650,11 @@ const LevelUpModal = ({
               }
             }
           );
-
           updatedCharacter.skill_proficiencies = currentSkills;
 
           const currentExpertise = [
             ...(updatedCharacter.skill_expertise || []),
           ];
-
           selectedFeat.modifiers.expertise.forEach((expertiseMod, index) => {
             if (expertiseMod.type === "choice") {
               const selectedExpertise =
@@ -617,7 +666,6 @@ const LevelUpModal = ({
               });
             }
           });
-
           updatedCharacter.skill_expertise = currentExpertise;
 
           const currentFeats = [...(updatedCharacter.standard_feats || [])];
@@ -628,7 +676,7 @@ const LevelUpModal = ({
         }
       }
 
-     await onSave(updatedCharacter);
+      await onSave(updatedCharacter);
       setIsSaving(false);
     } catch (error) {
       console.error("Error during level up:", error);
@@ -1690,7 +1738,7 @@ const LevelUpModal = ({
                     fontWeight: "500",
                   }}
                 >
-                  +{levelUpData.hitPointIncrease} HP (
+                  Full HP for Level {newLevel} (
                   {levelUpData.hitPointMethod === "average"
                     ? "Average"
                     : levelUpData.hitPointMethod === "roll"

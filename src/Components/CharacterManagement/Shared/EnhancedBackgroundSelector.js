@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { backgroundsData } from "./backgroundsData";
@@ -220,8 +220,26 @@ const EnhancedBackgroundSelector = ({
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
   const [expandedBackgrounds, setExpandedBackgrounds] = useState(new Set());
+  const backgroundRefs = useRef({});
 
   const selectedBackground = value || "";
+
+  useEffect(() => {
+    if (selectedBackground && selectedBackground.trim() !== "") {
+      if (expandedBackgrounds.size === 0) {
+        setExpandedBackgrounds(new Set([selectedBackground]));
+      }
+
+      const backgroundElement = backgroundRefs.current[selectedBackground];
+      if (backgroundElement) {
+        backgroundElement.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
+      }
+    }
+  }, [selectedBackground, expandedBackgrounds.size]);
 
   const enhancedStyles = {
     ...styles,
@@ -296,11 +314,18 @@ const EnhancedBackgroundSelector = ({
         character,
         backgroundName
       );
-      setExpandedBackgrounds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(backgroundName);
-        return newSet;
-      });
+      setExpandedBackgrounds(new Set([backgroundName]));
+
+      setTimeout(() => {
+        const backgroundElement = backgroundRefs.current[backgroundName];
+        if (backgroundElement) {
+          backgroundElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+            inline: "nearest",
+          });
+        }
+      }, 100);
     }
 
     onChange(updatedCharacter.background);
@@ -380,6 +405,7 @@ const EnhancedBackgroundSelector = ({
           return (
             <div
               key={name}
+              ref={(el) => (backgroundRefs.current[name] = el)}
               style={
                 isSelected
                   ? enhancedStyles.featCardSelected

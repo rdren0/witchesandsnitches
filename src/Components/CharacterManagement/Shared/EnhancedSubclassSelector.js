@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { subclassesData } from "./subclassesData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -33,6 +33,23 @@ const EnhancedSubclassSelector = ({
   const selectedSubclassData = selectedSubclass
     ? subclassesData[selectedSubclass]
     : null;
+
+  const sortedSubclasses = useMemo(() => {
+    const subclassArray = Object.values(subclassesData);
+
+    if (!selectedSubclass) {
+      return subclassArray;
+    }
+
+    const selectedClass = subclassArray.find(
+      (sc) => sc.name === selectedSubclass
+    );
+    const otherClasses = subclassArray
+      .filter((sc) => sc.name !== selectedSubclass)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return selectedClass ? [selectedClass, ...otherClasses] : subclassArray;
+  }, [selectedSubclass]);
 
   const normalizeSubclassChoices = (choices) => {
     if (!choices || typeof choices !== "object") return {};
@@ -146,8 +163,7 @@ const EnhancedSubclassSelector = ({
     };
 
     loadCharacterData();
-    // eslint-disable-next-line
-  }, [characterId, discordUserId]);
+  }, [characterId, discordUserId, value, onChange, externalSubclassChoices]);
 
   const handleSubclassToggle = async (subclassName) => {
     if (selectedSubclass === subclassName) {
@@ -366,7 +382,6 @@ const EnhancedSubclassSelector = ({
                 <strong>Current selection: {selectedChoice || "None"}</strong>
               </div>
             )}
-
             {levelData.choices.map((choice, index) => {
               const isChoiceSelected = selectedChoice === choice.name;
 
@@ -577,7 +592,7 @@ const EnhancedSubclassSelector = ({
       )}
 
       <div style={styles.featsContainer}>
-        {Object.values(subclassesData).map((subclass) => {
+        {sortedSubclasses.map((subclass) => {
           const isSelected = selectedSubclass === subclass.name;
           const isExpanded = expandedSubclasses.has(subclass.name);
           const availableLevels = getAvailableLevels(subclass);

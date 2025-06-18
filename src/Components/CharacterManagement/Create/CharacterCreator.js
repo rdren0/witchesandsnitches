@@ -1000,14 +1000,6 @@ const CharacterCreator = ({
         </div>
       )}
 
-      <EnhancedSkillsSection
-        character={character}
-        handleSkillToggle={handleSkillToggle}
-        getAvailableSkills={getAvailableSkills}
-        styles={styles}
-        theme={theme}
-      />
-
       {/* ASI Level Choices */}
       <ASILevelChoices
         character={character}
@@ -1033,6 +1025,13 @@ const CharacterCreator = ({
         }}
         character={character}
         disabled={false}
+      />
+      <EnhancedSkillsSection
+        character={character}
+        handleSkillToggle={handleSkillToggle}
+        getAvailableSkills={getAvailableSkills}
+        styles={styles}
+        theme={theme}
       />
 
       <StepIndicator step={4} totalSteps={5} label="Ability Scores" />
