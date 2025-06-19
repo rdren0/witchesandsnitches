@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { innateHeritages, heritageDescriptions } from "../../data";
-import { createFeatStyles } from "../../../styles/masterStyles";
-import { useTheme } from "../../../contexts/ThemeContext";
+import { innateHeritages, heritageDescriptions } from "../../../data";
+import { createFeatStyles } from "../../../../styles/masterStyles";
+import { useTheme } from "../../../../contexts/ThemeContext";
 
 export const InnateHeritage = ({
   character,
@@ -18,6 +18,58 @@ export const InnateHeritage = ({
   const isHigherLevel = character.level > 1;
   const shouldShowLevelWarning = isHigherLevel && isEditing;
   const hasSelectedHeritage = character.innateHeritage ? 1 : 0;
+
+  const applyHeritageProficiencies = (character, heritageName) => {
+    const { heritageDescriptions } = require("../../../data");
+
+    if (!heritageName || !heritageDescriptions[heritageName]) {
+      return {
+        ...character,
+        innateHeritage: "",
+        skillProficiencies: removeHeritageProficiencies(
+          character.skillProficiencies || [],
+          character.innateHeritage
+        ),
+        innateHeritageSkills: [],
+      };
+    }
+
+    const heritage = heritageDescriptions[heritageName];
+    const currentSkillProficiencies = character.skillProficiencies || [];
+
+    const cleanedSkillProficiencies = removeHeritageProficiencies(
+      currentSkillProficiencies,
+      character.innateHeritage
+    );
+
+    const newHeritageSkills = heritage.skillProficiencies || [];
+    const newSkillProficiencies = [
+      ...cleanedSkillProficiencies,
+      ...newHeritageSkills,
+    ];
+
+    return {
+      ...character,
+      innateHeritage: heritageName,
+      skillProficiencies: [...new Set(newSkillProficiencies)],
+      innateHeritageSkills: newHeritageSkills,
+    };
+  };
+
+  const removeHeritageProficiencies = (currentProficiencies, heritageName) => {
+    const { heritageDescriptions } = require("../../../data");
+
+    if (!heritageName || !heritageDescriptions[heritageName]) {
+      return currentProficiencies;
+    }
+
+    const heritage = heritageDescriptions[heritageName];
+    const heritageSkills = heritage.skillProficiencies || [];
+
+    return currentProficiencies.filter(
+      (skill) => !heritageSkills.includes(skill)
+    );
+  };
 
   const toggleHeritageExpansion = (heritageName) => {
     setExpandedHeritages((prev) => {
@@ -61,7 +113,17 @@ export const InnateHeritage = ({
       return;
     }
 
-    handleInputChange("innateHeritage", newValue);
+    const updatedCharacter = applyHeritageProficiencies(character, newValue);
+
+    handleInputChange("innateHeritage", updatedCharacter.innateHeritage);
+    handleInputChange(
+      "skillProficiencies",
+      updatedCharacter.skillProficiencies
+    );
+    handleInputChange(
+      "innateHeritageSkills",
+      updatedCharacter.innateHeritageSkills
+    );
   };
 
   const confirmChange = () => {

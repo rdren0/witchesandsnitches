@@ -1,12 +1,12 @@
 import { Lock, Unlock, Star } from "lucide-react";
-import { InnateHeritage } from "../Shared/InnateHeritage";
-import EnhancedFeatureSelector from "../Shared/EnhancedFeatureSelector";
-import StepIndicator from "../Shared/StepIndicator";
+import { InnateHeritage } from "../../Create/Steps/InnateHeritage";
+import EnhancedFeatureSelector from "../../Create/Steps/EnhancedFeatureSelector";
+import StepIndicator from "../../Shared/StepIndicator";
 import {
   AbilityScoreIncrements,
   ASIFeatSelector,
   FeatRequirementsInfo,
-} from "../Create/ASIComponents";
+} from "../../Create/ASIComponents";
 
 const Level1AndProgressionSection = ({
   character,

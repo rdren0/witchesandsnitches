@@ -2,7 +2,7 @@ import {
   AbilityScoreIncrements,
   ASIFeatSelector,
   FeatRequirementsInfo,
-} from "./ASIComponents";
+} from "../ASIComponents";
 
 const ASILevelChoices = ({
   character,

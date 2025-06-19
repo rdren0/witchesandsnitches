@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { subclassesData } from "./subclassesData";
-import { createFeatStyles } from "../../../styles/masterStyles";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { characterService } from "../../../services/characterService";
+import { subclassesData } from "../../Shared/subclassesData";
+import { createFeatStyles } from "../../../../styles/masterStyles";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { characterService } from "../../../../services/characterService";
 
 const EnhancedSubclassSelector = ({
   value,

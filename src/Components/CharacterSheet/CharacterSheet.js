@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Star,
   Sparkles,
+  Target,
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -193,6 +194,94 @@ const CharacterSheet = ({
       }
     } catch (error) {
       console.error("Error rolling spellcasting ability check:", error);
+      alert("Error rolling dice. Please try again.");
+    } finally {
+      setIsRolling(false);
+    }
+  };
+
+  const rollSpellAttack = async () => {
+    if (!character || isRolling) return;
+
+    const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
+    if (!spellcastingAbility) return;
+
+    setIsRolling(true);
+
+    try {
+      const spellcastingModifier = getSpellcastingAbilityModifier(character);
+      const totalModifier = character.proficiencyBonus + spellcastingModifier;
+
+      const rollValue = Math.floor(Math.random() * 20) + 1;
+      const total = rollValue + totalModifier;
+
+      const isCriticalSuccess = rollValue === 20;
+      const isCriticalFailure = rollValue === 1;
+
+      showRollResult({
+        title: "Spell Attack Roll",
+        rollValue: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+        type: "spellattack",
+        description: `d20 + ${character.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+      });
+
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${character.name} - Spell Attack Roll`,
+          color: isCriticalSuccess
+            ? 0x00ff00
+            : isCriticalFailure
+            ? 0xff0000
+            : 0x10b981,
+          fields: [
+            {
+              name: "Roll",
+              value: `d20: ${rollValue}`,
+              inline: true,
+            },
+            {
+              name: "Modifiers",
+              value: `Prof: +${
+                character.proficiencyBonus
+              }, ${spellcastingAbility}: ${formatModifier(
+                spellcastingModifier
+              )}`,
+              inline: true,
+            },
+            {
+              name: "Total",
+              value: `${total}`,
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Spell Attack Roll",
+          },
+        };
+
+        if (isCriticalSuccess) {
+          embed.description = "🌟 **Critical Hit!**";
+        } else if (isCriticalFailure) {
+          embed.description = "💥 **Critical Miss!**";
+        }
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending to Discord:", discordError);
+        }
+      }
+    } catch (error) {
+      console.error("Error rolling spell attack:", error);
       alert("Error rolling dice. Please try again.");
     } finally {
       setIsRolling(false);
@@ -789,7 +878,8 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.combatStats,
-                  gridTemplateColumns: "repeat(6, 1fr)",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                  gap: "12px",
                 }}
               >
                 {/* Enhanced HP Tile */}
@@ -829,6 +919,7 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statLabel,
+                      ...styles.statLabelRed,
                       color: getHPColor(character),
                     }}
                   >
@@ -884,6 +975,8 @@ const CharacterSheet = ({
                       </div>
                     )}
                 </div>
+
+                {/* Initiative Tile */}
                 <div
                   style={{ ...styles.statCard, ...styles.statCardBrown }}
                   onClick={() =>
@@ -911,11 +1004,96 @@ const CharacterSheet = ({
                     Initiative
                   </div>
                 </div>
+                {/* Spell Attack Tile (Clickable) */}
+                {getSpellcastingAbility(character.castingStyle) && (
+                  <div
+                    style={{
+                      ...styles.statCard,
+                      cursor: isRolling ? "wait" : "pointer",
+                      borderColor: "#e30716",
+                      backgroundColor: isRolling
+                        ? "#e30716" + "20"
+                        : "transparent",
+                      transition: "all 0.2s ease",
+                    }}
+                    onClick={() => !isRolling && rollSpellAttack()}
+                    title={`Click to roll spell attack: d20 + Prof (${
+                      character.proficiencyBonus
+                    }) + ${getSpellcastingAbility(
+                      character.castingStyle
+                    )} (${formatModifier(
+                      getSpellcastingAbilityModifier(character)
+                    )})`}
+                  >
+                    <Target
+                      className="w-6 h-6 text-green-600 mx-auto mb-1"
+                      style={{ color: "#e30716" }}
+                    />
+                    <div style={{ ...styles.statValue, color: "#e30716" }}>
+                      {formatModifier(
+                        character.proficiencyBonus +
+                          getSpellcastingAbilityModifier(character)
+                      )}
+                    </div>
+                    <div style={{ ...styles.statLabel, color: "#e30716" }}>
+                      Spell Attack
+                    </div>
+                  </div>
+                )}
+
+                {/* Spellcasting Ability Check Tile (Clickable) */}
+                {getSpellcastingAbility(character.castingStyle) && (
+                  <div
+                    style={{
+                      ...styles.statCard,
+                      cursor: isRolling ? "wait" : "pointer",
+                      borderColor: "#8b5cf6",
+                      backgroundColor: isRolling
+                        ? "#8b5cf6" + "20"
+                        : "transparent",
+                      transition: "all 0.2s ease",
+                    }}
+                    onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
+                    title={`Click to roll ${getSpellcastingAbility(
+                      character.castingStyle
+                    )} ability check (no proficiency): d20 + ${formatModifier(
+                      getSpellcastingAbilityModifier(character)
+                    )}`}
+                  >
+                    <Sparkles
+                      className="w-6 h-6 text-yellow-600 mx-auto mb-1"
+                      style={{ color: "#8b5cf6" }}
+                    />
+                    <div
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: "bold",
+                        color: "#8b5cf6",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {formatModifier(
+                        getSpellcastingAbilityModifier(character)
+                      )}
+                    </div>
+                    <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
+                      {" "}
+                      Spellcasting Ability Check (
+                      {getSpellcastingAbility(character.castingStyle)
+                        ?.slice(0, 3)
+                        .toUpperCase()}
+                      )
+                    </div>
+                  </div>
+                )}
+
+                {/* Armor Class Tile */}
                 <div
                   style={{
                     ...styles.statCard,
                     ...styles.statCardBlue,
                     cursor: "default",
+                    border: "none",
                   }}
                 >
                   <Shield
@@ -929,11 +1107,14 @@ const CharacterSheet = ({
                     Armor Class
                   </div>
                 </div>
+
+                {/* Hit Dice Tile */}
                 <div
                   style={{
                     ...styles.statCard,
                     ...styles.statCardPurple,
                     cursor: "default",
+                    border: "none",
                   }}
                   title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
                 >
@@ -949,10 +1130,13 @@ const CharacterSheet = ({
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
+
+                {/* Proficiency Tile */}
                 <div
                   style={{
                     ...styles.statCard,
                     cursor: "default",
+                    border: "none",
                   }}
                   title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
                 >
@@ -986,55 +1170,45 @@ const CharacterSheet = ({
                     Proficiency
                   </div>
                 </div>
-                {/* NEW: Spellcasting Ability Check Tile - Debug Version */}
-                <div
-                  style={{
-                    ...styles.statCard,
-                    cursor: isRolling ? "wait" : "pointer",
-                    borderColor: "#8b5cf6",
-                    backgroundColor: isRolling
-                      ? // eslint-disable-next-line
-                        "#8b5cf6" + "20"
-                      : "transparent",
-                    transition: "all 0.2s ease",
-                  }}
-                  onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
-                  title={`Click to make a spellcasting ability check using ${
-                    getSpellcastingAbility(character.castingStyle) ||
-                    "no spellcasting ability"
-                  }`}
-                >
-                  <Sparkles
-                    className="w-6 h-6 text-purple-600 mx-auto mb-1"
-                    style={{ color: "#8b5cf6" }}
-                  />
+
+                {/* Spell Save DC Tile (Plain) */}
+                {getSpellcastingAbility(character.castingStyle) && (
                   <div
                     style={{
-                      fontSize: "1.25rem",
-                      fontWeight: "bold",
-                      color: "#8b5cf6",
-                      marginBottom: "0.25rem",
+                      ...styles.statCard,
+                      cursor: "default",
+                      border: "none",
+                      // backgroundColor: "transparent",
                     }}
+                    title={`Spell Save DC: 8 + Prof (${
+                      character.proficiencyBonus
+                    }) + ${getSpellcastingAbility(
+                      character.castingStyle
+                    )} (${formatModifier(
+                      getSpellcastingAbilityModifier(character)
+                    )})`}
                   >
-                    {getSpellcastingAbility(character.castingStyle)
-                      ? formatModifier(
-                          getSpellcastingAbilityModifier(character)
-                        )
-                      : "N/A"}
+                    <Shield
+                      className="w-6 h-6 text-purple-600 mx-auto mb-1"
+                      style={{ color: "#8b5cf6" }}
+                    />
+                    <div
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: "bold",
+                        color: "#8b5cf6",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {8 +
+                        character.proficiencyBonus +
+                        getSpellcastingAbilityModifier(character)}
+                    </div>
+                    <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
+                      Spell Save DC
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      fontSize: "0.65rem",
-                      color: "#8b5cf6",
-                      textAlign: "center",
-                      lineHeight: "1.1",
-                    }}
-                  >
-                    Spellcasting
-                    <br />
-                    Ability Check
-                  </div>
-                </div>
+                )}
               </div>
 
               {character &&
@@ -1269,14 +1443,6 @@ const CharacterSheet = ({
                   title={`Level up ${character.name} to level ${
                     (character.level || 1) + 1
                   }`}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = "#059669";
-                    e.target.style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = "#10b981";
-                    e.target.style.transform = "translateY(0)";
-                  }}
                 >
                   <TrendingUp size={16} />
                   Level Up
@@ -1314,68 +1480,6 @@ const CharacterSheet = ({
                 style={{ width: "100%" }}
                 character={character}
               />
-            </div>
-
-            <div style={styles.instructionsCard}>
-              <div style={styles.instructionsGrid}>
-                <div style={styles.instructionItem}>
-                  <Heart className="w-4 h-4 text-red-500" />
-                  <span>
-                    Click Hit Points to manage HP (heal/damage) • Right-click to
-                    full heal
-                  </span>
-                </div>
-                <div style={styles.instructionItem}>
-                  <div
-                    style={{
-                      width: "12px",
-                      height: "12px",
-                      borderRadius: "50%",
-                      backgroundColor: "#1f2937",
-                      border: "2px solid #1f2937",
-                    }}
-                  />
-                  <span>
-                    Click circle to add proficiency bonus (+
-                    {character.proficiencyBonus})
-                  </span>
-                </div>
-                <div style={styles.instructionItem}>
-                  <span>
-                    Click skill or ability name to roll d20 + modifier
-                  </span>
-                </div>
-                <div style={styles.instructionItem}>
-                  <Coffee className="w-4 h-4 text-purple-500" />
-                  <span>Short Rest: Use hit dice to recover HP</span>
-                </div>
-                <div style={styles.instructionItem}>
-                  <Moon className="w-4 h-4 text-blue-500" />
-                  <span>Long Rest: Restore all HP and hit dice</span>
-                </div>
-
-                <div style={styles.instructionItem}>
-                  <span>Click column headers to sort skills</span>
-                </div>
-                <div style={styles.instructionItem}>
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                  <span>
-                    Level Up: Advance your character and gain new abilities
-                  </span>
-                </div>
-                <div style={styles.instructionItem}>
-                  <Sparkles className="w-4 h-4 text-purple-500" />
-                  <span>
-                    Click Spellcasting tile to roll ability check (no
-                    proficiency)
-                  </span>
-                </div>
-              </div>
-              {!discordWebhookUrl && (
-                <div style={styles.warning}>
-                  ⚠️ No Discord webhook configured - rolls will show as alerts
-                </div>
-              )}
             </div>
           </>
         )}

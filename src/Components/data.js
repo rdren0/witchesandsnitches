@@ -88,267 +88,6 @@ export const housesBySchool = {
   Koldovstoretz: ["Koldovstoretz"],
 };
 
-export const houseAbilityBonuses = {
-  Gryffindor: {
-    fixed: ["constitution", "charisma"],
-    choice: 1,
-  },
-  Hufflepuff: {
-    fixed: ["constitution", "wisdom"],
-    choice: 1,
-  },
-  Ravenclaw: {
-    fixed: ["intelligence", "wisdom"],
-    choice: 1,
-  },
-  Slytherin: {
-    fixed: ["dexterity", "charisma"],
-    choice: 1,
-  },
-  Beauxbatons: {
-    fixed: ["dexterity", "wisdom"],
-    choice: 1,
-  },
-  Durmstrang: {
-    fixed: ["strength", "constitution"],
-    choice: 1,
-  },
-  Uagadou: {
-    fixed: ["strength", "dexterity"],
-    choice: 1,
-  },
-  Mahoutokoro: {
-    fixed: ["dexterity", "intelligence"],
-    choice: 1,
-  },
-  Castelobruxo: {
-    fixed: ["constitution", "dexterity"],
-    choice: 1,
-  },
-  Koldovstoretz: {
-    fixed: ["strength", "wisdom"],
-    choice: 1,
-  },
-  "Horned Serpent": {
-    fixed: ["intelligence", "charisma"],
-    choice: 1,
-  },
-  "Wampus Cat": {
-    fixed: ["dexterity", "constitution"],
-    choice: 1,
-  },
-  Thunderbird: {
-    fixed: ["strength", "charisma"],
-    choice: 1,
-  },
-  Pukwudgie: {
-    fixed: ["wisdom", "charisma"],
-    choice: 1,
-  },
-};
-
-export const houseFeatures = {
-  Gryffindor: {
-    features: [
-      {
-        name: "Inspiring Presence OR Bravehearted",
-        description:
-          "Choose between inspiring allies when they fall or advantage on fear saves",
-      },
-      {
-        name: "True Gryffindor",
-        description: "Sword of Gryffindor may present itself in dire need",
-      },
-    ],
-    feat: true,
-  },
-  Hufflepuff: {
-    features: [
-      {
-        name: "Words of Encouragement OR Neg D4",
-        description: "Choose between giving d4 bonus or penalty to rolls",
-      },
-      {
-        name: "Steadfast Loyalty OR Kitchen Trips",
-        description:
-          "Choose between loyalty saves or magical being interaction",
-      },
-    ],
-    feat: true,
-  },
-  Ravenclaw: {
-    features: [
-      {
-        name: "In-Depth Knowledge",
-        description:
-          "Treat d20 rolls of 5 or lower as 6 on Int/Wis checks with proficiency",
-      },
-      {
-        name: "Rowena's Library",
-        description: "Research topics with housemates and exclusive books",
-      },
-    ],
-    feat: true,
-  },
-  Slytherin: {
-    features: [
-      {
-        name: "Compromising Information",
-        description:
-          "Double proficiency bonus on Charisma checks using secrets",
-      },
-      {
-        name: "A Noble Quality",
-        description: "Adopt persona to blend in with high-ranking officials",
-      },
-    ],
-    feat: true,
-  },
-  Beauxbatons: {
-    features: [
-      {
-        name: "Nimble Evasion",
-        description:
-          "Evasion on Str/Dex saves - no damage on success, half on failure",
-      },
-      {
-        name: "Exchange Student",
-        description: "Insight checks to understand and emulate other cultures",
-      },
-    ],
-    feat: true,
-  },
-  Durmstrang: {
-    features: [
-      {
-        name: "Cold Efficiency",
-        description:
-          "Add Bombarda to known spells, cast as bonus action in combat",
-      },
-      {
-        name: "Aggressive Endurance",
-        description:
-          "Stay conscious until end of next turn when reduced to 0 HP",
-      },
-    ],
-    feat: true,
-  },
-  Uagadou: {
-    features: [
-      {
-        name: "Lesser Animagus",
-        description: "Gain one Animagus form at 6th level from specific list",
-      },
-      {
-        name: "I'd Rather Use My Hands",
-        description: "Add half Dex bonus to wandless spellcasting attempts",
-      },
-    ],
-    feat: true,
-  },
-  Mahoutokoro: {
-    features: [
-      {
-        name: "Quidditch Fanatic",
-        description:
-          "Broom proficiency, expertise if taking Quidditch background/feat",
-      },
-      {
-        name: "Locked in Spells",
-        description:
-          "Choose 3 Charms, 3 DADA, 2 Transfiguration spells from 1st year for guaranteed success",
-      },
-    ],
-    feat: true,
-  },
-  Castelobruxo: {
-    features: [
-      {
-        name: "Beast Finder",
-        description:
-          "Spend spell slots to sense magical creatures within 100 feet",
-      },
-      {
-        name: "Toxicology Specialist",
-        description: "Advantage on Constitution saves against poison",
-      },
-    ],
-    feat: true,
-  },
-  Koldovstoretz: {
-    features: [
-      {
-        name: "Quick Brew",
-        description:
-          "Potioneer's Kit proficiency, brew two doses instead of one",
-      },
-      {
-        name: "Improvised Brooms",
-        description:
-          "Enchant uprooted trees into brooms with spellcasting check",
-      },
-    ],
-    feat: true,
-  },
-  "Horned Serpent": {
-    features: [
-      {
-        name: "Scholar's Mind",
-        description:
-          "Add half proficiency to Int/Cha checks without proficiency",
-      },
-      {
-        name: "Procedural Thinking",
-        description: "Advantage on Investigation for riddles and logic puzzles",
-      },
-    ],
-    feat: true,
-  },
-  "Wampus Cat": {
-    features: [
-      {
-        name: "Warrior's Endurance",
-        description: "Regain 1 HP on death save of 16+ (once per long rest)",
-      },
-      {
-        name: "Contagious Valor",
-        description:
-          "Battle cry gives advantage to up to 10 allies within 60 feet",
-      },
-    ],
-    feat: true,
-  },
-  Thunderbird: {
-    features: [
-      {
-        name: "Adventurer's Footing",
-        description: "No difficult terrain penalty, +5 speed, climb/swim speed",
-      },
-      {
-        name: "Dependable Bearings",
-        description:
-          "Good sense of direction, advantage on navigation Survival checks",
-      },
-    ],
-    feat: true,
-  },
-  Pukwudgie: {
-    features: [
-      {
-        name: "Healer's Knack",
-        description:
-          "Healing spells grant temp HP equal to 1 + Wis/Cha modifier",
-      },
-      {
-        name: "A Diplomatic Touch",
-        description:
-          "Meaningful help to hostile creatures may reduce their hostility",
-      },
-    ],
-    feat: true,
-  },
-};
-
 export const castingStyles = [
   "Willpower Caster",
   "Technique Caster",
@@ -434,9 +173,53 @@ export const heritageDescriptions = {
       "Ability Score Increase: Your Wisdom score increases by 1.",
       "Speed: Your base walking speed is 40 feet.",
       "Hooves: Your hooves are natural melee weapons, which you can use to make unarmed strikes. On a hit, you deal bludgeoning damage equal to 1d6 + your Strength modifier.",
-      "Equine Build: You count as one size larger when determining your carrying capacity and the weight you can push or drag. In addition, any climb that requires hands and feet is especially difficult for you because of your equine legs. When you make such a climb, each foot of movement costs you 4 extra feet, instead of the normal 1 extra foot.",
+      "Equine Build: You count as one size larger when determining carrying capacity and the weight you can push or drag. In addition, any climb that requires hands and feet is especially difficult for you because of your equine legs. When you make such a climb, each foot of movement costs you 4 extra feet, instead of the normal 1 extra foot.",
       "Naturalist: You gain one of the following benefits: Survivor (Proficiency in Survival and advantage on all Survival checks while in a Forest), Zoologist (Proficiency in Magical Creatures and advantage on checks to calm beasts), Herbologist (Proficiency in Herbology and while in a Forest you and your allies cannot be slowed by difficult terrain or lost unless by magical means), or Cosmologist (Proficiency in Perception and navigation abilities under night sky).",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "wisdom", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        speedBonus: 10,
+        naturalWeapons: true,
+        equineBuild: true,
+      },
+    },
+    features: [
+      {
+        name: "Naturalist",
+        description: "Choose one naturalist specialization",
+        isChoice: true,
+        options: [
+          {
+            name: "Survivor",
+            description:
+              "Proficiency in Survival and advantage on all Survival checks while in a Forest",
+            skillProficiencies: ["Survival"],
+          },
+          {
+            name: "Zoologist",
+            description:
+              "Proficiency in Magical Creatures and advantage on checks to calm beasts",
+            skillProficiencies: ["Magical Creatures"],
+          },
+          {
+            name: "Herbologist",
+            description:
+              "Proficiency in Herbology and while in a Forest you and your allies cannot be slowed by difficult terrain or lost unless by magical means",
+            skillProficiencies: ["Herbology"],
+          },
+          {
+            name: "Cosmologist",
+            description:
+              "Proficiency in Perception and navigation abilities under night sky",
+            skillProficiencies: ["Perception"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Dryad Ancestry": {
     description:
@@ -446,6 +229,18 @@ export const heritageDescriptions = {
       "You know the Druidcraft cantrip and can cast it at will, without the use of a wand.",
       "You have an 'unearthly' ability to understand plants on a personal level. You can innately cast the Speak-with-Plants spell once per long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        druidcraftCantrip: true,
+        speakWithPlantsSpell: true,
+        artisanalToolProficiency: true,
+      },
+    },
+    features: [],
+    skillProficiencies: ["Herbology"],
   },
   "Elf Legacy": {
     description:
@@ -456,6 +251,36 @@ export const heritageDescriptions = {
       "Wardslip Apparition: Apparition License Required. You can magically apparate in or out of warded locations that normally prevent such travel, including castle grounds and magically locked buildings. When you do so, you may travel up to half the normal apparition distance, and you cannot bring another creature with you. You can use this ability once per long rest.",
       "Pathetic Performance: As a bonus action, you may aid an ally within 15 feet of you by pretending to be helpless or pathetic, distracting a creature within 30 feet of you. If that ally attacks the creature before the start of your next turn, the first attack roll is made with advantage. You can use this ability a number of times equal to your proficiency bonus per long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        unseenHand: true,
+        wardslipApparition: true,
+        patheticPerformance: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which ability score to increase",
+        isChoice: true,
+        options: [
+          {
+            name: "Wisdom +1",
+            description: "Increase your Wisdom by 1",
+            abilityChoice: "wisdom",
+          },
+          {
+            name: "Dexterity +1",
+            description: "Increase your Dexterity by 1",
+            abilityChoice: "dexterity",
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Fey Ancestry": {
     description:
@@ -466,6 +291,36 @@ export const heritageDescriptions = {
       "For anyone else, a period of 8 hours is required in order to feel well-rested and avoid exhaustion. For you that period of time gets cut in half to 4 hours.",
       "Fey Traits: Your hidden heritage is manifested in odd physical ways (elongated ears, iridescent eyes, illusory creatures around you during rest, flowers in hair, seasonal hair color changes, etc.).",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        darkvision: 60,
+        feyRest: true,
+        feyTraits: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which ability score to increase",
+        isChoice: true,
+        options: [
+          {
+            name: "Wisdom +1",
+            description: "Increase your Wisdom by 1",
+            abilityChoice: "wisdom",
+          },
+          {
+            name: "Charisma +1",
+            description: "Increase your Charisma by 1",
+            abilityChoice: "charisma",
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Giant's Blood": {
     description:
@@ -476,6 +331,17 @@ export const heritageDescriptions = {
       "Hefty: You are considered one size larger when determining carrying capacity and weight you can push, drag, or lift.",
       "Natural Resistance: When a spell or other magical effect inflicts a condition on you, you can use your reaction to resist one condition of your choice. You can do this a number of times equal to your proficiency bonus per long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "strength", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        heftyBuild: true,
+        naturalResistance: true,
+      },
+    },
+    features: [],
+    skillProficiencies: [],
   },
   "Goblin Cunning": {
     description:
@@ -487,6 +353,19 @@ export const heritageDescriptions = {
       "Goblin Wit: You have advantage on all Intelligence and Wisdom saving throws against magic.",
       "Gobbledegook: You can speak, read, and write Gobbledegook.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "intelligence", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        nimbleBody: true,
+        goblinWit: true,
+        gobbledegook: true,
+        sizeSmall: true,
+      },
+    },
+    features: [],
+    skillProficiencies: [],
   },
   "Gorgon Ancestry": {
     description:
@@ -499,6 +378,38 @@ export const heritageDescriptions = {
       "Poison Resistance: You are resistant to poison damage and the poisoned condition.",
       "Gorgon Traits: Serpentine hair accents, snake-like eyes, scaled skin patterns, elongated canines, forked tongue, or clawed fingertips.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        darkvision: 60,
+        parseltongue: true,
+        petrifyingGaze: true,
+        poisonResistance: true,
+        gorgonTraits: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which ability score to increase",
+        isChoice: true,
+        options: [
+          {
+            name: "Constitution +1",
+            description: "Increase your Constitution by 1",
+            abilityChoice: "constitution",
+          },
+          {
+            name: "Charisma +1",
+            description: "Increase your Charisma by 1",
+            abilityChoice: "charisma",
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Hag-Touched": {
     description:
@@ -507,6 +418,34 @@ export const heritageDescriptions = {
       "You gain proficiency in either Survival or Stealth.",
       "Once per year, you may tap into your connection to chaos and warp the fabric of reality. You may speak a minor wish into existence, and it shall be so. This is subject to DM's discretion and approval.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        chaosWish: true,
+      },
+    },
+    features: [
+      {
+        name: "Skill Choice",
+        description: "Choose your survival skill specialization",
+        isChoice: true,
+        options: [
+          {
+            name: "Survival",
+            description: "Gain proficiency in Survival",
+            skillProficiencies: ["Survival"],
+          },
+          {
+            name: "Stealth",
+            description: "Gain proficiency in Stealth",
+            skillProficiencies: ["Stealth"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   Halfblood: {
     description:
@@ -517,6 +456,57 @@ export const heritageDescriptions = {
       "Option 2: Gain proficiency in Muggle Studies (expertise if already proficient) + two skills from: Athletics, Investigation, Medicine, Survival, Persuasion",
       "Option 3: Add half proficiency in Muggle Studies and History of Magic + gain expertise in one skill you're already proficient in",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {},
+    },
+    features: [
+      {
+        name: "Heritage Path",
+        description: "Choose your halfblood heritage focus",
+        isChoice: true,
+        options: [
+          {
+            name: "Magical Focus",
+            description:
+              "Gain proficiency in History of Magic (expertise if already proficient) + two skills from: Acrobatics, Herbology, Magical Creatures, Potion-Making, Intimidation",
+            skillProficiencies: ["History of Magic"],
+            bonusSkillChoices: [
+              "Acrobatics",
+              "Herbology",
+              "Magical Creatures",
+              "Potion-Making",
+              "Intimidation",
+            ],
+            bonusSkillCount: 2,
+          },
+          {
+            name: "Muggle Focus",
+            description:
+              "Gain proficiency in Muggle Studies (expertise if already proficient) + two skills from: Athletics, Investigation, Medicine, Survival, Persuasion",
+            skillProficiencies: ["Muggle Studies"],
+            bonusSkillChoices: [
+              "Athletics",
+              "Investigation",
+              "Medicine",
+              "Survival",
+              "Persuasion",
+            ],
+            bonusSkillCount: 2,
+          },
+          {
+            name: "Balanced Path",
+            description:
+              "Add half proficiency in Muggle Studies and History of Magic + gain expertise in one skill you're already proficient in",
+            halfProficiencies: ["Muggle Studies", "History of Magic"],
+            expertiseChoice: true,
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Metamorph Magic": {
     description:
@@ -526,6 +516,17 @@ export const heritageDescriptions = {
       "Transform: At will, you can transform your appearance including height, weight, facial features, voice, hair, and coloration. Your basic shape and size category stay the same.",
       "You can also adapt your body to an aquatic environment, growing webbing between your fingers to gain swimming speed equal to your walking speed.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "charisma", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        metamorphTransform: true,
+        aquaticAdaptation: true,
+      },
+    },
+    features: [],
+    skillProficiencies: [],
   },
   Muggleborn: {
     description:
@@ -535,6 +536,55 @@ export const heritageDescriptions = {
       "You gain tool proficiency with one of the following: Disguise kit, Navigator's Tools, Poisoner's Kit, Thieve's Tools, Cook's Utensils, or one Musical Instrument of your choice.",
       "You have advantage on any Muggle Studies checks made towards explaining Muggle culture, technology or history to Purebloods and Halfbloods.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        muggleCultureAdvantage: true,
+      },
+    },
+    features: [
+      {
+        name: "Tool Proficiency",
+        description: "Choose a tool proficiency from your muggle background",
+        isChoice: true,
+        options: [
+          {
+            name: "Disguise Kit",
+            description: "Gain proficiency with Disguise Kit",
+            toolProficiencies: ["Disguise Kit"],
+          },
+          {
+            name: "Navigator's Tools",
+            description: "Gain proficiency with Navigator's Tools",
+            toolProficiencies: ["Navigator's Tools"],
+          },
+          {
+            name: "Poisoner's Kit",
+            description: "Gain proficiency with Poisoner's Kit",
+            toolProficiencies: ["Poisoner's Kit"],
+          },
+          {
+            name: "Thieves' Tools",
+            description: "Gain proficiency with Thieves' Tools",
+            toolProficiencies: ["Thieves' Tools"],
+          },
+          {
+            name: "Cook's Utensils",
+            description: "Gain proficiency with Cook's Utensils",
+            toolProficiencies: ["Cook's Utensils"],
+          },
+          {
+            name: "Musical Instrument",
+            description:
+              "Gain proficiency with one Musical Instrument of your choice",
+            toolProficiencies: ["Musical Instrument (Choice)"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: ["Muggle Studies"],
   },
   "Part-Leprechaun": {
     description:
@@ -544,6 +594,41 @@ export const heritageDescriptions = {
       "You can sense the presence of gold and the general volume of it. You gain one additional downtime slot to find the end of the rainbow and steal another Leprechaun's gold. Make a DC 15 Perception or Investigation check. On a success you may roll 2D12X2 Gold.",
       "As an action, you can become invisible for 1 round. Anything you are wearing or carrying is also invisible as long as it is on your person. This effect ends if you attack, cast a spell or take damage.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        goldSense: true,
+        leprechaunInvisibility: true,
+        bonusDowntime: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which mental ability to enhance",
+        isChoice: true,
+        options: [
+          {
+            name: "Intelligence +1",
+            description: "Increase your Intelligence by 1",
+            abilityChoice: "intelligence",
+          },
+          {
+            name: "Wisdom +1",
+            description: "Increase your Wisdom by 1",
+            abilityChoice: "wisdom",
+          },
+          {
+            name: "Charisma +1",
+            description: "Increase your Charisma by 1",
+            abilityChoice: "charisma",
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Part-Harpy": {
     description:
@@ -554,6 +639,36 @@ export const heritageDescriptions = {
       "Baby Wings: You have a pair of mundane growing wings.",
       "Harpy Screech: You let out a violent screech laced with Harpy magic. As an action, you can choose a target within 60 feet that can hear you. The target must succeed on a Wisdom saving throw or take 1d4 psychic damage and have disadvantage on the next attack roll. You can do this a number of times equal to your proficiency bonus per long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        talonStrike: true,
+        babyWings: true,
+        harpyScreech: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which ability score to increase",
+        isChoice: true,
+        options: [
+          {
+            name: "Dexterity +1",
+            description: "Increase your Dexterity by 1",
+            abilityChoice: "dexterity",
+          },
+          {
+            name: "Charisma +1",
+            description: "Increase your Charisma by 1",
+            abilityChoice: "charisma",
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Part-Siren": {
     description:
@@ -563,6 +678,18 @@ export const heritageDescriptions = {
       "Debilitating Shriek: On Land. As an action, all creatures within a 60ft sphere must make a CON saving throw or become deafened. Any creature within 15ft that fails takes 1d4 thunder damage and gets pushed 5ft away.",
       "Siren's Song: In Water. Your haunting call commands aquatic creatures within 120ft range. You can command various numbers of creatures based on size. You can use these abilities a number of times equal to your proficiency bonus per long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        aquaticLegacy: true,
+        debilitatingShriek: true,
+        sirenSong: true,
+      },
+    },
+    features: [],
+    skillProficiencies: [],
   },
   Parseltongue: {
     description:
@@ -571,6 +698,17 @@ export const heritageDescriptions = {
       "Ability Score Increase: Increase your Charisma by 1, to a maximum of 20.",
       "Parselmouth: You can speak Parseltongue. You have advantage on all charisma checks made on snakes.",
     ],
+    modifiers: {
+      abilityIncreases: [{ type: "fixed", ability: "charisma", amount: 1 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        parseltongue: true,
+        snakeCharismaAdvantage: true,
+      },
+    },
+    features: [],
+    skillProficiencies: [],
   },
   "Pukwudgie Ancestry": {
     description:
@@ -582,6 +720,64 @@ export const heritageDescriptions = {
       "Poisoned Arrows: You have proficiency with shortbows and can craft poisonous arrows. When you attack with a shortbow, you can coat the arrow in Pukwudgie venom as a bonus action. You can use this feature a number of times equal to your proficiency bonus per long rest.",
       "Pukwudgie Tradition: You gain proficiency in one of the following: Stealth, Sleight of Hand, Deception or Persuasion.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        sizeSmall: true,
+        poisonedArrows: true,
+        shortbowProficiency: true,
+        sacredNames: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which ability score to increase",
+        isChoice: true,
+        options: [
+          {
+            name: "Dexterity +1",
+            description: "Increase your Dexterity by 1",
+            abilityChoice: "dexterity",
+          },
+          {
+            name: "Wisdom +1",
+            description: "Increase your Wisdom by 1",
+            abilityChoice: "wisdom",
+          },
+        ],
+      },
+      {
+        name: "Pukwudgie Tradition",
+        description: "Choose your traditional skill specialization",
+        isChoice: true,
+        options: [
+          {
+            name: "Stealth",
+            description: "Gain proficiency in Stealth",
+            skillProficiencies: ["Stealth"],
+          },
+          {
+            name: "Sleight of Hand",
+            description: "Gain proficiency in Sleight of Hand",
+            skillProficiencies: ["Sleight of Hand"],
+          },
+          {
+            name: "Deception",
+            description: "Gain proficiency in Deception",
+            skillProficiencies: ["Deception"],
+          },
+          {
+            name: "Persuasion",
+            description: "Gain proficiency in Persuasion",
+            skillProficiencies: ["Persuasion"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   Pureblood: {
     description:
@@ -591,6 +787,49 @@ export const heritageDescriptions = {
       "You gain tool proficiency with one of the following: Astronomer's Tools, Herbologist's Tools, Potioneer's Kit, Vehicle (Broomstick), Diviner's Kit. You may add your chosen tool to your inventory.",
       "Any checks related to knowing the family history of other Pureblood families is done so at advantage.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        purebloodFamilyKnowledge: true,
+      },
+    },
+    features: [
+      {
+        name: "Wizarding Tool Proficiency",
+        description: "Choose a tool proficiency from your wizarding upbringing",
+        isChoice: true,
+        options: [
+          {
+            name: "Astronomer's Tools",
+            description: "Gain proficiency with Astronomer's Tools",
+            toolProficiencies: ["Astronomer's Tools"],
+          },
+          {
+            name: "Herbologist's Tools",
+            description: "Gain proficiency with Herbologist's Tools",
+            toolProficiencies: ["Herbologist's Tools"],
+          },
+          {
+            name: "Potioneer's Kit",
+            description: "Gain proficiency with Potioneer's Kit",
+            toolProficiencies: ["Potioneer's Kit"],
+          },
+          {
+            name: "Vehicle (Broomstick)",
+            description: "Gain proficiency with Vehicle (Broomstick)",
+            toolProficiencies: ["Vehicle (Broomstick)"],
+          },
+          {
+            name: "Diviner's Kit",
+            description: "Gain proficiency with Diviner's Kit",
+            toolProficiencies: ["Diviner's Kit"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: ["History of Magic"],
   },
   "Satyr Ancestry": {
     description:
@@ -601,6 +840,37 @@ export const heritageDescriptions = {
       "You can use your head and horns to make unarmed strikes. If you hit with them, you deal bludgeoning damage equal to 1d6 + your Strength modifier.",
       "Physical traits: furry goat or deer-like lower body and ears, hooves, small twisting horns or antlers, flat animalistic nose, rectangular pupils, spotted coloration, etc.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        enhancedJumping: true,
+        hornAttack: true,
+        musicalInstrumentProficiency: true,
+        satyrTraits: true,
+      },
+    },
+    features: [
+      {
+        name: "Skill Choice",
+        description: "Choose your performative skill specialization",
+        isChoice: true,
+        options: [
+          {
+            name: "Acrobatics",
+            description: "Gain proficiency in Acrobatics",
+            skillProficiencies: ["Acrobatics"],
+          },
+          {
+            name: "Performance",
+            description: "Gain proficiency in Performance",
+            skillProficiencies: ["Performance"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Troll Blood": {
     description:
@@ -611,6 +881,58 @@ export const heritageDescriptions = {
       "Keen Smell: You have advantage on Wisdom (Perception) checks that rely on smell.",
       "Muscular Build: You are considered one size larger when determining carrying capacity and weight you can push, drag, or lift.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      abilityDecreases: [{ type: "fixed", ability: "intelligence", amount: 2 }],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        trollConstitution: true,
+        keenSmell: true,
+        muscularBuild: true,
+      },
+    },
+    features: [
+      {
+        name: "Primary Ability Increase",
+        description: "Choose which ability score to increase by 2",
+        isChoice: true,
+        options: [
+          {
+            name: "Strength +2",
+            description: "Increase your Strength by 2",
+            abilityChoice: "strength",
+            amount: 2,
+          },
+          {
+            name: "Constitution +2",
+            description: "Increase your Constitution by 2",
+            abilityChoice: "constitution",
+            amount: 2,
+          },
+        ],
+      },
+      {
+        name: "Secondary Ability Increase",
+        description: "Choose which ability score to increase by 1",
+        isChoice: true,
+        options: [
+          {
+            name: "Strength +1",
+            description: "Increase your Strength by 1",
+            abilityChoice: "strength",
+            amount: 1,
+          },
+          {
+            name: "Constitution +1",
+            description: "Increase your Constitution by 1",
+            abilityChoice: "constitution",
+            amount: 1,
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
   "Veela Charm": {
     description:
@@ -620,6 +942,61 @@ export const heritageDescriptions = {
       "Charismatic: You gain proficiency in one Charisma skill of your choice.",
       "Veela Charm: As an action, you can attempt to charm a humanoid you can see within 30 ft, who would be attracted to you. It must make a Wisdom saving throw, (if hostile, with advantage). If it fails, it is charmed by you for one hour or until you or your companions harm it. The charmed creature regards you as a friendly acquaintance and feels compelled to impress you or receive your attention. After, the creature knows it was charmed by you. You can't use this ability again until you finish a long rest.",
     ],
+    modifiers: {
+      abilityIncreases: [],
+      skillProficiencies: [],
+      expertise: [],
+      other: {
+        veelaCharm: true,
+      },
+    },
+    features: [
+      {
+        name: "Ability Score Choice",
+        description: "Choose which ability score to increase",
+        isChoice: true,
+        options: [
+          {
+            name: "Charisma +1",
+            description: "Increase your Charisma by 1",
+            abilityChoice: "charisma",
+          },
+          {
+            name: "Wisdom +1",
+            description: "Increase your Wisdom by 1",
+            abilityChoice: "wisdom",
+          },
+        ],
+      },
+      {
+        name: "Charismatic Skill",
+        description: "Choose your charismatic skill specialization",
+        isChoice: true,
+        options: [
+          {
+            name: "Persuasion",
+            description: "Gain proficiency in Persuasion",
+            skillProficiencies: ["Persuasion"],
+          },
+          {
+            name: "Deception",
+            description: "Gain proficiency in Deception",
+            skillProficiencies: ["Deception"],
+          },
+          {
+            name: "Intimidation",
+            description: "Gain proficiency in Intimidation",
+            skillProficiencies: ["Intimidation"],
+          },
+          {
+            name: "Performance",
+            description: "Gain proficiency in Performance",
+            skillProficiencies: ["Performance"],
+          },
+        ],
+      },
+    ],
+    skillProficiencies: [],
   },
 };
 

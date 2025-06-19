@@ -1,21 +1,23 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { Save, X, AlertTriangle, ArrowLeft, Settings } from "lucide-react";
 import { skillsByCastingStyle, hpData } from "../../data";
 import { standardFeats as importedStandardFeats } from "../../standardFeatData";
-import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { getAllSelectedFeats } from "../Create/ASIComponents";
 import { backgroundsData } from "../Shared/backgroundsData";
 
 // Import the new section components
-import BasicInformationSection from "./BasicInformationSection";
-import HouseAndSubclassSection from "./HouseAndSubclassSection";
-import Level1AndProgressionSection from "./Level1AndProgressionSection";
-import AbilityScoresSection from "./AbilityScoresSection";
-import MagicModifiersSection from "./MagicModifiersSection";
+import BasicInformationSection from "./Sections/BasicInformationSection";
+import HouseAndSubclassSection from "./Sections/HouseAndSubclassSection";
+import Level1AndProgressionSection from "./Sections/Level1AndProgressionSection";
+import AbilityScoresSection from "./Sections/AbilityScoresSection";
+import MagicModifiersSection from "./Sections/MagicModifiersSection";
+import { useCharacterSetup } from "./hooks/useCharacterSetup";
+import { useFieldLocks } from "./hooks/useFieldLocks";
+import { useFeatValidation } from "./hooks/useFeatValidation ";
+import { useASIHandlers } from "./hooks/useASIHandlers";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -24,28 +26,6 @@ if (!importedStandardFeats) {
     "Warning: standardFeats is undefined from data import. Using empty array as fallback."
   );
 }
-
-const migrateBackgroundSkills = (character) => {
-  if (character.backgroundSkills && character.backgroundSkills.length > 0) {
-    return character;
-  }
-
-  if (character.background && character.background !== "") {
-    const background = backgroundsData[character.background];
-    if (background && background.skillProficiencies) {
-      return {
-        ...character,
-        backgroundSkills: background.skillProficiencies,
-      };
-    }
-  }
-
-  return {
-    ...character,
-    backgroundSkills: [],
-  };
-};
-
 const CharacterEditor = ({
   character: originalCharacter,
   onSave,
@@ -54,125 +34,25 @@ const CharacterEditor = ({
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
+  const {
+    character,
+    setCharacter,
+    selectedHouse,
+    setSelectedHouse,
+    houseChoices,
+    setHouseChoices,
+    safeOriginalCharacter,
+  } = useCharacterSetup(originalCharacter);
 
-  const safeOriginalCharacter = useMemo(() => {
-    const baseCharacter = originalCharacter || {
-      id: null,
-      name: "",
-      level: 1,
-      castingStyle: "",
-      house: "",
-      houseChoices: {},
-      subclassChoices: {},
-      standardFeats: [],
-      asiChoices: {},
-      abilityScores: {
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10,
-      },
-      skillProficiencies: [],
-      backgroundSkills: [],
-      innateHeritage: "",
-      level1ChoiceType: "",
-      hitPoints: 1,
-      initiativeAbility: "dexterity",
-      subclass: "",
-      background: "",
-      gameSession: "",
-      wandType: "",
-      magicModifiers: {
-        divinations: 0,
-        charms: 0,
-        transfiguration: 0,
-        healing: 0,
-        jinxesHexesCurses: 0,
-      },
-    };
-
-    if (originalCharacter) {
-      baseCharacter.houseChoices =
-        originalCharacter.houseChoices || originalCharacter.house_choices || {};
-      baseCharacter.subclassChoices =
-        originalCharacter.subclassChoices ||
-        originalCharacter.subclass_choices ||
-        {};
-    }
-
-    return migrateBackgroundSkills(baseCharacter);
-  }, [originalCharacter]);
-
-  // State for ASI filters
-  const [asiLevelFilters, setASILevelFilters] = useState({});
-
-  const setASILevelFilter = (level, filter) => {
-    setASILevelFilters((prev) => ({
-      ...prev,
-      [level]: filter,
-    }));
-  };
-
-  const ASI_LEVELS = [4, 8, 12, 16, 19];
-
-  const getAvailableASILevels = (currentLevel) => {
-    return ASI_LEVELS.filter((level) => level <= currentLevel);
-  };
-
-  // Helper functions for character setup
-  const inferLevel1ChoiceType = (character) => {
-    if (character.level1ChoiceType) {
-      return character.level1ChoiceType;
-    }
-    if (character.innateHeritage && character.innateHeritage.trim() !== "") {
-      return "innate";
-    }
-    if (character.standardFeats && character.standardFeats.length > 0) {
-      const asiChoices = character.asiChoices || {};
-      const asiFeats = Object.values(asiChoices)
-        .filter((choice) => choice.type === "feat" && choice.selectedFeat)
-        .map((choice) => choice.selectedFeat);
-      if (character.standardFeats.length > asiFeats.length) {
-        return "feat";
-      }
-    }
-    return "";
-  };
-
-  const separateFeats = (character) => {
-    if (!character) {
-      return { level1Feats: [], asiFeats: [] };
-    }
-
-    const allFeats = character.standardFeats || [];
-    const asiChoices = character.asiChoices || {};
-    const asiFeats = Object.values(asiChoices)
-      .filter((choice) => choice.type === "feat" && choice.selectedFeat)
-      .map((choice) => choice.selectedFeat);
-    const level1Feats = allFeats.filter((feat) => !asiFeats.includes(feat));
-    return {
-      level1Feats,
-      asiFeats,
-    };
-  };
-
-  // Main character state
-  const [character, setCharacter] = useState(() => {
-    const { level1Feats } = separateFeats(safeOriginalCharacter);
-    const characterWithLevel1Choice = {
-      ...safeOriginalCharacter,
-      level1ChoiceType: inferLevel1ChoiceType(safeOriginalCharacter),
-      standardFeats:
-        safeOriginalCharacter.level1ChoiceType === "feat" ? level1Feats : [],
-      subclassChoices:
-        safeOriginalCharacter.subclassChoices ||
-        safeOriginalCharacter.subclass_choices ||
-        {},
-    };
-    return characterWithLevel1Choice;
-  });
+  const {
+    asiLevelFilters,
+    setASILevelFilter,
+    getAvailableASILevels,
+    handleASIChoiceChange,
+    handleASIFeatChange,
+    handleASIAbilityChange,
+    getFeatProgressionInfo,
+  } = useASIHandlers(character, setCharacter);
 
   // UI state
   const [expandedFeats, setExpandedFeats] = useState(new Set());
@@ -187,112 +67,15 @@ const CharacterEditor = ({
   const [rolledStats, setRolledStats] = useState([]);
   const [availableStats, setAvailableStats] = useState([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [selectedHouse, setSelectedHouse] = useState(
-    safeOriginalCharacter.house || ""
-  );
-  const [houseChoices, setHouseChoices] = useState(
-    safeOriginalCharacter.houseChoices ||
-      safeOriginalCharacter.house_choices ||
-      {}
-  );
-
-  // Lock state
-  const [lockedFields, setLockedFields] = useState({
-    level1ChoiceType: true,
-    abilityScores: true,
-  });
+  const [lockedFields, setLockedFields] = useFieldLocks(character);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  // Validation
-  const validateFeatSelections = useCallback(() => {
-    const allSelectedFeats = getAllSelectedFeats(character);
-    const uniqueFeats = [...new Set(allSelectedFeats)];
-
-    if (allSelectedFeats.length !== uniqueFeats.length) {
-      const duplicates = allSelectedFeats.filter(
-        (feat, index) => allSelectedFeats.indexOf(feat) !== index
-      );
-      setError(
-        `Duplicate feats detected: ${duplicates.join(
-          ", "
-        )}. Each feat can only be selected once.`
-      );
-      return false;
-    }
-
-    const safeStandardFeats = standardFeats || [];
-    const invalidFeats = allSelectedFeats.filter((featName) => {
-      const feat = safeStandardFeats.find((f) => f.name === featName);
-      return feat && !checkFeatPrerequisites(feat, character);
-    });
-
-    if (invalidFeats.length > 0) {
-      console.warn(
-        "Some selected feats no longer meet prerequisites:",
-        invalidFeats
-      );
-      setError(
-        `Warning: Some selected feats no longer meet prerequisites: ${invalidFeats.join(
-          ", "
-        )}`
-      );
-      return false;
-    }
-
-    return true;
-  }, [character]);
-
-  // Event handlers
-  const handleASIChoiceChange = (level, choiceType) => {
-    setCharacter((prev) => ({
-      ...prev,
-      asiChoices: {
-        ...prev.asiChoices,
-        [level]: {
-          ...prev.asiChoices[level],
-          type: choiceType,
-          ...(choiceType === "asi"
-            ? {
-                abilityScoreIncreases: [],
-                selectedFeat: null,
-              }
-            : {
-                abilityScoreIncreases: null,
-                selectedFeat: null,
-              }),
-        },
-      },
-    }));
-  };
-
-  const handleASIFeatChange = (level, featName) => {
-    setCharacter((prev) => ({
-      ...prev,
-      asiChoices: {
-        ...prev.asiChoices,
-        [level]: {
-          ...prev.asiChoices[level],
-          type: "feat",
-          selectedFeat: featName,
-        },
-      },
-    }));
-  };
-
-  const handleASIAbilityChange = (level, abilityUpdates) => {
-    setCharacter((prev) => ({
-      ...prev,
-      asiChoices: {
-        ...prev.asiChoices,
-        [level]: {
-          ...prev.asiChoices[level],
-          type: "asi",
-          abilityScoreIncreases: abilityUpdates,
-        },
-      },
-    }));
-  };
+  const { validateFeatSelections } = useFeatValidation({
+    character,
+    setError,
+    standardFeats,
+  });
 
   const handleHouseSelect = (house) => {
     setSelectedHouse(house);
@@ -497,7 +280,7 @@ const CharacterEditor = ({
     setCharacter((prev) => {
       const currentSkills = prev.skillProficiencies || [];
       const backgroundSkills = prev.backgroundSkills || [];
-      const castingStyleSkills = getAvailableSkills();
+      const castingStyleSkills = getAvailableSkills({ character });
 
       if (backgroundSkills.includes(skill)) {
         return prev;
@@ -540,7 +323,7 @@ const CharacterEditor = ({
     } else if (rolledHp !== null && !isHpManualMode) {
       return rolledHp;
     } else {
-      return calculateHitPoints();
+      return calculateHitPoints({ character });
     }
   };
 
@@ -572,48 +355,6 @@ const CharacterEditor = ({
       }
     });
     return allFeats;
-  };
-
-  const getFeatProgressionInfo = () => {
-    const currentLevel = character.level || 1;
-    const availableASILevels = getAvailableASILevels(currentLevel);
-    const nextASILevel = ASI_LEVELS.find((level) => currentLevel < level);
-    const choices = [];
-    if (character.level1ChoiceType === "innate") {
-      choices.push({ level: 1, choice: "Innate Heritage", type: "innate" });
-    } else if (character.level1ChoiceType === "feat") {
-      choices.push({ level: 1, choice: "Starting Feat", type: "feat" });
-    }
-    availableASILevels.forEach((level) => {
-      const asiChoice = character.asiChoices[level];
-      if (asiChoice) {
-        if (asiChoice.type === "asi") {
-          const increases = asiChoice.abilityScoreIncreases || [];
-          const abilityNames = increases
-            .map(
-              (inc) =>
-                inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
-            )
-            .join(", ");
-          choices.push({
-            level,
-            choice: `ASI (+1 ${abilityNames})`,
-            type: "asi",
-          });
-        } else if (asiChoice.type === "feat") {
-          choices.push({
-            level,
-            choice: asiChoice.selectedFeat || "Feat (not selected)",
-            type: "feat",
-          });
-        }
-      }
-    });
-    return {
-      choices,
-      nextASILevel,
-      totalFeatsSelected: collectAllFeatsFromChoices().length,
-    };
   };
 
   const saveCharacter = async () => {
@@ -776,23 +517,6 @@ const CharacterEditor = ({
     }
     // eslint-disable-next-line
   }, [character.background]);
-
-  useEffect(() => {
-    const hasAllScores = Object.values(character.abilityScores || {}).every(
-      (score) => score !== null && score !== undefined
-    );
-    if (hasAllScores) {
-      setIsManualMode(true);
-      setRolledStats([]);
-      setAvailableStats([]);
-    }
-    setLockedFields({
-      level1ChoiceType:
-        character.level > 1 ||
-        Boolean(character.innateHeritage || character.standardFeats?.length),
-      abilityScores: hasAllScores,
-    });
-  }, [character]);
 
   useEffect(() => {
     const hasChanges =

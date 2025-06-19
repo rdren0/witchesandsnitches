@@ -1,43 +1,32 @@
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../../styles/masterStyles";
+import { castingStyles } from "../../../data";
 import { RefreshCw } from "lucide-react";
-import { castingStyles } from "../../data";
-import StepIndicator from "../Shared/StepIndicator";
 
-const BasicInformationSection = ({
+function BasicInfo({
   character,
-  handleInputChange,
-  calculateHitPoints,
-  getCurrentHp,
   isHpManualMode,
   setIsHpManualMode,
   rolledHp,
   setRolledHp,
   rollHp,
-  styles,
-  theme,
-}) => {
-  const gameSessionOptions = [
-    "Sunday - Knights",
-    "Monday - Haunting",
-    "Tuesday - Knights",
-    "Wednesday - Haunting",
-    "Thursday - Knights",
-    "Friday - Knights",
-    "Saturday - Haunting",
-    "Saturday - Knights",
-    "DEVELOPMENT",
-  ];
+  handleInputChange,
+  gameSessionOptions,
+
+  calculateHitPoints,
+}) {
+  const { theme } = useTheme();
+  const styles = createCharacterCreationStyles(theme);
 
   return (
     <>
-      <StepIndicator step={1} totalSteps={5} label="Basic Information" />
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Name *</label>
         <input
           type="text"
-          value={character.name || ""}
+          value={character.name}
           onChange={(e) => handleInputChange("name", e.target.value)}
-          placeholder="Enter character name..."
+          placeholder="Enter your character's name..."
           style={styles.input}
           maxLength={50}
         />
@@ -46,7 +35,7 @@ const BasicInformationSection = ({
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Game Session</label>
         <select
-          value={character.gameSession || ""}
+          value={character.gameSession}
           onChange={(e) => handleInputChange("gameSession", e.target.value)}
           style={styles.select}
         >
@@ -57,12 +46,14 @@ const BasicInformationSection = ({
             </option>
           ))}
         </select>
+        <div style={styles.helpText}>
+          Select which game session your character will join.
+        </div>
       </div>
-
       <div style={styles.fieldContainer}>
-        <label style={styles.label}>Casting Style</label>
+        <label style={styles.label}>Casting Style *</label>
         <select
-          value={character.castingStyle || ""}
+          value={character.castingStyle}
           onChange={(e) => handleInputChange("castingStyle", e.target.value)}
           style={styles.select}
         >
@@ -73,6 +64,9 @@ const BasicInformationSection = ({
             </option>
           ))}
         </select>
+        <div style={styles.helpText}>
+          Your casting style determines your available skills and hit points.
+        </div>
       </div>
 
       {character.castingStyle === "Intellect Caster" && (
@@ -81,28 +75,6 @@ const BasicInformationSection = ({
           <div style={styles.helpText}>
             As an intellect caster, you may choose to use Intelligence or
             Dexterity for initiative.
-            {character.abilityScores &&
-              character.abilityScores.dexterity &&
-              character.abilityScores.intelligence && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    fontSize: "12px",
-                    fontStyle: "italic",
-                    color: theme.primary,
-                  }}
-                >
-                  {Math.floor((character.abilityScores.intelligence - 10) / 2) >
-                  Math.floor((character.abilityScores.dexterity - 10) / 2)
-                    ? "💡 Intelligence gives a higher modifier"
-                    : Math.floor((character.abilityScores.dexterity - 10) / 2) >
-                      Math.floor(
-                        (character.abilityScores.intelligence - 10) / 2
-                      )
-                    ? "⚡ Dexterity gives a higher modifier"
-                    : "⚖️ Both abilities give the same modifier"}
-                </div>
-              )}
           </div>
           <div style={styles.level1ChoiceContainer}>
             <label
@@ -130,43 +102,9 @@ const BasicInformationSection = ({
                 }
               >
                 Dexterity (Standard)
-                {character.abilityScores &&
-                  character.abilityScores.dexterity && (
-                    <span
-                      style={{
-                        color:
-                          character.abilityScores.intelligence &&
-                          Math.floor(
-                            (character.abilityScores.dexterity - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.intelligence - 10) / 2
-                            )
-                            ? theme.success
-                            : theme.textSecondary,
-                        fontWeight:
-                          character.abilityScores.intelligence &&
-                          Math.floor(
-                            (character.abilityScores.dexterity - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.intelligence - 10) / 2
-                            )
-                            ? "bold"
-                            : "normal",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      {Math.floor(
-                        (character.abilityScores.dexterity - 10) / 2
-                      ) >= 0
-                        ? "+"
-                        : ""}
-                      {Math.floor((character.abilityScores.dexterity - 10) / 2)}
-                    </span>
-                  )}
               </span>
             </label>
+
             <label
               style={
                 character.initiativeAbility === "intelligence"
@@ -192,49 +130,13 @@ const BasicInformationSection = ({
                 }
               >
                 Intelligence (Intellect Caster)
-                {character.abilityScores &&
-                  character.abilityScores.intelligence && (
-                    <span
-                      style={{
-                        color:
-                          character.abilityScores.dexterity &&
-                          Math.floor(
-                            (character.abilityScores.intelligence - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.dexterity - 10) / 2
-                            )
-                            ? theme.success
-                            : theme.textSecondary,
-                        fontWeight:
-                          character.abilityScores.dexterity &&
-                          Math.floor(
-                            (character.abilityScores.intelligence - 10) / 2
-                          ) >
-                            Math.floor(
-                              (character.abilityScores.dexterity - 10) / 2
-                            )
-                            ? "bold"
-                            : "normal",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      {Math.floor(
-                        (character.abilityScores.intelligence - 10) / 2
-                      ) >= 0
-                        ? "+"
-                        : ""}
-                      {Math.floor(
-                        (character.abilityScores.intelligence - 10) / 2
-                      )}
-                    </span>
-                  )}
               </span>
             </label>
           </div>
         </div>
       )}
 
+      {/* Level and Hit Points */}
       <div style={styles.levelHpGrid}>
         <div style={styles.levelContainer}>
           <label style={styles.label}>Level</label>
@@ -242,13 +144,15 @@ const BasicInformationSection = ({
             type="number"
             min="1"
             max="20"
-            value={character.level || 1}
+            value={character.level}
             onChange={(e) =>
               handleInputChange("level", parseInt(e.target.value) || 1)
             }
             style={styles.input}
           />
+          <div style={styles.helpText}>Starting character level</div>
         </div>
+
         <div style={styles.hpFieldContainer}>
           <label style={styles.label}>Hit Points</label>
           {!character.castingStyle ? (
@@ -281,6 +185,7 @@ const BasicInformationSection = ({
             </div>
           )}
         </div>
+
         {character.castingStyle && (
           <div style={styles.hpControlsContainer}>
             <div style={styles.hpControlsInline}>
@@ -297,6 +202,7 @@ const BasicInformationSection = ({
                   Roll
                 </button>
               )}
+
               <div
                 onClick={() => {
                   setIsHpManualMode(!isHpManualMode);
@@ -330,6 +236,6 @@ const BasicInformationSection = ({
       </div>
     </>
   );
-};
+}
 
-export default BasicInformationSection;
+export default BasicInfo;

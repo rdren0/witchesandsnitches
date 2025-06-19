@@ -1,6 +1,6 @@
 import { RefreshCw } from "lucide-react";
-import { castingStyles } from "../../data";
-import StepIndicator from "../Shared/StepIndicator";
+import { castingStyles } from "../../../data";
+import StepIndicator from "../../Shared/StepIndicator";
 
 const BasicInformationSection = ({
   character,

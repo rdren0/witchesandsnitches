@@ -1,24 +1,33 @@
 import { useState, useEffect } from "react";
 import { rollAbilityStat } from "../../utils/diceRoller";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { Wand, Save, RefreshCw, AlertCircle } from "lucide-react";
-import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
+import { Wand, Save, AlertCircle } from "lucide-react";
+import EnhancedSubclassSelector from "../Create/Steps/EnhancedSubclassSelector";
 
-import { castingStyles, skillsByCastingStyle, hpData } from "../../data";
+import { hpData } from "../../data";
 import { standardFeats } from "../../standardFeatData";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
-import { InnateHeritage } from "../Shared/InnateHeritage";
-import EnhancedFeatureSelector from "../Shared/EnhancedFeatureSelector";
-import { AbilityScorePicker } from "../Shared/AbilityScorePicker";
+import { InnateHeritage } from "../Create/Steps/InnateHeritage";
+import EnhancedFeatureSelector from "../Create/Steps/EnhancedFeatureSelector";
+import { AbilityScorePicker } from "../Create/Steps/AbilityScorePicker";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { FeatRequirementsInfo, getAllSelectedFeats } from "./ASIComponents";
-import ASILevelChoices from "./ASILevelChoices";
-import CharacterProgressionSummary from "./CharacterProgressionSummary";
-import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
+import { FeatRequirementsInfo } from "./ASIComponents";
+import ASILevelChoices from "../Create/Steps/ASILevelChoices";
+import CharacterProgressionSummary from "../Create/Steps/CharacterProgressionSummary";
+import EnhancedBackgroundSelector from "../Create/Steps/EnhancedBackgroundSelector";
 import { StepIndicator } from "../Shared/StepIndicator";
-import EnhancedHouseSelector from "../Shared/EnhancedHouseSelector";
-import EnhancedSkillsSection from "../Shared/EnhancedSkillsSection";
+import EnhancedHouseSelector from "../Create/Steps/EnhancedHouseSelector";
+import EnhancedSkillsSection from "../Create/Steps/EnhancedSkillsSection";
+import { gameSessionOptions, getInitialCharacterState } from "./const";
+import {
+  calculateHitPoints,
+  collectAllFeatsFromChoices,
+  getAvailableSkills,
+  getFeatProgressionInfo,
+  validateFeatSelections,
+} from "./utils";
+import BasicInfo from "./Steps/BasicInfo";
 
 const CharacterCreator = ({
   user,
@@ -26,62 +35,9 @@ const CharacterCreator = ({
   maxCharacters = 10,
   activeCharacterCount = 0,
   isLoadingCharacterCount,
-  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
-
-  const getInitialCharacterState = () => ({
-    name: "",
-    house: "",
-    houseChoices: {},
-    asiChoices: {},
-    castingStyle: "",
-    initiativeAbility: "dexterity",
-    subclass: "",
-    innateHeritage: "",
-    background: "",
-    backgroundSkills: [],
-    gameSession: "",
-    standardFeats: [],
-    skillProficiencies: [],
-    abilityScores: {
-      strength: null,
-      dexterity: null,
-      constitution: null,
-      intelligence: null,
-      wisdom: null,
-      charisma: null,
-    },
-    hitPoints: 0,
-    level: 1,
-    wandType: "",
-    magicModifiers: {
-      divinations: 0,
-      charms: 0,
-      transfiguration: 0,
-      healing: 0,
-      jinxesHexesCurses: 0,
-    },
-    level1ChoiceType: "",
-  });
-
-  const getGameSessionOptions = () => {
-    const sessions = [
-      "Sunday - Knights",
-      "Monday - Haunting",
-      "Tuesday - Knights",
-      "Wednesday - Haunting",
-      "Thursday - Knights",
-      "Friday - Knights",
-      "Saturday - Haunting",
-      "Saturday - Knights",
-      "DEVELOPMENT",
-    ];
-    return sessions;
-  };
-
-  const gameSessionOptions = getGameSessionOptions();
 
   const [character, setCharacter] = useState(getInitialCharacterState());
   const [rolledStats, setRolledStats] = useState([]);
@@ -101,99 +57,11 @@ const CharacterCreator = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  const ASI_LEVELS = [4, 8, 12, 16, 19];
-
   const setASILevelFilter = (level, filter) => {
     setASILevelFilters((prev) => ({
       ...prev,
       [level]: filter,
     }));
-  };
-
-  const getAvailableASILevels = (currentLevel) => {
-    return ASI_LEVELS.filter((level) => level <= currentLevel);
-  };
-
-  const calculateTotalFeatsFromChoices = () => {
-    let totalFeats = 0;
-
-    if (character.level1ChoiceType === "feat") {
-      totalFeats += 1;
-    }
-
-    const availableASILevels = getAvailableASILevels(character.level);
-    availableASILevels.forEach((level) => {
-      const choice = character.asiChoices[level];
-      if (choice && choice.type === "feat") {
-        totalFeats += 1;
-      }
-    });
-
-    return totalFeats;
-  };
-
-  const getFeatProgressionInfo = () => {
-    const currentLevel = character.level || 1;
-    const availableASILevels = getAvailableASILevels(currentLevel);
-    const nextASILevel = ASI_LEVELS.find((level) => currentLevel < level);
-
-    const choices = [];
-
-    if (character.level1ChoiceType === "innate") {
-      choices.push({ level: 1, choice: "Innate Heritage", type: "innate" });
-    } else if (character.level1ChoiceType === "feat") {
-      choices.push({ level: 1, choice: "Starting Feat", type: "feat" });
-    }
-
-    availableASILevels.forEach((level) => {
-      const asiChoice = character.asiChoices[level];
-      if (asiChoice) {
-        if (asiChoice.type === "asi") {
-          const increases = asiChoice.abilityScoreIncreases || [];
-          const abilityNames = increases
-            .map(
-              (inc) =>
-                inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
-            )
-            .join(", ");
-          choices.push({
-            level,
-            choice: `ASI (+1 ${abilityNames})`,
-            type: "asi",
-          });
-        } else if (asiChoice.type === "feat") {
-          choices.push({
-            level,
-            choice: asiChoice.selectedFeat || "Feat (not selected)",
-            type: "feat",
-          });
-        }
-      }
-    });
-
-    return {
-      choices,
-      nextASILevel,
-      totalFeatsSelected: calculateTotalFeatsFromChoices(),
-    };
-  };
-
-  const validateFeatSelections = () => {
-    const allSelectedFeats = getAllSelectedFeats(character);
-    const uniqueFeats = [...new Set(allSelectedFeats)];
-
-    if (allSelectedFeats.length !== uniqueFeats.length) {
-      const duplicates = allSelectedFeats.filter(
-        (feat, index) => allSelectedFeats.indexOf(feat) !== index
-      );
-      setError(
-        `Duplicate feats detected: ${duplicates.join(
-          ", "
-        )}. Each feat can only be selected once.`
-      );
-      return false;
-    }
-    return true;
   };
 
   const rollAllStats = () => {
@@ -272,7 +140,7 @@ const CharacterCreator = ({
       character.level1ChoiceType === "feat" &&
       character.standardFeats.length > 0
     ) {
-      validateFeatSelections();
+      validateFeatSelections({ character, setError });
     }
     // eslint-disable-next-line
   }, [
@@ -326,11 +194,6 @@ const CharacterCreator = ({
     );
   };
 
-  const getAvailableSkills = () => {
-    if (!character.castingStyle) return [];
-    return skillsByCastingStyle[character.castingStyle] || [];
-  };
-
   const handleInputChange = (field, value) => {
     if (field.includes(".")) {
       const [parent, child] = field.split(".");
@@ -379,7 +242,7 @@ const CharacterCreator = ({
     setCharacter((prev) => {
       const currentSkills = prev.skillProficiencies || [];
       const backgroundSkills = prev.backgroundSkills || [];
-      const castingStyleSkills = getAvailableSkills();
+      const castingStyleSkills = getAvailableSkills({ character });
 
       if (backgroundSkills.includes(skill)) {
         return prev;
@@ -404,29 +267,13 @@ const CharacterCreator = ({
     });
   };
 
-  const calculateHitPoints = () => {
-    if (!character.castingStyle) return 0;
-
-    const castingData = hpData[character.castingStyle];
-    if (!castingData) return 0;
-
-    const conScore = character.abilityScores.constitution;
-    const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
-    const level = character.level || 1;
-
-    const baseHP = castingData.base + conMod;
-    const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
-
-    return Math.max(1, baseHP + additionalHP);
-  };
-
   const getCurrentHp = () => {
     if (isHpManualMode) {
       return character.hitPoints || 1;
     } else if (rolledHp !== null && !isHpManualMode) {
       return rolledHp;
     } else {
-      return calculateHitPoints();
+      return calculateHitPoints({ character });
     }
   };
 
@@ -480,27 +327,6 @@ const CharacterCreator = ({
     }));
   };
 
-  const collectAllFeatsFromChoices = () => {
-    const allFeats = [];
-
-    if (
-      character.level1ChoiceType === "feat" &&
-      character.standardFeats.length > 0
-    ) {
-      allFeats.push(...character.standardFeats);
-    }
-
-    const availableASILevels = getAvailableASILevels(character.level);
-    availableASILevels.forEach((level) => {
-      const choice = character.asiChoices[level];
-      if (choice && choice.type === "feat" && choice.selectedFeat) {
-        allFeats.push(choice.selectedFeat);
-      }
-    });
-
-    return allFeats;
-  };
-
   const handleHouseSelect = (house) => {
     setSelectedHouse(house);
     handleInputChange("house", house);
@@ -525,12 +351,13 @@ const CharacterCreator = ({
     setIsSaving(true);
     setError(null);
 
-    const allFeats = collectAllFeatsFromChoices();
+    const allFeats = collectAllFeatsFromChoices({ character });
     const characterToSave = {
       ability_scores: character.abilityScores,
       asi_choices: character.asiChoices || {},
       background: character.background,
       background_skills: character.backgroundSkills || [],
+      innate_heritage_skills: character.innateHeritageSkills || [],
       casting_style: character.castingStyle,
       feat_choices: character.featChoices || {},
       game_session: character.gameSession,
@@ -562,8 +389,8 @@ const CharacterCreator = ({
         asiChoices: savedCharacter.asi_choices || {},
         background: savedCharacter.background,
         backgroundSkills: savedCharacter.background_skills || [],
+        innateHeritageSkills: savedCharacter.innate_heritage_skills || [],
         castingStyle: savedCharacter.casting_style,
-        gameSession: savedCharacter.game_session || "",
         hitPoints: savedCharacter.hit_points,
         house: savedCharacter.house,
         house_choices:
@@ -610,7 +437,7 @@ const CharacterCreator = ({
     !isLoadingCharacterCount &&
     activeCharacterCount < maxCharacters;
 
-  const featInfo = getFeatProgressionInfo();
+  const featInfo = getFeatProgressionInfo({ character });
 
   return (
     <div style={styles.panel}>
@@ -656,218 +483,17 @@ const CharacterCreator = ({
 
       {/* Basic Character Information */}
       <StepIndicator step={1} totalSteps={5} label="Basic Information" />
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Character Name *</label>
-        <input
-          type="text"
-          value={character.name}
-          onChange={(e) => handleInputChange("name", e.target.value)}
-          placeholder="Enter your character's name..."
-          style={styles.input}
-          maxLength={50}
-        />
-      </div>
-
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Game Session</label>
-        <select
-          value={character.gameSession}
-          onChange={(e) => handleInputChange("gameSession", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Game Session...</option>
-          {gameSessionOptions.map((session) => (
-            <option key={session} value={session}>
-              {session}
-            </option>
-          ))}
-        </select>
-        <div style={styles.helpText}>
-          Select which game session your character will join.
-        </div>
-      </div>
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Casting Style *</label>
-        <select
-          value={character.castingStyle}
-          onChange={(e) => handleInputChange("castingStyle", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Casting Style...</option>
-          {castingStyles.map((style) => (
-            <option key={style} value={style}>
-              {style}
-            </option>
-          ))}
-        </select>
-        <div style={styles.helpText}>
-          Your casting style determines your available skills and hit points.
-        </div>
-      </div>
-
-      {character.castingStyle === "Intellect Caster" && (
-        <div style={styles.fieldContainer}>
-          <label style={styles.label}>Initiative Ability *</label>
-          <div style={styles.helpText}>
-            As an intellect caster, you may choose to use Intelligence or
-            Dexterity for initiative.
-          </div>
-          <div style={styles.level1ChoiceContainer}>
-            <label
-              style={
-                character.initiativeAbility === "dexterity"
-                  ? styles.level1ChoiceLabelSelected
-                  : styles.level1ChoiceLabel
-              }
-            >
-              <input
-                type="radio"
-                name="initiativeAbility"
-                value="dexterity"
-                checked={character.initiativeAbility === "dexterity"}
-                onChange={(e) =>
-                  handleInputChange("initiativeAbility", e.target.value)
-                }
-                style={styles.level1ChoiceRadio}
-              />
-              <span
-                style={
-                  character.initiativeAbility === "dexterity"
-                    ? styles.level1ChoiceTextSelected
-                    : styles.level1ChoiceText
-                }
-              >
-                Dexterity (Standard)
-              </span>
-            </label>
-
-            <label
-              style={
-                character.initiativeAbility === "intelligence"
-                  ? styles.level1ChoiceLabelSelected
-                  : styles.level1ChoiceLabel
-              }
-            >
-              <input
-                type="radio"
-                name="initiativeAbility"
-                value="intelligence"
-                checked={character.initiativeAbility === "intelligence"}
-                onChange={(e) =>
-                  handleInputChange("initiativeAbility", e.target.value)
-                }
-                style={styles.level1ChoiceRadio}
-              />
-              <span
-                style={
-                  character.initiativeAbility === "intelligence"
-                    ? styles.level1ChoiceTextSelected
-                    : styles.level1ChoiceText
-                }
-              >
-                Intelligence (Intellect Caster)
-              </span>
-            </label>
-          </div>
-        </div>
-      )}
-
-      {/* Level and Hit Points */}
-      <div style={styles.levelHpGrid}>
-        <div style={styles.levelContainer}>
-          <label style={styles.label}>Level</label>
-          <input
-            type="number"
-            min="1"
-            max="20"
-            value={character.level}
-            onChange={(e) =>
-              handleInputChange("level", parseInt(e.target.value) || 1)
-            }
-            style={styles.input}
-          />
-          <div style={styles.helpText}>Starting character level</div>
-        </div>
-
-        <div style={styles.hpFieldContainer}>
-          <label style={styles.label}>Hit Points</label>
-          {!character.castingStyle ? (
-            <div style={styles.skillsPlaceholder}>
-              Select a Casting Style first
-            </div>
-          ) : (
-            <div style={styles.hpValueContainer}>
-              {isHpManualMode ? (
-                <input
-                  type="number"
-                  min="1"
-                  value={character.hitPoints || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "hitPoints",
-                      parseInt(e.target.value) || 1
-                    )
-                  }
-                  placeholder="--"
-                  style={styles.hpManualInput}
-                />
-              ) : rolledHp !== null ? (
-                <div style={styles.hpRollDisplay}>{rolledHp}</div>
-              ) : (
-                <div style={styles.hpDisplay}>{calculateHitPoints()}</div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {character.castingStyle && (
-          <div style={styles.hpControlsContainer}>
-            <div style={styles.hpControlsInline}>
-              {!isHpManualMode && (
-                <button
-                  onClick={rollHp}
-                  style={{
-                    ...styles.button,
-                    backgroundColor: "#EF4444",
-                    fontSize: "12px",
-                  }}
-                >
-                  <RefreshCw size={14} />
-                  Roll
-                </button>
-              )}
-
-              <div
-                onClick={() => {
-                  setIsHpManualMode(!isHpManualMode);
-                  setRolledHp(null);
-                }}
-                style={{
-                  ...styles.hpToggle,
-                  backgroundColor: isHpManualMode
-                    ? theme.success
-                    : theme.border,
-                  borderColor: isHpManualMode
-                    ? theme.success
-                    : theme.textSecondary,
-                }}
-                title={
-                  isHpManualMode
-                    ? "Switch to Auto/Roll mode"
-                    : "Switch to Manual mode"
-                }
-              >
-                <div
-                  style={{
-                    ...styles.hpToggleKnob,
-                    left: isHpManualMode ? "22px" : "2px",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <BasicInfo
+        character={character}
+        isHpManualMode={isHpManualMode}
+        setIsHpManualMode={setIsHpManualMode}
+        rolledHp={rolledHp}
+        setRolledHp={setRolledHp}
+        rollHp={rollHp}
+        handleInputChange={handleInputChange}
+        gameSessionOptions={gameSessionOptions}
+        calculateHitPoints={calculateHitPoints}
+      />
       <StepIndicator step={2} totalSteps={5} label="House Selection" />
 
       <div style={styles.fieldContainer}>

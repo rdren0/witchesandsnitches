@@ -1,4 +1,4 @@
-import StepIndicator from "../Shared/StepIndicator";
+import StepIndicator from "../../Shared/StepIndicator";
 
 const MagicModifiersSection = ({
   character,

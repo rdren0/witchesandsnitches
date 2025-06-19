@@ -181,13 +181,6 @@ const GenericD20Roller = ({
               type="button"
               onClick={decrementModifier}
               style={styles.modifierButton}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor =
-                  theme === "dark" ? "#374151" : "#f3f4f6";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "transparent";
-              }}
             >
               <Minus size={14} />
             </button>
@@ -208,13 +201,6 @@ const GenericD20Roller = ({
               type="button"
               onClick={incrementModifier}
               style={styles.modifierButton}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor =
-                  theme === "dark" ? "#374151" : "#f3f4f6";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "transparent";
-              }}
             >
               <Plus size={14} />
             </button>
@@ -228,18 +214,6 @@ const GenericD20Roller = ({
         onClick={handleRoll}
         disabled={isRolling}
         style={styles.rollButton}
-        onMouseEnter={(e) => {
-          if (!isRolling) {
-            e.target.style.backgroundColor = "#2563eb";
-            e.target.style.transform = "translateY(-1px)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isRolling) {
-            e.target.style.backgroundColor = "#3b82f6";
-            e.target.style.transform = "translateY(0)";
-          }
-        }}
       >
         <Dice6 size={16} />
         {isRolling ? "Rolling..." : "Roll D20"}

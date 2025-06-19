@@ -342,12 +342,6 @@ const Navigation = ({ characters, user }) => {
             width: "auto",
             transition: "opacity 0.2s ease",
           }}
-          onMouseEnter={(e) => {
-            e.target.style.opacity = "0.8";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.opacity = "1";
-          }}
         />
       </div>
 
@@ -602,12 +596,14 @@ function AppContent() {
         abilityScores: char.ability_scores,
         asiChoices: char.asi_choices || {},
         background: char.background,
+        backgroundSkills: char.background_skills || [],
+        innateHeritageSkills: char.innate_heritage_skills || [], // Add this line
         castingStyle: char.casting_style,
         createdAt: char.created_at,
         gameSession: char.game_session,
         hitPoints: char.hit_points,
         house: char.house,
-        houseChoices: char.house_choices || {}, // ADD THIS LINE
+        houseChoices: char.house_choices || {},
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
         level: char.level,
@@ -617,7 +613,7 @@ function AppContent() {
         skillExpertise: char.skill_expertise || [],
         standardFeats: char.standard_feats || [],
         subclass: char.subclass,
-        subclassChoices: char.subclass_choices || {}, // ADD THIS LINE
+        subclassChoices: char.subclass_choices || {},
         wandType: char.wand_type || "",
         magicModifiers: char.magic_modifiers || {
           divinations: 0,

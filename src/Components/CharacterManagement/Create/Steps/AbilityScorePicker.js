@@ -1,10 +1,10 @@
 import { RefreshCw, Trash } from "lucide-react";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { createAbilityScorePickerStyles } from "../../../styles/masterStyles";
-import { standardFeats } from "../../standardFeatData";
-import { backgroundsData } from "../Shared/backgroundsData";
-import { houseAbilityBonuses } from "../Shared/houseData";
-import { getAllSelectedFeats } from "../Create/ASIComponents";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { createAbilityScorePickerStyles } from "../../../../styles/masterStyles";
+import { standardFeats } from "../../../standardFeatData";
+import { backgroundsData } from "../../Shared/backgroundsData";
+import { getAllSelectedFeats } from "../ASIComponents";
+import { houseFeatures } from "../../Shared/houseData";
 
 const getSpellcastingAbility = (character) => {
   const castingStyle = character.castingStyle;
@@ -29,11 +29,11 @@ const calculateHouseModifiers = (character, houseChoices = {}) => {
 
   const houseDetails = {};
 
-  if (!character.house || !houseAbilityBonuses[character.house]) {
+  if (!character.house || !houseFeatures[character.house]) {
     return { modifiers, houseDetails };
   }
 
-  const houseBonuses = houseAbilityBonuses[character.house];
+  const houseBonuses = houseFeatures[character.house];
 
   if (houseBonuses.fixed) {
     houseBonuses.fixed.forEach((ability) => {
@@ -53,7 +53,7 @@ const calculateHouseModifiers = (character, houseChoices = {}) => {
     });
   }
 
-  if (houseBonuses.choice && houseChoices[character.house]?.abilityChoice) {
+  if (houseChoices[character.house]?.abilityChoice) {
     const chosenAbility = houseChoices[character.house].abilityChoice;
     if (modifiers.hasOwnProperty(chosenAbility)) {
       modifiers[chosenAbility] += 1;

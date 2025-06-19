@@ -302,7 +302,7 @@ const LevelUpModal = ({
     return choicesNeeded;
   };
 
-  const getAvailableSkills = () => {
+  const getAvailableSkills = ({ character }) => {
     return [
       "Athletics",
       "Acrobatics",

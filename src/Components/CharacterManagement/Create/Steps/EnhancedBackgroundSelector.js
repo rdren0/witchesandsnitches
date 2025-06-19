@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { createFeatStyles } from "../../../styles/masterStyles";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { backgroundsData } from "./backgroundsData";
+import { createFeatStyles } from "../../../../styles/masterStyles";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { backgroundsData } from "../../Shared/backgroundsData";
 
 const calculateBackgroundModifiers = (selectedBackground, character) => {
   const defaultInitiativeChanges = {

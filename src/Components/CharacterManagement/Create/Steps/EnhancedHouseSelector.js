@@ -2,11 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   schoolGroups,
   houseFeatures,
-  houseAbilityBonuses,
   houseColors,
-} from "./houseData";
-import { createFeatStyles } from "../../../styles/masterStyles";
-import { useTheme } from "../../../contexts/ThemeContext";
+} from "../../Shared/houseData";
+import { createFeatStyles } from "../../../../styles/masterStyles";
+import { useTheme } from "../../../../contexts/ThemeContext";
 
 const calculateHouseAbilityModifiers = (house, houseChoices = {}) => {
   const modifiers = {
@@ -20,9 +19,9 @@ const calculateHouseAbilityModifiers = (house, houseChoices = {}) => {
 
   const bonusDetails = {};
 
-  if (!house || !houseAbilityBonuses[house]) return { modifiers, bonusDetails };
+  if (!house || !houseFeatures[house]) return { modifiers, bonusDetails };
 
-  const houseBonuses = houseAbilityBonuses[house];
+  const houseBonuses = houseFeatures[house];
 
   if (houseBonuses.fixed) {
     houseBonuses.fixed.forEach((ability) => {
@@ -40,7 +39,7 @@ const calculateHouseAbilityModifiers = (house, houseChoices = {}) => {
     });
   }
 
-  if (houseBonuses.choice && houseChoices[house]?.abilityChoice) {
+  if (houseChoices[house]?.abilityChoice) {
     const chosenAbility = houseChoices[house].abilityChoice;
     if (modifiers.hasOwnProperty(chosenAbility)) {
       modifiers[chosenAbility] += 1;
@@ -100,7 +99,7 @@ const HouseAbilityChoice = ({
   onHouseChoiceSelect,
   styles,
 }) => {
-  if (!house || !houseAbilityBonuses[house]?.choice) return null;
+  if (!house) return null;
 
   const handleAbilityChoice = (ability) => {
     onHouseChoiceSelect(house, "abilityChoice", ability);
@@ -116,7 +115,7 @@ const HouseAbilityChoice = ({
     "charisma",
   ];
 
-  const fixedAbilities = houseAbilityBonuses[house]?.fixed || [];
+  const fixedAbilities = houseFeatures[house]?.fixed || [];
   const availableAbilities = abilities.filter(
     (ability) => !fixedAbilities.includes(ability)
   );
@@ -567,7 +566,7 @@ const EnhancedHouseSelector = ({
 
                     {expandedHouse === house &&
                       houseFeatures[house] &&
-                      houseAbilityBonuses[house] && (
+                      houseFeatures[house] && (
                         <div style={styles.houseDetails}>
                           {/* House ASI Modifier Pills */}
                           <HouseAbilityModifierPills
@@ -582,32 +581,29 @@ const EnhancedHouseSelector = ({
                               ➕ Ability Score Details
                             </h4>
                             <div style={styles.abilityBonusContainer}>
-                              {houseAbilityBonuses[house]?.fixed.map(
-                                (ability) => (
-                                  <span
-                                    key={ability}
-                                    style={{
-                                      ...styles.abilityBonus,
-                                      backgroundColor: theme.primary,
-                                      color: theme.surface,
-                                    }}
-                                  >
-                                    +1 {formatAbilityName(ability)} (Fixed)
-                                  </span>
-                                )
-                              )}
-                              {houseAbilityBonuses[house]?.choice && (
+                              {houseFeatures[house]?.fixed.map((ability) => (
                                 <span
+                                  key={ability}
                                   style={{
                                     ...styles.abilityBonus,
-                                    backgroundColor: theme.surfaceHover,
-                                    color: theme.text,
-                                    border: `1px solid ${theme.border}`,
+                                    backgroundColor: theme.primary,
+                                    color: theme.surface,
                                   }}
                                 >
-                                  +1 Any Ability (Choice)
+                                  +1 {formatAbilityName(ability)} (Fixed)
                                 </span>
-                              )}
+                              ))}
+
+                              <span
+                                style={{
+                                  ...styles.abilityBonus,
+                                  backgroundColor: theme.surfaceHover,
+                                  color: theme.text,
+                                  border: `1px solid ${theme.border}`,
+                                }}
+                              >
+                                +1 Any Ability (Choice)
+                              </span>
                             </div>
                           </div>
                           {/* House Ability Choice */}

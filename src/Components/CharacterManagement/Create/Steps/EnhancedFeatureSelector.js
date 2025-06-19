@@ -1,7 +1,7 @@
-import { standardFeats } from "../../standardFeatData";
-import { createFeatStyles } from "../../../styles/masterStyles";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { allSkills } from "../../CharacterSheet/utils";
+import { standardFeats } from "../../../standardFeatData";
+import { createFeatStyles } from "../../../../styles/masterStyles";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { allSkills } from "../../../CharacterSheet/utils";
 import { useMemo, useEffect } from "react";
 
 const getSpellcastingAbility = (character) => {
@@ -587,19 +587,6 @@ export const EnhancedFeatureSelector = ({
                         checked={isSelected}
                         onChange={() => handleFeatToggle(feat.name)}
                         style={enhancedStyles.customCheckbox}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) {
-                            e.target.style.borderColor = "#8B5CF6";
-                            e.target.style.backgroundColor =
-                              "rgba(139, 92, 246, 0.1)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) {
-                            e.target.style.borderColor = theme.border;
-                            e.target.style.backgroundColor = theme.surface;
-                          }
-                        }}
                         onFocus={(e) => {
                           e.target.style.boxShadow =
                             "0 0 0 3px rgba(139, 92, 246, 0.3)";

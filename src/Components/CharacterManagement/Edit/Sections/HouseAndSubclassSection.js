@@ -1,8 +1,8 @@
-import StepIndicator from "../Shared/StepIndicator";
-import EnhancedHouseSelector from "../Shared/EnhancedHouseSelector";
-import EnhancedSubclassSelector from "../Shared/EnhancedSubclassSelector";
-import EnhancedBackgroundSelector from "../Shared/EnhancedBackgroundSelector";
-import EnhancedSkillsSection from "../Shared/EnhancedSkillsSection";
+import StepIndicator from "../../Shared/StepIndicator";
+import EnhancedSubclassSelector from "../../Create/Steps/EnhancedSubclassSelector";
+import EnhancedSkillsSection from "../../Create/Steps/EnhancedSkillsSection";
+import EnhancedBackgroundSelector from "../../Create/Steps/EnhancedBackgroundSelector";
+import EnhancedHouseSelector from "../../Create/Steps/EnhancedHouseSelector";
 
 const HouseAndSubclassSection = ({
   character,

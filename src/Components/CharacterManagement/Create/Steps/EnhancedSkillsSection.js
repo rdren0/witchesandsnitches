@@ -5,33 +5,42 @@ const EnhancedSkillsSection = ({
   styles,
   theme,
 }) => {
-  // Separate skills by source
   const getSkillsBySource = () => {
     const allSkills = character.skillProficiencies || [];
-    const castingStyleSkills = getAvailableSkills();
-    const backgroundSkills = character.backgroundSkills || []; // Assuming background adds this
+    const castingStyleSkills = getAvailableSkills({ character }) || [];
+    const backgroundSkills = character.backgroundSkills || [];
+    const innateHeritageSkills = character.innateHeritageSkills || [];
 
-    // Skills that come from casting style selection (intersection of selected and available)
     const selectedCastingStyleSkills = allSkills.filter(
       (skill) =>
-        castingStyleSkills.includes(skill) && !backgroundSkills.includes(skill)
+        castingStyleSkills.includes(skill) &&
+        !backgroundSkills.includes(skill) &&
+        !innateHeritageSkills.includes(skill)
     );
 
-    // Skills that come from background
     const selectedBackgroundSkills = allSkills.filter((skill) =>
       backgroundSkills.includes(skill)
+    );
+
+    const selectedInnaateHeritageSkills = allSkills.filter((skill) =>
+      innateHeritageSkills.includes(skill)
     );
 
     return {
       castingStyleSkills: selectedCastingStyleSkills,
       backgroundSkills: selectedBackgroundSkills,
+      innateHeritageSkills: selectedInnaateHeritageSkills,
       totalSelected: allSkills.length,
     };
   };
 
-  const { castingStyleSkills, backgroundSkills, totalSelected } =
-    getSkillsBySource();
-  const availableCastingSkills = getAvailableSkills();
+  const {
+    castingStyleSkills,
+    backgroundSkills,
+    innateHeritageSkills,
+    totalSelected,
+  } = getSkillsBySource();
+  const availableCastingSkills = getAvailableSkills({ character });
 
   return (
     <div style={styles.fieldContainer}>
@@ -45,6 +54,79 @@ const EnhancedSkillsSection = ({
         </div>
       ) : (
         <div style={styles.skillsContainer}>
+          {/* Innate Heritage Skills Section */}
+
+          {innateHeritageSkills.length > 0 && (
+            <div style={{ marginBottom: "16px" }}>
+              <h4
+                style={{
+                  ...styles.skillsSubheader,
+                  color: "#8b5cf6",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                ✨ Innate Heritage Skills (Automatic)
+              </h4>
+              <div style={styles.skillsGrid}>
+                {innateHeritageSkills.map((skill) => (
+                  <div
+                    key={`heritage-${skill}`}
+                    style={{
+                      ...styles.skillOptionBase,
+                      backgroundColor: "#8b5cf6" + "20",
+                      border: `2px solid #8b5cf6`,
+                      cursor: "default",
+                      opacity: 0.9,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        backgroundColor: "#8b5cf6",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "8px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "white",
+                          fontSize: "10px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        H
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "14px",
+                        color: "#8b5cf6",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {skill}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: theme.textSecondary,
+                  fontStyle: "italic",
+                  marginTop: "4px",
+                }}
+              >
+                These skills are automatically granted by your innate heritage.
+              </div>
+            </div>
+          )}
           {/* Background Skills Section */}
           {backgroundSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
@@ -130,9 +212,13 @@ const EnhancedSkillsSection = ({
                 const isSelected = castingStyleSkills.includes(skill);
                 const isFromBackground = backgroundSkills.includes(skill);
                 const canSelect = isSelected || castingStyleSkills.length < 2;
+                const isFromHeritage = innateHeritageSkills.includes(skill);
+                if (isFromBackground || isFromHeritage) {
+                  const sourceLabel = isFromBackground ? "B" : "H";
+                  const sourceColor = isFromBackground
+                    ? theme.textSecondary
+                    : "#8b5cf6";
 
-                // If skill is from background, show it as unavailable for casting style selection
-                if (isFromBackground) {
                   return (
                     <div
                       key={`cs-${skill}`}
@@ -149,7 +235,7 @@ const EnhancedSkillsSection = ({
                           width: "16px",
                           height: "16px",
                           borderRadius: "50%",
-                          backgroundColor: theme.textSecondary,
+                          backgroundColor: sourceColor,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -163,7 +249,7 @@ const EnhancedSkillsSection = ({
                             fontWeight: "bold",
                           }}
                         >
-                          B
+                          {sourceLabel}
                         </span>
                       </div>
                       <span
