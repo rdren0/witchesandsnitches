@@ -5,6 +5,7 @@ import { standardFeats } from "../../../standardFeatData";
 import { backgroundsData } from "../../Shared/backgroundsData";
 import { getAllSelectedFeats } from "../ASIComponents";
 import { houseFeatures } from "../../Shared/houseData";
+import { heritageDescriptions } from "../../../data";
 
 const getSpellcastingAbility = (character) => {
   const castingStyle = character.castingStyle;
@@ -172,40 +173,214 @@ const calculateBackgroundModifiers = (character) => {
   return { modifiers, backgroundDetails };
 };
 
+// Utility functions to check for modifiers at multiple levels
+const checkForModifiers = (obj, type = "abilityIncreases") => {
+  const results = [];
+
+  // Level 1: Direct modifiers
+  if (obj?.modifiers?.[type]) {
+    results.push(...obj.modifiers[type]);
+  }
+
+  // Level 2: Data nested modifiers (common pattern)
+  if (obj?.data?.modifiers?.[type]) {
+    results.push(...obj.data.modifiers[type]);
+  }
+
+  // Level 3: Benefits/features nested modifiers
+  if (obj?.benefits?.modifiers?.[type]) {
+    results.push(...obj.benefits.modifiers[type]);
+  }
+
+  // Level 4: Nested in properties
+  if (obj?.properties?.modifiers?.[type]) {
+    results.push(...obj.properties.modifiers[type]);
+  }
+
+  return results;
+};
+
+// Simple utility for ability choices
+const checkForAbilityChoices = (obj) => {
+  const choices = [];
+
+  // Direct ability choice (most common pattern in your data)
+  if (obj?.abilityChoice) {
+    choices.push({
+      ability: obj.abilityChoice,
+      amount: obj.amount || 1,
+      type: "choice",
+    });
+  }
+
+  // Nested in data
+  if (obj?.data?.abilityChoice) {
+    choices.push({
+      ability: obj.data.abilityChoice,
+      amount: obj.data.amount || 1,
+      type: "choice",
+    });
+  }
+
+  // Nested in properties
+  if (obj?.properties?.abilityChoice) {
+    choices.push({
+      ability: obj.properties.abilityChoice,
+      amount: obj.properties.amount || 1,
+      type: "choice",
+    });
+  }
+
+  // Debug logging to see what we're finding
+  if (choices.length > 0) {
+    console.log("checkForAbilityChoices found:", choices, "in object:", obj);
+  }
+
+  return choices;
+};
+
+const calculateHeritageModifiers = (character, heritageChoices = {}) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const heritageDetails = {};
+
+  if (!character.innateHeritage) {
+    return { modifiers, heritageDetails };
+  }
+
+  const heritage = heritageDescriptions[character.innateHeritage];
+  if (!heritage) return { modifiers, heritageDetails };
+
+  // Check for ability increases at multiple levels
+  const abilityIncreases = checkForModifiers(heritage, "abilityIncreases");
+
+  abilityIncreases.forEach((increase) => {
+    if (
+      increase.type === "fixed" &&
+      modifiers.hasOwnProperty(increase.ability)
+    ) {
+      modifiers[increase.ability] += increase.amount;
+
+      if (!heritageDetails[increase.ability]) {
+        heritageDetails[increase.ability] = [];
+      }
+      heritageDetails[increase.ability].push({
+        source: "heritage",
+        heritageName: character.innateHeritage,
+        type: "fixed",
+        amount: increase.amount,
+      });
+    }
+  });
+
+  // Handle feature choices with multi-level checking
+  if (heritage.features && heritageChoices[character.innateHeritage]) {
+    heritage.features.forEach((feature) => {
+      if (feature.isChoice && feature.options) {
+        const selectedChoiceName =
+          heritageChoices[character.innateHeritage][feature.name];
+        const selectedChoice = feature.options.find(
+          (opt) => opt.name === selectedChoiceName
+        );
+
+        if (selectedChoice) {
+          // Check for ability choices at multiple levels
+          const abilityChoices = checkForAbilityChoices(selectedChoice);
+
+          abilityChoices.forEach(({ ability, amount }) => {
+            if (modifiers.hasOwnProperty(ability)) {
+              modifiers[ability] += amount;
+
+              if (!heritageDetails[ability]) {
+                heritageDetails[ability] = [];
+              }
+              heritageDetails[ability].push({
+                source: "heritage",
+                heritageName: character.innateHeritage,
+                type: "choice",
+                amount: amount,
+              });
+            }
+          });
+
+          // Also check for nested ability increases in the choice
+          const choiceAbilityIncreases = checkForModifiers(
+            selectedChoice,
+            "abilityIncreases"
+          );
+
+          choiceAbilityIncreases.forEach((increase) => {
+            if (modifiers.hasOwnProperty(increase.ability)) {
+              modifiers[increase.ability] += increase.amount;
+
+              if (!heritageDetails[increase.ability]) {
+                heritageDetails[increase.ability] = [];
+              }
+              heritageDetails[increase.ability].push({
+                source: "heritage",
+                heritageName: character.innateHeritage,
+                type: "choice",
+                amount: increase.amount,
+              });
+            }
+          });
+        }
+      }
+    });
+  }
+
+  return { modifiers, heritageDetails };
+};
+
 const calculateTotalModifiers = (
   character,
   featChoices = {},
-  houseChoices = {}
+  houseChoices = {},
+  heritageChoices = {}
 ) => {
   const featResult = calculateFeatModifiers(character, featChoices);
   const backgroundResult = calculateBackgroundModifiers(character);
   const houseResult = calculateHouseModifiers(character, houseChoices);
+  const heritageResult = calculateHeritageModifiers(character, heritageChoices);
 
   const totalModifiers = {
     strength:
       featResult.modifiers.strength +
       backgroundResult.modifiers.strength +
-      houseResult.modifiers.strength,
+      houseResult.modifiers.strength +
+      heritageResult.modifiers.strength,
     dexterity:
       featResult.modifiers.dexterity +
       backgroundResult.modifiers.dexterity +
-      houseResult.modifiers.dexterity,
+      houseResult.modifiers.dexterity +
+      heritageResult.modifiers.dexterity,
     constitution:
       featResult.modifiers.constitution +
       backgroundResult.modifiers.constitution +
-      houseResult.modifiers.constitution,
+      houseResult.modifiers.constitution +
+      heritageResult.modifiers.constitution,
     intelligence:
       featResult.modifiers.intelligence +
       backgroundResult.modifiers.intelligence +
-      houseResult.modifiers.intelligence,
+      houseResult.modifiers.intelligence +
+      heritageResult.modifiers.intelligence,
     wisdom:
       featResult.modifiers.wisdom +
       backgroundResult.modifiers.wisdom +
-      houseResult.modifiers.wisdom,
+      houseResult.modifiers.wisdom +
+      heritageResult.modifiers.wisdom,
     charisma:
       featResult.modifiers.charisma +
       backgroundResult.modifiers.charisma +
-      houseResult.modifiers.charisma,
+      houseResult.modifiers.charisma +
+      heritageResult.modifiers.charisma,
   };
 
   const allDetails = {};
@@ -214,6 +389,7 @@ const calculateTotalModifiers = (
       ...(featResult.featDetails[ability] || []),
       ...(backgroundResult.backgroundDetails[ability] || []),
       ...(houseResult.houseDetails[ability] || []),
+      ...(heritageResult.heritageDetails[ability] || []),
     ];
   });
 
@@ -223,6 +399,7 @@ const calculateTotalModifiers = (
     featModifiers: featResult.modifiers,
     backgroundModifiers: backgroundResult.modifiers,
     houseModifiers: houseResult.modifiers,
+    heritageModifiers: heritageResult.modifiers,
   };
 };
 
@@ -243,6 +420,7 @@ export const AbilityScorePicker = ({
   rollAllStats,
   featChoices = {},
   houseChoices = {},
+  heritageChoices = {},
   showModifiers = true,
 }) => {
   const { theme } = useTheme();
@@ -254,8 +432,14 @@ export const AbilityScorePicker = ({
     featModifiers,
     backgroundModifiers,
     houseModifiers,
+    heritageModifiers,
   } = showModifiers
-    ? calculateTotalModifiers(character, featChoices, houseChoices)
+    ? calculateTotalModifiers(
+        character,
+        featChoices,
+        houseChoices,
+        heritageChoices
+      )
     : {
         totalModifiers: {
           strength: 0,
@@ -283,6 +467,14 @@ export const AbilityScorePicker = ({
           charisma: 0,
         },
         houseModifiers: {
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        },
+        heritageModifiers: {
           strength: 0,
           dexterity: 0,
           constitution: 0,
@@ -362,6 +554,8 @@ export const AbilityScorePicker = ({
           return `+${detail.amount} from ${detail.backgroundName} background`;
         } else if (detail.source === "house") {
           return `+${detail.amount} from ${detail.houseName} (${detail.type})`;
+        } else if (detail.source === "heritage") {
+          return `+${detail.amount} from ${detail.heritageName} heritage (${detail.type})`;
         }
         return `+${detail.amount}`;
       })
@@ -433,10 +627,16 @@ export const AbilityScorePicker = ({
       borderColor: "#a855f7",
       borderWidth: "2px",
     },
+    abilityCardWithHeritage: {
+      ...styles.abilityCard,
+      backgroundColor: "rgba(139, 92, 246, 0.2)",
+      borderColor: "#8b5cf6",
+      borderWidth: "2px",
+    },
     abilityCardWithMultiple: {
       ...styles.abilityCard,
       background:
-        "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(168, 85, 247, 0.2) 100%)",
+        "linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.2) 25%, rgba(168, 85, 247, 0.2) 50%, rgba(139, 92, 246, 0.2) 100%)",
       borderColor: "#8b5cf6",
       borderWidth: "2px",
     },
@@ -454,6 +654,12 @@ export const AbilityScorePicker = ({
     },
     houseBonus: {
       color: "#a855f7",
+      fontSize: "10px",
+      fontWeight: "bold",
+      marginLeft: "2px",
+    },
+    heritageBonus: {
+      color: "#8b5cf6",
       fontSize: "10px",
       fontWeight: "bold",
       marginLeft: "2px",
@@ -616,11 +822,13 @@ export const AbilityScorePicker = ({
           const featBonus = featModifiers[ability] || 0;
           const backgroundBonus = backgroundModifiers[ability] || 0;
           const houseBonus = houseModifiers[ability] || 0;
+          const heritageBonus = heritageModifiers[ability] || 0;
           const effectiveScore = score !== null ? score + totalBonus : null;
           const hasModifier = totalBonus > 0;
           const hasFeatModifier = featBonus > 0;
           const hasBackgroundModifier = backgroundBonus > 0;
           const hasHouseModifier = houseBonus > 0;
+          const hasHeritageModifier = heritageBonus > 0;
           const baseModifier = getAbilityModifier(score);
           const effectiveModifier = getEffectiveModifier(ability);
           const tooltipText = getTooltipText(ability);
@@ -630,6 +838,7 @@ export const AbilityScorePicker = ({
             hasFeatModifier,
             hasBackgroundModifier,
             hasHouseModifier,
+            hasHeritageModifier,
           ].filter(Boolean).length;
 
           if (modifierSources > 1) {
@@ -640,6 +849,8 @@ export const AbilityScorePicker = ({
             cardStyle = enhancedStyles.abilityCardWithBackground;
           } else if (hasHouseModifier) {
             cardStyle = enhancedStyles.abilityCardWithHouse;
+          } else if (hasHeritageModifier) {
+            cardStyle = enhancedStyles.abilityCardWithHeritage;
           }
 
           return (
@@ -674,6 +885,11 @@ export const AbilityScorePicker = ({
                 )}
                 {hasHouseModifier && (
                   <span style={enhancedStyles.houseBonus}>+{houseBonus}</span>
+                )}
+                {hasHeritageModifier && (
+                  <span style={enhancedStyles.heritageBonus}>
+                    +{heritageBonus}
+                  </span>
                 )}
               </div>
 
@@ -748,6 +964,7 @@ export const AbilityScorePicker = ({
                         {featBonus > 0 && ` + Feat: ${featBonus}`}
                         {backgroundBonus > 0 && ` + Bg: ${backgroundBonus}`}
                         {houseBonus > 0 && ` + House: ${houseBonus}`}
+                        {heritageBonus > 0 && ` + Heritage: ${heritageBonus}`}
                         {` = ${effectiveScore}`}
                       </div>
                     )}
@@ -778,6 +995,7 @@ export const AbilityScorePicker = ({
                                 {featBonus > 0 && ` + ${featBonus}`}
                                 {backgroundBonus > 0 && ` + ${backgroundBonus}`}
                                 {houseBonus > 0 && ` + ${houseBonus}`}
+                                {heritageBonus > 0 && ` + ${heritageBonus}`}
                               </div>
                               <div style={enhancedStyles.effectiveScore}>
                                 = {effectiveScore}
@@ -844,7 +1062,7 @@ export const AbilityScorePicker = ({
           <div
             style={{
               background:
-                "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 50%, rgba(168, 85, 247, 0.1) 100%)",
+                "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 25%, rgba(168, 85, 247, 0.1) 50%, rgba(139, 92, 246, 0.1) 100%)",
               border: "1px solid rgba(139, 92, 246, 0.3)",
               borderRadius: "6px",
               padding: "12px",
@@ -864,14 +1082,15 @@ export const AbilityScorePicker = ({
               {Object.entries(totalModifiers)
                 .filter(([_, bonus]) => bonus > 0)
                 .map(([ability, bonus]) => {
-                  // const details = allDetails[ability] || [];
                   const featTotal = featModifiers[ability] || 0;
                   const backgroundTotal = backgroundModifiers[ability] || 0;
                   const houseTotal = houseModifiers[ability] || 0;
+                  const heritageTotal = heritageModifiers[ability] || 0;
                   const sources = [
                     featTotal > 0,
                     backgroundTotal > 0,
                     houseTotal > 0,
+                    heritageTotal > 0,
                   ].filter(Boolean).length;
 
                   let backgroundColor = "#8b5cf6";
@@ -879,6 +1098,7 @@ export const AbilityScorePicker = ({
                     if (featTotal > 0) backgroundColor = "#10B981";
                     else if (backgroundTotal > 0) backgroundColor = "#3b82f6";
                     else if (houseTotal > 0) backgroundColor = "#a855f7";
+                    else if (heritageTotal > 0) backgroundColor = "#8b5cf6";
                   }
 
                   return (
@@ -916,7 +1136,7 @@ export const AbilityScorePicker = ({
           💡 Tip: Press Enter to confirm a value, Escape to cancel. Valid range:
           1-30
           {showModifiers &&
-            " • House, feat, and background bonuses are automatically added to your base scores"}
+            " • House, feat, background, and heritage bonuses are automatically added to your base scores"}
         </div>
       )}
     </div>

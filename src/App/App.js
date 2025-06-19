@@ -597,7 +597,8 @@ function AppContent() {
         asiChoices: char.asi_choices || {},
         background: char.background,
         backgroundSkills: char.background_skills || [],
-        innateHeritageSkills: char.innate_heritage_skills || [], // Add this line
+        heritageChoices: char.heritage_choices || {},
+        innateHeritageSkills: char.innate_heritage_skills || [],
         castingStyle: char.casting_style,
         createdAt: char.created_at,
         gameSession: char.game_session,

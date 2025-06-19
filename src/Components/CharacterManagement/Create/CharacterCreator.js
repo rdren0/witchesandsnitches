@@ -50,6 +50,8 @@ const CharacterCreator = ({
   const [isHpManualMode, setIsHpManualMode] = useState(false);
   const [selectedHouse, setSelectedHouse] = useState("");
   const [houseChoices, setHouseChoices] = useState({});
+  const [heritageChoices, setHeritageChoices] = useState({});
+
   const [rolledHp, setRolledHp] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -114,6 +116,7 @@ const CharacterCreator = ({
     setCharacter(getInitialCharacterState());
     setSelectedHouse("");
     setHouseChoices({});
+    setHeritageChoices({});
     setExpandedFeats(new Set());
     setFeatFilter("");
     setASILevelFilters({});
@@ -238,18 +241,33 @@ const CharacterCreator = ({
     }));
   };
 
+  const handleHeritageChoicesChange = (newChoices) => {
+    setHeritageChoices(newChoices);
+    setCharacter((prev) => ({
+      ...prev,
+      heritageChoices: newChoices,
+    }));
+  };
+
   const handleSkillToggle = (skill) => {
     setCharacter((prev) => {
       const currentSkills = prev.skillProficiencies || [];
       const backgroundSkills = prev.backgroundSkills || [];
+      const innateHeritageSkills = prev.innateHeritageSkills || [];
       const castingStyleSkills = getAvailableSkills({ character });
 
-      if (backgroundSkills.includes(skill)) {
+      if (
+        backgroundSkills.includes(skill) ||
+        innateHeritageSkills.includes(skill)
+      ) {
         return prev;
       }
 
       const selectedCastingStyleSkills = currentSkills.filter(
-        (s) => castingStyleSkills.includes(s) && !backgroundSkills.includes(s)
+        (s) =>
+          castingStyleSkills.includes(s) &&
+          !backgroundSkills.includes(s) &&
+          !innateHeritageSkills.includes(s)
       );
 
       const isCurrentlySelected = currentSkills.includes(skill);
@@ -358,6 +376,7 @@ const CharacterCreator = ({
       background: character.background,
       background_skills: character.backgroundSkills || [],
       innate_heritage_skills: character.innateHeritageSkills || [],
+      heritage_choices: heritageChoices,
       casting_style: character.castingStyle,
       feat_choices: character.featChoices || {},
       game_session: character.gameSession,
@@ -390,14 +409,15 @@ const CharacterCreator = ({
         background: savedCharacter.background,
         backgroundSkills: savedCharacter.background_skills || [],
         innateHeritageSkills: savedCharacter.innate_heritage_skills || [],
+        heritageChoices: savedCharacter.heritage_choices || {},
         castingStyle: savedCharacter.casting_style,
+        gameSession: savedCharacter.game_session || "",
         hitPoints: savedCharacter.hit_points,
         house: savedCharacter.house,
-        house_choices:
+        houseChoices:
           Object.keys(houseChoices).length > 0
             ? houseChoices
             : character.houseChoices || {},
-
         innateHeritage: savedCharacter.innate_heritage,
         level: savedCharacter.level,
         name: savedCharacter.name,
@@ -604,6 +624,8 @@ const CharacterCreator = ({
           character={character}
           handleInputChange={handleInputChange}
           isEditing={false}
+          heritageChoices={heritageChoices}
+          onHeritageChoicesChange={handleHeritageChoicesChange}
         />
       )}
 
@@ -652,6 +674,8 @@ const CharacterCreator = ({
         character={character}
         disabled={false}
       />
+
+      {/* Skills Section */}
       <EnhancedSkillsSection
         character={character}
         handleSkillToggle={handleSkillToggle}
@@ -671,6 +695,7 @@ const CharacterCreator = ({
         clearStat={clearStat}
         featChoices={character.featChoices || {}}
         houseChoices={character.houseChoices || houseChoices}
+        heritageChoices={heritageChoices}
         isManualMode={isManualMode}
         rollAllStats={rollAllStats}
         rolledStats={rolledStats}
@@ -681,6 +706,7 @@ const CharacterCreator = ({
         setRolledStats={setRolledStats}
         setTempInputValues={setTempInputValues}
         tempInputValues={tempInputValues}
+        handleInputChange={handleInputChange}
       />
       <StepIndicator step={5} totalSteps={5} label="Wand Modifiers" />
 

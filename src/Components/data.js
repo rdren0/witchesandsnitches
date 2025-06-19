@@ -219,7 +219,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Dryad Ancestry": {
     description:
@@ -231,7 +230,7 @@ export const heritageDescriptions = {
     ],
     modifiers: {
       abilityIncreases: [],
-      skillProficiencies: [],
+      skillProficiencies: ["Herbology"],
       expertise: [],
       other: {
         druidcraftCantrip: true,
@@ -240,7 +239,6 @@ export const heritageDescriptions = {
       },
     },
     features: [],
-    skillProficiencies: ["Herbology"],
   },
   "Elf Legacy": {
     description:
@@ -280,7 +278,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Fey Ancestry": {
     description:
@@ -320,7 +317,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Giant's Blood": {
     description:
@@ -341,7 +337,6 @@ export const heritageDescriptions = {
       },
     },
     features: [],
-    skillProficiencies: [],
   },
   "Goblin Cunning": {
     description:
@@ -365,7 +360,6 @@ export const heritageDescriptions = {
       },
     },
     features: [],
-    skillProficiencies: [],
   },
   "Gorgon Ancestry": {
     description:
@@ -409,7 +403,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Hag-Touched": {
     description:
@@ -445,7 +438,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   Halfblood: {
     description:
@@ -506,7 +498,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Metamorph Magic": {
     description:
@@ -526,7 +517,6 @@ export const heritageDescriptions = {
       },
     },
     features: [],
-    skillProficiencies: [],
   },
   Muggleborn: {
     description:
@@ -538,7 +528,7 @@ export const heritageDescriptions = {
     ],
     modifiers: {
       abilityIncreases: [],
-      skillProficiencies: [],
+      skillProficiencies: ["Muggle Studies"],
       expertise: [],
       other: {
         muggleCultureAdvantage: true,
@@ -584,7 +574,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: ["Muggle Studies"],
   },
   "Part-Leprechaun": {
     description:
@@ -628,7 +617,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Part-Harpy": {
     description:
@@ -668,7 +656,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Part-Siren": {
     description:
@@ -689,7 +676,6 @@ export const heritageDescriptions = {
       },
     },
     features: [],
-    skillProficiencies: [],
   },
   Parseltongue: {
     description:
@@ -708,7 +694,6 @@ export const heritageDescriptions = {
       },
     },
     features: [],
-    skillProficiencies: [],
   },
   "Pukwudgie Ancestry": {
     description:
@@ -777,7 +762,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   Pureblood: {
     description:
@@ -789,7 +773,7 @@ export const heritageDescriptions = {
     ],
     modifiers: {
       abilityIncreases: [],
-      skillProficiencies: [],
+      skillProficiencies: ["History of Magic"],
       expertise: [],
       other: {
         purebloodFamilyKnowledge: true,
@@ -829,7 +813,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: ["History of Magic"],
   },
   "Satyr Ancestry": {
     description:
@@ -870,7 +853,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Troll Blood": {
     description:
@@ -932,7 +914,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
   "Veela Charm": {
     description:
@@ -996,7 +977,6 @@ export const heritageDescriptions = {
         ],
       },
     ],
-    skillProficiencies: [],
   },
 };
 

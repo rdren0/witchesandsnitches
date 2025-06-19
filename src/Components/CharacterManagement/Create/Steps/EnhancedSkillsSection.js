@@ -5,11 +5,25 @@ const EnhancedSkillsSection = ({
   styles,
   theme,
 }) => {
+  // Debug logging to see what character data we're getting
+  console.log("EnhancedSkillsSection character state:", character);
+  console.log(
+    "character.innateHeritageSkills:",
+    character.innateHeritageSkills
+  );
+  console.log("character.innateHeritage:", character.innateHeritage);
+  console.log("character.skillProficiencies:", character.skillProficiencies);
+
   const getSkillsBySource = () => {
     const allSkills = character.skillProficiencies || [];
     const castingStyleSkills = getAvailableSkills({ character }) || [];
     const backgroundSkills = character.backgroundSkills || [];
     const innateHeritageSkills = character.innateHeritageSkills || [];
+
+    console.log(
+      "getSkillsBySource - innateHeritageSkills:",
+      innateHeritageSkills
+    );
 
     const selectedCastingStyleSkills = allSkills.filter(
       (skill) =>
@@ -24,6 +38,11 @@ const EnhancedSkillsSection = ({
 
     const selectedInnaateHeritageSkills = allSkills.filter((skill) =>
       innateHeritageSkills.includes(skill)
+    );
+
+    console.log(
+      "selectedInnaateHeritageSkills:",
+      selectedInnaateHeritageSkills
     );
 
     return {
@@ -42,6 +61,8 @@ const EnhancedSkillsSection = ({
   } = getSkillsBySource();
   const availableCastingSkills = getAvailableSkills({ character });
 
+  console.log("Final innateHeritageSkills for display:", innateHeritageSkills);
+
   return (
     <div style={styles.fieldContainer}>
       <h3 style={styles.skillsHeader}>
@@ -55,7 +76,6 @@ const EnhancedSkillsSection = ({
       ) : (
         <div style={styles.skillsContainer}>
           {/* Innate Heritage Skills Section */}
-
           {innateHeritageSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h4
@@ -75,10 +95,12 @@ const EnhancedSkillsSection = ({
                     key={`heritage-${skill}`}
                     style={{
                       ...styles.skillOptionBase,
+                      // eslint-disable-next-line
                       backgroundColor: "#8b5cf6" + "20",
                       border: `2px solid #8b5cf6`,
                       cursor: "default",
                       opacity: 0.9,
+                      width: "49%",
                     }}
                   >
                     <div
@@ -127,6 +149,7 @@ const EnhancedSkillsSection = ({
               </div>
             </div>
           )}
+
           {/* Background Skills Section */}
           {backgroundSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
@@ -215,9 +238,7 @@ const EnhancedSkillsSection = ({
                 const isFromHeritage = innateHeritageSkills.includes(skill);
                 if (isFromBackground || isFromHeritage) {
                   const sourceLabel = isFromBackground ? "B" : "H";
-                  const sourceColor = isFromBackground
-                    ? theme.textSecondary
-                    : "#8b5cf6";
+                  const sourceColor = isFromBackground ? "#f59e0b" : "#8b5cf6";
 
                   return (
                     <div
@@ -325,7 +346,10 @@ const EnhancedSkillsSection = ({
               <span>
                 {" "}
                 ({backgroundSkills.length} from background,{" "}
-                {castingStyleSkills.length} from casting style)
+                {castingStyleSkills.length} from casting style
+                {innateHeritageSkills.length > 0 &&
+                  `, ${innateHeritageSkills.length} from heritage`}
+                )
               </span>
             )}
           </div>
