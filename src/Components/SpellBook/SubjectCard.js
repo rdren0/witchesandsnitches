@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { spellsData } from "./spells";
-import { getSpellModifier } from "./utils";
+import { getSpellModifier, getModifierInfo } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
 import { createSpellBookStyles } from "../../styles/masterStyles";
@@ -66,7 +66,7 @@ export const SubjectCard = ({
   user,
   globalSearchTerm = "",
 }) => {
-  const { attemptSpell } = useRollFunctions();
+  const { attemptSpell, rollResearch } = useRollFunctions();
   const { theme } = useTheme();
   const styles = createSpellBookStyles(theme);
   const [attemptingSpells, setAttemptingSpells] = useState({});
@@ -452,33 +452,27 @@ export const SubjectCard = ({
 
     const playerYear = selectedCharacter.year || 1;
     const spellYear = spellData.year || 1;
-
     const dc = calculateResearchDC(playerYear, spellYear, spellName);
-
-    const confirmMessage = `Research ${spellName}?\n\nPlayer Year: ${playerYear}\nSpell Year: ${spellYear}\nDC: ${dc}\n\nSuccess: Mark as researched\nNat 20: Mark as researched + 1 successful attempt`;
-
-    // eslint-disable-next-line no-restricted-globals
-    if (!confirm(confirmMessage)) return;
 
     setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
 
     try {
-      const modifier = getSpellModifier(
+      // Use the extracted roll function
+      const rollResult = await rollResearch({
         spellName,
-        subjectName,
-        selectedCharacter
-      );
+        subject: subjectName,
+        selectedCharacter,
+        dc,
+        playerYear,
+        spellYear,
+        getSpellModifier,
+        getModifierInfo,
+      });
 
-      const d20Roll = Math.floor(Math.random() * 20) + 1;
-      const totalRoll = d20Roll + modifier;
-      const isNaturalTwenty = d20Roll === 20;
-      const isSuccess = totalRoll >= dc;
-
-      const rollMessage = `Research Check: ${d20Roll}${
-        modifier >= 0 ? "+" : ""
-      }${modifier} = ${totalRoll} vs DC ${dc}`;
+      const { isSuccess, isNaturalTwenty } = rollResult;
 
       if (isSuccess) {
+        // Handle database updates
         const { data: existingProgress, error: fetchError } = await supabase
           .from("spell_progress_summary")
           .select("*")
@@ -497,6 +491,7 @@ export const SubjectCard = ({
           updated_at: new Date().toISOString(),
         };
 
+        // Only add successful attempt on Natural 20
         if (isNaturalTwenty) {
           const currentAttempts = existingProgress?.successful_attempts || 0;
           updateData.successful_attempts = Math.min(currentAttempts + 1, 2);
@@ -517,8 +512,8 @@ export const SubjectCard = ({
             character_id: selectedCharacter.id,
             discord_user_id: discordUserId,
             spell_name: spellName,
-            successful_attempts: isNaturalTwenty ? 1 : 0,
-            has_natural_twenty: false,
+            successful_attempts: isNaturalTwenty ? 1 : 0, // Only give attempt on Nat 20
+            has_natural_twenty: false, // This is for spell attempts, not research
             has_failed_attempt: false,
             researched: true,
           };
@@ -532,17 +527,6 @@ export const SubjectCard = ({
             return;
           }
         }
-
-        const successMessage = isNaturalTwenty
-          ? `🎯 EXCELLENT RESEARCH! (Nat 20)\n${rollMessage}\n\nYou gained deep understanding of ${spellName} and earned 1 successful attempt!`
-          : `✅ Research Successful!\n${rollMessage}\n\nYou learned about ${spellName} and marked it as researched.`;
-
-        // eslint-disable-next-line no-restricted-globals
-        alert(successMessage);
-      } else {
-        const failMessage = `❌ Research Failed\n${rollMessage}\n\n${spellName} proved too difficult to understand at this time.`;
-        // eslint-disable-next-line no-restricted-globals
-        alert(failMessage);
       }
 
       await loadSpellProgress();
@@ -1050,9 +1034,11 @@ export const SubjectCard = ({
           </button>
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          {console.log({ isResearched, spellName })}
           <button
             onClick={() => markSpellAsResearched(spellName)}
             disabled={
+              isResearched ||
               isMastered ||
               !selectedCharacter ||
               attemptingSpells[spellName] ||
@@ -1073,6 +1059,7 @@ export const SubjectCard = ({
               transition: "all 0.2s ease",
               fontFamily: "inherit",
               ...(isMastered ||
+              isResearched ||
               !selectedCharacter ||
               attemptingSpells[spellName] ||
               !findSpellData(spellName).year

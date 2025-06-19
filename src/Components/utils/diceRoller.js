@@ -38,6 +38,8 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         return "#10b981";
       case "saving_throw":
         return "#8b5cf6";
+      case "research":
+        return "#10b981";
       default:
         return "#6b7280";
     }
@@ -324,20 +326,6 @@ export const useRollModal = () => {
     };
   }
   return context;
-};
-
-export const useRollFunctions = () => {
-  const { showRollResult } = useRollModal();
-
-  return {
-    rollAbility: (params) => rollAbility({ ...params, showRollResult }),
-    rollInitiative: (params) => rollInitiative({ ...params, showRollResult }),
-    rollSkill: (params) => rollSkill({ ...params, showRollResult }),
-    attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
-    rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
-    rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
-    rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),
-  };
 };
 
 export const calculateSkillBonus = ({ skillName, abilityMod, character }) => {
@@ -953,7 +941,7 @@ export const rollInitiative = async ({
   try {
     const diceResult = rollDice();
     const d20Roll = diceResult.total;
-    // ✅ Use the character's pre-calculated initiative modifier instead
+
     const mod = character.initiativeModifier;
     const total = d20Roll + mod;
 
@@ -1445,4 +1433,182 @@ export const rollSavingThrow = async ({
   } finally {
     setIsRolling(false);
   }
+};
+
+export const rollResearch = async ({
+  spellName,
+  subject,
+  selectedCharacter,
+  dc,
+  playerYear,
+  spellYear,
+  getSpellModifier,
+  getModifierInfo,
+  showRollResult,
+}) => {
+  try {
+    const modifier = getSpellModifier(spellName, subject, selectedCharacter);
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+    const totalRoll = d20Roll + modifier;
+    const isNaturalTwenty = d20Roll === 20;
+    const isSuccess = totalRoll >= dc;
+
+    const isCriticalSuccess = isNaturalTwenty;
+    const isCriticalFailure = d20Roll === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `Research: ${spellName}`,
+        rollValue: d20Roll,
+        modifier: modifier,
+        total: totalRoll,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "research",
+        description: `History of Magic check (DC ${dc}) for ${selectedCharacter.name}`,
+      });
+    }
+
+    if (discordWebhookUrl) {
+      let embedColor = isSuccess ? 0x10b981 : 0xef4444;
+      let title = `${
+        selectedCharacter?.name || "Unknown"
+      } Researched: ${spellName}`;
+      let resultText = "";
+
+      if (isNaturalTwenty) {
+        embedColor = 0xffd700;
+        title = `⭐ ${
+          selectedCharacter?.name || "Unknown"
+        } Researched: ${spellName}`;
+        resultText = "⭐ **EXCELLENT RESEARCH!** (Natural 20)";
+      } else if (isSuccess) {
+        resultText = "✅ **Research Successful!**";
+      } else {
+        resultText = "❌ **Research Failed**";
+      }
+
+      const fields = [
+        {
+          name: "Result",
+          value: resultText,
+          inline: true,
+        },
+        {
+          name: "Roll Details",
+          value: `**${d20Roll}** ${
+            modifier >= 0 ? "+" : ""
+          }${modifier} = **${totalRoll}** vs DC ${dc}`,
+          inline: true,
+        },
+        {
+          name: "Research Info",
+          value: `Player Year: ${playerYear}\nSpell Year: ${spellYear}`,
+          inline: true,
+        },
+      ];
+
+      if (isSuccess) {
+        if (isNaturalTwenty) {
+          fields.push({
+            name: "Special Benefit",
+            value: "Gained deep understanding + 1 successful attempt!",
+            inline: false,
+          });
+        } else {
+          fields.push({
+            name: "Benefit",
+            value: "Spell marked as researched for future attempts",
+            inline: false,
+          });
+        }
+      } else {
+        fields.push({
+          name: "Outcome",
+          value: `${spellName} proved too difficult to understand at this time`,
+          inline: false,
+        });
+      }
+
+      if (modifier !== 0) {
+        const modifierInfo = getModifierInfo(
+          spellName,
+          subject,
+          selectedCharacter
+        );
+
+        let modifierBreakdown = `${modifierInfo.abilityName}: ${
+          modifierInfo.abilityModifier >= 0 ? "+" : ""
+        }${modifierInfo.abilityModifier}`;
+
+        if (modifierInfo.wandModifier !== 0) {
+          modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+            modifierInfo.wandModifier >= 0 ? "+" : ""
+          }${modifierInfo.wandModifier}`;
+        }
+
+        fields.push({
+          name: "Modifier Breakdown",
+          value: modifierBreakdown,
+          inline: false,
+        });
+      }
+
+      const embed = {
+        title: title,
+        description: "",
+        color: embedColor,
+        fields: fields,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: "Witches And Snitches - Spell Research",
+        },
+      };
+
+      try {
+        await fetch(discordWebhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            embeds: [embed],
+          }),
+        });
+      } catch (discordError) {
+        console.error("Error sending to Discord:", discordError);
+      }
+    }
+
+    return {
+      d20Roll,
+      modifier,
+      totalRoll,
+      dc,
+      isSuccess,
+      isNaturalTwenty,
+      rollMessage: `Research Check: ${d20Roll}${
+        modifier >= 0 ? "+" : ""
+      }${modifier} = ${totalRoll} vs DC ${dc}`,
+    };
+  } catch (error) {
+    console.error("Error during research roll:", error);
+    throw error;
+  }
+};
+
+export const useRollFunctions = () => {
+  const { showRollResult } = useRollModal();
+
+  return {
+    rollAbility: (params) => rollAbility({ ...params, showRollResult }),
+    rollInitiative: (params) => rollInitiative({ ...params, showRollResult }),
+    rollSkill: (params) => rollSkill({ ...params, showRollResult }),
+    attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
+    rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
+    rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
+    rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),
+    rollResearch: (params) => rollResearch({ ...params, showRollResult }),
+  };
 };
