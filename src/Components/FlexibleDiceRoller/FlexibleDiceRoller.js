@@ -10,20 +10,29 @@ const FlexibleDiceRoller = ({
   style = {},
   compact = false,
 }) => {
-  const { rollFlexibleDice } = useRollFunctions();
+  const { rollFlexibleDice } = useRollFunctions(); // Assuming this function exists or needs to be created
   const { theme } = useTheme();
   const [diceType, setDiceType] = useState(20);
-  const [rollType, setRollType] = useState("normal");
+  const [rollType, setRollType] = useState("normal"); // normal, advantage, disadvantage
   const [modifier, setModifier] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
 
-  const diceOptions = [2, 4, 6, 8, 10, 12, 20, 100];
   const rollTypeOptions = [
     { value: "normal", label: "Normal", short: "N" },
     { value: "advantage", label: "Advantage", short: "ADV" },
     { value: "disadvantage", label: "Disadvantage", short: "DIS" },
   ];
+
+  const commonDice = [4, 6, 8, 10, 12, 20, 100];
+
+  const incrementDiceType = () => {
+    setDiceType((prev) => parseInt(prev) + 1);
+  };
+
+  const decrementDiceType = () => {
+    setDiceType((prev) => Math.max(2, parseInt(prev) - 1)); // Minimum d2
+  };
 
   const handleRoll = () => {
     const rollTitle = customTitle.trim() || title;
@@ -31,6 +40,7 @@ const FlexibleDiceRoller = ({
       ? `Rolling ${customTitle.toLowerCase()}`
       : description;
 
+    // Use the new rollFlexibleDice function
     rollFlexibleDice({
       diceType: parseInt(diceType),
       rollType: rollType,
@@ -102,7 +112,7 @@ const FlexibleDiceRoller = ({
       outline: "none",
       cursor: "pointer",
       appearance: "none",
-      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http:
+      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${
         theme === "dark" ? "%23d1d5db" : "%23374151"
       }' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
       backgroundRepeat: "no-repeat",
@@ -117,6 +127,7 @@ const FlexibleDiceRoller = ({
       borderRadius: "6px",
       backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
       overflow: "hidden",
+      transition: "border-color 0.2s ease",
     },
     modifierButton: {
       background: "none",
@@ -244,24 +255,106 @@ const FlexibleDiceRoller = ({
         <div style={styles.inputRow}>
           <div style={styles.inputContainer}>
             <label style={styles.label}>Dice Type</label>
-            <select
-              value={diceType}
-              onChange={(e) => setDiceType(e.target.value)}
-              style={styles.select}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#3b82f6";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor =
-                  theme === "dark" ? "#4b5563" : "#d1d5db";
+            <div style={styles.modifierContainer}>
+              <button
+                type="button"
+                onClick={decrementDiceType}
+                style={styles.modifierButton}
+              >
+                <Minus size={14} />
+              </button>
+              <input
+                type="number"
+                value={diceType}
+                min="2"
+                max="9999"
+                placeholder="20"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 2;
+                  setDiceType(Math.max(2, Math.min(9999, value)));
+                }}
+                style={{
+                  ...styles.modifierInput,
+                  textAlign: "center",
+                  fontWeight: "600",
+                  minWidth: "80px",
+                }}
+                onFocus={(e) => {
+                  e.target.style.backgroundColor =
+                    theme === "dark" ? "#374151" : "#f8fafc";
+                  e.target.parentElement.style.borderColor = "#3b82f6";
+                }}
+                onBlur={(e) => {
+                  e.target.style.backgroundColor = "transparent";
+                  e.target.parentElement.style.borderColor =
+                    theme === "dark" ? "#4b5563" : "#d1d5db";
+                  // Ensure valid value on blur
+                  const value = parseInt(e.target.value) || 2;
+                  setDiceType(Math.max(2, Math.min(9999, value)));
+                }}
+              />
+              <button
+                type="button"
+                onClick={incrementDiceType}
+                style={styles.modifierButton}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+            <div
+              style={{
+                fontSize: "10px",
+                color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                textAlign: "center",
+                marginTop: "2px",
               }}
             >
-              {diceOptions.map((dice) => (
-                <option key={dice} value={dice}>
-                  d{dice}
-                </option>
-              ))}
-            </select>
+              d{diceType}
+            </div>
+            {/* Quick preset buttons for common dice */}
+            {!compact && (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                  marginTop: "6px",
+                  justifyContent: "center",
+                }}
+              >
+                {commonDice.map((dice) => (
+                  <button
+                    key={dice}
+                    type="button"
+                    onClick={() => setDiceType(dice)}
+                    style={{
+                      padding: "2px 6px",
+                      fontSize: "10px",
+                      border: `1px solid ${
+                        theme === "dark" ? "#4b5563" : "#d1d5db"
+                      }`,
+                      borderRadius: "4px",
+                      backgroundColor:
+                        diceType === dice
+                          ? "#3b82f6"
+                          : theme === "dark"
+                          ? "#374151"
+                          : "#ffffff",
+                      color:
+                        diceType === dice
+                          ? "white"
+                          : theme === "dark"
+                          ? "#d1d5db"
+                          : "#374151",
+                      cursor: "pointer",
+                      transition: "all 0.1s ease",
+                    }}
+                  >
+                    d{dice}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={styles.inputContainer}>
