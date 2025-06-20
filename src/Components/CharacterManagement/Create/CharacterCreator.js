@@ -395,13 +395,13 @@ const CharacterCreator = ({
       subclass: character.subclass,
       wand_type: character.wandType,
     };
-
+    console.log({ characterToSave });
     try {
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         discordUserId
       );
-
+      console.log({ savedCharacter });
       const transformedCharacter = {
         id: savedCharacter.id,
         abilityScores: savedCharacter.ability_scores,

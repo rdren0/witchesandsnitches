@@ -58,6 +58,8 @@ export const useCharacterSetup = (originalCharacter) => {
       skillProficiencies: [],
       backgroundSkills: [],
       innateHeritage: "",
+      innateHeritageSkills: [],
+      heritageChoices: {},
       level1ChoiceType: "",
       hitPoints: 1,
       initiativeAbility: "dexterity",
@@ -76,11 +78,26 @@ export const useCharacterSetup = (originalCharacter) => {
 
     const merged = { ...defaultCharacter, ...originalCharacter };
 
+    // Transform snake_case database fields to camelCase frontend fields
     merged.houseChoices =
       originalCharacter?.houseChoices || originalCharacter?.house_choices || {};
     merged.subclassChoices =
       originalCharacter?.subclassChoices ||
       originalCharacter?.subclass_choices ||
+      {};
+
+    // ADD THESE MISSING TRANSFORMATIONS:
+    merged.innateHeritage =
+      originalCharacter?.innateHeritage ||
+      originalCharacter?.innate_heritage ||
+      "";
+    merged.innateHeritageSkills =
+      originalCharacter?.innateHeritageSkills ||
+      originalCharacter?.innate_heritage_skills ||
+      [];
+    merged.heritageChoices =
+      originalCharacter?.heritageChoices ||
+      originalCharacter?.heritage_choices ||
       {};
 
     return migrateBackgroundSkills(merged);

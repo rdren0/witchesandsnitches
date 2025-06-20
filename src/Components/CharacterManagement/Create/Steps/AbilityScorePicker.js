@@ -546,20 +546,57 @@ export const AbilityScorePicker = ({
     const details = allDetails[ability] || [];
     if (details.length === 0) return null;
 
-    return details
-      .map((detail) => {
-        if (detail.source === "feat") {
-          return `+${detail.amount} from ${detail.featName}`;
-        } else if (detail.source === "background") {
-          return `+${detail.amount} from ${detail.backgroundName} background`;
-        } else if (detail.source === "house") {
-          return `+${detail.amount} from ${detail.houseName} (${detail.type})`;
-        } else if (detail.source === "heritage") {
-          return `+${detail.amount} from ${detail.heritageName} heritage (${detail.type})`;
-        }
-        return `+${detail.amount}`;
-      })
-      .join(", ");
+    // Group sources by type for cleaner display
+    const sourceGroups = {
+      feat: [],
+      background: [],
+      house: [],
+      heritage: [],
+    };
+
+    details.forEach((detail) => {
+      if (detail.source === "feat") {
+        sourceGroups.feat.push(detail);
+      } else if (detail.source === "background") {
+        sourceGroups.background.push(detail);
+      } else if (detail.source === "house") {
+        sourceGroups.house.push(detail);
+      } else if (detail.source === "heritage") {
+        sourceGroups.heritage.push(detail);
+      }
+    });
+
+    const tooltipParts = [];
+
+    if (sourceGroups.feat.length > 0) {
+      const featBonuses = sourceGroups.feat
+        .map((d) => `${d.featName} (+${d.amount})`)
+        .join(", ");
+      tooltipParts.push(`Feats: ${featBonuses}`);
+    }
+
+    if (sourceGroups.background.length > 0) {
+      const bgBonuses = sourceGroups.background
+        .map((d) => `${d.backgroundName} (+${d.amount})`)
+        .join(", ");
+      tooltipParts.push(`Background: ${bgBonuses}`);
+    }
+
+    if (sourceGroups.house.length > 0) {
+      const houseBonuses = sourceGroups.house
+        .map((d) => `${d.houseName} (+${d.amount})`)
+        .join(", ");
+      tooltipParts.push(`House: ${houseBonuses}`);
+    }
+
+    if (sourceGroups.heritage.length > 0) {
+      const heritageBonuses = sourceGroups.heritage
+        .map((d) => `${d.heritageName} (+${d.amount})`)
+        .join(", ");
+      tooltipParts.push(`Heritage: ${heritageBonuses}`);
+    }
+
+    return tooltipParts.join("\n");
   };
 
   const handleManualScoreBlur = (ability) => {

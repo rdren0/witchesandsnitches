@@ -29,6 +29,9 @@ const Level1AndProgressionSection = ({
   standardFeats,
   styles,
   theme,
+  // ADD THESE MISSING PROPS:
+  heritageChoices,
+  onHeritageChoicesChange,
 }) => {
   const featInfo = getFeatProgressionInfo();
 
@@ -206,6 +209,8 @@ const Level1AndProgressionSection = ({
           character={character}
           handleInputChange={handleInputChange}
           isEditing={true}
+          heritageChoices={heritageChoices}
+          onHeritageChoicesChange={onHeritageChoicesChange}
         />
       )}
 

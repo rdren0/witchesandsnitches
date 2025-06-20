@@ -221,25 +221,23 @@ const EnhancedBackgroundSelector = ({
   const styles = createFeatStyles(theme);
   const [expandedBackgrounds, setExpandedBackgrounds] = useState(new Set());
   const backgroundRefs = useRef({});
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const selectedBackground = value || "";
 
   useEffect(() => {
-    if (selectedBackground && selectedBackground.trim() !== "") {
+    // Only expand the selected background on initial load, but don't scroll
+    if (
+      selectedBackground &&
+      selectedBackground.trim() !== "" &&
+      !hasInitialized
+    ) {
       if (expandedBackgrounds.size === 0) {
         setExpandedBackgrounds(new Set([selectedBackground]));
       }
-
-      const backgroundElement = backgroundRefs.current[selectedBackground];
-      if (backgroundElement) {
-        backgroundElement.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-          inline: "nearest",
-        });
-      }
+      setHasInitialized(true);
     }
-  }, [selectedBackground, expandedBackgrounds.size]);
+  }, [selectedBackground, expandedBackgrounds.size, hasInitialized]);
 
   const enhancedStyles = {
     ...styles,
@@ -316,6 +314,7 @@ const EnhancedBackgroundSelector = ({
       );
       setExpandedBackgrounds(new Set([backgroundName]));
 
+      // Only scroll when user actively selects a different background
       setTimeout(() => {
         const backgroundElement = backgroundRefs.current[backgroundName];
         if (backgroundElement) {

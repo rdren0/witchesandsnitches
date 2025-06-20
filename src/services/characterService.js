@@ -21,7 +21,7 @@ const getCharacters = async (discordUserId) => {
   return data || [];
 };
 
-// Fixed: Remove supabase parameter since we use the one from top of file
+// Fixed: Add innate_heritage to the insert
 const saveCharacter = async (characterData, discordUserId) => {
   try {
     const { data: savedCharacter, error: characterError } = await supabase
@@ -40,7 +40,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         house: characterData.house,
         house_choices: characterData.house_choices,
         initiative_ability: characterData.initiative_ability,
-        heritage_choices: characterData.heritage_choices,
+        innate_heritage: characterData.innate_heritage, // ← ADDED THIS
         innate_heritage_skills: characterData.innate_heritage_skills,
         level: characterData.level,
         level1_choice_type: characterData.level1_choice_type,
@@ -87,7 +87,7 @@ const saveCharacter = async (characterData, discordUserId) => {
   }
 };
 
-// Fixed: Remove supabase parameter since we use the one from top of file
+// Fixed: Add innate_heritage to the update
 const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
     // Get current character to check if background changed
@@ -112,7 +112,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         house: characterData.house,
         house_choices: characterData.house_choices,
         initiative_ability: characterData.initiative_ability,
-        heritage_choices: characterData.heritage_choices,
+        innate_heritage: characterData.innate_heritage, // ← ADDED THIS
         innate_heritage_skills: characterData.innate_heritage_skills,
         level: characterData.level,
         level1_choice_type: characterData.level1_choice_type,

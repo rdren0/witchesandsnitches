@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { Save, X, AlertTriangle, ArrowLeft, Settings } from "lucide-react";
+import {
+  Save,
+  X,
+  AlertTriangle,
+  ArrowLeft,
+  Settings,
+  Lock,
+  Unlock,
+} from "lucide-react";
 import { skillsByCastingStyle, hpData } from "../../data";
 import { standardFeats as importedStandardFeats } from "../../standardFeatData";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -26,6 +34,133 @@ if (!importedStandardFeats) {
     "Warning: standardFeats is undefined from data import. Using empty array as fallback."
   );
 }
+
+// Section Lock Management Hook
+const useSectionLocks = () => {
+  const [sectionLocks, setSectionLocks] = useState({
+    basicInformation: true,
+    houseAndSubclass: true,
+    level1AndProgression: true,
+    abilityScores: true,
+    magicModifiers: true,
+  });
+
+  const toggleSectionLock = (sectionName) => {
+    setSectionLocks((prev) => ({
+      ...prev,
+      [sectionName]: !prev[sectionName],
+    }));
+  };
+
+  const unlockAllSections = () => {
+    setSectionLocks({
+      basicInformation: false,
+      houseAndSubclass: false,
+      level1AndProgression: false,
+      abilityScores: false,
+      magicModifiers: false,
+    });
+  };
+
+  const lockAllSections = () => {
+    setSectionLocks({
+      basicInformation: true,
+      houseAndSubclass: true,
+      level1AndProgression: true,
+      abilityScores: true,
+      magicModifiers: true,
+    });
+  };
+
+  return {
+    sectionLocks,
+    toggleSectionLock,
+    unlockAllSections,
+    lockAllSections,
+  };
+};
+
+// Section Header Component
+const SectionHeader = ({
+  title,
+  subtitle,
+  isLocked,
+  onToggleLock,
+  styles,
+  theme,
+}) => {
+  return (
+    <div
+      style={{
+        ...styles.sectionHeader,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "16px",
+        padding: "12px 16px",
+        backgroundColor: isLocked
+          ? theme.backgroundSecondary
+          : theme.backgroundTertiary,
+        border: `1px solid ${isLocked ? theme.border : theme.primary}`,
+        borderRadius: "8px",
+        transition: "all 0.2s ease",
+      }}
+    >
+      <div>
+        <h2
+          style={{
+            ...styles.sectionTitle,
+            margin: 0,
+            fontSize: "18px",
+            fontWeight: "600",
+            color: isLocked ? theme.textSecondary : theme.text,
+          }}
+        >
+          {title}
+        </h2>
+        {subtitle && (
+          <p
+            style={{
+              ...styles.sectionSubtitle,
+              margin: "4px 0 0 0",
+              fontSize: "14px",
+              color: theme.textSecondary,
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <button
+        onClick={onToggleLock}
+        style={{
+          ...styles.button,
+          padding: "8px",
+          backgroundColor: isLocked ? theme.warning : theme.success,
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          fontSize: "14px",
+          fontWeight: "500",
+          transition: "all 0.2s ease",
+        }}
+        title={
+          isLocked
+            ? "Click to unlock and edit this section"
+            : "Click to lock this section"
+        }
+      >
+        {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
+        {isLocked ? "Locked" : "Unlocked"}
+      </button>
+    </div>
+  );
+};
+
 const CharacterEditor = ({
   character: originalCharacter,
   onSave,
@@ -54,6 +189,14 @@ const CharacterEditor = ({
     getFeatProgressionInfo,
   } = useASIHandlers(character, setCharacter);
 
+  // Section locking
+  const {
+    sectionLocks,
+    toggleSectionLock,
+    unlockAllSections,
+    lockAllSections,
+  } = useSectionLocks();
+
   // UI state
   const [expandedFeats, setExpandedFeats] = useState(new Set());
   const [featFilter, setFeatFilter] = useState("");
@@ -77,12 +220,39 @@ const CharacterEditor = ({
     standardFeats,
   });
 
+  // Enhanced styles for locked sections
+  const enhancedStyles = {
+    ...styles,
+    lockedSection: {
+      opacity: 0.6,
+      pointerEvents: "none",
+      userSelect: "none",
+      position: "relative",
+    },
+    sectionContainer: {
+      marginBottom: "32px",
+      transition: "all 0.3s ease",
+    },
+    bulkActions: {
+      display: "flex",
+      gap: "12px",
+      marginBottom: "24px",
+      justifyContent: "center",
+      padding: "16px",
+      backgroundColor: theme.backgroundSecondary,
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
+    },
+  };
+
   const handleHouseSelect = (house) => {
+    if (sectionLocks.houseAndSubclass) return;
     setSelectedHouse(house);
     handleInputChange("house", house);
   };
 
   const handleHouseChoiceSelect = (house, featureName, optionName) => {
+    if (sectionLocks.houseAndSubclass) return;
     setHouseChoices((prev) => ({
       ...prev,
       [house]: { ...prev[house], [featureName]: optionName },
@@ -97,7 +267,7 @@ const CharacterEditor = ({
   };
 
   const rollHp = () => {
-    if (!character.castingStyle) return;
+    if (sectionLocks.basicInformation || !character.castingStyle) return;
     const roller = new DiceRoller();
     const castingData = hpData[character.castingStyle];
     if (!castingData) return;
@@ -117,7 +287,7 @@ const CharacterEditor = ({
   };
 
   const assignStat = (ability, statValue) => {
-    if (lockedFields.abilityScores) return;
+    if (sectionLocks.abilityScores || lockedFields.abilityScores) return;
     const oldValue = character.abilityScores[ability];
     const statIndex = availableStats.indexOf(statValue);
     if (statIndex > -1) {
@@ -138,7 +308,7 @@ const CharacterEditor = ({
   };
 
   const clearStat = (ability) => {
-    if (lockedFields.abilityScores) return;
+    if (sectionLocks.abilityScores || lockedFields.abilityScores) return;
     const oldValue = character.abilityScores[ability];
     if (oldValue !== null) {
       if (!isManualMode) {
@@ -182,6 +352,33 @@ const CharacterEditor = ({
   };
 
   const handleInputChange = (field, value) => {
+    // Check section locks based on field
+    const fieldSectionMap = {
+      name: "basicInformation",
+      level: "basicInformation",
+      castingStyle: "basicInformation",
+      hitPoints: "basicInformation",
+      house: "houseAndSubclass",
+      subclass: "houseAndSubclass",
+      background: "houseAndSubclass",
+      level1ChoiceType: "level1AndProgression",
+      innateHeritage: "level1AndProgression",
+      standardFeats: "level1AndProgression",
+      wandType: "basicInformation",
+      gameSession: "basicInformation",
+      initiativeAbility: "basicInformation",
+    };
+
+    // Check if field starts with abilityScores
+    if (field.startsWith("abilityScores.")) {
+      if (sectionLocks.abilityScores) return;
+    } else if (field.startsWith("magicModifiers.")) {
+      if (sectionLocks.magicModifiers) return;
+    } else {
+      const sectionName = fieldSectionMap[field];
+      if (sectionName && sectionLocks[sectionName]) return;
+    }
+
     if (field.includes(".")) {
       const [parent, child] = field.split(".");
       setCharacter((prev) => {
@@ -267,7 +464,8 @@ const CharacterEditor = ({
   };
 
   const handleLevel1ChoiceChange = (choiceType) => {
-    if (lockedFields.level1ChoiceType) return;
+    if (sectionLocks.level1AndProgression || lockedFields.level1ChoiceType)
+      return;
     setCharacter((prev) => ({
       ...prev,
       level1ChoiceType: choiceType,
@@ -277,6 +475,7 @@ const CharacterEditor = ({
   };
 
   const handleSkillToggle = (skill) => {
+    if (sectionLocks.houseAndSubclass) return;
     setCharacter((prev) => {
       const currentSkills = prev.skillProficiencies || [];
       const backgroundSkills = prev.backgroundSkills || [];
@@ -541,23 +740,23 @@ const CharacterEditor = ({
 
   if (!originalCharacter) {
     return (
-      <div style={styles.panel}>
-        <div style={{ ...styles.header, textAlign: "center" }}>
-          <h1 style={styles.title}>Loading Character...</h1>
-          <p style={styles.subtitle}>
+      <div style={enhancedStyles.panel}>
+        <div style={{ ...enhancedStyles.header, textAlign: "center" }}>
+          <h1 style={enhancedStyles.title}>Loading Character...</h1>
+          <p style={enhancedStyles.subtitle}>
             Please wait while the character data loads.
           </p>
         </div>
       </div>
     );
   }
-
+  console.log({ character });
   return (
-    <div style={styles.panel}>
+    <div style={enhancedStyles.panel}>
       {/* Header */}
       <div
         style={{
-          ...styles.header,
+          ...enhancedStyles.header,
           display: "flex",
           alignItems: "center",
           gap: "16px",
@@ -567,7 +766,7 @@ const CharacterEditor = ({
         <button
           onClick={handleCancel}
           style={{
-            ...styles.button,
+            ...enhancedStyles.button,
             backgroundColor: theme.border,
             color: theme.textSecondary,
             padding: "8px",
@@ -576,8 +775,8 @@ const CharacterEditor = ({
           <ArrowLeft size={16} />
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={styles.title}>Editing: {character.name}</h1>
-          <p style={styles.subtitle}>
+          <h1 style={enhancedStyles.title}>Editing: {character.name}</h1>
+          <p style={enhancedStyles.subtitle}>
             Level {character.level} {character.castingStyle} • {character.house}
             {hasUnsavedChanges && (
               <span style={{ color: theme.warning, marginLeft: "8px" }}>
@@ -593,120 +792,247 @@ const CharacterEditor = ({
 
       {/* Error Display */}
       {error && (
-        <div style={styles.errorContainer}>
+        <div style={enhancedStyles.errorContainer}>
           <AlertTriangle size={16} />
           {error}
         </div>
       )}
 
       {/* Editing Warning */}
-      <div style={styles.editingWarning}>
+      <div style={enhancedStyles.editingWarning}>
         <AlertTriangle size={16} />
         <div>
-          <strong>Editing Existing Character</strong>
+          <strong>Section-Based Editing</strong>
           <p>
-            Some fields may be locked to preserve character integrity. Use the
-            lock/unlock buttons to modify restricted fields if needed.
+            Each section is locked by default to preserve character integrity.
+            Click the lock/unlock button on any section header to enable
+            editing.
           </p>
         </div>
       </div>
 
+      {/* Bulk Actions */}
+      <div style={enhancedStyles.bulkActions}>
+        <button
+          onClick={unlockAllSections}
+          style={{
+            ...enhancedStyles.button,
+            backgroundColor: theme.success,
+            color: "white",
+            padding: "8px 16px",
+          }}
+        >
+          <Unlock size={16} />
+          Unlock All Sections
+        </button>
+        <button
+          onClick={lockAllSections}
+          style={{
+            ...enhancedStyles.button,
+            backgroundColor: theme.warning,
+            color: "white",
+            padding: "8px 16px",
+          }}
+        >
+          <Lock size={16} />
+          Lock All Sections
+        </button>
+      </div>
+
       {/* Section 1: Basic Information */}
-      <BasicInformationSection
-        character={character}
-        handleInputChange={handleInputChange}
-        calculateHitPoints={calculateHitPoints}
-        getCurrentHp={getCurrentHp}
-        isHpManualMode={isHpManualMode}
-        setIsHpManualMode={setIsHpManualMode}
-        rolledHp={rolledHp}
-        setRolledHp={setRolledHp}
-        rollHp={rollHp}
-        styles={styles}
-        theme={theme}
-      />
+      <div style={enhancedStyles.sectionContainer}>
+        <SectionHeader
+          title="Basic Information"
+          subtitle="Character name, level, casting style, hit points"
+          isLocked={sectionLocks.basicInformation}
+          onToggleLock={() => toggleSectionLock("basicInformation")}
+          styles={enhancedStyles}
+          theme={theme}
+        />
+        <div
+          style={
+            sectionLocks.basicInformation ? enhancedStyles.lockedSection : {}
+          }
+        >
+          <BasicInformationSection
+            character={character}
+            handleInputChange={handleInputChange}
+            calculateHitPoints={calculateHitPoints}
+            getCurrentHp={getCurrentHp}
+            isHpManualMode={isHpManualMode}
+            setIsHpManualMode={setIsHpManualMode}
+            rolledHp={rolledHp}
+            setRolledHp={setRolledHp}
+            rollHp={rollHp}
+            styles={enhancedStyles}
+            theme={theme}
+            isLocked={sectionLocks.basicInformation}
+          />
+        </div>
+      </div>
 
       {/* Section 2: House and Subclass */}
-      <HouseAndSubclassSection
-        character={character}
-        handleInputChange={handleInputChange}
-        selectedHouse={selectedHouse}
-        handleHouseSelect={handleHouseSelect}
-        houseChoices={houseChoices}
-        handleHouseChoiceSelect={handleHouseChoiceSelect}
-        setCharacter={setCharacter}
-        handleSkillToggle={handleSkillToggle}
-        getAvailableSkills={getAvailableSkills}
-        styles={styles}
-        theme={theme}
-      />
+      <div style={enhancedStyles.sectionContainer}>
+        <SectionHeader
+          title="House and Subclass"
+          subtitle="House selection, subclass, background, and skills"
+          isLocked={sectionLocks.houseAndSubclass}
+          onToggleLock={() => toggleSectionLock("houseAndSubclass")}
+          styles={enhancedStyles}
+          theme={theme}
+        />
+        <div
+          style={
+            sectionLocks.houseAndSubclass ? enhancedStyles.lockedSection : {}
+          }
+        >
+          <HouseAndSubclassSection
+            character={character}
+            handleInputChange={handleInputChange}
+            selectedHouse={selectedHouse}
+            handleHouseSelect={handleHouseSelect}
+            houseChoices={houseChoices}
+            handleHouseChoiceSelect={handleHouseChoiceSelect}
+            setCharacter={setCharacter}
+            handleSkillToggle={handleSkillToggle}
+            getAvailableSkills={getAvailableSkills}
+            styles={enhancedStyles}
+            theme={theme}
+            characterId={character.id}
+            discordUserId={discordUserId}
+            autoSave={true}
+            onSaveError={(error) => {
+              console.error("Subclass save error:", error);
+              setError(`Failed to save subclass: ${error.message}`);
+            }}
+            onSaveSuccess={() => {
+              console.log("Subclass saved successfully");
+              if (error && error.includes("subclass")) {
+                setError(null);
+              }
+            }}
+            isLocked={sectionLocks.houseAndSubclass}
+          />
+        </div>
+      </div>
 
       {/* Section 3: Level 1 Choice and Progression */}
-      <Level1AndProgressionSection
-        character={character}
-        handleInputChange={handleInputChange}
-        handleLevel1ChoiceChange={handleLevel1ChoiceChange}
-        lockedFields={lockedFields}
-        toggleFieldLock={toggleFieldLock}
-        expandedFeats={expandedFeats}
-        setExpandedFeats={setExpandedFeats}
-        featFilter={featFilter}
-        setFeatFilter={setFeatFilter}
-        calculateMaxFeats={calculateMaxFeats}
-        getAvailableASILevels={getAvailableASILevels}
-        handleASIChoiceChange={handleASIChoiceChange}
-        handleASIFeatChange={handleASIFeatChange}
-        handleASIAbilityChange={handleASIAbilityChange}
-        asiLevelFilters={asiLevelFilters}
-        setASILevelFilter={setASILevelFilter}
-        getFeatProgressionInfo={getFeatProgressionInfo}
-        standardFeats={standardFeats}
-        styles={styles}
-        theme={theme}
-      />
+      <div style={enhancedStyles.sectionContainer}>
+        <SectionHeader
+          title="Level 1 Choice and Progression"
+          subtitle="Level 1 feat or heritage choice, ASI progression"
+          isLocked={sectionLocks.level1AndProgression}
+          onToggleLock={() => toggleSectionLock("level1AndProgression")}
+          styles={enhancedStyles}
+          theme={theme}
+        />
+        <div
+          style={
+            sectionLocks.level1AndProgression
+              ? enhancedStyles.lockedSection
+              : {}
+          }
+        >
+          <Level1AndProgressionSection
+            character={character}
+            handleInputChange={handleInputChange}
+            handleLevel1ChoiceChange={handleLevel1ChoiceChange}
+            lockedFields={lockedFields}
+            toggleFieldLock={toggleFieldLock}
+            expandedFeats={expandedFeats}
+            setExpandedFeats={setExpandedFeats}
+            featFilter={featFilter}
+            setFeatFilter={setFeatFilter}
+            calculateMaxFeats={calculateMaxFeats}
+            getAvailableASILevels={getAvailableASILevels}
+            handleASIChoiceChange={handleASIChoiceChange}
+            handleASIFeatChange={handleASIFeatChange}
+            handleASIAbilityChange={handleASIAbilityChange}
+            asiLevelFilters={asiLevelFilters}
+            setASILevelFilter={setASILevelFilter}
+            getFeatProgressionInfo={getFeatProgressionInfo}
+            standardFeats={standardFeats}
+            styles={enhancedStyles}
+            theme={theme}
+            isLocked={sectionLocks.level1AndProgression}
+          />
+        </div>
+      </div>
 
       {/* Section 4: Ability Scores */}
-      <AbilityScoresSection
-        character={character}
-        setCharacter={setCharacter}
-        lockedFields={lockedFields}
-        toggleFieldLock={toggleFieldLock}
-        allStatsAssigned={allStatsAssigned}
-        assignStat={assignStat}
-        availableStats={availableStats}
-        clearStat={clearStat}
-        houseChoices={houseChoices}
-        isManualMode={isManualMode}
-        setIsManualMode={setIsManualMode}
-        rolledStats={rolledStats}
-        setRolledStats={setRolledStats}
-        setAvailableStats={setAvailableStats}
-        tempInputValues={tempInputValues}
-        setTempInputValues={setTempInputValues}
-        styles={styles}
-        theme={theme}
-      />
+      <div style={enhancedStyles.sectionContainer}>
+        <SectionHeader
+          title="Ability Scores"
+          subtitle="Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma"
+          isLocked={sectionLocks.abilityScores}
+          onToggleLock={() => toggleSectionLock("abilityScores")}
+          styles={enhancedStyles}
+          theme={theme}
+        />
+        <div
+          style={sectionLocks.abilityScores ? enhancedStyles.lockedSection : {}}
+        >
+          <AbilityScoresSection
+            character={character}
+            setCharacter={setCharacter}
+            lockedFields={lockedFields}
+            toggleFieldLock={toggleFieldLock}
+            allStatsAssigned={allStatsAssigned}
+            assignStat={assignStat}
+            availableStats={availableStats}
+            clearStat={clearStat}
+            houseChoices={houseChoices}
+            isManualMode={isManualMode}
+            setIsManualMode={setIsManualMode}
+            rolledStats={rolledStats}
+            setRolledStats={setRolledStats}
+            setAvailableStats={setAvailableStats}
+            tempInputValues={tempInputValues}
+            setTempInputValues={setTempInputValues}
+            styles={enhancedStyles}
+            theme={theme}
+            isLocked={sectionLocks.abilityScores}
+          />
+        </div>
+      </div>
 
       {/* Section 5: Magic Modifiers */}
-      <MagicModifiersSection
-        character={character}
-        handleInputChange={handleInputChange}
-        magicModifierTempValues={magicModifierTempValues}
-        setMagicModifierTempValues={setMagicModifierTempValues}
-        styles={styles}
-        theme={theme}
-      />
+      <div style={enhancedStyles.sectionContainer}>
+        <SectionHeader
+          title="Magic Modifiers"
+          subtitle="Divinations, Charms, Transfiguration, Healing, Jinxes/Hexes/Curses"
+          isLocked={sectionLocks.magicModifiers}
+          onToggleLock={() => toggleSectionLock("magicModifiers")}
+          styles={enhancedStyles}
+          theme={theme}
+        />
+        <div
+          style={
+            sectionLocks.magicModifiers ? enhancedStyles.lockedSection : {}
+          }
+        >
+          <MagicModifiersSection
+            character={character}
+            handleInputChange={handleInputChange}
+            magicModifierTempValues={magicModifierTempValues}
+            setMagicModifierTempValues={setMagicModifierTempValues}
+            styles={enhancedStyles}
+            theme={theme}
+            isLocked={sectionLocks.magicModifiers}
+          />
+        </div>
+      </div>
 
       {/* Action Buttons */}
-      <div style={styles.actionButtons}>
+      <div style={enhancedStyles.actionButtons}>
         <button
           onClick={handleCancel}
           style={{
-            ...styles.button,
+            ...enhancedStyles.button,
             backgroundColor: theme.border,
             color: theme.textSecondary,
           }}
-          disabled={isSaving || !hasUnsavedChanges}
+          disabled={isSaving}
         >
           <X size={16} />
           Cancel
@@ -715,7 +1041,7 @@ const CharacterEditor = ({
           onClick={saveCharacter}
           disabled={isSaving || !hasUnsavedChanges}
           style={{
-            ...styles.saveButton,
+            ...enhancedStyles.saveButton,
             backgroundColor: theme.primary,
             cursor: isSaving ? "not-allowed" : "pointer",
             opacity: isSaving ? 0.7 : 1,

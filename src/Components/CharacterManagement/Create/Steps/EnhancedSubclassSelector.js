@@ -24,6 +24,7 @@ const EnhancedSubclassSelector = ({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [internalSubclassChoices, setInternalSubclassChoices] = useState({});
+  const [hasInitializedChoices, setHasInitializedChoices] = useState(false);
 
   const subclassChoices = externalSubclassChoices || internalSubclassChoices;
   const setSubclassChoices =
@@ -83,9 +84,11 @@ const EnhancedSubclassSelector = ({
     ) {
       const normalized = normalizeSubclassChoices(externalSubclassChoices);
       setInternalSubclassChoices(normalized);
+      setHasInitializedChoices(true);
     }
   }, [externalSubclassChoices]);
 
+  // Auto-expand selected subclass, especially for higher level characters
   useEffect(() => {
     if (selectedSubclass && selectedSubclass.trim() !== "") {
       setExpandedSubclasses((prev) => {
@@ -95,6 +98,25 @@ const EnhancedSubclassSelector = ({
       });
     }
   }, [selectedSubclass]);
+
+  // For higher level characters, auto-expand to show all required choices
+  useEffect(() => {
+    if (characterLevel > 1 && selectedSubclass && selectedSubclassData) {
+      const requiredChoices = getRequiredChoices(selectedSubclassData);
+      if (requiredChoices.total > 0 && !requiredChoices.isComplete) {
+        setExpandedSubclasses((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(selectedSubclass);
+          return newSet;
+        });
+      }
+    }
+  }, [
+    characterLevel,
+    selectedSubclass,
+    selectedSubclassData,
+    normalizedSubclassChoices,
+  ]);
 
   const saveToDatabase = useCallback(
     async (subclass, choices) => {
@@ -155,6 +177,7 @@ const EnhancedSubclassSelector = ({
         ) {
           const normalized = normalizeSubclassChoices(characterSubclassChoices);
           setInternalSubclassChoices(normalized);
+          setHasInitializedChoices(true);
         }
       } catch (error) {
         console.error("Failed to load character data:", error);
@@ -292,7 +315,8 @@ const EnhancedSubclassSelector = ({
   };
 
   const getRequiredChoices = (subclassData) => {
-    if (!subclassData) return { total: 0, missing: [], isComplete: true };
+    if (!subclassData)
+      return { total: 0, missing: [], missingByLevel: {}, isComplete: true };
 
     const featuresByLevel = parseAllFeaturesByLevel(subclassData);
     const availableLevels = getAvailableLevels(subclassData);
@@ -306,10 +330,22 @@ const EnhancedSubclassSelector = ({
       (level) => !normalizedSubclassChoices[level]
     );
 
+    // Create a detailed breakdown by level
+    const missingByLevel = {};
+    missingChoices.forEach((level) => {
+      const levelData = featuresByLevel[level];
+      missingByLevel[level] = {
+        choiceCount: levelData.choices.length,
+        choices: levelData.choices.map((choice) => choice.name),
+      };
+    });
+
     return {
       total: levelsWithChoices.length,
       missing: missingChoices,
+      missingByLevel: missingByLevel,
       isComplete: missingChoices.length === 0,
+      levelsWithChoices: levelsWithChoices,
     };
   };
 
@@ -496,10 +532,95 @@ const EnhancedSubclassSelector = ({
     });
   };
 
+  // Enhanced choice summary for higher level characters
+  const renderChoiceSummary = (choiceStatus) => {
+    if (!selectedSubclassData || choiceStatus.total === 0) return null;
+
+    const completedChoices = choiceStatus.levelsWithChoices.filter(
+      (level) => normalizedSubclassChoices[level]
+    );
+
+    return (
+      <div
+        style={{
+          ...styles.choiceSummary,
+          backgroundColor: choiceStatus.isComplete
+            ? `${theme.success}15`
+            : `${theme.warning}15`,
+          border: `1px solid ${
+            choiceStatus.isComplete ? theme.success : theme.warning
+          }`,
+          borderRadius: "6px",
+          padding: "12px",
+          marginBottom: "16px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "14px",
+            fontWeight: "bold",
+            color: choiceStatus.isComplete ? theme.success : theme.warning,
+            marginBottom: "8px",
+          }}
+        >
+          Subclass Choices Progress: {completedChoices.length}/
+          {choiceStatus.total}
+        </div>
+
+        {choiceStatus.levelsWithChoices.map((level) => {
+          const hasChoice = normalizedSubclassChoices[level];
+          const choiceName = hasChoice
+            ? normalizedSubclassChoices[level]
+            : null;
+
+          return (
+            <div
+              key={level}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "4px",
+                fontSize: "13px",
+              }}
+            >
+              <span
+                style={{
+                  color: hasChoice ? theme.success : theme.warning,
+                  marginRight: "8px",
+                  fontWeight: "bold",
+                }}
+              >
+                {hasChoice ? "✓" : "○"}
+              </span>
+              <span style={{ color: theme.textPrimary }}>
+                Level {level}: {choiceName || "Not selected"}
+              </span>
+            </div>
+          );
+        })}
+
+        {!choiceStatus.isComplete && (
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "12px",
+              color: theme.textSecondary,
+              fontStyle: "italic",
+            }}
+          >
+            {characterLevel > 1
+              ? "Complete all choices to finalize your subclass for this level range."
+              : "Make your subclass choice to continue."}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const hasSelectedSubclass = selectedSubclass ? 1 : 0;
   const choiceStatus = selectedSubclassData
     ? getRequiredChoices(selectedSubclassData)
-    : { total: 0, missing: [], isComplete: true };
+    : { total: 0, missing: [], missingByLevel: {}, isComplete: true };
 
   return (
     <div style={styles.fieldContainer}>
@@ -551,8 +672,10 @@ const EnhancedSubclassSelector = ({
           <span
             style={{ display: "block", marginTop: "4px", fontStyle: "italic" }}
           >
-            Only features and choices for levels 1-{characterLevel} are
-            available based on your character level.
+            Character Level {characterLevel}: Features and choices for levels 1-
+            {characterLevel} are available.
+            {choiceStatus.total > 1 &&
+              " All level-appropriate choices must be completed."}
           </span>
         )}
         {autoSave && characterId && (
@@ -569,6 +692,11 @@ const EnhancedSubclassSelector = ({
         )}
       </div>
 
+      {/* Enhanced choice summary for higher level characters */}
+      {selectedSubclass &&
+        choiceStatus.total > 0 &&
+        renderChoiceSummary(choiceStatus)}
+
       {hasSelectedSubclass === 1 && choiceStatus.isComplete && (
         <div style={styles.completionMessage}>
           ✓ Subclass selected: {selectedSubclass}
@@ -576,6 +704,7 @@ const EnhancedSubclassSelector = ({
             ` with ${choiceStatus.total} choice${
               choiceStatus.total > 1 ? "s" : ""
             } made`}
+          {characterLevel > 1 && " (all level-appropriate choices completed)"}
         </div>
       )}
 
@@ -588,6 +717,18 @@ const EnhancedSubclassSelector = ({
               choiceStatus.missing.length > 1 ? "s" : ""
             } ${choiceStatus.missing.join(", ")})`}
           to complete your subclass selection.
+          {characterLevel > 1 && (
+            <div
+              style={{
+                marginTop: "6px",
+                fontSize: "13px",
+                color: theme.textSecondary,
+              }}
+            >
+              Higher level characters must complete all available subclass
+              choices.
+            </div>
+          )}
         </div>
       )}
 
@@ -603,6 +744,14 @@ const EnhancedSubclassSelector = ({
               total + (featuresByLevel[level]?.choices?.length > 0 ? 1 : 0)
             );
           }, 0);
+
+          // Show level range for higher level characters
+          const levelRange =
+            availableLevels.length > 1
+              ? `${Math.min(...availableLevels)}-${Math.max(
+                  ...availableLevels
+                )}`
+              : availableLevels[0] || 1;
 
           return (
             <div
@@ -635,8 +784,8 @@ const EnhancedSubclassSelector = ({
                     {subclass.name}
                     {totalChoices > 0 && (
                       <span style={styles.availableChoicesIndicator}>
-                        ({totalChoices} choice{totalChoices > 1 ? "s" : ""}{" "}
-                        available)
+                        ({totalChoices} choice{totalChoices > 1 ? "s" : ""}
+                        {characterLevel > 1 ? ` levels ${levelRange}` : ""})
                       </span>
                     )}
                   </span>
@@ -701,6 +850,13 @@ const EnhancedSubclassSelector = ({
         Note: Subclass is optional and represents your character's specialized
         training path. Features and choices are automatically available when you
         reach the required level.
+        {characterLevel > 1 && (
+          <span style={{ display: "block", marginTop: "4px" }}>
+            For Level {characterLevel} characters, all subclass choices through
+            level {characterLevel}
+            must be completed if a subclass is selected.
+          </span>
+        )}
       </div>
     </div>
   );

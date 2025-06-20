@@ -5,25 +5,11 @@ const EnhancedSkillsSection = ({
   styles,
   theme,
 }) => {
-  // Debug logging to see what character data we're getting
-  console.log("EnhancedSkillsSection character state:", character);
-  console.log(
-    "character.innateHeritageSkills:",
-    character.innateHeritageSkills
-  );
-  console.log("character.innateHeritage:", character.innateHeritage);
-  console.log("character.skillProficiencies:", character.skillProficiencies);
-
   const getSkillsBySource = () => {
     const allSkills = character.skillProficiencies || [];
     const castingStyleSkills = getAvailableSkills({ character }) || [];
     const backgroundSkills = character.backgroundSkills || [];
     const innateHeritageSkills = character.innateHeritageSkills || [];
-
-    console.log(
-      "getSkillsBySource - innateHeritageSkills:",
-      innateHeritageSkills
-    );
 
     const selectedCastingStyleSkills = allSkills.filter(
       (skill) =>
@@ -38,11 +24,6 @@ const EnhancedSkillsSection = ({
 
     const selectedInnaateHeritageSkills = allSkills.filter((skill) =>
       innateHeritageSkills.includes(skill)
-    );
-
-    console.log(
-      "selectedInnaateHeritageSkills:",
-      selectedInnaateHeritageSkills
     );
 
     return {
@@ -60,8 +41,6 @@ const EnhancedSkillsSection = ({
     totalSelected,
   } = getSkillsBySource();
   const availableCastingSkills = getAvailableSkills({ character });
-
-  console.log("Final innateHeritageSkills for display:", innateHeritageSkills);
 
   return (
     <div style={styles.fieldContainer}>
