@@ -20,7 +20,7 @@ import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
-import GenericD20Roller from "../GenericD20Roller/GenericD20Roller";
+import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -1012,7 +1012,8 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#e30716",
                       backgroundColor: isRolling
-                        ? "#e30716" + "20"
+                        ? // eslint-disable-next-line
+                          "#e30716" + "20"
                         : "transparent",
                       transition: "all 0.2s ease",
                     }}
@@ -1049,7 +1050,8 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#8b5cf6",
                       backgroundColor: isRolling
-                        ? "#8b5cf6" + "20"
+                        ? // eslint-disable-next-line
+                          "#8b5cf6" + "20"
                         : "transparent",
                       transition: "all 0.2s ease",
                     }}
@@ -1474,7 +1476,7 @@ const CharacterSheet = ({
                 modifiers={modifiers(character)}
               />
 
-              <GenericD20Roller
+              <FlexibleDiceRoller
                 title="Custom Roll"
                 description={`Rolling for ${character.name}`}
                 style={{ width: "100%" }}

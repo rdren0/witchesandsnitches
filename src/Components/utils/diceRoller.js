@@ -18,6 +18,8 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     isCriticalFailure,
     description,
     type = "ability",
+    diceType = 20,
+    rollType = "normal",
   } = rollResult;
 
   const getTypeColor = () => {
@@ -40,9 +42,25 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         return "#8b5cf6";
       case "research":
         return "#10b981";
+      case "flexible":
+        return "#f59e0b";
       default:
         return "#6b7280";
     }
+  };
+
+  // Get appropriate dice icon color based on dice type
+  const getDiceColor = () => {
+    if (isCriticalSuccess) return "#f59e0b";
+    if (isCriticalFailure) return "#ef4444";
+    return getTypeColor();
+  };
+
+  // Get roll type indicator
+  const getRollTypeIndicator = () => {
+    if (rollType === "advantage") return "🎯 ADV";
+    if (rollType === "disadvantage") return "⚠️ DIS";
+    return "";
   };
 
   const backgroundColor = isCriticalSuccess
@@ -103,6 +121,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           <X size={20} />
         </button>
 
+        {/* Critical Success/Failure Icons */}
         {(isCriticalSuccess || isCriticalFailure) && (
           <div style={{ textAlign: "center", marginBottom: "16px" }}>
             {isCriticalSuccess ? (
@@ -113,6 +132,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
+        {/* Title with Roll Type Indicator */}
         <h2
           style={{
             margin: "0 0 16px 0",
@@ -121,11 +141,31 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             color: "#1f2937",
             textAlign: "center",
             paddingRight: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
           }}
         >
           {title}
+          {rollType !== "normal" && (
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                backgroundColor:
+                  rollType === "advantage" ? "#10b981" : "#ef4444",
+                color: "white",
+              }}
+            >
+              {getRollTypeIndicator()}
+            </span>
+          )}
         </h2>
 
+        {/* Main Roll Display */}
         <div
           style={{
             textAlign: "center",
@@ -148,7 +188,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               marginBottom: "8px",
             }}
           >
-            <Dice6 size={28} color={getTypeColor()} />
+            <Dice6 size={28} color={getDiceColor()} />
             <span
               style={{
                 color: isCriticalSuccess
@@ -185,13 +225,15 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               color: "#6b7280",
             }}
           >
-            d20 Roll: {rollValue}
+            d{diceType} Roll{rollType !== "normal" ? ` (${rollType})` : ""}:{" "}
+            {rollValue}
             {modifier !== 0 &&
               ` • Modifier: ${modifier >= 0 ? "+" : ""}${modifier}`}{" "}
             • Total: {total}
           </div>
         </div>
 
+        {/* Critical Success Message */}
         {isCriticalSuccess && (
           <div
             style={{
@@ -214,11 +256,14 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               ✨ CRITICAL SUCCESS! ✨
             </div>
             <div style={{ fontSize: "14px", color: "#92400e" }}>
-              Exceptional success regardless of DC!
+              {diceType === 20
+                ? "Exceptional success regardless of DC!"
+                : `Maximum result on d${diceType}!`}
             </div>
           </div>
         )}
 
+        {/* Critical Failure Message */}
         {isCriticalFailure && (
           <div
             style={{
@@ -241,11 +286,14 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               💀 CRITICAL FAILURE! 💀
             </div>
             <div style={{ fontSize: "14px", color: "#991b1b" }}>
-              Spectacular failure regardless of modifier!
+              {diceType === 20
+                ? "Spectacular failure regardless of modifier!"
+                : `Minimum result on d${diceType}!`}
             </div>
           </div>
         )}
 
+        {/* Description */}
         {description && (
           <div
             style={{
@@ -260,6 +308,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
+        {/* Close Button */}
         <div style={{ textAlign: "center" }}>
           <button
             onClick={onClose}
@@ -1598,9 +1647,166 @@ export const rollResearch = async ({
   }
 };
 
+export const rollFlexibleDie = (diceType = 20, rollType = "normal") => {
+  const roller = new DiceRoller();
+  let notation;
+
+  // For advantage/disadvantage, we typically only apply to d20 rolls
+  // But this implementation allows it for any dice type if desired
+  if (rollType === "advantage") {
+    notation = `2d${diceType}kh1`; // Keep highest of 2 dice
+  } else if (rollType === "disadvantage") {
+    notation = `2d${diceType}kl1`; // Keep lowest of 2 dice
+  } else {
+    notation = `1d${diceType}`; // Normal roll
+  }
+
+  const roll = roller.roll(notation);
+  return {
+    total: roll.total,
+    notation: roll.notation,
+    output: roll.output,
+    diceType: diceType,
+    rollType: rollType,
+  };
+};
+
+// New flexible dice rolling function
+export const rollFlexibleDice = async ({
+  diceType = 20,
+  rollType = "normal",
+  modifier = 0,
+  title = "Flexible Roll",
+  description = "Rolling dice with modifier",
+  character = null,
+  isRolling,
+  setIsRolling,
+  showRollResult,
+}) => {
+  if (isRolling) return;
+
+  setIsRolling(true);
+
+  try {
+    const diceResult = rollFlexibleDie(diceType, rollType);
+    const diceRoll = diceResult.total;
+    const mod = parseInt(modifier) || 0;
+    const total = diceRoll + mod;
+
+    // Critical success/failure logic - typically only applies to d20 rolls
+    const isCriticalSuccess = diceType === 20 && diceRoll === 20;
+    const isCriticalFailure = diceType === 20 && diceRoll === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: title,
+        rollValue: diceRoll,
+        modifier: mod,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "flexible",
+        description: description,
+        diceType: diceType,
+        rollType: rollType,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      const rollTypeText =
+        rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
+      alert(
+        `${title}: d${diceType}${rollTypeText}(${diceRoll}) + ${mod} = ${total}${criticalText}`
+      );
+    }
+
+    // Discord webhook message
+    let embedColor = 0xff9e3d;
+    let resultText = "";
+
+    if (isCriticalSuccess) {
+      embedColor = 0xffd700;
+      resultText = " - **CRITICAL SUCCESS!** 🎉";
+    } else if (isCriticalFailure) {
+      embedColor = 0xff0000;
+      resultText = " - **CRITICAL FAILURE!** 💥";
+    }
+
+    const rollTitle = character
+      ? `${character.name}: ${title}${resultText}`
+      : `${title}${resultText}`;
+
+    const rollTypeDescription =
+      rollType !== "normal"
+        ? ` (${rollType.charAt(0).toUpperCase() + rollType.slice(1)})`
+        : "";
+
+    const message = {
+      embeds: [
+        {
+          title: rollTitle,
+          description:
+            rollType !== "normal"
+              ? `${
+                  rollType === "advantage" ? "🎯 Advantage" : "⚠️ Disadvantage"
+                } Roll${rollType !== "normal" ? rollTypeDescription : ""}`
+              : "",
+          color: embedColor,
+          fields: [
+            {
+              name: "Roll Details",
+              value: `d${diceType}${rollTypeDescription}: ${diceRoll} ${
+                mod >= 0 ? "+" : ""
+              }${mod} = **${total}**${
+                isCriticalSuccess
+                  ? "\n✨ **Critical Success!**"
+                  : isCriticalFailure
+                  ? "\n💀 **Critical Failure!**"
+                  : ""
+              }`,
+              inline: false,
+            },
+            {
+              name: "Dice Formula",
+              value: diceResult.notation,
+              inline: true,
+            },
+          ],
+          footer: {
+            text: `Witches and Snitches - Flexible Roll • Today at ${new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}`,
+          },
+        },
+      ],
+    };
+
+    if (discordWebhookUrl) {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
+    }
+  } catch (error) {
+    console.error("Error sending Discord message:", error);
+    alert("Failed to send roll to Discord");
+  } finally {
+    setIsRolling(false);
+  }
+};
+
 export const useRollFunctions = () => {
   const { showRollResult } = useRollModal();
-
   return {
     rollAbility: (params) => rollAbility({ ...params, showRollResult }),
     rollInitiative: (params) => rollInitiative({ ...params, showRollResult }),
@@ -1610,5 +1816,7 @@ export const useRollFunctions = () => {
     rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
     rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),
     rollResearch: (params) => rollResearch({ ...params, showRollResult }),
+    rollFlexibleDice: (params) =>
+      rollFlexibleDice({ ...params, showRollResult }),
   };
 };
