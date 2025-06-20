@@ -18,10 +18,10 @@ import { backgroundsData } from "../Shared/backgroundsData";
 
 // Import the new section components
 import BasicInformationSection from "../Edit/BasicInformationSection";
-import HouseAndSubclassSection from "../Edit/sections/HouseAndSubclassSection";
-import Level1AndProgressionSection from "../Edit/sections/Level1AndProgressionSection";
-import AbilityScoresSection from "../Edit/sections/AbilityScoresSection";
-import MagicModifiersSection from "../Edit/sections/MagicModifiersSection";
+import HouseAndSubclassSection from "./components/HouseAndSubclassSection";
+import Level1AndProgressionSection from "./components/Level1AndProgressionSection";
+import AbilityScoresSection from "./components/AbilityScoresSection";
+import MagicModifiersSection from "./components/MagicModifiersSection";
 import { useCharacterSetup } from "./hooks/useCharacterSetup";
 import { useFieldLocks } from "./hooks/useFieldLocks";
 import { useFeatValidation } from "./hooks/useFeatValidation ";
