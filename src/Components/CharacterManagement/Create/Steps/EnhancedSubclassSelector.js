@@ -24,7 +24,7 @@ const EnhancedSubclassSelector = ({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [internalSubclassChoices, setInternalSubclassChoices] = useState({});
-  const [hasInitializedChoices, setHasInitializedChoices] = useState(false);
+  // const [hasInitializedChoices, setHasInitializedChoices] = useState(false);
 
   const subclassChoices = externalSubclassChoices || internalSubclassChoices;
   const setSubclassChoices =
@@ -84,7 +84,7 @@ const EnhancedSubclassSelector = ({
     ) {
       const normalized = normalizeSubclassChoices(externalSubclassChoices);
       setInternalSubclassChoices(normalized);
-      setHasInitializedChoices(true);
+      // setHasInitializedChoices(true);
     }
   }, [externalSubclassChoices]);
 
@@ -111,6 +111,7 @@ const EnhancedSubclassSelector = ({
         });
       }
     }
+    // eslint-disable-next-line
   }, [
     characterLevel,
     selectedSubclass,
@@ -177,7 +178,7 @@ const EnhancedSubclassSelector = ({
         ) {
           const normalized = normalizeSubclassChoices(characterSubclassChoices);
           setInternalSubclassChoices(normalized);
-          setHasInitializedChoices(true);
+          // setHasInitializedChoices(true);
         }
       } catch (error) {
         console.error("Failed to load character data:", error);
