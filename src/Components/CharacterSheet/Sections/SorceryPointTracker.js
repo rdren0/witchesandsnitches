@@ -20,7 +20,7 @@ const SorceryPointTracker = ({
   const maxSorceryPoints = character?.maxSorceryPoints || 0;
 
   const getSorceryPointColor = () => {
-    if (maxSorceryPoints === 0) return "#6b7280";
+    if (maxSorceryPoints === 0) return "#a855f7";
     const percentage = currentSorceryPoints / maxSorceryPoints;
     if (percentage >= 0.75) return "#10b981";
     if (percentage >= 0.5) return "#3b82f6";
@@ -158,6 +158,7 @@ const SorceryPointTracker = ({
       fontSize: "18px",
       fontWeight: "bold",
       marginBottom: "8px",
+      color: "#a855f7",
     },
     slotButtons: {
       display: "flex",
