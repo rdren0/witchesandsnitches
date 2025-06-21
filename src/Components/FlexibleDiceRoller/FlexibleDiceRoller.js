@@ -64,8 +64,8 @@ const FlexibleDiceRoller = ({
   const styles = {
     container: {
       padding: compact ? "12px" : "16px",
-      backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
-      border: `1px solid ${theme === "dark" ? "#4b5563" : "#e5e7eb"}`,
+      backgroundColor: theme.background,
+      border: `2px solid ${theme.border}`,
       borderRadius: "8px",
       boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
       ...style,
@@ -73,7 +73,7 @@ const FlexibleDiceRoller = ({
     title: {
       fontSize: compact ? "14px" : "16px",
       fontWeight: "600",
-      color: theme === "dark" ? "#f9fafb" : "#1f2937",
+      color: theme.text,
       marginBottom: compact ? "8px" : "12px",
       display: "flex",
       alignItems: "center",
@@ -99,22 +99,19 @@ const FlexibleDiceRoller = ({
     label: {
       fontSize: "12px",
       fontWeight: "500",
-      color: theme === "dark" ? "#d1d5db" : "#374151",
+      color: theme.text,
       marginBottom: "4px",
     },
     select: {
       padding: "8px 12px",
-      border: `2px solid ${theme === "dark" ? "#4b5563" : "#d1d5db"}`,
+      border: `2px solid ${theme.border}`,
       borderRadius: "6px",
       fontSize: "14px",
-      backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
-      color: theme === "dark" ? "#f9fafb" : "#1f2937",
+      backgroundColor: theme.background,
+      color: theme.text,
       outline: "none",
       cursor: "pointer",
       appearance: "none",
-      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${
-        theme === "dark" ? "%23d1d5db" : "%23374151"
-      }' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
       backgroundRepeat: "no-repeat",
       backgroundPosition: "right 8px center",
       backgroundSize: "16px",
@@ -123,9 +120,9 @@ const FlexibleDiceRoller = ({
     modifierContainer: {
       display: "flex",
       alignItems: "center",
-      border: `2px solid ${theme === "dark" ? "#4b5563" : "#d1d5db"}`,
+      border: `2px solid ${theme.border}`,
       borderRadius: "6px",
-      backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+      backgroundColor: theme.background,
       overflow: "hidden",
       transition: "border-color 0.2s ease",
     },
@@ -137,7 +134,7 @@ const FlexibleDiceRoller = ({
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: theme === "dark" ? "#9ca3af" : "#6b7280",
+      color: theme.text,
       transition: "background-color 0.2s ease",
     },
     modifierInput: {
@@ -148,24 +145,24 @@ const FlexibleDiceRoller = ({
       fontWeight: "500",
       textAlign: "center",
       minWidth: "60px",
-      color: theme === "dark" ? "#f9fafb" : "#1f2937",
+      color: theme.text,
       outline: "none",
     },
     titleInput: {
       width: "100%",
       padding: "8px 12px",
-      border: `2px solid ${theme === "dark" ? "#4b5563" : "#d1d5db"}`,
+      border: `2px solid ${theme.border}`,
       borderRadius: "6px",
       fontSize: "14px",
-      backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
-      color: theme === "dark" ? "#f9fafb" : "#1f2937",
+      backgroundColor: theme.background,
+      color: theme.text,
       outline: "none",
       transition: "border-color 0.2s ease",
     },
     rollButton: {
       width: "100%",
       padding: compact ? "8px 16px" : "12px 20px",
-      backgroundColor: isRolling ? "#9ca3af" : "#3b82f6",
+      backgroundColor: isRolling ? theme.background : "#3b82f6",
       color: "white",
       border: "none",
       borderRadius: "6px",
@@ -181,13 +178,13 @@ const FlexibleDiceRoller = ({
     },
     rollFormula: {
       fontSize: "12px",
-      color: theme === "dark" ? "#9ca3af" : "#6b7280",
+      color: theme.text,
       textAlign: "center",
       fontFamily: "monospace",
       marginBottom: "8px",
       padding: "4px 8px",
-      backgroundColor: theme === "dark" ? "#1f2937" : "#f8fafc",
-      border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
+      backgroundColor: theme.background,
+      border: `2px solid ${theme.border}`,
       borderRadius: "4px",
     },
     advantageIndicator: {
@@ -200,8 +197,8 @@ const FlexibleDiceRoller = ({
           ? "#10b981"
           : rollType === "disadvantage"
           ? "#ef4444"
-          : "#6b7280",
-      color: "white",
+          : theme.background,
+      color: theme.text,
       marginLeft: "8px",
     },
   };
