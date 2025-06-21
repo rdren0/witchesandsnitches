@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Sparkles, Zap, PlusIcon, MinusIcon } from "lucide-react";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const SorceryPointTracker = ({
   character,
@@ -14,7 +15,7 @@ const SorceryPointTracker = ({
     action: "use",
     amount: 1,
   });
-
+  const { theme } = useTheme();
   const currentSorceryPoints = character?.sorceryPoints || 0;
   const maxSorceryPoints = character?.maxSorceryPoints || 0;
 
@@ -115,7 +116,7 @@ const SorceryPointTracker = ({
 
   const styles = {
     container: {
-      backgroundColor: "#1f2937",
+      backgroundColor: theme.background,
       border: "1px solid #374151",
       borderRadius: "12px",
       padding: "20px",
@@ -139,8 +140,8 @@ const SorceryPointTracker = ({
       maxWidth: "240px", // Limit to about 2 tiles max
     },
     slotItem: {
-      backgroundColor: "#374151",
-      border: "1px solid #4b5563",
+      backgroundColor: theme.surface,
+      border: `1px solid ${theme.primary}`,
       borderRadius: "8px",
       padding: "12px",
       textAlign: "center",
@@ -149,7 +150,7 @@ const SorceryPointTracker = ({
     },
     slotLevel: {
       fontSize: "14px",
-      color: "#9ca3af",
+      color: theme.text,
       marginBottom: "4px",
       fontWeight: "500",
     },
@@ -187,15 +188,15 @@ const SorceryPointTracker = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      backgroundColor: theme.background,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       zIndex: 1000,
     },
     modalContent: {
-      backgroundColor: "#1f2937",
-      border: "1px solid #374151",
+      backgroundColor: theme.background,
+      border: `2px solid ${theme.border}`,
       borderRadius: "12px",
       padding: "24px",
       minWidth: "300px",
@@ -204,7 +205,7 @@ const SorceryPointTracker = ({
     modalHeader: {
       fontSize: "18px",
       fontWeight: "600",
-      color: "#f9fafb",
+      color: theme.text,
       marginBottom: "16px",
       textAlign: "center",
     },
@@ -213,17 +214,17 @@ const SorceryPointTracker = ({
     },
     label: {
       display: "block",
-      color: "#d1d5db",
+      color: theme.text,
       fontSize: "14px",
       marginBottom: "8px",
     },
     input: {
       width: "100%",
       padding: "10px 12px",
-      backgroundColor: "#374151",
-      border: "1px solid #4b5563",
+      backgroundColor: theme.background,
+      border: `2px solid ${theme.border}`,
       borderRadius: "6px",
-      color: "#f9fafb",
+      color: theme.text,
       fontSize: "16px",
     },
     modalButtons: {

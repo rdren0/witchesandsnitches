@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, BookOpen, PlusIcon, MinusIcon } from "lucide-react";
 import SorceryPointTracker from "./SorceryPointTracker";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const SpellSlotTracker = ({
   character,
@@ -9,6 +10,8 @@ const SpellSlotTracker = ({
   setCharacter,
   selectedCharacterId,
 }) => {
+  const { theme } = useTheme();
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -392,8 +395,8 @@ const SpellSlotTracker = ({
 
   const styles = {
     container: {
-      backgroundColor: "#1f2937",
-      border: "1px solid #374151",
+      backgroundColor: theme.background,
+      border: `2px solid ${theme.border}`,
       borderRadius: "12px",
       padding: "20px",
       minHeight: "200px",
@@ -420,9 +423,9 @@ const SpellSlotTracker = ({
     },
     addButton: {
       backgroundColor: "#f59e0b",
-      border: "1px solid #4b5563",
+      border: `2px solid ${theme.border}`,
       borderRadius: "6px",
-      color: "white",
+      color: theme.text,
       padding: "4px 8px",
       fontSize: "12px",
       cursor: "pointer",
@@ -441,8 +444,8 @@ const SpellSlotTracker = ({
       alignItems: "stretch",
     },
     slotItem: {
-      backgroundColor: "#374151",
-      border: "1px solid #4b5563",
+      backgroundColor: theme.background,
+      border: `2px solid ${theme.border}`,
       borderRadius: "8px",
       padding: "12px",
       textAlign: "center",
