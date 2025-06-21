@@ -330,7 +330,6 @@ export const createThemedStyles = (theme) => ({
   characterCreation: {
     container: {
       padding: "20px",
-      maxWidth: "1200px",
       margin: "0 auto",
       backgroundColor: theme.background,
     },

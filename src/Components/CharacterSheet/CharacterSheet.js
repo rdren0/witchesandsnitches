@@ -21,6 +21,9 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
+// import CorruptionTracker from "./Sections/CorruptionTracker";
+import SpellSlotTracker from "./Sections/SpellSlotTracker";
+import SorceryPointTracker from "./Sections/SorceryPointTracker";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -42,6 +45,27 @@ const pulseKeyframes = `
     }
   }
 `;
+
+const getCharacterSheetLayoutStyles = (theme) => ({
+  display: "grid",
+  gridTemplateColumns: "3fr 1fr",
+  gap: "24px",
+  alignItems: "start",
+  marginBottom: "20px",
+  width: "100%",
+
+  "@media (max-width: 1024px)": {
+    gridTemplateColumns: "1fr",
+    gap: "20px",
+  },
+});
+
+const getRightSideStackStyles = (theme) => ({
+  display: "flex",
+  flexDirection: "column",
+  gap: "20px",
+  height: "fit-content",
+});
 
 const CharacterSheet = ({
   user,
@@ -413,7 +437,35 @@ const CharacterSheet = ({
     try {
       const { data, error } = await supabase
         .from("characters")
-        .select("*, initiative_ability")
+        .select(
+          `
+        *, 
+        initiative_ability,
+        character_resources (
+          corruption_points,
+          sorcery_points,
+          max_sorcery_points,
+          spell_slots_1,
+          spell_slots_2,
+          spell_slots_3,
+          spell_slots_4,
+          spell_slots_5,
+          spell_slots_6,
+          spell_slots_7,
+          spell_slots_8,
+          spell_slots_9,
+          max_spell_slots_1,
+          max_spell_slots_2,
+          max_spell_slots_3,
+          max_spell_slots_4,
+          max_spell_slots_5,
+          max_spell_slots_6,
+          max_spell_slots_7,
+          max_spell_slots_8,
+          max_spell_slots_9
+        )
+      `
+        )
         .eq("id", selectedCharacter.id)
         .eq("discord_user_id", discordUserId)
         .single();
@@ -432,6 +484,8 @@ const CharacterSheet = ({
           data.standard_feats || [],
           asiChoices
         );
+
+        const resources = data.character_resources?.[0] || {};
 
         const transformedCharacter = {
           id: data.id,
@@ -477,6 +531,31 @@ const CharacterSheet = ({
             data.skill_proficiencies || [],
             data.skill_expertise || []
           ),
+
+          spellSlots1: resources.spell_slots_1 || 0,
+          spellSlots2: resources.spell_slots_2 || 0,
+          spellSlots3: resources.spell_slots_3 || 0,
+          spellSlots4: resources.spell_slots_4 || 0,
+          spellSlots5: resources.spell_slots_5 || 0,
+          spellSlots6: resources.spell_slots_6 || 0,
+          spellSlots7: resources.spell_slots_7 || 0,
+          spellSlots8: resources.spell_slots_8 || 0,
+          spellSlots9: resources.spell_slots_9 || 0,
+
+          maxSpellSlots1: resources.max_spell_slots_1 || 0,
+          maxSpellSlots2: resources.max_spell_slots_2 || 0,
+          maxSpellSlots3: resources.max_spell_slots_3 || 0,
+          maxSpellSlots4: resources.max_spell_slots_4 || 0,
+          maxSpellSlots5: resources.max_spell_slots_5 || 0,
+          maxSpellSlots6: resources.max_spell_slots_6 || 0,
+          maxSpellSlots7: resources.max_spell_slots_7 || 0,
+          maxSpellSlots8: resources.max_spell_slots_8 || 0,
+          maxSpellSlots9: resources.max_spell_slots_9 || 0,
+
+          corruptionPoints: resources.corruption_points || 0,
+          sorceryPoints: resources.sorcery_points || 0,
+          maxSorceryPoints: resources.max_sorcery_points || 0,
+
           speed: 30,
           standardFeats: data.standard_feats || [],
           strength: effectiveAbilityScores.strength || 10,
@@ -520,13 +599,21 @@ const CharacterSheet = ({
     const currentHitDice = character.currentHitDice;
     const maxHitDice = character.maxHitDice;
 
-    if (currentHP >= maxHP && currentHitDice >= maxHitDice) {
+    const hasSpellSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].some(
+      (level) => (character?.[`maxSpellSlots${level}`] || 0) > 0
+    );
+
+    if (currentHP >= maxHP && currentHitDice >= maxHitDice && !hasSpellSlots) {
       alert("Character is already at full health and hit dice!");
       return;
     }
 
     const confirmed = window.confirm(
-      `Take a long rest for ${character.name}?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}`
+      `Take a long rest for ${
+        character.name
+      }?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}${
+        hasSpellSlots ? "\n• All Spell Slots" : ""
+      }`
     );
     if (!confirmed) return;
 
@@ -536,18 +623,7 @@ const CharacterSheet = ({
       const hpRestored = maxHP - currentHP;
       const hitDiceRestored = maxHitDice - currentHitDice;
 
-      showRollResult({
-        title: `Long Rest Complete`,
-        rollValue: hpRestored + hitDiceRestored,
-        modifier: 0,
-        total: hpRestored + hitDiceRestored,
-        isCriticalSuccess: false,
-        isCriticalFailure: false,
-        type: "longrest",
-        description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored • ${character.name} is fully rested!`,
-      });
-
-      const { error } = await supabase
+      const { error: characterError } = await supabase
         .from("characters")
         .update({
           current_hit_points: maxHP,
@@ -557,11 +633,49 @@ const CharacterSheet = ({
         .eq("id", character.id)
         .eq("discord_user_id", discordUserId);
 
-      if (error) {
-        console.error("Error updating character:", error);
+      if (characterError) {
+        console.error("Error updating character:", characterError);
         alert("Failed to update character data");
         return;
       }
+
+      if (hasSpellSlots) {
+        const spellSlotUpdates = {
+          character_id: character.id,
+          discord_user_id: discordUserId,
+          updated_at: new Date().toISOString(),
+        };
+
+        [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((level) => {
+          const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
+          if (maxSlots > 0) {
+            spellSlotUpdates[`spell_slots_${level}`] = maxSlots;
+          }
+        });
+
+        const { error: resourcesError } = await supabase
+          .from("character_resources")
+          .upsert(spellSlotUpdates, {
+            onConflict: "character_id,discord_user_id",
+          });
+
+        if (resourcesError) {
+          console.error("Error updating spell slots:", resourcesError);
+        }
+      }
+
+      showRollResult({
+        title: `Long Rest Complete`,
+        rollValue: hpRestored + hitDiceRestored,
+        modifier: 0,
+        total: hpRestored + hitDiceRestored,
+        isCriticalSuccess: false,
+        isCriticalFailure: false,
+        type: "longrest",
+        description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored${
+          hasSpellSlots ? " • All spell slots restored" : ""
+        } • ${character.name} is fully rested!`,
+      });
 
       if (discordWebhookUrl) {
         const embed = {
@@ -580,7 +694,9 @@ const CharacterSheet = ({
             },
             {
               name: "Current Status",
-              value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice`,
+              value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice${
+                hasSpellSlots ? " • All spell slots restored" : ""
+              }`,
               inline: false,
             },
           ],
@@ -1180,7 +1296,6 @@ const CharacterSheet = ({
                       ...styles.statCard,
                       cursor: "default",
                       border: "none",
-                      // backgroundColor: "transparent",
                     }}
                     title={`Spell Save DC: 8 + Prof (${
                       character.proficiencyBonus
@@ -1457,15 +1572,9 @@ const CharacterSheet = ({
               discordWebhookUrl={discordWebhookUrl}
             />
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2fr auto",
-                gap: "20px",
-                alignItems: "start",
-                marginBottom: "20px",
-              }}
-            >
+            {/* IMPROVED LAYOUT SECTION */}
+            <div style={getCharacterSheetLayoutStyles(theme)}>
+              {/* Left side - Skills */}
               <Skills
                 character={character}
                 supabase={supabase}
@@ -1475,13 +1584,37 @@ const CharacterSheet = ({
                 isRolling={isRolling}
                 modifiers={modifiers(character)}
               />
-
-              <FlexibleDiceRoller
-                title="Custom Roll"
-                description={`Rolling for ${character.name}`}
-                style={{ width: "100%" }}
-                character={character}
-              />
+              {console.log({ character })}
+              {/* Right side - Corruption, Sorcery Points, and Dice Roller stacked */}
+              <div style={getRightSideStackStyles(theme)}>
+                <SpellSlotTracker
+                  character={character}
+                  supabase={supabase}
+                  discordUserId={discordUserId}
+                  setCharacter={setCharacter}
+                  selectedCharacterId={selectedCharacter.id}
+                />
+                {/* <CorruptionTracker
+                  character={character}
+                  supabase={supabase}
+                  discordUserId={discordUserId}
+                  setCharacter={setCharacter}
+                  selectedCharacterId={selectedCharacter.id}
+                /> */}
+                <SorceryPointTracker
+                  key="sorcery-points"
+                  character={character}
+                  supabase={supabase}
+                  discordUserId={discordUserId}
+                  setCharacter={setCharacter}
+                  selectedCharacterId={selectedCharacter.id}
+                />
+                <FlexibleDiceRoller
+                  title="Custom Roll"
+                  description={`Rolling for ${character.name}`}
+                  character={character}
+                />
+              </div>
             </div>
           </>
         )}

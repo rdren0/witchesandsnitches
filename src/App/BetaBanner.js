@@ -15,7 +15,6 @@ const BetaBanner = ({ onReportBug }) => {
     >
       <div
         style={{
-          maxWidth: "1200px",
           margin: "0 auto",
           display: "flex",
           alignItems: "center",

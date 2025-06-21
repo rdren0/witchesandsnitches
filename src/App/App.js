@@ -396,7 +396,6 @@ const CharacterSubNavigation = () => {
         style={{
           display: "flex",
           gap: "4px",
-          maxWidth: "1200px",
           margin: "0 auto",
           paddingTop: "8px",
         }}

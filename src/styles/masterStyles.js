@@ -163,7 +163,6 @@ export const createAppStyles = (theme) => ({
 
 const createCharacterSheetStyles = (theme) => ({
   container: {
-    maxWidth: "1200px",
     margin: "0 auto",
     padding: "20px",
     backgroundColor: theme.background,
@@ -321,6 +320,135 @@ const createCharacterSheetStyles = (theme) => ({
     textAlign: "center",
     padding: "40px",
     color: theme.textSecondary,
+  },
+  sectionCard: {
+    backgroundColor: theme.surface,
+    borderRadius: "12px",
+    padding: "16px",
+    marginBottom: "16px",
+    border: `2px solid ${theme.border}`,
+  },
+  corruptionDisplay: {
+    textAlign: "center",
+    marginBottom: "24px",
+  },
+  corruptionOrb: {
+    width: "80px",
+    height: "80px",
+    background: "linear-gradient(135deg, #7c3aed, #dc2626)",
+    borderRadius: "50%",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+    margin: "0 auto 8px",
+  },
+  corruptionValue: {
+    fontSize: "28px",
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
+  corruptionLabel: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+  },
+  sectionHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: "12px",
+  },
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  button: {
+    padding: "8px 16px",
+    borderRadius: "8px",
+    border: "none",
+    fontSize: "14px",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  buttonPrimary: {
+    backgroundColor: theme.primary,
+    color: "#ffffff",
+  },
+  buttonSecondary: {
+    backgroundColor: theme.textSecondary,
+    color: "#ffffff",
+  },
+  buttonDanger: {
+    backgroundColor: "#dc2626",
+    color: "#ffffff",
+  },
+  buttonSuccess: {
+    backgroundColor: "#16a34a",
+    color: "#ffffff",
+  },
+  buttonGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "8px",
+    justifyContent: "center",
+  },
+  input: {
+    width: "100%",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+    fontSize: "14px",
+    backgroundColor: theme.surface,
+    color: theme.text,
+  },
+  inputGroup: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "center",
+    marginBottom: "8px",
+  },
+  checkbox: {
+    marginRight: "8px",
+  },
+  activityItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px",
+    borderRadius: "6px",
+    marginBottom: "4px",
+    fontSize: "12px",
+  },
+  activityGained: {
+    backgroundColor: "#fef2f2",
+    border: "1px solid #fecaca",
+  },
+  activitySpent: {
+    backgroundColor: "#f3f4f6",
+    border: "1px solid #d1d5db",
+  },
+  statusIndicator: {
+    padding: "6px 12px",
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "500",
+  },
+  statusSuccess: {
+    backgroundColor: "#dcfce7",
+    color: "#166534",
+    border: "1px solid #bbf7d0",
+  },
+  statusWarning: {
+    backgroundColor: "#fef3c7",
+    color: "#92400e",
+    border: "1px solid #fde68a",
+  },
+  helpText: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+    marginTop: "12px",
   },
 });
 
@@ -522,7 +650,7 @@ export const createSkillsStyles = (theme) => ({
 export const createCharacterCreationStyles = (theme) => ({
   container: {
     padding: "20px",
-    maxWidth: "1200px",
+
     margin: "0 auto",
     backgroundColor: theme.background,
     minHeight: "100vh",
@@ -3055,7 +3183,7 @@ export const createCharacterSelectorStyles = (theme) => {
       flexDirection: "column",
       alignItems: "center",
       gap: "20px",
-      maxWidth: "1200px",
+
       margin: "0 auto",
     },
     selectorRow: {
@@ -3117,7 +3245,7 @@ export const createCharacterSelectorStyles = (theme) => {
       borderRadius: "8px",
       margin: "16px 0",
       fontSize: "14px",
-      maxWidth: "1200px",
+
       marginLeft: "auto",
       marginRight: "auto",
       textAlign: "center",
@@ -4273,7 +4401,6 @@ export const createInventoryStyles = (theme) => ({
 
 export const createCharacterNotesStyles = (theme) => ({
   container: {
-    maxWidth: "1200px",
     margin: "0 auto",
     padding: "20px",
   },
@@ -4928,7 +5055,6 @@ export const createCharacterGalleryStyles = (theme) => ({
 });
 export const createDowntimeStyles = (theme) => ({
   container: {
-    maxWidth: "1200px",
     margin: "0 auto",
     padding: "20px",
     fontFamily: "Arial, sans-serif",

@@ -49,14 +49,12 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     }
   };
 
-  // Get appropriate dice icon color based on dice type
   const getDiceColor = () => {
     if (isCriticalSuccess) return "#f59e0b";
     if (isCriticalFailure) return "#ef4444";
     return getTypeColor();
   };
 
-  // Get roll type indicator
   const getRollTypeIndicator = () => {
     if (rollType === "advantage") return "🎯 ADV";
     if (rollType === "disadvantage") return "⚠️ DIS";
@@ -332,6 +330,265 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   );
 };
 
+// Replace the empty rollCorruption function in your diceRoller.js with this implementation:
+
+const rollCorruption = async ({
+  character,
+  pointsGained,
+  pointsRedeemed,
+  reason,
+  pointsTotal,
+  pointsRemaining,
+  type = "gained",
+  saveResult = null,
+}) => {
+  try {
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    const characterName = character?.name || "Unknown Character";
+    const usedFor =
+      reason?.trim() || (type === "gained" ? "Dark deed" : "Act of redemption");
+
+    // Corruption tier system
+    const getCorruptionTier = (points) => {
+      if (points === 0)
+        return {
+          name: "Pure Hearted",
+          range: "(0)",
+          color: 0x10b981,
+          saveDC: 10,
+          boon: null,
+          effect: null,
+        };
+      if (points <= 4)
+        return {
+          name: "Pragmatic",
+          range: "(1-4)",
+          color: 0xf59e0b,
+          saveDC: 12,
+          boon: "Empowered Darkness",
+          effect: null,
+        };
+      if (points <= 7)
+        return {
+          name: "Devious",
+          range: "(5-7)",
+          color: 0xef4444,
+          saveDC: 14,
+          boon: null,
+          effect: "Mild Effect",
+        };
+      if (points <= 11)
+        return {
+          name: "Vicious",
+          range: "(8-11)",
+          color: 0x7c2d12,
+          saveDC: 16,
+          boon: "Heightened Darkness",
+          effect: "Severe Effect",
+        };
+      return {
+        name: "Vile",
+        range: "(12+)",
+        color: 0x1f2937,
+        saveDC: 18,
+        boon: null,
+        effect: "Severe Effect",
+      };
+    };
+
+    const finalPoints = type === "gained" ? pointsTotal : pointsRemaining;
+    const currentTier = getCorruptionTier(finalPoints);
+
+    let corruptionLevel = `${currentTier.name} ${currentTier.range}`;
+
+    // Add tier-specific emoji and description
+    if (finalPoints === 0) {
+      corruptionLevel = "✨ **PURE HEARTED** - Soul cleansed of darkness";
+    } else if (finalPoints <= 4) {
+      corruptionLevel =
+        "⚖️ **PRAGMATIC** - Willing to bend rules for the greater good";
+    } else if (finalPoints <= 7) {
+      corruptionLevel = "😈 **DEVIOUS** - Embracing darker methods";
+    } else if (finalPoints <= 11) {
+      corruptionLevel = "🔥 **VICIOUS** - Deep in corruption's grip";
+    } else {
+      corruptionLevel = "💀 **VILE** - Soul consumed by darkness";
+    }
+
+    // Different embed based on type
+    let embed;
+
+    if (type === "gained") {
+      const wasFromSave = saveResult !== null;
+
+      embed = {
+        title: wasFromSave
+          ? "💀 Corruption Save Failed"
+          : "💀 Corruption Gained",
+        description: wasFromSave
+          ? `${characterName} failed to resist the corruption of their dark deed...`
+          : `${characterName} has fallen deeper into darkness...`,
+        color: currentTier.color,
+        fields: [
+          {
+            name: "Character",
+            value: characterName,
+            inline: true,
+          },
+          {
+            name: "Points Gained",
+            value: pointsGained.toString(),
+            inline: true,
+          },
+          {
+            name: "Total Corruption",
+            value: pointsTotal.toString(),
+            inline: true,
+          },
+        ],
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: `Witches and Snitches - Corruption ${
+            wasFromSave ? "Save" : "Gained"
+          } • Next Wisdom Save DC: ${currentTier.saveDC}`,
+        },
+      };
+
+      // Add save details if this was from a wisdom save
+      if (wasFromSave && saveResult) {
+        embed.fields.push({
+          name: "Corruption Save",
+          value: `**${saveResult.rollValue}** ${
+            saveResult.modifier >= 0 ? "+" : ""
+          }${saveResult.modifier} = **${saveResult.total}** vs DC ${
+            saveResult.dc
+          }`,
+          inline: false,
+        });
+      }
+
+      embed.fields.push({
+        name: wasFromSave ? "Dark Deed" : "Dark Deed",
+        value: usedFor,
+        inline: false,
+      });
+
+      embed.fields.push({
+        name: "Corruption Tier",
+        value: corruptionLevel,
+        inline: false,
+      });
+    } else {
+      embed = {
+        title: "✨ Corruption Redeemed",
+        description: `${characterName} has found redemption through remorse...`,
+        color: finalPoints === 0 ? 0x10b981 : currentTier.color, // Green if fully redeemed
+        fields: [
+          {
+            name: "Character",
+            value: characterName,
+            inline: true,
+          },
+          {
+            name: "Points Redeemed",
+            value: pointsRedeemed.toString(),
+            inline: true,
+          },
+          {
+            name: "Remaining Corruption",
+            value: pointsRemaining.toString(),
+            inline: true,
+          },
+          {
+            name: "Act of Redemption",
+            value: usedFor,
+            inline: false,
+          },
+          {
+            name: "Corruption Tier",
+            value: corruptionLevel,
+            inline: false,
+          },
+        ],
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: `Witches and Snitches - Corruption Redeemed • Wisdom Save DC: ${currentTier.saveDC}`,
+        },
+      };
+    }
+
+    // Add tier benefits/effects
+    if (currentTier.boon || currentTier.effect) {
+      let tierInfo = "";
+      if (currentTier.boon) tierInfo += `**Boon:** ${currentTier.boon}\n`;
+      if (currentTier.effect) tierInfo += `**Effect:** ${currentTier.effect}`;
+
+      embed.fields.push({
+        name: "Tier Benefits/Effects",
+        value: tierInfo,
+        inline: false,
+      });
+    }
+
+    // Add appropriate warnings/notes
+    if (type === "gained") {
+      if (finalPoints >= 12) {
+        embed.fields.push({
+          name: "⚠️ Warning",
+          value:
+            "This character's soul is being consumed by darkness. Redemption grows ever more difficult...",
+          inline: false,
+        });
+      } else if (finalPoints >= 8) {
+        embed.fields.push({
+          name: "⚠️ Caution",
+          value:
+            "Dark forces have a strong hold on this character. Future corruption saves are DC 16.",
+          inline: false,
+        });
+      } else if (finalPoints >= 5) {
+        embed.fields.push({
+          name: "📋 Note",
+          value:
+            "Character must roll for a Mild Corruption Effect. Future corruption saves are DC 14.",
+          inline: false,
+        });
+      }
+    } else {
+      if (finalPoints === 0) {
+        embed.fields.push({
+          name: "🎉 Redemption Complete",
+          value:
+            "This character has found complete redemption! Their soul is pure once more.",
+          inline: false,
+        });
+      } else if (finalPoints <= 4) {
+        embed.fields.push({
+          name: "🌟 Progress",
+          value:
+            "Significant progress toward redemption. Keep seeking to make amends.",
+          inline: false,
+        });
+      }
+    }
+
+    await fetch(discordWebhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        embeds: [embed],
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send corruption Discord webhook:", error);
+  }
+};
 export const RollModalProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [rollResult, setRollResult] = useState(null);
@@ -1651,14 +1908,12 @@ export const rollFlexibleDie = (diceType = 20, rollType = "normal") => {
   const roller = new DiceRoller();
   let notation;
 
-  // For advantage/disadvantage, we typically only apply to d20 rolls
-  // But this implementation allows it for any dice type if desired
   if (rollType === "advantage") {
-    notation = `2d${diceType}kh1`; // Keep highest of 2 dice
+    notation = `2d${diceType}kh1`;
   } else if (rollType === "disadvantage") {
-    notation = `2d${diceType}kl1`; // Keep lowest of 2 dice
+    notation = `2d${diceType}kl1`;
   } else {
-    notation = `1d${diceType}`; // Normal roll
+    notation = `1d${diceType}`;
   }
 
   const roll = roller.roll(notation);
@@ -1671,7 +1926,6 @@ export const rollFlexibleDie = (diceType = 20, rollType = "normal") => {
   };
 };
 
-// New flexible dice rolling function
 export const rollFlexibleDice = async ({
   diceType = 20,
   rollType = "normal",
@@ -1693,7 +1947,6 @@ export const rollFlexibleDice = async ({
     const mod = parseInt(modifier) || 0;
     const total = diceRoll + mod;
 
-    // Critical success/failure logic - typically only applies to d20 rolls
     const isCriticalSuccess = diceType === 20 && diceRoll === 20;
     const isCriticalFailure = diceType === 20 && diceRoll === 1;
 
@@ -1723,7 +1976,6 @@ export const rollFlexibleDice = async ({
       );
     }
 
-    // Discord webhook message
     let embedColor = 0xff9e3d;
     let resultText = "";
 
@@ -1818,5 +2070,6 @@ export const useRollFunctions = () => {
     rollResearch: (params) => rollResearch({ ...params, showRollResult }),
     rollFlexibleDice: (params) =>
       rollFlexibleDice({ ...params, showRollResult }),
+    rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),
   };
 };

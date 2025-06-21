@@ -557,13 +557,13 @@ export const createThemedStyles = (theme) => ({
     marginTop: "0.25rem",
   },
   skillsCard: {
+    maxWidth: "600px",
     backgroundColor: theme.surface,
     borderRadius: "0.5rem",
     boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
     padding: "1.5rem",
     border: `2px solid ${theme.border}`,
     marginBottom: "1.5rem",
-    width: "80%",
   },
   skillsTitle: {
     fontSize: "1.25rem",
