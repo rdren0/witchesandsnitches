@@ -64,7 +64,7 @@ const FlexibleDiceRoller = ({
   const styles = {
     container: {
       padding: compact ? "12px" : "16px",
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       border: `2px solid ${theme.border}`,
       borderRadius: "8px",
       boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",

@@ -116,7 +116,7 @@ const SorceryPointTracker = ({
 
   const styles = {
     container: {
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       border: "1px solid #374151",
       borderRadius: "12px",
       padding: "20px",
