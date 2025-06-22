@@ -245,7 +245,6 @@ const createCharacterSheetStyles = (theme) => ({
     borderColor: "#755224",
   },
   statCardBrownHover: {
-    // eslint-disable-next-line
     backgroundColor: "#755224" + "10",
     transform: "translateY(-2px)",
     boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
@@ -507,8 +506,8 @@ export const createAbilityScoresStyles = (theme) => ({
     gap: "4px",
   },
   abilityName: {
-    fontSize: "12px",
-    fontWeight: "500",
+    fontSize: "14px",
+    fontWeight: "700",
     color: theme.textSecondary,
     textTransform: "uppercase",
     letterSpacing: "0.5px",
@@ -1281,7 +1280,7 @@ export const createCharacterCreationStyles = (theme) => ({
     color: "#10B981",
     textAlign: "center",
     padding: "10px",
-    // eslint-disable-next-line
+
     backgroundColor: "#10B981" + "20",
     border: "2px solid #10B981",
     borderRadius: "6px",
@@ -2213,6 +2212,7 @@ export const createAbilityScorePickerStyles = (theme) => ({
     fontSize: "14px",
   },
   abilityGrid: {
+    marginTop: "12px",
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
     gap: "16px",
@@ -3309,6 +3309,23 @@ export const createPotionsStyles = (theme) => ({
     border: `2px solid ${theme.border}`,
     boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
   },
+  thresholdCard: {
+    display: "flex",
+    fontSize: "14px",
+    justifyContent: "space-between",
+    color: theme.text,
+    backgroundColor: theme.surface,
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    // fontStyle: "italic",
+    borderTop: `2px solid ${theme.border}`,
+    marginLeft: "4px",
+  },
+  thresholdCardTitle: {
+    paddingBottom: "6px",
+    fontWeight: "semi-bold",
+    color: theme.highlight,
+    margin: 0,
+  },
   cardTitle: {
     fontSize: "20px",
     fontWeight: "bold",
@@ -3326,6 +3343,7 @@ export const createPotionsStyles = (theme) => ({
     padding: "16px",
     borderRadius: "8px",
     border: `1px solid ${theme.border}`,
+    color: theme.text,
   },
   proficiencyTitle: {
     fontSize: "16px",
@@ -3668,6 +3686,59 @@ export const createPotionsStyles = (theme) => ({
   },
   primaryButton: {
     backgroundColor: theme.primary,
+  },
+  ingredientTransformation: {
+    marginTop: "12px",
+    padding: "8px 12px",
+    backgroundColor: theme.surface,
+    borderRadius: "6px",
+    border: `1px solid ${theme.border}`,
+  },
+
+  transformationRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "8px",
+  },
+
+  rawQuality: {
+    fontSize: "14px",
+    color: theme.text,
+    fontWeight: "500",
+  },
+
+  preparedQuality: {
+    fontSize: "14px",
+    color: theme.text,
+    fontWeight: "600",
+  },
+
+  dcModifier: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+    fontStyle: "italic",
+  },
+
+  rollPreview: {
+    marginTop: "16px",
+  },
+
+  rollPreviewContent: {},
+
+  totalValue: {
+    fontWeight: "700",
+    color: theme.primary,
+  },
+
+  warningText: {
+    marginTop: "8px",
+    padding: "8px",
+    backgroundColor: theme.warning || "#FEF3C7",
+    color: theme.warningText || "#92400E",
+    fontSize: "14px",
+    borderRadius: "4px",
+    textAlign: "center",
   },
 });
 

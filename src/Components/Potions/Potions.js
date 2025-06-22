@@ -99,6 +99,7 @@ const PotionBrewingSystem = ({ character }) => {
     currentCharacter?.abilityScores?.wisdom,
     currentCharacter?.level,
     refreshTrigger,
+    currentCharacter,
   ]);
 
   const ingredientModifiers = {
@@ -515,21 +516,23 @@ const PotionBrewingSystem = ({ character }) => {
                     </strong>
                   </div>
                 </div>
-
                 {selectedPotion.rarity && qualityDCs[selectedPotion.rarity] && (
                   <div
                     style={{
-                      fontSize: "0.875rem",
-                      marginTop: "12px",
-                      padding: "8px",
-                      backgroundColor:
-                        theme === "dark"
-                          ? "rgba(55, 65, 81, 0.5)"
-                          : "rgba(243, 244, 246, 0.8)",
-                      borderRadius: "4px",
+                      backgroundColor: theme.surface,
+                      padding: "4px",
+                      margin: "6px",
+                      border: `2px solid ${theme.primary}`,
+                      borderRadius: "8px",
+                      fontSize: "18px",
                     }}
                   >
-                    <div style={{ fontWeight: "bold", marginBottom: "6px" }}>
+                    <div
+                      style={{
+                        padding: "2px",
+                        paddingBottom: "4px",
+                      }}
+                    >
                       Quality Thresholds:
                     </div>
                     {/* FIXED: Show total needed (including modifier) instead of raw die requirement */}
@@ -587,20 +590,8 @@ const PotionBrewingSystem = ({ character }) => {
                       }
 
                       return (
-                        <div
-                          key={quality}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            color: !isAchievable
-                              ? theme === "dark"
-                                ? "#6b7280"
-                                : "#9ca3af"
-                              : "inherit",
-                            fontStyle: !isAchievable ? "italic" : "normal",
-                          }}
-                        >
-                          <span>
+                        <div key={quality} style={styles.thresholdCard}>
+                          <span style={styles.thresholdCardTitle}>
                             {quality.charAt(0).toUpperCase() + quality.slice(1)}
                             :
                           </span>
