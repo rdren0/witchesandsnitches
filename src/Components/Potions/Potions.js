@@ -92,7 +92,6 @@ const PotionBrewingSystem = ({ character }) => {
     const totalModifier = wisdomModifier + skillBonus;
 
     return totalModifier;
-    // eslint-disable-next-line
   }, [
     currentCharacter?.skills?.potionMaking,
     currentCharacter?.skillProficiencies,
@@ -166,9 +165,15 @@ const PotionBrewingSystem = ({ character }) => {
     const qualityHierarchy = ["flawed", "normal", "exceptional", "superior"];
     const preparedIndex = qualityHierarchy.indexOf(preparedQuality);
 
-    return qualityHierarchy[
-      Math.min(preparedIndex + 2, qualityHierarchy.length - 1)
-    ];
+    if (preparedIndex === -1) {
+      console.error("Invalid prepared ingredient quality:", preparedQuality);
+      return "flawed";
+    }
+
+    const maxIndex = Math.min(preparedIndex + 2, qualityHierarchy.length - 1);
+    const maxQuality = qualityHierarchy[maxIndex];
+
+    return maxQuality;
   };
 
   const getDiceIcon = (value) => {
@@ -190,7 +195,7 @@ const PotionBrewingSystem = ({ character }) => {
 
     setBrewingInProgress(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     try {
       const characterModifier = getCharacterPotionModifier;
@@ -478,7 +483,6 @@ const PotionBrewingSystem = ({ character }) => {
 
               <div style={styles.rollPreview}>
                 <div style={styles.rollPreviewContent}></div>
-
                 <div
                   style={{
                     fontSize: "0.875rem",
@@ -528,63 +532,82 @@ const PotionBrewingSystem = ({ character }) => {
                     <div style={{ fontWeight: "bold", marginBottom: "6px" }}>
                       Quality Thresholds:
                     </div>
-                    {Object.entries(qualityDCs[selectedPotion.rarity])
-                      .reverse()
-                      .map(([quality, baseDC]) => {
-                        const adjustedDC =
-                          baseDC + (ingredientModifiers[preparedQuality] || 0);
-                        const neededRoll = Math.max(
-                          1,
-                          adjustedDC - characterModifier
-                        );
-                        const maxQuality = getMaxAchievableQuality();
-                        const isAchievable =
-                          quality !== "ruined" &&
-                          (maxQuality === "Cannot brew without kit" ||
-                            [
-                              "flawed",
-                              "normal",
-                              "exceptional",
-                              "superior",
-                            ].indexOf(quality) <=
-                              [
-                                "flawed",
-                                "normal",
-                                "exceptional",
-                                "superior",
-                              ].indexOf(maxQuality));
+                    {/* FIXED: Show total needed (including modifier) instead of raw die requirement */}
+                    {[
+                      "superior",
+                      "exceptional",
+                      "normal",
+                      "flawed",
+                      "ruined",
+                    ].map((quality) => {
+                      const baseDC =
+                        qualityDCs[selectedPotion.rarity][quality] || 0;
+                      const adjustedDC =
+                        baseDC + (ingredientModifiers[preparedQuality] || 0);
+                      const maxQuality = getMaxAchievableQuality();
 
-                        return (
-                          <div
-                            key={quality}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              color: !isAchievable
-                                ? theme === "dark"
-                                  ? "#6b7280"
-                                  : "#9ca3af"
-                                : "inherit",
-                              fontStyle: !isAchievable ? "italic" : "normal",
-                            }}
-                          >
-                            <span>
-                              {quality.charAt(0).toUpperCase() +
-                                quality.slice(1)}
-                              :
-                            </span>
-                            <span>
-                              {!isAchievable
-                                ? "Not achievable"
-                                : neededRoll > 20
-                                ? "Impossible"
-                                : neededRoll <= 1
-                                ? "Automatic"
-                                : `${neededRoll}+ on the die`}
-                            </span>
-                          </div>
-                        );
-                      })}
+                      const qualityHierarchy = [
+                        "ruined",
+                        "flawed",
+                        "normal",
+                        "exceptional",
+                        "superior",
+                      ];
+                      const maxIndex = qualityHierarchy.indexOf(maxQuality);
+                      const qualityIndex = qualityHierarchy.indexOf(quality);
+
+                      const isAchievable =
+                        maxQuality !== "Cannot brew without kit" &&
+                        qualityIndex <= maxIndex;
+
+                      let displayText;
+                      if (!isAchievable) {
+                        displayText = "Not achievable";
+                      } else if (quality === "ruined") {
+                        const flawedDC =
+                          qualityDCs[selectedPotion.rarity]["flawed"] || 0;
+                        const flawedAdjustedDC =
+                          flawedDC +
+                          (ingredientModifiers[preparedQuality] || 0);
+                        const totalNeededForFlawed = flawedAdjustedDC;
+                        const ruinedMaxTotal = totalNeededForFlawed - 1;
+                        displayText =
+                          ruinedMaxTotal >= 1
+                            ? `${ruinedMaxTotal} or less total`
+                            : "Impossible to avoid";
+                      } else {
+                        const totalNeeded = adjustedDC;
+                        if (totalNeeded > 20 + characterModifier) {
+                          displayText = "Impossible";
+                        } else if (totalNeeded <= 1 + characterModifier) {
+                          displayText = "Automatic";
+                        } else {
+                          displayText = `${totalNeeded}+ total`;
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={quality}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            color: !isAchievable
+                              ? theme === "dark"
+                                ? "#6b7280"
+                                : "#9ca3af"
+                              : "inherit",
+                            fontStyle: !isAchievable ? "italic" : "normal",
+                          }}
+                        >
+                          <span>
+                            {quality.charAt(0).toUpperCase() + quality.slice(1)}
+                            :
+                          </span>
+                          <span>{displayText}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

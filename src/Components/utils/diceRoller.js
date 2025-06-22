@@ -330,8 +330,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   );
 };
 
-// Replace the empty rollCorruption function in your diceRoller.js with this implementation:
-
 const rollCorruption = async ({
   character,
   pointsGained,
@@ -352,7 +350,6 @@ const rollCorruption = async ({
     const usedFor =
       reason?.trim() || (type === "gained" ? "Dark deed" : "Act of redemption");
 
-    // Corruption tier system
     const getCorruptionTier = (points) => {
       if (points === 0)
         return {
@@ -405,7 +402,6 @@ const rollCorruption = async ({
 
     let corruptionLevel = `${currentTier.name} ${currentTier.range}`;
 
-    // Add tier-specific emoji and description
     if (finalPoints === 0) {
       corruptionLevel = "✨ **PURE HEARTED** - Soul cleansed of darkness";
     } else if (finalPoints <= 4) {
@@ -419,7 +415,6 @@ const rollCorruption = async ({
       corruptionLevel = "💀 **VILE** - Soul consumed by darkness";
     }
 
-    // Different embed based on type
     let embed;
 
     if (type === "gained") {
@@ -458,7 +453,6 @@ const rollCorruption = async ({
         },
       };
 
-      // Add save details if this was from a wisdom save
       if (wasFromSave && saveResult) {
         embed.fields.push({
           name: "Corruption Save",
@@ -486,7 +480,7 @@ const rollCorruption = async ({
       embed = {
         title: "✨ Corruption Redeemed",
         description: `${characterName} has found redemption through remorse...`,
-        color: finalPoints === 0 ? 0x10b981 : currentTier.color, // Green if fully redeemed
+        color: finalPoints === 0 ? 0x10b981 : currentTier.color,
         fields: [
           {
             name: "Character",
@@ -521,7 +515,6 @@ const rollCorruption = async ({
       };
     }
 
-    // Add tier benefits/effects
     if (currentTier.boon || currentTier.effect) {
       let tierInfo = "";
       if (currentTier.boon) tierInfo += `**Boon:** ${currentTier.boon}\n`;
@@ -534,7 +527,6 @@ const rollCorruption = async ({
       });
     }
 
-    // Add appropriate warnings/notes
     if (type === "gained") {
       if (finalPoints >= 12) {
         embed.fields.push({
@@ -971,7 +963,6 @@ export const rollBrewPotion = async ({
   showRollResult,
 }) => {
   if (isRolling) return null;
-
   setIsRolling(true);
 
   try {
@@ -980,27 +971,62 @@ export const rollBrewPotion = async ({
     const skillModifier = characterModifier || 0;
     const totalRoll = d20Roll + skillModifier;
 
-    const calculateBrewingResult = (roll, diceRoll, modifier) => {
-      const baseDCs = qualityDCs[selectedPotion.rarity];
-      const ingredientMod = ingredientModifiers[ingredientQuality];
+    const getMaxAchievableQuality = ({ proficiencies, ingredientQuality }) => {
+      const hasKit = proficiencies.potioneersKit || proficiencies.herbologyKit;
+      if (!hasKit) return "Cannot brew without kit";
 
-      const maxQuality = getMaxAchievableQuality({
-        proficiencies,
-        ingredientQuality,
-      });
+      const qualityHierarchy = ["flawed", "normal", "exceptional", "superior"];
+      const preparedIndex = qualityHierarchy.indexOf(ingredientQuality);
 
-      const adjustedDCs = Object.fromEntries(
-        Object.entries(baseDCs).map(([quality, dc]) => [
-          quality,
-          dc + ingredientMod,
-        ])
-      );
+      if (preparedIndex === -1) {
+        console.error(
+          "Invalid prepared ingredient quality:",
+          ingredientQuality
+        );
+        return "flawed";
+      }
 
-      let achievedQuality = "ruined";
-      const qualityOrder = ["superior", "exceptional", "normal", "flawed"];
+      const maxIndex = Math.min(preparedIndex + 2, qualityHierarchy.length - 1);
+      const maxQuality = qualityHierarchy[maxIndex];
 
-      for (const quality of qualityOrder) {
-        if (roll >= adjustedDCs[quality]) {
+      return maxQuality;
+    };
+
+    const maxQuality = getMaxAchievableQuality({
+      proficiencies,
+      ingredientQuality,
+    });
+    const baseDCs = qualityDCs[selectedPotion.rarity];
+    const ingredientMod = ingredientModifiers[ingredientQuality] || 0;
+    const adjustedDCs = Object.fromEntries(
+      Object.entries(baseDCs).map(([quality, dc]) => [
+        quality,
+        dc + ingredientMod,
+      ])
+    );
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    let achievedQuality;
+    let targetDC;
+
+    if (isCriticalSuccess) {
+      achievedQuality =
+        maxQuality === "Cannot brew without kit" ? "ruined" : maxQuality;
+      targetDC = adjustedDCs[achievedQuality] || 0;
+    } else if (isCriticalFailure) {
+      achievedQuality = "ruined";
+      targetDC = 0;
+    } else {
+      const sortedQualities = Object.entries(adjustedDCs)
+        .sort(([, a], [, b]) => b - a)
+        .map(([quality]) => quality);
+
+      achievedQuality = "ruined";
+      for (const quality of sortedQualities) {
+        const dc = adjustedDCs[quality];
+        if (totalRoll >= dc) {
           achievedQuality = quality;
           break;
         }
@@ -1016,92 +1042,28 @@ export const rollBrewPotion = async ({
       const maxIndex = qualityHierarchy.indexOf(maxQuality);
       const achievedIndex = qualityHierarchy.indexOf(achievedQuality);
 
-      if (achievedIndex > maxIndex) {
+      if (maxIndex !== -1 && achievedIndex > maxIndex) {
         achievedQuality = maxQuality;
       }
 
-      return {
-        achievedQuality,
-        maxQuality,
-        diceRoll,
-        characterModifier: modifier,
-        total: roll,
-        roll: roll,
-        targetDC: adjustedDCs[achievedQuality],
-        baseDCs,
-        adjustedDCs,
-        ingredientMod,
-        potion: selectedPotion,
-        ingredientQuality,
-        proficiencies,
-      };
-    };
-
-    const isCriticalSuccess = d20Roll === 20;
-    const isCriticalFailure = d20Roll === 1;
-
-    let brewingResult;
-    if (isCriticalSuccess) {
-      const maxQuality = getMaxAchievableQuality({
-        proficiencies,
-        ingredientQuality,
-      });
-      const baseDCs = qualityDCs[selectedPotion.rarity];
-      const ingredientMod = ingredientModifiers[ingredientQuality];
-      const adjustedDCs = Object.fromEntries(
-        Object.entries(baseDCs).map(([quality, dc]) => [
-          quality,
-          dc + ingredientMod,
-        ])
-      );
-
-      brewingResult = {
-        achievedQuality: maxQuality,
-        maxQuality: maxQuality,
-        diceRoll: d20Roll,
-        characterModifier: skillModifier,
-        total: totalRoll,
-        roll: totalRoll,
-        targetDC: adjustedDCs[maxQuality],
-        baseDCs,
-        adjustedDCs,
-        ingredientMod,
-        potion: selectedPotion,
-        ingredientQuality,
-        proficiencies,
-      };
-    } else if (isCriticalFailure) {
-      const baseDCs = qualityDCs[selectedPotion.rarity];
-      const ingredientMod = ingredientModifiers[ingredientQuality];
-      const adjustedDCs = Object.fromEntries(
-        Object.entries(baseDCs).map(([quality, dc]) => [
-          quality,
-          dc + ingredientMod,
-        ])
-      );
-      const maxQuality = getMaxAchievableQuality({
-        proficiencies,
-        ingredientQuality,
-      });
-
-      brewingResult = {
-        achievedQuality: "ruined",
-        maxQuality: maxQuality,
-        diceRoll: d20Roll,
-        characterModifier: skillModifier,
-        total: totalRoll,
-        roll: totalRoll,
-        targetDC: 0,
-        baseDCs,
-        adjustedDCs,
-        ingredientMod,
-        potion: selectedPotion,
-        ingredientQuality,
-        proficiencies,
-      };
-    } else {
-      brewingResult = calculateBrewingResult(totalRoll, d20Roll, skillModifier);
+      targetDC = adjustedDCs[achievedQuality] || 0;
     }
+
+    const brewingResult = {
+      achievedQuality,
+      maxQuality,
+      diceRoll: d20Roll,
+      characterModifier: skillModifier,
+      total: totalRoll,
+      roll: totalRoll,
+      targetDC,
+      baseDCs,
+      adjustedDCs,
+      ingredientMod,
+      potion: selectedPotion,
+      ingredientQuality,
+      proficiencies,
+    };
 
     if (showRollResult) {
       showRollResult({
@@ -1113,115 +1075,138 @@ export const rollBrewPotion = async ({
         isCriticalFailure,
         type: "potion",
         description: `Quality Achieved: ${
-          brewingResult.achievedQuality.charAt(0).toUpperCase() +
-          brewingResult.achievedQuality.slice(1)
+          achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
         }`,
       });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      alert(
+        `Potion Brewing: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}`
+      );
     }
 
-    if (webhookUrl || discordWebhookUrl) {
-      const webhookToUse = webhookUrl || discordWebhookUrl;
+    let embedColor = 0x6b46c1; // Default potion color
+    let resultText = "";
 
-      let embedColor = 0x6b46c1;
-      let resultText = "";
+    // Set colors based on quality
+    switch (achievedQuality) {
+      case "superior":
+        embedColor = 0x8b5cf6;
+        break;
+      case "exceptional":
+        embedColor = 0x3b82f6;
+        break;
+      case "normal":
+        embedColor = 0x10b981;
+        break;
+      case "flawed":
+        embedColor = 0xf59e0b;
+        break;
+      case "ruined":
+        embedColor = 0xef4444;
+        break;
+      default:
+        embedColor = 0x6b7280;
+        break;
+    }
 
-      switch (brewingResult.achievedQuality) {
-        case "superior":
-          embedColor = 0x8b5cf6;
-          break;
-        case "exceptional":
-          embedColor = 0x3b82f6;
-          break;
-        case "normal":
-          embedColor = 0x10b981;
-          break;
-        case "flawed":
-          embedColor = 0xf59e0b;
-          break;
-        case "ruined":
-          embedColor = 0xef4444;
-          break;
-        default:
-          embedColor = 0x6b7280;
-          break;
-      }
-      if (isCriticalSuccess) {
-        embedColor = 0xffd700;
-        resultText = " - **CRITICAL SUCCESS!** 🎉";
-      } else if (isCriticalFailure) {
-        embedColor = 0xff0000;
-        resultText = " - **CRITICAL FAILURE!** 💥";
-      }
+    if (isCriticalSuccess) {
+      embedColor = 0xffd700;
+      resultText = " - **CRITICAL SUCCESS!** 🎉";
+    } else if (isCriticalFailure) {
+      embedColor = 0xff0000;
+      resultText = " - **CRITICAL FAILURE!** 💥";
+    }
 
-      const rollDisplay =
-        skillModifier !== 0
-          ? `${d20Roll} + ${skillModifier} = ${totalRoll}`
-          : `${d20Roll}`;
+    // Harry Potter ruined messages
+    const ruinedMessages = [
+      "You did your best!",
+      "Maybe stick to Transfiguration?",
+      "You’re just one cauldron explosion away from a breakthrough… or remedial lessons.",
+      "Technically a potion. Emotionally? More of a strongly brewed cry for help.",
+      "Some potions turn lead to gold. Yours might turn potential to detention.",
+      "Don't worry, we've all melted a cauldron or two!",
+      "Ah yes, the rare ‘liquid disappointment.’ Must be part of the intermediate curriculum.",
+      "At least you didn't turn anyone into a ferret!",
+    ];
 
-      const embed = {
-        title: `${character?.name || "Unknown"} Brewed: ${
-          selectedPotion.name
-        }${resultText}`,
-        description: `${
-          isCriticalSuccess
-            ? " (Natural 20!)"
-            : isCriticalFailure
-            ? " (Natural 1!)"
-            : `Roll: ${rollDisplay}`
-        }`,
-        color: embedColor,
-        fields: [
-          {
-            name: "Roll vs DC",
-            value: `${rollDisplay} vs DC ${brewingResult.targetDC}`,
-            inline: true,
+    let description = "";
+    if (isCriticalSuccess) {
+      description = "Natural 20!";
+    } else if (isCriticalFailure) {
+      description = "Natural 1!";
+    }
+
+    // Add ruined message if quality is ruined
+    if (achievedQuality === "ruined") {
+      const randomMessage =
+        ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
+      description += description
+        ? `\n\n*${randomMessage}*`
+        : `*${randomMessage}*`;
+    }
+
+    const message = {
+      embeds: [
+        {
+          title: `${character?.name || "Unknown"} Brewed: ${
+            selectedPotion.name
+          }${resultText}`,
+          description: description,
+          color: embedColor,
+          fields: [
+            {
+              name: "Roll Details",
+              value: `Roll: ${d20Roll} ${
+                skillModifier >= 0 ? "+" : ""
+              }${skillModifier} = **${totalRoll}**${
+                isCriticalSuccess
+                  ? "\n✨ **Achieved maximum possible quality!**"
+                  : isCriticalFailure
+                  ? "\n💀 **Spectacular brewing failure!**"
+                  : ""
+              }`,
+              inline: false,
+            },
+            {
+              name: "Quality Achieved",
+              value: `${
+                achievedQuality.charAt(0).toUpperCase() +
+                achievedQuality.slice(1)
+              }`,
+              inline: true,
+            },
+            {
+              name: "Potion Effect",
+              value: selectedPotion.description,
+              inline: false,
+            },
+          ],
+          footer: {
+            text: `Witches and Snitches - Potion Brewing • Today at ${new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}`,
           },
-          {
-            name: "Skill Modifier",
-            value:
-              skillModifier >= 0 ? `+${skillModifier}` : `${skillModifier}`,
-            inline: true,
-          },
-          {
-            name: "Ingredient Quality",
-            value:
-              ingredientQuality.charAt(0).toUpperCase() +
-              ingredientQuality.slice(1),
-            inline: true,
-          },
-          {
-            name: "Quality Achieved",
-            value: `${
-              brewingResult.achievedQuality.charAt(0).toUpperCase() +
-              brewingResult.achievedQuality.slice(1)
-            }`,
-            inline: true,
-          },
-          {
-            name: "Potion Effect",
-            value: selectedPotion.description,
-            inline: false,
-          },
-        ],
-        timestamp: new Date().toISOString(),
-        footer: {
-          text: "Witches and Snitches - Potion Brewing",
         },
-      };
+      ],
+    };
 
-      try {
-        await fetch(webhookToUse, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            embeds: [embed],
-          }),
-        });
-      } catch (error) {
-        console.error("Error sending to Discord:", error);
-      }
+    if (discordWebhookUrl) {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
     }
 
     return brewingResult;
