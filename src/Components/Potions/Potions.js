@@ -613,7 +613,6 @@ const PotionBrewingSystem = ({ character }) => {
               </div>
             </div>
           )}
-
           <div style={styles.card}>
             <button
               onClick={brewPotion}

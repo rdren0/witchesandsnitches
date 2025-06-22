@@ -1122,7 +1122,6 @@ export const rollBrewPotion = async ({
       resultText = " - **CRITICAL FAILURE!** 💥";
     }
 
-    // Harry Potter ruined messages
     const ruinedMessages = [
       "You did your best!",
       "Maybe stick to Transfiguration?",
@@ -1142,7 +1141,7 @@ export const rollBrewPotion = async ({
     }
 
     // Add ruined message if quality is ruined
-    if (achievedQuality === "ruined") {
+    if (achievedQuality === "ruined" || isCriticalFailure) {
       const randomMessage =
         ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
       description += description
