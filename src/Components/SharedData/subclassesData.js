@@ -1102,7 +1102,7 @@ export const subclassesData = {
         level: 6,
         name: "Brew Glory",
         description:
-          "Gain proficiency in Herbology or Potion-Making, or Expertise if already proficient in both. Choose one specialization feature.",
+          "Gain proficiency in Herbology or Potion-Making (or expertise if already proficient) in both. Choose one specialization feature.",
         choices: [
           {
             name: "Plant Veil",
@@ -1998,7 +1998,7 @@ export const subclassesData = {
           {
             name: "Study Buddy",
             description:
-              "Learn one language and gain proficiency in Herbology, History of Magic, Investigation, Magical Theory, or Muggle Studies (expertise if already proficient). After 1 hour studying, automatically improve one subject grade by one category. Can help others with homework instead.",
+              " After 1 hour studying, automatically improve one subject grade by one category. Can help others with homework instead. Choose: Herbology or History of Magic or Investigation or Magical Theory or Muggle Studies to gain proficiency in (expertise if already proficient). After 1 hour studying, automatically improve one subject grade by one category. Can help others with homework instead.",
           },
           {
             name: "Quick Skim",
@@ -2007,6 +2007,8 @@ export const subclassesData = {
           },
         ],
       },
+      //
+
       {
         level: 6,
         name: "Intellect Advantage",

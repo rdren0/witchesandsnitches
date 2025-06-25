@@ -9,12 +9,13 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
-import { skillsByCastingStyle, hpData } from "../../data";
-import { standardFeats as importedStandardFeats } from "../../standardFeatData";
+import { skillsByCastingStyle } from "../utils";
+import { hpData } from "../../SharedData/data";
+import { standardFeats as importedStandardFeats } from "../../SharedData/standardFeatData";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { backgroundsData } from "../Shared/backgroundsData";
+import { backgroundsData } from "../../SharedData/backgroundsData";
 
 // Import the new section components
 import BasicInformationSection from "../Edit/BasicInformationSection";
@@ -26,6 +27,7 @@ import { useCharacterSetup } from "./hooks/useCharacterSetup";
 import { useFieldLocks } from "./hooks/useFieldLocks";
 import { useFeatValidation } from "./hooks/useFeatValidation ";
 import { useASIHandlers } from "./hooks/useASIHandlers";
+import EnhancedSkillsSection from "../CharacterCreation/EnhancedSkillsSection";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -752,7 +754,6 @@ const CharacterEditor = ({
       </div>
     );
   }
-  console.log({ character });
   return (
     <div style={enhancedStyles.panel}>
       {/* Header */}
@@ -908,7 +909,6 @@ const CharacterEditor = ({
               setError(`Failed to save subclass: ${error.message}`);
             }}
             onSaveSuccess={() => {
-              console.log("Subclass saved successfully");
               if (error && error.includes("subclass")) {
                 setError(null);
               }
@@ -960,7 +960,14 @@ const CharacterEditor = ({
           />
         </div>
       </div>
-
+      {/* Skills Section */}
+      <EnhancedSkillsSection
+        character={character}
+        handleSkillToggle={handleSkillToggle}
+        getAvailableSkills={getAvailableSkills}
+        styles={styles}
+        theme={theme}
+      />
       {/* Section 4: Ability Scores */}
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader

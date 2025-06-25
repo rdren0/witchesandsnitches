@@ -97,35 +97,6 @@ const SpellSlotTracker = ({
           newCharacterState[`spellSlots${spellLevel}`] = maxSlots;
         });
         setCharacter(newCharacterState);
-
-        const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
-        if (discordWebhookUrl) {
-          const embed = {
-            title: `${character.name} - ${
-              isLevelUpRefresh
-                ? "Spell Slots Refreshed (Level Up!)"
-                : "Spell Slots Configured"
-            }`,
-            color: isLevelUpRefresh ? 0x10b981 : 0x3b82f6,
-            description: isLevelUpRefresh
-              ? `Level up to ${characterLevel}! All spell slots restored and new levels unlocked.`
-              : `Spell slots set up for level ${characterLevel} character`,
-            timestamp: new Date().toISOString(),
-            footer: {
-              text: "Witches and Snitches - Spell Setup",
-            },
-          };
-
-          try {
-            await fetch(discordWebhookUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ embeds: [embed] }),
-            });
-          } catch (discordError) {
-            console.error("Error sending to Discord:", discordError);
-          }
-        }
       } catch (error) {
         console.error("Error setting up spell slots:", error);
       } finally {
@@ -162,9 +133,6 @@ const SpellSlotTracker = ({
       lastKnownLevel &&
       character.level !== lastKnownLevel
     ) {
-      console.log(
-        `Character leveled up from ${lastKnownLevel} to ${character.level}, refreshing spell slots...`
-      );
       setupStandardSpellSlots(character.level, true);
     }
     setLastKnownLevel(character?.level);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createFeatStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { backgroundsData } from "../../Shared/backgroundsData";
+import { backgroundsData } from "../../../SharedData/backgroundsData";
 
 const calculateBackgroundModifiers = (selectedBackground, character) => {
   const defaultInitiativeChanges = {
@@ -226,7 +226,7 @@ const EnhancedBackgroundSelector = ({
   const selectedBackground = value || "";
 
   useEffect(() => {
-    // Only expand the selected background on initial load, but don't scroll
+    // Only expand the selected background on initial load
     if (
       selectedBackground &&
       selectedBackground.trim() !== "" &&
@@ -301,6 +301,7 @@ const EnhancedBackgroundSelector = ({
     let updatedCharacter;
 
     if (selectedBackground === backgroundName) {
+      // Deselect the background
       updatedCharacter = applyBackgroundProficiencies(character, "");
       setExpandedBackgrounds((prev) => {
         const newSet = new Set(prev);
@@ -308,23 +309,12 @@ const EnhancedBackgroundSelector = ({
         return newSet;
       });
     } else {
+      // Select the background and auto-expand it
       updatedCharacter = applyBackgroundProficiencies(
         character,
         backgroundName
       );
       setExpandedBackgrounds(new Set([backgroundName]));
-
-      // Only scroll when user actively selects a different background
-      setTimeout(() => {
-        const backgroundElement = backgroundRefs.current[backgroundName];
-        if (backgroundElement) {
-          backgroundElement.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-            inline: "nearest",
-          });
-        }
-      }, 100);
     }
 
     onChange(updatedCharacter.background);
@@ -369,7 +359,22 @@ const EnhancedBackgroundSelector = ({
     }));
   };
 
-  const availableBackgrounds = getAvailableBackgrounds();
+  // Modified to show only selected background if one is selected, otherwise show all
+  const visibleBackgrounds = () => {
+    const allBackgrounds = getAvailableBackgrounds();
+
+    if (!selectedBackground) {
+      return allBackgrounds.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // Only show the selected background
+    const selectedBg = allBackgrounds.find(
+      (bg) => bg.name === selectedBackground
+    );
+    return selectedBg ? [selectedBg] : allBackgrounds;
+  };
+
+  const availableBackgrounds = visibleBackgrounds();
 
   return (
     <div style={enhancedStyles.container}>
@@ -414,7 +419,7 @@ const EnhancedBackgroundSelector = ({
               <div style={enhancedStyles.featHeader}>
                 <label style={enhancedStyles.featLabelClickable}>
                   <input
-                    type="radio"
+                    type="checkbox"
                     name="background"
                     checked={isSelected}
                     onChange={() => handleBackgroundToggle(name)}
@@ -455,14 +460,16 @@ const EnhancedBackgroundSelector = ({
                     )}
                   </span>
                 </label>
-                <button
-                  onClick={() => toggleBackgroundExpansion(name)}
-                  style={enhancedStyles.expandButton}
-                  type="button"
-                  disabled={disabled}
-                >
-                  {isExpanded ? "▲" : "▼"}
-                </button>
+                {!isSelected && (
+                  <button
+                    onClick={() => toggleBackgroundExpansion(name)}
+                    style={enhancedStyles.expandButton}
+                    type="button"
+                    disabled={disabled}
+                  >
+                    {isExpanded ? "▲" : "▼"}
+                  </button>
+                )}
               </div>
 
               <div
@@ -475,7 +482,7 @@ const EnhancedBackgroundSelector = ({
                 {data.preview || data.description}
               </div>
 
-              {isExpanded && (
+              {(isExpanded || isSelected) && (
                 <div
                   style={
                     isSelected
@@ -738,6 +745,18 @@ const EnhancedBackgroundSelector = ({
         magical abilities.
         {selectedBackground &&
           " Mechanical bonuses from your background are shown above and automatically applied."}
+        {selectedBackground && (
+          <span
+            style={{
+              display: "block",
+              marginTop: "4px",
+              fontStyle: "italic",
+              color: theme.success,
+            }}
+          >
+            Uncheck the selected background to see all available options again.
+          </span>
+        )}
       </div>
     </div>
   );

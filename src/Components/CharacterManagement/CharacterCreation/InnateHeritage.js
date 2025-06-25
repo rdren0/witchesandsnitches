@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { innateHeritages, heritageDescriptions } from "../../../data";
-import { createFeatStyles } from "../../../../styles/masterStyles";
-import { useTheme } from "../../../../contexts/ThemeContext";
+import {
+  innateHeritages,
+  heritageDescriptions,
+} from "../../SharedData/heritageData";
+import { createFeatStyles } from "../../../styles/masterStyles";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 // Utility functions to check for modifiers at multiple levels
 const checkForModifiers = (obj, type = "abilityIncreases") => {
@@ -59,11 +62,6 @@ const checkForAbilityChoices = (obj) => {
       amount: obj.properties.amount || 1,
       type: "choice",
     });
-  }
-
-  // Debug logging to see what we're finding
-  if (choices.length > 0) {
-    console.log("checkForAbilityChoices found:", choices, "in object:", obj);
   }
 
   return choices;
@@ -260,9 +258,6 @@ const HeritageChoiceSelector = ({
 
   if (choiceFeatures.length === 0) return null;
 
-  // Debug logging
-  console.log(`Heritage ${heritage} choice features:`, choiceFeatures);
-
   const handleChoiceChange = (featureName, choiceName) => {
     onHeritageChoiceSelect(heritage, featureName, choiceName);
   };
@@ -285,15 +280,6 @@ const HeritageChoiceSelector = ({
                 feature.name,
                 option.name
               );
-
-              // Debug each option
-              console.log(
-                `Option ${option.name}:`,
-                option,
-                "ability choices:",
-                checkForAbilityChoices(option)
-              );
-
               return (
                 <div key={optionIndex} style={styles.choiceOption}>
                   <label style={styles.choiceLabel}>
@@ -918,10 +904,8 @@ export const InnateHeritage = ({
                       )) || "No description available."}
                     </ul>
 
-                    {/*  */}
-                    {console.log(heritageData)}
                     {/* Skill Proficiencies */}
-                    {/* {heritageData?.modifiers?.skillProficiencies && (
+                    {!!heritageData?.modifiers?.skillProficiencies.length && (
                       <div style={{ marginBottom: "16px" }}>
                         <h5
                           style={{
@@ -963,8 +947,8 @@ export const InnateHeritage = ({
                           )}
                         </div>
                       </div>
-                    )} */}
-                    {/*  */}
+                    )}
+
                     {/* Show base skill proficiencies */}
                     {checkForSkillProficiencies(heritageData).length > 0 && (
                       <div
@@ -1054,7 +1038,7 @@ export const InnateHeritage = ({
                     )}
 
                     {/* Show other special abilities */}
-                    {heritageData?.modifiers?.other &&
+                    {!!heritageData?.modifiers?.other.length &&
                       Object.keys(heritageData.modifiers.other).length > 0 && (
                         <div
                           style={{

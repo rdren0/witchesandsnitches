@@ -61,12 +61,12 @@ export const houseFeatures = {
           {
             name: "Words of Encouragement",
             description:
-              "You may use your reaction to give an ally who can hear you, a d4 bonus to the first attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only benefit from this effect once per round.",
+              "You may use your reaction to give an ally who can hear you, a d4 BONUS to the first attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only benefit from this effect once per round.",
           },
           {
             name: "Neg D4",
             description:
-              "You may use your reaction to give a creature who can hear you, a d4 penalty to any attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only be penalized from this effect once per round.",
+              "You may use your reaction to give a creature who can hear you, a d4 PENALTY to any attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only be penalized from this effect once per round.",
           },
         ],
       },

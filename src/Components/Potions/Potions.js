@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Dice1,
   Dice2,
@@ -16,7 +16,7 @@ import {
 import { useRollFunctions } from "../utils/diceRoller";
 
 import { useTheme } from "../../contexts/ThemeContext";
-import { potions, qualityDCs } from "../data";
+import { potions, qualityDCs } from "./potionsData";
 import { createPotionsStyles } from "../../styles/masterStyles";
 
 const PotionBrewingSystem = ({ character }) => {
@@ -41,18 +41,6 @@ const PotionBrewingSystem = ({ character }) => {
   const currentCharacter = useMemo(() => {
     return character || selectedCharacter;
   }, [character, selectedCharacter]);
-
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  useEffect(() => {
-    setRefreshTrigger((prev) => prev + 1);
-  }, [
-    currentCharacter?.skills,
-    currentCharacter?.skillProficiencies,
-    currentCharacter?.skillExpertise,
-    currentCharacter?.abilityScores,
-    currentCharacter?.level,
-  ]);
 
   const getCharacterPotionModifier = useMemo(() => {
     if (!currentCharacter) return 0;
@@ -92,15 +80,7 @@ const PotionBrewingSystem = ({ character }) => {
     const totalModifier = wisdomModifier + skillBonus;
 
     return totalModifier;
-  }, [
-    currentCharacter?.skills?.potionMaking,
-    currentCharacter?.skillProficiencies,
-    currentCharacter?.skillExpertise,
-    currentCharacter?.abilityScores?.wisdom,
-    currentCharacter?.level,
-    refreshTrigger,
-    currentCharacter,
-  ]);
+  }, [currentCharacter]);
 
   const ingredientModifiers = {
     flawed: 2,

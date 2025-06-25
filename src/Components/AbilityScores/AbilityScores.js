@@ -56,7 +56,6 @@ const AbilityScores = ({ character }) => {
 
   return (
     <div style={styles.abilityCard}>
-      <h2 style={styles.abilityTitle}>Ability Scores</h2>
       <div style={styles.abilityGrid}>
         {[
           { name: "Strength", key: "strength" },

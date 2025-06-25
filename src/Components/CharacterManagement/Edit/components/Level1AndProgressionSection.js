@@ -1,6 +1,6 @@
 import { Lock, Unlock, Star } from "lucide-react";
-import { InnateHeritage } from "../../Create/Steps/InnateHeritage";
-import EnhancedFeatureSelector from "../../Create/Steps/EnhancedFeatureSelector";
+import { InnateHeritage } from "../../CharacterCreation/InnateHeritage";
+import EnhancedFeatureSelector from "./EnhancedFeatureSelectorEdit";
 import StepIndicator from "../../Shared/StepIndicator";
 import {
   AbilityScoreIncrements,

@@ -1,29 +1,9 @@
 import { useState } from "react";
-import { standardFeats } from "../../standardFeatData";
+import { standardFeats } from "../../SharedData/standardFeatData";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { getAllSelectedFeats } from "../utils";
 
-// Utility function to collect all selected feats from all sources
-export const getAllSelectedFeats = (character) => {
-  const allSelectedFeats = [];
-
-  // Get feats from level 1 choice
-  if (character.level1ChoiceType === "feat" && character.standardFeats) {
-    allSelectedFeats.push(...character.standardFeats);
-  }
-
-  // Get feats from ASI choices
-  const asiChoices = character.asiChoices || {};
-  Object.values(asiChoices).forEach((choice) => {
-    if (choice.type === "feat" && choice.selectedFeat) {
-      allSelectedFeats.push(choice.selectedFeat);
-    }
-  });
-
-  return [...new Set(allSelectedFeats)]; // Remove any duplicates
-};
-
-// Component for handling ability score increments in ASI choices
 export const AbilityScoreIncrements = ({
   level,
   choice,
@@ -200,7 +180,6 @@ export const AbilityScoreIncrements = ({
   );
 };
 
-// Component for selecting feats in ASI choices
 export const ASIFeatSelector = ({
   level,
   character,
@@ -215,22 +194,17 @@ export const ASIFeatSelector = ({
 }) => {
   const safeStandardFeats = standardFeats || [];
 
-  // Get all currently selected feats to filter out duplicates
   const allSelectedFeats = getAllSelectedFeats(character);
 
-  // Remove the currently selected feat for this level from the exclusion list
-  // so it can remain selected
   const excludedFeats = allSelectedFeats.filter(
     (featName) => featName !== choice.selectedFeat
   );
 
   const availableFeats = safeStandardFeats.filter((feat) => {
-    // Check prerequisites
     if (!checkFeatPrerequisites(feat, character)) {
       return false;
     }
 
-    // Check if feat is already selected elsewhere
     if (excludedFeats.includes(feat.name)) {
       return false;
     }
@@ -250,7 +224,6 @@ export const ASIFeatSelector = ({
     );
   });
 
-  // Check if currently selected feat is no longer available (already selected elsewhere)
   const currentlySelectedUnavailable =
     choice.selectedFeat && excludedFeats.includes(choice.selectedFeat);
 
@@ -423,12 +396,10 @@ export const ASIFeatSelector = ({
   );
 };
 
-// Component showing feat availability information
 export const FeatRequirementsInfo = ({ character }) => {
   const { theme } = useTheme();
   const safeStandardFeats = standardFeats || [];
 
-  // Get all currently selected feats
   const allSelectedFeats = getAllSelectedFeats(character);
 
   const availableCount = safeStandardFeats.filter((feat) =>

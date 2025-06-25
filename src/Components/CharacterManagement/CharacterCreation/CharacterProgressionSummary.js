@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import { useTheme } from "../../../../contexts/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const CharacterProgressionSummary = ({ character, featInfo, styles }) => {
   const { theme } = useTheme();

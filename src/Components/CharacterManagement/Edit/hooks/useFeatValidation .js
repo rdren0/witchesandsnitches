@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { checkFeatPrerequisites } from "../../../CharacterSheet/utils";
-import { getAllSelectedFeats } from "../../Create/ASIComponents";
+import { getAllSelectedFeats } from "../../utils";
 
 export const useFeatValidation = ({
   character,

@@ -1,4 +1,4 @@
-import { backgroundsData } from "../CharacterManagement/Shared/backgroundsData";
+import { backgroundsData } from "../SharedData/backgroundsData";
 
 export const parseEquipmentString = (equipmentString) => {
   if (!equipmentString || typeof equipmentString !== "string") {

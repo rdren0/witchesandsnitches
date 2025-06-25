@@ -1,8 +1,7 @@
 import StepIndicator from "../../Shared/StepIndicator";
-import EnhancedSubclassSelector from "../../Create/Steps/EnhancedSubclassSelector";
-import EnhancedSkillsSection from "../../Create/Steps/EnhancedSkillsSection";
-import EnhancedBackgroundSelector from "../../Create/Steps/EnhancedBackgroundSelector";
-import EnhancedHouseSelector from "../../Create/Steps/EnhancedHouseSelector";
+import EnhancedSubclassSelector from "./EnhancedSubclassSelectorEdit";
+import EnhancedBackgroundSelector from "./EnhancedBackgroundSelectorEdit";
+import EnhancedHouseSelector from "./EnhancedHouseSelectorEdit";
 
 const HouseAndSubclassSection = ({
   character,
@@ -12,8 +11,6 @@ const HouseAndSubclassSection = ({
   houseChoices,
   handleHouseChoiceSelect,
   setCharacter,
-  handleSkillToggle,
-  getAvailableSkills,
   styles,
   theme,
 }) => {
@@ -63,15 +60,6 @@ const HouseAndSubclassSection = ({
         }}
         character={character}
         disabled={false}
-      />
-
-      {/* Skills Section */}
-      <EnhancedSkillsSection
-        character={character}
-        handleSkillToggle={handleSkillToggle}
-        getAvailableSkills={getAvailableSkills}
-        styles={styles}
-        theme={theme}
       />
     </>
   );

@@ -21,8 +21,8 @@ const MagicModifiersSection = ({
         <div style={styles.magicModifiersGrid}>
           {[
             { key: "divinations", label: "Divinations" },
-            { key: "charms", label: "Charms" },
             { key: "transfiguration", label: "Transfiguration" },
+            { key: "charms", label: "Charms" },
             { key: "healing", label: "Healing" },
             { key: "jinxesHexesCurses", label: "JHC" },
           ].map(({ key, label }) => (

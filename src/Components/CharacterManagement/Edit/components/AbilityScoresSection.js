@@ -1,6 +1,6 @@
 import { Lock, Unlock } from "lucide-react";
 import StepIndicator from "../../Shared/StepIndicator";
-import AbilityScorePicker from "../../Create/Steps/AbilityScorePicker";
+import AbilityScorePicker from "./AbilityScorePickerEdit";
 
 const AbilityScoresSection = ({
   character,

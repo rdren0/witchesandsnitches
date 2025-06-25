@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { backgroundsData } from "../../Shared/backgroundsData";
+import { backgroundsData } from "../../../SharedData/backgroundsData";
 
 // Safely fills missing background skills if needed
 const migrateBackgroundSkills = (character) => {

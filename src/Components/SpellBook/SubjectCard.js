@@ -26,6 +26,10 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
 import { createSpellBookStyles } from "../../styles/masterStyles";
 
+const hasSubclassFeature = (character, featureName) => {
+  return character?.subclassFeatures?.includes(featureName) || false;
+};
+
 const getIcon = (iconName) => {
   const iconMap = {
     Wand2: Wand2,
@@ -399,15 +403,19 @@ export const SubjectCard = ({
   };
 
   const findSpellData = (spellName) => {
-    // eslint-disable-next-line
-    for (const [level, spells] of Object.entries(subjectData.levels)) {
+    for (const [, spells] of Object.entries(subjectData.levels)) {
       const spell = spells.find((s) => s.name === spellName);
       if (spell) return spell;
     }
     return null;
   };
 
-  const calculateResearchDC = (playerYear, spellYear, spellName) => {
+  const calculateResearchDC = (
+    playerYear,
+    spellYear,
+    spellName,
+    selectedCharacter
+  ) => {
     let baseDC = 8 + 2 * playerYear;
 
     const yearDifference = spellYear - playerYear;
@@ -452,12 +460,30 @@ export const SubjectCard = ({
 
     const playerYear = selectedCharacter.year || 1;
     const spellYear = spellData.year || 1;
-    const dc = calculateResearchDC(playerYear, spellYear, spellName);
+    const dc = calculateResearchDC(
+      playerYear,
+      spellYear,
+      spellName,
+      selectedCharacter
+    );
 
     setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
 
     try {
-      // Use the extracted roll function
+      let modifier = getSpellModifier(
+        spellName,
+        subjectName,
+        selectedCharacter
+      );
+
+      if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+        const wisdomModifier = Math.floor(
+          (selectedCharacter.abilityScores.wisdom - 10) / 2
+        );
+        const researcherBonus = Math.floor(wisdomModifier / 2);
+        modifier += researcherBonus;
+      }
+
       const rollResult = await rollResearch({
         spellName,
         subject: subjectName,
@@ -465,14 +491,18 @@ export const SubjectCard = ({
         dc,
         playerYear,
         spellYear,
-        getSpellModifier,
+        getSpellModifier: () => modifier,
         getModifierInfo,
+        researcherBonus: hasSubclassFeature(selectedCharacter, "Researcher")
+          ? Math.floor(
+              Math.floor((selectedCharacter.abilityScores.wisdom - 10) / 2) / 2
+            )
+          : 0,
       });
 
       const { isSuccess, isNaturalTwenty } = rollResult;
 
       if (isSuccess) {
-        // Handle database updates
         const { data: existingProgress, error: fetchError } = await supabase
           .from("spell_progress_summary")
           .select("*")
@@ -491,7 +521,11 @@ export const SubjectCard = ({
           updated_at: new Date().toISOString(),
         };
 
-        // Only add successful attempt on Natural 20
+        if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+          updateData.has_arithmantic_tag = true;
+          updateData.has_runic_tag = true;
+        }
+
         if (isNaturalTwenty) {
           const currentAttempts = existingProgress?.successful_attempts || 0;
           updateData.successful_attempts = Math.min(currentAttempts + 1, 2);
@@ -512,10 +546,16 @@ export const SubjectCard = ({
             character_id: selectedCharacter.id,
             discord_user_id: discordUserId,
             spell_name: spellName,
-            successful_attempts: isNaturalTwenty ? 1 : 0, // Only give attempt on Nat 20
-            has_natural_twenty: false, // This is for spell attempts, not research
+            successful_attempts: isNaturalTwenty ? 1 : 0,
+            has_natural_twenty: false,
             has_failed_attempt: false,
             researched: true,
+
+            has_arithmantic_tag: hasSubclassFeature(
+              selectedCharacter,
+              "Researcher"
+            ),
+            has_runic_tag: hasSubclassFeature(selectedCharacter, "Researcher"),
           };
 
           const { error: insertError } = await supabase
@@ -584,6 +624,14 @@ export const SubjectCard = ({
         updated_at: new Date().toISOString(),
       };
 
+      if (
+        editFormData.researched &&
+        hasSubclassFeature(selectedCharacter, "Researcher")
+      ) {
+        updateData.has_arithmantic_tag = true;
+        updateData.has_runic_tag = true;
+      }
+
       if (existingProgress) {
         const { error: updateError } = await supabase
           .from("spell_progress_summary")
@@ -644,12 +692,74 @@ export const SubjectCard = ({
     }));
   };
 
+  const loadSpellProgress = React.useCallback(async () => {
+    if (!selectedCharacter || !discordUserId) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error loading spell progress:", error);
+        setError(`Failed to load spell progress: ${error.message}`);
+        return;
+      }
+
+      const formattedAttempts = {};
+      const formattedCriticals = {};
+      const formattedFailures = {};
+      const formattedResearch = {};
+
+      data?.forEach((progress) => {
+        formattedAttempts[progress.spell_name] = {};
+
+        if (progress.has_natural_twenty) {
+          formattedAttempts[progress.spell_name][1] = true;
+          formattedAttempts[progress.spell_name][2] = true;
+          formattedCriticals[progress.spell_name] = true;
+        } else {
+          for (let i = 1; i <= Math.min(progress.successful_attempts, 2); i++) {
+            formattedAttempts[progress.spell_name][i] = true;
+          }
+        }
+
+        if (progress.has_failed_attempt) {
+          formattedFailures[progress.spell_name] = true;
+        }
+        if (progress.researched) {
+          formattedResearch[progress.spell_name] = true;
+        }
+      });
+
+      setSpellAttempts(formattedAttempts);
+      setCriticalSuccesses(formattedCriticals);
+      setFailedAttempts(formattedFailures);
+      setResearchedSpells(formattedResearch);
+    } catch (error) {
+      console.error("Error loading spell progress:", error);
+      setError(`Failed to load spell progress: ${error.message}`);
+    }
+  }, [
+    selectedCharacter,
+    discordUserId,
+    supabase,
+    setSpellAttempts,
+    setCriticalSuccesses,
+    setFailedAttempts,
+    setResearchedSpells,
+    setError,
+  ]);
+
   useEffect(() => {
     if (selectedCharacter && discordUserId) {
       loadSpellProgress();
     }
-    // eslint-disable-next-line
-  }, [selectedCharacter, discordUserId]);
+  }, [selectedCharacter, discordUserId, loadSpellProgress]);
 
   const updateSpellProgressSummary = async (
     spellName,
@@ -740,60 +850,6 @@ export const SubjectCard = ({
     setOpenMenus({});
   };
 
-  const loadSpellProgress = async () => {
-    if (!selectedCharacter || !discordUserId) {
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId);
-
-      if (error) {
-        console.error("Error loading spell progress:", error);
-        setError(`Failed to load spell progress: ${error.message}`);
-        return;
-      }
-
-      const formattedAttempts = {};
-      const formattedCriticals = {};
-      const formattedFailures = {};
-      const formattedResearch = {};
-
-      data?.forEach((progress) => {
-        formattedAttempts[progress.spell_name] = {};
-
-        if (progress.has_natural_twenty) {
-          formattedAttempts[progress.spell_name][1] = true;
-          formattedAttempts[progress.spell_name][2] = true;
-          formattedCriticals[progress.spell_name] = true;
-        } else {
-          for (let i = 1; i <= Math.min(progress.successful_attempts, 2); i++) {
-            formattedAttempts[progress.spell_name][i] = true;
-          }
-        }
-
-        if (progress.has_failed_attempt) {
-          formattedFailures[progress.spell_name] = true;
-        }
-        if (progress.researched) {
-          formattedResearch[progress.spell_name] = true;
-        }
-      });
-
-      setSpellAttempts(formattedAttempts);
-      setCriticalSuccesses(formattedCriticals);
-      setFailedAttempts(formattedFailures);
-      setResearchedSpells(formattedResearch);
-    } catch (error) {
-      console.error("Error loading spell progress:", error);
-      setError(`Failed to load spell progress: ${error.message}`);
-    }
-  };
-
   const renderSearchResults = () => {
     if (searchResults.length === 0) {
       return (
@@ -850,6 +906,13 @@ export const SubjectCard = ({
     const isAttempting = attemptingSpells[spellName];
     const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
     const isDescriptionExpanded = expandedDescriptions[spellName];
+
+    const hasArithmancticTag =
+      spellObj.tags?.includes("Arithmantic") ||
+      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
+    const hasRunicTag =
+      spellObj.tags?.includes("Runic") ||
+      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
 
     let rowStyle = { ...styles.tableRow };
     if (isMastered) {
@@ -964,6 +1027,55 @@ export const SubjectCard = ({
                   Researched
                 </span>
               )}
+              {/* Show special tags for Researcher */}
+              {hasArithmancticTag && (
+                <span
+                  style={{
+                    fontSize: "9px",
+                    fontWeight: "600",
+                    padding: "2px 4px",
+                    borderRadius: "8px",
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                  }}
+                  title="Arithmantic: Enhanced with mathematical precision"
+                >
+                  🔢 Arithmantic
+                </span>
+              )}
+              {hasRunicTag && (
+                <span
+                  style={{
+                    fontSize: "9px",
+                    fontWeight: "600",
+                    padding: "2px 4px",
+                    borderRadius: "8px",
+                    backgroundColor: "#8b5cf6",
+                    color: "white",
+                  }}
+                  title="Runic: Enhanced with ancient symbols"
+                >
+                  ᚱ Runic
+                </span>
+              )}
+              {hasArithmancticTag &&
+                hasRunicTag &&
+                hasSubclassFeature(selectedCharacter, "Researcher") && (
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      fontWeight: "600",
+                      padding: "2px 4px",
+                      borderRadius: "8px",
+                      background: "linear-gradient(45deg, #3b82f6, #8b5cf6)",
+                      border: "1px solid #ffd700",
+                      color: "white",
+                    }}
+                    title="Researcher: Both tags from extensive spell study"
+                  >
+                    📚 Enhanced
+                  </span>
+                )}
             </div>
           </div>
         </td>
@@ -1034,7 +1146,6 @@ export const SubjectCard = ({
           </button>
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          {console.log({ isResearched, spellName })}
           <button
             onClick={() => markSpellAsResearched(spellName)}
             disabled={
@@ -1058,6 +1169,7 @@ export const SubjectCard = ({
               gap: "4px",
               transition: "all 0.2s ease",
               fontFamily: "inherit",
+              position: "relative",
               ...(isMastered ||
               isResearched ||
               !selectedCharacter ||
@@ -1069,10 +1181,26 @@ export const SubjectCard = ({
                   }
                 : {}),
             }}
-            title={`Research ${spellName} (History of Magic Check)`}
+            title={`Research ${spellName} (History of Magic Check)${
+              hasSubclassFeature(selectedCharacter, "Researcher")
+                ? " - Researcher: +½ Wisdom modifier"
+                : ""
+            }`}
           >
             <BookOpen size={14} />
             {attemptingSpells[spellName] ? "Rolling..." : "Research"}
+            {hasSubclassFeature(selectedCharacter, "Researcher") && (
+              <span
+                style={{
+                  fontSize: "10px",
+                  marginLeft: "2px",
+                  color: "#ffd700",
+                }}
+                title="Researcher bonus active"
+              >
+                📚
+              </span>
+            )}
           </button>
         </td>
         <td style={styles.tableCellMenu}>
@@ -1218,6 +1346,12 @@ export const SubjectCard = ({
                   <p style={styles.modalHelpText}>
                     Mark if this spell has been researched (alternative to
                     attempting)
+                    {hasSubclassFeature(selectedCharacter, "Researcher") && (
+                      <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
+                        {" "}
+                        - Researcher: Gains both Arithmantic and Runic tags
+                      </span>
+                    )}
                   </p>
                 </div>
 
@@ -1270,6 +1404,27 @@ export const SubjectCard = ({
                   ))}
                 </div>
               )}
+              {/* Show enhanced tags for researched spells */}
+              {isResearched &&
+                hasSubclassFeature(selectedCharacter, "Researcher") && (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      padding: "8px",
+                      backgroundColor: "rgba(139, 92, 246, 0.1)",
+                      borderRadius: "4px",
+                      border: "1px solid rgba(139, 92, 246, 0.3)",
+                    }}
+                  >
+                    <strong style={{ color: "#8b5cf6" }}>
+                      📚 Researcher Enhancement:
+                    </strong>
+                    <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                      This spell has been enhanced with both Arithmantic and
+                      Runic properties through extensive research.
+                    </div>
+                  </div>
+                )}
             </div>
           </td>
         </tr>
@@ -1423,6 +1578,23 @@ export const SubjectCard = ({
             <span style={styles.subjectStatLabel}>Researched</span>
           </div>
         </div>
+        {hasSubclassFeature(selectedCharacter, "Researcher") && (
+          <div
+            style={{
+              marginTop: "8px",
+              padding: "4px 8px",
+              backgroundColor: "rgba(139, 92, 246, 0.1)",
+              borderRadius: "4px",
+              border: "1px solid rgba(139, 92, 246, 0.3)",
+              fontSize: "12px",
+              color: "#8b5cf6",
+              fontWeight: "600",
+            }}
+          >
+            📚 Researcher: Research bonus active, researched spells gain both
+            tags
+          </div>
+        )}
       </div>
 
       {isExpanded && (

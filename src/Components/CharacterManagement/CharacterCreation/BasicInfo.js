@@ -1,6 +1,6 @@
-import { useTheme } from "../../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../../styles/masterStyles";
-import { castingStyles } from "../../../data";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../styles/masterStyles";
+import { castingStyles } from "../../SharedData/data";
 import { RefreshCw } from "lucide-react";
 
 function BasicInfo({

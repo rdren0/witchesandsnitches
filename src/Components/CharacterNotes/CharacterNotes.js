@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
-import { templates } from "../data";
+import { templates } from "./templates";
 
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterNotesStyles } from "../../styles/masterStyles";

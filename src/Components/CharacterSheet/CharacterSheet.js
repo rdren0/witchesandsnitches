@@ -21,9 +21,10 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
-// import CorruptionTracker from "./Sections/CorruptionTracker";
+import CorruptionTracker from "./Sections/CorruptionTracker";
 import SpellSlotTracker from "./Sections/SpellSlotTracker";
 import SorceryPointTracker from "./Sections/SorceryPointTracker";
+import CastingTiles from "./CastingTiles";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -128,7 +129,6 @@ const CharacterSheet = ({
     };
     return spellcastingAbilityMap[castingStyle] || null;
   };
-
   const getSpellcastingAbilityModifier = (character) => {
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
     if (!spellcastingAbility) return 0;
@@ -942,6 +942,96 @@ const CharacterSheet = ({
                     style={{ display: "flex", justifyContent: "space-between" }}
                   >
                     <h1 style={styles.characterName}>{character.name}</h1>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "16px",
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                        marginBottom: "18px",
+                      }}
+                    >
+                      <button
+                        style={{
+                          backgroundColor: "#9d4edd",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor:
+                            character.currentHitDice <= 0
+                              ? "not-allowed"
+                              : "pointer",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+                          transition: "all 0.2s ease",
+                          minWidth: "140px",
+                          justifyContent: "center",
+                          width: "160px",
+                          height: "40px",
+                        }}
+                        onClick={handleShortRestClick}
+                        disabled={character.currentHitDice <= 0}
+                        title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
+                      >
+                        <Coffee size={16} />
+                        Short Rest
+                      </button>
+                      <button
+                        style={{
+                          backgroundColor: "#3b82f6",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: isLongResting ? "wait" : "pointer",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          opacity: isLongResting ? 0.7 : 1,
+                          transition: "all 0.2s ease",
+                          minWidth: "140px",
+                          justifyContent: "center",
+                          width: "160px",
+                          height: "40px",
+                        }}
+                        onClick={handleLongRest}
+                        disabled={isLongResting}
+                        title="Restore all HP and hit dice with a long rest"
+                      >
+                        <Moon size={16} />
+                        {isLongResting ? "Resting..." : "Long Rest"}
+                      </button>
+                      <button
+                        style={{
+                          backgroundColor: "#10b981",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          transition: "all 0.2s ease",
+                          width: "160px",
+                          height: "40px",
+                          justifyContent: "center",
+                        }}
+                        onClick={() => setShowLevelUp(true)}
+                        title={`Level up ${character.name} to level ${
+                          (character.level || 1) + 1
+                        }`}
+                      >
+                        <TrendingUp size={16} />
+                        Level Up
+                      </button>
+                    </div>
                   </div>
                   <div style={styles.infoGrid}>
                     <div style={styles.infoItem}>
@@ -1327,244 +1417,6 @@ const CharacterSheet = ({
                   </div>
                 )}
               </div>
-
-              {character &&
-                !characterLoading &&
-                Object.keys(character.asiChoices || {}).length > 0 && (
-                  <div
-                    style={{
-                      ...styles.headerCard,
-                      marginTop: "16px",
-                      padding: "20px",
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: "600",
-                        color: theme === "dark" ? "#f9fafb" : "#1f2937",
-                        marginBottom: "16px",
-                        borderBottom: `1px solid ${
-                          theme === "dark" ? "#4b5563" : "#e5e7eb"
-                        }`,
-                        paddingBottom: "8px",
-                      }}
-                    >
-                      Character Progression
-                    </h3>
-
-                    {/* Show all feats if any */}
-                    {character.allFeats && character.allFeats.length > 0 && (
-                      <div style={{ marginBottom: "16px" }}>
-                        <h4
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: theme === "dark" ? "#f9fafb" : "#374151",
-                            marginBottom: "8px",
-                          }}
-                        >
-                          Feats
-                        </h4>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                          }}
-                        >
-                          {character.allFeats.map((feat, index) => (
-                            <span
-                              key={index}
-                              style={{
-                                display: "inline-block",
-                                padding: "4px 12px",
-                                backgroundColor: `${
-                                  theme === "dark" ? "#3b82f6" : "#3b82f6"
-                                }20`,
-                                color: theme === "dark" ? "#60a5fa" : "#3b82f6",
-                                borderRadius: "16px",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                                border: `1px solid ${
-                                  theme === "dark" ? "#3b82f6" : "#3b82f6"
-                                }40`,
-                              }}
-                            >
-                              {feat}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Show ASI history */}
-                    <div>
-                      <h4
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: theme === "dark" ? "#f9fafb" : "#374151",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        Ability Score Improvements
-                      </h4>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "4px",
-                        }}
-                      >
-                        {Object.entries(character.asiChoices)
-                          .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                          .map(([level, choice]) => (
-                            <div
-                              key={level}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                fontSize: "13px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontWeight: "600",
-                                  color:
-                                    theme === "dark" ? "#60a5fa" : "#3b82f6",
-                                  minWidth: "60px",
-                                }}
-                              >
-                                Level {level}:
-                              </span>
-                              {choice.type === "asi" ? (
-                                <span
-                                  style={{
-                                    color:
-                                      theme === "dark" ? "#9ca3af" : "#6b7280",
-                                  }}
-                                >
-                                  {choice.abilityScoreIncreases
-                                    ?.map(
-                                      (inc) =>
-                                        inc.ability.charAt(0).toUpperCase() +
-                                        inc.ability.slice(1)
-                                    )
-                                    .join(", ")}{" "}
-                                  +1
-                                </span>
-                              ) : (
-                                <span
-                                  style={{
-                                    color:
-                                      theme === "dark" ? "#9ca3af" : "#6b7280",
-                                  }}
-                                >
-                                  Feat: {choice.selectedFeat}
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-            </div>
-
-            <div
-              style={{
-                ...styles.headerCard,
-                padding: "20px",
-                marginBottom: "20px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  gap: "16px",
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  style={{
-                    padding: "12px 24px",
-                    backgroundColor: "#9d4edd",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor:
-                      character.currentHitDice <= 0 ? "not-allowed" : "pointer",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    opacity: character.currentHitDice <= 0 ? 0.6 : 1,
-                    transition: "all 0.2s ease",
-                    minWidth: "140px",
-                    justifyContent: "center",
-                  }}
-                  onClick={handleShortRestClick}
-                  disabled={character.currentHitDice <= 0}
-                  title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
-                >
-                  <Coffee size={16} />
-                  Short Rest
-                </button>
-                <button
-                  style={{
-                    padding: "12px 24px",
-                    backgroundColor: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor: isLongResting ? "wait" : "pointer",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    opacity: isLongResting ? 0.7 : 1,
-                    transition: "all 0.2s ease",
-                    minWidth: "140px",
-                    justifyContent: "center",
-                  }}
-                  onClick={handleLongRest}
-                  disabled={isLongResting}
-                  title="Restore all HP and hit dice with a long rest"
-                >
-                  <Moon size={16} />
-                  {isLongResting ? "Resting..." : "Long Rest"}
-                </button>
-                <button
-                  style={{
-                    padding: "12px 24px",
-                    backgroundColor: "#10b981",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    transition: "all 0.2s ease",
-                    minWidth: "140px",
-                    justifyContent: "center",
-                  }}
-                  onClick={() => setShowLevelUp(true)}
-                  title={`Level up ${character.name} to level ${
-                    (character.level || 1) + 1
-                  }`}
-                >
-                  <TrendingUp size={16} />
-                  Level Up
-                </button>
-              </div>
             </div>
 
             <AbilityScores
@@ -1584,9 +1436,18 @@ const CharacterSheet = ({
                 isRolling={isRolling}
                 modifiers={modifiers(character)}
               />
-              {console.log({ character })}
               {/* Right side - Corruption, Sorcery Points, and Dice Roller stacked */}
               <div style={getRightSideStackStyles(theme)}>
+                <FlexibleDiceRoller
+                  title="Custom Roll"
+                  description={`Rolling for ${character.name}`}
+                  character={character}
+                />
+                <CastingTiles
+                  character={character}
+                  styles={styles}
+                  showRollResult={showRollResult}
+                />
                 <SpellSlotTracker
                   character={character}
                   supabase={supabase}
@@ -1594,13 +1455,13 @@ const CharacterSheet = ({
                   setCharacter={setCharacter}
                   selectedCharacterId={selectedCharacter.id}
                 />
-                {/* <CorruptionTracker
+                <CorruptionTracker
                   character={character}
                   supabase={supabase}
                   discordUserId={discordUserId}
                   setCharacter={setCharacter}
                   selectedCharacterId={selectedCharacter.id}
-                /> */}
+                />
                 <SorceryPointTracker
                   key="sorcery-points"
                   character={character}
@@ -1608,11 +1469,6 @@ const CharacterSheet = ({
                   discordUserId={discordUserId}
                   setCharacter={setCharacter}
                   selectedCharacterId={selectedCharacter.id}
-                />
-                <FlexibleDiceRoller
-                  title="Custom Roll"
-                  description={`Rolling for ${character.name}`}
-                  character={character}
                 />
               </div>
             </div>

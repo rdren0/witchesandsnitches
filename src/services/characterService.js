@@ -21,7 +21,6 @@ const getCharacters = async (discordUserId) => {
   return data || [];
 };
 
-// Fixed: Add innate_heritage to the insert
 const saveCharacter = async (characterData, discordUserId) => {
   try {
     const { data: savedCharacter, error: characterError } = await supabase
@@ -40,13 +39,14 @@ const saveCharacter = async (characterData, discordUserId) => {
         house: characterData.house,
         house_choices: characterData.house_choices,
         initiative_ability: characterData.initiative_ability,
-        innate_heritage: characterData.innate_heritage, // ← ADDED THIS
+        innate_heritage: characterData.innate_heritage,
         innate_heritage_skills: characterData.innate_heritage_skills,
         level: characterData.level,
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
         skill_proficiencies: characterData.skill_proficiencies,
+        skill_expertise: characterData.skill_expertise,
         standard_feats: characterData.standard_feats,
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
@@ -59,7 +59,6 @@ const saveCharacter = async (characterData, discordUserId) => {
       throw characterError;
     }
 
-    // Add starting equipment based on background
     if (characterData.background && savedCharacter.id) {
       try {
         const startingEquipment = getStartingEquipment(
@@ -76,7 +75,6 @@ const saveCharacter = async (characterData, discordUserId) => {
         }
       } catch (equipmentError) {
         console.error("Failed to add starting equipment:", equipmentError);
-        // Don't fail character creation if equipment fails
       }
     }
 
@@ -87,10 +85,8 @@ const saveCharacter = async (characterData, discordUserId) => {
   }
 };
 
-// Fixed: Add innate_heritage to the update
 const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
-    // Get current character to check if background changed
     const { data: currentCharacter } = await supabase
       .from("characters")
       .select("background")
@@ -98,7 +94,6 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
       .eq("discord_user_id", discordUserId)
       .single();
 
-    // Update the character
     const { data: updatedCharacter, error: updateError } = await supabase
       .from("characters")
       .update({
@@ -112,13 +107,14 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         house: characterData.house,
         house_choices: characterData.house_choices,
         initiative_ability: characterData.initiative_ability,
-        innate_heritage: characterData.innate_heritage, // ← ADDED THIS
+        innate_heritage: characterData.innate_heritage,
         innate_heritage_skills: characterData.innate_heritage_skills,
         level: characterData.level,
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
         skill_proficiencies: characterData.skill_proficiencies,
+        skill_expertise: characterData.skill_expertise,
         standard_feats: characterData.standard_feats,
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
@@ -134,7 +130,6 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
       throw updateError;
     }
 
-    // Check if background changed and add new starting equipment
     const backgroundChanged =
       currentCharacter?.background !== characterData.background;
 
@@ -157,7 +152,6 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
           "Failed to add starting equipment on background change:",
           equipmentError
         );
-        // Don't fail the character update if equipment fails
       }
     }
 

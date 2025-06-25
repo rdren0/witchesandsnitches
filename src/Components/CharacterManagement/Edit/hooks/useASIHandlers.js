@@ -29,10 +29,12 @@ export const useASIHandlers = (character, setCharacter) => {
               ? {
                   abilityScoreIncreases: [],
                   selectedFeat: null,
+                  featChoices: {},
                 }
               : {
                   abilityScoreIncreases: null,
                   selectedFeat: null,
+                  featChoices: {},
                 }),
           },
         },
@@ -42,7 +44,7 @@ export const useASIHandlers = (character, setCharacter) => {
   );
 
   const handleASIFeatChange = useCallback(
-    (level, featName) => {
+    (level, featName, featChoices = {}) => {
       setCharacter((prev) => ({
         ...prev,
         asiChoices: {
@@ -51,6 +53,8 @@ export const useASIHandlers = (character, setCharacter) => {
             ...prev.asiChoices[level],
             type: "feat",
             selectedFeat: featName,
+            featChoices: featChoices,
+            abilityScoreIncreases: null,
           },
         },
       }));
@@ -60,17 +64,40 @@ export const useASIHandlers = (character, setCharacter) => {
 
   const handleASIAbilityChange = useCallback(
     (level, abilityUpdates) => {
-      setCharacter((prev) => ({
-        ...prev,
-        asiChoices: {
-          ...prev.asiChoices,
-          [level]: {
-            ...prev.asiChoices[level],
-            type: "asi",
-            abilityScoreIncreases: abilityUpdates,
+      setCharacter((prev) => {
+        const newCharacter = {
+          ...prev,
+          asiChoices: {
+            ...prev.asiChoices,
+            [level]: {
+              ...prev.asiChoices[level],
+              type: "asi",
+              abilityScoreIncreases: abilityUpdates,
+            },
           },
-        },
-      }));
+        };
+
+        const baseAbilityScores = prev.abilityScores || {};
+        const effectiveAbilityScores = { ...baseAbilityScores };
+
+        const allASIChoices = newCharacter.asiChoices || {};
+        Object.entries(allASIChoices).forEach(([asiLevel, choice]) => {
+          if (choice.type === "asi" && choice.abilityScoreIncreases) {
+            choice.abilityScoreIncreases.forEach((increase) => {
+              const ability = increase.ability;
+              const amount = increase.increase || 1;
+              if (effectiveAbilityScores[ability]) {
+                effectiveAbilityScores[ability] += amount;
+              }
+            });
+          }
+        });
+
+        return {
+          ...newCharacter,
+          effectiveAbilityScores,
+        };
+      });
     },
     [setCharacter]
   );

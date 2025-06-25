@@ -3,8 +3,10 @@ import { Search, X } from "lucide-react";
 import { SubjectCard } from "./SubjectCard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedSpellBookStyles } from "../../styles/masterStyles";
+import { hasSubclassFeature } from "./utils";
 
 import { spellsData } from "./spells";
+import { useCallback } from "react";
 
 const SpellBook = ({
   supabase,
@@ -33,15 +35,59 @@ const SpellBook = ({
     setResearchedSpells({});
   }, [selectedCharacter?.id]);
 
-  const getFilteredSpellsData = () => {
+  const getAvailableSpellsData = useCallback(() => {
+    let availableSpells = { ...spellsData };
+
+    if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+      const jhcLevels = { ...availableSpells["Jinxes, Hexes & Curses"].levels };
+      const cantrips = [...jhcLevels.Cantrips];
+
+      const devictoIndex = cantrips.findIndex(
+        (spell) => spell.name === "Devicto"
+      );
+      const enhancedDevicto = {
+        name: "Devicto",
+        level: "Cantrip",
+        castingTime: "Action",
+        range: "60 Feet",
+        duration: "Instantaneous",
+        year: 4,
+        tags: ["Arithmantic", "Runic"],
+        description:
+          "An advanced hex that overwhelms the target with magical interference. The spell disrupts the target's concentration and magical abilities through a combination of mathematical precision and runic power. When enhanced through extensive study, this spell demonstrates the perfect fusion of analytical and symbolic magical theory.",
+        higherLevels:
+          "When you cast this spell using a spell slot of 1st level or higher, you can target one additional creature for each slot level above 0.",
+        restriction: false,
+        researcherEnhanced: true,
+      };
+
+      if (devictoIndex >= 0) {
+        cantrips[devictoIndex] = enhancedDevicto;
+      } else {
+        cantrips.push(enhancedDevicto);
+      }
+
+      jhcLevels.Cantrips = cantrips;
+      availableSpells["Jinxes, Hexes & Curses"] = {
+        ...availableSpells["Jinxes, Hexes & Curses"],
+        levels: jhcLevels,
+      };
+    }
+
+    return availableSpells;
+  }, [selectedCharacter]);
+
+  const getFilteredSpellsData = useCallback(() => {
+    const availableSpells = getAvailableSpellsData();
+
     if (!searchTerm.trim()) {
-      return spellsData;
+      return availableSpells;
     }
 
     const filteredData = {};
     const lowerSearchTerm = searchTerm.toLowerCase();
 
-    Object.entries(spellsData).forEach(([subjectName, subjectData]) => {
+    Object.entries(availableSpells).forEach(([subjectName, subjectData]) => {
       const filteredLevels = {};
       let hasMatchingSpells = false;
 
@@ -77,10 +123,11 @@ const SpellBook = ({
     });
 
     return filteredData;
-  };
+  }, [searchTerm, getAvailableSpellsData]);
 
-  const getTotalSpells = (dataSource = spellsData) => {
-    return Object.values(dataSource).reduce((total, subject) => {
+  const getTotalSpells = (dataSource = null) => {
+    const sourceData = dataSource || getAvailableSpellsData();
+    return Object.values(sourceData).reduce((total, subject) => {
       return (
         total +
         Object.values(subject.levels).reduce(
@@ -98,18 +145,40 @@ const SpellBook = ({
     }).length;
   };
 
-  // New function to get total researched spells
   const getTotalResearched = () => {
     return Object.keys(researchedSpells).filter(
       (spellName) => researchedSpells[spellName]
     ).length;
   };
 
-  // New function to get total failed attempts
   const getTotalFailed = () => {
     return Object.keys(failedAttempts).filter(
       (spellName) => failedAttempts[spellName]
     ).length;
+  };
+
+  const getTotalEnhanced = () => {
+    if (!hasSubclassFeature(selectedCharacter, "Researcher")) return 0;
+
+    let enhancedCount = getTotalResearched();
+
+    const availableSpells = getAvailableSpellsData();
+    Object.values(availableSpells).forEach((subject) => {
+      Object.values(subject.levels).forEach((spells) => {
+        spells.forEach((spell) => {
+          if (
+            spell.tags?.includes("Arithmantic") &&
+            spell.tags?.includes("Runic")
+          ) {
+            if (!researchedSpells[spell.name]) {
+              enhancedCount++;
+            }
+          }
+        });
+      });
+    });
+
+    return enhancedCount;
   };
 
   const filteredSpellsData = getFilteredSpellsData();
@@ -118,6 +187,7 @@ const SpellBook = ({
   const totalMastered = getTotalMastered();
   const totalResearched = getTotalResearched();
   const totalFailed = getTotalFailed();
+  const totalEnhanced = getTotalEnhanced();
 
   const clearSearch = () => {
     setSearchTerm("");
@@ -132,8 +202,7 @@ const SpellBook = ({
       });
       setExpandedSubjects(newExpandedSubjects);
     }
-    // eslint-disable-next-line
-  }, [searchTerm]);
+  }, [searchTerm, getFilteredSpellsData]);
 
   if (!user || !discordUserId) {
     return (
@@ -191,6 +260,35 @@ const SpellBook = ({
           }}
         >
           {error}
+        </div>
+      )}
+
+      {/* Show Researcher status banner */}
+      {hasSubclassFeature(selectedCharacter, "Researcher") && (
+        <div
+          style={{
+            backgroundColor: "rgba(139, 92, 246, 0.1)",
+            border: "1px solid rgba(139, 92, 246, 0.3)",
+            color: "#8b5cf6",
+            padding: "12px",
+            borderRadius: "8px",
+            margin: "16px 20px",
+            fontSize: "14px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          📚 <strong>Researcher Active:</strong>
+          <span style={{ fontWeight: "normal" }}>
+            +
+            {Math.floor(
+              Math.floor((selectedCharacter.abilityScores.wisdom - 10) / 2) / 2
+            )}{" "}
+            to research checks, researched spells gain both Arithmantic and
+            Runic tags, enhanced Devicto access
+          </span>
         </div>
       )}
 
@@ -257,11 +355,32 @@ const SpellBook = ({
           ></span>
           {totalFailed} Failed
         </span>
+        {hasSubclassFeature(selectedCharacter, "Researcher") &&
+          totalEnhanced > 0 && (
+            <span style={styles.statItem}>
+              <span
+                style={{ ...styles.statDot, backgroundColor: "#d946ef" }}
+              ></span>
+              {totalEnhanced} Enhanced
+            </span>
+          )}
         <span style={styles.statItem}>
           <span
             style={{ ...styles.statDot, backgroundColor: "#f59e0b" }}
           ></span>
           Playing as {selectedCharacter.name}
+          {hasSubclassFeature(selectedCharacter, "Researcher") && (
+            <span
+              style={{
+                marginLeft: "4px",
+                fontSize: "12px",
+                color: "#8b5cf6",
+                fontWeight: "600",
+              }}
+            >
+              📚
+            </span>
+          )}
         </span>
       </div>
 
@@ -280,6 +399,9 @@ const SpellBook = ({
             <li>Subjects (e.g., "Charms", "Transfiguration")</li>
             <li>Spell levels (e.g., "Cantrip", "1st Level")</li>
             <li>Casting properties (e.g., "Touch", "Concentration")</li>
+            {hasSubclassFeature(selectedCharacter, "Researcher") && (
+              <li>Tags (e.g., "Arithmantic", "Runic")</li>
+            )}
           </ul>
           <button onClick={clearSearch} style={styles.clearSearchButton}>
             Clear Search
@@ -304,7 +426,6 @@ const SpellBook = ({
               setExpandedSubjects={setExpandedSubjects}
               setSpellAttempts={setSpellAttempts}
               spellAttempts={spellAttempts}
-              // Pass new state setters and values
               failedAttempts={failedAttempts}
               setFailedAttempts={setFailedAttempts}
               researchedSpells={researchedSpells}

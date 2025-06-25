@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Users, Plus, Edit3, TrendingUp } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
-import CharacterCreator from "./Create/CharacterCreator";
+import CharacterCreator from "./CharacterCreation/CharacterCreator";
 import CharacterEditor from "./Edit/CharacterEditor";
 import CharacterList from "./Edit/CharacterList";
 import LevelUpModal from "./Edit/LevelUpModal";

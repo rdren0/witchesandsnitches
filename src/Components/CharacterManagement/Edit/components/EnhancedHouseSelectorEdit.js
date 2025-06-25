@@ -3,7 +3,7 @@ import {
   schoolGroups,
   houseFeatures,
   houseColors,
-} from "../../Shared/houseData";
+} from "../../../SharedData/houseData";
 import { createFeatStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 

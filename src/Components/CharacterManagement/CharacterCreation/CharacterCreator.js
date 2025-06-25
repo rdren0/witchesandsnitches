@@ -1,33 +1,66 @@
-import { useState, useEffect } from "react";
-import { rollAbilityStat } from "../../utils/diceRoller";
-import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { Wand, Save, AlertCircle } from "lucide-react";
-import EnhancedSubclassSelector from "../Create/Steps/EnhancedSubclassSelector";
-
-import { hpData } from "../../data";
-import { standardFeats } from "../../standardFeatData";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { Wand, Save, AlertCircle } from "lucide-react";
+
 import { characterService } from "../../../services/characterService";
-import { InnateHeritage } from "../Create/Steps/InnateHeritage";
-import EnhancedFeatureSelector from "../Create/Steps/EnhancedFeatureSelector";
-import { AbilityScorePicker } from "../Create/Steps/AbilityScorePicker";
+import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+import { rollAbilityStat } from "../../utils/diceRoller";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { FeatRequirementsInfo } from "./ASIComponents";
-import ASILevelChoices from "../Create/Steps/ASILevelChoices";
-import CharacterProgressionSummary from "../Create/Steps/CharacterProgressionSummary";
-import EnhancedBackgroundSelector from "../Create/Steps/EnhancedBackgroundSelector";
+import { calculateTotalModifiers } from "../utils";
+
+import { hpData } from "../../SharedData/data";
+import { standardFeats } from "../../SharedData/standardFeatData";
+
+import { InnateHeritage } from "./InnateHeritage";
+import BasicInfo from "./BasicInfo";
+import EnhancedFeatureSelector from "./EnhancedFeatureSelector";
+import EnhancedSubclassSelector from "./EnhancedSubclassSelector";
+import ASILevelChoices from "./ASILevelChoices";
+import CharacterProgressionSummary from "./CharacterProgressionSummary";
+import EnhancedBackgroundSelector from "./EnhancedBackgroundSelector";
+import EnhancedHouseSelector from "./EnhancedHouseSelector";
+import EnhancedSkillsSection from "./EnhancedSkillsSection";
+
+import { AbilityScorePicker } from "./AbilityScorePicker";
 import { StepIndicator } from "../Shared/StepIndicator";
-import EnhancedHouseSelector from "../Create/Steps/EnhancedHouseSelector";
-import EnhancedSkillsSection from "../Create/Steps/EnhancedSkillsSection";
-import { gameSessionOptions, getInitialCharacterState } from "./const";
+import { gameSessionOptions, getInitialCharacterState } from "../Create/const";
 import {
   calculateHitPoints,
   collectAllFeatsFromChoices,
   getAvailableSkills,
   getFeatProgressionInfo,
   validateFeatSelections,
-} from "./utils";
-import BasicInfo from "./Steps/BasicInfo";
+} from "../utils";
+
+export const FeatRequirementsInfo = ({ character }) => {
+  return (
+    <div
+      style={{
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        border: "1px solid rgba(59, 130, 246, 0.3)",
+        borderRadius: "6px",
+        padding: "12px",
+        marginBottom: "12px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "12px",
+          fontWeight: "600",
+          color: "#2563eb",
+          marginBottom: "6px",
+        }}
+      >
+        📋 Feat Prerequisites
+      </div>
+      <div style={{ fontSize: "11px", color: "#1d4ed8", lineHeight: "1.4" }}>
+        Some feats have prerequisites (ability scores, proficiencies, etc.).
+        Feats you don't meet the requirements for will be clearly marked. Your
+        current character qualifications will be checked automatically.
+      </div>
+    </div>
+  );
+};
 
 const CharacterCreator = ({
   user,
@@ -58,12 +91,96 @@ const CharacterCreator = ({
   const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
 
   const discordUserId = user?.user_metadata?.provider_id;
+  const isFeat = character.level1ChoiceType === "feat";
+  const isInnateHeritage = character.level1ChoiceType === "innate";
 
   const setASILevelFilter = (level, filter) => {
     setASILevelFilters((prev) => ({
       ...prev,
       [level]: filter,
     }));
+  };
+
+  const calculateFinalAbilityScores = (
+    character,
+    featChoices = {},
+    houseChoices = {},
+    heritageChoices = {}
+  ) => {
+    const allFeatChoices = {
+      ...(character.featChoices || {}),
+      ...featChoices,
+    };
+
+    const asiModifiers = {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    };
+
+    const asiChoices = character.asiChoices || {};
+
+    Object.values(asiChoices).forEach((choice) => {
+      if (choice.type === "feat" && choice.featChoices) {
+        Object.assign(allFeatChoices, choice.featChoices);
+      }
+
+      if (choice.type === "asi" && choice.abilityScoreIncreases) {
+        choice.abilityScoreIncreases.forEach((increase) => {
+          const ability = increase.ability;
+          const amount = increase.increase || 1;
+          if (asiModifiers.hasOwnProperty(ability)) {
+            asiModifiers[ability] += amount;
+          }
+        });
+      }
+    });
+
+    const { totalModifiers } = calculateTotalModifiers(
+      character,
+      allFeatChoices,
+      houseChoices,
+      heritageChoices
+    );
+
+    const finalAbilityScores = {
+      strength:
+        (character.abilityScores.strength || 0) +
+        (totalModifiers.strength || 0) +
+        (asiModifiers.strength || 0),
+      dexterity:
+        (character.abilityScores.dexterity || 0) +
+        (totalModifiers.dexterity || 0) +
+        (asiModifiers.dexterity || 0),
+      constitution:
+        (character.abilityScores.constitution || 0) +
+        (totalModifiers.constitution || 0) +
+        (asiModifiers.constitution || 0),
+      intelligence:
+        (character.abilityScores.intelligence || 0) +
+        (totalModifiers.intelligence || 0) +
+        (asiModifiers.intelligence || 0),
+      wisdom:
+        (character.abilityScores.wisdom || 0) +
+        (totalModifiers.wisdom || 0) +
+        (asiModifiers.wisdom || 0),
+      charisma:
+        (character.abilityScores.charisma || 0) +
+        (totalModifiers.charisma || 0) +
+        (asiModifiers.charisma || 0),
+    };
+
+    Object.keys(finalAbilityScores).forEach((ability) => {
+      finalAbilityScores[ability] = Math.min(
+        20,
+        Math.max(1, finalAbilityScores[ability])
+      );
+    });
+
+    return finalAbilityScores;
   };
 
   const rollAllStats = () => {
@@ -139,17 +256,15 @@ const CharacterCreator = ({
   }, []);
 
   useEffect(() => {
-    if (
-      character.level1ChoiceType === "feat" &&
-      character.standardFeats.length > 0
-    ) {
+    if (isFeat && character.standardFeats.length > 0) {
       validateFeatSelections({ character, setError });
     }
-    // eslint-disable-next-line
   }, [
     character.standardFeats,
     character.asiChoices,
     character.level1ChoiceType,
+    character,
+    isFeat,
   ]);
 
   const assignStat = (ability, statValue) => {
@@ -317,19 +432,24 @@ const CharacterCreator = ({
     }));
   };
 
-  const handleASIFeatChange = (level, featName) => {
-    setCharacter((prev) => ({
-      ...prev,
-      asiChoices: {
-        ...prev.asiChoices,
-        [level]: {
-          ...prev.asiChoices[level],
-          type: "feat",
-          selectedFeat: featName,
+  const handleASIFeatChange = useCallback(
+    (level, featName, featChoices = {}) => {
+      setCharacter((prev) => ({
+        ...prev,
+        asiChoices: {
+          ...prev.asiChoices,
+          [level]: {
+            ...prev.asiChoices[level],
+            type: "feat",
+            selectedFeat: featName,
+            featChoices: featChoices,
+            abilityScoreIncreases: null,
+          },
         },
-      },
-    }));
-  };
+      }));
+    },
+    [setCharacter]
+  );
 
   const handleASIAbilityChange = (level, abilityUpdates) => {
     setCharacter((prev) => ({
@@ -365,13 +485,64 @@ const CharacterCreator = ({
     }));
   };
 
+  const calculateFinalSkillsAndExpertise = (character) => {
+    const allSkills = character.skillProficiencies || [];
+    const backgroundSkills = character.backgroundSkills || [];
+    const innateHeritageSkills = character.innateHeritageSkills || [];
+    const subclassChoices = character.subclassChoices || {};
+
+    const expertiseSkills = [];
+    const finalProficiencies = [...allSkills];
+
+    Object.values(subclassChoices).forEach((choice) => {
+      if (typeof choice === "object" && choice.mainChoice && choice.subChoice) {
+        if (choice.mainChoice === "Study Buddy") {
+          const selectedSkill = choice.subChoice;
+
+          const hasFromOtherSource =
+            backgroundSkills.includes(selectedSkill) ||
+            innateHeritageSkills.includes(selectedSkill);
+
+          if (hasFromOtherSource) {
+            expertiseSkills.push(selectedSkill);
+
+            const profIndex = finalProficiencies.indexOf(selectedSkill);
+            if (profIndex > -1) {
+              finalProficiencies.splice(profIndex, 1);
+            }
+          }
+        }
+      } else if (typeof choice === "string") {
+        if (choice === "Practice Makes Perfect") {
+        }
+      }
+    });
+
+    return {
+      skill_proficiencies: finalProficiencies,
+      skill_expertise: expertiseSkills,
+    };
+  };
+
   const saveCharacter = async () => {
     setIsSaving(true);
     setError(null);
 
     const allFeats = collectAllFeatsFromChoices({ character });
+
+    const finalAbilityScores = calculateFinalAbilityScores(
+      character,
+      character.featChoices || {},
+      houseChoices,
+      heritageChoices
+    );
+
+    const { skill_proficiencies, skill_expertise } =
+      calculateFinalSkillsAndExpertise(character);
+
     const characterToSave = {
-      ability_scores: character.abilityScores,
+      ability_scores: finalAbilityScores,
+      base_ability_scores: character.abilityScores,
       asi_choices: character.asiChoices || {},
       background: character.background,
       background_skills: character.backgroundSkills || [],
@@ -389,22 +560,25 @@ const CharacterCreator = ({
       level1_choice_type: character.level1ChoiceType,
       magic_modifiers: character.magicModifiers,
       name: character.name.trim(),
-      skill_proficiencies: character.skillProficiencies || [],
+      skill_proficiencies: skill_proficiencies, // ← Fixed: calculated proficiencies
+      skill_expertise: skill_expertise, // ← Added: calculated expertise
       standard_feats: allFeats,
       subclass_choices: character.subclassChoices || {},
       subclass: character.subclass,
       wand_type: character.wandType,
     };
-    console.log({ characterToSave });
+
     try {
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         discordUserId
       );
-      console.log({ savedCharacter });
+
       const transformedCharacter = {
         id: savedCharacter.id,
         abilityScores: savedCharacter.ability_scores,
+        baseAbilityScores:
+          savedCharacter.base_ability_scores || character.abilityScores,
         asiChoices: savedCharacter.asi_choices || {},
         background: savedCharacter.background,
         backgroundSkills: savedCharacter.background_skills || [],
@@ -421,7 +595,7 @@ const CharacterCreator = ({
         innateHeritage: savedCharacter.innate_heritage,
         level: savedCharacter.level,
         name: savedCharacter.name,
-        skillExpertise: savedCharacter.skill_expertise || [],
+        skillExpertise: savedCharacter.skill_expertise || [], // ← Fixed: include expertise
         skillProficiencies: savedCharacter.skill_proficiencies || [],
         standardFeats: savedCharacter.standard_feats || [],
         subclass: savedCharacter.subclass,
@@ -566,7 +740,7 @@ const CharacterCreator = ({
         <div style={styles.level1ChoiceContainer}>
           <label
             style={
-              character.level1ChoiceType === "innate"
+              isInnateHeritage
                 ? styles.level1ChoiceLabelSelected
                 : styles.level1ChoiceLabel
             }
@@ -575,13 +749,13 @@ const CharacterCreator = ({
               type="radio"
               name="level1Choice"
               value="innate"
-              checked={character.level1ChoiceType === "innate"}
+              checked={isInnateHeritage}
               onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
               style={styles.level1ChoiceRadio}
             />
             <span
               style={
-                character.level1ChoiceType === "innate"
+                isInnateHeritage
                   ? styles.level1ChoiceTextSelected
                   : styles.level1ChoiceText
               }
@@ -592,7 +766,7 @@ const CharacterCreator = ({
 
           <label
             style={
-              character.level1ChoiceType === "feat"
+              isFeat
                 ? styles.level1ChoiceLabelSelected
                 : styles.level1ChoiceLabel
             }
@@ -601,13 +775,13 @@ const CharacterCreator = ({
               type="radio"
               name="level1Choice"
               value="feat"
-              checked={character.level1ChoiceType === "feat"}
+              checked={isFeat}
               onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
               style={styles.level1ChoiceRadio}
             />
             <span
               style={
-                character.level1ChoiceType === "feat"
+                isFeat
                   ? styles.level1ChoiceTextSelected
                   : styles.level1ChoiceText
               }
@@ -619,7 +793,7 @@ const CharacterCreator = ({
       </div>
 
       {/* Innate Heritage */}
-      {character.level1ChoiceType === "innate" && (
+      {isInnateHeritage && (
         <InnateHeritage
           character={character}
           handleInputChange={handleInputChange}
@@ -630,7 +804,7 @@ const CharacterCreator = ({
       )}
 
       {/* Starting Feat */}
-      {character.level1ChoiceType === "feat" && (
+      {isFeat && (
         <div style={styles.fieldContainer}>
           <FeatRequirementsInfo character={character} />
           <EnhancedFeatureSelector
@@ -693,7 +867,15 @@ const CharacterCreator = ({
         availableStats={availableStats}
         character={character}
         clearStat={clearStat}
-        featChoices={character.featChoices || {}}
+        featChoices={{
+          ...(character.featChoices || {}),
+          ...Object.values(character.asiChoices || {}).reduce((acc, choice) => {
+            if (choice.type === "feat" && choice.featChoices) {
+              return { ...acc, ...choice.featChoices };
+            }
+            return acc;
+          }, {}),
+        }}
         houseChoices={character.houseChoices || houseChoices}
         heritageChoices={heritageChoices}
         isManualMode={isManualMode}

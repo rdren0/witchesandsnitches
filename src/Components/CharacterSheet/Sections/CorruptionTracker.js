@@ -523,7 +523,7 @@ export const CorruptionTracker = ({
         >
           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span>{showRedeemSection ? "▼" : "▶"}</span>
-            <span>Redeem Corruption (Good Deeds)</span>
+            <span>Absolve Corruption (Good Deeds)</span>
           </span>
           <span style={{ fontSize: "12px", fontWeight: "normal" }}>
             {corruptionPoints} available
@@ -585,7 +585,7 @@ export const CorruptionTracker = ({
             >
               {isProcessing
                 ? "Processing..."
-                : `Redeem ${spendAmount} Point${spendAmount !== 1 ? "s" : ""}`}
+                : `Absolve ${spendAmount} Point${spendAmount !== 1 ? "s" : ""}`}
             </button>
           </div>
         )}

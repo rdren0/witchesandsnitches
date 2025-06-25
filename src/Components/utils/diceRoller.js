@@ -2,9 +2,42 @@ import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6, Star, Skull } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
+
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
 const RollModalContext = createContext();
+
+const hasSubclassFeature = (character, featureName) => {
+  return character?.subclassFeatures?.includes(featureName) || false;
+};
+
+const getResearcherBonuses = (character) => {
+  if (!hasSubclassFeature(character, "Researcher")) {
+    return {
+      researchBonus: 0,
+      grantsDoubleTags: false,
+      hasDevictoAccess: false,
+      wisdomModifier: 0,
+    };
+  }
+
+  const getAbilityModifier = (score) => {
+    if (score === null || score === undefined) return 0;
+    return Math.floor((score - 10) / 2);
+  };
+
+  const wisdomModifier = getAbilityModifier(
+    character.abilityScores?.wisdom || 10
+  );
+  const researchBonus = Math.floor(wisdomModifier / 2);
+
+  return {
+    researchBonus: Math.max(0, researchBonus),
+    grantsDoubleTags: true,
+    hasDevictoAccess: true,
+    wisdomModifier,
+  };
+};
 
 export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   if (!isOpen || !rollResult) return null;
@@ -12,14 +45,16 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   const {
     title,
     rollValue,
+    originalRoll,
     modifier,
     total,
     isCriticalSuccess,
     isCriticalFailure,
     description,
     type = "ability",
-    diceType = 20,
     rollType = "normal",
+    ravenclawBonusApplied = false,
+    abilityType,
   } = rollResult;
 
   const getTypeColor = () => {
@@ -41,7 +76,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
       case "saving_throw":
         return "#8b5cf6";
       case "research":
-        return "#10b981";
+        return "#f59e0b";
       case "flexible":
         return "#f59e0b";
       default:
@@ -85,23 +120,24 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 9999,
+        zIndex: 1000,
       }}
       onClick={onClose}
     >
       <div
         style={{
-          backgroundColor: backgroundColor,
+          backgroundColor,
           border: `3px solid ${borderColor}`,
           borderRadius: "16px",
           padding: "24px",
+          minWidth: "320px",
           maxWidth: "400px",
-          width: "90%",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+          textAlign: "center",
           position: "relative",
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close button */}
         <button
           onClick={onClose}
           style={{
@@ -110,221 +146,170 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             right: "12px",
             background: "none",
             border: "none",
+            fontSize: "20px",
             cursor: "pointer",
-            padding: "4px",
-            borderRadius: "4px",
             color: "#6b7280",
           }}
         >
           <X size={20} />
         </button>
 
-        {/* Critical Success/Failure Icons */}
-        {(isCriticalSuccess || isCriticalFailure) && (
-          <div style={{ textAlign: "center", marginBottom: "16px" }}>
-            {isCriticalSuccess ? (
-              <Star size={48} color="#f59e0b" fill="#f59e0b" />
-            ) : (
-              <Skull size={48} color="#ef4444" fill="#ef4444" />
-            )}
-          </div>
-        )}
-
-        {/* Title with Roll Type Indicator */}
-        <h2
+        {/* Title */}
+        <h3
           style={{
             margin: "0 0 16px 0",
             fontSize: "20px",
-            fontWeight: "600",
+            fontWeight: "700",
             color: "#1f2937",
-            textAlign: "center",
-            paddingRight: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
           }}
         >
           {title}
-          {rollType !== "normal" && (
-            <span
-              style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                padding: "4px 8px",
-                borderRadius: "4px",
-                backgroundColor:
-                  rollType === "advantage" ? "#10b981" : "#ef4444",
-                color: "white",
-              }}
-            >
-              {getRollTypeIndicator()}
-            </span>
-          )}
-        </h2>
+        </h3>
 
-        {/* Main Roll Display */}
+        {/* Description */}
+        {description && (
+          <p
+            style={{
+              margin: "0 0 20px 0",
+              fontSize: "14px",
+              color: "#6b7280",
+              lineHeight: "1.4",
+            }}
+          >
+            {description}
+          </p>
+        )}
+
+        {/* Dice Result */}
         <div
           style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            padding: "16px",
-            backgroundColor: "white",
-            borderRadius: "12px",
-            border: "2px solid #e5e7eb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "16px",
+            margin: "20px 0",
           }}
         >
           <div
             style={{
+              backgroundColor: getDiceColor(),
+              color: "white",
+              borderRadius: "12px",
+              padding: "16px",
+              minWidth: "80px",
+              position: "relative",
+            }}
+          >
+            <Dice6 size={24} style={{ marginBottom: "8px" }} />
+            <div style={{ fontSize: "24px", fontWeight: "bold" }}>
+              {rollValue}
+            </div>
+            {getRollTypeIndicator() && (
+              <div style={{ fontSize: "10px", marginTop: "4px" }}>
+                {getRollTypeIndicator()}
+              </div>
+            )}
+          </div>
+
+          <div style={{ fontSize: "20px", color: "#6b7280" }}>+</div>
+
+          <div
+            style={{
+              backgroundColor: "#e5e7eb",
+              color: "#374151",
+              borderRadius: "12px",
+              padding: "16px",
+              minWidth: "80px",
+            }}
+          >
+            <div style={{ fontSize: "12px", marginBottom: "4px" }}>
+              Modifier
+            </div>
+            <div style={{ fontSize: "20px", fontWeight: "bold" }}>
+              {modifier >= 0 ? "+" : ""}
+              {modifier}
+            </div>
+          </div>
+
+          <div style={{ fontSize: "20px", color: "#6b7280" }}>=</div>
+
+          <div
+            style={{
+              backgroundColor: "#1f2937",
+              color: "white",
+              borderRadius: "12px",
+              padding: "16px",
+              minWidth: "80px",
+            }}
+          >
+            <div style={{ fontSize: "12px", marginBottom: "4px" }}>Total</div>
+            <div style={{ fontSize: "24px", fontWeight: "bold" }}>{total}</div>
+          </div>
+        </div>
+
+        {/* Ravenclaw Bonus Display */}
+        {ravenclawBonusApplied && originalRoll && (
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "12px 16px",
+              backgroundColor: "#dbeafe",
+              border: "2px solid #3b82f6",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "500",
+              color: "#1e40af",
+            }}
+          >
+            <div style={{ marginBottom: "4px" }}>
+              🦅 <strong>Ravenclaw In-Depth Knowledge!</strong>
+            </div>
+            <div style={{ fontSize: "12px", color: "#1e40af" }}>
+              Original d20 roll: {originalRoll} → Treated as: {rollValue}
+            </div>
+            <div
+              style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}
+            >
+              {abilityType === "intelligence" ? "Intelligence" : "Wisdom"}{" "}
+              ability check with proficiency
+            </div>
+          </div>
+        )}
+
+        {/* Critical Success/Failure Icons */}
+        {isCriticalSuccess && (
+          <div
+            style={{
+              marginTop: "16px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: "8px",
-              fontSize: "24px",
-              fontWeight: "bold",
-              color: "#1f2937",
-              marginBottom: "8px",
+              color: "#f59e0b",
             }}
           >
-            <Dice6 size={28} color={getDiceColor()} />
-            <span
-              style={{
-                color: isCriticalSuccess
-                  ? "#f59e0b"
-                  : isCriticalFailure
-                  ? "#ef4444"
-                  : "#1f2937",
-              }}
-            >
-              {rollValue}
-            </span>
-            {modifier !== 0 && (
-              <>
-                <span style={{ color: "#6b7280" }}>
-                  {modifier >= 0 ? "+" : ""}
-                  {modifier}
-                </span>
-                <span style={{ color: "#6b7280" }}>=</span>
-                <span
-                  style={{
-                    color: getTypeColor(),
-                    fontSize: "28px",
-                  }}
-                >
-                  {total}
-                </span>
-              </>
-            )}
-          </div>
-
-          <div
-            style={{
-              fontSize: "14px",
-              color: "#6b7280",
-            }}
-          >
-            d{diceType} Roll{rollType !== "normal" ? ` (${rollType})` : ""}:{" "}
-            {rollValue}
-            {modifier !== 0 &&
-              ` • Modifier: ${modifier >= 0 ? "+" : ""}${modifier}`}{" "}
-            • Total: {total}
-          </div>
-        </div>
-
-        {/* Critical Success Message */}
-        {isCriticalSuccess && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "12px",
-              backgroundColor: "#fef3c7",
-              border: "2px solid #f59e0b",
-              borderRadius: "8px",
-              marginBottom: "16px",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "16px",
-                fontWeight: "600",
-                color: "#92400e",
-                marginBottom: "4px",
-              }}
-            >
-              ✨ CRITICAL SUCCESS! ✨
-            </div>
-            <div style={{ fontSize: "14px", color: "#92400e" }}>
-              {diceType === 20
-                ? "Exceptional success regardless of DC!"
-                : `Maximum result on d${diceType}!`}
-            </div>
+            <Star size={20} fill="currentColor" />
+            <span style={{ fontWeight: "600" }}>CRITICAL SUCCESS!</span>
+            <Star size={20} fill="currentColor" />
           </div>
         )}
 
-        {/* Critical Failure Message */}
         {isCriticalFailure && (
           <div
             style={{
-              textAlign: "center",
-              padding: "12px",
-              backgroundColor: "#fee2e2",
-              border: "2px solid #ef4444",
-              borderRadius: "8px",
-              marginBottom: "16px",
+              marginTop: "16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              color: "#ef4444",
             }}
           >
-            <div
-              style={{
-                fontSize: "16px",
-                fontWeight: "600",
-                color: "#991b1b",
-                marginBottom: "4px",
-              }}
-            >
-              💀 CRITICAL FAILURE! 💀
-            </div>
-            <div style={{ fontSize: "14px", color: "#991b1b" }}>
-              {diceType === 20
-                ? "Spectacular failure regardless of modifier!"
-                : `Minimum result on d${diceType}!`}
-            </div>
+            <Skull size={20} />
+            <span style={{ fontWeight: "600" }}>CRITICAL FAILURE!</span>
+            <Skull size={20} />
           </div>
         )}
-
-        {/* Description */}
-        {description && (
-          <div
-            style={{
-              fontSize: "14px",
-              color: "#4b5563",
-              textAlign: "center",
-              marginBottom: "20px",
-              fontStyle: "italic",
-            }}
-          >
-            {description}
-          </div>
-        )}
-
-        {/* Close Button */}
-        <div style={{ textAlign: "center" }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: "10px 24px",
-              backgroundColor: getTypeColor(),
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "500",
-              cursor: "pointer",
-              minWidth: "100px",
-            }}
-          >
-            Close
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -581,6 +566,7 @@ const rollCorruption = async ({
     console.error("Failed to send corruption Discord webhook:", error);
   }
 };
+
 export const RollModalProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [rollResult, setRollResult] = useState(null);
@@ -638,14 +624,93 @@ export const calculateSkillBonus = ({ skillName, abilityMod, character }) => {
   return abilityMod;
 };
 
-export const rollDice = () => {
+export const applyRavenclawBonus = (
+  diceRoll,
+  character,
+  abilityType,
+  hasProficiency
+) => {
+  if (character?.house !== "Ravenclaw") {
+    return diceRoll;
+  }
+
+  const isIntOrWisCheck =
+    abilityType === "intelligence" || abilityType === "wisdom";
+
+  if (isIntOrWisCheck && hasProficiency && diceRoll <= 5) {
+    return 6;
+  }
+
+  return diceRoll;
+};
+
+export const rollDice = (
+  character = null,
+  abilityType = null,
+  hasProficiency = false
+) => {
   const roller = new DiceRoller();
   const roll = roller.roll("1d20");
+
+  const adjustedTotal = applyRavenclawBonus(
+    roll.total,
+    character,
+    abilityType,
+    hasProficiency
+  );
+
   return {
-    total: roll.total,
+    total: adjustedTotal,
+    originalRoll: roll.total,
     notation: roll.notation,
     output: roll.output,
+    ravenclawBonusApplied: adjustedTotal !== roll.total,
   };
+};
+
+export const rollAbilityCheckWithProficiency = async ({
+  abilityType,
+  hasProficiency,
+  modifier = 0,
+  title = "Ability Check",
+  character,
+  isRolling,
+  setIsRolling,
+  showRollResult,
+}) => {
+  if (isRolling) return;
+
+  setIsRolling(true);
+
+  try {
+    const diceResult = rollDice(character, abilityType, hasProficiency);
+    const d20Roll = diceResult.originalRoll;
+    const adjustedRoll = diceResult.total;
+    const total = adjustedRoll + modifier;
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: title,
+        rollValue: adjustedRoll,
+        originalRoll: d20Roll,
+        modifier: modifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "ability",
+        description: `Rolling ${title} for ${character.name}`,
+        ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
+        abilityType: abilityType,
+      });
+    }
+  } catch (error) {
+    console.error("Error with ability check:", error);
+  } finally {
+    setIsRolling(false);
+  }
 };
 
 export const rollAbility = async ({
@@ -661,10 +726,13 @@ export const rollAbility = async ({
   setIsRolling(true);
 
   try {
-    const diceResult = rollDice();
-    const d20Roll = diceResult.total;
+    const hasProficiency = false;
+
+    const diceResult = rollDice(character, ability.key, hasProficiency);
+    const d20Roll = diceResult.originalRoll;
+    const adjustedRoll = diceResult.total;
     const abilityMod = characterModifiers[ability.key];
-    const total = d20Roll + abilityMod;
+    const total = adjustedRoll + abilityMod;
 
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
@@ -672,13 +740,16 @@ export const rollAbility = async ({
     if (showRollResult) {
       showRollResult({
         title: `${ability.name} Check`,
-        rollValue: d20Roll,
+        rollValue: adjustedRoll,
+        originalRoll: d20Roll,
         modifier: abilityMod,
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
         type: "ability",
         description: `Rolling ${ability.name} check for ${character.name}`,
+        ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
+        abilityType: ability.key,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -686,8 +757,13 @@ export const rollAbility = async ({
         : isCriticalFailure
         ? " - CRITICAL FAILURE!"
         : "";
+
+      const ravenclawText = diceResult.ravenclawBonusApplied
+        ? ` (Ravenclaw: ${d20Roll}→${adjustedRoll})`
+        : "";
+
       alert(
-        `${ability.name} Check: d20(${d20Roll}) + ${abilityMod} = ${total}${criticalText}`
+        `${ability.name} Check: d20(${adjustedRoll})${ravenclawText} + ${abilityMod} = ${total}${criticalText}`
       );
     }
 
@@ -700,6 +776,11 @@ export const rollAbility = async ({
     } else if (isCriticalFailure) {
       embedColor = 0xff0000;
       resultText = " - **CRITICAL FAILURE!** 💥";
+    }
+
+    let rollDescription = `Roll: ${adjustedRoll}`;
+    if (diceResult.ravenclawBonusApplied) {
+      rollDescription = `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}`;
     }
 
     const message = {
@@ -717,13 +798,17 @@ export const rollAbility = async ({
           fields: [
             {
               name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
+              value: `${rollDescription} ${
                 abilityMod >= 0 ? "+" : ""
               }${abilityMod} = **${total}**${
                 isCriticalSuccess
                   ? "\n✨ **Exceptional success regardless of DC!**"
                   : isCriticalFailure
                   ? "\n💀 **Spectacular failure regardless of modifier!**"
+                  : ""
+              }${
+                diceResult.ravenclawBonusApplied
+                  ? `\n🎓 *In-Depth Knowledge bonus applied!*`
                   : ""
               }`,
               inline: false,
@@ -1089,10 +1174,9 @@ export const rollBrewPotion = async ({
       );
     }
 
-    let embedColor = 0x6b46c1; // Default potion color
+    let embedColor = 0x6b46c1;
     let resultText = "";
 
-    // Set colors based on quality
     switch (achievedQuality) {
       case "superior":
         embedColor = 0x8b5cf6;
@@ -1125,11 +1209,11 @@ export const rollBrewPotion = async ({
     const ruinedMessages = [
       "You did your best!",
       "Maybe stick to Transfiguration?",
-      "You’re just one cauldron explosion away from a breakthrough… or remedial lessons.",
+      "You're just one cauldron explosion away from a breakthrough… or remedial lessons.",
       "Technically a potion. Emotionally? More of a strongly brewed cry for help.",
       "Some potions turn lead to gold. Yours might turn potential to detention.",
       "Don't worry, we've all melted a cauldron or two!",
-      "Ah yes, the rare ‘liquid disappointment.’ Must be part of the intermediate curriculum.",
+      "Ah yes, the rare 'liquid disappointment.' Must be part of the intermediate curriculum.",
       "At least you didn't turn anyone into a ferret!",
     ];
 
@@ -1140,7 +1224,6 @@ export const rollBrewPotion = async ({
       description = "Natural 1!";
     }
 
-    // Add ruined message if quality is ruined
     if (achievedQuality === "ruined" || isCriticalFailure) {
       const randomMessage =
         ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
@@ -1310,27 +1393,64 @@ export const rollSkill = async ({
   setIsRolling(true);
 
   try {
-    const diceResult = rollDice();
-    const d20Roll = diceResult.total;
+    const skillToAbility = {
+      athletics: "strength",
+      acrobatics: "dexterity",
+      sleightOfHand: "dexterity",
+      stealth: "dexterity",
+      herbology: "intelligence",
+      historyOfMagic: "intelligence",
+      investigation: "intelligence",
+      magicalTheory: "intelligence",
+      muggleStudies: "intelligence",
+      insight: "wisdom",
+      magicalCreatures: "wisdom",
+      medicine: "wisdom",
+      perception: "wisdom",
+      potionMaking: "wisdom",
+      survival: "wisdom",
+      deception: "charisma",
+      intimidation: "charisma",
+      performance: "charisma",
+      persuasion: "charisma",
+    };
+
+    const abilityType =
+      skillToAbility[skill.name] ||
+      skillToAbility[skill.displayName?.toLowerCase()];
+
+    const hasProficiency =
+      character?.skills?.[skill.name] >= 1 ||
+      character?.skill_proficiencies?.includes(skill.displayName) ||
+      character?.skill_proficiencies?.includes(skill.name);
+
+    const diceResult = rollDice(character, abilityType, hasProficiency);
+    const d20Roll = diceResult.originalRoll;
+    const adjustedRoll = diceResult.total;
+
     const skillBonus = calculateSkillBonus({
       skillName: skill.name,
       abilityMod,
       character,
     });
-    const total = d20Roll + skillBonus;
+
+    const total = adjustedRoll + skillBonus;
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
 
     if (showRollResult) {
       showRollResult({
         title: `${skill.displayName} Check`,
-        rollValue: d20Roll,
+        rollValue: adjustedRoll,
+        originalRoll: d20Roll,
         modifier: skillBonus,
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
         type: "skill",
         description: `Rolling ${skill.displayName} check for ${character.name}`,
+        ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
+        abilityType: abilityType,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -1338,8 +1458,13 @@ export const rollSkill = async ({
         : isCriticalFailure
         ? " - CRITICAL FAILURE!"
         : "";
+
+      const ravenclawText = diceResult.ravenclawBonusApplied
+        ? ` (Ravenclaw: ${d20Roll}→${adjustedRoll})`
+        : "";
+
       alert(
-        `${skill.displayName} Check: d20(${d20Roll}) + ${skillBonus} = ${total}${criticalText}`
+        `${skill.displayName} Check: d20(${adjustedRoll})${ravenclawText} + ${skillBonus} = ${total}${criticalText}`
       );
     }
 
@@ -1354,6 +1479,11 @@ export const rollSkill = async ({
       resultText = " - **CRITICAL FAILURE!** 💥";
     }
 
+    let rollDescription = `Roll: ${adjustedRoll}`;
+    if (diceResult.ravenclawBonusApplied) {
+      rollDescription = `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}`;
+    }
+
     const message = {
       embeds: [
         {
@@ -1362,7 +1492,7 @@ export const rollSkill = async ({
           fields: [
             {
               name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
+              value: `${rollDescription} ${
                 skillBonus >= 0 ? "+" : ""
               }${skillBonus} = **${total}**${
                 isCriticalSuccess
@@ -1370,12 +1500,16 @@ export const rollSkill = async ({
                   : isCriticalFailure
                   ? "\n💀 **Spectacular failure regardless of modifier!**"
                   : ""
+              }${
+                diceResult.ravenclawBonusApplied
+                  ? `\n🎓 *In-Depth Knowledge bonus applied!*`
+                  : ""
               }`,
               inline: false,
             },
           ],
           footer: {
-            text: `Witches and Snitches - Skill Check • Today at ${new Date().toLocaleTimeString(
+            text: `Witches and Snitches- Skill Check • Today at ${new Date().toLocaleTimeString(
               [],
               {
                 hour: "2-digit",
@@ -1737,7 +1871,15 @@ export const rollResearch = async ({
   showRollResult,
 }) => {
   try {
-    const modifier = getSpellModifier(spellName, subject, selectedCharacter);
+    let modifier = getSpellModifier(spellName, subject, selectedCharacter);
+
+    let researcherBonus = 0;
+    if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+      const researcherBonuses = getResearcherBonuses(selectedCharacter);
+      researcherBonus = researcherBonuses.researchBonus;
+      modifier += researcherBonus;
+    }
+
     const diceResult = rollDice();
     const d20Roll = diceResult.total;
     const totalRoll = d20Roll + modifier;
@@ -1813,6 +1955,15 @@ export const rollResearch = async ({
             inline: false,
           });
         }
+
+        if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+          fields.push({
+            name: "📚 Researcher Enhancement",
+            value:
+              "This spell now gains both Arithmantic and Runic tags through extensive study!",
+            inline: false,
+          });
+        }
       } else {
         fields.push({
           name: "Outcome",
@@ -1836,6 +1987,13 @@ export const rollResearch = async ({
           modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
             modifierInfo.wandModifier >= 0 ? "+" : ""
           }${modifierInfo.wandModifier}`;
+        }
+
+        if (
+          hasSubclassFeature(selectedCharacter, "Researcher") &&
+          researcherBonus > 0
+        ) {
+          modifierBreakdown += `\n📚 Researcher (½ Wis): +${researcherBonus}`;
         }
 
         fields.push({
@@ -1878,6 +2036,7 @@ export const rollResearch = async ({
       dc,
       isSuccess,
       isNaturalTwenty,
+      researcherBonus,
       rollMessage: `Research Check: ${d20Roll}${
         modifier >= 0 ? "+" : ""
       }${modifier} = ${totalRoll} vs DC ${dc}`,

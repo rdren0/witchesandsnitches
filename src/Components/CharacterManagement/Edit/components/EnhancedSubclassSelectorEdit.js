@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { subclassesData } from "../../Shared/subclassesData";
+import { subclassesData } from "../../../SharedData/subclassesData";
 import { createFeatStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { characterService } from "../../../../services/characterService";
@@ -11,7 +11,6 @@ const EnhancedSubclassSelector = ({
   onSubclassChoicesChange,
   characterLevel = 1,
   disabled = false,
-
   characterId = null,
   discordUserId = null,
   autoSave = false,
@@ -24,7 +23,6 @@ const EnhancedSubclassSelector = ({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [internalSubclassChoices, setInternalSubclassChoices] = useState({});
-  // const [hasInitializedChoices, setHasInitializedChoices] = useState(false);
 
   const subclassChoices = externalSubclassChoices || internalSubclassChoices;
   const setSubclassChoices =
@@ -35,21 +33,17 @@ const EnhancedSubclassSelector = ({
     ? subclassesData[selectedSubclass]
     : null;
 
-  const sortedSubclasses = useMemo(() => {
+  const visibleSubclasses = useMemo(() => {
     const subclassArray = Object.values(subclassesData);
 
     if (!selectedSubclass) {
-      return subclassArray;
+      return subclassArray.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     const selectedClass = subclassArray.find(
       (sc) => sc.name === selectedSubclass
     );
-    const otherClasses = subclassArray
-      .filter((sc) => sc.name !== selectedSubclass)
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    return selectedClass ? [selectedClass, ...otherClasses] : subclassArray;
+    return selectedClass ? [selectedClass] : subclassArray;
   }, [selectedSubclass]);
 
   const normalizeSubclassChoices = (choices) => {
@@ -60,14 +54,21 @@ const EnhancedSubclassSelector = ({
       if (choice) {
         if (typeof choice === "string") {
           normalized[level] = choice;
-        } else if (typeof choice === "object" && choice.name) {
-          normalized[level] = choice.name;
-        } else if (typeof choice === "object" && choice.selectedChoice) {
-          normalized[level] = choice.selectedChoice;
-        } else if (typeof choice === "object" && choice.choice) {
-          normalized[level] = choice.choice;
-        } else {
-          normalized[level] = String(choice);
+        } else if (typeof choice === "object") {
+          if (choice.mainChoice && choice.subChoice) {
+            normalized[level] = {
+              mainChoice: choice.mainChoice,
+              subChoice: choice.subChoice,
+            };
+          } else if (choice.name) {
+            normalized[level] = choice.name;
+          } else if (choice.selectedChoice) {
+            normalized[level] = choice.selectedChoice;
+          } else if (choice.choice) {
+            normalized[level] = choice.choice;
+          } else {
+            normalized[level] = String(choice);
+          }
         }
       }
     });
@@ -84,11 +85,9 @@ const EnhancedSubclassSelector = ({
     ) {
       const normalized = normalizeSubclassChoices(externalSubclassChoices);
       setInternalSubclassChoices(normalized);
-      // setHasInitializedChoices(true);
     }
   }, [externalSubclassChoices]);
 
-  // Auto-expand selected subclass, especially for higher level characters
   useEffect(() => {
     if (selectedSubclass && selectedSubclass.trim() !== "") {
       setExpandedSubclasses((prev) => {
@@ -99,7 +98,171 @@ const EnhancedSubclassSelector = ({
     }
   }, [selectedSubclass]);
 
-  // For higher level characters, auto-expand to show all required choices
+  const parseAllFeaturesByLevel = (subclassData) => {
+    if (!subclassData) return {};
+
+    const featuresByLevel = {};
+
+    if (subclassData.level1Features) {
+      featuresByLevel[1] = {
+        features: subclassData.level1Features,
+        choices: subclassData.level1Choices || [],
+      };
+    }
+
+    if (subclassData.higherLevelFeatures) {
+      subclassData.higherLevelFeatures.forEach((feature) => {
+        const level = feature.level;
+
+        if (!featuresByLevel[level]) {
+          featuresByLevel[level] = {
+            features: [],
+            choices: [],
+          };
+        }
+
+        if (feature.choices && Array.isArray(feature.choices)) {
+          const processedChoices = feature.choices.map((choice) => {
+            if (choice.description && choice.description.includes("Choose:")) {
+              const parts = choice.description.split("Choose:");
+              const beforeChoose = parts[0].trim();
+              const afterChoose = parts[1];
+
+              const endings = [
+                " to gain proficiency in",
+                ". After",
+                ". Once",
+                ". Master",
+              ];
+              let choicesText = afterChoose;
+              let afterChoices = "";
+
+              for (const ending of endings) {
+                if (afterChoose.includes(ending)) {
+                  const splitPoint = afterChoose.indexOf(ending);
+                  choicesText = afterChoose.substring(0, splitPoint);
+                  afterChoices = afterChoose.substring(splitPoint);
+                  break;
+                }
+              }
+
+              const nestedChoices = choicesText.split(" or ").map((opt) => ({
+                name: opt.trim(),
+                description: `${beforeChoose} ${opt.trim()}${afterChoices}`,
+              }));
+
+              return {
+                ...choice,
+                description: beforeChoose,
+                hasNestedChoices: true,
+                nestedChoices: nestedChoices,
+              };
+            }
+            return choice;
+          });
+
+          featuresByLevel[level].choices = processedChoices;
+
+          featuresByLevel[level].features.push({
+            name: feature.name,
+            description: feature.description,
+          });
+        } else if (
+          feature.description &&
+          feature.description.includes("Choose:")
+        ) {
+          const choicesText = feature.description.split("Choose:")[1];
+          if (choicesText) {
+            const choices = choicesText.split(" or ").map((choice) => {
+              const cleanChoice = choice.trim().split("(")[0].trim();
+              return {
+                name: cleanChoice,
+                description: choice.trim(),
+              };
+            });
+            featuresByLevel[level].choices = choices;
+
+            featuresByLevel[level].features.push({
+              name: feature.name,
+              description: feature.description.split("Choose:")[0].trim(),
+            });
+          }
+        } else {
+          featuresByLevel[level].features.push(feature);
+        }
+      });
+    }
+
+    return featuresByLevel;
+  };
+  const getAvailableLevels = (subclassData) => {
+    if (!subclassData) return [];
+
+    const featuresByLevel = parseAllFeaturesByLevel(subclassData);
+    const allLevels = Object.keys(featuresByLevel).map((level) =>
+      parseInt(level)
+    );
+    const availableLevels = allLevels.filter(
+      (level) => level <= characterLevel
+    );
+
+    return availableLevels.sort((a, b) => a - b);
+  };
+
+  const getRequiredChoices = useCallback(
+    (subclassData) => {
+      if (!subclassData)
+        return { total: 0, missing: [], missingByLevel: {}, isComplete: true };
+
+      const featuresByLevel = parseAllFeaturesByLevel(subclassData);
+      const availableLevels = getAvailableLevels(subclassData);
+
+      const levelsWithChoices = availableLevels.filter(
+        (level) =>
+          featuresByLevel[level] && featuresByLevel[level].choices.length > 0
+      );
+
+      const missingChoices = levelsWithChoices.filter((level) => {
+        const currentChoice = normalizedSubclassChoices[level];
+        if (!currentChoice) return true;
+
+        const levelChoices = featuresByLevel[level].choices;
+        const hasNestedChoices = levelChoices.some(
+          (choice) => choice.hasNestedChoices
+        );
+
+        if (hasNestedChoices && typeof currentChoice === "object") {
+          return !currentChoice.subChoice;
+        } else if (hasNestedChoices && typeof currentChoice === "string") {
+          const selectedChoice = levelChoices.find(
+            (choice) => choice.name === currentChoice
+          );
+          return selectedChoice && selectedChoice.hasNestedChoices;
+        }
+
+        return false;
+      });
+
+      const missingByLevel = {};
+      missingChoices.forEach((level) => {
+        const levelData = featuresByLevel[level];
+        missingByLevel[level] = {
+          choiceCount: levelData.choices.length,
+          choices: levelData.choices.map((choice) => choice.name),
+        };
+      });
+
+      return {
+        total: levelsWithChoices.length,
+        missing: missingChoices,
+        missingByLevel: missingByLevel,
+        isComplete: missingChoices.length === 0,
+        levelsWithChoices: levelsWithChoices,
+      };
+    },
+    [normalizedSubclassChoices, parseAllFeaturesByLevel, getAvailableLevels]
+  );
+
   useEffect(() => {
     if (characterLevel > 1 && selectedSubclass && selectedSubclassData) {
       const requiredChoices = getRequiredChoices(selectedSubclassData);
@@ -111,12 +274,12 @@ const EnhancedSubclassSelector = ({
         });
       }
     }
-    // eslint-disable-next-line
   }, [
     characterLevel,
     selectedSubclass,
     selectedSubclassData,
     normalizedSubclassChoices,
+    getRequiredChoices,
   ]);
 
   const saveToDatabase = useCallback(
@@ -178,7 +341,6 @@ const EnhancedSubclassSelector = ({
         ) {
           const normalized = normalizeSubclassChoices(characterSubclassChoices);
           setInternalSubclassChoices(normalized);
-          // setHasInitializedChoices(true);
         }
       } catch (error) {
         console.error("Failed to load character data:", error);
@@ -210,12 +372,63 @@ const EnhancedSubclassSelector = ({
     }
   };
 
-  const handleSubclassChoiceChange = (level, choiceName) => {
-    const newChoices = {
-      ...normalizedSubclassChoices,
-      [level]: choiceName,
-    };
-    setSubclassChoices(newChoices);
+  const handleSubclassChoiceChange = (
+    level,
+    choiceName,
+    isMainChoice = true,
+    subChoiceName = null
+  ) => {
+    const currentChoice = normalizedSubclassChoices[level];
+
+    if (isMainChoice) {
+      if (
+        typeof currentChoice === "object" &&
+        currentChoice.mainChoice === choiceName
+      ) {
+        const newChoices = {
+          ...normalizedSubclassChoices,
+          [level]: currentChoice,
+        };
+        setSubclassChoices(newChoices);
+      } else {
+        const newChoices = {
+          ...normalizedSubclassChoices,
+          [level]: choiceName,
+        };
+        setSubclassChoices(newChoices);
+      }
+    } else {
+      const newChoices = {
+        ...normalizedSubclassChoices,
+        [level]: {
+          mainChoice: choiceName,
+          subChoice: subChoiceName,
+        },
+      };
+      setSubclassChoices(newChoices);
+    }
+  };
+
+  const isChoiceSelected = (level, choiceName, subChoiceName = null) => {
+    const currentChoice = normalizedSubclassChoices[level];
+
+    if (!currentChoice) return false;
+
+    if (subChoiceName) {
+      return (
+        typeof currentChoice === "object" &&
+        currentChoice.mainChoice === choiceName &&
+        currentChoice.subChoice === subChoiceName
+      );
+    } else {
+      if (typeof currentChoice === "string") {
+        return currentChoice === choiceName;
+      } else if (typeof currentChoice === "object") {
+        return currentChoice.mainChoice === choiceName;
+      }
+    }
+
+    return false;
   };
 
   const toggleSubclassExpansion = (subclassName) => {
@@ -230,79 +443,6 @@ const EnhancedSubclassSelector = ({
     });
   };
 
-  const parseAllFeaturesByLevel = (subclassData) => {
-    if (!subclassData) return {};
-
-    const featuresByLevel = {};
-
-    if (subclassData.level1Features) {
-      featuresByLevel[1] = {
-        features: subclassData.level1Features,
-        choices: subclassData.level1Choices || [],
-      };
-    }
-
-    if (subclassData.higherLevelFeatures) {
-      subclassData.higherLevelFeatures.forEach((feature) => {
-        const level = feature.level;
-
-        if (!featuresByLevel[level]) {
-          featuresByLevel[level] = {
-            features: [],
-            choices: [],
-          };
-        }
-
-        if (feature.choices && Array.isArray(feature.choices)) {
-          featuresByLevel[level].choices = feature.choices;
-
-          featuresByLevel[level].features.push({
-            name: feature.name,
-            description: feature.description,
-          });
-        } else if (
-          feature.description &&
-          feature.description.includes("Choose:")
-        ) {
-          const choicesText = feature.description.split("Choose:")[1];
-          if (choicesText) {
-            const choices = choicesText.split(" or ").map((choice) => {
-              const cleanChoice = choice.trim().split("(")[0].trim();
-              return {
-                name: cleanChoice,
-                description: choice.trim(),
-              };
-            });
-            featuresByLevel[level].choices = choices;
-
-            featuresByLevel[level].features.push({
-              name: feature.name,
-              description: feature.description.split("Choose:")[0].trim(),
-            });
-          }
-        } else {
-          featuresByLevel[level].features.push(feature);
-        }
-      });
-    }
-
-    return featuresByLevel;
-  };
-
-  const getAvailableLevels = (subclassData) => {
-    if (!subclassData) return [];
-
-    const featuresByLevel = parseAllFeaturesByLevel(subclassData);
-    const allLevels = Object.keys(featuresByLevel).map((level) =>
-      parseInt(level)
-    );
-    const availableLevels = allLevels.filter(
-      (level) => level <= characterLevel
-    );
-
-    return availableLevels.sort((a, b) => a - b);
-  };
-
   const getLockedLevels = (subclassData) => {
     if (!subclassData) return [];
 
@@ -313,41 +453,6 @@ const EnhancedSubclassSelector = ({
     const lockedLevels = allLevels.filter((level) => level > characterLevel);
 
     return lockedLevels.sort((a, b) => a - b);
-  };
-
-  const getRequiredChoices = (subclassData) => {
-    if (!subclassData)
-      return { total: 0, missing: [], missingByLevel: {}, isComplete: true };
-
-    const featuresByLevel = parseAllFeaturesByLevel(subclassData);
-    const availableLevels = getAvailableLevels(subclassData);
-
-    const levelsWithChoices = availableLevels.filter(
-      (level) =>
-        featuresByLevel[level] && featuresByLevel[level].choices.length > 0
-    );
-
-    const missingChoices = levelsWithChoices.filter(
-      (level) => !normalizedSubclassChoices[level]
-    );
-
-    // Create a detailed breakdown by level
-    const missingByLevel = {};
-    missingChoices.forEach((level) => {
-      const levelData = featuresByLevel[level];
-      missingByLevel[level] = {
-        choiceCount: levelData.choices.length,
-        choices: levelData.choices.map((choice) => choice.name),
-      };
-    });
-
-    return {
-      total: levelsWithChoices.length,
-      missing: missingChoices,
-      missingByLevel: missingByLevel,
-      isComplete: missingChoices.length === 0,
-      levelsWithChoices: levelsWithChoices,
-    };
   };
 
   const renderLevelFeatures = (subclassData, level) => {
@@ -416,77 +521,197 @@ const EnhancedSubclassSelector = ({
               <div style={styles.choiceInfo}>
                 Select one of the following options for Level {level}:
                 <br />
-                <strong>Current selection: {selectedChoice || "None"}</strong>
+                <strong>
+                  Current selection:{" "}
+                  {typeof selectedChoice === "object"
+                    ? `${selectedChoice.mainChoice} (${
+                        selectedChoice.subChoice || "no sub-choice"
+                      })`
+                    : selectedChoice || "None"}
+                </strong>
               </div>
             )}
             {levelData.choices.map((choice, index) => {
-              const isChoiceSelected = selectedChoice === choice.name;
+              const isMainChoiceSelected = isChoiceSelected(level, choice.name);
+              const hasNestedChoices = choice.hasNestedChoices;
 
               return (
-                <div
-                  key={`choice-${index}`}
-                  style={
-                    isSelected
-                      ? isChoiceSelected
-                        ? styles.choiceContainerSelectedOption
-                        : styles.choiceContainerSelected
-                      : styles.choiceContainer
-                  }
-                >
-                  {isSelected ? (
-                    <label
-                      style={
-                        disabled
-                          ? styles.choiceLabelDisabled
-                          : styles.choiceLabel
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        type="radio"
-                        name={`subclass-level${level}-choice`}
-                        value={choice.name}
-                        checked={isChoiceSelected}
-                        onChange={(e) => {
-                          if (!disabled) {
-                            handleSubclassChoiceChange(level, e.target.value);
-                          }
-                        }}
-                        disabled={disabled}
+                <div key={`choice-${index}`}>
+                  {/* Main choice */}
+                  <div
+                    style={
+                      isSelected
+                        ? isMainChoiceSelected
+                          ? styles.choiceContainerSelectedOption
+                          : styles.choiceContainerSelected
+                        : styles.choiceContainer
+                    }
+                  >
+                    {isSelected ? (
+                      <label
                         style={
                           disabled
-                            ? styles.radioButtonDisabled
-                            : styles.radioButton
+                            ? styles.choiceLabelDisabled
+                            : styles.choiceLabel
                         }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <strong
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="radio"
+                          name={`subclass-level${level}-choice`}
+                          value={choice.name}
+                          checked={isMainChoiceSelected}
+                          onChange={(e) => {
+                            if (!disabled) {
+                              handleSubclassChoiceChange(
+                                level,
+                                e.target.value,
+                                true
+                              );
+                            }
+                          }}
+                          disabled={disabled}
                           style={
-                            isChoiceSelected
-                              ? styles.featureNameSelected
-                              : {
-                                  ...styles.featureName,
-                                  color: theme.success,
-                                }
+                            disabled
+                              ? styles.radioButtonDisabled
+                              : styles.radioButton
                           }
-                        >
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <strong
+                            style={
+                              isMainChoiceSelected
+                                ? styles.featureNameSelected
+                                : {
+                                    ...styles.featureName,
+                                    color: theme.success,
+                                  }
+                            }
+                          >
+                            {choice.name}
+                          </strong>
+                          <p style={styles.featureDescription}>
+                            {choice.description}
+                          </p>
+                        </div>
+                      </label>
+                    ) : (
+                      <>
+                        <strong style={styles.featureName}>
                           {choice.name}
                         </strong>
                         <p style={styles.featureDescription}>
                           {choice.description}
                         </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Nested choices - only show if main choice is selected */}
+                  {isSelected && isMainChoiceSelected && hasNestedChoices && (
+                    <div
+                      style={{
+                        marginLeft: "20px",
+                        marginTop: "10px",
+                        padding: "12px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "6px",
+                        backgroundColor: theme.surfaceHover,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: theme.text,
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Gain proficiency (expertise if already proficient) in:
                       </div>
-                    </label>
-                  ) : (
-                    <>
-                      <strong style={styles.featureName}>{choice.name}</strong>
-                      <p style={styles.featureDescription}>
-                        {choice.description}
-                      </p>
-                    </>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                        }}
+                      >
+                        {choice.nestedChoices.map(
+                          (nestedChoice, nestedIndex) => {
+                            const isNestedSelected = isChoiceSelected(
+                              level,
+                              choice.name,
+                              nestedChoice.name
+                            );
+
+                            return (
+                              <label
+                                key={`nested-${nestedIndex}`}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  fontSize: "12px",
+                                  cursor: disabled ? "not-allowed" : "pointer",
+                                  padding: "4px 8px",
+                                  borderRadius: "4px",
+                                  border: `1px solid ${
+                                    isNestedSelected
+                                      ? theme.primary
+                                      : theme.border
+                                  }`,
+                                  backgroundColor: isNestedSelected
+                                    ? `${theme.primary}15`
+                                    : theme.surface,
+                                  transition: "all 0.2s ease",
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`subclass-level${level}-nested-${choice.name}`}
+                                  value={nestedChoice.name}
+                                  checked={isNestedSelected}
+                                  onChange={(e) => {
+                                    if (!disabled) {
+                                      handleSubclassChoiceChange(
+                                        level,
+                                        choice.name,
+                                        false,
+                                        e.target.value
+                                      );
+                                    }
+                                  }}
+                                  disabled={disabled}
+                                  style={{
+                                    margin: 0,
+                                    accentColor: theme.primary,
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                />
+                                <span
+                                  style={{
+                                    color: isNestedSelected
+                                      ? theme.primary
+                                      : theme.text,
+                                    fontWeight: isNestedSelected
+                                      ? "600"
+                                      : "500",
+                                  }}
+                                >
+                                  {nestedChoice.name}
+                                </span>
+                              </label>
+                            );
+                          }
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               );
@@ -533,7 +758,6 @@ const EnhancedSubclassSelector = ({
     });
   };
 
-  // Enhanced choice summary for higher level characters
   const renderChoiceSummary = (choiceStatus) => {
     if (!selectedSubclassData || choiceStatus.total === 0) return null;
 
@@ -569,9 +793,12 @@ const EnhancedSubclassSelector = ({
         </div>
 
         {choiceStatus.levelsWithChoices.map((level) => {
-          const hasChoice = normalizedSubclassChoices[level];
-          const choiceName = hasChoice
-            ? normalizedSubclassChoices[level]
+          const choice = normalizedSubclassChoices[level];
+          const hasChoice = !!choice;
+          const choiceDisplay = hasChoice
+            ? typeof choice === "object"
+              ? `${choice.mainChoice} (${choice.subChoice || "incomplete"})`
+              : choice
             : null;
 
           return (
@@ -594,7 +821,7 @@ const EnhancedSubclassSelector = ({
                 {hasChoice ? "✓" : "○"}
               </span>
               <span style={{ color: theme.textPrimary }}>
-                Level {level}: {choiceName || "Not selected"}
+                Level {level}: {choiceDisplay || "Not selected"}
               </span>
             </div>
           );
@@ -734,7 +961,7 @@ const EnhancedSubclassSelector = ({
       )}
 
       <div style={styles.featsContainer}>
-        {sortedSubclasses.map((subclass) => {
+        {visibleSubclasses.map((subclass) => {
           const isSelected = selectedSubclass === subclass.name;
           const isExpanded = expandedSubclasses.has(subclass.name);
           const availableLevels = getAvailableLevels(subclass);
@@ -746,7 +973,6 @@ const EnhancedSubclassSelector = ({
             );
           }, 0);
 
-          // Show level range for higher level characters
           const levelRange =
             availableLevels.length > 1
               ? `${Math.min(...availableLevels)}-${Math.max(
@@ -762,7 +988,7 @@ const EnhancedSubclassSelector = ({
               <div style={styles.featHeader}>
                 <label style={styles.featLabelClickable}>
                   <input
-                    type="radio"
+                    type="checkbox"
                     name="subclass"
                     value={subclass.name}
                     checked={isSelected}
@@ -791,14 +1017,16 @@ const EnhancedSubclassSelector = ({
                     )}
                   </span>
                 </label>
-                <button
-                  onClick={() => toggleSubclassExpansion(subclass.name)}
-                  style={styles.expandButton}
-                  type="button"
-                  disabled={disabled}
-                >
-                  {isExpanded ? "▲" : "▼"}
-                </button>
+                {!isSelected && (
+                  <button
+                    onClick={() => toggleSubclassExpansion(subclass.name)}
+                    style={styles.expandButton}
+                    type="button"
+                    disabled={disabled}
+                  >
+                    {isExpanded ? "▲" : "▼"}
+                  </button>
+                )}
               </div>
 
               <div
@@ -809,7 +1037,7 @@ const EnhancedSubclassSelector = ({
                 {subclass.description}
               </div>
 
-              {isExpanded && (
+              {(isExpanded || isSelected) && (
                 <div
                   style={
                     isSelected
@@ -856,6 +1084,18 @@ const EnhancedSubclassSelector = ({
             For Level {characterLevel} characters, all subclass choices through
             level {characterLevel}
             must be completed if a subclass is selected.
+          </span>
+        )}
+        {selectedSubclass && (
+          <span
+            style={{
+              display: "block",
+              marginTop: "4px",
+              fontStyle: "italic",
+              color: theme.success,
+            }}
+          >
+            Uncheck the selected subclass to see all available options again.
           </span>
         )}
       </div>
