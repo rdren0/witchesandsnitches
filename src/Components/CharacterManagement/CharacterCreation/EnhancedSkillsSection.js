@@ -206,26 +206,6 @@ const EnhancedSkillsSection = ({
         backgroundSkills.includes(skill) || innateHeritageSkills.includes(skill)
     ) || hasExpertiseGranter.length > 0;
 
-  const shouldGrantExpertise = (skill) => {
-    return hasExpertise(skill);
-  };
-
-  const canSelectForExpertise = (skill) => {
-    if (!hasProficiency(skill)) {
-      return false;
-    }
-
-    if (studyBuddySkills.includes(skill)) {
-      return true;
-    }
-
-    if (hasExpertiseGranter.length > 0) {
-      return true;
-    }
-
-    return false;
-  };
-
   return (
     <div style={styles.fieldContainer}>
       <h3 style={styles.skillsHeader}>

@@ -119,6 +119,7 @@ const EnhancedSubclassSelector = ({
     selectedSubclass,
     selectedSubclassData,
     normalizedSubclassChoices,
+    getRequiredChoices,
   ]);
 
   const saveToDatabase = useCallback(

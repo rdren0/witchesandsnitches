@@ -922,11 +922,6 @@ export const EnhancedFeatureSelector = ({
     }
   };
 
-  // Calculate benefits for tooltip showing
-  const allBenefits = useMemo(() => {
-    return calculateAllFeatBenefits(selectedFeats, character, featChoices);
-  }, [selectedFeats, character, featChoices]);
-
   return (
     <div style={enhancedStyles.fieldContainer}>
       <h3 style={enhancedStyles.skillsHeader}>

@@ -98,7 +98,7 @@ const EnhancedSubclassSelector = ({
     }
   }, [selectedSubclass]);
 
-  const parseAllFeaturesByLevel = (subclassData) => {
+  const parseAllFeaturesByLevel = useCallback((subclassData) => {
     if (!subclassData) return {};
 
     const featuresByLevel = {};
@@ -194,7 +194,8 @@ const EnhancedSubclassSelector = ({
     }
 
     return featuresByLevel;
-  };
+  }, []);
+
   const getAvailableLevels = (subclassData) => {
     if (!subclassData) return [];
 
