@@ -5,9 +5,8 @@ import {
 } from "../Create/ASIComponents";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { allSkills } from "../../SharedData/data";
 import { useMemo } from "react";
-import EnhancedFeatureSelector from "./EnhancedFeatureSelector"; // Import the enhanced selector
+import EnhancedFeatureSelector from "./EnhancedFeatureSelector";
 
 const getSpellcastingAbility = (character) => {
   const castingStyle = character.castingStyle;

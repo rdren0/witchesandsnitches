@@ -77,12 +77,6 @@ const EnhancedSkillsSection = ({
     return expertiseSkills.includes(skill);
   };
 
-  const hasProficiency = (skill) => {
-    const skillProficiencies =
-      character.skillProficiencies || character.skill_proficiencies || [];
-    return skillProficiencies.includes(skill);
-  };
-
   const getSubclassSkills = () => {
     const subclassSkills = [];
     const expertiseSkills = [];
@@ -244,6 +238,7 @@ const EnhancedSkillsSection = ({
                     key={`heritage-${skill}`}
                     style={{
                       ...styles.skillOptionBase,
+                      // eslint-disable-next-line
                       backgroundColor: "#8b5cf6" + "20",
                       border: `2px solid #8b5cf6`,
                       cursor: "default",
@@ -402,6 +397,7 @@ const EnhancedSkillsSection = ({
                     key={`subclass-${skill}`}
                     style={{
                       ...styles.skillOptionBase,
+                      // eslint-disable-next-line
                       backgroundColor: "#06b6d4" + "20",
                       border: `2px solid #06b6d4`,
                       cursor: "default",

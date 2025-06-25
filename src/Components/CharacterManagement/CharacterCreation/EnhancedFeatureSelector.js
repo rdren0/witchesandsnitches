@@ -531,7 +531,10 @@ export const EnhancedFeatureSelector = ({
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
 
-  const featChoices = character.featChoices || {};
+  const featChoices = useMemo(
+    () => character.featChoices || {},
+    [character.featChoices]
+  );
   const selectedFeats = useMemo(
     () => character.standardFeats || [],
     [character.standardFeats]
@@ -953,12 +956,6 @@ export const EnhancedFeatureSelector = ({
     }
   };
 
-  // Calculate benefits for tooltip showing
-  const allBenefits = useMemo(() => {
-    return calculateAllFeatBenefits(selectedFeats, character, featChoices);
-  }, [selectedFeats, character, featChoices]);
-
-  // Get counts for display
   const allSelectedFeats = getAllSelectedFeats(character);
   const availableCount = standardFeats.length - allSelectedFeats.length;
 

@@ -196,19 +196,22 @@ const EnhancedSubclassSelector = ({
     return featuresByLevel;
   }, []);
 
-  const getAvailableLevels = (subclassData) => {
-    if (!subclassData) return [];
+  const getAvailableLevels = useCallback(
+    (subclassData) => {
+      if (!subclassData) return [];
 
-    const featuresByLevel = parseAllFeaturesByLevel(subclassData);
-    const allLevels = Object.keys(featuresByLevel).map((level) =>
-      parseInt(level)
-    );
-    const availableLevels = allLevels.filter(
-      (level) => level <= characterLevel
-    );
+      const featuresByLevel = parseAllFeaturesByLevel(subclassData);
+      const allLevels = Object.keys(featuresByLevel).map((level) =>
+        parseInt(level)
+      );
+      const availableLevels = allLevels.filter(
+        (level) => level <= characterLevel
+      );
 
-    return availableLevels.sort((a, b) => a - b);
-  };
+      return availableLevels.sort((a, b) => a - b);
+    },
+    [parseAllFeaturesByLevel, characterLevel]
+  );
 
   const getRequiredChoices = useCallback(
     (subclassData) => {
