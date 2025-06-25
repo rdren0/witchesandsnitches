@@ -1455,15 +1455,15 @@ const CharacterSheet = ({
                   setCharacter={setCharacter}
                   selectedCharacterId={selectedCharacter.id}
                 />
-                <CorruptionTracker
+                <SorceryPointTracker
+                  key="sorcery-points"
                   character={character}
                   supabase={supabase}
                   discordUserId={discordUserId}
                   setCharacter={setCharacter}
                   selectedCharacterId={selectedCharacter.id}
                 />
-                <SorceryPointTracker
-                  key="sorcery-points"
+                <CorruptionTracker
                   character={character}
                   supabase={supabase}
                   discordUserId={discordUserId}
