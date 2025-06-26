@@ -1020,15 +1020,7 @@ export const SubjectCard = ({
             }) + Wand modifier`}
           >
             <Brain size={14} />
-            <span>
-              Arithmancy
-              {arithmancyModifier !== 0 && (
-                <span style={{ fontSize: "10px", marginLeft: "2px" }}>
-                  ({arithmancyModifier >= 0 ? "+" : ""}
-                  {arithmancyModifier})
-                </span>
-              )}
-            </span>
+            <span>Arithmancy</span>
           </button>
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
