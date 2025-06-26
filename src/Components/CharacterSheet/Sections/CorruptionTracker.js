@@ -23,7 +23,6 @@ export const CorruptionTracker = ({
   const [spendReason, setSpendReason] = useState("");
   const [gainAmount, setGainAmount] = useState(1);
   const [gainReason, setGainReason] = useState("");
-  const [showManualGain, setShowManualGain] = useState(false);
   const [showGainSection, setShowGainSection] = useState(false);
   const [showRedeemSection, setShowRedeemSection] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -82,98 +81,6 @@ export const CorruptionTracker = ({
   };
 
   const currentTier = getCorruptionTier(corruptionPoints);
-
-  const rollCorruptionSave = async () => {
-    if (isProcessing || !character) return;
-    setIsProcessing(true);
-
-    const deedReason = gainReason || "Dark deed committed";
-
-    try {
-      const wisdomModifier = character.abilityScores?.wisdom
-        ? Math.floor((character.abilityScores.wisdom - 10) / 2)
-        : 0;
-      const proficiencyBonus = character.proficiencyBonus || 0;
-      const hasWisdomSaveProficiency =
-        character.savingThrowProficiencies?.includes("wisdom") || false;
-      const totalModifier =
-        wisdomModifier + (hasWisdomSaveProficiency ? proficiencyBonus : 0);
-
-      const diceResult = rollDice();
-      const d20Roll = diceResult.total;
-      const total = d20Roll + totalModifier;
-      const dc = currentTier.saveDC;
-
-      const isCriticalSuccess = d20Roll === 20;
-      const isCriticalFailure = d20Roll === 1;
-      const isSuccess =
-        (total >= dc || isCriticalSuccess) && !isCriticalFailure;
-
-      if (showRollResult) {
-        showRollResult({
-          title: `Corruption Resistance Save`,
-          rollValue: d20Roll,
-          modifier: totalModifier,
-          total: total,
-          isCriticalSuccess,
-          isCriticalFailure,
-          type: "saving_throw",
-          description: `${character.name} resists corruption after: ${deedReason} (DC ${dc})`,
-        });
-      }
-
-      if (!isSuccess) {
-        const newTotal = corruptionPoints + 1;
-        await updateCorruptionPoints(newTotal);
-
-        if (rollCorruption) {
-          rollCorruption({
-            character,
-            pointsGained: 1,
-            reason: deedReason,
-            pointsTotal: newTotal,
-            type: "gained",
-            saveResult: {
-              rollValue: d20Roll,
-              modifier: totalModifier,
-              total,
-              dc,
-              failed: true,
-            },
-          });
-        }
-      }
-
-      setGainReason("");
-    } catch (error) {
-      console.error("Error rolling corruption save:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleFailedSave = async () => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-
-    const deedReason = gainReason || "Failed Wisdom Save";
-    const newTotal = corruptionPoints + 1;
-
-    await updateCorruptionPoints(newTotal);
-
-    if (rollCorruption) {
-      rollCorruption({
-        character,
-        pointsGained: 1,
-        reason: deedReason,
-        pointsTotal: newTotal,
-        type: "gained",
-      });
-    }
-
-    setGainReason("");
-    setIsProcessing(false);
-  };
 
   const updateCorruptionPoints = async (newTotal) => {
     if (!character || !selectedCharacterId) return;
@@ -278,6 +185,62 @@ export const CorruptionTracker = ({
     fontWeight: "600",
   });
 
+  const getSubsectionStyle = (color) => ({
+    padding: "12px",
+    backgroundColor: theme.surface,
+    borderRadius: "8px",
+    border: `1px solid ${color}40`,
+  });
+
+  const getInputStyle = (disabled = false) => ({
+    ...styles.input,
+    backgroundColor: theme.surface,
+    color: theme.text,
+    border: `1px solid ${theme.border}`,
+    ...(disabled ? { opacity: 0.5 } : {}),
+  });
+
+  const getButtonStyle = (type = "default", disabled = false) => {
+    let baseStyle = { ...styles.button };
+
+    if (disabled) {
+      return {
+        ...baseStyle,
+        backgroundColor: theme.surface,
+        color: theme.textSecondary,
+        cursor: "not-allowed",
+        opacity: 0.6,
+      };
+    }
+
+    switch (type) {
+      case "danger":
+        return {
+          ...baseStyle,
+          backgroundColor: "#dc2626",
+          color: "#ffffff",
+        };
+      case "success":
+        return {
+          ...baseStyle,
+          backgroundColor: "#059669",
+          color: "#ffffff",
+        };
+      case "primary":
+        return {
+          ...baseStyle,
+          backgroundColor: "#7c2d12",
+          color: "#ffffff",
+        };
+      default:
+        return {
+          ...baseStyle,
+          backgroundColor: theme.primary,
+          color: "#ffffff",
+        };
+    }
+  };
+
   return (
     <div style={styles.headerCard}>
       <div style={styles.sectionHeader}>
@@ -291,7 +254,7 @@ export const CorruptionTracker = ({
         <div
           style={{
             ...styles.corruptionOrb,
-            background: `linear-gradient(135deg, ${currentTier.color}, #1a1a1a)`,
+            background: `linear-gradient(135deg, ${currentTier.color}, ${theme.surface})`,
           }}
         >
           <span style={styles.corruptionValue}>{corruptionPoints}</span>
@@ -325,6 +288,7 @@ export const CorruptionTracker = ({
         )}
       </div>
 
+      {/* Gain Corruption Section */}
       <div style={{ marginBottom: "20px" }}>
         <button
           onClick={() => setShowGainSection(!showGainSection)}
@@ -334,20 +298,10 @@ export const CorruptionTracker = ({
             <span>{showGainSection ? "▼" : "▶"}</span>
             <span>Gain Corruption (Dark Deeds)</span>
           </span>
-          <span style={{ fontSize: "12px", fontWeight: "normal" }}>
-            DC {currentTier.saveDC}
-          </span>
         </button>
 
         {showGainSection && (
-          <div
-            style={{
-              padding: "12px",
-              backgroundColor: "#fef2f2",
-              borderRadius: "8px",
-              border: "1px solid #fecaca",
-            }}
-          >
+          <div style={getSubsectionStyle("#991b1b")}>
             <div
               style={{
                 fontSize: "11px",
@@ -356,166 +310,56 @@ export const CorruptionTracker = ({
                 fontStyle: "italic",
               }}
             >
-              Current Wisdom Save DC: {currentTier.saveDC} • Failure = +1
-              Corruption Point
+              Add corruption points directly for dark deeds and morally
+              questionable actions
             </div>
 
-            <div style={{ marginBottom: "12px" }}>
-              <div style={styles.inputGroup}>
-                <input
-                  type="text"
-                  placeholder="Describe the dark deed (murder, betrayal, etc.)..."
-                  value={gainReason}
-                  onChange={(e) => setGainReason(e.target.value)}
-                  disabled={isProcessing}
-                  style={{
-                    ...styles.input,
-                    flex: 1,
-                    ...(isProcessing ? { opacity: 0.5 } : {}),
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={rollCorruptionSave}
-                  disabled={isProcessing}
-                  style={{
-                    ...styles.button,
-                    ...(isProcessing
-                      ? {
-                          backgroundColor: "#d1d5db",
-                          color: "#6b7280",
-                          cursor: "not-allowed",
-                        }
-                      : {
-                          backgroundColor: "#7c2d12",
-                          color: "#ffffff",
-                        }),
-                    flex: 1,
-                  }}
-                >
-                  {isProcessing
-                    ? "Rolling..."
-                    : `Roll Corruption Save (DC ${currentTier.saveDC})`}
-                </button>
-                <button
-                  onClick={handleFailedSave}
-                  disabled={isProcessing}
-                  style={{
-                    ...styles.button,
-                    ...(isProcessing
-                      ? {
-                          backgroundColor: "#d1d5db",
-                          color: "#6b7280",
-                          cursor: "not-allowed",
-                        }
-                      : styles.buttonDanger),
-                    flex: 1,
-                  }}
-                >
-                  Save Failed (+1)
-                </button>
-              </div>
+            <div style={styles.inputGroup}>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={gainAmount}
+                onChange={(e) =>
+                  setGainAmount(Math.max(1, parseInt(e.target.value) || 1))
+                }
+                disabled={isProcessing}
+                style={{
+                  ...getInputStyle(isProcessing),
+                  width: "80px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Describe the dark deed (murder, betrayal, etc.)..."
+                value={gainReason}
+                onChange={(e) => setGainReason(e.target.value)}
+                disabled={isProcessing}
+                style={{
+                  ...getInputStyle(isProcessing),
+                  flex: 1,
+                }}
+              />
             </div>
-
-            <div
+            <button
+              onClick={addPoints}
+              disabled={gainAmount < 1 || isProcessing}
               style={{
-                borderTop: "1px solid #fecaca",
-                paddingTop: "12px",
-                marginTop: "8px",
+                ...getButtonStyle("danger", gainAmount < 1 || isProcessing),
+                width: "100%",
               }}
             >
-              <button
-                onClick={() => setShowManualGain(!showManualGain)}
-                style={{
-                  ...styles.button,
-                  backgroundColor: "transparent",
-                  color: "#991b1b",
-                  border: "1px solid #fecaca",
-                  fontSize: "12px",
-                  padding: "6px 12px",
-                  width: "100%",
-                  marginBottom: showManualGain ? "12px" : "0px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                }}
-              >
-                {showManualGain ? "▼" : "▶"} Manual Corruption Assignment
-              </button>
-
-              {showManualGain && (
-                <div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#991b1b",
-                      marginBottom: "8px",
-                      fontStyle: "italic",
-                    }}
-                  >
-                    For direct DM assignment without saves
-                  </div>
-                  <div style={styles.inputGroup}>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={gainAmount}
-                      onChange={(e) =>
-                        setGainAmount(
-                          Math.max(1, parseInt(e.target.value) || 1)
-                        )
-                      }
-                      disabled={isProcessing}
-                      style={{
-                        ...styles.input,
-                        width: "80px",
-                        ...(isProcessing ? { opacity: 0.5 } : {}),
-                      }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Reason for manual corruption assignment..."
-                      value={gainReason}
-                      onChange={(e) => setGainReason(e.target.value)}
-                      disabled={isProcessing}
-                      style={{
-                        ...styles.input,
-                        flex: 1,
-                        ...(isProcessing ? { opacity: 0.5 } : {}),
-                      }}
-                    />
-                  </div>
-                  <button
-                    onClick={addPoints}
-                    disabled={gainAmount < 1 || isProcessing}
-                    style={{
-                      ...styles.button,
-                      ...(gainAmount < 1 || isProcessing
-                        ? {
-                            backgroundColor: "#d1d5db",
-                            color: "#6b7280",
-                            cursor: "not-allowed",
-                          }
-                        : styles.buttonDanger),
-                      width: "100%",
-                    }}
-                  >
-                    {isProcessing
-                      ? "Processing..."
-                      : `Manually Assign ${gainAmount} Point${
-                          gainAmount !== 1 ? "s" : ""
-                        }`}
-                  </button>
-                </div>
-              )}
-            </div>
+              {isProcessing
+                ? "Processing..."
+                : `Add ${gainAmount} Corruption Point${
+                    gainAmount !== 1 ? "s" : ""
+                  }`}
+            </button>
           </div>
         )}
       </div>
 
+      {/* Absolve Corruption Section */}
       <div style={{ marginBottom: "20px" }}>
         <button
           onClick={() => setShowRedeemSection(!showRedeemSection)}
@@ -531,14 +375,7 @@ export const CorruptionTracker = ({
         </button>
 
         {showRedeemSection && (
-          <div
-            style={{
-              padding: "12px",
-              backgroundColor: "#f0fdf4",
-              borderRadius: "8px",
-              border: `1px solid #bbf7d0`,
-            }}
-          >
+          <div style={getSubsectionStyle("#059669")}>
             <div style={styles.inputGroup}>
               <input
                 type="number"
@@ -550,9 +387,8 @@ export const CorruptionTracker = ({
                 }
                 disabled={isProcessing}
                 style={{
-                  ...styles.input,
+                  ...getInputStyle(isProcessing),
                   width: "80px",
-                  ...(isProcessing ? { opacity: 0.5 } : {}),
                 }}
               />
               <input
@@ -562,9 +398,8 @@ export const CorruptionTracker = ({
                 onChange={(e) => setSpendReason(e.target.value)}
                 disabled={isProcessing}
                 style={{
-                  ...styles.input,
+                  ...getInputStyle(isProcessing),
                   flex: 1,
-                  ...(isProcessing ? { opacity: 0.5 } : {}),
                 }}
               />
             </div>
@@ -572,14 +407,10 @@ export const CorruptionTracker = ({
               onClick={spendPoints}
               disabled={spendAmount > corruptionPoints || isProcessing}
               style={{
-                ...styles.button,
-                ...(spendAmount > corruptionPoints || isProcessing
-                  ? {
-                      backgroundColor: "#d1d5db",
-                      color: "#6b7280",
-                      cursor: "not-allowed",
-                    }
-                  : styles.buttonSuccess),
+                ...getButtonStyle(
+                  "success",
+                  spendAmount > corruptionPoints || isProcessing
+                ),
                 width: "100%",
               }}
             >
@@ -591,19 +422,20 @@ export const CorruptionTracker = ({
         )}
       </div>
 
+      {/* Info Section */}
       <div
         style={{
           fontSize: "12px",
           color: theme.textSecondary,
           marginTop: "16px",
           padding: "8px",
-          backgroundColor: theme.background,
+          backgroundColor: theme.surface,
           borderRadius: "6px",
           border: `1px solid ${theme.border}`,
         }}
       >
-        <strong>Save DCs:</strong> Pure (10) → Pragmatic (12) → Devious (14) →
-        Vicious (16) → Vile (18)
+        <strong>Corruption Tiers:</strong> Pure Hearted (0) → Pragmatic (1-4) →
+        Devious (5-7) → Vicious (8-11) → Vile (12+)
       </div>
     </div>
   );
