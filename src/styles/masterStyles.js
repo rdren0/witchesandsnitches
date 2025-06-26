@@ -2406,7 +2406,6 @@ export const createSpellBookStyles = (theme) => ({
     lineHeight: "1.5",
     margin: "0 0 20px 0",
   },
-
   subjectCard: {
     backgroundColor: theme.surface,
     borderRadius: "16px",
@@ -2506,7 +2505,6 @@ export const createSpellBookStyles = (theme) => ({
     borderRadius: "3px",
     transition: "width 0.3s ease",
   },
-
   table: {
     width: "100%",
     backgroundColor: theme.surface,
@@ -2556,7 +2554,6 @@ export const createSpellBookStyles = (theme) => ({
     textAlign: "center",
     position: "relative",
   },
-
   spellNameContainer: {
     display: "flex",
     flexDirection: "column",

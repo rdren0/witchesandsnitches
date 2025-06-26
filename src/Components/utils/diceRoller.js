@@ -5,6 +5,24 @@ import { getModifierInfo } from "../SpellBook/utils";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
+const difficultSpells = [
+  "ABSCONDI",
+  "PELLUCIDI PELLIS",
+  "SAGITTARIO",
+  "CONFRINGO",
+  "DEVICTO",
+  "STUPEFY",
+  "PETRIFICUS TOTALUS",
+  "PROTEGO",
+  "PROTEGO MAXIMA",
+  "FINITE INCANTATEM",
+  "CONFUNDO",
+  "BOMBARDA",
+  "EPISKY",
+  "EXPELLIARMUS",
+  "INCARCEROUS",
+];
+
 const RollModalContext = createContext();
 
 const hasSubclassFeature = (character, featureName) => {
@@ -1691,6 +1709,370 @@ export const rollSkill = async ({
   }
 };
 
+export const attemptArithmancySpell = async ({
+  spellName,
+  subject,
+  showRollResult,
+  selectedCharacter,
+  setSpellAttempts,
+  discordUserId,
+  setAttemptingSpells,
+  setCriticalSuccesses,
+  updateSpellProgressSummary,
+}) => {
+  if (!selectedCharacter || !discordUserId) {
+    alert("Please select a character first!");
+    return;
+  }
+
+  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+
+    const intModifier = Math.floor(
+      (selectedCharacter.abilityScores.intelligence - 10) / 2
+    );
+    const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
+    const wandModifier = modifierInfo.wandModifier || 0;
+    const totalModifier = intModifier + wandModifier;
+
+    const total = d20Roll + totalModifier;
+    let goal = 11;
+    if (difficultSpells.includes(spellName.toUpperCase())) {
+      goal += 3;
+    }
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+    const isSuccess =
+      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${spellName} (Arithmancy Cast)`,
+        rollValue: d20Roll,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "spell",
+        description: `Arithmancy casting ${spellName} for ${selectedCharacter.name} using Intelligence`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      const resultText = isSuccess ? "SUCCESS" : "FAILED";
+      alert(
+        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+      );
+    }
+
+    if (isCriticalSuccess) {
+      setSpellAttempts((prev) => ({
+        ...prev,
+        [spellName]: { 1: true, 2: true },
+      }));
+      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
+    } else if (isSuccess) {
+      setSpellAttempts((prev) => {
+        const currentAttempts = prev[spellName] || {};
+        const newAttempts = { ...currentAttempts };
+
+        if (!newAttempts[1]) {
+          newAttempts[1] = true;
+        } else if (!newAttempts[2]) {
+          newAttempts[2] = true;
+        }
+
+        return {
+          ...prev,
+          [spellName]: newAttempts,
+        };
+      });
+    }
+
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    let title = `${
+      selectedCharacter?.name || "Unknown"
+    } Arithmancy Cast: ${spellName}`;
+    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
+    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
+
+    if (isCriticalSuccess) {
+      title = `⭐ ${
+        selectedCharacter?.name || "Unknown"
+      } Arithmancy Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
+      embedColor = 0xffd700;
+    } else if (isCriticalFailure) {
+      title = `💥 ${
+        selectedCharacter?.name || "Unknown"
+      } Arithmancy Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
+      embedColor = 0x8b0000;
+    }
+
+    let rollDescription = `**Roll:** ${d20Roll}`;
+    const modifierText =
+      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+    rollDescription += ` ${modifierText} = **${total}**`;
+
+    const fields = [
+      {
+        name: "Result",
+        value: resultText,
+        inline: true,
+      },
+      {
+        name: "Roll Details",
+        value: rollDescription,
+        inline: true,
+      },
+      {
+        name: "Casting Method",
+        value: "Arithmancy Cast (Intelligence-based)",
+        inline: true,
+      },
+    ];
+
+    let modifierBreakdown = `Intelligence: ${
+      intModifier >= 0 ? "+" : ""
+    }${intModifier}`;
+
+    modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+      wandModifier >= 0 ? "+" : ""
+    }${wandModifier}`;
+
+    fields.push({
+      name: "Modifier Breakdown",
+      value: modifierBreakdown,
+      inline: false,
+    });
+
+    const embed = {
+      title: title,
+      description: "",
+      color: embedColor,
+      fields: fields,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Witches And Snitches - Arithmancy Spellcasting",
+      },
+    };
+
+    try {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: [embed],
+        }),
+      });
+    } catch (error) {
+      console.error("Error sending to Discord:", error);
+    }
+
+    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+  } catch (error) {
+    console.error("Error attempting Arithmancy spell:", error);
+    alert("Error processing Arithmancy spell attempt. Please try again.");
+  } finally {
+    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
+  }
+};
+
+export const attemptRunesSpell = async ({
+  spellName,
+  subject,
+  showRollResult,
+  selectedCharacter,
+  setSpellAttempts,
+  discordUserId,
+  setAttemptingSpells,
+  setCriticalSuccesses,
+  updateSpellProgressSummary,
+}) => {
+  if (!selectedCharacter || !discordUserId) {
+    alert("Please select a character first!");
+    return;
+  }
+
+  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+
+    const wisModifier = Math.floor(
+      (selectedCharacter.abilityScores.wisdom - 10) / 2
+    );
+    const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
+    const wandModifier = modifierInfo.wandModifier || 0;
+    const totalModifier = wisModifier + wandModifier;
+
+    const total = d20Roll + totalModifier;
+    let goal = 11;
+    if (difficultSpells.includes(spellName.toUpperCase())) {
+      goal += 3;
+    }
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+    const isSuccess =
+      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${spellName} (Runic Cast)`,
+        rollValue: d20Roll,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "spell",
+        description: `Runic casting ${spellName} for ${selectedCharacter.name} using Wisdom`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      const resultText = isSuccess ? "SUCCESS" : "FAILED";
+      alert(
+        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+      );
+    }
+
+    if (isCriticalSuccess) {
+      setSpellAttempts((prev) => ({
+        ...prev,
+        [spellName]: { 1: true, 2: true },
+      }));
+      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
+    } else if (isSuccess) {
+      setSpellAttempts((prev) => {
+        const currentAttempts = prev[spellName] || {};
+        const newAttempts = { ...currentAttempts };
+
+        if (!newAttempts[1]) {
+          newAttempts[1] = true;
+        } else if (!newAttempts[2]) {
+          newAttempts[2] = true;
+        }
+
+        return {
+          ...prev,
+          [spellName]: newAttempts,
+        };
+      });
+    }
+
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    let title = `${
+      selectedCharacter?.name || "Unknown"
+    } Runic Cast: ${spellName}`;
+    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
+    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
+
+    if (isCriticalSuccess) {
+      title = `⭐ ${
+        selectedCharacter?.name || "Unknown"
+      } Runic Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
+      embedColor = 0xffd700;
+    } else if (isCriticalFailure) {
+      title = `💥 ${
+        selectedCharacter?.name || "Unknown"
+      } Runic Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
+      embedColor = 0x8b0000;
+    }
+
+    let rollDescription = `**Roll:** ${d20Roll}`;
+    const modifierText =
+      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+    rollDescription += ` ${modifierText} = **${total}**`;
+
+    const fields = [
+      {
+        name: "Result",
+        value: resultText,
+        inline: true,
+      },
+      {
+        name: "Roll Details",
+        value: rollDescription,
+        inline: true,
+      },
+      {
+        name: "Casting Method",
+        value: "Runic Cast (Wisdom-based)",
+        inline: true,
+      },
+    ];
+
+    let modifierBreakdown = `Wisdom: ${
+      wisModifier >= 0 ? "+" : ""
+    }${wisModifier}`;
+
+    modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+      wandModifier >= 0 ? "+" : ""
+    }${wandModifier}`;
+
+    fields.push({
+      name: "Modifier Breakdown",
+      value: modifierBreakdown,
+      inline: false,
+    });
+
+    const embed = {
+      title: title,
+      description: "",
+      color: embedColor,
+      fields: fields,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Witches And Snitches - Runic Spellcasting",
+      },
+    };
+
+    try {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: [embed],
+        }),
+      });
+    } catch (error) {
+      console.error("Error sending to Discord:", error);
+    }
+
+    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+  } catch (error) {
+    console.error("Error attempting Runic spell:", error);
+    alert("Error processing Runic spell attempt. Please try again.");
+  } finally {
+    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
+  }
+};
+
 export const attemptSpell = async ({
   spellName,
   subject,
@@ -1720,25 +2102,7 @@ export const attemptSpell = async ({
     );
     const total = d20Roll + totalModifier;
     let goal = 11;
-    if (
-      [
-        "ABSCONDI",
-        "PELLUCIDI PELLIS",
-        "SAGITTARIO",
-        "CONFRINGO",
-        "DEVICTO",
-        "STUPEFY",
-        "PETRIFICUS TOTALUS",
-        "PROTEGO",
-        "PROTEGO MAXIMA",
-        "FINITE INCANTATEM",
-        "CONFUNDO",
-        "BOMBARDA",
-        "EPISKY",
-        "EXPELLIARMUS",
-        "INCARCEROUS",
-      ].includes(spellName.toUpperCase())
-    ) {
+    if (difficultSpells.includes(spellName.toUpperCase())) {
       goal += 3;
     }
     const isCriticalSuccess = d20Roll === 20;
@@ -1819,11 +2183,9 @@ export const attemptSpell = async ({
     }
 
     let rollDescription = `**Roll:** ${d20Roll}`;
-    if (totalModifier !== 0) {
-      const modifierText =
-        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-      rollDescription += ` ${modifierText} = **${total}**`;
-    }
+    const modifierText =
+      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+    rollDescription += ` ${modifierText} = **${total}**`;
 
     const fields = [
       {
@@ -1838,7 +2200,7 @@ export const attemptSpell = async ({
       },
     ];
 
-    if (totalModifier !== 0 && selectedCharacter) {
+    if (selectedCharacter) {
       const modifierInfo = getModifierInfo(
         spellName,
         subject,
@@ -1848,11 +2210,10 @@ export const attemptSpell = async ({
       let modifierBreakdown = `${modifierInfo.abilityName}: ${
         modifierInfo.abilityModifier >= 0 ? "+" : ""
       }${modifierInfo.abilityModifier}`;
-      if (modifierInfo.wandModifier !== 0) {
-        modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-          modifierInfo.wandModifier >= 0 ? "+" : ""
-        }${modifierInfo.wandModifier}`;
-      }
+
+      modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+        modifierInfo.wandModifier >= 0 ? "+" : ""
+      }${modifierInfo.wandModifier}`;
 
       fields.push({
         name: "Modifier Breakdown",
@@ -2353,418 +2714,6 @@ export const rollFlexibleDice = async ({
   }
 };
 
-export const attemptArithmancySpell = async ({
-  spellName,
-  subject,
-  showRollResult,
-  selectedCharacter,
-  setSpellAttempts,
-  discordUserId,
-  setAttemptingSpells,
-  setCriticalSuccesses,
-  updateSpellProgressSummary,
-}) => {
-  if (!selectedCharacter || !discordUserId) {
-    alert("Please select a character first!");
-    return;
-  }
-
-  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
-
-  try {
-    const diceResult = rollDice();
-    const d20Roll = diceResult.total;
-
-    // Calculate Arithmancy modifier: INT modifier + wand modifier
-    const intModifier = Math.floor(
-      (selectedCharacter.abilityScores.intelligence - 10) / 2
-    );
-    const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
-    const wandModifier = modifierInfo.wandModifier || 0;
-    const totalModifier = intModifier + wandModifier;
-
-    const total = d20Roll + totalModifier;
-    let goal = 11;
-    if (
-      [
-        "ABSCONDI",
-        "PELLUCIDI PELLIS",
-        "SAGITTARIO",
-        "CONFRINGO",
-        "DEVICTO",
-        "STUPEFY",
-        "PETRIFICUS TOTALUS",
-        "PROTEGO",
-        "PROTEGO MAXIMA",
-        "FINITE INCANTATEM",
-        "CONFUNDO",
-        "BOMBARDA",
-        "EPISKY",
-        "EXPELLIARMUS",
-        "INCARCEROUS",
-      ].includes(spellName.toUpperCase())
-    ) {
-      goal += 3;
-    }
-    const isCriticalSuccess = d20Roll === 20;
-    const isCriticalFailure = d20Roll === 1;
-    const isSuccess =
-      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
-
-    if (showRollResult) {
-      showRollResult({
-        title: `${spellName} (Arithmancy Cast)`,
-        rollValue: d20Roll,
-        modifier: totalModifier,
-        total: total,
-        isCriticalSuccess,
-        isCriticalFailure,
-        type: "spell",
-        description: `Arithmancy casting ${spellName} for ${selectedCharacter.name} using Intelligence`,
-      });
-    } else {
-      const criticalText = isCriticalSuccess
-        ? " - CRITICAL SUCCESS!"
-        : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
-      const resultText = isSuccess ? "SUCCESS" : "FAILED";
-      alert(
-        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
-      );
-    }
-
-    if (isCriticalSuccess) {
-      setSpellAttempts((prev) => ({
-        ...prev,
-        [spellName]: { 1: true, 2: true },
-      }));
-      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
-    } else if (isSuccess) {
-      setSpellAttempts((prev) => {
-        const currentAttempts = prev[spellName] || {};
-        const newAttempts = { ...currentAttempts };
-
-        if (!newAttempts[1]) {
-          newAttempts[1] = true;
-        } else if (!newAttempts[2]) {
-          newAttempts[2] = true;
-        }
-
-        return {
-          ...prev,
-          [spellName]: newAttempts,
-        };
-      });
-    }
-
-    if (!discordWebhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
-
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Arithmancy Cast: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
-    if (isCriticalSuccess) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Arithmancy Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700;
-    } else if (isCriticalFailure) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Arithmancy Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
-    }
-
-    let rollDescription = `**Roll:** ${d20Roll}`;
-    if (totalModifier !== 0) {
-      const modifierText =
-        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-      rollDescription += ` ${modifierText} = **${total}**`;
-    }
-
-    const fields = [
-      {
-        name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
-        inline: true,
-      },
-      {
-        name: "Casting Method",
-        value: "🧮 Arithmancy Cast (Intelligence-based)",
-        inline: true,
-      },
-    ];
-
-    if (totalModifier !== 0) {
-      let modifierBreakdown = `Intelligence: ${
-        intModifier >= 0 ? "+" : ""
-      }${intModifier}`;
-      if (wandModifier !== 0) {
-        modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-          wandModifier >= 0 ? "+" : ""
-        }${wandModifier}`;
-      }
-
-      fields.push({
-        name: "Modifier Breakdown",
-        value: modifierBreakdown,
-        inline: false,
-      });
-    }
-
-    const embed = {
-      title: title,
-      description: "",
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Arithmancy Spellcasting",
-      },
-    };
-
-    try {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
-    }
-
-    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
-  } catch (error) {
-    console.error("Error attempting Arithmancy spell:", error);
-    alert("Error processing Arithmancy spell attempt. Please try again.");
-  } finally {
-    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
-  }
-};
-
-export const attemptRunesSpell = async ({
-  spellName,
-  subject,
-  showRollResult,
-  selectedCharacter,
-  setSpellAttempts,
-  discordUserId,
-  setAttemptingSpells,
-  setCriticalSuccesses,
-  updateSpellProgressSummary,
-}) => {
-  if (!selectedCharacter || !discordUserId) {
-    alert("Please select a character first!");
-    return;
-  }
-
-  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
-
-  try {
-    const diceResult = rollDice();
-    const d20Roll = diceResult.total;
-
-    // Calculate Runes modifier: WIS modifier + wand modifier
-    const wisModifier = Math.floor(
-      (selectedCharacter.abilityScores.wisdom - 10) / 2
-    );
-    const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
-    const wandModifier = modifierInfo.wandModifier || 0;
-    const totalModifier = wisModifier + wandModifier;
-
-    const total = d20Roll + totalModifier;
-    let goal = 11;
-    if (
-      [
-        "ABSCONDI",
-        "PELLUCIDI PELLIS",
-        "SAGITTARIO",
-        "CONFRINGO",
-        "DEVICTO",
-        "STUPEFY",
-        "PETRIFICUS TOTALUS",
-        "PROTEGO",
-        "PROTEGO MAXIMA",
-        "FINITE INCANTATEM",
-        "CONFUNDO",
-        "BOMBARDA",
-        "EPISKY",
-        "EXPELLIARMUS",
-        "INCARCEROUS",
-      ].includes(spellName.toUpperCase())
-    ) {
-      goal += 3;
-    }
-    const isCriticalSuccess = d20Roll === 20;
-    const isCriticalFailure = d20Roll === 1;
-    const isSuccess =
-      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
-
-    if (showRollResult) {
-      showRollResult({
-        title: `${spellName} (Runic Cast)`,
-        rollValue: d20Roll,
-        modifier: totalModifier,
-        total: total,
-        isCriticalSuccess,
-        isCriticalFailure,
-        type: "spell",
-        description: `Runic casting ${spellName} for ${selectedCharacter.name} using Wisdom`,
-      });
-    } else {
-      const criticalText = isCriticalSuccess
-        ? " - CRITICAL SUCCESS!"
-        : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
-      const resultText = isSuccess ? "SUCCESS" : "FAILED";
-      alert(
-        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
-      );
-    }
-
-    if (isCriticalSuccess) {
-      setSpellAttempts((prev) => ({
-        ...prev,
-        [spellName]: { 1: true, 2: true },
-      }));
-      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
-    } else if (isSuccess) {
-      setSpellAttempts((prev) => {
-        const currentAttempts = prev[spellName] || {};
-        const newAttempts = { ...currentAttempts };
-
-        if (!newAttempts[1]) {
-          newAttempts[1] = true;
-        } else if (!newAttempts[2]) {
-          newAttempts[2] = true;
-        }
-
-        return {
-          ...prev,
-          [spellName]: newAttempts,
-        };
-      });
-    }
-
-    if (!discordWebhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
-
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Runic Cast: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
-    if (isCriticalSuccess) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Runic Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700;
-    } else if (isCriticalFailure) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Runic Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
-    }
-
-    let rollDescription = `**Roll:** ${d20Roll}`;
-    if (totalModifier !== 0) {
-      const modifierText =
-        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-      rollDescription += ` ${modifierText} = **${total}**`;
-    }
-
-    const fields = [
-      {
-        name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
-        inline: true,
-      },
-      {
-        name: "Casting Method",
-        value: "🔮 Runic Cast (Wisdom-based)",
-        inline: true,
-      },
-    ];
-
-    if (totalModifier !== 0) {
-      let modifierBreakdown = `Wisdom: ${
-        wisModifier >= 0 ? "+" : ""
-      }${wisModifier}`;
-      if (wandModifier !== 0) {
-        modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-          wandModifier >= 0 ? "+" : ""
-        }${wandModifier}`;
-      }
-
-      fields.push({
-        name: "Modifier Breakdown",
-        value: modifierBreakdown,
-        inline: false,
-      });
-    }
-
-    const embed = {
-      title: title,
-      description: "",
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Runic Spellcasting",
-      },
-    };
-
-    try {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
-    }
-
-    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
-  } catch (error) {
-    console.error("Error attempting Runic spell:", error);
-    alert("Error processing Runic spell attempt. Please try again.");
-  } finally {
-    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
-  }
-};
-
 export const useRollFunctions = () => {
   const { showRollResult } = useRollModal();
   return {
@@ -2773,9 +2722,9 @@ export const useRollFunctions = () => {
     rollSkill: (params) => rollSkill({ ...params, showRollResult }),
     attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
     attemptArithmancySpell: (params) =>
-      attemptArithmancySpell({ ...params, showRollResult }), // ADD THIS LINE
+      attemptArithmancySpell({ ...params, showRollResult }),
     attemptRunesSpell: (params) =>
-      attemptRunesSpell({ ...params, showRollResult }), // ADD THIS LINE
+      attemptRunesSpell({ ...params, showRollResult }),
     rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
     rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
     rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),

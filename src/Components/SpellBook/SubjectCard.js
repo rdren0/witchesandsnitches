@@ -18,6 +18,8 @@ import {
   X,
   Search,
   Filter,
+  Brain,
+  Eye as WisdomIcon,
 } from "lucide-react";
 
 import { spellsData } from "./spells";
@@ -43,6 +45,419 @@ const getIcon = (iconName) => {
   };
   return iconMap[iconName] || Star;
 };
+
+const getAdditionalStyles = (theme) => ({
+  subjectCard: {
+    backgroundColor: theme.surface || "#ffffff",
+    border: `1px solid ${theme.border || "#e5e7eb"}`,
+    borderRadius: "12px",
+    marginBottom: "16px",
+    overflow: "hidden",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+  subjectHeader: {
+    padding: "16px 20px",
+    backgroundColor: theme.surface || "#ffffff",
+    borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
+    transition: "all 0.2s ease",
+  },
+  subjectTitleContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "12px",
+  },
+  subjectTitle: {
+    fontSize: "20px",
+    fontWeight: "600",
+    margin: 0,
+  },
+  subjectStats: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  subjectStatText: {
+    fontSize: "14px",
+    color: theme.textSecondary || "#6b7280",
+    fontWeight: "500",
+  },
+  subjectProgress: {
+    height: "8px",
+    backgroundColor: theme.background || "#f8fafc",
+    borderRadius: "4px",
+    overflow: "hidden",
+    flex: 1,
+    maxWidth: "200px",
+  },
+  subjectProgressFill: {
+    height: "100%",
+    transition: "width 0.3s ease",
+    borderRadius: "4px",
+  },
+  subjectContent: {
+    padding: "0",
+  },
+  filterContainer: {
+    padding: "16px 20px",
+    backgroundColor: theme.background || "#f8fafc",
+    borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  filterIcon: {
+    color: theme.textSecondary || "#6b7280",
+  },
+  filterSelect: {
+    padding: "8px 12px",
+    border: `2px solid ${theme.border || "#e5e7eb"}`,
+    borderRadius: "8px",
+    backgroundColor: theme.surface || "#ffffff",
+    color: theme.text || "#1f2937",
+    fontSize: "14px",
+    fontFamily: "inherit",
+  },
+  levelSection: {
+    borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
+  },
+  sectionToggle: {
+    width: "100%",
+    padding: "16px 20px",
+    backgroundColor: "transparent",
+    border: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    cursor: "pointer",
+    transition: "background-color 0.2s ease",
+    color: theme.text || "#1f2937",
+    fontSize: "16px",
+    fontWeight: "500",
+  },
+  sectionLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  sectionRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  sectionProgressText: {
+    fontSize: "14px",
+    color: theme.textSecondary || "#6b7280",
+    fontWeight: "500",
+  },
+  sectionProgress: {
+    width: "100px",
+    height: "6px",
+    backgroundColor: theme.background || "#f8fafc",
+    borderRadius: "3px",
+    overflow: "hidden",
+  },
+  sectionProgressFill: {
+    height: "100%",
+    backgroundColor: theme.success || "#10b981",
+    transition: "width 0.3s ease",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    backgroundColor: theme.surface || "#ffffff",
+  },
+  tableHeader: {
+    backgroundColor: theme.background || "#f8fafc",
+  },
+  tableHeaderCell: {
+    padding: "12px 16px",
+    textAlign: "left",
+    fontWeight: "600",
+    fontSize: "14px",
+    color: theme.text || "#1f2937",
+    borderBottom: `2px solid ${theme.border || "#e5e7eb"}`,
+  },
+  tableHeaderCellCenter: {
+    padding: "12px 16px",
+    textAlign: "center",
+    fontWeight: "600",
+    fontSize: "14px",
+    color: theme.text || "#1f2937",
+    borderBottom: `2px solid ${theme.border || "#e5e7eb"}`,
+  },
+  tableRow: {
+    transition: "background-color 0.2s ease",
+    "&:hover": {
+      backgroundColor: theme.background || "#f8fafc",
+    },
+  },
+  tableRowMastered: {
+    backgroundColor: `${theme.success || "#10b981"}10`,
+  },
+  tableCell: {
+    padding: "12px 16px",
+    borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
+    fontSize: "14px",
+    color: theme.text || "#1f2937",
+    verticalAlign: "middle",
+  },
+  tableCellMenu: {
+    padding: "8px",
+    borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
+    position: "relative",
+    textAlign: "center",
+  },
+  spellNameContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  },
+  spellName: {
+    fontWeight: "500",
+    fontSize: "14px",
+  },
+  tagsContainer: {
+    display: "flex",
+    gap: "4px",
+    flexWrap: "wrap",
+  },
+  tag: {
+    fontSize: "11px",
+    fontWeight: "600",
+    padding: "2px 6px",
+    borderRadius: "12px",
+    color: "white",
+  },
+  attemptsContainer: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "center",
+  },
+  checkboxLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    fontSize: "12px",
+    color: theme.textSecondary || "#6b7280",
+  },
+  checkboxFirst: {
+    accentColor: theme.primary || "#6366f1",
+  },
+  checkboxSecond: {
+    accentColor: theme.success || "#10b981",
+  },
+  checkboxText: {
+    fontSize: "12px",
+    fontWeight: "500",
+  },
+  criticalSuccessContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    justifyContent: "center",
+  },
+  criticalSuccessText: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: theme.warning || "#f59e0b",
+  },
+  noCriticalText: {
+    color: theme.textSecondary || "#6b7280",
+    fontSize: "14px",
+  },
+  attemptButton: {
+    backgroundColor: theme.primary || "#6366f1",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "6px 12px",
+    fontSize: "12px",
+    fontWeight: "500",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  attemptButtonDisabled: {
+    backgroundColor: theme.textSecondary || "#6b7280",
+    cursor: "not-allowed",
+    opacity: 0.6,
+  },
+  menuButton: {
+    padding: "6px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s ease",
+  },
+  menuDropdown: {
+    position: "absolute",
+    top: "100%",
+    right: "0",
+    backgroundColor: theme.surface || "#ffffff",
+    border: `1px solid ${theme.border || "#e5e7eb"}`,
+    borderRadius: "8px",
+    boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+    zIndex: 1000,
+    minWidth: "120px",
+  },
+  menuItem: {
+    width: "100%",
+    padding: "8px 12px",
+    border: "none",
+    backgroundColor: "transparent",
+    color: theme.text || "#1f2937",
+    fontSize: "14px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "background-color 0.2s ease",
+    "&:hover": {
+      backgroundColor: theme.background || "#f8fafc",
+    },
+  },
+  editModal: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2000,
+  },
+  editModalContent: {
+    backgroundColor: theme.surface || "#ffffff",
+    padding: "24px",
+    borderRadius: "12px",
+    border: `1px solid ${theme.border || "#e5e7eb"}`,
+    minWidth: "400px",
+    maxWidth: "90vw",
+    maxHeight: "90vh",
+    overflow: "auto",
+  },
+  editModalTitle: {
+    fontSize: "18px",
+    fontWeight: "600",
+    color: theme.text || "#1f2937",
+    marginBottom: "20px",
+    margin: 0,
+  },
+  editFormGroup: {
+    marginBottom: "16px",
+  },
+  editFormLabel: {
+    display: "block",
+    fontSize: "14px",
+    fontWeight: "500",
+    color: theme.text || "#1f2937",
+    marginBottom: "8px",
+  },
+  editFormSelect: {
+    width: "100%",
+    padding: "8px 12px",
+    border: `2px solid ${theme.border || "#e5e7eb"}`,
+    borderRadius: "6px",
+    backgroundColor: theme.surface || "#ffffff",
+    color: theme.text || "#1f2937",
+    fontSize: "14px",
+    fontFamily: "inherit",
+  },
+  editFormCheckboxLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontSize: "14px",
+    color: theme.text || "#1f2937",
+    cursor: "pointer",
+  },
+  editFormCheckbox: {
+    accentColor: theme.primary || "#6366f1",
+  },
+  editFormActions: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "flex-end",
+    marginTop: "24px",
+  },
+  editFormSaveButton: {
+    backgroundColor: theme.success || "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "8px 16px",
+    fontSize: "14px",
+    fontWeight: "500",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    transition: "all 0.2s ease",
+  },
+  editFormCancelButton: {
+    backgroundColor: theme.error || "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "8px 16px",
+    fontSize: "14px",
+    fontWeight: "500",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    transition: "all 0.2s ease",
+  },
+  searchResultsContainer: {
+    padding: "16px 20px",
+  },
+  noResultsContainer: {
+    textAlign: "center",
+    padding: "40px 20px",
+    color: theme.textSecondary || "#6b7280",
+  },
+  noResultsIcon: {
+    marginBottom: "16px",
+    opacity: 0.5,
+  },
+  noResultsTitle: {
+    fontSize: "18px",
+    fontWeight: "600",
+    margin: "0 0 8px 0",
+    color: theme.text || "#1f2937",
+  },
+  noResultsMessage: {
+    fontSize: "14px",
+    margin: "0 0 20px 0",
+  },
+  clearSearchButton: {
+    backgroundColor: theme.primary || "#6366f1",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "8px 16px",
+    fontSize: "14px",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  searchHighlight: {
+    backgroundColor: theme.warning || "#f59e0b",
+    color: "white",
+    padding: "2px 4px",
+    borderRadius: "3px",
+    fontWeight: "600",
+  },
+});
 
 export const SubjectCard = ({
   criticalSuccesses,
@@ -70,9 +485,18 @@ export const SubjectCard = ({
   user,
   globalSearchTerm = "",
 }) => {
-  const { attemptSpell, rollResearch } = useRollFunctions();
+  const {
+    attemptSpell,
+    attemptArithmancySpell,
+    attemptRunesSpell,
+    rollResearch,
+  } = useRollFunctions();
   const { theme } = useTheme();
-  const styles = createSpellBookStyles(theme);
+
+  const baseStyles = createSpellBookStyles(theme);
+  const additionalStyles = getAdditionalStyles(theme);
+  const styles = { ...baseStyles, ...additionalStyles };
+
   const [attemptingSpells, setAttemptingSpells] = useState({});
   const [openMenus, setOpenMenus] = useState({});
   const [editingSpell, setEditingSpell] = useState(null);
@@ -84,7 +508,6 @@ export const SubjectCard = ({
     hasArithmancticTag: false,
     hasRunicTag: false,
   });
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
 
@@ -100,332 +523,645 @@ export const SubjectCard = ({
     const masteredSpells = allSpells.filter((spellObj) => {
       const spellName = spellObj.name;
       const attempts = spellAttempts?.[spellName] ?? {};
-      return Object.values(attempts).filter(Boolean).length >= 2;
-    }).length;
-
-    const attemptedSpells = allSpells.filter((spellObj) => {
-      const spellName = spellObj.name;
-      const attempts = spellAttempts[spellName] || {};
-      return (
-        Object.keys(attempts).length > 0 ||
-        Object.values(attempts).filter(Boolean).length > 0
-      );
-    }).length;
-
-    const failedSpells = allSpells.filter((spellObj) => {
-      const spellName = spellObj.name;
-      return failedAttempts[spellName] || false;
-    }).length;
-
-    const researchedSpellsCount = allSpells.filter((spellObj) => {
-      const spellName = spellObj.name;
-      return researchedSpells[spellName] || false;
-    }).length;
+      return attempts[1] && attempts[2];
+    });
 
     return {
       totalSpells,
-      masteredSpells,
-      attemptedSpells,
-      failedSpells,
-      researchedSpells: researchedSpellsCount,
+      masteredCount: masteredSpells.length,
+      progressPercentage: Math.round(
+        (masteredSpells.length / totalSpells) * 100
+      ),
     };
   };
 
-  const getAllSpells = () => {
-    const allSpells = [];
-    Object.entries(subjectData.levels).forEach(([level, spells]) => {
-      spells.forEach((spell, index) => {
-        allSpells.push({
-          ...spell,
-          level,
-          originalIndex: index,
-        });
+  const { totalSpells, masteredCount, progressPercentage } =
+    getSubjectStats(subjectName);
+
+  const loadSpellProgress = async () => {
+    if (!selectedCharacter || !discordUserId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error fetching spell progress:", error);
+        return;
+      }
+
+      const newSpellAttempts = {};
+      const newCriticalSuccesses = {};
+      const newFailedAttempts = {};
+      const newResearchedSpells = {};
+      const newArithmancticTags = {};
+      const newRunicTags = {};
+
+      data.forEach((spell) => {
+        const spellName = spell.spell_name;
+
+        if (spell.successful_attempts > 0) {
+          newSpellAttempts[spellName] = {
+            1: true,
+            2: spell.successful_attempts >= 2,
+          };
+        }
+
+        if (spell.has_natural_twenty) {
+          newCriticalSuccesses[spellName] = true;
+        }
+
+        if (spell.has_failed_attempt) {
+          newFailedAttempts[spellName] = true;
+        }
+
+        if (spell.researched) {
+          newResearchedSpells[spellName] = true;
+        }
+
+        if (spell.has_arithmantic_tag) {
+          newArithmancticTags[spellName] = true;
+        }
+
+        if (spell.has_runic_tag) {
+          newRunicTags[spellName] = true;
+        }
       });
-    });
-    return allSpells;
+
+      setSpellAttempts(newSpellAttempts);
+      setCriticalSuccesses(newCriticalSuccesses);
+      setFailedAttempts(newFailedAttempts);
+      setResearchedSpells(newResearchedSpells);
+      setArithmancticTags(newArithmancticTags);
+      setRunicTags(newRunicTags);
+    } catch (error) {
+      console.error("Error loading spell progress:", error);
+    }
   };
+
+  useEffect(() => {
+    loadSpellProgress();
+    // eslint-disable-next-line
+  }, [selectedCharacter?.id, discordUserId]);
 
   const activeSearchTerm = searchTerm || globalSearchTerm;
 
-  const getFilteredSpells = () => {
-    let spells = getAllSpells();
+  const allSpells = useMemo(() => {
+    return Object.entries(subjectData.levels).flatMap(([level, spells]) =>
+      spells.map((spell) => ({ ...spell, level, subject: subjectName }))
+    );
+  }, [subjectData.levels, subjectName]);
 
-    if (activeSearchTerm && activeSearchTerm.trim().length > 0) {
-      const term = activeSearchTerm.toLowerCase();
-      console.log("Searching for term:", term);
-      console.log("Current tag states:", { arithmancticTags, runicTags });
+  const searchResults = useMemo(() => {
+    if (!activeSearchTerm || activeSearchTerm.trim() === "") return [];
 
-      spells = spells.filter((spell) => {
-        // Check inherent tags
-        const hasInherentTag = spell.tags?.some((tag) =>
-          tag.toLowerCase().includes(term)
-        );
+    const searchTermLower = activeSearchTerm.toLowerCase().trim();
 
-        // Check manually assigned tags
-        const hasManualArithmancticTag =
-          arithmancticTags[spell.name] && "arithmantic".includes(term);
-        const hasManualRunicTag =
-          runicTags[spell.name] && "runic".includes(term);
+    return allSpells.filter((spell) => {
+      const nameMatch = spell.name.toLowerCase().includes(searchTermLower);
+      const descriptionMatch = spell.description
+        ?.toLowerCase()
+        .includes(searchTermLower);
+      const tagMatch = spell.tags?.some((tag) =>
+        tag.toLowerCase().includes(searchTermLower)
+      );
 
-        // Check if it's a researched spell with Researcher bonus (auto-tags)
-        const isResearchedWithResearcher =
-          researchedSpells[spell.name] &&
-          hasSubclassFeature(selectedCharacter, "Researcher");
-        const hasResearcherArithmancticTag =
-          isResearchedWithResearcher && "arithmantic".includes(term);
-        const hasResearcherRunicTag =
-          isResearchedWithResearcher && "runic".includes(term);
-
-        const matches =
-          spell.name.toLowerCase().includes(term) ||
-          (spell.description &&
-            spell.description.toLowerCase().includes(term)) ||
-          spell.level.toLowerCase().includes(term) ||
-          hasInherentTag ||
-          hasManualArithmancticTag ||
-          hasManualRunicTag ||
-          hasResearcherArithmancticTag ||
-          hasResearcherRunicTag;
-
-        if (
-          matches &&
-          (hasManualArithmancticTag ||
-            hasManualRunicTag ||
-            hasResearcherArithmancticTag ||
-            hasResearcherRunicTag)
-        ) {
-          console.log("Spell matched by tags:", spell.name, {
-            hasManualArithmancticTag,
-            hasManualRunicTag,
-            hasResearcherArithmancticTag,
-            hasResearcherRunicTag,
-          });
-        }
-
-        return matches;
-      });
-    }
-
-    if (searchFilter !== "all") {
-      spells = spells.filter((spellObj) => {
-        const spellName = spellObj.name;
-        const attempts = spellAttempts[spellName] || {};
-        const successCount = Object.values(attempts).filter(Boolean).length;
-        const isMastered = successCount >= 2;
-        const hasAttempts =
-          Object.keys(attempts).length > 0 || successCount > 0;
-        const hasFailedAttempt = failedAttempts[spellName] || false;
-        const isResearched = researchedSpells[spellName] || false;
-
-        switch (searchFilter) {
-          case "mastered":
-            return isMastered;
-          case "attempted":
-            return (hasAttempts || hasFailedAttempt) && !isMastered;
-          case "failed":
-            return hasFailedAttempt && !hasAttempts;
-          case "researched":
-            return isResearched;
-          case "unmastered":
-            return !isMastered;
-          default:
-            return true;
-        }
-      });
-    }
-
-    return spells;
-  };
-
-  const filterSpellsByStatus = (spells) => {
-    if (searchFilter === "all") return spells;
-
-    return spells.filter((spellObj) => {
-      const spellName = spellObj.name;
-      const attempts = spellAttempts[spellName] || {};
-      const successCount = Object.values(attempts).filter(Boolean).length;
-      const isMastered = successCount >= 2;
-      const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
-      const hasFailedAttempt = failedAttempts[spellName] || false;
-      const isResearched = researchedSpells[spellName] || false;
-
-      switch (searchFilter) {
-        case "mastered":
-          return isMastered;
-        case "attempted":
-          return (hasAttempts || hasFailedAttempt) && !isMastered;
-        case "failed":
-          return hasFailedAttempt && !hasAttempts;
-        case "researched":
-          return isResearched;
-        case "unmastered":
-          return !isMastered;
-        default:
-          return true;
-      }
+      return nameMatch || descriptionMatch || tagMatch;
     });
-  };
-
-  const searchResults = getFilteredSpells();
-  const hasActiveSearch =
-    (activeSearchTerm && activeSearchTerm.trim().length > 0) ||
-    searchFilter !== "all";
+  }, [allSpells, activeSearchTerm]);
 
   const clearSearch = () => {
     setSearchTerm("");
-    setSearchFilter("all");
   };
 
-  const Icon = getIcon(subjectData.icon);
-  const stats = getSubjectStats(subjectName);
-  const isExpanded = expandedSubjects[subjectName];
-  const hasStatusFilter = searchFilter !== "all";
+  const updateSpellProgressSummary = async (
+    spellName,
+    isSuccess,
+    isNaturalTwenty = false
+  ) => {
+    if (!selectedCharacter || !discordUserId) return;
 
-  const isDarkTheme = useMemo(() => {
-    if (
-      theme.background === "#1f2937" ||
-      theme.background === "#111827" ||
-      theme.background === "#0f172a" ||
-      theme.background === "#1e293b"
-    ) {
-      return true;
+    try {
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("discord_user_id", discordUserId)
+        .eq("spell_name", spellName)
+        .single();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Error fetching spell progress:", fetchError);
+        return;
+      }
+
+      if (existingProgress) {
+        const currentAttempts = existingProgress.successful_attempts || 0;
+        const newAttempts = isNaturalTwenty
+          ? 2
+          : Math.min(currentAttempts + (isSuccess ? 1 : 0), 2);
+
+        const updateData = {
+          successful_attempts: newAttempts,
+          has_natural_twenty:
+            existingProgress.has_natural_twenty || isNaturalTwenty,
+          has_failed_attempt: existingProgress.has_failed_attempt || !isSuccess,
+        };
+
+        const { error: updateError } = await supabase
+          .from("spell_progress_summary")
+          .update(updateData)
+          .eq("id", existingProgress.id);
+
+        if (updateError) {
+          console.error("Error updating spell progress:", updateError);
+        }
+      } else {
+        const insertData = {
+          character_id: selectedCharacter.id,
+          discord_user_id: discordUserId,
+          spell_name: spellName,
+          successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
+          has_natural_twenty: isNaturalTwenty,
+          has_failed_attempt: !isSuccess,
+          researched: false,
+        };
+
+        const { error: insertError } = await supabase
+          .from("spell_progress_summary")
+          .insert([insertData]);
+
+        if (insertError) {
+          console.error("Error inserting spell progress:", insertError);
+        }
+      }
+
+      await loadSpellProgress();
+    } catch (error) {
+      console.error("Error updating spell progress summary:", error);
     }
-
-    if (theme.background && theme.text) {
-      const bgHex = theme.background.replace("#", "");
-      const textHex = theme.text.replace("#", "");
-
-      const bgBrightness = parseInt(bgHex, 16);
-      const textBrightness = parseInt(textHex, 16);
-
-      return bgBrightness < textBrightness;
-    }
-
-    if (
-      theme.text === "#f9fafb" ||
-      theme.text === "#ffffff" ||
-      theme.text === "#e5e7eb" ||
-      theme.text === "#d1d5db"
-    ) {
-      return true;
-    }
-
-    return false;
-  }, [theme.background, theme.text]);
-
-  const SPELL_LEVEL_PALETTE = {
-    Cantrips: {
-      primary: isDarkTheme ? "#e5e7eb" : "#6b7280",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #404756 100%)"
-        : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#cbd5e1",
-    },
-    "1st Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#059669",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #3a4f47 100%)"
-        : "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#a7f3d0",
-    },
-    "2nd Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#2563eb",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #394856 100%)"
-        : "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#93c5fd",
-    },
-    "3rd Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#7c3aed",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #3f4356 100%)"
-        : "linear-gradient(135deg, #f5f3ff 0%, #e9d5ff 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#c4b5fd",
-    },
-    "4th Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#d97706",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #424051 100%)"
-        : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#fcd34d",
-    },
-    "5th Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#dc2626",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #423f51 100%)"
-        : "linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#fca5a5",
-    },
-    "6th Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#be185d",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #423f54 100%)"
-        : "linear-gradient(135deg, #fdf2f8 0%, #fbcfe8 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#f9a8d4",
-    },
-    "7th Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#0891b2",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #374854 100%)"
-        : "linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#67e8f9",
-    },
-    "8th Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#65a30d",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #3c4651 100%)"
-        : "linear-gradient(135deg, #f7fee7 0%, #d9f99d 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#bef264",
-    },
-    "9th Level": {
-      primary: isDarkTheme ? "#e5e7eb" : "#9333ea",
-      background: isDarkTheme
-        ? "linear-gradient(135deg, #374151 0%, #3e4156 100%)"
-        : "linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%)",
-      borderColor: isDarkTheme ? "#6b7280" : "#d8b4fe",
-    },
   };
 
-  const generateLevelColor = (level) => {
-    const paletteColor = SPELL_LEVEL_PALETTE[level];
-    if (paletteColor) {
-      return {
-        background: paletteColor.background,
-        borderColor: paletteColor.borderColor,
-        color: paletteColor.primary,
-      };
-    }
-
-    return {
-      background: isDarkTheme
-        ? `linear-gradient(135deg, ${subjectData.color}20 0%, ${subjectData.color}30 100%)`
-        : `linear-gradient(135deg, ${subjectData.color}10 0%, ${subjectData.color}20 100%)`,
-      borderColor: isDarkTheme
-        ? subjectData.color + "40"
-        : subjectData.color + "30",
-      color: subjectData.color,
-    };
+  const toggleMenu = (spellName) => {
+    setOpenMenus((prev) => {
+      const newMenus = {};
+      if (!prev[spellName]) {
+        newMenus[spellName] = true;
+      }
+      return newMenus;
+    });
   };
 
-  const getSuccessfulAttempts = (spellName) => {
+  const closeAllMenus = () => {
+    setOpenMenus({});
+  };
+
+  const renderSearchResults = () => {
+    if (searchResults.length === 0) {
+      return (
+        <div style={styles.noResultsContainer}>
+          <Search size={48} style={styles.noResultsIcon} />
+          <p style={styles.noResultsTitle}>No spells found</p>
+          <p style={styles.noResultsMessage}>
+            No spells found matching your search criteria.
+          </p>
+          <button onClick={clearSearch} style={styles.clearSearchButton}>
+            Clear Search
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={styles.searchResultsContainer}>
+        <table style={styles.table}>
+          <thead style={styles.tableHeader}>
+            <tr>
+              <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
+              <th style={styles.tableHeaderCell}>Spell Name</th>
+              <th style={styles.tableHeaderCell}>Successful Attempts</th>
+              <th style={styles.tableHeaderCellCenter}>Critical</th>
+              <th style={styles.tableHeaderCellCenter}>Attempt</th>
+              <th style={styles.tableHeaderCellCenter}>Arithmancy</th>
+              <th style={styles.tableHeaderCellCenter}>Runes</th>
+              <th style={styles.tableHeaderCellCenter}>Research</th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
+                Menu
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {searchResults
+              .map((spellObj, index) =>
+                renderSpellRow(spellObj, index, subjectName, true)
+              )
+              .flat()}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderSpellRow = (spellObj, index, subject, showLevel = false) => {
+    const spellName = spellObj.name;
+    const successCount = getSuccessfulAttempts(spellName);
+
     const attempts = spellAttempts[spellName] || {};
-    return Object.values(attempts).filter(Boolean).length;
-  };
+    const hasCriticalSuccess = criticalSuccesses[spellName] || false;
+    const isResearched = researchedSpells[spellName] || false;
+    const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
+    const hasFailedAttempt = failedAttempts[spellName] || false;
 
-  const highlightSearchTerm = (text) => {
-    if (!activeSearchTerm || !text) return text;
+    const isAttempting = attemptingSpells[spellName] || false;
+    const isMastered = attempts[1] && attempts[2];
 
-    const regex = new RegExp(`(${activeSearchTerm})`, "gi");
-    const parts = text.split(regex);
+    const hasArithmancticTag =
+      spellObj.tags?.includes("Arithmantic") ||
+      arithmancticTags[spellName] ||
+      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
 
-    return parts.map((part, index) =>
-      regex.test(part) ? (
-        <span key={index} style={styles.searchHighlight}>
-          {part}
+    const hasRunicTag =
+      spellObj.tags?.includes("Runic") ||
+      runicTags[spellName] ||
+      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
+
+    const spellModifier = getSpellModifier(
+      spellName,
+      subject,
+      selectedCharacter
+    );
+    const modifierDisplay =
+      spellModifier !== 0 ? (
+        <span
+          style={{
+            fontSize: "11px",
+            color: spellModifier >= 0 ? "#10b981" : "#ef4444",
+            fontWeight: "600",
+            marginLeft: "4px",
+          }}
+        >
+          ({spellModifier >= 0 ? "+" : ""}
+          {spellModifier})
         </span>
-      ) : (
-        part
-      )
+      ) : null;
+
+    const getArithmancyModifier = () => {
+      if (!selectedCharacter?.abilityScores) return 0;
+      const intModifier = Math.floor(
+        (selectedCharacter.abilityScores.intelligence - 10) / 2
+      );
+      const wandModifier = getWandModifier(spellName, selectedCharacter);
+      return intModifier + wandModifier;
+    };
+
+    const getWandModifier = (spellName, character) => {
+      if (!character?.magicModifiers) return 0;
+
+      const modifierInfo = getModifierInfo(spellName, subject, character);
+      return modifierInfo.wandModifier || 0;
+    };
+
+    const arithmancyModifier = getArithmancyModifier();
+
+    return (
+      <tr
+        key={spellName}
+        style={{
+          ...styles.tableRow,
+          ...(isMastered ? styles.tableRowMastered : {}),
+        }}
+      >
+        <td style={styles.tableCell}>
+          {showLevel ? `${spellObj.level.replace("Level ", "")}` : index + 1}
+        </td>
+        <td style={styles.tableCell}>
+          <div style={styles.spellNameContainer}>
+            <span style={styles.spellName}>
+              {highlightSearchTerm(spellName)}
+            </span>
+            {modifierDisplay}
+            <div style={styles.tagsContainer}>
+              {spellObj.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    ...styles.tag,
+                    backgroundColor:
+                      tag === "Arithmantic" ? "#3b82f6" : "#8b5cf6",
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+              {!isMastered && (hasAttempts || hasFailedAttempt) && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    backgroundColor: hasAttempts
+                      ? theme.success || "#10b981"
+                      : theme.error || "#ef4444",
+                    color: "white",
+                  }}
+                >
+                  Attempted
+                </span>
+              )}
+              {hasArithmancticTag && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                  }}
+                  title="Arithmantic: Enhanced with mathematical precision"
+                >
+                  🔢 Arithmantic
+                </span>
+              )}
+              {hasRunicTag && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    backgroundColor: "#8b5cf6",
+                    color: "white",
+                  }}
+                  title="Runic: Enhanced with ancient symbols"
+                >
+                  ᚱ Runic
+                </span>
+              )}
+            </div>
+          </div>
+        </td>
+        <td style={styles.tableCell}>
+          <div style={styles.attemptsContainer}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={Boolean(attempts[1])}
+                disabled={true}
+                readOnly={true}
+                style={styles.checkboxFirst}
+              />
+              <span style={styles.checkboxText}>1st</span>
+            </label>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={Boolean(attempts[2])}
+                disabled={true}
+                readOnly={true}
+                style={styles.checkboxSecond}
+              />
+              <span style={styles.checkboxText}>2nd</span>
+            </label>
+          </div>
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          {hasCriticalSuccess ? (
+            <div style={styles.criticalSuccessContainer}>
+              <Star
+                size={20}
+                color={theme.warning || "#ffd700"}
+                fill={theme.warning || "#ffd700"}
+                title="Critical Success - Mastered with Natural 20!"
+              />
+              <span style={styles.criticalSuccessText}>20</span>
+            </div>
+          ) : (
+            <span style={styles.noCriticalText}>-</span>
+          )}
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          <button
+            onClick={() =>
+              attemptSpell({
+                spellName,
+                subject,
+                getSpellModifier,
+                selectedCharacter,
+                setSpellAttempts,
+                discordUserId,
+                setAttemptingSpells,
+                setCriticalSuccesses,
+                updateSpellProgressSummary,
+              })
+            }
+            disabled={isAttempting || isMastered || !selectedCharacter}
+            style={{
+              ...styles.attemptButton,
+              ...(isMastered || isAttempting || !selectedCharacter
+                ? styles.attemptButtonDisabled
+                : {}),
+            }}
+          >
+            <Dice6 size={14} />
+            {isAttempting ? "Rolling..." : "Attempt"}
+          </button>
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          <button
+            onClick={() =>
+              attemptArithmancySpell({
+                spellName,
+                subject,
+                selectedCharacter,
+                setSpellAttempts,
+                discordUserId,
+                setAttemptingSpells,
+                setCriticalSuccesses,
+                updateSpellProgressSummary,
+              })
+            }
+            disabled={isAttempting || isMastered || !selectedCharacter}
+            style={{
+              backgroundColor: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: "500",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              transition: "all 0.2s ease",
+              fontFamily: "inherit",
+              ...(isMastered || isAttempting || !selectedCharacter
+                ? {
+                    backgroundColor: theme.textSecondary,
+                    cursor: "not-allowed",
+                  }
+                : {}),
+            }}
+            title={`Arithmancy Cast ${spellName} - Uses Intelligence modifier (+${
+              Math.floor(
+                (selectedCharacter?.abilityScores?.intelligence - 10) / 2
+              ) || 0
+            }) + Wand modifier`}
+          >
+            <Brain size={14} />
+            <span>
+              Arithmancy
+              {arithmancyModifier !== 0 && (
+                <span style={{ fontSize: "10px", marginLeft: "2px" }}>
+                  ({arithmancyModifier >= 0 ? "+" : ""}
+                  {arithmancyModifier})
+                </span>
+              )}
+            </span>
+          </button>
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          <button
+            onClick={() =>
+              attemptRunesSpell({
+                spellName,
+                subject,
+                selectedCharacter,
+                setSpellAttempts,
+                discordUserId,
+                setAttemptingSpells,
+                setCriticalSuccesses,
+                updateSpellProgressSummary,
+              })
+            }
+            disabled={isAttempting || isMastered || !selectedCharacter}
+            style={{
+              backgroundColor: "#8b5cf6",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: "500",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              transition: "all 0.2s ease",
+              fontFamily: "inherit",
+              ...(isMastered || isAttempting || !selectedCharacter
+                ? {
+                    backgroundColor: theme.textSecondary,
+                    cursor: "not-allowed",
+                  }
+                : {}),
+            }}
+            title={`Runic Cast ${spellName} - Uses Wisdom modifier (+${
+              Math.floor((selectedCharacter?.abilityScores?.wisdom - 10) / 2) ||
+              0
+            }) + Wand modifier`}
+          >
+            <WisdomIcon size={14} />
+            <span>Runes</span>
+          </button>
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          <button
+            onClick={() => markSpellAsResearched(spellName)}
+            disabled={
+              isResearched ||
+              isMastered ||
+              !selectedCharacter ||
+              attemptingSpells[spellName] ||
+              !findSpellData(spellName).year
+            }
+            style={{
+              backgroundColor: theme.warning || "#f59e0b",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: "500",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              transition: "all 0.2s ease",
+              fontFamily: "inherit",
+              position: "relative",
+              ...(isMastered ||
+              isResearched ||
+              !selectedCharacter ||
+              attemptingSpells[spellName] ||
+              !findSpellData(spellName).year
+                ? {
+                    backgroundColor: theme.textSecondary,
+                    cursor: "not-allowed",
+                  }
+                : {}),
+            }}
+            title={`Research ${spellName} (History of Magic Check)${
+              hasSubclassFeature(selectedCharacter, "Researcher")
+                ? " - Researcher: +½ Wisdom modifier"
+                : ""
+            }`}
+          >
+            <BookOpen size={14} />
+            {attemptingSpells[spellName] ? "Rolling..." : "Research"}
+            {hasSubclassFeature(selectedCharacter, "Researcher") && (
+              <span
+                style={{
+                  fontSize: "10px",
+                  marginLeft: "2px",
+                  color: "#ffd700",
+                }}
+                title="Researcher bonus active"
+              >
+                📚
+              </span>
+            )}
+          </button>
+        </td>
+        <td style={{ ...styles.tableCellMenu, position: "relative" }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMenu(spellName);
+            }}
+            style={{
+              ...styles.menuButton,
+              backgroundColor: openMenus[spellName] ? "#3b82f6" : "transparent",
+              color: openMenus[spellName] ? "white" : theme.text,
+            }}
+          >
+            <MoreVertical size={16} />
+          </button>
+
+          {openMenus[spellName] && (
+            <div style={styles.menuDropdown}>
+              <button
+                onClick={() => startEditing(spellName)}
+                style={styles.menuItem}
+              >
+                <Edit3 size={14} />
+                Edit Progress
+              </button>
+            </div>
+          )}
+        </td>
+      </tr>
     );
   };
 
@@ -436,10 +1172,8 @@ export const SubjectCard = ({
     const hasFailed = failedAttempts[spellName] || false;
     const isResearched = researchedSpells[spellName] || false;
 
-    // Find the spell data to check for inherent tags
     const spellData = findSpellData(spellName);
 
-    // Check all sources for tags (same logic as display)
     const hasArithmancticTag =
       spellData?.tags?.includes("Arithmantic") ||
       arithmancticTags[spellName] ||
@@ -560,9 +1294,16 @@ export const SubjectCard = ({
           : 0,
       });
 
-      const { isSuccess, isNaturalTwenty } = rollResult;
+      if (rollResult.isSuccess) {
+        setResearchedSpells((prev) => ({ ...prev, [spellName]: true }));
 
-      if (isSuccess) {
+        if (rollResult.isNaturalTwenty) {
+          setSpellAttempts((prev) => ({
+            ...prev,
+            [spellName]: { 1: true, 2: false },
+          }));
+        }
+
         const { data: existingProgress, error: fetchError } = await supabase
           .from("spell_progress_summary")
           .select("*")
@@ -572,26 +1313,28 @@ export const SubjectCard = ({
           .single();
 
         if (fetchError && fetchError.code !== "PGRST116") {
-          console.error("Error fetching spell progress:", fetchError);
+          console.error(
+            "Error fetching spell progress for research:",
+            fetchError
+          );
           return;
         }
 
-        const updateData = {
-          researched: true,
-          updated_at: new Date().toISOString(),
-        };
-
-        if (hasSubclassFeature(selectedCharacter, "Researcher")) {
-          updateData.has_arithmantic_tag = true;
-          updateData.has_runic_tag = true;
-        }
-
-        if (isNaturalTwenty) {
-          const currentAttempts = existingProgress?.successful_attempts || 0;
-          updateData.successful_attempts = Math.min(currentAttempts + 1, 2);
-        }
-
         if (existingProgress) {
+          const updateData = {
+            researched: true,
+            successful_attempts: rollResult.isNaturalTwenty
+              ? Math.max(existingProgress.successful_attempts || 0, 1)
+              : existingProgress.successful_attempts || 0,
+            has_natural_twenty:
+              existingProgress.has_natural_twenty || rollResult.isNaturalTwenty,
+            has_arithmantic_tag: hasSubclassFeature(
+              selectedCharacter,
+              "Researcher"
+            ),
+            has_runic_tag: hasSubclassFeature(selectedCharacter, "Researcher"),
+          };
+
           const { error: updateError } = await supabase
             .from("spell_progress_summary")
             .update(updateData)
@@ -606,7 +1349,7 @@ export const SubjectCard = ({
             character_id: selectedCharacter.id,
             discord_user_id: discordUserId,
             spell_name: spellName,
-            successful_attempts: isNaturalTwenty ? 1 : 0,
+            successful_attempts: rollResult.isNaturalTwenty ? 1 : 0,
             has_natural_twenty: false,
             has_failed_attempt: false,
             researched: true,
@@ -668,34 +1411,13 @@ export const SubjectCard = ({
       }
 
       const updateData = {
-        successful_attempts: Math.min(
-          Math.max(editFormData.successfulAttempts, 0),
-          2
-        ),
+        successful_attempts: editFormData.successfulAttempts,
         has_natural_twenty: editFormData.hasCriticalSuccess,
         has_failed_attempt: editFormData.hasFailedAttempt,
         researched: editFormData.researched,
-        updated_at: new Date().toISOString(),
+        has_arithmantic_tag: editFormData.hasArithmancticTag,
+        has_runic_tag: editFormData.hasRunicTag,
       };
-
-      // Handle tags: if researched + Researcher, force both tags to true
-      // Otherwise, use the manual checkbox values
-      if (
-        editFormData.researched &&
-        hasSubclassFeature(selectedCharacter, "Researcher")
-      ) {
-        updateData.has_arithmantic_tag = true;
-        updateData.has_runic_tag = true;
-      } else {
-        updateData.has_arithmantic_tag = editFormData.hasArithmancticTag;
-        updateData.has_runic_tag = editFormData.hasRunicTag;
-      }
-
-      console.log("Saving spell progress:", {
-        spellName: editingSpell,
-        updateData,
-        editFormData,
-      });
 
       if (existingProgress) {
         const { error: updateError } = await supabase
@@ -705,7 +1427,6 @@ export const SubjectCard = ({
 
         if (updateError) {
           console.error("Error updating spell progress:", updateError);
-          alert("Error updating spell progress");
           return;
         }
       } else {
@@ -722,7 +1443,6 @@ export const SubjectCard = ({
 
         if (insertError) {
           console.error("Error inserting spell progress:", insertError);
-          alert("Error creating spell progress");
           return;
         }
       }
@@ -730,17 +1450,9 @@ export const SubjectCard = ({
       await loadSpellProgress();
       cancelEditing();
     } catch (error) {
-      console.error("Error saving edit:", error);
-      alert("Error saving changes");
+      console.error("Error saving spell progress:", error);
+      setError("Error saving spell progress");
     }
-  };
-
-  const toggleSection = (subject, level) => {
-    const key = `${subject}-${level}`;
-    setExpandedSections((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
   };
 
   const toggleSubject = (subjectName) => {
@@ -750,1008 +1462,112 @@ export const SubjectCard = ({
     }));
   };
 
-  const toggleDescription = (spellName) => {
-    setExpandedDescriptions((prev) => ({
+  const toggleSection = (sectionKey) => {
+    setExpandedSections((prev) => ({
       ...prev,
-      [spellName]: !prev[spellName],
+      [sectionKey]: !prev[sectionKey],
     }));
   };
 
-  const loadSpellProgress = React.useCallback(async () => {
-    if (!selectedCharacter || !discordUserId) {
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId);
-
-      if (error) {
-        console.error("Error loading spell progress:", error);
-        setError(`Failed to load spell progress: ${error.message}`);
-        return;
-      }
-
-      const formattedAttempts = {};
-      const formattedCriticals = {};
-      const formattedFailures = {};
-      const formattedResearch = {};
-      const formattedArithmancticTags = {};
-      const formattedRunicTags = {};
-
-      data?.forEach((progress) => {
-        console.log("Loading progress for:", progress.spell_name, {
-          has_arithmantic_tag: progress.has_arithmantic_tag,
-          has_runic_tag: progress.has_runic_tag,
-          researched: progress.researched,
-        });
-
-        formattedAttempts[progress.spell_name] = {};
-
-        if (progress.has_natural_twenty) {
-          formattedAttempts[progress.spell_name][1] = true;
-          formattedAttempts[progress.spell_name][2] = true;
-          formattedCriticals[progress.spell_name] = true;
-        } else {
-          for (let i = 1; i <= Math.min(progress.successful_attempts, 2); i++) {
-            formattedAttempts[progress.spell_name][i] = true;
-          }
-        }
-
-        if (progress.has_failed_attempt) {
-          formattedFailures[progress.spell_name] = true;
-        }
-        if (progress.researched) {
-          formattedResearch[progress.spell_name] = true;
-        }
-        if (progress.has_arithmantic_tag) {
-          formattedArithmancticTags[progress.spell_name] = true;
-        }
-        if (progress.has_runic_tag) {
-          formattedRunicTags[progress.spell_name] = true;
-        }
-      });
-
-      console.log("Final formatted tags:", {
-        arithmancticTags: formattedArithmancticTags,
-        runicTags: formattedRunicTags,
-      });
-
-      setSpellAttempts(formattedAttempts);
-      setCriticalSuccesses(formattedCriticals);
-      setFailedAttempts(formattedFailures);
-      setResearchedSpells(formattedResearch);
-      setArithmancticTags(formattedArithmancticTags);
-      setRunicTags(formattedRunicTags);
-    } catch (error) {
-      console.error("Error loading spell progress:", error);
-      setError(`Failed to load spell progress: ${error.message}`);
-    }
-  }, [
-    selectedCharacter,
-    discordUserId,
-    supabase,
-    setSpellAttempts,
-    setCriticalSuccesses,
-    setFailedAttempts,
-    setResearchedSpells,
-    setError,
-    setRunicTags,
-    setArithmancticTags,
-  ]);
-
-  useEffect(() => {
-    if (selectedCharacter && discordUserId) {
-      loadSpellProgress();
-    }
-  }, [selectedCharacter, discordUserId, loadSpellProgress]);
-
-  const updateSpellProgressSummary = async (
-    spellName,
-    isSuccess,
-    isNaturalTwenty = false
-  ) => {
-    if (!selectedCharacter || !discordUserId) return;
-
-    try {
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
-        .eq("spell_name", spellName)
-        .single();
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching spell progress:", fetchError);
-        return;
-      }
-
-      let updateData = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (existingProgress) {
-        if (existingProgress.has_natural_twenty) {
-          return;
-        }
-
-        if (isSuccess) {
-          if (isNaturalTwenty) {
-            updateData.successful_attempts = 2;
-            updateData.has_natural_twenty = true;
-          } else {
-            updateData.successful_attempts = Math.min(
-              existingProgress.successful_attempts + 1,
-              2
-            );
-          }
-        } else {
-          updateData.has_failed_attempt = true;
-        }
-
-        const { error: updateError } = await supabase
-          .from("spell_progress_summary")
-          .update(updateData)
-          .eq("id", existingProgress.id);
-
-        if (updateError) {
-          console.error("Error updating spell progress:", updateError);
-        }
-      } else {
-        const insertData = {
-          character_id: selectedCharacter.id,
-          discord_user_id: discordUserId,
-          spell_name: spellName,
-          successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
-          has_natural_twenty: isNaturalTwenty,
-          has_failed_attempt: !isSuccess,
-          researched: false,
-        };
-
-        const { error: insertError } = await supabase
-          .from("spell_progress_summary")
-          .insert([insertData]);
-
-        if (insertError) {
-          console.error("Error inserting spell progress:", insertError);
-        }
-      }
-
-      await loadSpellProgress();
-    } catch (error) {
-      console.error("Error updating spell progress summary:", error);
-    }
+  const getSuccessfulAttempts = (spellName) => {
+    const attempts = spellAttempts[spellName] || {};
+    return Object.values(attempts).filter(Boolean).length;
   };
 
-  // FIXED: Updated toggleMenu function to prevent click interference
-  const toggleMenu = (spellName) => {
-    console.log(
-      "toggleMenu called for:",
-      spellName,
-      "current openMenus:",
-      openMenus
+  const highlightSearchTerm = (text) => {
+    if (!activeSearchTerm || !text) return text;
+
+    const regex = new RegExp(`(${activeSearchTerm})`, "gi");
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} style={styles.searchHighlight}>
+          {part}
+        </span>
+      ) : (
+        part
+      )
     );
-    setOpenMenus((prev) => {
-      // Close all other menus when opening a new one
-      const newMenus = {};
-      if (!prev[spellName]) {
-        newMenus[spellName] = true;
-        console.log("Opening menu for:", spellName);
-      } else {
-        console.log("Closing menu for:", spellName);
-      }
-      console.log("New menu state:", newMenus);
-      return newMenus;
-    });
   };
 
-  const closeAllMenus = () => {
-    setOpenMenus({});
-  };
-
-  const renderSearchResults = () => {
-    if (searchResults.length === 0) {
-      return (
-        <div style={styles.noResultsContainer}>
-          <Search size={48} style={styles.noResultsIcon} />
-          <p style={styles.noResultsTitle}>No spells found</p>
-          <p style={styles.noResultsMessage}>
-            No spells found matching your search criteria.
-          </p>
-          <button onClick={clearSearch} style={styles.clearSearchButton}>
-            Clear Search
-          </button>
-        </div>
-      );
+  const filteredLevels = useMemo(() => {
+    if (!activeSearchTerm || activeSearchTerm.trim() === "") {
+      return Object.entries(subjectData.levels);
     }
+    return [];
+  }, [subjectData.levels, activeSearchTerm]);
 
+  const isExpanded = expandedSubjects[subjectName];
+  const Icon = getIcon(subjectData.icon);
+
+  if (activeSearchTerm && activeSearchTerm.trim() !== "") {
     return (
-      <div style={styles.searchResultsContainer}>
-        <table style={styles.table}>
-          <thead style={styles.tableHeader}>
-            <tr>
-              <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
-              <th style={styles.tableHeaderCell}>Spell Name</th>
-              <th style={styles.tableHeaderCell}>Successful Attempts</th>
-              <th style={styles.tableHeaderCellCenter}>Critical</th>
-              <th style={styles.tableHeaderCellCenter}>Attempt</th>
-              <th style={styles.tableHeaderCellCenter}>Research</th>
-              <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
-                Menu
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {searchResults
-              .map((spellObj, index) =>
-                renderSpellRow(spellObj, index, subjectName, true)
-              )
-              .flat()}
-          </tbody>
-        </table>
+      <div key={subjectName} style={styles.subjectCard}>
+        <div
+          style={{
+            ...styles.subjectHeader,
+            borderLeftColor: subjectData.color,
+            borderLeftWidth: "4px",
+            borderLeftStyle: "solid",
+          }}
+        >
+          <div style={styles.subjectTitleContainer}>
+            <Icon size={24} color={subjectData.color} />
+            <h2 style={{ ...styles.subjectTitle, color: subjectData.color }}>
+              {subjectName} - Search Results
+            </h2>
+          </div>
+        </div>
+        {renderSearchResults()}
       </div>
     );
-  };
+  }
 
-  const renderSpellRow = (spellObj, index, subject, showLevel = false) => {
-    const spellName = spellObj.name;
-    const attempts = spellAttempts[spellName] || {};
-    const successCount = getSuccessfulAttempts(spellName);
-    const hasCriticalSuccess = criticalSuccesses[spellName] || false;
-    const hasFailedAttempt = failedAttempts[spellName] || false;
-    const isResearched = researchedSpells[spellName] || false;
-    const isMastered = successCount >= 2;
-    const isRestricted = spellObj.restriction || false;
-    const isAttempting = attemptingSpells[spellName];
-    const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
-    const isDescriptionExpanded = expandedDescriptions[spellName];
+  const renderLevelSection = (level, spells, subject) => {
+    const sectionKey = `${subject}-${level}`;
+    const isExpanded = expandedSections[sectionKey];
 
-    const hasArithmancticTag =
-      spellObj.tags?.includes("Arithmantic") ||
-      arithmancticTags[spellName] ||
-      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
-    const hasRunicTag =
-      spellObj.tags?.includes("Runic") ||
-      runicTags[spellName] ||
-      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
+    const filteredSpells = spells.filter((spell) => {
+      if (searchFilter === "all") return true;
+      if (searchFilter === "mastered") {
+        const attempts = spellAttempts[spell.name] || {};
+        return attempts[1] && attempts[2];
+      }
+      if (searchFilter === "unmastered") {
+        const attempts = spellAttempts[spell.name] || {};
+        return !(attempts[1] && attempts[2]);
+      }
+      if (searchFilter === "researched") {
+        return researchedSpells[spell.name];
+      }
+      if (searchFilter === "unresearched") {
+        return !researchedSpells[spell.name];
+      }
+      return true;
+    });
 
-    // Debug logging
-    if (
-      spellName === "Alohomora" ||
-      arithmancticTags[spellName] ||
-      runicTags[spellName]
-    ) {
-      console.log(`Tag check for ${spellName}:`, {
-        inherentArithmantic: spellObj.tags?.includes("Arithmantic"),
-        manualArithmantic: arithmancticTags[spellName],
-        inherentRunic: spellObj.tags?.includes("Runic"),
-        manualRunic: runicTags[spellName],
-        isResearched,
-        isResearcher: hasSubclassFeature(selectedCharacter, "Researcher"),
-        finalArithmantic: hasArithmancticTag,
-        finalRunic: hasRunicTag,
-      });
-    }
+    const masteredCount = filteredSpells.filter((spell) => {
+      const attempts = spellAttempts[spell.name] || {};
+      return attempts[1] && attempts[2];
+    }).length;
 
-    let rowStyle = { ...styles.tableRow };
-    if (isMastered) {
-      rowStyle = { ...rowStyle, ...styles.tableRowMastered };
-    } else if (isResearched) {
-      rowStyle = {
-        ...rowStyle,
-        backgroundColor: (theme.warning || "#f59e0b") + "10",
-      };
-    } else if (hasAttempts) {
-      rowStyle = {
-        ...rowStyle,
-        backgroundColor: (theme.success || "#10b981") + "05",
-      };
-    } else if (hasFailedAttempt) {
-      rowStyle = {
-        ...rowStyle,
-        backgroundColor: (theme.error || "#ef4444") + "05",
-      };
-    }
-
-    const mainRow = (
-      <tr key={spellName} style={rowStyle}>
-        <td style={{ ...styles.tableCell, width: "3rem" }}>{index + 1}</td>
-        <td style={styles.tableCell}>
-          <div style={styles.spellNameContainer}>
-            <div style={styles.spellNameRow}>
-              <span
-                style={isMastered ? styles.spellNameMastered : styles.spellName}
-              >
-                {highlightSearchTerm(spellName)}
-              </span>
-              {showLevel && (
-                <span style={styles.levelBadge}>{spellObj.level}</span>
-              )}
-              {isRestricted && (
-                <Star
-                  size={16}
-                  color={theme.warning || "#eab308"}
-                  title="Restricted/Advanced Spell"
-                />
-              )}
-              {spellObj.description && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleDescription(spellName);
-                  }}
-                  style={styles.descriptionToggleButton}
-                  title={
-                    isDescriptionExpanded
-                      ? "Hide description"
-                      : "Show description"
-                  }
-                >
-                  {isDescriptionExpanded ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  )}
-                </button>
-              )}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "4px",
-                flexWrap: "wrap",
-                marginTop: "4px",
-              }}
-            >
-              {hasCriticalSuccess && (
-                <span style={styles.criticalMasteredBadge}>
-                  Critically Mastered
-                </span>
-              )}
-              {isMastered && !hasCriticalSuccess && (
-                <span style={styles.masteredBadge}>Mastered</span>
-              )}
-              {!isMastered && (hasAttempts || hasFailedAttempt) && (
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "600",
-                    padding: "2px 6px",
-                    borderRadius: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    backgroundColor: hasAttempts
-                      ? theme.success || "#10b981"
-                      : theme.error || "#ef4444",
-                    color: "white",
-                  }}
-                >
-                  Attempted
-                </span>
-              )}
-              {isResearched && (
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "600",
-                    padding: "2px 6px",
-                    borderRadius: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    backgroundColor: theme.warning || "#f59e0b",
-                    color: "white",
-                  }}
-                >
-                  Researched
-                </span>
-              )}
-              {/* Show special tags */}
-              {hasArithmancticTag && (
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "600",
-                    padding: "2px 6px",
-                    borderRadius: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    backgroundColor: "#3b82f6",
-                    color: "white",
-                  }}
-                  title="Arithmantic: Enhanced with mathematical precision"
-                >
-                  🔢 Arithmantic
-                </span>
-              )}
-              {hasRunicTag && (
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "600",
-                    padding: "2px 6px",
-                    borderRadius: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                    backgroundColor: "#8b5cf6",
-                    color: "white",
-                  }}
-                  title="Runic: Enhanced with ancient symbols"
-                >
-                  ᚱ Runic
-                </span>
-              )}
-              {hasArithmancticTag &&
-                hasRunicTag &&
-                hasSubclassFeature(selectedCharacter, "Researcher") &&
-                isResearched && (
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: "600",
-                      padding: "2px 6px",
-                      borderRadius: "10px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      background: "linear-gradient(45deg, #3b82f6, #8b5cf6)",
-                      border: "1px solid #ffd700",
-                      color: "white",
-                    }}
-                    title="Researcher: Both tags from extensive spell study"
-                  >
-                    📚 Enhanced
-                  </span>
-                )}
-            </div>
-          </div>
-        </td>
-        <td style={styles.tableCell}>
-          <div style={styles.attemptsContainer}>
-            <label style={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={Boolean(attempts[1])}
-                disabled={true}
-                readOnly={true}
-                style={styles.checkboxFirst}
-              />
-              <span style={styles.checkboxText}>1st</span>
-            </label>
-            <label style={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={Boolean(attempts[2])}
-                disabled={true}
-                readOnly={true}
-                style={styles.checkboxSecond}
-              />
-              <span style={styles.checkboxText}>2nd</span>
-            </label>
-          </div>
-        </td>
-        <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          {hasCriticalSuccess ? (
-            <div style={styles.criticalSuccessContainer}>
-              <Star
-                size={20}
-                color={theme.warning || "#ffd700"}
-                fill={theme.warning || "#ffd700"}
-                title="Critical Success - Mastered with Natural 20!"
-              />
-              <span style={styles.criticalSuccessText}>20</span>
-            </div>
-          ) : (
-            <span style={styles.noCriticalText}>-</span>
-          )}
-        </td>
-        <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() =>
-              attemptSpell({
-                spellName,
-                subject,
-                getSpellModifier,
-                selectedCharacter,
-                setSpellAttempts,
-                discordUserId,
-                setAttemptingSpells,
-                setCriticalSuccesses,
-                updateSpellProgressSummary,
-              })
-            }
-            disabled={isAttempting || isMastered || !selectedCharacter}
-            style={{
-              ...styles.attemptButton,
-              ...(isMastered || isAttempting || !selectedCharacter
-                ? styles.attemptButtonDisabled
-                : {}),
-            }}
-          >
-            <Dice6 size={14} />
-            {isAttempting ? "Rolling..." : "Attempt"}
-          </button>
-        </td>
-        <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() => markSpellAsResearched(spellName)}
-            disabled={
-              isResearched ||
-              isMastered ||
-              !selectedCharacter ||
-              attemptingSpells[spellName] ||
-              !findSpellData(spellName).year
-            }
-            style={{
-              backgroundColor: theme.warning || "#f59e0b",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: "500",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              transition: "all 0.2s ease",
-              fontFamily: "inherit",
-              position: "relative",
-              ...(isMastered ||
-              isResearched ||
-              !selectedCharacter ||
-              attemptingSpells[spellName] ||
-              !findSpellData(spellName).year
-                ? {
-                    backgroundColor: theme.textSecondary,
-                    cursor: "not-allowed",
-                  }
-                : {}),
-            }}
-            title={`Research ${spellName} (History of Magic Check)${
-              hasSubclassFeature(selectedCharacter, "Researcher")
-                ? " - Researcher: +½ Wisdom modifier"
-                : ""
-            }`}
-          >
-            <BookOpen size={14} />
-            {attemptingSpells[spellName] ? "Rolling..." : "Research"}
-            {hasSubclassFeature(selectedCharacter, "Researcher") && (
-              <span
-                style={{
-                  fontSize: "10px",
-                  marginLeft: "2px",
-                  color: "#ffd700",
-                }}
-                title="Researcher bonus active"
-              >
-                📚
-              </span>
-            )}
-          </button>
-        </td>
-        <td style={{ ...styles.tableCellMenu, position: "relative" }}>
-          <button
-            onClick={(e) => {
-              console.log(
-                "Menu button clicked for:",
-                spellName,
-                "in context:",
-                showLevel ? "search results" : "normal list"
-              );
-              e.stopPropagation();
-              toggleMenu(spellName);
-            }}
-            style={{
-              ...styles.menuButton,
-              backgroundColor: openMenus[spellName] ? "#3b82f6" : "transparent",
-              color: openMenus[spellName] ? "white" : styles.menuButton.color,
-              cursor: "pointer",
-              zIndex: 1000,
-            }}
-            title={`Menu for ${spellName}`}
-          >
-            <MoreVertical size={16} />
-          </button>
-
-          {openMenus[spellName] && (
-            <div
-              style={{
-                position: "fixed", // Changed from absolute to fixed to escape parent clipping
-                right: "20px", // Position from viewport edge
-                top: hasActiveSearch ? "auto" : "auto", // Let it auto-position
-                bottom: hasActiveSearch ? "20px" : "auto", // Position from bottom in search mode
-                backgroundColor: theme.surface || "#ffffff",
-                border: `1px solid ${theme.border || "#e5e7eb"}`,
-                borderRadius: "8px",
-                boxShadow: "0 8px 25px -8px rgba(0, 0, 0, 0.25)", // Stronger shadow for fixed positioning
-                zIndex: 9999, // Much higher z-index for fixed positioning
-                minWidth: "160px",
-                padding: "4px",
-                display: "block",
-              }}
-            >
-              <div
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  color: theme.textSecondary || "#666",
-                  borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
-                  marginBottom: "4px",
-                  fontWeight: "600",
-                }}
-              >
-                {spellName}
-              </div>
-              <button
-                onClick={(e) => {
-                  console.log("Edit button clicked for:", spellName);
-                  e.stopPropagation();
-                  startEditing(spellName);
-                }}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: theme.text || "#000000",
-                  fontFamily: "inherit",
-                  transition: "background-color 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = theme.primary
-                    ? `${theme.primary}20`
-                    : "#f3f4f6";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "transparent";
-                }}
-              >
-                <Edit3 size={14} />
-                Edit Progress
-              </button>
-            </div>
-          )}
-
-          {editingSpell === spellName && (
-            <div style={styles.modalOverlay} onClick={cancelEditing}>
-              <div
-                style={styles.modalContent}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 style={styles.modalTitle}>Edit Progress: {spellName}</h3>
-                <p style={styles.modalSubtitle}>
-                  Current:{" "}
-                  {
-                    Object.values(spellAttempts[spellName] || {}).filter(
-                      Boolean
-                    ).length
-                  }{" "}
-                  successful attempts
-                  {criticalSuccesses[spellName] ? " (Critical Success)" : ""}
-                  {failedAttempts[spellName] ? " (Has Failed)" : ""}
-                  {researchedSpells[spellName] ? " (Researched)" : ""}
-                  {findSpellData(spellName)?.tags?.includes("Arithmantic") ||
-                  arithmancticTags[spellName] ||
-                  (researchedSpells[spellName] &&
-                    hasSubclassFeature(selectedCharacter, "Researcher"))
-                    ? " (🔢 Arithmantic)"
-                    : ""}
-                  {findSpellData(spellName)?.tags?.includes("Runic") ||
-                  runicTags[spellName] ||
-                  (researchedSpells[spellName] &&
-                    hasSubclassFeature(selectedCharacter, "Researcher"))
-                    ? " (ᚱ Runic)"
-                    : ""}
-                </p>
-
-                <div style={styles.modalField}>
-                  <label style={styles.modalLabel}>
-                    Successful Attempts (0-2):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="2"
-                    value={
-                      editFormData.hasCriticalSuccess
-                        ? 2
-                        : editFormData.successfulAttempts
-                    }
-                    onChange={(e) =>
-                      setEditFormData((prev) => ({
-                        ...prev,
-                        successfulAttempts: parseInt(e.target.value) || 0,
-                      }))
-                    }
-                    disabled={editFormData.hasCriticalSuccess}
-                    style={{
-                      ...styles.modalInput,
-                      ...(editFormData.hasCriticalSuccess
-                        ? styles.modalInputDisabled
-                        : {}),
-                    }}
-                  />
-                  {editFormData.hasCriticalSuccess && (
-                    <p style={styles.modalHelpText}>
-                      Automatically set to 2 due to critical success
-                    </p>
-                  )}
-                </div>
-
-                <div style={styles.modalField}>
-                  <label style={styles.modalCheckboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={editFormData.hasCriticalSuccess}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          hasCriticalSuccess: e.target.checked,
-                          successfulAttempts: e.target.checked
-                            ? 2
-                            : prev.successfulAttempts,
-                        }))
-                      }
-                      style={styles.modalCheckbox}
-                    />
-                    <span style={styles.modalCheckboxText}>
-                      Critical Success (Natural 20)
-                    </span>
-                  </label>
-                  <p style={styles.modalHelpText}>
-                    Checking this will automatically set successful attempts to
-                    2 (mastery)
-                  </p>
-                </div>
-
-                <div style={styles.modalField}>
-                  <label style={styles.modalCheckboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={editFormData.hasFailedAttempt}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          hasFailedAttempt: e.target.checked,
-                        }))
-                      }
-                      style={styles.modalCheckbox}
-                    />
-                    <span style={styles.modalCheckboxText}>
-                      Has Failed Attempt
-                    </span>
-                  </label>
-                  <p style={styles.modalHelpText}>
-                    Mark if this spell has been attempted unsuccessfully
-                  </p>
-                </div>
-
-                <div style={styles.modalField}>
-                  <label style={styles.modalCheckboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={editFormData.researched}
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          researched: e.target.checked,
-                          // Auto-enable tags if Researcher and marking as researched
-                          hasArithmancticTag:
-                            e.target.checked &&
-                            hasSubclassFeature(selectedCharacter, "Researcher")
-                              ? true
-                              : prev.hasArithmancticTag,
-                          hasRunicTag:
-                            e.target.checked &&
-                            hasSubclassFeature(selectedCharacter, "Researcher")
-                              ? true
-                              : prev.hasRunicTag,
-                        }))
-                      }
-                      style={styles.modalCheckbox}
-                    />
-                    <span style={styles.modalCheckboxText}>Researched</span>
-                  </label>
-                  <p style={styles.modalHelpText}>
-                    Mark if this spell has been researched (alternative to
-                    attempting)
-                    {hasSubclassFeature(selectedCharacter, "Researcher") && (
-                      <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
-                        {" "}
-                        - Researcher: Automatically gains both Arithmantic and
-                        Runic tags
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                <div style={styles.modalField}>
-                  <label style={styles.modalCheckboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={
-                        editFormData.hasArithmancticTag ||
-                        (editFormData.researched &&
-                          hasSubclassFeature(selectedCharacter, "Researcher"))
-                      }
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          hasArithmancticTag: e.target.checked,
-                        }))
-                      }
-                      disabled={
-                        editFormData.researched &&
-                        hasSubclassFeature(selectedCharacter, "Researcher")
-                      }
-                      style={styles.modalCheckbox}
-                    />
-                    <span style={styles.modalCheckboxText}>
-                      🔢 Arithmantic Tag
-                    </span>
-                  </label>
-                  <p style={styles.modalHelpText}>
-                    Enhanced with mathematical precision and numerical patterns
-                    {editFormData.researched &&
-                      hasSubclassFeature(selectedCharacter, "Researcher") && (
-                        <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
-                          {" "}
-                          (Auto-applied by Researcher)
-                        </span>
-                      )}
-                  </p>
-                </div>
-
-                <div style={styles.modalField}>
-                  <label style={styles.modalCheckboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={
-                        editFormData.hasRunicTag ||
-                        (editFormData.researched &&
-                          hasSubclassFeature(selectedCharacter, "Researcher"))
-                      }
-                      onChange={(e) =>
-                        setEditFormData((prev) => ({
-                          ...prev,
-                          hasRunicTag: e.target.checked,
-                        }))
-                      }
-                      disabled={
-                        editFormData.researched &&
-                        hasSubclassFeature(selectedCharacter, "Researcher")
-                      }
-                      style={styles.modalCheckbox}
-                    />
-                    <span style={styles.modalCheckboxText}>ᚱ Runic Tag</span>
-                  </label>
-                  <p style={styles.modalHelpText}>
-                    Enhanced with ancient runic symbols and mystical power
-                    {editFormData.researched &&
-                      hasSubclassFeature(selectedCharacter, "Researcher") && (
-                        <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
-                          {" "}
-                          (Auto-applied by Researcher)
-                        </span>
-                      )}
-                  </p>
-                </div>
-
-                <div style={styles.modalActions}>
-                  <button
-                    onClick={cancelEditing}
-                    style={styles.modalCancelButton}
-                  >
-                    <X size={14} />
-                    Cancel
-                  </button>
-                  <button onClick={saveEdit} style={styles.modalSaveButton}>
-                    <Check size={14} />
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </td>
-      </tr>
-    );
-
-    const descriptionRow =
-      isDescriptionExpanded && spellObj.description ? (
-        <tr key={`${spellName}-description`}>
-          <td colSpan="7" style={styles.descriptionRowCell}>
-            <div style={styles.descriptionContainer}>
-              <div style={styles.descriptionTitle}>{spellName}</div>
-              <div style={styles.descriptionMeta}>
-                {spellObj.level} •{" "}
-                {spellObj.castingTime || "Unknown casting time"} • Range:{" "}
-                {spellObj.range || "Unknown"} • Duration:{" "}
-                {spellObj.duration || "Unknown"}
-              </div>
-              <div style={styles.descriptionText}>
-                {highlightSearchTerm(spellObj.description)}
-              </div>
-              {spellObj.higherLevels && (
-                <div style={styles.descriptionHigherLevels}>
-                  <strong>At Higher Levels:</strong> {spellObj.higherLevels}
-                </div>
-              )}
-              {spellObj.tags && spellObj.tags.length > 0 && (
-                <div style={styles.descriptionTags}>
-                  {spellObj.tags.map((tag) => (
-                    <span key={tag} style={styles.descriptionTag}>
-                      {highlightSearchTerm(tag)}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {/* Show enhanced tags for researched spells */}
-              {isResearched &&
-                hasSubclassFeature(selectedCharacter, "Researcher") && (
-                  <div
-                    style={{
-                      marginTop: "8px",
-                      padding: "8px",
-                      backgroundColor: "rgba(139, 92, 246, 0.1)",
-                      borderRadius: "4px",
-                      border: "1px solid rgba(139, 92, 246, 0.3)",
-                    }}
-                  >
-                    <strong style={{ color: "#8b5cf6" }}>
-                      📚 Researcher Enhancement:
-                    </strong>
-                    <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                      This spell has been enhanced with both Arithmantic and
-                      Runic properties through extensive research.
-                    </div>
-                  </div>
-                )}
-            </div>
-          </td>
-        </tr>
-      ) : null;
-
-    return [mainRow, descriptionRow].filter(Boolean);
-  };
-
-  const renderSection = (subject, level, spells) => {
-    const filteredSpells = filterSpellsByStatus(spells);
-    const isExpanded = expandedSections[`${subject}-${level}`];
-    const levelColor = generateLevelColor(level);
-    const masteredCount = filteredSpells.filter(
-      (spellObj) => getSuccessfulAttempts(spellObj.name) >= 2
-    ).length;
     const progressPercentage =
       filteredSpells.length > 0
-        ? (masteredCount / filteredSpells.length) * 100
+        ? Math.round((masteredCount / filteredSpells.length) * 100)
         : 0;
+
+    const hasStatusFilter = searchFilter !== "all";
 
     if (filteredSpells.length === 0 && hasStatusFilter) {
       return null;
     }
 
     return (
-      <div key={level} style={styles.sectionContainer}>
+      <div key={level} style={styles.levelSection}>
         <button
-          onClick={() => toggleSection(subject, level)}
-          style={{
-            ...styles.sectionButton,
-            background: levelColor.background,
-            borderColor: levelColor.borderColor,
-            color: levelColor.color,
-          }}
+          onClick={() => toggleSection(sectionKey)}
+          style={styles.sectionToggle}
         >
           <div style={styles.sectionLeft}>
             {isExpanded ? (
@@ -1791,6 +1607,8 @@ export const SubjectCard = ({
                 <th style={styles.tableHeaderCell}>Successful Attempts</th>
                 <th style={styles.tableHeaderCellCenter}>Critical</th>
                 <th style={styles.tableHeaderCellCenter}>Attempt</th>
+                <th style={styles.tableHeaderCellCenter}>Arithmancy</th>
+                <th style={styles.tableHeaderCellCenter}>Runes</th>
                 <th style={styles.tableHeaderCellCenter}>Research</th>
                 <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
                   Menu
@@ -1835,122 +1653,169 @@ export const SubjectCard = ({
             )}
           </div>
         </div>
-        <p style={styles.subjectDescription}>{subjectData.description}</p>
         <div style={styles.subjectStats}>
-          <div style={styles.subjectStatItem}>
-            <span
+          <span style={styles.subjectStatText}>
+            {masteredCount}/{totalSpells} Mastered ({progressPercentage}%)
+          </span>
+          <div style={styles.subjectProgress}>
+            <div
               style={{
-                ...styles.subjectStatNumber,
-                color: subjectData.color,
+                ...styles.subjectProgressFill,
+                width: `${progressPercentage}%`,
+                backgroundColor: subjectData.color,
               }}
-            >
-              {stats.totalSpells}
-            </span>
-            <span style={styles.subjectStatLabel}>Total Spells</span>
-          </div>
-          <div style={styles.subjectStatItem}>
-            <span
-              style={{
-                ...styles.subjectStatNumber,
-                color: theme.success || "#10b981",
-              }}
-            >
-              {stats.masteredSpells}
-            </span>
-            <span style={styles.subjectStatLabel}>Mastered</span>
-          </div>
-          <div style={styles.subjectStatItem}>
-            <span
-              style={{
-                ...styles.subjectStatNumber,
-                color: theme.warning || "#f59e0b",
-              }}
-            >
-              {stats.researchedSpells}
-            </span>
-            <span style={styles.subjectStatLabel}>Researched</span>
+            ></div>
           </div>
         </div>
-        {hasSubclassFeature(selectedCharacter, "Researcher") && (
-          <div
-            style={{
-              marginTop: "8px",
-              padding: "4px 8px",
-              backgroundColor: "rgba(139, 92, 246, 0.1)",
-              borderRadius: "4px",
-              border: "1px solid rgba(139, 92, 246, 0.3)",
-              fontSize: "12px",
-              color: "#8b5cf6",
-              fontWeight: "600",
-            }}
-          >
-            📚 Researcher: Research bonus active, researched spells gain both
-            tags
-          </div>
-        )}
       </div>
 
       {isExpanded && (
         <div style={styles.subjectContent}>
-          <div style={styles.searchSection}>
-            <div style={styles.searchControls}>
-              <div style={styles.searchInputContainer}>
-                <Search size={18} style={styles.searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Search spells by name, description, level, or tags..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={styles.searchInput}
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    style={styles.searchClearButton}
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-
-              <div style={styles.filterControls}>
-                <Filter size={16} style={styles.filterIcon} />
-                <select
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  style={styles.filterSelect}
-                >
-                  <option value="all">All Spells</option>
-                  <option value="mastered">Mastered</option>
-                  <option value="attempted">Attempted</option>
-                  <option value="failed">Failed Only</option>
-                  <option value="researched">Researched</option>
-                  <option value="unmastered">Not Mastered</option>
-                </select>
-              </div>
-            </div>
-
-            {hasActiveSearch && (
-              <div style={styles.searchResultsInfo}>
-                <span style={styles.searchResultsText}>
-                  {searchResults?.length || 0} spell(s) found
-                </span>
-                <button onClick={clearSearch} style={styles.clearSearchButton}>
-                  <X size={12} />
-                  Clear
-                </button>
-              </div>
-            )}
+          <div style={styles.filterContainer}>
+            <Filter size={16} style={styles.filterIcon} />
+            <select
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              style={styles.filterSelect}
+            >
+              <option value="all">All Spells</option>
+              <option value="mastered">Mastered Only</option>
+              <option value="unmastered">Unmastered Only</option>
+              <option value="researched">Researched Only</option>
+              <option value="unresearched">Unresearched Only</option>
+            </select>
           </div>
 
-          {hasActiveSearch
-            ? renderSearchResults()
-            : Object.entries(subjectData.levels)
-                .filter(([level, spells]) => spells.length > 0)
-                .map(([level, spells]) =>
-                  renderSection(subjectName, level, spells)
-                )
-                .filter(Boolean)}
+          {filteredLevels.map(([level, spells]) =>
+            renderLevelSection(level, spells, subjectName)
+          )}
+        </div>
+      )}
+
+      {editingSpell && (
+        <div style={styles.editModal}>
+          <div style={styles.editModalContent}>
+            <h3 style={styles.editModalTitle}>
+              Edit Spell Progress: {editingSpell}
+            </h3>
+
+            <div style={styles.editFormGroup}>
+              <label style={styles.editFormLabel}>Successful Attempts:</label>
+              <select
+                value={editFormData.successfulAttempts}
+                onChange={(e) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    successfulAttempts: parseInt(e.target.value),
+                  }))
+                }
+                style={styles.editFormSelect}
+              >
+                <option value={0}>0</option>
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+              </select>
+            </div>
+
+            <div style={styles.editFormGroup}>
+              <label style={styles.editFormCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={editFormData.hasCriticalSuccess}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      hasCriticalSuccess: e.target.checked,
+                    }))
+                  }
+                  style={styles.editFormCheckbox}
+                />
+                Critical Success (Natural 20)
+              </label>
+            </div>
+
+            <div style={styles.editFormGroup}>
+              <label style={styles.editFormCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={editFormData.hasFailedAttempt}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      hasFailedAttempt: e.target.checked,
+                    }))
+                  }
+                  style={styles.editFormCheckbox}
+                />
+                Has Failed Attempt
+              </label>
+            </div>
+
+            <div style={styles.editFormGroup}>
+              <label style={styles.editFormCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={editFormData.researched}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      researched: e.target.checked,
+                    }))
+                  }
+                  style={styles.editFormCheckbox}
+                />
+                Researched
+              </label>
+            </div>
+
+            <div style={styles.editFormGroup}>
+              <label style={styles.editFormCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={editFormData.hasArithmancticTag}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      hasArithmancticTag: e.target.checked,
+                    }))
+                  }
+                  style={styles.editFormCheckbox}
+                />
+                Has Arithmantic Tag
+              </label>
+            </div>
+
+            <div style={styles.editFormGroup}>
+              <label style={styles.editFormCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={editFormData.hasRunicTag}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      hasRunicTag: e.target.checked,
+                    }))
+                  }
+                  style={styles.editFormCheckbox}
+                />
+                Has Runic Tag
+              </label>
+            </div>
+
+            <div style={styles.editFormActions}>
+              <button onClick={saveEdit} style={styles.editFormSaveButton}>
+                <Check size={16} />
+                Save
+              </button>
+              <button
+                onClick={cancelEditing}
+                style={styles.editFormCancelButton}
+              >
+                <X size={16} />
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
