@@ -3,7 +3,6 @@ import { Flame } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../../styles/masterStyles";
 import { useRollFunctions } from "../../utils/diceRoller";
-import { rollDice } from "../../utils/diceRoller";
 import { useRollModal } from "../../utils/diceRoller";
 
 export const CorruptionTracker = ({
