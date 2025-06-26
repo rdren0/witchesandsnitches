@@ -21,14 +21,10 @@ import {
 } from "lucide-react";
 
 import { spellsData } from "./spells";
-import { getSpellModifier, getModifierInfo } from "./utils";
+import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
 import { createSpellBookStyles } from "../../styles/masterStyles";
-
-const hasSubclassFeature = (character, featureName) => {
-  return character?.subclassFeatures?.includes(featureName) || false;
-};
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -64,6 +60,10 @@ export const SubjectCard = ({
   setFailedAttempts,
   researchedSpells,
   setResearchedSpells,
+  arithmancticTags,
+  setArithmancticTags,
+  runicTags,
+  setRunicTags,
   subjectData,
   subjectName,
   supabase,
@@ -81,6 +81,8 @@ export const SubjectCard = ({
     hasCriticalSuccess: false,
     hasFailedAttempt: false,
     researched: false,
+    hasArithmancticTag: false,
+    hasRunicTag: false,
   });
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,15 +152,57 @@ export const SubjectCard = ({
 
     if (activeSearchTerm && activeSearchTerm.trim().length > 0) {
       const term = activeSearchTerm.toLowerCase();
+      console.log("Searching for term:", term);
+      console.log("Current tag states:", { arithmancticTags, runicTags });
+
       spells = spells.filter((spell) => {
-        return (
+        // Check inherent tags
+        const hasInherentTag = spell.tags?.some((tag) =>
+          tag.toLowerCase().includes(term)
+        );
+
+        // Check manually assigned tags
+        const hasManualArithmancticTag =
+          arithmancticTags[spell.name] && "arithmantic".includes(term);
+        const hasManualRunicTag =
+          runicTags[spell.name] && "runic".includes(term);
+
+        // Check if it's a researched spell with Researcher bonus (auto-tags)
+        const isResearchedWithResearcher =
+          researchedSpells[spell.name] &&
+          hasSubclassFeature(selectedCharacter, "Researcher");
+        const hasResearcherArithmancticTag =
+          isResearchedWithResearcher && "arithmantic".includes(term);
+        const hasResearcherRunicTag =
+          isResearchedWithResearcher && "runic".includes(term);
+
+        const matches =
           spell.name.toLowerCase().includes(term) ||
           (spell.description &&
             spell.description.toLowerCase().includes(term)) ||
           spell.level.toLowerCase().includes(term) ||
-          (spell.tags &&
-            spell.tags.some((tag) => tag.toLowerCase().includes(term)))
-        );
+          hasInherentTag ||
+          hasManualArithmancticTag ||
+          hasManualRunicTag ||
+          hasResearcherArithmancticTag ||
+          hasResearcherRunicTag;
+
+        if (
+          matches &&
+          (hasManualArithmancticTag ||
+            hasManualRunicTag ||
+            hasResearcherArithmancticTag ||
+            hasResearcherRunicTag)
+        ) {
+          console.log("Spell matched by tags:", spell.name, {
+            hasManualArithmancticTag,
+            hasManualRunicTag,
+            hasResearcherArithmancticTag,
+            hasResearcherRunicTag,
+          });
+        }
+
+        return matches;
       });
     }
 
@@ -392,11 +436,27 @@ export const SubjectCard = ({
     const hasFailed = failedAttempts[spellName] || false;
     const isResearched = researchedSpells[spellName] || false;
 
+    // Find the spell data to check for inherent tags
+    const spellData = findSpellData(spellName);
+
+    // Check all sources for tags (same logic as display)
+    const hasArithmancticTag =
+      spellData?.tags?.includes("Arithmantic") ||
+      arithmancticTags[spellName] ||
+      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
+
+    const hasRunicTag =
+      spellData?.tags?.includes("Runic") ||
+      runicTags[spellName] ||
+      (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
+
     setEditFormData({
       successfulAttempts: successCount,
       hasCriticalSuccess: hasCritical,
       hasFailedAttempt: hasFailed,
       researched: isResearched,
+      hasArithmancticTag: hasArithmancticTag,
+      hasRunicTag: hasRunicTag,
     });
     setEditingSpell(spellName);
     closeAllMenus();
@@ -578,14 +638,6 @@ export const SubjectCard = ({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = () => {
-      closeAllMenus();
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
-
   const cancelEditing = () => {
     setEditingSpell(null);
     setEditFormData({
@@ -593,6 +645,8 @@ export const SubjectCard = ({
       hasCriticalSuccess: false,
       hasFailedAttempt: false,
       researched: false,
+      hasArithmancticTag: false,
+      hasRunicTag: false,
     });
   };
 
@@ -624,13 +678,24 @@ export const SubjectCard = ({
         updated_at: new Date().toISOString(),
       };
 
+      // Handle tags: if researched + Researcher, force both tags to true
+      // Otherwise, use the manual checkbox values
       if (
         editFormData.researched &&
         hasSubclassFeature(selectedCharacter, "Researcher")
       ) {
         updateData.has_arithmantic_tag = true;
         updateData.has_runic_tag = true;
+      } else {
+        updateData.has_arithmantic_tag = editFormData.hasArithmancticTag;
+        updateData.has_runic_tag = editFormData.hasRunicTag;
       }
+
+      console.log("Saving spell progress:", {
+        spellName: editingSpell,
+        updateData,
+        editFormData,
+      });
 
       if (existingProgress) {
         const { error: updateError } = await supabase
@@ -644,16 +709,16 @@ export const SubjectCard = ({
           return;
         }
       } else {
+        const insertData = {
+          character_id: selectedCharacter.id,
+          discord_user_id: discordUserId,
+          spell_name: editingSpell,
+          ...updateData,
+        };
+
         const { error: insertError } = await supabase
           .from("spell_progress_summary")
-          .insert([
-            {
-              character_id: selectedCharacter.id,
-              discord_user_id: discordUserId,
-              spell_name: editingSpell,
-              ...updateData,
-            },
-          ]);
+          .insert([insertData]);
 
         if (insertError) {
           console.error("Error inserting spell progress:", insertError);
@@ -714,8 +779,16 @@ export const SubjectCard = ({
       const formattedCriticals = {};
       const formattedFailures = {};
       const formattedResearch = {};
+      const formattedArithmancticTags = {};
+      const formattedRunicTags = {};
 
       data?.forEach((progress) => {
+        console.log("Loading progress for:", progress.spell_name, {
+          has_arithmantic_tag: progress.has_arithmantic_tag,
+          has_runic_tag: progress.has_runic_tag,
+          researched: progress.researched,
+        });
+
         formattedAttempts[progress.spell_name] = {};
 
         if (progress.has_natural_twenty) {
@@ -734,12 +807,25 @@ export const SubjectCard = ({
         if (progress.researched) {
           formattedResearch[progress.spell_name] = true;
         }
+        if (progress.has_arithmantic_tag) {
+          formattedArithmancticTags[progress.spell_name] = true;
+        }
+        if (progress.has_runic_tag) {
+          formattedRunicTags[progress.spell_name] = true;
+        }
+      });
+
+      console.log("Final formatted tags:", {
+        arithmancticTags: formattedArithmancticTags,
+        runicTags: formattedRunicTags,
       });
 
       setSpellAttempts(formattedAttempts);
       setCriticalSuccesses(formattedCriticals);
       setFailedAttempts(formattedFailures);
       setResearchedSpells(formattedResearch);
+      setArithmancticTags(formattedArithmancticTags);
+      setRunicTags(formattedRunicTags);
     } catch (error) {
       console.error("Error loading spell progress:", error);
       setError(`Failed to load spell progress: ${error.message}`);
@@ -753,6 +839,8 @@ export const SubjectCard = ({
     setFailedAttempts,
     setResearchedSpells,
     setError,
+    setRunicTags,
+    setArithmancticTags,
   ]);
 
   useEffect(() => {
@@ -839,11 +927,26 @@ export const SubjectCard = ({
     }
   };
 
+  // FIXED: Updated toggleMenu function to prevent click interference
   const toggleMenu = (spellName) => {
-    setOpenMenus((prev) => ({
-      ...prev,
-      [spellName]: !prev[spellName],
-    }));
+    console.log(
+      "toggleMenu called for:",
+      spellName,
+      "current openMenus:",
+      openMenus
+    );
+    setOpenMenus((prev) => {
+      // Close all other menus when opening a new one
+      const newMenus = {};
+      if (!prev[spellName]) {
+        newMenus[spellName] = true;
+        console.log("Opening menu for:", spellName);
+      } else {
+        console.log("Closing menu for:", spellName);
+      }
+      console.log("New menu state:", newMenus);
+      return newMenus;
+    });
   };
 
   const closeAllMenus = () => {
@@ -909,10 +1012,30 @@ export const SubjectCard = ({
 
     const hasArithmancticTag =
       spellObj.tags?.includes("Arithmantic") ||
+      arithmancticTags[spellName] ||
       (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
     const hasRunicTag =
       spellObj.tags?.includes("Runic") ||
+      runicTags[spellName] ||
       (isResearched && hasSubclassFeature(selectedCharacter, "Researcher"));
+
+    // Debug logging
+    if (
+      spellName === "Alohomora" ||
+      arithmancticTags[spellName] ||
+      runicTags[spellName]
+    ) {
+      console.log(`Tag check for ${spellName}:`, {
+        inherentArithmantic: spellObj.tags?.includes("Arithmantic"),
+        manualArithmantic: arithmancticTags[spellName],
+        inherentRunic: spellObj.tags?.includes("Runic"),
+        manualRunic: runicTags[spellName],
+        isResearched,
+        isResearcher: hasSubclassFeature(selectedCharacter, "Researcher"),
+        finalArithmantic: hasArithmancticTag,
+        finalRunic: hasRunicTag,
+      });
+    }
 
     let rowStyle = { ...styles.tableRow };
     if (isMastered) {
@@ -1027,14 +1150,16 @@ export const SubjectCard = ({
                   Researched
                 </span>
               )}
-              {/* Show special tags for Researcher */}
+              {/* Show special tags */}
               {hasArithmancticTag && (
                 <span
                   style={{
-                    fontSize: "9px",
+                    fontSize: "10px",
                     fontWeight: "600",
-                    padding: "2px 4px",
-                    borderRadius: "8px",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
                     backgroundColor: "#3b82f6",
                     color: "white",
                   }}
@@ -1046,10 +1171,12 @@ export const SubjectCard = ({
               {hasRunicTag && (
                 <span
                   style={{
-                    fontSize: "9px",
+                    fontSize: "10px",
                     fontWeight: "600",
-                    padding: "2px 4px",
-                    borderRadius: "8px",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
                     backgroundColor: "#8b5cf6",
                     color: "white",
                   }}
@@ -1060,13 +1187,16 @@ export const SubjectCard = ({
               )}
               {hasArithmancticTag &&
                 hasRunicTag &&
-                hasSubclassFeature(selectedCharacter, "Researcher") && (
+                hasSubclassFeature(selectedCharacter, "Researcher") &&
+                isResearched && (
                   <span
                     style={{
-                      fontSize: "9px",
+                      fontSize: "10px",
                       fontWeight: "600",
-                      padding: "2px 4px",
-                      borderRadius: "8px",
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
                       background: "linear-gradient(45deg, #3b82f6, #8b5cf6)",
                       border: "1px solid #ffd700",
                       color: "white",
@@ -1203,22 +1333,89 @@ export const SubjectCard = ({
             )}
           </button>
         </td>
-        <td style={styles.tableCellMenu}>
+        <td style={{ ...styles.tableCellMenu, position: "relative" }}>
           <button
             onClick={(e) => {
+              console.log(
+                "Menu button clicked for:",
+                spellName,
+                "in context:",
+                showLevel ? "search results" : "normal list"
+              );
               e.stopPropagation();
               toggleMenu(spellName);
             }}
-            style={styles.menuButton}
+            style={{
+              ...styles.menuButton,
+              backgroundColor: openMenus[spellName] ? "#3b82f6" : "transparent",
+              color: openMenus[spellName] ? "white" : styles.menuButton.color,
+              cursor: "pointer",
+              zIndex: 1000,
+            }}
+            title={`Menu for ${spellName}`}
           >
             <MoreVertical size={16} />
           </button>
 
           {openMenus[spellName] && (
-            <div style={styles.dropdownMenu}>
+            <div
+              style={{
+                position: "fixed", // Changed from absolute to fixed to escape parent clipping
+                right: "20px", // Position from viewport edge
+                top: hasActiveSearch ? "auto" : "auto", // Let it auto-position
+                bottom: hasActiveSearch ? "20px" : "auto", // Position from bottom in search mode
+                backgroundColor: theme.surface || "#ffffff",
+                border: `1px solid ${theme.border || "#e5e7eb"}`,
+                borderRadius: "8px",
+                boxShadow: "0 8px 25px -8px rgba(0, 0, 0, 0.25)", // Stronger shadow for fixed positioning
+                zIndex: 9999, // Much higher z-index for fixed positioning
+                minWidth: "160px",
+                padding: "4px",
+                display: "block",
+              }}
+            >
+              <div
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "12px",
+                  color: theme.textSecondary || "#666",
+                  borderBottom: `1px solid ${theme.border || "#e5e7eb"}`,
+                  marginBottom: "4px",
+                  fontWeight: "600",
+                }}
+              >
+                {spellName}
+              </div>
               <button
-                onClick={() => startEditing(spellName)}
-                style={styles.dropdownMenuItem}
+                onClick={(e) => {
+                  console.log("Edit button clicked for:", spellName);
+                  e.stopPropagation();
+                  startEditing(spellName);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: theme.text || "#000000",
+                  fontFamily: "inherit",
+                  transition: "background-color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = theme.primary
+                    ? `${theme.primary}20`
+                    : "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "transparent";
+                }}
               >
                 <Edit3 size={14} />
                 Edit Progress
@@ -1244,6 +1441,18 @@ export const SubjectCard = ({
                   {criticalSuccesses[spellName] ? " (Critical Success)" : ""}
                   {failedAttempts[spellName] ? " (Has Failed)" : ""}
                   {researchedSpells[spellName] ? " (Researched)" : ""}
+                  {findSpellData(spellName)?.tags?.includes("Arithmantic") ||
+                  arithmancticTags[spellName] ||
+                  (researchedSpells[spellName] &&
+                    hasSubclassFeature(selectedCharacter, "Researcher"))
+                    ? " (🔢 Arithmantic)"
+                    : ""}
+                  {findSpellData(spellName)?.tags?.includes("Runic") ||
+                  runicTags[spellName] ||
+                  (researchedSpells[spellName] &&
+                    hasSubclassFeature(selectedCharacter, "Researcher"))
+                    ? " (ᚱ Runic)"
+                    : ""}
                 </p>
 
                 <div style={styles.modalField}>
@@ -1337,6 +1546,17 @@ export const SubjectCard = ({
                         setEditFormData((prev) => ({
                           ...prev,
                           researched: e.target.checked,
+                          // Auto-enable tags if Researcher and marking as researched
+                          hasArithmancticTag:
+                            e.target.checked &&
+                            hasSubclassFeature(selectedCharacter, "Researcher")
+                              ? true
+                              : prev.hasArithmancticTag,
+                          hasRunicTag:
+                            e.target.checked &&
+                            hasSubclassFeature(selectedCharacter, "Researcher")
+                              ? true
+                              : prev.hasRunicTag,
                         }))
                       }
                       style={styles.modalCheckbox}
@@ -1349,9 +1569,82 @@ export const SubjectCard = ({
                     {hasSubclassFeature(selectedCharacter, "Researcher") && (
                       <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
                         {" "}
-                        - Researcher: Gains both Arithmantic and Runic tags
+                        - Researcher: Automatically gains both Arithmantic and
+                        Runic tags
                       </span>
                     )}
+                  </p>
+                </div>
+
+                <div style={styles.modalField}>
+                  <label style={styles.modalCheckboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        editFormData.hasArithmancticTag ||
+                        (editFormData.researched &&
+                          hasSubclassFeature(selectedCharacter, "Researcher"))
+                      }
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          hasArithmancticTag: e.target.checked,
+                        }))
+                      }
+                      disabled={
+                        editFormData.researched &&
+                        hasSubclassFeature(selectedCharacter, "Researcher")
+                      }
+                      style={styles.modalCheckbox}
+                    />
+                    <span style={styles.modalCheckboxText}>
+                      🔢 Arithmantic Tag
+                    </span>
+                  </label>
+                  <p style={styles.modalHelpText}>
+                    Enhanced with mathematical precision and numerical patterns
+                    {editFormData.researched &&
+                      hasSubclassFeature(selectedCharacter, "Researcher") && (
+                        <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
+                          {" "}
+                          (Auto-applied by Researcher)
+                        </span>
+                      )}
+                  </p>
+                </div>
+
+                <div style={styles.modalField}>
+                  <label style={styles.modalCheckboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        editFormData.hasRunicTag ||
+                        (editFormData.researched &&
+                          hasSubclassFeature(selectedCharacter, "Researcher"))
+                      }
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          hasRunicTag: e.target.checked,
+                        }))
+                      }
+                      disabled={
+                        editFormData.researched &&
+                        hasSubclassFeature(selectedCharacter, "Researcher")
+                      }
+                      style={styles.modalCheckbox}
+                    />
+                    <span style={styles.modalCheckboxText}>ᚱ Runic Tag</span>
+                  </label>
+                  <p style={styles.modalHelpText}>
+                    Enhanced with ancient runic symbols and mystical power
+                    {editFormData.researched &&
+                      hasSubclassFeature(selectedCharacter, "Researcher") && (
+                        <span style={{ color: "#8b5cf6", fontWeight: "600" }}>
+                          {" "}
+                          (Auto-applied by Researcher)
+                        </span>
+                      )}
                   </p>
                 </div>
 

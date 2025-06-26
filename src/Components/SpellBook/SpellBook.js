@@ -24,6 +24,8 @@ const SpellBook = ({
   const [spellAttempts, setSpellAttempts] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
   const [researchedSpells, setResearchedSpells] = useState({});
+  const [arithmancticTags, setArithmancticTags] = useState({});
+  const [runicTags, setRunicTags] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
 
   const discordUserId = user?.user_metadata?.provider_id;
@@ -33,6 +35,8 @@ const SpellBook = ({
     setCriticalSuccesses({});
     setFailedAttempts({});
     setResearchedSpells({});
+    setArithmancticTags({});
+    setRunicTags({});
   }, [selectedCharacter?.id]);
 
   const getAvailableSpellsData = useCallback(() => {
@@ -93,6 +97,28 @@ const SpellBook = ({
 
       Object.entries(subjectData.levels).forEach(([level, spells]) => {
         const filteredSpells = spells.filter((spell) => {
+          // Check inherent tags
+          const hasInherentTag = spell.tags?.some((tag) =>
+            tag.toLowerCase().includes(lowerSearchTerm)
+          );
+
+          // Check manually assigned tags
+          const hasManualArithmancticTag =
+            arithmancticTags[spell.name] &&
+            "arithmantic".includes(lowerSearchTerm);
+          const hasManualRunicTag =
+            runicTags[spell.name] && "runic".includes(lowerSearchTerm);
+
+          // Check if it's a researched spell with Researcher bonus (auto-tags)
+          const isResearchedWithResearcher =
+            researchedSpells[spell.name] &&
+            hasSubclassFeature(selectedCharacter, "Researcher");
+          const hasResearcherArithmancticTag =
+            isResearchedWithResearcher &&
+            "arithmantic".includes(lowerSearchTerm);
+          const hasResearcherRunicTag =
+            isResearchedWithResearcher && "runic".includes(lowerSearchTerm);
+
           return (
             spell.name.toLowerCase().includes(lowerSearchTerm) ||
             spell.description?.toLowerCase().includes(lowerSearchTerm) ||
@@ -102,9 +128,11 @@ const SpellBook = ({
             spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
             spell.range?.toLowerCase().includes(lowerSearchTerm) ||
             spell.duration?.toLowerCase().includes(lowerSearchTerm) ||
-            spell.tags?.some((tag) =>
-              tag.toLowerCase().includes(lowerSearchTerm)
-            )
+            hasInherentTag ||
+            hasManualArithmancticTag ||
+            hasManualRunicTag ||
+            hasResearcherArithmancticTag ||
+            hasResearcherRunicTag
           );
         });
 
@@ -123,7 +151,14 @@ const SpellBook = ({
     });
 
     return filteredData;
-  }, [searchTerm, getAvailableSpellsData]);
+  }, [
+    searchTerm,
+    getAvailableSpellsData,
+    arithmancticTags,
+    runicTags,
+    researchedSpells,
+    selectedCharacter,
+  ]);
 
   const getTotalSpells = (dataSource = null) => {
     const sourceData = dataSource || getAvailableSpellsData();
@@ -167,8 +202,9 @@ const SpellBook = ({
       Object.values(subject.levels).forEach((spells) => {
         spells.forEach((spell) => {
           if (
-            spell.tags?.includes("Arithmantic") &&
-            spell.tags?.includes("Runic")
+            (spell.tags?.includes("Arithmantic") &&
+              spell.tags?.includes("Runic")) ||
+            (arithmancticTags[spell.name] && runicTags[spell.name])
           ) {
             if (!researchedSpells[spell.name]) {
               enhancedCount++;
@@ -430,6 +466,10 @@ const SpellBook = ({
               setFailedAttempts={setFailedAttempts}
               researchedSpells={researchedSpells}
               setResearchedSpells={setResearchedSpells}
+              arithmancticTags={arithmancticTags}
+              setArithmancticTags={setArithmancticTags}
+              runicTags={runicTags}
+              setRunicTags={setRunicTags}
               subjectData={subjectData}
               subjectName={subjectName}
               supabase={supabase}
