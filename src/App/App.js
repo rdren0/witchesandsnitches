@@ -28,6 +28,7 @@ import Inventory from "../Components/Inventory/Inventory";
 import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
 import logo from "./../Images/logo/Thumbnail-01.png";
 import BetaBanner from "./BetaBanner";
+import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -380,6 +381,7 @@ const CharacterSubNavigation = () => {
     { path: "/character/gallery", label: "NPC Gallery", key: "gallery" },
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
     { path: "/character/notes", label: "Notes", key: "notes" },
+    { path: "/character/recipes", label: "Recipes", key: "recipes" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -1023,6 +1025,19 @@ function AppContent() {
               <ProtectedRoute user={user}>
                 {characterSelector}
                 <DowntimeSheet />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/character/recipes"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <RecipeCookingSystem
+                  user={user}
+                  character={selectedCharacter}
+                  supabase={supabase}
+                />
               </ProtectedRoute>
             }
           />

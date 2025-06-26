@@ -808,24 +808,6 @@ export const SubjectCard = ({
         </span>
       ) : null;
 
-    const getArithmancyModifier = () => {
-      if (!selectedCharacter?.abilityScores) return 0;
-      const intModifier = Math.floor(
-        (selectedCharacter.abilityScores.intelligence - 10) / 2
-      );
-      const wandModifier = getWandModifier(spellName, selectedCharacter);
-      return intModifier + wandModifier;
-    };
-
-    const getWandModifier = (spellName, character) => {
-      if (!character?.magicModifiers) return 0;
-
-      const modifierInfo = getModifierInfo(spellName, subject, character);
-      return modifierInfo.wandModifier || 0;
-    };
-
-    const arithmancyModifier = getArithmancyModifier();
-
     return (
       <tr
         key={spellName}

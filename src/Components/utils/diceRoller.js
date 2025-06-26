@@ -5,24 +5,6 @@ import { getModifierInfo } from "../SpellBook/utils";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
-const difficultSpells = [
-  "ABSCONDI",
-  "PELLUCIDI PELLIS",
-  "SAGITTARIO",
-  "CONFRINGO",
-  "DEVICTO",
-  "STUPEFY",
-  "PETRIFICUS TOTALUS",
-  "PROTEGO",
-  "PROTEGO MAXIMA",
-  "FINITE INCANTATEM",
-  "CONFUNDO",
-  "BOMBARDA",
-  "EPISKY",
-  "EXPELLIARMUS",
-  "INCARCEROUS",
-];
-
 const RollModalContext = createContext();
 
 const hasSubclassFeature = (character, featureName) => {
@@ -1709,6 +1691,213 @@ export const rollSkill = async ({
   }
 };
 
+const getSpellLevel = (spellName, subject, spellsData) => {
+  const subjectData = spellsData[subject];
+  if (!subjectData) return 0;
+
+  for (const [levelKey, spells] of Object.entries(subjectData.levels)) {
+    const spell = spells.find((s) => s.name === spellName);
+    if (spell) {
+      if (levelKey === "Cantrips") return 0;
+      const match = levelKey.match(/(\d+)/);
+      return match ? parseInt(match[1]) : 0;
+    }
+  }
+  return 0;
+};
+
+const getSpellCastingDC = (spellLevel) => {
+  return 10 + spellLevel;
+};
+export const attemptSpell = async ({
+  spellName,
+  subject,
+  showRollResult,
+  getSpellModifier,
+  selectedCharacter,
+  setSpellAttempts,
+  discordUserId,
+  setAttemptingSpells,
+  setCriticalSuccesses,
+  updateSpellProgressSummary,
+  spellsData,
+}) => {
+  if (!selectedCharacter || !discordUserId) {
+    alert("Please select a character first!");
+    return;
+  }
+
+  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+    const totalModifier = getSpellModifier(
+      spellName,
+      subject,
+      selectedCharacter
+    );
+    const total = d20Roll + totalModifier;
+
+    const spellLevel = getSpellLevel(spellName, subject, spellsData);
+    const goal = getSpellCastingDC(spellLevel);
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+    const isSuccess =
+      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${spellName} Attempt`,
+        rollValue: d20Roll,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "spell",
+        description: `Attempting to cast ${spellName} (Level ${spellLevel}, DC ${goal}) for ${selectedCharacter.name}`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      const resultText = isSuccess ? "SUCCESS" : "FAILED";
+      alert(
+        `${spellName} Attempt: d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`
+      );
+    }
+
+    if (isCriticalSuccess) {
+      setSpellAttempts((prev) => ({
+        ...prev,
+        [spellName]: { 1: true, 2: true },
+      }));
+      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
+    } else if (isSuccess) {
+      setSpellAttempts((prev) => {
+        const currentAttempts = prev[spellName] || {};
+        const newAttempts = { ...currentAttempts };
+
+        if (!newAttempts[1]) {
+          newAttempts[1] = true;
+        } else if (!newAttempts[2]) {
+          newAttempts[2] = true;
+        }
+
+        return {
+          ...prev,
+          [spellName]: newAttempts,
+        };
+      });
+    }
+
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    let title = `${
+      selectedCharacter?.name || "Unknown"
+    } Attempted: ${spellName}`;
+    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
+    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
+
+    if (isCriticalSuccess) {
+      title = `⭐ ${
+        selectedCharacter?.name || "Unknown"
+      } Attempted: ${spellName}`;
+      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
+      embedColor = 0xffd700;
+    } else if (isCriticalFailure) {
+      title = `💥 ${
+        selectedCharacter?.name || "Unknown"
+      } Attempted: ${spellName}`;
+      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
+      embedColor = 0x8b0000;
+    }
+
+    let rollDescription = `**Roll:** ${d20Roll}`;
+    const modifierText =
+      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+    rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
+
+    const fields = [
+      {
+        name: "Result",
+        value: resultText,
+        inline: true,
+      },
+      {
+        name: "Roll Details",
+        value: rollDescription,
+        inline: true,
+      },
+      {
+        name: "Spell Info",
+        value: `Level ${spellLevel} (DC ${goal})`,
+        inline: true,
+      },
+    ];
+
+    if (selectedCharacter) {
+      const modifierInfo = getModifierInfo(
+        spellName,
+        subject,
+        selectedCharacter
+      );
+
+      let modifierBreakdown = `${modifierInfo.abilityName}: ${
+        modifierInfo.abilityModifier >= 0 ? "+" : ""
+      }${modifierInfo.abilityModifier}`;
+
+      modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+        modifierInfo.wandModifier >= 0 ? "+" : ""
+      }${modifierInfo.wandModifier}`;
+
+      fields.push({
+        name: "Modifier Breakdown",
+        value: modifierBreakdown,
+        inline: false,
+      });
+    }
+
+    const embed = {
+      title: title,
+      description: "",
+      color: embedColor,
+      fields: fields,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Witches And Snitches - Spellcasting",
+      },
+    };
+
+    try {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: [embed],
+        }),
+      });
+    } catch (error) {
+      console.error("Error sending to Discord:", error);
+    }
+
+    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+  } catch (error) {
+    console.error("Error attempting spell:", error);
+    alert("Error processing spell attempt. Please try again.");
+  } finally {
+    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
+  }
+};
+
 export const attemptArithmancySpell = async ({
   spellName,
   subject,
@@ -1719,6 +1908,7 @@ export const attemptArithmancySpell = async ({
   setAttemptingSpells,
   setCriticalSuccesses,
   updateSpellProgressSummary,
+  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -1739,10 +1929,10 @@ export const attemptArithmancySpell = async ({
     const totalModifier = intModifier + wandModifier;
 
     const total = d20Roll + totalModifier;
-    let goal = 11;
-    if (difficultSpells.includes(spellName.toUpperCase())) {
-      goal += 3;
-    }
+
+    const spellLevel = getSpellLevel(spellName, subject, spellsData);
+    const goal = getSpellCastingDC(spellLevel);
+
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
     const isSuccess =
@@ -1757,7 +1947,7 @@ export const attemptArithmancySpell = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "spell",
-        description: `Arithmancy casting ${spellName} for ${selectedCharacter.name} using Intelligence`,
+        description: `Arithmancy casting ${spellName} (Level ${spellLevel}, DC ${goal}) for ${selectedCharacter.name} using Intelligence`,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -1767,7 +1957,7 @@ export const attemptArithmancySpell = async ({
         : "";
       const resultText = isSuccess ? "SUCCESS" : "FAILED";
       alert(
-        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`
       );
     }
 
@@ -1823,7 +2013,7 @@ export const attemptArithmancySpell = async ({
     let rollDescription = `**Roll:** ${d20Roll}`;
     const modifierText =
       totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-    rollDescription += ` ${modifierText} = **${total}**`;
+    rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
 
     const fields = [
       {
@@ -1838,7 +2028,7 @@ export const attemptArithmancySpell = async ({
       },
       {
         name: "Casting Method",
-        value: "Arithmancy Cast (Intelligence-based)",
+        value: `Arithmancy Cast (Level ${spellLevel}, DC ${goal})`,
         inline: true,
       },
     ];
@@ -1901,6 +2091,7 @@ export const attemptRunesSpell = async ({
   setAttemptingSpells,
   setCriticalSuccesses,
   updateSpellProgressSummary,
+  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -1921,10 +2112,10 @@ export const attemptRunesSpell = async ({
     const totalModifier = wisModifier + wandModifier;
 
     const total = d20Roll + totalModifier;
-    let goal = 11;
-    if (difficultSpells.includes(spellName.toUpperCase())) {
-      goal += 3;
-    }
+
+    const spellLevel = getSpellLevel(spellName, subject, spellsData);
+    const goal = getSpellCastingDC(spellLevel);
+
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
     const isSuccess =
@@ -1939,7 +2130,7 @@ export const attemptRunesSpell = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "spell",
-        description: `Runic casting ${spellName} for ${selectedCharacter.name} using Wisdom`,
+        description: `Runic casting ${spellName} (Level ${spellLevel}, DC ${goal}) for ${selectedCharacter.name} using Wisdom`,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -1949,7 +2140,7 @@ export const attemptRunesSpell = async ({
         : "";
       const resultText = isSuccess ? "SUCCESS" : "FAILED";
       alert(
-        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`
       );
     }
 
@@ -2005,7 +2196,7 @@ export const attemptRunesSpell = async ({
     let rollDescription = `**Roll:** ${d20Roll}`;
     const modifierText =
       totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-    rollDescription += ` ${modifierText} = **${total}**`;
+    rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
 
     const fields = [
       {
@@ -2020,7 +2211,7 @@ export const attemptRunesSpell = async ({
       },
       {
         name: "Casting Method",
-        value: "Runic Cast (Wisdom-based)",
+        value: `Runic Cast (Level ${spellLevel}, DC ${goal})`,
         inline: true,
       },
     ];
@@ -2073,53 +2264,194 @@ export const attemptRunesSpell = async ({
   }
 };
 
-export const attemptSpell = async ({
-  spellName,
-  subject,
+export const rollCookRecipe = async ({
+  isRolling,
+  setIsRolling,
+  character,
+  selectedRecipe,
+  proficiencies,
+  ingredientQuality,
+  qualityDCs,
+  ingredientModifiers,
+  characterModifier = 0,
+  webhookUrl,
   showRollResult,
-  getSpellModifier,
-  selectedCharacter,
-  setSpellAttempts,
-  discordUserId,
-  setAttemptingSpells,
-  setCriticalSuccesses,
-  updateSpellProgressSummary,
+  addRecipeToInventory,
+  currentCharacter,
+  supabase,
+  user,
+  rawIngredientQuality,
 }) => {
-  if (!selectedCharacter || !discordUserId) {
-    alert("Please select a character first!");
-    return;
-  }
-
-  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+  if (isRolling) return null;
+  setIsRolling(true);
 
   try {
     const diceResult = rollDice();
     const d20Roll = diceResult.total;
-    const totalModifier = getSpellModifier(
-      spellName,
-      subject,
-      selectedCharacter
+    const skillModifier = characterModifier || 0;
+    const totalRoll = d20Roll + skillModifier;
+
+    const getMaxAchievableQuality = ({ proficiencies, ingredientQuality }) => {
+      const hasKit = proficiencies.culinaryKit || proficiencies.herbologyKit;
+      if (!hasKit) return "Cannot cook without kit";
+
+      const qualityHierarchy = ["flawed", "regular", "exceptional", "superior"];
+      const preparedIndex = qualityHierarchy.indexOf(ingredientQuality);
+
+      if (preparedIndex === -1) {
+        console.error(
+          "Invalid prepared ingredient quality:",
+          ingredientQuality
+        );
+        return "flawed";
+      }
+
+      const maxIndex = Math.min(preparedIndex + 2, qualityHierarchy.length - 1);
+      const maxQuality = qualityHierarchy[maxIndex];
+
+      return maxQuality;
+    };
+
+    const maxQuality = getMaxAchievableQuality({
+      proficiencies,
+      ingredientQuality,
+    });
+
+    const baseDCs = qualityDCs;
+    const ingredientMod = ingredientModifiers[ingredientQuality] || 0;
+    const adjustedDCs = Object.fromEntries(
+      Object.entries(baseDCs).map(([quality, dc]) => [
+        quality,
+        dc + ingredientMod,
+      ])
     );
-    const total = d20Roll + totalModifier;
-    let goal = 11;
-    if (difficultSpells.includes(spellName.toUpperCase())) {
-      goal += 3;
-    }
+
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
-    const isSuccess =
-      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    let achievedQuality;
+    let targetDC;
+
+    if (isCriticalSuccess) {
+      achievedQuality =
+        maxQuality === "Cannot cook without kit" ? "ruined" : maxQuality;
+      targetDC = adjustedDCs[achievedQuality] || 0;
+    } else if (isCriticalFailure) {
+      achievedQuality = "ruined";
+      targetDC = 0;
+    } else {
+      const sortedQualities = Object.entries(adjustedDCs)
+        .sort(([, a], [, b]) => b - a)
+        .map(([quality]) => quality);
+
+      achievedQuality = "ruined";
+      for (const quality of sortedQualities) {
+        const dc = adjustedDCs[quality];
+        if (totalRoll >= dc) {
+          achievedQuality = quality;
+          break;
+        }
+      }
+
+      const qualityHierarchy = [
+        "ruined",
+        "flawed",
+        "regular",
+        "exceptional",
+        "superior",
+      ];
+      const maxIndex = qualityHierarchy.indexOf(maxQuality);
+      const achievedIndex = qualityHierarchy.indexOf(achievedQuality);
+
+      if (maxIndex !== -1 && achievedIndex > maxIndex) {
+        achievedQuality = maxQuality;
+      }
+
+      targetDC = adjustedDCs[achievedQuality] || 0;
+    }
+
+    const cookingResult = {
+      achievedQuality,
+      maxQuality,
+      diceRoll: d20Roll,
+      characterModifier: skillModifier,
+      total: totalRoll,
+      roll: totalRoll,
+      targetDC,
+      baseDCs,
+      adjustedDCs,
+      ingredientMod,
+      recipe: selectedRecipe,
+      recipeName: selectedRecipe.name,
+      ingredientQuality,
+      proficiencies,
+      timestamp: new Date().toLocaleString(),
+    };
+
+    let inventoryAdded = false;
+    if (
+      achievedQuality !== "ruined" &&
+      addRecipeToInventory &&
+      supabase &&
+      currentCharacter &&
+      user
+    ) {
+      try {
+        const getRecipeValue = (quality) => {
+          const baseValues = {
+            flawed: "2g",
+            regular: "5g",
+            exceptional: "15g",
+            superior: "50g",
+          };
+
+          return baseValues[quality] || "1g";
+        };
+
+        const recipeItem = {
+          name: `${
+            achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+          } ${selectedRecipe.name}`,
+          description: `${selectedRecipe.description}\n\nEffect: ${
+            selectedRecipe.qualities[achievedQuality]
+          }\n\nCooked on ${new Date().toLocaleString()} with ${rawIngredientQuality} ingredients (prepared to ${ingredientQuality}). Roll: ${d20Roll} + ${skillModifier} = ${totalRoll}`,
+          quantity: 1,
+          value: getRecipeValue(achievedQuality),
+          category: "Recipes",
+          attunement_required: false,
+          character_id: currentCharacter.id,
+          discord_user_id: user?.discord_user_id || user?.id,
+        };
+
+        const { error } = await supabase
+          .from("inventory_items")
+          .insert([recipeItem])
+          .select()
+          .single();
+
+        if (!error) {
+          inventoryAdded = true;
+        }
+      } catch (error) {
+        console.error("Error adding recipe to inventory:", error);
+      }
+    }
 
     if (showRollResult) {
       showRollResult({
-        title: `${spellName} Attempt`,
+        title: `Recipe Cooking: ${selectedRecipe.name}`,
         rollValue: d20Roll,
-        modifier: totalModifier,
-        total: total,
+        modifier: skillModifier,
+        total: totalRoll,
         isCriticalSuccess,
         isCriticalFailure,
-        type: "spell",
-        description: `Attempting to cast ${spellName} for ${selectedCharacter.name}`,
+        type: "recipe",
+        description: `Quality Achieved: ${
+          achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+        }`,
+        inventoryAdded,
+        recipeQuality: achievedQuality,
+        recipeName: selectedRecipe.name,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -2127,132 +2459,143 @@ export const attemptSpell = async ({
         : isCriticalFailure
         ? " - CRITICAL FAILURE!"
         : "";
-      const resultText = isSuccess ? "SUCCESS" : "FAILED";
+      const inventoryText = inventoryAdded ? " - Added to Inventory!" : "";
       alert(
-        `${spellName} Attempt: d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+        `Recipe Cooking: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}${inventoryText}`
       );
     }
 
-    if (isCriticalSuccess) {
-      setSpellAttempts((prev) => ({
-        ...prev,
-        [spellName]: { 1: true, 2: true },
-      }));
-      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
-    } else if (isSuccess) {
-      setSpellAttempts((prev) => {
-        const currentAttempts = prev[spellName] || {};
-        const newAttempts = { ...currentAttempts };
+    let embedColor = 0x6b46c1;
+    let resultText = "";
 
-        if (!newAttempts[1]) {
-          newAttempts[1] = true;
-        } else if (!newAttempts[2]) {
-          newAttempts[2] = true;
-        }
-
-        return {
-          ...prev,
-          [spellName]: newAttempts,
-        };
-      });
+    switch (achievedQuality) {
+      case "superior":
+        embedColor = 0x8b5cf6;
+        break;
+      case "exceptional":
+        embedColor = 0x3b82f6;
+        break;
+      case "regular":
+        embedColor = 0x10b981;
+        break;
+      case "flawed":
+        embedColor = 0xf59e0b;
+        break;
+      case "ruined":
+        embedColor = 0xef4444;
+        break;
+      default:
+        embedColor = 0x6b7280;
+        break;
     }
 
-    if (!discordWebhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
-
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Attempted: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
     if (isCriticalSuccess) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Attempted: ${spellName}`;
-      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
       embedColor = 0xffd700;
+      resultText = " - **CRITICAL SUCCESS!** 🎉";
     } else if (isCriticalFailure) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Attempted: ${spellName}`;
-      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
+      embedColor = 0xff0000;
+      resultText = " - **CRITICAL FAILURE!** 💥";
     }
 
-    let rollDescription = `**Roll:** ${d20Roll}`;
-    const modifierText =
-      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-    rollDescription += ` ${modifierText} = **${total}**`;
-
-    const fields = [
-      {
-        name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
-        inline: true,
-      },
+    const ruinedMessages = [
+      "The kitchen survived... barely!",
+      "Cooking is an art, and this was... abstract!",
+      "Even master chefs burn the toast sometimes!",
+      "The ingredients had their own plans today.",
+      "That's why they invented takeout!",
+      "Better luck next meal!",
+      "Gordon Ramsay would have words about this...",
+      "The recipe became a learning experience!",
+      "At least the smoke alarm works!",
+      "Innovation often looks like chaos at first!",
     ];
 
-    if (selectedCharacter) {
-      const modifierInfo = getModifierInfo(
-        spellName,
-        subject,
-        selectedCharacter
-      );
+    const randomRuinedMessage =
+      ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
 
-      let modifierBreakdown = `${modifierInfo.abilityName}: ${
-        modifierInfo.abilityModifier >= 0 ? "+" : ""
-      }${modifierInfo.abilityModifier}`;
-
-      modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-        modifierInfo.wandModifier >= 0 ? "+" : ""
-      }${modifierInfo.wandModifier}`;
-
-      fields.push({
-        name: "Modifier Breakdown",
-        value: modifierBreakdown,
-        inline: false,
-      });
-    }
-
-    const embed = {
-      title: title,
-      description: "",
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Spellcasting",
-      },
+    const message = {
+      embeds: [
+        {
+          title: `${character.name} Cooked a Recipe: ${selectedRecipe.name}${resultText}`,
+          description: achievedQuality === "ruined" ? randomRuinedMessage : "",
+          color: embedColor,
+          fields: [
+            {
+              name: "Roll Details",
+              value: `Roll: ${d20Roll} ${
+                skillModifier >= 0 ? "+" : ""
+              }${skillModifier} = **${totalRoll}**${
+                isCriticalSuccess
+                  ? "\n✨ **Achieved maximum possible quality!**"
+                  : isCriticalFailure
+                  ? "\n💀 **Spectacular cooking failure!**"
+                  : ""
+              }`,
+              inline: false,
+            },
+            {
+              name: "Quality Achieved",
+              value: `${
+                achievedQuality.charAt(0).toUpperCase() +
+                achievedQuality.slice(1)
+              }${inventoryAdded ? " (Added to Inventory)" : ""}`,
+              inline: true,
+            },
+            {
+              name: "Eating Time",
+              value: selectedRecipe.eatingTime,
+              inline: true,
+            },
+            {
+              name: "Duration",
+              value: selectedRecipe.duration,
+              inline: true,
+            },
+            {
+              name: "Recipe Effect",
+              value: selectedRecipe.description,
+              inline: false,
+            },
+            {
+              name: `${
+                achievedQuality.charAt(0).toUpperCase() +
+                achievedQuality.slice(1)
+              } Quality Effect`,
+              value:
+                selectedRecipe.qualities[achievedQuality] ||
+                "No effect available",
+              inline: false,
+            },
+          ],
+          footer: {
+            text: `Witches and Snitches - Recipe Cooking • Today at ${new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}`,
+          },
+        },
+      ],
     };
 
-    try {
-      await fetch(discordWebhookUrl, {
+    if (webhookUrl) {
+      await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
+        body: JSON.stringify(message),
       });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
     }
 
-    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+    return cookingResult;
   } catch (error) {
-    console.error("Error attempting spell:", error);
-    alert("Error processing spell attempt. Please try again.");
+    console.error("Error cooking recipe:", error);
+    return null;
   } finally {
-    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
+    setIsRolling(false);
   }
 };
 
@@ -2732,5 +3075,6 @@ export const useRollFunctions = () => {
     rollFlexibleDice: (params) =>
       rollFlexibleDice({ ...params, showRollResult }),
     rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),
+    rollCookRecipe: (params) => rollCookRecipe({ ...params, showRollResult }),
   };
 };
