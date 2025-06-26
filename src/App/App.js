@@ -28,7 +28,7 @@ import Inventory from "../Components/Inventory/Inventory";
 import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
 import logo from "./../Images/logo/Thumbnail-01.png";
 import BetaBanner from "./BetaBanner";
-import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
+// import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -1028,7 +1028,7 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route
+          {/* <Route
             path="/character/recipes"
             element={
               <ProtectedRoute user={user}>
@@ -1040,7 +1040,7 @@ function AppContent() {
                 />
               </ProtectedRoute>
             }
-          />
+          /> */}
           <Route
             path="/character/gallery"
             element={
