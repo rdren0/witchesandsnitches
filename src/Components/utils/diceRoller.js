@@ -1,6 +1,6 @@
 import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { X, Dice6, Star, Skull } from "lucide-react";
+import { X, Dice6, Star } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
@@ -45,7 +45,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   const {
     title,
     rollValue,
-    originalRoll,
     modifier,
     total,
     isCriticalSuccess,
@@ -53,8 +52,8 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     description,
     type = "ability",
     rollType = "normal",
-    ravenclawBonusApplied = false,
-    abilityType,
+    inventoryAdded,
+    potionQuality,
   } = rollResult;
 
   const getTypeColor = () => {
@@ -76,9 +75,11 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
       case "saving_throw":
         return "#8b5cf6";
       case "research":
-        return "#f59e0b";
+        return "#10b981";
       case "flexible":
         return "#f59e0b";
+      case "potion":
+        return "#6b46c1";
       default:
         return "#6b7280";
     }
@@ -106,7 +107,24 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     ? "#f59e0b"
     : isCriticalFailure
     ? "#ef4444"
-    : getTypeColor();
+    : getDiceColor();
+
+  const textColor = isCriticalSuccess
+    ? "#92400e"
+    : isCriticalFailure
+    ? "#991b1b"
+    : "#1f2937";
+
+  const getQualityColor = (quality) => {
+    const colors = {
+      flawed: "#ef4444",
+      normal: "#6b7280",
+      exceptional: "#8b5cf6",
+      superior: "#f59e0b",
+      ruined: "#dc2626",
+    };
+    return colors[quality] || "#6b7280";
+  };
 
   return (
     <div
@@ -121,6 +139,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
+        padding: "20px",
       }}
       onClick={onClose}
     >
@@ -131,186 +150,248 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           borderRadius: "16px",
           padding: "24px",
           minWidth: "320px",
-          maxWidth: "400px",
-          textAlign: "center",
-          position: "relative",
+          maxWidth: "500px",
+          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+          transform: "scale(1)",
+          animation: "rollModalAppear 0.3s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "12px",
-            right: "12px",
-            background: "none",
-            border: "none",
-            fontSize: "20px",
-            cursor: "pointer",
-            color: "#6b7280",
-          }}
-        >
-          <X size={20} />
-        </button>
-
-        {/* Title */}
-        <h3
-          style={{
-            margin: "0 0 16px 0",
-            fontSize: "20px",
-            fontWeight: "700",
-            color: "#1f2937",
-          }}
-        >
-          {title}
-        </h3>
-
-        {/* Description */}
-        {description && (
-          <p
-            style={{
-              margin: "0 0 20px 0",
-              fontSize: "14px",
-              color: "#6b7280",
-              lineHeight: "1.4",
-            }}
-          >
-            {description}
-          </p>
-        )}
-
-        {/* Dice Result */}
+        {/* Header */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            gap: "16px",
-            margin: "20px 0",
+            justifyContent: "space-between",
+            marginBottom: "20px",
           }}
         >
           <div
             style={{
-              backgroundColor: getDiceColor(),
-              color: "white",
-              borderRadius: "12px",
-              padding: "16px",
-              minWidth: "80px",
-              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
             }}
           >
-            <Dice6 size={24} style={{ marginBottom: "8px" }} />
-            <div style={{ fontSize: "24px", fontWeight: "bold" }}>
-              {rollValue}
+            <Dice6
+              size={32}
+              style={{
+                color: getDiceColor(),
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+              }}
+            />
+            <div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: textColor,
+                  lineHeight: "1.2",
+                }}
+              >
+                {title}
+              </h2>
+              {getRollTypeIndicator() && (
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#6b7280",
+                    fontWeight: "500",
+                    marginTop: "2px",
+                  }}
+                >
+                  {getRollTypeIndicator()}
+                </div>
+              )}
             </div>
-            {getRollTypeIndicator() && (
-              <div style={{ fontSize: "10px", marginTop: "4px" }}>
-                {getRollTypeIndicator()}
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#6b7280",
+              cursor: "pointer",
+              padding: "4px",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Main Roll Display */}
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+            padding: "20px",
+            backgroundColor: "rgba(255, 255, 255, 0.7)",
+            borderRadius: "12px",
+            border: `2px solid ${borderColor}20`,
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: "900",
+              color: getDiceColor(),
+              lineHeight: "1",
+              marginBottom: "8px",
+              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            {rollValue}
+          </div>
+          <div
+            style={{
+              fontSize: "18px",
+              color: textColor,
+              fontWeight: "600",
+              marginBottom: "4px",
+            }}
+          >
+            {modifier >= 0 ? "+" : ""}
+            {modifier} = {total}
+          </div>
+          {(isCriticalSuccess || isCriticalFailure) && (
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "700",
+                color: isCriticalSuccess ? "#92400e" : "#991b1b",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                marginTop: "8px",
+              }}
+            >
+              {isCriticalSuccess
+                ? "✨ Critical Success!"
+                : "💀 Critical Failure!"}
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        {description && (
+          <div
+            style={{
+              fontSize: "14px",
+              color: "#374151",
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "rgba(255, 255, 255, 0.8)",
+              borderRadius: "8px",
+              fontWeight: "500",
+            }}
+          >
+            {description}
+          </div>
+        )}
+
+        {/* NEW: Potion-specific information and inventory status */}
+        {type === "potion" && (
+          <div style={{ marginBottom: "16px" }}>
+            {/* Quality Badge */}
+            {potionQuality && (
+              <div
+                style={{
+                  display: "inline-block",
+                  backgroundColor: getQualityColor(potionQuality),
+                  color: "white",
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  textTransform: "capitalize",
+                  marginBottom: "12px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                }}
+              >
+                {potionQuality} Quality
+              </div>
+            )}
+
+            {/* Inventory Status Pill */}
+            {inventoryAdded !== undefined && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  padding: "8px 16px",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  backgroundColor: inventoryAdded ? "#10b981" : "#ef4444",
+                  color: "white",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                }}
+              >
+                {inventoryAdded ? (
+                  <>
+                    <Star size={16} />
+                    Added to Inventory!
+                  </>
+                ) : (
+                  <>
+                    <X size={16} />
+                    Failed to add to inventory
+                  </>
+                )}
               </div>
             )}
           </div>
-
-          <div style={{ fontSize: "20px", color: "#6b7280" }}>+</div>
-
-          <div
-            style={{
-              backgroundColor: "#e5e7eb",
-              color: "#374151",
-              borderRadius: "12px",
-              padding: "16px",
-              minWidth: "80px",
-            }}
-          >
-            <div style={{ fontSize: "12px", marginBottom: "4px" }}>
-              Modifier
-            </div>
-            <div style={{ fontSize: "20px", fontWeight: "bold" }}>
-              {modifier >= 0 ? "+" : ""}
-              {modifier}
-            </div>
-          </div>
-
-          <div style={{ fontSize: "20px", color: "#6b7280" }}>=</div>
-
-          <div
-            style={{
-              backgroundColor: "#1f2937",
-              color: "white",
-              borderRadius: "12px",
-              padding: "16px",
-              minWidth: "80px",
-            }}
-          >
-            <div style={{ fontSize: "12px", marginBottom: "4px" }}>Total</div>
-            <div style={{ fontSize: "24px", fontWeight: "bold" }}>{total}</div>
-          </div>
-        </div>
-
-        {/* Ravenclaw Bonus Display */}
-        {ravenclawBonusApplied && originalRoll && (
-          <div
-            style={{
-              marginTop: "16px",
-              padding: "12px 16px",
-              backgroundColor: "#dbeafe",
-              border: "2px solid #3b82f6",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "#1e40af",
-            }}
-          >
-            <div style={{ marginBottom: "4px" }}>
-              🦅 <strong>Ravenclaw In-Depth Knowledge!</strong>
-            </div>
-            <div style={{ fontSize: "12px", color: "#1e40af" }}>
-              Original d20 roll: {originalRoll} → Treated as: {rollValue}
-            </div>
-            <div
-              style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}
-            >
-              {abilityType === "intelligence" ? "Intelligence" : "Wisdom"}{" "}
-              ability check with proficiency
-            </div>
-          </div>
         )}
 
-        {/* Critical Success/Failure Icons */}
-        {isCriticalSuccess && (
-          <div
-            style={{
-              marginTop: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              color: "#f59e0b",
-            }}
-          >
-            <Star size={20} fill="currentColor" />
-            <span style={{ fontWeight: "600" }}>CRITICAL SUCCESS!</span>
-            <Star size={20} fill="currentColor" />
-          </div>
-        )}
-
-        {isCriticalFailure && (
-          <div
-            style={{
-              marginTop: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              color: "#ef4444",
-            }}
-          >
-            <Skull size={20} />
-            <span style={{ fontWeight: "600" }}>CRITICAL FAILURE!</span>
-            <Skull size={20} />
-          </div>
-        )}
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%",
+            padding: "12px",
+            backgroundColor: getDiceColor(),
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            fontSize: "16px",
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+          onMouseOver={(e) => {
+            e.target.style.transform = "translateY(-1px)";
+            e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = "translateY(0)";
+            e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+          }}
+        >
+          {type === "potion" ? "Continue Brewing" : "Continue"}
+        </button>
       </div>
+
+      <style>
+        {`
+          @keyframes rollModalAppear {
+            from {
+              opacity: 0;
+              transform: scale(0.9) translateY(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1) translateY(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 };
@@ -1046,6 +1127,12 @@ export const rollBrewPotion = async ({
   characterModifier = 0,
   webhookUrl,
   showRollResult,
+
+  addPotionToInventory,
+  currentCharacter,
+  supabase,
+  user,
+  rawIngredientQuality,
 }) => {
   if (isRolling) return null;
   setIsRolling(true);
@@ -1150,9 +1237,84 @@ export const rollBrewPotion = async ({
       proficiencies,
     };
 
+    let inventoryAdded = false;
+    if (
+      achievedQuality !== "ruined" &&
+      addPotionToInventory &&
+      supabase &&
+      currentCharacter &&
+      user
+    ) {
+      try {
+        const getPotionValue = (quality, rarity) => {
+          const baseValues = {
+            common: {
+              flawed: "5g",
+              normal: "25g",
+              exceptional: "50g",
+              superior: "100g",
+            },
+            uncommon: {
+              flawed: "25g",
+              normal: "100g",
+              exceptional: "200g",
+              superior: "400g",
+            },
+            rare: {
+              flawed: "100g",
+              normal: "500g",
+              exceptional: "1000g",
+              superior: "2000g",
+            },
+            "very rare": {
+              flawed: "500g",
+              normal: "2500g",
+              exceptional: "5000g",
+              superior: "10000g",
+            },
+            legendary: {
+              flawed: "2500g",
+              normal: "12500g",
+              exceptional: "25000g",
+              superior: "50000g",
+            },
+          };
+
+          return baseValues[rarity]?.[quality] || "Unknown";
+        };
+
+        const potionItem = {
+          name: `${
+            achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+          } ${selectedPotion.name}`,
+          description: `${
+            selectedPotion.description
+          }\n\nBrewed on ${new Date().toLocaleString()} with ${rawIngredientQuality} ingredients (prepared to ${ingredientQuality}). Roll: ${d20Roll} + ${skillModifier} = ${totalRoll}`,
+          quantity: 1,
+          value: getPotionValue(achievedQuality, selectedPotion.rarity),
+          category: "Potions",
+          attunement_required: false,
+          character_id: currentCharacter.id,
+          discord_user_id: user?.discord_user_id || user?.id,
+        };
+
+        const { error } = await supabase
+          .from("inventory_items")
+          .insert([potionItem])
+          .select()
+          .single();
+
+        if (!error) {
+          inventoryAdded = true;
+        }
+      } catch (error) {
+        console.error("Error adding potion to inventory:", error);
+      }
+    }
+
     if (showRollResult) {
       showRollResult({
-        title: `Potion Brewing: \n ${selectedPotion.name}`,
+        title: `Potion Brewing: ${selectedPotion.name}`,
         rollValue: d20Roll,
         modifier: skillModifier,
         total: totalRoll,
@@ -1162,6 +1324,10 @@ export const rollBrewPotion = async ({
         description: `Quality Achieved: ${
           achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
         }`,
+
+        inventoryAdded,
+        potionQuality: achievedQuality,
+        potionName: selectedPotion.name,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -1169,8 +1335,9 @@ export const rollBrewPotion = async ({
         : isCriticalFailure
         ? " - CRITICAL FAILURE!"
         : "";
+      const inventoryText = inventoryAdded ? " - Added to Inventory!" : "";
       alert(
-        `Potion Brewing: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}`
+        `Potion Brewing: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}${inventoryText}`
       );
     }
 
@@ -1208,37 +1375,23 @@ export const rollBrewPotion = async ({
 
     const ruinedMessages = [
       "You did your best!",
-      "Maybe stick to Transfiguration?",
-      "You're just one cauldron explosion away from a breakthrough… or remedial lessons.",
-      "Technically a potion. Emotionally? More of a strongly brewed cry for help.",
-      "Some potions turn lead to gold. Yours might turn potential to detention.",
-      "Don't worry, we've all melted a cauldron or two!",
-      "Ah yes, the rare 'liquid disappointment.' Must be part of the intermediate curriculum.",
-      "At least you didn't turn anyone into a ferret!",
+      "Practice makes perfect!",
+      "Even master brewers have off days!",
+      "The ingredients had other plans...",
+      "Sometimes the cauldron wins.",
+      "Better luck next time!",
+      "That's why they call it 'experimental brewing'!",
+      "The potion decided to become... abstract art.",
     ];
 
-    let description = "";
-    if (isCriticalSuccess) {
-      description = "Natural 20!";
-    } else if (isCriticalFailure) {
-      description = "Natural 1!";
-    }
-
-    if (achievedQuality === "ruined" || isCriticalFailure) {
-      const randomMessage =
-        ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
-      description += description
-        ? `\n\n*${randomMessage}*`
-        : `*${randomMessage}*`;
-    }
+    const randomRuinedMessage =
+      ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
 
     const message = {
       embeds: [
         {
-          title: `${character?.name || "Unknown"} Brewed: ${
-            selectedPotion.name
-          }${resultText}`,
-          description: description,
+          title: `${character.name} Brewed a Potion: ${selectedPotion.name}${resultText}`,
+          description: achievedQuality === "ruined" ? randomRuinedMessage : "",
           color: embedColor,
           fields: [
             {
@@ -1259,7 +1412,7 @@ export const rollBrewPotion = async ({
               value: `${
                 achievedQuality.charAt(0).toUpperCase() +
                 achievedQuality.slice(1)
-              }`,
+              }${inventoryAdded ? " (Added to Inventory)" : ""}`,
               inline: true,
             },
             {
@@ -2200,6 +2353,418 @@ export const rollFlexibleDice = async ({
   }
 };
 
+export const attemptArithmancySpell = async ({
+  spellName,
+  subject,
+  showRollResult,
+  selectedCharacter,
+  setSpellAttempts,
+  discordUserId,
+  setAttemptingSpells,
+  setCriticalSuccesses,
+  updateSpellProgressSummary,
+}) => {
+  if (!selectedCharacter || !discordUserId) {
+    alert("Please select a character first!");
+    return;
+  }
+
+  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+
+    // Calculate Arithmancy modifier: INT modifier + wand modifier
+    const intModifier = Math.floor(
+      (selectedCharacter.abilityScores.intelligence - 10) / 2
+    );
+    const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
+    const wandModifier = modifierInfo.wandModifier || 0;
+    const totalModifier = intModifier + wandModifier;
+
+    const total = d20Roll + totalModifier;
+    let goal = 11;
+    if (
+      [
+        "ABSCONDI",
+        "PELLUCIDI PELLIS",
+        "SAGITTARIO",
+        "CONFRINGO",
+        "DEVICTO",
+        "STUPEFY",
+        "PETRIFICUS TOTALUS",
+        "PROTEGO",
+        "PROTEGO MAXIMA",
+        "FINITE INCANTATEM",
+        "CONFUNDO",
+        "BOMBARDA",
+        "EPISKY",
+        "EXPELLIARMUS",
+        "INCARCEROUS",
+      ].includes(spellName.toUpperCase())
+    ) {
+      goal += 3;
+    }
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+    const isSuccess =
+      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${spellName} (Arithmancy Cast)`,
+        rollValue: d20Roll,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "spell",
+        description: `Arithmancy casting ${spellName} for ${selectedCharacter.name} using Intelligence`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      const resultText = isSuccess ? "SUCCESS" : "FAILED";
+      alert(
+        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+      );
+    }
+
+    if (isCriticalSuccess) {
+      setSpellAttempts((prev) => ({
+        ...prev,
+        [spellName]: { 1: true, 2: true },
+      }));
+      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
+    } else if (isSuccess) {
+      setSpellAttempts((prev) => {
+        const currentAttempts = prev[spellName] || {};
+        const newAttempts = { ...currentAttempts };
+
+        if (!newAttempts[1]) {
+          newAttempts[1] = true;
+        } else if (!newAttempts[2]) {
+          newAttempts[2] = true;
+        }
+
+        return {
+          ...prev,
+          [spellName]: newAttempts,
+        };
+      });
+    }
+
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    let title = `${
+      selectedCharacter?.name || "Unknown"
+    } Arithmancy Cast: ${spellName}`;
+    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
+    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
+
+    if (isCriticalSuccess) {
+      title = `⭐ ${
+        selectedCharacter?.name || "Unknown"
+      } Arithmancy Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
+      embedColor = 0xffd700;
+    } else if (isCriticalFailure) {
+      title = `💥 ${
+        selectedCharacter?.name || "Unknown"
+      } Arithmancy Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
+      embedColor = 0x8b0000;
+    }
+
+    let rollDescription = `**Roll:** ${d20Roll}`;
+    if (totalModifier !== 0) {
+      const modifierText =
+        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+      rollDescription += ` ${modifierText} = **${total}**`;
+    }
+
+    const fields = [
+      {
+        name: "Result",
+        value: resultText,
+        inline: true,
+      },
+      {
+        name: "Roll Details",
+        value: rollDescription,
+        inline: true,
+      },
+      {
+        name: "Casting Method",
+        value: "🧮 Arithmancy Cast (Intelligence-based)",
+        inline: true,
+      },
+    ];
+
+    if (totalModifier !== 0) {
+      let modifierBreakdown = `Intelligence: ${
+        intModifier >= 0 ? "+" : ""
+      }${intModifier}`;
+      if (wandModifier !== 0) {
+        modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+          wandModifier >= 0 ? "+" : ""
+        }${wandModifier}`;
+      }
+
+      fields.push({
+        name: "Modifier Breakdown",
+        value: modifierBreakdown,
+        inline: false,
+      });
+    }
+
+    const embed = {
+      title: title,
+      description: "",
+      color: embedColor,
+      fields: fields,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Witches And Snitches - Arithmancy Spellcasting",
+      },
+    };
+
+    try {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: [embed],
+        }),
+      });
+    } catch (error) {
+      console.error("Error sending to Discord:", error);
+    }
+
+    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+  } catch (error) {
+    console.error("Error attempting Arithmancy spell:", error);
+    alert("Error processing Arithmancy spell attempt. Please try again.");
+  } finally {
+    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
+  }
+};
+
+export const attemptRunesSpell = async ({
+  spellName,
+  subject,
+  showRollResult,
+  selectedCharacter,
+  setSpellAttempts,
+  discordUserId,
+  setAttemptingSpells,
+  setCriticalSuccesses,
+  updateSpellProgressSummary,
+}) => {
+  if (!selectedCharacter || !discordUserId) {
+    alert("Please select a character first!");
+    return;
+  }
+
+  setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+
+    // Calculate Runes modifier: WIS modifier + wand modifier
+    const wisModifier = Math.floor(
+      (selectedCharacter.abilityScores.wisdom - 10) / 2
+    );
+    const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
+    const wandModifier = modifierInfo.wandModifier || 0;
+    const totalModifier = wisModifier + wandModifier;
+
+    const total = d20Roll + totalModifier;
+    let goal = 11;
+    if (
+      [
+        "ABSCONDI",
+        "PELLUCIDI PELLIS",
+        "SAGITTARIO",
+        "CONFRINGO",
+        "DEVICTO",
+        "STUPEFY",
+        "PETRIFICUS TOTALUS",
+        "PROTEGO",
+        "PROTEGO MAXIMA",
+        "FINITE INCANTATEM",
+        "CONFUNDO",
+        "BOMBARDA",
+        "EPISKY",
+        "EXPELLIARMUS",
+        "INCARCEROUS",
+      ].includes(spellName.toUpperCase())
+    ) {
+      goal += 3;
+    }
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+    const isSuccess =
+      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${spellName} (Runic Cast)`,
+        rollValue: d20Roll,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "spell",
+        description: `Runic casting ${spellName} for ${selectedCharacter.name} using Wisdom`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      const resultText = isSuccess ? "SUCCESS" : "FAILED";
+      alert(
+        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} - ${resultText}${criticalText}`
+      );
+    }
+
+    if (isCriticalSuccess) {
+      setSpellAttempts((prev) => ({
+        ...prev,
+        [spellName]: { 1: true, 2: true },
+      }));
+      setCriticalSuccesses((prev) => ({ ...prev, [spellName]: true }));
+    } else if (isSuccess) {
+      setSpellAttempts((prev) => {
+        const currentAttempts = prev[spellName] || {};
+        const newAttempts = { ...currentAttempts };
+
+        if (!newAttempts[1]) {
+          newAttempts[1] = true;
+        } else if (!newAttempts[2]) {
+          newAttempts[2] = true;
+        }
+
+        return {
+          ...prev,
+          [spellName]: newAttempts,
+        };
+      });
+    }
+
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    let title = `${
+      selectedCharacter?.name || "Unknown"
+    } Runic Cast: ${spellName}`;
+    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
+    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
+
+    if (isCriticalSuccess) {
+      title = `⭐ ${
+        selectedCharacter?.name || "Unknown"
+      } Runic Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
+      embedColor = 0xffd700;
+    } else if (isCriticalFailure) {
+      title = `💥 ${
+        selectedCharacter?.name || "Unknown"
+      } Runic Cast: ${spellName}`;
+      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
+      embedColor = 0x8b0000;
+    }
+
+    let rollDescription = `**Roll:** ${d20Roll}`;
+    if (totalModifier !== 0) {
+      const modifierText =
+        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+      rollDescription += ` ${modifierText} = **${total}**`;
+    }
+
+    const fields = [
+      {
+        name: "Result",
+        value: resultText,
+        inline: true,
+      },
+      {
+        name: "Roll Details",
+        value: rollDescription,
+        inline: true,
+      },
+      {
+        name: "Casting Method",
+        value: "🔮 Runic Cast (Wisdom-based)",
+        inline: true,
+      },
+    ];
+
+    if (totalModifier !== 0) {
+      let modifierBreakdown = `Wisdom: ${
+        wisModifier >= 0 ? "+" : ""
+      }${wisModifier}`;
+      if (wandModifier !== 0) {
+        modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
+          wandModifier >= 0 ? "+" : ""
+        }${wandModifier}`;
+      }
+
+      fields.push({
+        name: "Modifier Breakdown",
+        value: modifierBreakdown,
+        inline: false,
+      });
+    }
+
+    const embed = {
+      title: title,
+      description: "",
+      color: embedColor,
+      fields: fields,
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Witches And Snitches - Runic Spellcasting",
+      },
+    };
+
+    try {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: [embed],
+        }),
+      });
+    } catch (error) {
+      console.error("Error sending to Discord:", error);
+    }
+
+    await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+  } catch (error) {
+    console.error("Error attempting Runic spell:", error);
+    alert("Error processing Runic spell attempt. Please try again.");
+  } finally {
+    setAttemptingSpells((prev) => ({ ...prev, [spellName]: false }));
+  }
+};
+
 export const useRollFunctions = () => {
   const { showRollResult } = useRollModal();
   return {
@@ -2207,6 +2772,10 @@ export const useRollFunctions = () => {
     rollInitiative: (params) => rollInitiative({ ...params, showRollResult }),
     rollSkill: (params) => rollSkill({ ...params, showRollResult }),
     attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
+    attemptArithmancySpell: (params) =>
+      attemptArithmancySpell({ ...params, showRollResult }), // ADD THIS LINE
+    attemptRunesSpell: (params) =>
+      attemptRunesSpell({ ...params, showRollResult }), // ADD THIS LINE
     rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
     rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
     rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),

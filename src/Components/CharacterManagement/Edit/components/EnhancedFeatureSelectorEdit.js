@@ -15,7 +15,6 @@ const getSpellcastingAbility = (character) => {
   return abilityMap[castingStyle] || "intelligence";
 };
 
-// Comprehensive feat benefits calculation
 const calculateAllFeatBenefits = (
   selectedFeats,
   character,
@@ -48,7 +47,6 @@ const calculateAllFeatBenefits = (
 
     const featBenefits = feat.benefits;
 
-    // Handle ability score increases
     if (featBenefits.abilityScoreIncrease) {
       const increase = featBenefits.abilityScoreIncrease;
       let abilityToIncrease;
@@ -78,11 +76,9 @@ const calculateAllFeatBenefits = (
       }
     }
 
-    // Handle skill proficiencies
     if (featBenefits.skillProficiencies?.length > 0) {
       featBenefits.skillProficiencies.forEach((skillProf) => {
         if (skillProf.type === "choice") {
-          // Handle skill choice - this will need UI handling
           benefits.skillProficiencies.push({
             source: featName,
             type: "choice",
@@ -90,7 +86,6 @@ const calculateAllFeatBenefits = (
             options: skillProf.skills || "any",
           });
         } else if (skillProf.skills) {
-          // Fixed skills
           skillProf.skills.forEach((skill) => {
             benefits.skillProficiencies.push({
               source: featName,
@@ -101,7 +96,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle expertise
     if (featBenefits.expertise?.length > 0) {
       featBenefits.expertise.forEach((exp) => {
         benefits.expertise.push({
@@ -112,7 +106,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle saving throw proficiencies
     if (featBenefits.savingThrowProficiencies?.length > 0) {
       featBenefits.savingThrowProficiencies.forEach((save) => {
         benefits.savingThrowProficiencies.push({
@@ -123,7 +116,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle resistances
     if (featBenefits.resistances?.length > 0) {
       featBenefits.resistances.forEach((resistance) => {
         benefits.resistances.push({
@@ -133,7 +125,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle immunities
     if (featBenefits.immunities?.length > 0) {
       featBenefits.immunities.forEach((immunity) => {
         benefits.immunities.push({
@@ -143,7 +134,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle speeds
     if (Object.keys(featBenefits.speeds).length > 0) {
       Object.entries(featBenefits.speeds).forEach(([speedType, value]) => {
         if (!benefits.speeds[speedType]) benefits.speeds[speedType] = [];
@@ -154,7 +144,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle combat bonuses
     if (Object.keys(featBenefits.combatBonuses).length > 0) {
       Object.entries(featBenefits.combatBonuses).forEach(
         ([bonusType, value]) => {
@@ -168,7 +157,6 @@ const calculateAllFeatBenefits = (
       );
     }
 
-    // Handle spellcasting benefits
     if (Object.keys(featBenefits.spellcasting).length > 0) {
       Object.entries(featBenefits.spellcasting).forEach(
         ([benefitType, value]) => {
@@ -182,7 +170,6 @@ const calculateAllFeatBenefits = (
       );
     }
 
-    // Handle special abilities
     if (featBenefits.specialAbilities?.length > 0) {
       featBenefits.specialAbilities.forEach((ability) => {
         benefits.specialAbilities.push({
@@ -196,7 +183,6 @@ const calculateAllFeatBenefits = (
   return benefits;
 };
 
-// Enhanced modifier pills component
 const ComprehensiveFeatBenefitPills = ({
   selectedFeats,
   character,
@@ -249,7 +235,7 @@ const ComprehensiveFeatBenefitPills = ({
 
         {/* Skill Proficiency Pills */}
         {benefits.skillProficiencies
-          .filter((sp) => sp.skill) // Only show fixed skills, not choices
+          .filter((sp) => sp.skill)
           .map((skillProf, index) => (
             <div
               key={`skill-${index}`}
@@ -344,23 +330,18 @@ const ComprehensiveFeatBenefitPills = ({
         )}
 
         {/* Special Abilities Pills */}
-        {benefits.specialAbilities.slice(0, 3).map(
-          (
-            ability,
-            index // Limit to prevent overflow
-          ) => (
-            <div
-              key={`ability-${index}`}
-              style={styles.abilityPill}
-              title={`${ability.name} from ${ability.source}`}
-            >
-              <span style={styles.pillAbility}>SPEC</span>
-              <span style={styles.pillModifier}>
-                {ability.name.slice(0, 4).toUpperCase()}
-              </span>
-            </div>
-          )
-        )}
+        {benefits.specialAbilities.slice(0, 3).map((ability, index) => (
+          <div
+            key={`ability-${index}`}
+            style={styles.abilityPill}
+            title={`${ability.name} from ${ability.source}`}
+          >
+            <span style={styles.pillAbility}>SPEC</span>
+            <span style={styles.pillModifier}>
+              {ability.name.slice(0, 4).toUpperCase()}
+            </span>
+          </div>
+        ))}
 
         {/* Show count if there are more special abilities */}
         {benefits.specialAbilities.length > 3 && (
@@ -458,40 +439,47 @@ const FeatChoicesSection = ({
       {/* Skill Proficiency Choices */}
       {feat.benefits.skillProficiencies
         ?.filter((sp) => sp.type === "choice")
-        .map((skillChoice, index) => (
-          <div key={`skill-choice-${index}`} style={styles.choiceSection}>
-            <div style={styles.choiceLabel}>
-              Choose {skillChoice.count} skill proficienc
-              {skillChoice.count > 1 ? "ies" : "y"}:
-            </div>
-            <div style={styles.skillChoiceGrid}>
-              {(skillChoice.skills === "any"
-                ? allSkills.map((s) => s.name)
-                : skillChoice.skills
-              ).map((skill) => {
-                const choiceKey = `${featName}_skill_${index}_${skill}`;
-                const currentChoice = featChoices[choiceKey];
+        .map((skillChoice, index) => {
+          let availableSkills = [];
 
-                return (
-                  <label key={skill} style={styles.skillChoiceLabel}>
-                    <input
-                      type="checkbox"
-                      name={choiceKey}
-                      checked={currentChoice || false}
-                      onChange={(e) =>
-                        handleChoiceChange(choiceKey, e.target.checked)
-                      }
-                      style={styles.skillChoiceCheckbox}
-                    />
-                    <span style={styles.skillChoiceName}>
-                      {skill.charAt(0).toUpperCase() + skill.slice(1)}
-                    </span>
-                  </label>
-                );
-              })}
+          if (skillChoice?.skills === "any") {
+            availableSkills = allSkills?.map((s) => s.displayName) || [];
+          } else if (Array.isArray(skillChoice?.skills)) {
+            availableSkills = skillChoice.skills;
+          }
+
+          return (
+            <div key={`skill-choice-${index}`} style={styles.choiceSection}>
+              <div style={styles.choiceLabel}>
+                Choose {skillChoice.count} skill proficienc
+                {skillChoice.count > 1 ? "ies" : "y"}:
+              </div>
+              <div style={styles.skillChoiceGrid}>
+                {availableSkills.map((skill) => {
+                  const choiceKey = `${featName}_skill_${index}_${skill}`;
+                  const currentChoice = featChoices[choiceKey];
+
+                  return (
+                    <label key={skill} style={styles.skillChoiceLabel}>
+                      <input
+                        type="checkbox"
+                        name={choiceKey}
+                        checked={currentChoice || false}
+                        onChange={(e) =>
+                          handleChoiceChange(choiceKey, e.target.checked)
+                        }
+                        style={styles.skillChoiceCheckbox}
+                      />
+                      <span style={styles.skillChoiceName}>
+                        {skill.charAt(0).toUpperCase() + skill.slice(1)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
     </div>
   );
 };
@@ -702,7 +690,7 @@ export const EnhancedFeatureSelector = ({
       color: theme.text,
       fontSize: "11px",
     },
-    // ... rest of existing styles
+
     featChoiceContainer: {
       backgroundColor: theme.surfaceHover,
       border: `1px solid ${theme.border}`,
@@ -796,7 +784,6 @@ export const EnhancedFeatureSelector = ({
           setFeatChoices((prev) => {
             const newChoices = { ...prev };
 
-            // Set default choices for ability scores
             if (
               feat.benefits.abilityScoreIncrease?.type === "choice" ||
               feat.benefits.abilityScoreIncrease?.type === "choice_any"

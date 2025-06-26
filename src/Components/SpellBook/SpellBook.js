@@ -401,10 +401,6 @@ const SpellBook = ({
             </span>
           )}
         <span style={styles.statItem}>
-          <span
-            style={{ ...styles.statDot, backgroundColor: "#f59e0b" }}
-          ></span>
-          Playing as {selectedCharacter.name}
           {hasSubclassFeature(selectedCharacter, "Researcher") && (
             <span
               style={{

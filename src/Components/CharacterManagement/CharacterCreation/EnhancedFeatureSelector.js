@@ -458,40 +458,45 @@ const FeatChoicesSection = ({
       {/* Skill Proficiency Choices */}
       {feat.benefits.skillProficiencies
         ?.filter((sp) => sp.type === "choice")
-        .map((skillChoice, index) => (
-          <div key={`skill-choice-${index}`} style={styles.choiceSection}>
-            <div style={styles.choiceLabel}>
-              Choose {skillChoice.count} skill proficienc
-              {skillChoice.count > 1 ? "ies" : "y"}:
-            </div>
-            <div style={styles.skillChoiceGrid}>
-              {(skillChoice.skills === "any"
-                ? allSkills.map((s) => s.name)
-                : skillChoice.skills
-              ).map((skill) => {
-                const choiceKey = `${featName}_skill_${index}_${skill}`;
-                const currentChoice = featChoices[choiceKey];
+        .map((skillChoice, index) => {
+          // Fixed: Get the available skills properly
+          const availableSkills =
+            skillChoice?.skills === "any"
+              ? allSkills?.map((s) => s.displayName) || [] // Use displayName for consistency
+              : skillChoice?.skills || [];
 
-                return (
-                  <label key={skill} style={styles.skillChoiceLabel}>
-                    <input
-                      type="checkbox"
-                      name={choiceKey}
-                      checked={currentChoice || false}
-                      onChange={(e) =>
-                        handleChoiceChange(choiceKey, e.target.checked)
-                      }
-                      style={styles.skillChoiceCheckbox}
-                    />
-                    <span style={styles.skillChoiceName}>
-                      {skill.charAt(0).toUpperCase() + skill.slice(1)}
-                    </span>
-                  </label>
-                );
-              })}
+          return (
+            <div key={`skill-choice-${index}`} style={styles.choiceSection}>
+              <div style={styles.choiceLabel}>
+                Choose {skillChoice.count} skill proficienc
+                {skillChoice.count > 1 ? "ies" : "y"}:
+              </div>
+              <div style={styles.skillChoiceGrid}>
+                {availableSkills.map((skill) => {
+                  const choiceKey = `${featName}_skill_${index}_${skill}`;
+                  const currentChoice = featChoices[choiceKey];
+
+                  return (
+                    <label key={skill} style={styles.skillChoiceLabel}>
+                      <input
+                        type="checkbox"
+                        name={choiceKey}
+                        checked={currentChoice || false}
+                        onChange={(e) =>
+                          handleChoiceChange(choiceKey, e.target.checked)
+                        }
+                        style={styles.skillChoiceCheckbox}
+                      />
+                      <span style={styles.skillChoiceName}>
+                        {skill.charAt(0).toUpperCase() + skill.slice(1)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
     </div>
   );
 };

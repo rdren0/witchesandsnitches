@@ -19,7 +19,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { potions, qualityDCs } from "./potionsData";
 import { createPotionsStyles } from "../../styles/masterStyles";
 
-const PotionBrewingSystem = ({ character }) => {
+const PotionBrewingSystem = ({ character, supabase, user }) => {
   const { theme, selectedCharacter } = useTheme();
   const styles = createPotionsStyles(theme);
   const { rollBrewPotion } = useRollFunctions();
@@ -163,6 +163,92 @@ const PotionBrewingSystem = ({ character }) => {
     return <IconComponent size={24} />;
   };
 
+  // NEW: Helper function to determine potion value based on quality and rarity
+  const getPotionValue = (quality, rarity) => {
+    const baseValues = {
+      common: {
+        flawed: "5g",
+        normal: "25g",
+        exceptional: "50g",
+        superior: "100g",
+      },
+      uncommon: {
+        flawed: "25g",
+        normal: "100g",
+        exceptional: "200g",
+        superior: "400g",
+      },
+      rare: {
+        flawed: "100g",
+        normal: "500g",
+        exceptional: "1000g",
+        superior: "2000g",
+      },
+      "very rare": {
+        flawed: "500g",
+        normal: "2500g",
+        exceptional: "5000g",
+        superior: "10000g",
+      },
+      legendary: {
+        flawed: "2500g",
+        normal: "12500g",
+        exceptional: "25000g",
+        superior: "50000g",
+      },
+    };
+
+    return baseValues[rarity]?.[quality] || "Unknown";
+  };
+
+  // NEW: Function to add potion to inventory
+  const addPotionToInventory = async (brewingResult) => {
+    if (!supabase || !currentCharacter?.id || !user) {
+      console.error("Missing required data for inventory addition");
+      return false;
+    }
+
+    try {
+      const potionItem = {
+        name: `${
+          brewingResult.achievedQuality.charAt(0).toUpperCase() +
+          brewingResult.achievedQuality.slice(1)
+        } ${brewingResult.potion.name}`,
+        description: `${
+          brewingResult.potion.description
+        }\n\nBrewed on ${new Date().toLocaleString()} with ${ingredientQuality} ingredients (prepared to ${getPreparedIngredientQuality()}). Roll: ${
+          brewingResult.diceRoll || brewingResult.roll
+        } + ${brewingResult.characterModifier} = ${
+          (brewingResult.diceRoll || brewingResult.roll) +
+          brewingResult.characterModifier
+        }`,
+        quantity: 1,
+        value: getPotionValue(
+          brewingResult.achievedQuality,
+          brewingResult.potion.rarity
+        ),
+        category: "Potion",
+        attunement_required: false,
+        character_id: currentCharacter.id,
+        discord_user_id: user?.discord_user_id || user?.id,
+      };
+
+      const { data, error } = await supabase
+        .from("inventory_items")
+        .insert([potionItem])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error("Error adding potion to inventory:", error);
+      return false;
+    }
+  };
+
+  // UPDATED: brewPotion function with inventory integration
   const brewPotion = async () => {
     if (!selectedPotion) return;
 
@@ -191,6 +277,12 @@ const PotionBrewingSystem = ({ character }) => {
         qualityDCs,
         ingredientModifiers,
         characterModifier,
+        // NEW: Pass inventory function to rollBrewPotion
+        addPotionToInventory,
+        currentCharacter,
+        supabase,
+        user,
+        rawIngredientQuality: ingredientQuality,
       });
 
       if (brewingResult) {
