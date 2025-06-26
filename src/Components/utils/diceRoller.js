@@ -2,6 +2,7 @@ import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6, Star } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
+import { spellsData } from "../SpellBook/spells";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -54,6 +55,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     rollType = "normal",
     inventoryAdded,
     potionQuality,
+    recipeQuality,
   } = rollResult;
 
   const getTypeColor = () => {
@@ -80,6 +82,8 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         return "#f59e0b";
       case "potion":
         return "#6b46c1";
+      case "recipe":
+        return "#8b5cf6";
       default:
         return "#6b7280";
     }
@@ -293,15 +297,16 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
-        {/* NEW: Potion-specific information and inventory status */}
-        {type === "potion" && (
+        {(type === "potion" || type === "recipe") && (
           <div style={{ marginBottom: "16px" }}>
             {/* Quality Badge */}
-            {potionQuality && (
+            {(potionQuality || recipeQuality) && (
               <div
                 style={{
                   display: "inline-block",
-                  backgroundColor: getQualityColor(potionQuality),
+                  backgroundColor: getQualityColor(
+                    potionQuality || recipeQuality
+                  ),
                   color: "white",
                   padding: "6px 12px",
                   borderRadius: "20px",
@@ -312,7 +317,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}
               >
-                {potionQuality} Quality
+                {potionQuality || recipeQuality} Quality
               </div>
             )}
 
@@ -365,16 +370,12 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             transition: "all 0.2s ease",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
-          onMouseOver={(e) => {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-          }}
-          onMouseOut={(e) => {
-            e.target.style.transform = "translateY(0)";
-            e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-          }}
         >
-          {type === "potion" ? "Continue Brewing" : "Continue"}
+          {type === "potion"
+            ? "Continue Brewing"
+            : type === "recipe"
+            ? "Continue Cooking"
+            : "Continue"}
         </button>
       </div>
 
@@ -1691,7 +1692,7 @@ export const rollSkill = async ({
   }
 };
 
-const getSpellLevel = (spellName, subject, spellsData) => {
+const getSpellLevel = (spellName, subject) => {
   const subjectData = spellsData[subject];
   if (!subjectData) return 0;
 
@@ -1720,7 +1721,6 @@ export const attemptSpell = async ({
   setAttemptingSpells,
   setCriticalSuccesses,
   updateSpellProgressSummary,
-  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -1739,7 +1739,7 @@ export const attemptSpell = async ({
     );
     const total = d20Roll + totalModifier;
 
-    const spellLevel = getSpellLevel(spellName, subject, spellsData);
+    const spellLevel = getSpellLevel(spellName, subject);
     const goal = getSpellCastingDC(spellLevel);
 
     const isCriticalSuccess = d20Roll === 20;
@@ -1908,7 +1908,6 @@ export const attemptArithmancySpell = async ({
   setAttemptingSpells,
   setCriticalSuccesses,
   updateSpellProgressSummary,
-  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -1930,7 +1929,7 @@ export const attemptArithmancySpell = async ({
 
     const total = d20Roll + totalModifier;
 
-    const spellLevel = getSpellLevel(spellName, subject, spellsData);
+    const spellLevel = getSpellLevel(spellName, subject);
     const goal = getSpellCastingDC(spellLevel);
 
     const isCriticalSuccess = d20Roll === 20;
@@ -2091,7 +2090,6 @@ export const attemptRunesSpell = async ({
   setAttemptingSpells,
   setCriticalSuccesses,
   updateSpellProgressSummary,
-  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -2113,7 +2111,7 @@ export const attemptRunesSpell = async ({
 
     const total = d20Roll + totalModifier;
 
-    const spellLevel = getSpellLevel(spellName, subject, spellsData);
+    const spellLevel = getSpellLevel(spellName, subject);
     const goal = getSpellCastingDC(spellLevel);
 
     const isCriticalSuccess = d20Roll === 20;
@@ -2292,8 +2290,12 @@ export const rollCookRecipe = async ({
     const totalRoll = d20Roll + skillModifier;
 
     const getMaxAchievableQuality = ({ proficiencies, ingredientQuality }) => {
-      const hasKit = proficiencies.culinaryKit || proficiencies.herbologyKit;
-      if (!hasKit) return "Cannot cook without kit";
+      // For Culinarians, they have built-in proficiency
+      const isCulinarian = character?.subclass === "Culinarian";
+      const hasKit =
+        proficiencies.culinaryKit || proficiencies.herbologyKit || isCulinarian;
+
+      if (!hasKit) return "Cannot cook without kit or Culinarian training";
 
       const qualityHierarchy = ["flawed", "regular", "exceptional", "superior"];
       const preparedIndex = qualityHierarchy.indexOf(ingredientQuality);
@@ -2306,7 +2308,17 @@ export const rollCookRecipe = async ({
         return "flawed";
       }
 
-      const maxIndex = Math.min(preparedIndex + 2, qualityHierarchy.length - 1);
+      // Culinarians may have enhanced quality progression
+      let maxQualityBonus = 0;
+      if (isCulinarian) {
+        // Culinarians can achieve better quality with their training
+        maxQualityBonus = 1;
+      }
+
+      const maxIndex = Math.min(
+        preparedIndex + 2 + maxQualityBonus,
+        qualityHierarchy.length - 1
+      );
       const maxQuality = qualityHierarchy[maxIndex];
 
       return maxQuality;
@@ -2317,6 +2329,7 @@ export const rollCookRecipe = async ({
       ingredientQuality,
     });
 
+    // Use the recipe quality DCs (recipes don't have rarity like potions)
     const baseDCs = qualityDCs;
     const ingredientMod = ingredientModifiers[ingredientQuality] || 0;
     const adjustedDCs = Object.fromEntries(
@@ -2334,7 +2347,9 @@ export const rollCookRecipe = async ({
 
     if (isCriticalSuccess) {
       achievedQuality =
-        maxQuality === "Cannot cook without kit" ? "ruined" : maxQuality;
+        maxQuality === "Cannot cook without kit or Culinarian training"
+          ? "ruined"
+          : maxQuality;
       targetDC = adjustedDCs[achievedQuality] || 0;
     } else if (isCriticalFailure) {
       achievedQuality = "ruined";
@@ -2504,9 +2519,7 @@ export const rollCookRecipe = async ({
       "The ingredients had their own plans today.",
       "That's why they invented takeout!",
       "Better luck next meal!",
-      "Gordon Ramsay would have words about this...",
       "The recipe became a learning experience!",
-      "At least the smoke alarm works!",
       "Innovation often looks like chaos at first!",
     ];
 
