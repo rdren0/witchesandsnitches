@@ -3,7 +3,6 @@ import { Flame } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../../styles/masterStyles";
 import { useRollFunctions } from "../../utils/diceRoller";
-import { useRollModal } from "../../utils/diceRoller";
 
 export const CorruptionTracker = ({
   character,
@@ -13,7 +12,6 @@ export const CorruptionTracker = ({
   selectedCharacterId,
 }) => {
   const { rollCorruption } = useRollFunctions();
-  const { showRollResult } = useRollModal();
   const { theme } = useTheme();
   const styles = getCharacterSheetStyles(theme);
 
