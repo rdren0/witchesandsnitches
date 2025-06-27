@@ -115,7 +115,7 @@ export const CorruptionTracker = ({
         if (error.code === "PGRST116") {
           console.log("Character resources not found, creating...");
 
-          const { data: createData, error: createError } = await supabase
+          const { error: createError } = await supabase
             .from("character_resources")
             .insert({
               character_id: selectedCharacterId,
