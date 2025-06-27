@@ -25,10 +25,10 @@ export const CorruptionTracker = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    if (character?.corruption_points !== undefined) {
-      setCorruptionPoints(character.corruption_points);
+    if (character?.corruptionPoints !== undefined) {
+      setCorruptionPoints(character.corruptionPoints);
     }
-  }, [character?.corruption_points]);
+  }, [character?.corruptionPoints]);
 
   const getCorruptionTier = (points) => {
     if (points === 0)
@@ -80,44 +80,84 @@ export const CorruptionTracker = ({
   const currentTier = getCorruptionTier(corruptionPoints);
 
   const updateCorruptionPoints = async (newTotal) => {
-    if (!character || !selectedCharacterId) return;
+    if (!character || !selectedCharacterId || !discordUserId) {
+      console.error("Missing required data:", {
+        hasCharacter: !!character,
+        hasSelectedCharacterId: !!selectedCharacterId,
+        hasDiscordUserId: !!discordUserId,
+      });
+      return;
+    }
 
-    setCorruptionPoints(newTotal);
+    const validatedTotal = Math.max(0, newTotal);
+
+    setCorruptionPoints(validatedTotal);
     setCharacter((prev) => ({
       ...prev,
-      corruption_points: newTotal,
+      corruptionPoints: validatedTotal,
     }));
 
     try {
-      const { error } = await supabase
-        .from("characters")
+      const { data, error } = await supabase
+        .from("character_resources")
         .update({
-          corruption_points: newTotal,
+          corruption_points: validatedTotal,
+          updated_at: new Date().toISOString(),
         })
-        .eq("id", selectedCharacterId)
-        .eq("discord_user_id", discordUserId);
+        .eq("character_id", selectedCharacterId)
+        .eq("discord_user_id", discordUserId)
+        .select()
+        .single();
 
       if (error) {
-        console.error("Error updating corruption points:", error);
+        console.error("Database error updating corruption points:", error);
 
-        setCorruptionPoints(character.corruption_points || 0);
-        setCharacter((prev) => ({
-          ...prev,
-          corruption_points: character.corruption_points || 0,
-        }));
+        if (error.code === "PGRST116") {
+          console.log("Character resources not found, creating...");
 
-        alert("Failed to update corruption points. Please try again.");
+          const { data: createData, error: createError } = await supabase
+            .from("character_resources")
+            .insert({
+              character_id: selectedCharacterId,
+              discord_user_id: discordUserId,
+              corruption_points: validatedTotal,
+              sorcery_points: 0,
+              max_sorcery_points: 0,
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            throw createError;
+          }
+
+          console.log("Character resources created successfully");
+          return;
+        }
+
+        throw error;
       }
+
+      console.log("Corruption points updated successfully:", data);
     } catch (err) {
       console.error("Error updating corruption points:", err);
 
-      setCorruptionPoints(character.corruption_points || 0);
+      const originalValue = character.corruptionPoints || 0;
+      setCorruptionPoints(originalValue);
       setCharacter((prev) => ({
         ...prev,
-        corruption_points: character.corruption_points || 0,
+        corruptionPoints: originalValue,
       }));
 
-      alert("Failed to update corruption points. Please try again.");
+      const errorMessage = err.message?.includes(
+        'relation "character_resources" does not exist'
+      )
+        ? "Database table not found. Please contact support."
+        : err.message?.includes("permission")
+        ? "Permission denied. Please check your login status."
+        : "Failed to update corruption points. Please try again.";
+
+      alert(errorMessage);
     }
   };
 
