@@ -563,8 +563,8 @@ export const subclassesData = {
       },
     ],
   },
-  Divination: {
-    name: "Divination",
+  Divinations: {
+    name: "Divinations",
     description:
       "Seers and mind-readers with foresight abilities, mental manipulation, and mystical perception",
     higherLevelFeatures: [

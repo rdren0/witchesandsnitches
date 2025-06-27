@@ -89,7 +89,7 @@ const getModifierInfo = (spellName, subject, character) => {
     jinxesHexesCurses: "JHC",
     transfiguration: "Transfiguration",
     healing: "Healing",
-    divinations: "Divination",
+    divinations: "Divinations",
   };
 
   return {
