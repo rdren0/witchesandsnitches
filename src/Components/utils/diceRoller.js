@@ -161,7 +161,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -228,7 +227,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Main Roll Display */}
         <div
           style={{
             textAlign: "center",
@@ -280,7 +278,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Description */}
         {description && (
           <div
             style={{
@@ -299,7 +296,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
 
         {(type === "potion" || type === "recipe") && (
           <div style={{ marginBottom: "16px" }}>
-            {/* Quality Badge */}
             {(potionQuality || recipeQuality) && (
               <div
                 style={{
@@ -321,7 +317,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               </div>
             )}
 
-            {/* Inventory Status Pill */}
             {inventoryAdded !== undefined && (
               <div
                 style={{
@@ -354,7 +349,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Close Button */}
         <button
           onClick={onClose}
           style={{
@@ -1239,41 +1233,40 @@ export const rollBrewPotion = async ({
     };
 
     let inventoryAdded = false;
-    if (
-      achievedQuality !== "ruined" &&
-      addPotionToInventory &&
-      supabase &&
-      currentCharacter &&
-      user
-    ) {
+    if (addPotionToInventory && supabase && currentCharacter && user) {
       try {
         const getPotionValue = (quality, rarity) => {
           const baseValues = {
             common: {
+              ruined: "0g",
               flawed: "5g",
               normal: "25g",
               exceptional: "50g",
               superior: "100g",
             },
             uncommon: {
+              ruined: "0g",
               flawed: "25g",
               normal: "100g",
               exceptional: "200g",
               superior: "400g",
             },
             rare: {
+              ruined: "0g",
               flawed: "100g",
               normal: "500g",
               exceptional: "1000g",
               superior: "2000g",
             },
             "very rare": {
+              ruined: "0g",
               flawed: "500g",
               normal: "2500g",
               exceptional: "5000g",
               superior: "10000g",
             },
             legendary: {
+              ruined: "0g",
               flawed: "2500g",
               normal: "12500g",
               exceptional: "25000g",
