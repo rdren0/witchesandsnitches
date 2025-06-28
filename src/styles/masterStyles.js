@@ -2217,6 +2217,9 @@ export const createCharacterCreationStyles = (theme) => ({
   },
   actionButton: {
     alignItems: "center",
+    margin: "4px",
+    display: "flex",
+    justifyContent: "space-around",
     gap: "4px",
     padding: "8px 12px",
     border: "none",
@@ -2225,7 +2228,7 @@ export const createCharacterCreationStyles = (theme) => ({
     fontWeight: "500",
     cursor: "pointer",
     transition: "all 0.2s ease",
-    width: "80px",
+    width: "100px",
   },
   editButton: {
     backgroundColor: theme.primary,
