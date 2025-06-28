@@ -50,9 +50,49 @@ export const potions = {
       description: "Neutralizes simple poisons and provides advantage",
     },
     {
+      name: "Baneberry Poison",
+      rarity: "common",
+      description:
+        "Causes a lingering poisoned condition unless resisted with a Constitution save",
+    },
+    {
       name: "Beautification Potion",
       rarity: "uncommon",
       description: "Makes appearance more attractive for 10 minutes",
+    },
+    {
+      name: "Dr. Ubbly’s Oblivious Unction",
+      rarity: "common",
+      description: "Gives disadvantage on Wisdom checks for 1 hour",
+    },
+    {
+      name: "Forgetfulness Potion",
+      rarity: "common",
+      description:
+        "Erases the last minute of memory and blocks new memories for 10 minutes",
+    },
+    {
+      name: "Fungiface Potion",
+      rarity: "common",
+      description:
+        "Covers your face in itchy mushrooms for 1 hour (furnunculus spell effect)",
+    },
+    {
+      name: "Garrotting Gas",
+      rarity: "common",
+      description:
+        "Inhaled gas that can poison or knock out creatures; affects a 5-foot area when thrown",
+    },
+    {
+      name: "Herbicide Potion",
+      rarity: "common",
+      description:
+        "Kills magical plants within a 5-foot cube; partial effect on larger plants",
+    },
+    {
+      name: "Oculus Potion",
+      rarity: "common",
+      description: "Cures blindness and restores normal vision",
     },
     {
       name: "Shrinking Solution",
@@ -82,9 +122,27 @@ export const potions = {
       description: "Advantage on Intelligence checks for 1 hour",
     },
     {
+      name: "Befuddlement Draught",
+      rarity: "uncommon",
+      description:
+        "Disadvantage on Intelligence and Wisdom checks; advantage on saves vs. fear (except Dementors) for 1 hour",
+    },
+    {
       name: "Blood Replenishing Potion",
       rarity: "uncommon",
       description: "Doubles hit dice recovery or regains all spent hit dice",
+    },
+    {
+      name: "Bloodroot Poison",
+      rarity: "uncommon",
+      description:
+        "Deals ongoing poison damage that can't be healed; ends after seven successful daily saves",
+    },
+    {
+      name: "Confusing Concoction",
+      rarity: "common",
+      description:
+        "For 6 seconds, you can't act and may move in a random direction based on a d10 roll",
     },
     {
       name: "Exstimulo Potion",
@@ -97,9 +155,59 @@ export const potions = {
       description: "Resistance to fire damage for 1 hour",
     },
     {
+      name: "Girding Potion",
+      rarity: "uncommon",
+      description: "Grants 6d4 + 6 temporary hit points for 1 hour",
+    },
+    {
+      name: "Gregory’s Unctuous Unction",
+      rarity: "uncommon",
+      description:
+        "Charmed by the giver for 1 hour, treating them as your best friend",
+    },
+    {
+      name: "Moonseed Poison",
+      rarity: "common",
+      description:
+        "Deals 6d6 poison damage (half on save, DC 11) when ingested",
+    },
+    {
+      name: "Pet Tonic",
+      rarity: "common",
+      description:
+        "Fully heals a magical pet, cures conditions, and grants 1d4 temporary hit points for 1 hour",
+    },
+    {
+      name: "Regerminating Potion",
+      rarity: "common",
+      description: "Revives dying plants and accelerates seedling growth",
+    },
+    {
+      name: "Star Grass Salve",
+      rarity: "common",
+      description: "Restores 2d4 + 2 hit points when applied",
+    },
+    {
+      name: "Sleeping Draught",
+      rarity: "uncommon",
+      description:
+        "Puts you into a magical sleep for 1 hour; only an antidote can wake you early",
+    },
+    {
       name: "Strengthening Solution",
       rarity: "uncommon",
       description: "Strength score raised to 21 for 1 hour",
+    },
+    {
+      name: "Volubilis Potion",
+      rarity: "uncommon",
+      description:
+        "For 10 minutes, alters your voice and grants advantage on Deception and Performance checks to impersonate someone",
+    },
+    {
+      name: "Wiggenweld Potion",
+      rarity: "uncommon",
+      description: "Cures magical sleep and awakens the target instantly",
     },
   ],
   4: [
@@ -114,6 +222,12 @@ export const potions = {
       description: "Suppresses strong emotions for 1 hour",
     },
     {
+      name: "Fatiguing Fusion",
+      rarity: "uncommon",
+      description:
+        "On failed save (DC 13), causes 3 levels of exhaustion, up to a max of 5",
+    },
+    {
       name: "Gillyweed",
       rarity: "uncommon",
       description: "Breathe underwater and swim for 1 hour",
@@ -122,6 +236,29 @@ export const potions = {
       name: "Memory Potion",
       rarity: "uncommon",
       description: "Restores lost memories, advantage on knowledge checks",
+    },
+    {
+      name: "Murtlap Essence",
+      rarity: "uncommon",
+      description: "Restores 4d4 + 4 hit points when applied to wounds",
+    },
+    {
+      name: "Noxious Potion",
+      rarity: "uncommon",
+      description:
+        "Inhaled or ingested poison dealing 6d6 damage and ongoing 2d6 until 3 saves (DC 13); can be thrown to affect a 5-foot area",
+    },
+    {
+      name: "Twilight Moonbeams",
+      rarity: "uncommon",
+      description:
+        "Charmed by a chosen target for 1 hour; disadvantage on Perception checks not involving them",
+    },
+    {
+      name: "Vitamix Potion",
+      rarity: "uncommon",
+      description:
+        "Grants advantage on Dexterity checks for 1 hour; feels like a burst of energy",
     },
     {
       name: "Wideye Potion",
@@ -141,6 +278,12 @@ export const potions = {
       description: "Invisibility for 10 minutes (no concentration)",
     },
     {
+      name: "Kissing Concoction",
+      rarity: "rare",
+      description:
+        "Charmed for 1 hour; compelled to kiss a chosen target when seen or directed toward them",
+    },
+    {
       name: "Mandrake Restorative Draught",
       rarity: "rare",
       description: "Ends charm, paralysis, petrification, or transfiguration",
@@ -154,6 +297,12 @@ export const potions = {
       name: "Wit-Sharpening Potion",
       rarity: "rare",
       description: "Raises Intelligence and Wisdom to 20 for 1 hour",
+    },
+    {
+      name: "Weedosoros",
+      rarity: "rare",
+      description:
+        "Deals 14d6 poison damage (DC 15); poisoned for 1 day on fail or 1 minute on success",
     },
   ],
   6: [
