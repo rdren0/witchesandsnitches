@@ -564,6 +564,7 @@ export const createThemedStyles = (theme) => ({
     padding: "1.5rem",
     border: `2px solid ${theme.border}`,
     marginBottom: "1.5rem",
+    height: "1200px",
   },
   skillsTitle: {
     fontSize: "1.25rem",

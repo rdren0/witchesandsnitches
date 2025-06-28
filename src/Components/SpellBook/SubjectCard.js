@@ -322,6 +322,8 @@ const getAdditionalStyles = (theme) => ({
     "&:hover": {
       backgroundColor: theme.background || "#f8fafc",
     },
+    position: "relative",
+    zIndex: 2,
   },
   editModal: {
     position: "fixed",
@@ -498,6 +500,8 @@ export const SubjectCard = ({
   const styles = { ...baseStyles, ...additionalStyles };
 
   const [attemptingSpells, setAttemptingSpells] = useState({});
+  const [alternateAttemptsModal, setAlternateAttemptsModal] = useState(null);
+
   const [openMenus, setOpenMenus] = useState({});
   const [editingSpell, setEditingSpell] = useState(null);
   const [editFormData, setEditFormData] = useState({
@@ -765,16 +769,137 @@ export const SubjectCard = ({
     );
   };
 
+  const AlternateAttemptsModal = ({ spellName, spellObj, subject }) => {
+    if (!alternateAttemptsModal) return null;
+
+    const isAttempting = attemptingSpells[spellName] || false;
+    const isMastered =
+      (spellAttempts[spellName]?.[1] && spellAttempts[spellName]?.[2]) || false;
+    const isResearched = researchedSpells[spellName] || false;
+
+    return (
+      <div style={styles.modalOverlay}>
+        <div style={styles.modalContent}>
+          <div style={styles.modalHeader}>
+            <h3 style={styles.modalTitle}>Alternate Attempts: {spellName}</h3>
+            <button
+              onClick={() => setAlternateAttemptsModal(null)}
+              style={styles.modalCloseButton}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div style={styles.modalBody}>
+            <p style={styles.modalDescription}>
+              Choose an alternate casting method for this spell:
+            </p>
+
+            <div style={styles.alternateButtonsGrid}>
+              {/* Arithmancy Button */}
+              <button
+                onClick={() => {
+                  attemptArithmancySpell({
+                    spellName,
+                    subject,
+                    selectedCharacter,
+                    setSpellAttempts,
+                    discordUserId,
+                    setAttemptingSpells,
+                    setCriticalSuccesses,
+                    updateSpellProgressSummary,
+                  });
+                  setAlternateAttemptsModal(null);
+                }}
+                disabled={isAttempting || isMastered || !selectedCharacter}
+                style={styles.alternateButton}
+              >
+                <Brain size={20} />
+                <div style={styles.alternateButtonContent}>
+                  <div style={styles.alternateButtonTitle}>Arithmancy Cast</div>
+                  <div style={styles.alternateButtonSubtitle}>
+                    Intelligence + Wand modifier
+                  </div>
+                  <div style={styles.alternateButtonModifier}>
+                    +
+                    {Math.floor(
+                      (selectedCharacter?.abilityScores?.intelligence - 10) / 2
+                    ) || 0}
+                  </div>
+                </div>
+              </button>
+
+              {/* Runes Button */}
+              <button
+                onClick={() => {
+                  attemptRunesSpell({
+                    spellName,
+                    subject,
+                    selectedCharacter,
+                    setSpellAttempts,
+                    discordUserId,
+                    setAttemptingSpells,
+                    setCriticalSuccesses,
+                    updateSpellProgressSummary,
+                  });
+                  setAlternateAttemptsModal(null);
+                }}
+                disabled={isAttempting || isMastered || !selectedCharacter}
+                style={styles.alternateButton}
+              >
+                <WisdomIcon size={20} />
+                <div style={styles.alternateButtonContent}>
+                  <div style={styles.alternateButtonTitle}>Runic Cast</div>
+                  <div style={styles.alternateButtonSubtitle}>
+                    Wisdom + Wand modifier
+                  </div>
+                  <div style={styles.alternateButtonModifier}>
+                    +
+                    {Math.floor(
+                      (selectedCharacter?.abilityScores?.wisdom - 10) / 2
+                    ) || 0}
+                  </div>
+                </div>
+              </button>
+
+              {/* Research Button */}
+              <button
+                onClick={() => {
+                  markSpellAsResearched(spellName);
+                  setAlternateAttemptsModal(null);
+                }}
+                disabled={
+                  isResearched ||
+                  isMastered ||
+                  !selectedCharacter ||
+                  isAttempting ||
+                  !findSpellData(spellName).year
+                }
+                style={styles.alternateButton}
+              >
+                <BookOpen size={20} />
+                <div style={styles.alternateButtonContent}>
+                  <div style={styles.alternateButtonTitle}>Research Spell</div>
+                  <div style={styles.alternateButtonSubtitle}>
+                    History of Magic Check
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderSpellRow = (spellObj, index, subject, showLevel = false) => {
     const spellName = spellObj.name;
     const successCount = getSuccessfulAttempts(spellName);
-
     const attempts = spellAttempts[spellName] || {};
     const hasCriticalSuccess = criticalSuccesses[spellName] || false;
     const isResearched = researchedSpells[spellName] || false;
     const hasAttempts = Object.keys(attempts).length > 0 || successCount > 0;
     const hasFailedAttempt = failedAttempts[spellName] || false;
-
     const isAttempting = attemptingSpells[spellName] || false;
     const isMastered = attempts[1] && attempts[2];
 
@@ -854,6 +979,22 @@ export const SubjectCard = ({
                   }}
                 >
                   Attempted
+                </span>
+              )}
+              {isResearched && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    padding: "2px 6px",
+                    borderRadius: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    backgroundColor: theme.warning || "#f59e0b",
+                    color: "white",
+                  }}
+                >
+                  Researched
                 </span>
               )}
               {hasArithmancticTag && (
@@ -959,155 +1100,6 @@ export const SubjectCard = ({
             {isAttempting ? "Rolling..." : "Attempt"}
           </button>
         </td>
-        <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() =>
-              attemptArithmancySpell({
-                spellName,
-                subject,
-                selectedCharacter,
-                setSpellAttempts,
-                discordUserId,
-                setAttemptingSpells,
-                setCriticalSuccesses,
-                updateSpellProgressSummary,
-              })
-            }
-            disabled={isAttempting || isMastered || !selectedCharacter}
-            style={{
-              backgroundColor: "#3b82f6",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: "500",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              transition: "all 0.2s ease",
-              fontFamily: "inherit",
-              ...(isMastered || isAttempting || !selectedCharacter
-                ? {
-                    backgroundColor: theme.textSecondary,
-                    cursor: "not-allowed",
-                  }
-                : {}),
-            }}
-            title={`Arithmancy Cast ${spellName} - Uses Intelligence modifier (+${
-              Math.floor(
-                (selectedCharacter?.abilityScores?.intelligence - 10) / 2
-              ) || 0
-            }) + Wand modifier`}
-          >
-            <Brain size={14} />
-            <span>Arithmancy</span>
-          </button>
-        </td>
-        <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() =>
-              attemptRunesSpell({
-                spellName,
-                subject,
-                selectedCharacter,
-                setSpellAttempts,
-                discordUserId,
-                setAttemptingSpells,
-                setCriticalSuccesses,
-                updateSpellProgressSummary,
-              })
-            }
-            disabled={isAttempting || isMastered || !selectedCharacter}
-            style={{
-              backgroundColor: "#8b5cf6",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: "500",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              transition: "all 0.2s ease",
-              fontFamily: "inherit",
-              ...(isMastered || isAttempting || !selectedCharacter
-                ? {
-                    backgroundColor: theme.textSecondary,
-                    cursor: "not-allowed",
-                  }
-                : {}),
-            }}
-            title={`Runic Cast ${spellName} - Uses Wisdom modifier (+${
-              Math.floor((selectedCharacter?.abilityScores?.wisdom - 10) / 2) ||
-              0
-            }) + Wand modifier`}
-          >
-            <WisdomIcon size={14} />
-            <span>Runes</span>
-          </button>
-        </td>
-        <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() => markSpellAsResearched(spellName)}
-            disabled={
-              isResearched ||
-              isMastered ||
-              !selectedCharacter ||
-              attemptingSpells[spellName] ||
-              !findSpellData(spellName).year
-            }
-            style={{
-              backgroundColor: theme.warning || "#f59e0b",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: "500",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              transition: "all 0.2s ease",
-              fontFamily: "inherit",
-              position: "relative",
-              ...(isMastered ||
-              isResearched ||
-              !selectedCharacter ||
-              attemptingSpells[spellName] ||
-              !findSpellData(spellName).year
-                ? {
-                    backgroundColor: theme.textSecondary,
-                    cursor: "not-allowed",
-                  }
-                : {}),
-            }}
-            title={`Research ${spellName} (History of Magic Check)${
-              hasSubclassFeature(selectedCharacter, "Researcher")
-                ? " - Researcher: +½ Wisdom modifier"
-                : ""
-            }`}
-          >
-            <BookOpen size={14} />
-            {attemptingSpells[spellName] ? "Rolling..." : "Research"}
-            {hasSubclassFeature(selectedCharacter, "Researcher") && (
-              <span
-                style={{
-                  fontSize: "10px",
-                  marginLeft: "2px",
-                  color: "#ffd700",
-                }}
-                title="Researcher bonus active"
-              >
-                📚
-              </span>
-            )}
-          </button>
-        </td>
         <td style={{ ...styles.tableCellMenu, position: "relative" }}>
           <button
             onClick={(e) => {
@@ -1124,10 +1116,49 @@ export const SubjectCard = ({
           </button>
 
           {openMenus[spellName] && (
-            <div style={styles.menuDropdown}>
+            <div
+              style={{
+                right: "20px",
+                top: "auto",
+                bottom: "auto",
+                backgroundColor: theme.surface || "#ffffff",
+                border: `1px solid ${theme.border || "#e5e7eb"}`,
+                borderRadius: "8px",
+                boxShadow: "0 8px 25px -8px rgba(0, 0, 0, 0.25)",
+                zIndex: 9999,
+                minWidth: "160px",
+                padding: "4px",
+                display: "block",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setAlternateAttemptsModal(spellName);
+                  closeAllMenus();
+                }}
+                style={styles.menuItem}
+              >
+                <Dice6 size={14} />
+                Alternate Casting
+              </button>
               <button
                 onClick={() => startEditing(spellName)}
-                style={styles.menuItem}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: theme.text || "#000000",
+                  fontFamily: "inherit",
+                  transition: "background-color 0.2s ease",
+                }}
               >
                 <Edit3 size={14} />
                 Edit Progress
@@ -1581,9 +1612,6 @@ export const SubjectCard = ({
                 <th style={styles.tableHeaderCell}>Successful Attempts</th>
                 <th style={styles.tableHeaderCellCenter}>Critical</th>
                 <th style={styles.tableHeaderCellCenter}>Attempt</th>
-                <th style={styles.tableHeaderCellCenter}>Arithmancy</th>
-                <th style={styles.tableHeaderCellCenter}>Runes</th>
-                <th style={styles.tableHeaderCellCenter}>Research</th>
                 <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
                   Menu
                 </th>
@@ -1791,6 +1819,13 @@ export const SubjectCard = ({
             </div>
           </div>
         </div>
+      )}
+      {alternateAttemptsModal && (
+        <AlternateAttemptsModal
+          spellName={alternateAttemptsModal}
+          spellObj={findSpellData(alternateAttemptsModal)}
+          subject={subjectName}
+        />
       )}
     </div>
   );

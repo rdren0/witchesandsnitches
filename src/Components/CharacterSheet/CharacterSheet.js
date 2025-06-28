@@ -24,7 +24,7 @@ import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import CorruptionTracker from "./Sections/CorruptionTracker";
 import SpellSlotTracker from "./Sections/SpellSlotTracker";
 import SorceryPointTracker from "./Sections/SorceryPointTracker";
-import CastingTiles from "./CastingTiles";
+import { useCallback } from "react";
 
 const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
 
@@ -74,6 +74,8 @@ const CharacterSheet = ({
   selectedCharacter,
   characters,
   className = "",
+  adminMode = false,
+  isUserAdmin = false,
 }) => {
   const { rollInitiative } = useRollFunctions();
   const { showRollResult } = useRollModal();
@@ -97,11 +99,11 @@ const CharacterSheet = ({
   const [characterLoading, setCharacterLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const getHitDie = (castingStyle) => {
+  const getHitDie = useCallback((castingStyle) => {
     return hitDiceData[castingStyle] || hitDiceData.default;
-  };
+  }, []);
 
-  const getBaseArmorClass = (castingStyle) => {
+  const getBaseArmorClass = useCallback((castingStyle) => {
     const baseACMap = {
       Willpower: 13,
       "Willpower Caster": 13,
@@ -113,7 +115,7 @@ const CharacterSheet = ({
       "Vigor Caster": 8,
     };
     return baseACMap[castingStyle] || 11;
-  };
+  }, []);
 
   const getSpellcastingAbility = (castingStyle) => {
     const spellcastingAbilityMap = {
@@ -312,17 +314,20 @@ const CharacterSheet = ({
     }
   };
 
-  const getArmorClassModifier = (effectiveAbilityScores) => {
+  const getArmorClassModifier = useCallback((effectiveAbilityScores) => {
     return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
-  };
+  }, []);
 
-  const getInitiativeModifier = (initiativeAbility, effectiveAbilityScores) => {
-    if (initiativeAbility === "intelligence") {
-      return Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
-    }
+  const getInitiativeModifier = useCallback(
+    (initiativeAbility, effectiveAbilityScores) => {
+      if (initiativeAbility === "intelligence") {
+        return Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
+      }
 
-    return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
-  };
+      return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
+    },
+    []
+  );
 
   const getHPColor = (character) => {
     const currentHP = character.currentHitPoints ?? character.hitPoints;
@@ -352,22 +357,25 @@ const CharacterSheet = ({
     };
   };
 
-  const calculateEffectiveAbilityScores = (baseScores, asiChoices) => {
-    const effectiveScores = { ...baseScores };
-    Object.entries(asiChoices).forEach(([level, choice]) => {
-      if (choice.type === "asi" && choice.abilityScoreIncreases) {
-        choice.abilityScoreIncreases.forEach((increase) => {
-          if (effectiveScores[increase.ability] !== undefined) {
-            effectiveScores[increase.ability] =
-              (effectiveScores[increase.ability] || 10) + 1;
-          }
-        });
-      }
-    });
-    return effectiveScores;
-  };
+  const calculateEffectiveAbilityScores = useCallback(
+    (baseScores, asiChoices) => {
+      const effectiveScores = { ...baseScores };
+      Object.entries(asiChoices).forEach(([level, choice]) => {
+        if (choice.type === "asi" && choice.abilityScoreIncreases) {
+          choice.abilityScoreIncreases.forEach((increase) => {
+            if (effectiveScores[increase.ability] !== undefined) {
+              effectiveScores[increase.ability] =
+                (effectiveScores[increase.ability] || 10) + 1;
+            }
+          });
+        }
+      });
+      return effectiveScores;
+    },
+    []
+  );
 
-  const getAllCharacterFeats = (standardFeats, asiChoices) => {
+  const getAllCharacterFeats = useCallback((standardFeats, asiChoices) => {
     const allFeats = [...standardFeats];
 
     Object.entries(asiChoices).forEach(([level, choice]) => {
@@ -377,55 +385,58 @@ const CharacterSheet = ({
     });
 
     return allFeats;
-  };
+  }, []);
 
-  const transformSkillData = (skillProficiencies = [], skillExpertise = []) => {
-    const skillMap = {
-      Athletics: "athletics",
-      Acrobatics: "acrobatics",
-      "Sleight of Hand": "sleightOfHand",
-      Stealth: "stealth",
-      Herbology: "herbology",
-      "History of Magic": "historyOfMagic",
-      Investigation: "investigation",
-      "Magical Theory": "magicalTheory",
-      "Muggle Studies": "muggleStudies",
-      Insight: "insight",
-      "Magical Creatures": "magicalCreatures",
-      Medicine: "medicine",
-      Perception: "perception",
-      "Potion Making": "potionMaking",
-      Survival: "survival",
-      Deception: "deception",
-      Intimidation: "intimidation",
-      Performance: "performance",
-      Persuasion: "persuasion",
-    };
+  const transformSkillData = useCallback(
+    (skillProficiencies = [], skillExpertise = []) => {
+      const skillMap = {
+        Athletics: "athletics",
+        Acrobatics: "acrobatics",
+        "Sleight of Hand": "sleightOfHand",
+        Stealth: "stealth",
+        Herbology: "herbology",
+        "History of Magic": "historyOfMagic",
+        Investigation: "investigation",
+        "Magical Theory": "magicalTheory",
+        "Muggle Studies": "muggleStudies",
+        Insight: "insight",
+        "Magical Creatures": "magicalCreatures",
+        Medicine: "medicine",
+        Perception: "perception",
+        "Potion Making": "potionMaking",
+        Survival: "survival",
+        Deception: "deception",
+        Intimidation: "intimidation",
+        Performance: "performance",
+        Persuasion: "persuasion",
+      };
 
-    const skills = {};
+      const skills = {};
 
-    Object.values(skillMap).forEach((skill) => {
-      skills[skill] = 0;
-    });
+      Object.values(skillMap).forEach((skill) => {
+        skills[skill] = 0;
+      });
 
-    skillProficiencies.forEach((skillName) => {
-      const mappedSkill = skillMap[skillName];
-      if (mappedSkill) {
-        skills[mappedSkill] = 1;
-      }
-    });
+      skillProficiencies.forEach((skillName) => {
+        const mappedSkill = skillMap[skillName];
+        if (mappedSkill) {
+          skills[mappedSkill] = 1;
+        }
+      });
 
-    skillExpertise.forEach((skillName) => {
-      const mappedSkill = skillMap[skillName];
-      if (mappedSkill) {
-        skills[mappedSkill] = 2;
-      }
-    });
+      skillExpertise.forEach((skillName) => {
+        const mappedSkill = skillMap[skillName];
+        if (mappedSkill) {
+          skills[mappedSkill] = 2;
+        }
+      });
 
-    return skills;
-  };
+      return skills;
+    },
+    []
+  );
 
-  const fetchCharacterDetails = async () => {
+  const fetchCharacterDetails = useCallback(async () => {
     if (!selectedCharacter?.id) {
       setCharacter(null);
       return;
@@ -435,10 +446,13 @@ const CharacterSheet = ({
     setError(null);
 
     try {
-      const { data, error } = await supabase
-        .from("characters")
-        .select(
-          `
+      let data, error;
+
+      if (adminMode && isUserAdmin) {
+        const response = await supabase
+          .from("characters")
+          .select(
+            `
         *, 
         initiative_ability,
         character_resources (
@@ -465,10 +479,51 @@ const CharacterSheet = ({
           max_spell_slots_9
         )
       `
+          )
+          .eq("id", selectedCharacter.id)
+          .single();
+
+        data = response.data;
+        error = response.error;
+      } else {
+        const response = await supabase
+          .from("characters")
+          .select(
+            `
+        *, 
+        initiative_ability,
+        character_resources (
+          corruption_points,
+          sorcery_points,
+          max_sorcery_points,
+          spell_slots_1,
+          spell_slots_2,
+          spell_slots_3,
+          spell_slots_4,
+          spell_slots_5,
+          spell_slots_6,
+          spell_slots_7,
+          spell_slots_8,
+          spell_slots_9,
+          max_spell_slots_1,
+          max_spell_slots_2,
+          max_spell_slots_3,
+          max_spell_slots_4,
+          max_spell_slots_5,
+          max_spell_slots_6,
+          max_spell_slots_7,
+          max_spell_slots_8,
+          max_spell_slots_9
         )
-        .eq("id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
-        .single();
+      `
+          )
+          .eq("id", selectedCharacter.id)
+          .eq("discord_user_id", discordUserId)
+          .single();
+
+        data = response.data;
+        error = response.error;
+      }
 
       if (error) throw error;
 
@@ -565,6 +620,8 @@ const CharacterSheet = ({
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,
           year: `Level ${data.level}`,
+
+          ownerId: data.discord_user_id,
         };
 
         setCharacter(transformedCharacter);
@@ -575,12 +632,31 @@ const CharacterSheet = ({
     } finally {
       setCharacterLoading(false);
     }
-  };
+  }, [
+    selectedCharacter?.id,
+    supabase,
+    adminMode,
+    isUserAdmin,
+    discordUserId,
+    calculateEffectiveAbilityScores,
+    getAllCharacterFeats,
+    getBaseArmorClass,
+    getArmorClassModifier,
+    getHitDie,
+    getInitiativeModifier,
+    transformSkillData,
+  ]);
 
   useEffect(() => {
     fetchCharacterDetails();
-    // eslint-disable-next-line
-  }, [selectedCharacter?.id, discordUserId, supabase]);
+  }, [
+    selectedCharacter?.id,
+    discordUserId,
+    supabase,
+    adminMode,
+    isUserAdmin,
+    fetchCharacterDetails,
+  ]);
 
   const handleShortRestClick = () => {
     if (!character || character.currentHitDice <= 0) {
@@ -908,7 +984,25 @@ const CharacterSheet = ({
             <h3>Loading Character Sheet...</h3>
           </div>
         )}
-
+        {adminMode &&
+          isUserAdmin &&
+          selectedCharacter?.ownerId !== discordUserId && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ff6b6b, #ffa500)",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                marginBottom: "16px",
+                textAlign: "center",
+                fontWeight: "bold",
+                border: "2px solid #ff4757",
+              }}
+            >
+              ADMIN MODE: Viewing {selectedCharacter.name} (Session:{" "}
+              {selectedCharacter?.gameSession || "Unknown"})
+            </div>
+          )}
         {character && !characterLoading && (
           <>
             <div style={styles.headerCard}>
@@ -1442,11 +1536,6 @@ const CharacterSheet = ({
                   title="Custom Roll"
                   description={`Rolling for ${character.name}`}
                   character={character}
-                />
-                <CastingTiles
-                  character={character}
-                  styles={styles}
-                  showRollResult={showRollResult}
                 />
                 <SpellSlotTracker
                   character={character}

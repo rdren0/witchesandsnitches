@@ -1525,7 +1525,7 @@ export const spellsData = {
           level: "5th Level",
           year: 6,
           tags: ["R"],
-          description: "Divination spell",
+          description: "Divinations spell",
         },
         {
           name: "Mumblio Totalum",

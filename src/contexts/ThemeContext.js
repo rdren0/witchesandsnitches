@@ -140,7 +140,6 @@ const HOUSE_THEMES = {
     headerBackground: "#6D28D9",
     sidebarBackground: "#F9FAFB",
   },
-
   Beauxbatons: {
     primary: "#4F8FFF",
     secondary: "#E8F4FD",

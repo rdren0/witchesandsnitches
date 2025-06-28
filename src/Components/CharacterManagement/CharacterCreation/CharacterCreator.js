@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { Wand, Save, AlertCircle } from "lucide-react";
+import { Wand, Save, AlertCircle, UserCheck } from "lucide-react";
 
 import { characterService } from "../../../services/characterService";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
@@ -68,6 +68,8 @@ const CharacterCreator = ({
   maxCharacters = 10,
   activeCharacterCount = 0,
   isLoadingCharacterCount,
+  targetUserId = null,
+  adminMode = false,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -90,7 +92,6 @@ const CharacterCreator = ({
   const [error, setError] = useState(null);
   const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
 
-  const discordUserId = user?.user_metadata?.provider_id;
   const isFeat = character.level1ChoiceType === "feat";
   const isInnateHeritage = character.level1ChoiceType === "innate";
 
@@ -347,6 +348,37 @@ const CharacterCreator = ({
     }
   };
 
+  const renderAdminModeIndicator = () => {
+    if (
+      !adminMode ||
+      !targetUserId ||
+      targetUserId === user?.user_metadata?.provider_id
+    ) {
+      return null;
+    }
+
+    return (
+      <div
+        style={{
+          background: "linear-gradient(135deg, #10b981, #34d399)",
+          color: "white",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          textAlign: "center",
+          fontWeight: "bold",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
+        <UserCheck size={18} />
+        Creating character for another user (Admin Mode)
+      </div>
+    );
+  };
+
   const handleLevel1ChoiceChange = (choiceType) => {
     setCharacter((prev) => ({
       ...prev,
@@ -525,6 +557,13 @@ const CharacterCreator = ({
   };
 
   const saveCharacter = async () => {
+    const effectiveUserId = targetUserId || user?.user_metadata?.provider_id;
+
+    if (!effectiveUserId) {
+      setError("No valid user ID found for character creation");
+      setIsSaving(false);
+      return;
+    }
     setIsSaving(true);
     setError(null);
 
@@ -571,7 +610,7 @@ const CharacterCreator = ({
     try {
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
-        discordUserId
+        effectiveUserId
       );
 
       const transformedCharacter = {
@@ -613,6 +652,15 @@ const CharacterCreator = ({
       if (onCharacterSaved) {
         onCharacterSaved(transformedCharacter);
       }
+      const targetUserInfo =
+        adminMode &&
+        targetUserId &&
+        targetUserId !== user?.user_metadata?.provider_id
+          ? " for the selected user"
+          : "";
+      alert(
+        `Character "${character.name}" created successfully${targetUserInfo}!`
+      );
     } catch (err) {
       setError("Failed to save character: " + err.message);
       console.error("Error saving character:", err);
@@ -635,6 +683,7 @@ const CharacterCreator = ({
 
   return (
     <div style={styles.panel}>
+      {renderAdminModeIndicator()}
       <div
         style={{
           ...styles.header,

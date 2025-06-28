@@ -7,6 +7,7 @@ import { hasSubclassFeature } from "./utils";
 
 import { spellsData } from "./spells";
 import { useCallback } from "react";
+import CastingTiles from "../CharacterSheet/CastingTiles";
 
 const SpellBook = ({
   supabase,
@@ -283,6 +284,8 @@ const SpellBook = ({
 
   return (
     <div className="SpellBook">
+      <CastingTiles character={selectedCharacter} />
+
       {error && (
         <div
           style={{

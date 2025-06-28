@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { Wand2, Sparkles } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "../../styles/masterStyles";
+import { useRollModal } from "../utils/diceRoller";
 
-const CastingTiles = ({ character, showRollResult }) => {
+const CastingTiles = ({ character }) => {
   const { theme } = useTheme();
+  const { showRollResult } = useRollModal();
+
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
 

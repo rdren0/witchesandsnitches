@@ -98,7 +98,7 @@ export const CorruptionTracker = ({
     }));
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("character_resources")
         .update({
           corruption_points: validatedTotal,
@@ -131,14 +131,11 @@ export const CorruptionTracker = ({
             throw createError;
           }
 
-          console.log("Character resources created successfully");
           return;
         }
 
         throw error;
       }
-
-      console.log("Corruption points updated successfully:", data);
     } catch (err) {
       console.error("Error updating corruption points:", err);
 

@@ -8,7 +8,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { Edit3, Check, X, User, Palette } from "lucide-react";
+import { Edit3, Check, X, User, Palette, Shield, Key } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
@@ -28,7 +28,10 @@ import Inventory from "../Components/Inventory/Inventory";
 import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
 import logo from "./../Images/logo/Thumbnail-01.png";
 import BetaBanner from "./BetaBanner";
-// import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
+import { AdminProvider, useAdmin } from "../contexts/AdminContext";
+import AdminDashboard from "../Admin/AdminDashboard";
+import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
+import AdminPasswordModal from "../Admin/AdminPasswordModal";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -182,14 +185,41 @@ const AuthComponent = ({
   onSignIn,
   onSignOut,
   isLoading,
+  onAdminToggleClick, // Add this prop
 }) => {
   const { theme } = useTheme();
+  const { isUserAdmin, adminMode } = useAdmin();
   const styles = createAppStyles(theme);
   const navigate = useNavigate();
 
   if (user) {
     return (
       <div style={styles.authSection}>
+        {/* Fixed Admin Button - no nesting */}
+        {(isUserAdmin || true) && (
+          <button
+            onClick={onAdminToggleClick} // Use the prop passed from AppContent
+            style={{
+              ...styles.themeButton,
+              backgroundColor: theme.surface,
+              color: adminMode ? "#ffd700" : theme.primary,
+              border: adminMode
+                ? "2px solid #ffd700"
+                : `1px solid ${theme.border}`,
+              fontWeight: adminMode ? "bold" : "normal",
+            }}
+            title={
+              isUserAdmin
+                ? adminMode
+                  ? "Exit Admin Mode"
+                  : "Enter Admin Mode"
+                : "Unlock Admin Mode"
+            }
+          >
+            {adminMode ? <Shield size={16} /> : <Key size={16} />}
+          </button>
+        )}
+
         <button
           onClick={() => navigate("/theme-settings")}
           style={styles.themeButton}
@@ -274,8 +304,9 @@ const AuthComponent = ({
   );
 };
 
-const Navigation = ({ characters, user }) => {
+const Navigation = ({ characters }) => {
   const { theme } = useTheme();
+  const { isUserAdmin, adminMode } = useAdmin();
   const styles = createAppStyles(theme);
   const navigate = useNavigate();
   const location = useLocation();
@@ -289,6 +320,14 @@ const Navigation = ({ characters, user }) => {
         key: "character-management",
       },
     ];
+
+    if (isUserAdmin) {
+      baseTabs.push({
+        path: "/admin",
+        label: "Admin Dashboard",
+        key: "admin",
+      });
+    }
 
     if (characters.length > 0) {
       return [
@@ -349,16 +388,26 @@ const Navigation = ({ characters, user }) => {
       <nav style={styles.tabNavigation}>
         {visibleTabs.map((tab) => {
           const isActive = isActiveTab(tab.path);
-
+          const isAdminTab = tab.key === "admin";
           return (
             <button
               key={tab.key}
               style={{
                 ...styles.tabButton,
                 ...(isActive ? styles.tabButtonActive : {}),
+                ...(isAdminTab && adminMode
+                  ? {
+                      backgroundColor: "#ffd70020",
+                      borderColor: "#ffd700",
+                      color: "#b8860b",
+                    }
+                  : {}),
               }}
               onClick={() => navigate(tab.path)}
             >
+              {isAdminTab && (
+                <Shield size={16} style={{ marginRight: "6px" }} />
+              )}
               {tab.label}
             </button>
           );
@@ -381,7 +430,6 @@ const CharacterSubNavigation = () => {
     { path: "/character/gallery", label: "NPC Gallery", key: "gallery" },
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
     { path: "/character/notes", label: "Notes", key: "notes" },
-    // { path: "/character/recipes", label: "Recipes", key: "recipes" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -540,12 +588,10 @@ function AppContent() {
   const [charactersError, setCharactersError] = useState(null);
   const [initialCharacterId, setInitialCharacterId] = useState(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
-
-  const loadingRef = useRef(false);
-
-  const { setSelectedCharacter: setThemeSelectedCharacter } = useTheme();
-
-  const discordUserId = user?.user_metadata?.provider_id;
+  const [adminMode, setAdminMode] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const getInitialSelectedCharacter = () => {
     try {
@@ -559,10 +605,38 @@ function AppContent() {
     }
     return null;
   };
-
   const [selectedCharacter, setSelectedCharacter] = useState(
     getInitialSelectedCharacter
   );
+
+  const loadingRef = useRef(false);
+  const { setSelectedCharacter: setThemeSelectedCharacter } = useTheme();
+  const discordUserId = user?.user_metadata?.provider_id;
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!discordUserId) {
+        setIsUserAdmin(false);
+        return;
+      }
+
+      try {
+        const adminStatus = await characterService.isUserAdmin(discordUserId);
+        setIsUserAdmin(adminStatus);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsUserAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [discordUserId]);
+
+  useEffect(() => {
+    if (!isUserAdmin) {
+      setAdminMode(false);
+    }
+  }, [isUserAdmin]);
 
   useEffect(() => {
     setThemeSelectedCharacter(selectedCharacter);
@@ -579,6 +653,54 @@ function AppContent() {
     }
   };
 
+  const handleAdminToggleClick = () => {
+    if (adminMode) {
+      setAdminMode(false);
+      return;
+    }
+
+    if (isUserAdmin) {
+      setAdminMode(true);
+    } else {
+      setShowPasswordModal(true);
+    }
+  };
+
+  const handlePasswordSubmit = async (password) => {
+    setIsVerifying(true);
+
+    try {
+      console.log("🔍 Attempting environment password verification...");
+
+      const discordUserId = user?.user_metadata?.provider_id;
+
+      await characterService.verifyAdminPassword(discordUserId, password);
+
+      console.log("✅ Environment password verification succeeded!");
+
+      setIsUserAdmin(true);
+
+      setAdminMode(true);
+
+      setShowPasswordModal(false);
+
+      console.log("🪄 Alohomora! Access to the Restricted Section granted!");
+    } catch (error) {
+      console.error("❌ Password verification failed!");
+      console.error("Error:", error);
+
+      throw error;
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    if (!isVerifying) {
+      setShowPasswordModal(false);
+    }
+  };
+
   const loadCharacters = useCallback(async () => {
     if (!discordUserId || loadingRef.current) {
       return;
@@ -588,9 +710,13 @@ function AppContent() {
     setCharactersError(null);
 
     try {
-      const charactersData = await characterService.getCharacters(
-        discordUserId
-      );
+      let charactersData;
+
+      if (adminMode && isUserAdmin) {
+        charactersData = await characterService.getAllCharacters();
+      } else {
+        charactersData = await characterService.getCharacters(discordUserId);
+      }
 
       const transformedCharacters = charactersData.map((char) => ({
         id: char.id,
@@ -624,6 +750,14 @@ function AppContent() {
           healing: 0,
           jinxesHexesCurses: 0,
         },
+
+        discord_user_id: char.discord_user_id,
+        ownerInfo: char.discord_users
+          ? {
+              username: char.discord_users.username,
+              displayName: char.discord_users.display_name,
+            }
+          : null,
       }));
 
       const sortedCharacters = transformedCharacters.sort((a, b) => {
@@ -634,7 +768,6 @@ function AppContent() {
 
       const savedCharacterId =
         sessionStorage.getItem("selectedCharacterId") || initialCharacterId;
-
       let characterToSelect = null;
 
       if (
@@ -688,7 +821,16 @@ function AppContent() {
     selectedCharacter,
     initialCharacterId,
     setThemeSelectedCharacter,
+    adminMode,
+    isUserAdmin,
   ]);
+
+  useEffect(() => {
+    if (discordUserId && hasAttemptedLoad) {
+      setHasAttemptedLoad(false);
+    }
+    // eslint-disable-next-line
+  }, [adminMode]);
 
   useEffect(() => {
     if (discordUserId && !hasAttemptedLoad && !charactersLoading) {
@@ -893,6 +1035,7 @@ function AppContent() {
       onCharacterChange={handleCharacterChange}
       isLoading={charactersLoading}
       error={charactersError}
+      adminMode={adminMode}
     />
   );
 
@@ -909,6 +1052,7 @@ function AppContent() {
           onSignIn={signInWithDiscord}
           onSignOut={signOut}
           isLoading={authLoading}
+          onAdminToggleClick={handleAdminToggleClick}
         />
       </header>
 
@@ -942,6 +1086,8 @@ function AppContent() {
                   selectedCharacterId={selectedCharacter?.id}
                   onSelectedCharacterReset={resetSelectedCharacter}
                   supabase={supabase}
+                  adminMode={adminMode}
+                  isUserAdmin={isUserAdmin}
                 />
               </ProtectedRoute>
             }
@@ -949,6 +1095,14 @@ function AppContent() {
           <Route
             path="/character"
             element={<Navigate to="/character/sheet" replace />}
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute user={user}>
+                <AdminDashboard supabase={supabase} />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/character/sheet"
@@ -961,6 +1115,8 @@ function AppContent() {
                   supabase={supabase}
                   selectedCharacter={selectedCharacter}
                   characters={characters}
+                  adminMode={adminMode}
+                  isUserAdmin={isUserAdmin}
                 />
               </ProtectedRoute>
             }
@@ -1028,7 +1184,7 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/character/recipes"
             element={
               <ProtectedRoute user={user}>
@@ -1040,7 +1196,7 @@ function AppContent() {
                 />
               </ProtectedRoute>
             }
-          /> */}
+          />
           <Route
             path="/character/gallery"
             element={
@@ -1058,6 +1214,12 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <AdminPasswordModal
+        isOpen={showPasswordModal}
+        onClose={handleModalClose}
+        onPasswordSubmit={handlePasswordSubmit}
+        isLoading={isVerifying}
+      />
     </div>
   );
 }
@@ -1067,10 +1229,34 @@ function App() {
     <Router>
       <RollModalProvider>
         <ThemeProvider>
-          <AppContent />
+          <AdminProviderWrapper />
         </ThemeProvider>
       </RollModalProvider>
     </Router>
+  );
+}
+
+function AdminProviderWrapper() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return (
+    <AdminProvider user={user}>
+      <AppContent />
+    </AdminProvider>
   );
 }
 

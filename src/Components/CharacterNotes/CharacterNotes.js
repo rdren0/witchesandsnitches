@@ -544,6 +544,7 @@ const EntryCard = ({
   isDuplicating,
   styles,
 }) => {
+  const { theme } = useTheme();
   return (
     <>
       <div style={styles.entryHeader}>
@@ -587,7 +588,7 @@ const EntryCard = ({
           source={entry.content}
           style={{
             backgroundColor: "transparent",
-            color: "#374151",
+            color: theme.text,
           }}
         />
       </div>

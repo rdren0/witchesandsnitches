@@ -12,7 +12,6 @@ function BasicInfo({
   rollHp,
   handleInputChange,
   gameSessionOptions,
-
   calculateHitPoints,
 }) {
   const { theme } = useTheme();

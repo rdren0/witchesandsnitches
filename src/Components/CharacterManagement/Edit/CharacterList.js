@@ -8,6 +8,8 @@ import {
   AlertCircle,
   Shield,
   Calendar,
+  Edit3,
+  TrendingUp,
 } from "lucide-react";
 
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -24,6 +26,9 @@ const CharacterList = ({
   onLevelUpCharacter,
   onCreateNew,
   supabase,
+  adminMode = false,
+  isUserAdmin = false,
+  allCharacters = undefined,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -31,33 +36,41 @@ const CharacterList = ({
   const [savedCharacters, setSavedCharacters] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [duplicatingCharacterId, setDuplicatingCharacterId] = useState(null);
 
   const [editingCharacter, setEditingCharacter] = useState(null);
   const [sortBy, setSortBy] = useState("created");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [filterHouse, setFilterHouse] = useState("");
+  const [filterValue, setFilterValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const discordUserId = user?.user_metadata?.provider_id;
 
   const loadCharacters = useCallback(async () => {
-    if (!discordUserId) return;
+    if (!discordUserId && !adminMode) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const charactersData = await characterService.getCharacters(
-        discordUserId
-      );
+      let charactersData;
+
+      if (adminMode && isUserAdmin) {
+        charactersData = await characterService.getAllCharacters();
+      } else {
+        charactersData = await characterService.getCharacters(discordUserId);
+      }
 
       const transformedCharacters = charactersData.map((char) => ({
         abilityScores: char.ability_scores,
         asiChoices: char.asi_choices || {},
         background: char.background,
+        backgroundSkills: char.background_skills || [],
+        heritageChoices: char.heritage_choices || {},
+        innateHeritageSkills: char.innate_heritage_skills || [],
         castingStyle: char.casting_style,
         createdAt: char.created_at,
+        currentHitDice: char.current_hit_dice || char.level,
+        currentHitPoints: char.current_hit_points ?? char.hit_points,
         gameSession: char.game_session,
         hitPoints: char.hit_points,
         house: char.house,
@@ -67,13 +80,6 @@ const CharacterList = ({
         innateHeritage: char.innate_heritage,
         level: char.level,
         level1ChoiceType: char.level1_choice_type || "",
-        name: char.name,
-        skillExpertise: char.skill_expertise || [],
-        skillProficiencies: char.skill_proficiencies || [],
-        standardFeats: char.standard_feats || [],
-        subclass: char.subclass,
-        subclassChoices: char.subclass_choices || {}, // ADD THIS LINE
-        wandType: char.wand_type || "",
         magicModifiers: char.magic_modifiers || {
           divinations: 0,
           charms: 0,
@@ -81,21 +87,88 @@ const CharacterList = ({
           healing: 0,
           jinxesHexesCurses: 0,
         },
+        name: char.name,
+        skillProficiencies: char.skill_proficiencies || [],
+        skillExpertise: char.skill_expertise || [],
+        standardFeats: char.standard_feats || [],
+        subclass: char.subclass,
+        subclassChoices: char.subclass_choices || {},
+        updatedAt: char.updated_at,
+        wandType: char.wand_type || "",
+
+        discordUserId: char.discord_user_id,
+        ownerInfo: char.discord_users
+          ? {
+              username: char.discord_users.username,
+              displayName: char.discord_users.display_name,
+            }
+          : null,
       }));
-      setSavedCharacters(transformedCharacters);
+
+      const sortedCharacters = transformedCharacters.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setSavedCharacters(sortedCharacters);
     } catch (err) {
-      setError("Failed to load characters: " + err.message);
       console.error("Error loading characters:", err);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
-  }, [discordUserId]);
+  }, [discordUserId, adminMode, isUserAdmin]);
 
   useEffect(() => {
-    if (discordUserId) {
+    if (adminMode && allCharacters) {
+      const transformedCharacters = allCharacters.map((char) => ({
+        abilityScores: char.ability_scores,
+        asiChoices: char.asi_choices || {},
+        background: char.background,
+        backgroundSkills: char.background_skills || [],
+        heritageChoices: char.heritage_choices || {},
+        innateHeritageSkills: char.innate_heritage_skills || [],
+        castingStyle: char.casting_style,
+        createdAt: char.created_at,
+        currentHitDice: char.current_hit_dice || char.level,
+        currentHitPoints: char.current_hit_points ?? char.hit_points,
+        gameSession: char.game_session,
+        hitPoints: char.hit_points,
+        house: char.house,
+        houseChoices: char.house_choices || {},
+        id: char.id,
+        initiativeAbility: char.initiative_ability || "dexterity",
+        innateHeritage: char.innate_heritage,
+        level: char.level,
+        level1ChoiceType: char.level1_choice_type || "",
+        magicModifiers: char.magic_modifiers || {
+          divinations: 0,
+          charms: 0,
+          transfiguration: 0,
+          healing: 0,
+          jinxesHexesCurses: 0,
+        },
+        name: char.name,
+        skillProficiencies: char.skill_proficiencies || [],
+        skillExpertise: char.skill_expertise || [],
+        standardFeats: char.standard_feats || [],
+        subclass: char.subclass,
+        subclassChoices: char.subclass_choices || {},
+        updatedAt: char.updated_at,
+        wandType: char.wand_type || "",
+
+        discordUserId: char.discord_user_id,
+        ownerInfo: char.discord_users
+          ? {
+              username: char.discord_users.username,
+              displayName: char.discord_users.display_name,
+            }
+          : null,
+      }));
+      setSavedCharacters(transformedCharacters);
+    } else {
       loadCharacters();
     }
-  }, [discordUserId, loadCharacters]);
+  }, [adminMode, allCharacters, loadCharacters]);
 
   const handleEdit = (character) => {
     if (onEditCharacter) {
@@ -105,114 +178,86 @@ const CharacterList = ({
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditingCharacter(null);
-  };
-
-  const handleSaveEdit = (updatedCharacter) => {
-    setEditingCharacter(null);
-    loadCharacters();
-  };
-
-  const handleDuplicate = async (character) => {
-    if (!character) return;
-
-    setDuplicatingCharacterId(character.id);
-
-    try {
-      const baseName = character.name;
-      const existingNames = savedCharacters.map((char) =>
-        char.name.toLowerCase()
-      );
-      let duplicateName = `${baseName} (Copy)`;
-      let counter = 1;
-
-      while (existingNames.includes(duplicateName.toLowerCase())) {
-        counter++;
-        duplicateName = `${baseName} (Copy ${counter})`;
-      }
-
-      await loadCharacters();
-    } catch (err) {
-      console.error("Error duplicating character:", err);
-      alert("Failed to duplicate character: " + err.message);
-    } finally {
-      setDuplicatingCharacterId(null);
-    }
-  };
-
-  const handleLevelUp = async (character) => {
-    if (!character || character.level >= 20) return;
-
+  const handleLevelUp = (character) => {
     if (onLevelUpCharacter) {
       onLevelUpCharacter(character);
-      return;
-    }
-
-    try {
-      const updatedData = {
-        level: character.level + 1,
-      };
-
-      await characterService.updateCharacter(
-        character.id,
-        updatedData,
-        discordUserId
-      );
-
-      loadCharacters();
-    } catch (err) {
-      console.error("Error leveling up character:", err);
-      alert("Failed to level up character: " + err.message);
     }
   };
 
   const handleArchive = async (character) => {
-    if (!window.confirm(`Are you sure you want to delete ${character.name}?`)) {
-      return;
-    }
+    const effectiveUserId =
+      adminMode && isUserAdmin ? character.discordUserId : discordUserId;
+
+    const confirmMessage =
+      adminMode && character.discordUserId !== discordUserId
+        ? `Are you sure you want to delete "${
+            character.name
+          }"? This character belongs to ${
+            character.ownerInfo?.displayName ||
+            character.ownerInfo?.username ||
+            "another user"
+          }.`
+        : `Are you sure you want to delete "${character.name}"? This action cannot be undone.`;
+
+    if (!window.confirm(confirmMessage)) return;
 
     try {
-      await characterService.deleteCharacter(character.id, discordUserId);
+      await characterService.deleteCharacter(character.id, effectiveUserId);
 
-      const wasSelected =
-        selectedCharacterId &&
-        selectedCharacterId.toString() === character.id.toString();
+      setSavedCharacters((prev) =>
+        prev.filter((char) => char.id !== character.id)
+      );
 
-      if (wasSelected) {
-        const updatedCharacters = savedCharacters.filter(
-          (char) => char.id !== character.id
-        );
-        if (updatedCharacters.length > 0) {
-          onSelectedCharacterReset(updatedCharacters[0]);
-        } else {
-          onSelectedCharacterReset(null);
-        }
+      if (selectedCharacterId === character.id) {
+        onSelectedCharacterReset();
       }
 
-      loadCharacters();
-    } catch (err) {
-      console.error("Error deleting character:", err);
-      alert("Failed to delete character: " + err.message);
+      alert(`Character "${character.name}" has been deleted.`);
+    } catch (error) {
+      console.error("Error deleting character:", error);
+      alert(`Failed to delete character: ${error.message}`);
     }
   };
 
+  const handleSaveEdit = async (editedCharacter) => {
+    try {
+      setSavedCharacters((prev) =>
+        prev.map((char) =>
+          char.id === editedCharacter.id
+            ? { ...char, ...editedCharacter }
+            : char
+        )
+      );
+
+      setEditingCharacter(null);
+      alert(`Character "${editedCharacter.name}" updated successfully!`);
+    } catch (error) {
+      console.error("Error updating character:", error);
+      alert(`Failed to update character: ${error.message}`);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCharacter(null);
+  };
+
   const getSortedAndFilteredCharacters = () => {
-    let filtered = savedCharacters || [];
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (char) =>
-          char.name.toLowerCase().includes(term) ||
-          char.house.toLowerCase().includes(term) ||
-          char.castingStyle.toLowerCase().includes(term) ||
-          char.background?.toLowerCase().includes(term) ||
-          char.gameSession?.toLowerCase().includes(term)
+    let filtered = savedCharacters;
+
+    if (searchTerm) {
+      filtered = filtered.filter((char) =>
+        char.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (filterHouse) {
-      filtered = filtered.filter((char) => char.house === filterHouse);
+    if (filterValue) {
+      if (adminMode) {
+        // Filter by game session in admin mode
+        filtered = filtered.filter((char) => char.gameSession === filterValue);
+      } else {
+        // Filter by house in regular mode
+        filtered = filtered.filter((char) => char.house === filterValue);
+      }
     }
 
     filtered.sort((a, b) => {
@@ -220,22 +265,28 @@ const CharacterList = ({
 
       switch (sortBy) {
         case "name":
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
+          aValue = a.name;
+          bValue = b.name;
           break;
         case "level":
           aValue = a.level;
           bValue = b.level;
           break;
         case "house":
-          aValue = a.house.toLowerCase();
-          bValue = b.house.toLowerCase();
+          aValue = a.house;
+          bValue = b.house;
           break;
         case "created":
-        default:
-          aValue = new Date(a.createdAt || 0);
-          bValue = new Date(b.createdAt || 0);
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
           break;
+        case "updated":
+          aValue = new Date(a.updatedAt || a.createdAt);
+          bValue = new Date(b.updatedAt || b.createdAt);
+          break;
+        default:
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
       }
 
       if (sortDirection === "asc") {
@@ -257,14 +308,25 @@ const CharacterList = ({
     }
   };
 
-  const getAllHouses = () => {
-    const houses = [
-      ...new Set(savedCharacters.map((char) => char.house)),
-    ].filter(Boolean);
-    return houses.sort();
+  // Updated function to get houses or game sessions based on admin mode
+  const getFilterOptions = () => {
+    if (adminMode) {
+      // Get all unique game sessions
+      const gameSessions = [
+        ...new Set(savedCharacters.map((char) => char.gameSession)),
+      ].filter(Boolean);
+      return gameSessions.sort();
+    } else {
+      // Get all unique houses
+      const houses = [
+        ...new Set(savedCharacters.map((char) => char.house)),
+      ].filter(Boolean);
+      return houses.sort();
+    }
   };
 
   const filteredCharacters = getSortedAndFilteredCharacters();
+
   if (editingCharacter) {
     return (
       <CharacterEditor
@@ -274,6 +336,8 @@ const CharacterList = ({
         user={user}
         customUsername={customUsername}
         supabase={supabase}
+        adminMode={adminMode}
+        isUserAdmin={isUserAdmin}
       />
     );
   }
@@ -308,10 +372,13 @@ const CharacterList = ({
           <Users />
         </div>
         <div style={{ flex: 1 }}>
-          <h1 style={styles.title}>My Characters</h1>
+          <h1 style={styles.title}>
+            {adminMode ? "All Characters" : "My Characters"}
+          </h1>
           <p style={styles.subtitle}>
-            Manage your characters, level up, edit details, and create
-            duplicates
+            {adminMode
+              ? "Manage all characters in the system (Admin Mode)"
+              : "Manage your characters, level up, edit details, and create duplicates"}
           </p>
         </div>
         {onCreateNew && (
@@ -345,89 +412,96 @@ const CharacterList = ({
 
         <div style={styles.filterContainer}>
           <select
-            value={filterHouse}
-            onChange={(e) => setFilterHouse(e.target.value)}
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
             style={styles.filterSelect}
           >
-            <option value="">All Houses</option>
-            {getAllHouses().map((house) => (
-              <option key={house} value={house}>
-                {house}
+            <option value="">
+              {adminMode ? "All Game Sessions" : "All Houses"}
+            </option>
+            {getFilterOptions().map((option) => (
+              <option key={option} value={option}>
+                {option}
               </option>
             ))}
           </select>
         </div>
 
         <div style={styles.sortContainer}>
-          <span style={styles.sortLabel}>Sort by:</span>
-          {[
-            { key: "created", label: "Created" },
-            { key: "name", label: "Name" },
-            { key: "level", label: "Level" },
-            { key: "house", label: "House" },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => handleSort(key)}
-              style={{
-                ...styles.sortButton,
-                ...(sortBy === key ? styles.sortButtonActive : {}),
-              }}
-            >
-              {label}
-              {sortBy === key && (
-                <ArrowUp
-                  size={12}
-                  style={{
-                    transform:
-                      sortDirection === "desc" ? "rotate(180deg)" : "none",
-                    transition: "transform 0.2s ease",
-                  }}
-                />
-              )}
-            </button>
-          ))}
+          <button
+            onClick={() => handleSort("name")}
+            style={{
+              ...styles.sortButton,
+              ...(sortBy === "name" ? styles.activeSortButton : {}),
+            }}
+          >
+            Name
+            {sortBy === "name" && (
+              <ArrowUp
+                size={12}
+                style={{
+                  transform:
+                    sortDirection === "desc" ? "rotate(180deg)" : "none",
+                }}
+              />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort("level")}
+            style={{
+              ...styles.sortButton,
+              ...(sortBy === "level" ? styles.activeSortButton : {}),
+            }}
+          >
+            Level
+            {sortBy === "level" && (
+              <ArrowUp
+                size={12}
+                style={{
+                  transform:
+                    sortDirection === "desc" ? "rotate(180deg)" : "none",
+                }}
+              />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort("created")}
+            style={{
+              ...styles.sortButton,
+              ...(sortBy === "created" ? styles.activeSortButton : {}),
+            }}
+          >
+            Created
+            {sortBy === "created" && (
+              <ArrowUp
+                size={12}
+                style={{
+                  transform:
+                    sortDirection === "desc" ? "rotate(180deg)" : "none",
+                }}
+              />
+            )}
+          </button>
         </div>
       </div>
 
       {isLoading ? (
-        <div style={styles.loadingContainer}>
-          <div style={styles.loadingSpinner}>Loading characters...</div>
-        </div>
+        <div style={styles.loadingContainer}>Loading characters...</div>
       ) : filteredCharacters.length === 0 ? (
-        <div style={styles.emptyState}>
-          {savedCharacters.length === 0 ? (
-            <>
-              <Users size={48} color={theme.textSecondary} />
-              <h3 style={styles.emptyStateTitle}>No Characters Yet</h3>
-              <p style={styles.emptyStateText}>
-                Create your first character to get started on your magical
-                journey!
-              </p>
-              {onCreateNew && (
-                <button
-                  onClick={onCreateNew}
-                  style={{
-                    ...styles.button,
-                    backgroundColor: theme.primary,
-                    color: "white",
-                    marginTop: "16px",
-                  }}
-                >
-                  <Plus size={16} style={{ marginRight: "8px" }} />
-                  Create Your First Character
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              <AlertCircle size={48} color={theme.textSecondary} />
-              <h3 style={styles.emptyStateTitle}>No Characters Found</h3>
-              <p style={styles.emptyStateText}>
-                Try adjusting your search or filter criteria.
-              </p>
-            </>
-          )}
+        <div style={styles.noCharactersContainer}>
+          <Users size={48} color={theme.textSecondary} />
+          <h3>
+            {savedCharacters.length === 0
+              ? adminMode
+                ? "No characters found in the system."
+                : "You haven't created any characters yet."
+              : "No characters match your search criteria."}
+          </h3>
+          <p>
+            {savedCharacters.length === 0
+              ? 'Click "Create New Character" to get started!'
+              : "Try adjusting your search or filter settings."}
+          </p>
         </div>
       ) : (
         <div style={styles.charactersGrid}>
@@ -435,7 +509,8 @@ const CharacterList = ({
             const isSelected =
               selectedCharacterId &&
               selectedCharacterId.toString() === character.id.toString();
-            const isDuplicating = duplicatingCharacterId === character.id;
+            const isOwnCharacter = character.discordUserId === discordUserId;
+            const canEdit = isOwnCharacter || (adminMode && isUserAdmin);
 
             return (
               <div
@@ -443,6 +518,7 @@ const CharacterList = ({
                 style={{
                   ...styles.characterCard,
                   ...(isSelected ? styles.characterCardSelected : {}),
+                  position: "relative",
                 }}
               >
                 <div style={styles.characterCardHeader}>
@@ -457,6 +533,23 @@ const CharacterList = ({
                 </div>
 
                 <div style={styles.characterCardBody}>
+                  {/* Owner info in admin mode */}
+                  {adminMode && character.ownerInfo && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: theme.textSecondary,
+                        marginBottom: "8px",
+                        fontStyle: "italic",
+                        textAlign: "center",
+                      }}
+                    >
+                      Owner:{" "}
+                      {character.ownerInfo.displayName ||
+                        character.ownerInfo.username}
+                    </div>
+                  )}
+
                   <div style={styles.characterInfoRow}>
                     <div style={styles.characterInfoItem}>
                       <Shield size={14} color={theme.primary} />
@@ -481,7 +574,7 @@ const CharacterList = ({
                     <div style={styles.statBadge}>
                       <span style={styles.statLabel}>HP:</span>
                       <span style={styles.statValue}>
-                        {character.hitPoints}
+                        {character.currentHitPoints}/{character.hitPoints}
                       </span>
                     </div>
 
@@ -513,55 +606,61 @@ const CharacterList = ({
                 </div>
 
                 <div style={styles.characterCardActions}>
-                  <button
-                    onClick={() => handleEdit(character)}
-                    style={{
-                      ...styles.actionButton,
-                      ...styles.editButton,
-                    }}
-                    title="Edit character"
-                  >
-                    Edit
-                  </button>
+                  {canEdit && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(character)}
+                        style={{
+                          ...styles.actionButton,
+                          ...styles.editButton,
+                        }}
+                        title="Edit character"
+                      >
+                        <Edit3 size={14} />
+                        Edit
+                      </button>
 
-                  {character.level < 20 && (
-                    <button
-                      onClick={() => handleLevelUp(character)}
-                      style={{
-                        ...styles.actionButton,
-                        ...styles.levelUpButton,
-                      }}
-                      title="Level up character"
-                    >
-                      Level Up
-                    </button>
+                      {character.level < 20 && (
+                        <button
+                          onClick={() => handleLevelUp(character)}
+                          style={{
+                            ...styles.actionButton,
+                            ...styles.levelUpButton,
+                          }}
+                          title="Level up character"
+                        >
+                          <TrendingUp size={14} />
+                          Level Up
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleArchive(character)}
+                        style={{
+                          ...styles.actionButton,
+                          ...styles.deleteButton,
+                        }}
+                        title="Delete character"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => handleDuplicate(character)}
-                    disabled={true}
-                    style={{
-                      ...styles.actionButton,
-                      backgroundColor: true ? "#9ca3af" : "#8b5cf6",
-                      color: "white",
-                      cursor: true ? "not-allowed" : "pointer",
-                      opacity: isDuplicating ? 0.7 : 1,
-                    }}
-                    title="Duplicate character"
-                  >
-                    {isDuplicating ? "Duplicating..." : "Duplicate"}
-                  </button>
 
-                  <button
-                    onClick={() => handleArchive(character)}
-                    style={{
-                      ...styles.actionButton,
-                      ...styles.deleteButton,
-                    }}
-                    title="Delete character"
-                  >
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
+                  {!canEdit && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: theme.textSecondary,
+                        fontStyle: "italic",
+                        textAlign: "center",
+                        padding: "8px",
+                      }}
+                    >
+                      View Only
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -573,17 +672,19 @@ const CharacterList = ({
         <div style={styles.summaryContainer}>
           <div style={styles.summaryStats}>
             <div style={styles.summaryItem}>
-              <span style={styles.summaryLabel}>Total Characters:</span>
+              <span style={styles.summaryLabel}>
+                {adminMode ? "Total Characters:" : "Total Characters:"}
+              </span>
               <span style={styles.summaryValue}>{savedCharacters.length}</span>
             </div>
-            {searchTerm || filterHouse ? (
+            {(searchTerm || filterValue) && (
               <div style={styles.summaryItem}>
                 <span style={styles.summaryLabel}>Showing:</span>
                 <span style={styles.summaryValue}>
                   {filteredCharacters.length}
                 </span>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       )}
