@@ -321,21 +321,21 @@ const Navigation = ({ characters }) => {
       },
     ];
 
-    if (isUserAdmin) {
+    if (characters.length > 0) {
       baseTabs.push({
-        path: "/admin",
-        label: "Admin Dashboard",
-        key: "admin",
+        path: "/character/sheet",
+        label: "Character Sheet",
+        key: "character",
       });
     }
 
-    if (characters.length > 0) {
+    if (isUserAdmin) {
       return [
         ...baseTabs,
         {
-          path: "/character/sheet",
-          label: "Character Sheet",
-          key: "character",
+          path: "/admin",
+          label: "Admin Dashboard",
+          key: "admin",
         },
       ];
     }

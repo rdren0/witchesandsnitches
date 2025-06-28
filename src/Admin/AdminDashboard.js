@@ -770,9 +770,6 @@ const AdminDashboard = ({ supabase, user }) => {
             ADMIN
           </div>
         </div>
-        <div style={{ color: theme.textSecondary, fontSize: "14px" }}>
-          Admin Mode: {adminMode ? "ON" : "OFF"}
-        </div>
       </div>
 
       <div style={styles.tabs}>
