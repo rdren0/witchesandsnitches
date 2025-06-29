@@ -71,6 +71,7 @@ const CharacterCreator = ({
   isLoadingCharacterCount,
   targetUserId = null,
   adminMode = false,
+  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -557,6 +558,46 @@ const CharacterCreator = ({
     };
   };
 
+  const ensureUserProfile = async (userId, supabase, userMetadata = null) => {
+    if (!userId) return false;
+
+    try {
+      const { data: existingProfile } = await supabase
+        .from("user_profiles")
+        .select("id")
+        .eq("discord_user_id", userId)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        const defaultUsername =
+          userMetadata?.full_name ||
+          userMetadata?.name ||
+          userMetadata?.username ||
+          `User_${userId.slice(-6)}`;
+
+        await supabase.from("user_profiles").insert([
+          {
+            discord_user_id: userId,
+            username: defaultUsername,
+            discord_name: userMetadata?.full_name || null,
+            avatar_url: userMetadata?.avatar_url || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            role: "user",
+          },
+        ]);
+
+        console.log("Auto-created user profile for user:", userId);
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error ensuring user profile:", error);
+
+      return false;
+    }
+  };
+
   const saveCharacter = async () => {
     const effectiveUserId = targetUserId || user?.user_metadata?.provider_id;
 
@@ -565,50 +606,57 @@ const CharacterCreator = ({
       setIsSaving(false);
       return;
     }
+
     setIsSaving(true);
     setError(null);
 
-    const allFeats = collectAllFeatsFromChoices({ character });
-
-    const finalAbilityScores = calculateFinalAbilityScores(
-      character,
-      character.featChoices || {},
-      houseChoices,
-      heritageChoices
-    );
-
-    const { skill_proficiencies, skill_expertise } =
-      calculateFinalSkillsAndExpertise(character);
-
-    const characterToSave = {
-      ability_scores: finalAbilityScores,
-      base_ability_scores: character.abilityScores,
-      asi_choices: character.asiChoices || {},
-      background: character.background,
-      background_skills: character.backgroundSkills || [],
-      innate_heritage_skills: character.innateHeritageSkills || [],
-      heritage_choices: heritageChoices,
-      casting_style: character.castingStyle,
-      feat_choices: character.featChoices || {},
-      game_session: character.gameSession,
-      hit_points: getCurrentHp(),
-      house_choices: houseChoices,
-      house: character.house,
-      initiative_ability: character.initiativeAbility || "dexterity",
-      innate_heritage: character.innateHeritage,
-      level: character.level,
-      level1_choice_type: character.level1ChoiceType,
-      magic_modifiers: character.magicModifiers,
-      name: character.name.trim(),
-      skill_proficiencies: skill_proficiencies, // ← Fixed: calculated proficiencies
-      skill_expertise: skill_expertise, // ← Added: calculated expertise
-      standard_feats: allFeats,
-      subclass_choices: character.subclassChoices || {},
-      subclass: character.subclass,
-      wand_type: character.wandType,
-    };
-
     try {
+      if (targetUserId) {
+        await ensureUserProfile(targetUserId, supabase);
+      } else {
+        await ensureUserProfile(effectiveUserId, supabase, user?.user_metadata);
+      }
+
+      const allFeats = collectAllFeatsFromChoices({ character });
+
+      const finalAbilityScores = calculateFinalAbilityScores(
+        character,
+        character.featChoices || {},
+        houseChoices,
+        heritageChoices
+      );
+
+      const { skill_proficiencies, skill_expertise } =
+        calculateFinalSkillsAndExpertise(character);
+
+      const characterToSave = {
+        ability_scores: finalAbilityScores,
+        base_ability_scores: character.abilityScores,
+        asi_choices: character.asiChoices || {},
+        background: character.background,
+        background_skills: character.backgroundSkills || [],
+        innate_heritage_skills: character.innateHeritageSkills || [],
+        heritage_choices: heritageChoices,
+        casting_style: character.castingStyle,
+        feat_choices: character.featChoices || {},
+        game_session: character.gameSession,
+        hit_points: getCurrentHp(),
+        house_choices: houseChoices,
+        house: character.house,
+        initiative_ability: character.initiativeAbility || "dexterity",
+        innate_heritage: character.innateHeritage,
+        level: character.level,
+        level1_choice_type: character.level1ChoiceType,
+        magic_modifiers: character.magicModifiers,
+        name: character.name.trim(),
+        skill_proficiencies: skill_proficiencies,
+        skill_expertise: skill_expertise,
+        standard_feats: allFeats,
+        subclass_choices: character.subclassChoices || {},
+        subclass: character.subclass,
+        wand_type: character.wandType,
+      };
+
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         effectiveUserId
@@ -635,7 +683,7 @@ const CharacterCreator = ({
         innateHeritage: savedCharacter.innate_heritage,
         level: savedCharacter.level,
         name: savedCharacter.name,
-        skillExpertise: savedCharacter.skill_expertise || [], // ← Fixed: include expertise
+        skillExpertise: savedCharacter.skill_expertise || [],
         skillProficiencies: savedCharacter.skill_proficiencies || [],
         standardFeats: savedCharacter.standard_feats || [],
         subclass: savedCharacter.subclass,
@@ -653,12 +701,14 @@ const CharacterCreator = ({
       if (onCharacterSaved) {
         onCharacterSaved(transformedCharacter);
       }
+
       const targetUserInfo =
         adminMode &&
         targetUserId &&
         targetUserId !== user?.user_metadata?.provider_id
           ? " for the selected user"
           : "";
+
       alert(
         `Character "${character.name}" created successfully${targetUserInfo}!`
       );

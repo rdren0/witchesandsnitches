@@ -440,6 +440,7 @@ const CharacterManagement = ({
               }}
               targetUserId={selectedTargetUserId}
               adminMode={adminMode && isUserAdmin}
+              supabase={supabase}
             />
           </>
         )}
