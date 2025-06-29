@@ -663,23 +663,15 @@ const CharacterCreator = ({
     setError(null);
 
     try {
-      console.log("🚀 Starting character creation for user:", effectiveUserId);
-
       if (targetUserId) {
-        console.log("👑 Admin mode - creating for target user:", targetUserId);
         await ensureUserInBothTables(targetUserId, supabase);
       } else {
-        console.log("👤 Normal mode - creating for current user");
         await ensureUserInBothTables(
           effectiveUserId,
           supabase,
           user?.user_metadata
         );
       }
-
-      console.log(
-        "✅ User confirmed in both tables, proceeding with character creation"
-      );
 
       const allFeats = collectAllFeatsFromChoices({ character });
 
@@ -721,13 +713,10 @@ const CharacterCreator = ({
         wand_type: character.wandType,
       };
 
-      console.log("💾 Saving character to database...");
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         effectiveUserId
       );
-
-      console.log("🎉 Character saved successfully!");
 
       const transformedCharacter = {
         id: savedCharacter.id,
