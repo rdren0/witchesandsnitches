@@ -559,14 +559,25 @@ const CharacterCreator = ({
   };
 
   const ensureUserProfile = async (userId, supabase, userMetadata = null) => {
-    if (!userId) return false;
+    if (!userId) {
+      console.error("❌ No userId provided to ensureUserProfile");
+      return false;
+    }
 
     try {
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: checkError } = await supabase
         .from("user_profiles")
         .select("id")
         .eq("discord_user_id", userId)
         .maybeSingle();
+
+      if (checkError) {
+        console.error(
+          "❌ [CharacterCreator] Error checking user profile:",
+          checkError
+        );
+        throw checkError;
+      }
 
       if (!existingProfile) {
         const defaultUsername =
@@ -575,29 +586,38 @@ const CharacterCreator = ({
           userMetadata?.username ||
           `User_${userId.slice(-6)}`;
 
-        await supabase.from("user_profiles").insert([
-          {
-            discord_user_id: userId,
-            username: defaultUsername,
-            discord_name: userMetadata?.full_name || null,
-            avatar_url: userMetadata?.avatar_url || null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            role: "user",
-          },
-        ]);
+        const { error: insertError } = await supabase
+          .from("user_profiles")
+          .insert([
+            {
+              discord_user_id: userId,
+              username: defaultUsername,
+              discord_name: userMetadata?.full_name || null,
+              avatar_url: userMetadata?.avatar_url || null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]);
 
-        console.log("Auto-created user profile for user:", userId);
+        if (insertError) {
+          console.error(
+            "❌ [CharacterCreator] Error creating user profile:",
+            insertError
+          );
+          throw insertError;
+        }
       }
 
       return true;
     } catch (error) {
-      console.error("Error ensuring user profile:", error);
+      console.error(
+        "💥 [CharacterCreator] Failed to ensure user profile:",
+        error
+      );
 
-      return false;
+      throw new Error(`Failed to create user profile: ${error.message}`);
     }
   };
-
   const saveCharacter = async () => {
     const effectiveUserId = targetUserId || user?.user_metadata?.provider_id;
 
@@ -611,11 +631,19 @@ const CharacterCreator = ({
     setError(null);
 
     try {
+      console.log("🚀 Starting character creation for user:", effectiveUserId);
+
       if (targetUserId) {
+        console.log("👑 Admin mode - creating for target user:", targetUserId);
         await ensureUserProfile(targetUserId, supabase);
       } else {
+        console.log("👤 Normal mode - creating for current user");
         await ensureUserProfile(effectiveUserId, supabase, user?.user_metadata);
       }
+
+      console.log(
+        "✅ User profile confirmed, proceeding with character creation"
+      );
 
       const allFeats = collectAllFeatsFromChoices({ character });
 
@@ -657,10 +685,13 @@ const CharacterCreator = ({
         wand_type: character.wandType,
       };
 
+      console.log("💾 Saving character to database...");
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         effectiveUserId
       );
+
+      console.log("🎉 Character saved successfully!");
 
       const transformedCharacter = {
         id: savedCharacter.id,
@@ -713,8 +744,8 @@ const CharacterCreator = ({
         `Character "${character.name}" created successfully${targetUserInfo}!`
       );
     } catch (err) {
+      console.error("💥 Character creation failed:", err);
       setError("Failed to save character: " + err.message);
-      console.error("Error saving character:", err);
     } finally {
       setIsSaving(false);
     }

@@ -1,5 +1,5 @@
 import ThemeCharacterSync from "../Components/ThemeCharacterSync/ThemeCharacterSync";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -39,6 +39,21 @@ const supabase = createClient(
 );
 
 const isLocalhost = window.location.hostname === "localhost";
+
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+const requestIdleCallback =
+  window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
 
 const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
   const { theme } = useTheme();
@@ -614,6 +629,23 @@ function AppContent() {
   const { setSelectedCharacter: setThemeSelectedCharacter } = useTheme();
   const discordUserId = user?.user_metadata?.provider_id;
 
+  const debouncedSelectCharacter = useMemo(
+    () =>
+      debounce((character) => {
+        setSelectedCharacter(character);
+        setThemeSelectedCharacter(character);
+        if (character) {
+          sessionStorage.setItem(
+            "selectedCharacterId",
+            character.id.toString()
+          );
+        } else {
+          sessionStorage.removeItem("selectedCharacterId");
+        }
+      }, 100),
+    [setThemeSelectedCharacter]
+  );
+
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!discordUserId) {
@@ -645,8 +677,7 @@ function AppContent() {
 
   const resetSelectedCharacter = (newCharacter = null) => {
     if (newCharacter) {
-      setSelectedCharacter(newCharacter);
-      setThemeSelectedCharacter(newCharacter);
+      debouncedSelectCharacter(newCharacter);
     } else {
       setSelectedCharacter(null);
       setThemeSelectedCharacter(null);
@@ -702,6 +733,51 @@ function AppContent() {
     }
   };
 
+  const selectInitialCharacter = useCallback(
+    (characters) => {
+      if (!characters.length) return;
+
+      const savedCharacterId =
+        sessionStorage.getItem("selectedCharacterId") || initialCharacterId;
+      let characterToSelect = null;
+
+      if (
+        selectedCharacter &&
+        characters.find(
+          (c) => c.id.toString() === selectedCharacter.id.toString()
+        )
+      ) {
+        characterToSelect = characters.find(
+          (c) => c.id.toString() === selectedCharacter.id.toString()
+        );
+      } else if (savedCharacterId) {
+        characterToSelect = characters.find(
+          (char) => char.id.toString() === savedCharacterId.toString()
+        );
+      }
+
+      if (!characterToSelect && characters.length > 0) {
+        characterToSelect = characters[0];
+      }
+
+      if (
+        characterToSelect &&
+        (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
+      ) {
+        requestIdleCallback(() => {
+          debouncedSelectCharacter(characterToSelect);
+          setInitialCharacterId(null);
+        });
+      } else if (characterToSelect) {
+        sessionStorage.setItem(
+          "selectedCharacterId",
+          characterToSelect.id.toString()
+        );
+      }
+    },
+    [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
+  );
+
   const loadCharacters = useCallback(async () => {
     if (!discordUserId || loadingRef.current) {
       return;
@@ -711,13 +787,17 @@ function AppContent() {
     setCharactersError(null);
 
     try {
-      let charactersData;
+      const loadOperations = [
+        adminMode && isUserAdmin
+          ? characterService.getAllCharacters()
+          : characterService.getCharacters(discordUserId),
+      ];
 
-      if (adminMode && isUserAdmin) {
-        charactersData = await characterService.getAllCharacters();
-      } else {
-        charactersData = await characterService.getCharacters(discordUserId);
+      if (!customUsername && user) {
+        loadOperations.push(loadCustomUsername());
       }
+
+      const [charactersData] = await Promise.all(loadOperations);
 
       const transformedCharacters = charactersData.map((char) => ({
         id: char.id,
@@ -761,52 +841,17 @@ function AppContent() {
           : null,
       }));
 
+      // PERFORMANCE OPTIMIZATION: Use built-in sort for better performance
       const sortedCharacters = transformedCharacters.sort((a, b) => {
         return new Date(a.createdAt) - new Date(b.createdAt);
       });
 
       setCharacters(sortedCharacters);
 
-      const savedCharacterId =
-        sessionStorage.getItem("selectedCharacterId") || initialCharacterId;
-      let characterToSelect = null;
-
-      if (
-        selectedCharacter &&
-        sortedCharacters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString()
-        )
-      ) {
-        characterToSelect = sortedCharacters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString()
-        );
-      } else if (savedCharacterId) {
-        characterToSelect = sortedCharacters.find(
-          (char) => char.id.toString() === savedCharacterId.toString()
-        );
-      }
-
-      if (!characterToSelect && sortedCharacters.length > 0) {
-        characterToSelect = sortedCharacters[0];
-      }
-
-      if (
-        characterToSelect &&
-        (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
-      ) {
-        setSelectedCharacter(characterToSelect);
-        setThemeSelectedCharacter(characterToSelect);
-        sessionStorage.setItem(
-          "selectedCharacterId",
-          characterToSelect.id.toString()
-        );
-        setInitialCharacterId(null);
-      } else if (characterToSelect) {
-        sessionStorage.setItem(
-          "selectedCharacterId",
-          characterToSelect.id.toString()
-        );
-      }
+      // PERFORMANCE OPTIMIZATION: Defer character selection to idle time
+      requestIdleCallback(() => {
+        selectInitialCharacter(sortedCharacters);
+      });
 
       setHasAttemptedLoad(true);
     } catch (err) {
@@ -817,13 +862,14 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
+    // eslint-disable-next-line
   }, [
     discordUserId,
-    selectedCharacter,
-    initialCharacterId,
-    setThemeSelectedCharacter,
     adminMode,
     isUserAdmin,
+    selectInitialCharacter,
+    customUsername,
+    user,
   ]);
 
   useEffect(() => {
@@ -835,7 +881,9 @@ function AppContent() {
 
   useEffect(() => {
     if (discordUserId && !hasAttemptedLoad && !charactersLoading) {
-      loadCharacters();
+      requestIdleCallback(() => {
+        loadCharacters();
+      });
     }
   }, [discordUserId, hasAttemptedLoad, charactersLoading, loadCharacters]);
 
@@ -857,9 +905,32 @@ function AppContent() {
     };
   }, []);
 
+  const loadCustomUsername = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("username")
+        .eq("discord_user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setCustomUsername(data.username || "");
+      } else if (error && error.code !== "PGRST116") {
+        // Ignore "not found" errors
+        console.error("Error loading custom username:", error);
+      }
+    } catch (error) {
+      console.error("Error loading custom username:", error);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
-      loadCustomUsername();
+      requestIdleCallback(() => {
+        loadCustomUsername();
+      });
       setHasAttemptedLoad(false);
     } else {
       setCustomUsername("");
@@ -900,34 +971,7 @@ function AppContent() {
   ]);
 
   const handleCharacterChange = (character) => {
-    setSelectedCharacter(character);
-    setThemeSelectedCharacter(character);
-
-    if (character) {
-      sessionStorage.setItem("selectedCharacterId", character.id.toString());
-    } else {
-      sessionStorage.removeItem("selectedCharacterId");
-    }
-  };
-
-  const loadCustomUsername = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("username")
-        .eq("discord_user_id", user.id)
-        .maybeSingle();
-
-      if (!error && data) {
-        setCustomUsername(data.username || "");
-      } else if (error) {
-        console.error("Error loading custom username:", error);
-      }
-    } catch (error) {
-      console.error("Error loading custom username:", error);
-    }
+    debouncedSelectCharacter(character);
   };
 
   const updateCustomUsername = async (newUsername) => {
