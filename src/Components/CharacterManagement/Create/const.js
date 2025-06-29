@@ -33,19 +33,3 @@ export const getInitialCharacterState = () => ({
   },
   level1ChoiceType: "",
 });
-
-export const gameSessionOptions = [
-  "Sunday - Knights",
-  "Sunday - Haunting",
-  "Monday - Haunting",
-  "Tuesday - Knights",
-  "Tuesday - Haunting",
-  "Wednesday - Haunting",
-  "Thursday - Knights",
-  "Friday - Knights",
-  "Friday - Haunting",
-  "Saturday - Haunting",
-  "Saturday - Knights AM",
-  "Saturday - Knights PM",
-  "DEVELOPMENT",
-];

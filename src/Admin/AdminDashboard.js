@@ -13,7 +13,7 @@ import { characterService } from "../services/characterService";
 
 const AdminDashboard = ({ supabase, user }) => {
   const { theme } = useTheme();
-  const { isUserAdmin, adminMode, loadAllUsers } = useAdmin();
+  const { isUserAdmin, loadAllUsers } = useAdmin();
 
   const [activeTab, setActiveTab] = useState("overview");
   // eslint-disable-next-line

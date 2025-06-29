@@ -1,7 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { castingStyles } from "../../SharedData/data";
 import StepIndicator from "../Shared/StepIndicator";
-import { gameSessionOptions } from "../Create/const";
+import { gameSessionOptions } from "../../../App/const";
 
 const BasicInformationSection = ({
   character,

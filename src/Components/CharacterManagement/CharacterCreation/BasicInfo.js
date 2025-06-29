@@ -1,8 +1,8 @@
+import { gameSessionOptions } from "../../../App/const";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { castingStyles } from "../../SharedData/data";
 import { RefreshCw } from "lucide-react";
-import { gameSessionOptions } from "../Create/const";
 
 function BasicInfo({
   character,

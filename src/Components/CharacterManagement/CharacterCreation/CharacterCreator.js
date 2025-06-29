@@ -23,7 +23,7 @@ import EnhancedSkillsSection from "./EnhancedSkillsSection";
 
 import { AbilityScorePicker } from "./AbilityScorePicker";
 import { StepIndicator } from "../Shared/StepIndicator";
-import { gameSessionOptions, getInitialCharacterState } from "../Create/const";
+import { getInitialCharacterState } from "../Create/const";
 import {
   calculateHitPoints,
   collectAllFeatsFromChoices,
@@ -31,6 +31,7 @@ import {
   getFeatProgressionInfo,
   validateFeatSelections,
 } from "../utils";
+import { gameSessionOptions } from "../../../App/const";
 
 export const FeatRequirementsInfo = ({ character }) => {
   return (

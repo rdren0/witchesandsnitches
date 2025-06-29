@@ -3,8 +3,7 @@ import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6, Star } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
 import { spellsData } from "../SpellBook/spells";
-
-const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
+import { getDiscordWebhook } from "../../App/const";
 
 const RollModalContext = createContext();
 
@@ -402,6 +401,7 @@ const rollCorruption = async ({
   saveResult = null,
 }) => {
   try {
+    const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
     if (!discordWebhookUrl) {
       console.error("Discord webhook URL not configured");
       return;
@@ -479,15 +479,9 @@ const rollCorruption = async ({
     let embed;
 
     if (type === "gained") {
-      const wasFromSave = saveResult !== null;
-
       embed = {
-        title: wasFromSave
-          ? "💀 Corruption Save Failed"
-          : "💀 Corruption Gained",
-        description: wasFromSave
-          ? `${characterName} failed to resist the corruption of their dark deed...`
-          : `${characterName} has fallen deeper into darkness...`,
+        title: "💀 Corruption Gained",
+        description: `${characterName} has fallen deeper into darkness...`,
         color: currentTier.color,
         fields: [
           {
@@ -508,26 +502,14 @@ const rollCorruption = async ({
         ],
         timestamp: new Date().toISOString(),
         footer: {
-          text: `Witches and Snitches - Corruption ${
-            wasFromSave ? "Save" : "Gained"
-          } • Next Wisdom Save DC: ${currentTier.saveDC}`,
+          text: `Witches and Snitches - Corruption ${"Gained"} • Next Wisdom Save DC: ${
+            currentTier.saveDC
+          }`,
         },
       };
 
-      if (wasFromSave && saveResult) {
-        embed.fields.push({
-          name: "Corruption Save",
-          value: `**${saveResult.rollValue}** ${
-            saveResult.modifier >= 0 ? "+" : ""
-          }${saveResult.modifier} = **${saveResult.total}** vs DC ${
-            saveResult.dc
-          }`,
-          inline: false,
-        });
-      }
-
       embed.fields.push({
-        name: wasFromSave ? "Dark Deed" : "Dark Deed",
+        name: "Dark Deed",
         value: usedFor,
         inline: false,
       });
@@ -789,6 +771,149 @@ export const rollAbilityCheckWithProficiency = async ({
   }
 };
 
+export const rollMagicCasting = async ({
+  school,
+  type,
+  modifier,
+  isRolling,
+  setIsRolling,
+  character,
+  showRollResult,
+}) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
+  if (isRolling) return;
+
+  setIsRolling(true);
+
+  try {
+    const diceResult = rollDice();
+    const d20Roll = diceResult.total;
+    const total = d20Roll + modifier;
+
+    const isCriticalSuccess = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${school} ${type} Roll`,
+        rollValue: d20Roll,
+        modifier: modifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "spell",
+        description: `Rolling ${school} ${type} check for ${character.name}`,
+      });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+      alert(
+        `${school} ${type} Roll: d20(${d20Roll}) + ${modifier} = ${total}${criticalText}`
+      );
+    }
+
+    let embedColor = 0x9d4edd;
+    let resultText = "";
+
+    const schoolColors = {
+      Divinations: 0xf59e0b,
+      Transfig: 0x10b981,
+      Charms: 0x3b82f6,
+      Healing: 0xef4444,
+      JHC: 0x8330ee,
+    };
+
+    embedColor = schoolColors[school] || 0x9d4edd;
+
+    if (isCriticalSuccess) {
+      embedColor = 0xffd700;
+      resultText = " - **CRITICAL SUCCESS!** 🎉";
+    } else if (isCriticalFailure) {
+      embedColor = 0xff0000;
+      resultText = " - **CRITICAL FAILURE!** 💥";
+    }
+
+    const wandEmojis = {
+      Divinations: "🔮",
+      Transfig: "✨",
+      Charms: "💫",
+      Healing: "❤️",
+      JHC: "⚡",
+    };
+
+    const schoolEmoji = wandEmojis[school] || "🪄";
+
+    const message = {
+      embeds: [
+        {
+          title: `${schoolEmoji} ${character.name} Cast: ${school} ${type}${resultText}`,
+          description: `${
+            isCriticalSuccess
+              ? "Natural 20! Exceptional magical prowess!"
+              : isCriticalFailure
+              ? "Natural 1! Magic went awry!"
+              : ""
+          }`,
+          color: embedColor,
+          fields: [
+            {
+              name: "Roll Details",
+              value: `Roll: ${d20Roll} ${
+                modifier >= 0 ? "+" : ""
+              }${modifier} = **${total}**${
+                isCriticalSuccess
+                  ? "\n✨ **Masterful spellcasting!**"
+                  : isCriticalFailure
+                  ? "\n💥 **Magical mishap!**"
+                  : ""
+              }`,
+              inline: false,
+            },
+            {
+              name: "Magic School",
+              value: school,
+              inline: true,
+            },
+            {
+              name: "Cast Type",
+              value: type,
+              inline: true,
+            },
+          ],
+          footer: {
+            text: `Witches and Snitches - Magic Casting • Today at ${new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            )}`,
+          },
+        },
+      ],
+    };
+
+    if (discordWebhookUrl) {
+      await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
+    }
+  } catch (error) {
+    console.error("Error sending Discord message:", error);
+    alert("Failed to send roll to Discord");
+  } finally {
+    setIsRolling(false);
+  }
+};
+
 export const rollAbility = async ({
   ability,
   isRolling,
@@ -797,6 +922,8 @@ export const rollAbility = async ({
   character,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1030,6 +1157,8 @@ export const rollGenericD20 = async ({
   setIsRolling,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1120,15 +1249,15 @@ export const rollBrewPotion = async ({
   qualityDCs,
   ingredientModifiers,
   characterModifier = 0,
-  webhookUrl,
   showRollResult,
-
   addPotionToInventory,
   currentCharacter,
   supabase,
   user,
   rawIngredientQuality,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return null;
   setIsRolling(true);
 
@@ -1451,9 +1580,10 @@ export const rollInitiative = async ({
   character,
   isRolling,
   setIsRolling,
-  characterModifiers,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1535,6 +1665,8 @@ export const rollSkill = async ({
   character,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1715,6 +1847,8 @@ export const attemptSpell = async ({
   setCriticalSuccesses,
   updateSpellProgressSummary,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
+
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
@@ -1902,6 +2036,8 @@ export const attemptArithmancySpell = async ({
   setCriticalSuccesses,
   updateSpellProgressSummary,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
+
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
@@ -2084,6 +2220,8 @@ export const attemptRunesSpell = async ({
   setCriticalSuccesses,
   updateSpellProgressSummary,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
+
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
@@ -2283,7 +2421,6 @@ export const rollCookRecipe = async ({
     const totalRoll = d20Roll + skillModifier;
 
     const getMaxAchievableQuality = ({ proficiencies, ingredientQuality }) => {
-      // For Culinarians, they have built-in proficiency
       const isCulinarian = character?.subclass === "Culinarian";
       const hasKit =
         proficiencies.culinaryKit || proficiencies.herbologyKit || isCulinarian;
@@ -2301,10 +2438,8 @@ export const rollCookRecipe = async ({
         return "flawed";
       }
 
-      // Culinarians may have enhanced quality progression
       let maxQualityBonus = 0;
       if (isCulinarian) {
-        // Culinarians can achieve better quality with their training
         maxQualityBonus = 1;
       }
 
@@ -2322,7 +2457,6 @@ export const rollCookRecipe = async ({
       ingredientQuality,
     });
 
-    // Use the recipe quality DCs (recipes don't have rarity like potions)
     const baseDCs = qualityDCs;
     const ingredientMod = ingredientModifiers[ingredientQuality] || 0;
     const adjustedDCs = Object.fromEntries(
@@ -2619,6 +2753,8 @@ export const rollSavingThrow = async ({
   savingThrowModifier,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return;
 
   setIsRolling(true);
@@ -2733,6 +2869,8 @@ export const rollResearch = async ({
   getModifierInfo,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
+
   try {
     let modifier = getSpellModifier(spellName, subject, selectedCharacter);
 
@@ -2943,6 +3081,8 @@ export const rollFlexibleDice = async ({
   setIsRolling,
   showRollResult,
 }) => {
+  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
   if (isRolling) return;
 
   setIsRolling(true);
@@ -3082,5 +3222,7 @@ export const useRollFunctions = () => {
       rollFlexibleDice({ ...params, showRollResult }),
     rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),
     rollCookRecipe: (params) => rollCookRecipe({ ...params, showRollResult }),
+    rollMagicCasting: (params) =>
+      rollMagicCasting({ ...params, showRollResult }),
   };
 };

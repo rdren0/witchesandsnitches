@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Wand2, Sparkles } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "../../styles/masterStyles";
-import { useRollModal } from "../utils/diceRoller";
+import { useRollModal, rollMagicCasting } from "../utils/diceRoller";
 
 const CastingTiles = ({ character }) => {
   const { theme } = useTheme();
@@ -17,33 +17,19 @@ const CastingTiles = ({ character }) => {
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   };
 
-  const handleRoll = (modifier, type, school) => {
+  const handleRoll = async (modifier, type, school) => {
     if (isRolling) return;
 
-    setIsRolling(true);
-    const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + modifier;
-
-    if (showRollResult) {
-      showRollResult({
-        title: `${school} ${type} Roll`,
-        rollValue: roll,
-        modifier: modifier,
-        total: total,
-        isCriticalSuccess: roll === 20,
-        isCriticalFailure: roll === 1,
-        type: "spell",
-        description: `d20(${roll}) ${formatModifier(modifier)} = ${total}`,
-      });
-    } else {
-      alert(
-        `${school} ${type} Roll: d20(${roll}) ${formatModifier(
-          modifier
-        )} = ${total}`
-      );
-    }
-
-    setTimeout(() => setIsRolling(false), 1000);
+    // Use the Discord-enabled rolling function
+    await rollMagicCasting({
+      school,
+      type,
+      modifier,
+      isRolling,
+      setIsRolling,
+      character,
+      showRollResult,
+    });
   };
 
   const schools = [
@@ -52,35 +38,45 @@ const CastingTiles = ({ character }) => {
       key: "divinations",
       color: "#F59E0B",
       wandMod: (character.magicModifiers || {})[`divinations`] || 0,
-      castingStat: getAbilityModifier(character.wisdom || 10),
+      castingStat: getAbilityModifier(
+        character.abilityScores?.wisdom || character.wisdom || 10
+      ),
     },
     {
       name: "Transfig",
       key: "transfiguration",
       color: "#10B981",
       wandMod: (character.magicModifiers || {})[`transfiguration`] || 0,
-      castingStat: getAbilityModifier(character.strength || 10),
+      castingStat: getAbilityModifier(
+        character.abilityScores?.strength || character.strength || 10
+      ),
     },
     {
       name: "Charms",
       key: "charms",
       color: "#3B82F6",
       wandMod: (character.magicModifiers || {})[`charms`] || 0,
-      castingStat: getAbilityModifier(character.dexterity || 10),
+      castingStat: getAbilityModifier(
+        character.abilityScores?.dexterity || character.dexterity || 10
+      ),
     },
     {
       name: "Healing",
       key: "healing",
       color: "#EF4444",
       wandMod: (character.magicModifiers || {})[`healing`] || 0,
-      castingStat: getAbilityModifier(character.intelligence || 10),
+      castingStat: getAbilityModifier(
+        character.abilityScores?.intelligence || character.intelligence || 10
+      ),
     },
     {
       name: "JHC",
       key: "jinxesHexesCurses",
       color: "#8330ee",
       wandMod: (character.magicModifiers || {})[`jinxesHexesCurses`] || 0,
-      castingStat: getAbilityModifier(character.charisma || 10),
+      castingStat: getAbilityModifier(
+        character.abilityScores?.charisma || character.charisma || 10
+      ),
     },
   ];
 
