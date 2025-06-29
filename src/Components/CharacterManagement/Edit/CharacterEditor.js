@@ -608,10 +608,12 @@ const CharacterEditor = ({
     };
 
     try {
+      const effectiveUserId = character.discordUserId || discordUserId;
+
       const updatedCharacter = await characterService.updateCharacter(
         character.id,
         characterToSave,
-        discordUserId
+        effectiveUserId
       );
 
       const transformedCharacter = {

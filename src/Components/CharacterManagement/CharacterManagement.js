@@ -117,8 +117,8 @@ const CharacterManagement = ({
   const handleCharacterSaved = async (updatedCharacter) => {
     try {
       const effectiveUserId =
-        adminMode && selectedTargetUserId
-          ? selectedTargetUserId
+        adminMode && isUserAdmin
+          ? updatedCharacter.discordUserId
           : discordUserId;
 
       const { error } = await supabase
