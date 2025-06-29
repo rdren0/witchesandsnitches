@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { castingStyles } from "../../SharedData/data";
 import StepIndicator from "../Shared/StepIndicator";
+import { gameSessionOptions } from "../Create/const";
 
 const BasicInformationSection = ({
   character,
@@ -15,18 +16,6 @@ const BasicInformationSection = ({
   styles,
   theme,
 }) => {
-  const gameSessionOptions = [
-    "Sunday - Knights",
-    "Monday - Haunting",
-    "Tuesday - Knights",
-    "Wednesday - Haunting",
-    "Thursday - Knights",
-    "Friday - Knights",
-    "Saturday - Haunting",
-    "Saturday - Knights",
-    "DEVELOPMENT",
-  ];
-
   return (
     <>
       <StepIndicator step={1} totalSteps={5} label="Basic Information" />
