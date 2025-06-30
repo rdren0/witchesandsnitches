@@ -69,11 +69,6 @@ const InspirationTracker = ({
                 : "💡 Used Inspiration",
               inline: true,
             },
-            {
-              name: "Current State",
-              value: newState ? "Has Inspiration" : "No Inspiration",
-              inline: true,
-            },
           ],
           timestamp: new Date().toISOString(),
           footer: {
