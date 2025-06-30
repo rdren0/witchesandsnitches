@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sparkles, Zap, PlusIcon, MinusIcon } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { getDiscordWebhook } from "../../../App/const";
 
 const SorceryPointTracker = ({
   character,
@@ -63,7 +64,8 @@ const SorceryPointTracker = ({
         sorceryPoints: newSorceryPoints,
       }));
 
-      const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
+      const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
       if (discordWebhookUrl) {
         const embed = {
           title: `${character.name} - ${action}`,

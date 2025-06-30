@@ -22,6 +22,7 @@ export const characterResourcesService = {
         discord_user_id: discordUserId,
         corruption_points: 0,
         sorcery_points: 0,
+        inspiration: false,
         max_sorcery_points: 0,
         spell_slots_1: 0,
         spell_slots_2: 0,

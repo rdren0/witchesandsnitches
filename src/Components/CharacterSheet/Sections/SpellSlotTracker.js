@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, BookOpen, PlusIcon, MinusIcon } from "lucide-react";
 import SorceryPointTracker from "./SorceryPointTracker";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { getDiscordWebhook } from "../../../App/const";
 
 const SpellSlotTracker = ({
   character,
@@ -229,7 +230,8 @@ const SpellSlotTracker = ({
 
       setShowCustomModal(false);
 
-      const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
+      const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
       if (discordWebhookUrl) {
         const totalSlots = Object.values(customSlots).reduce(
           (sum, slots) => sum + slots,
@@ -297,7 +299,8 @@ const SpellSlotTracker = ({
         [`spellSlots${level}`]: newSlots,
       }));
 
-      const discordWebhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK_URL;
+      const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
       if (discordWebhookUrl) {
         const embed = {
           title: `${character.name} - ${action}`,

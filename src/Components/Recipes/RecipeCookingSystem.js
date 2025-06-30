@@ -15,6 +15,7 @@ import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { recipes, recipeQualityDCs, recipeCategories } from "./recipesData";
 import { createRecipesStyles } from "../../styles/masterStyles";
+import { getDiscordWebhook } from "../../App/const";
 
 const RecipeCookingSystem = ({ character, user, supabase }) => {
   const { theme, selectedCharacter } = useTheme();
@@ -209,6 +210,8 @@ const RecipeCookingSystem = ({ character, user, supabase }) => {
   const characterModifier = getCharacterCookingModifier;
 
   const rollRecipe = async () => {
+    const webhookUrl = getDiscordWebhook(character?.gameSession);
+
     if (!selectedRecipe || isRolling) return;
 
     setIsRolling(true);
@@ -224,7 +227,7 @@ const RecipeCookingSystem = ({ character, user, supabase }) => {
         qualityDCs: recipeQualityDCs,
         ingredientModifiers,
         characterModifier,
-        webhookUrl: process.env.REACT_APP_DISCORD_WEBHOOK_URL,
+        webhookUrl,
         addRecipeToInventory: true,
         currentCharacter,
         supabase,

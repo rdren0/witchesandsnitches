@@ -165,7 +165,7 @@ export const AdminProvider = ({ children, user }) => {
     isUserAdmin,
     adminLoading,
     allUsers,
-
+    setAdminMode,
     toggleAdminMode,
     verifyAdminPassword,
     loadAllUsers,

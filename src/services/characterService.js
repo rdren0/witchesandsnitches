@@ -7,91 +7,232 @@ const supabase = createClient(
 );
 
 const getCharacters = async (discordUserId) => {
-  const { data, error } = await supabase
+  const { data: characters, error: charactersError } = await supabase
     .from("characters")
     .select("*")
     .eq("discord_user_id", discordUserId)
     .eq("active", true)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(`Failed to fetch characters: ${error.message}`);
+  if (charactersError) {
+    throw new Error(`Failed to fetch characters: ${charactersError.message}`);
   }
 
-  return data || [];
+  if (!characters || characters.length === 0) {
+    return [];
+  }
+
+  const characterIds = characters.map((char) => char.id);
+  const { data: characterResources, error: resourcesError } = await supabase
+    .from("character_resources")
+    .select("*")
+    .in("character_id", characterIds);
+
+  if (resourcesError) {
+    console.warn("Failed to load character resources:", resourcesError);
+  }
+
+  const resourcesMap = {};
+  if (characterResources) {
+    characterResources.forEach((resource) => {
+      resourcesMap[resource.character_id] = resource;
+    });
+  }
+
+  const transformedData = characters.map((character) => {
+    const resources = resourcesMap[character.id] || {};
+
+    return {
+      ...character,
+      inspiration: resources.inspiration ?? false,
+      sorceryPoints: resources.sorcery_points || 0,
+      corruptionPoints: resources.corruption_points || 0,
+      spellSlots1: resources.spell_slots_1 || 0,
+      spellSlots2: resources.spell_slots_2 || 0,
+      spellSlots3: resources.spell_slots_3 || 0,
+      spellSlots4: resources.spell_slots_4 || 0,
+      spellSlots5: resources.spell_slots_5 || 0,
+      spellSlots6: resources.spell_slots_6 || 0,
+      spellSlots7: resources.spell_slots_7 || 0,
+      spellSlots8: resources.spell_slots_8 || 0,
+      spellSlots9: resources.spell_slots_9 || 0,
+      maxSpellSlots1: resources.max_spell_slots_1 || 0,
+      maxSpellSlots2: resources.max_spell_slots_2 || 0,
+      maxSpellSlots3: resources.max_spell_slots_3 || 0,
+      maxSpellSlots4: resources.max_spell_slots_4 || 0,
+      maxSpellSlots5: resources.max_spell_slots_5 || 0,
+      maxSpellSlots6: resources.max_spell_slots_6 || 0,
+      maxSpellSlots7: resources.max_spell_slots_7 || 0,
+      maxSpellSlots8: resources.max_spell_slots_8 || 0,
+      maxSpellSlots9: resources.max_spell_slots_9 || 0,
+    };
+  });
+
+  return transformedData;
 };
 
 const getAllCharacters = async () => {
   try {
-    try {
-      const { data, error } = await supabase
-        .from("characters")
-        .select(`*,discord_users (username,display_name)`)
-        .eq("active", true)
-        .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("characters")
+      .select(
+        `
+        *,
+        discord_users (username, display_name),
+        character_resources (
+          inspiration,
+          sorcery_points,
+          corruption_points,
+          spell_slots_1,
+          spell_slots_2,
+          spell_slots_3,
+          spell_slots_4,
+          spell_slots_5,
+          spell_slots_6,
+          spell_slots_7,
+          spell_slots_8,
+          spell_slots_9,
+          max_spell_slots_1,
+          max_spell_slots_2,
+          max_spell_slots_3,
+          max_spell_slots_4,
+          max_spell_slots_5,
+          max_spell_slots_6,
+          max_spell_slots_7,
+          max_spell_slots_8,
+          max_spell_slots_9
+        )
+      `
+      )
+      .eq("active", true)
+      .order("created_at", { ascending: false });
 
-      if (!error) {
-        return data || [];
-      } else {
-        console.warn("❌ Relationship-based query failed:", error.message);
-        throw error;
-      }
-    } catch (relationshipError) {
-      console.warn("🔄 Relationship query failed, trying manual join...");
+    if (!error) {
+      const transformedData = (data || []).map((character) => {
+        const resources = character.character_resources?.[0] || {};
 
-      const { data: characters, error: charactersError } = await supabase
-        .from("characters")
-        .select("*")
-        .eq("active", true)
-        .order("created_at", { ascending: false });
+        return {
+          ...character,
+          character_resources: undefined,
+          inspiration: resources.inspiration ?? false,
+          sorceryPoints: resources.sorcery_points || 0,
+          corruptionPoints: resources.corruption_points || 0,
+          spellSlots1: resources.spell_slots_1 || 0,
+          spellSlots2: resources.spell_slots_2 || 0,
+          spellSlots3: resources.spell_slots_3 || 0,
+          spellSlots4: resources.spell_slots_4 || 0,
+          spellSlots5: resources.spell_slots_5 || 0,
+          spellSlots6: resources.spell_slots_6 || 0,
+          spellSlots7: resources.spell_slots_7 || 0,
+          spellSlots8: resources.spell_slots_8 || 0,
+          spellSlots9: resources.spell_slots_9 || 0,
+          maxSpellSlots1: resources.max_spell_slots_1 || 0,
+          maxSpellSlots2: resources.max_spell_slots_2 || 0,
+          maxSpellSlots3: resources.max_spell_slots_3 || 0,
+          maxSpellSlots4: resources.max_spell_slots_4 || 0,
+          maxSpellSlots5: resources.max_spell_slots_5 || 0,
+          maxSpellSlots6: resources.max_spell_slots_6 || 0,
+          maxSpellSlots7: resources.max_spell_slots_7 || 0,
+          maxSpellSlots8: resources.max_spell_slots_8 || 0,
+          maxSpellSlots9: resources.max_spell_slots_9 || 0,
+        };
+      });
 
-      if (charactersError) {
-        throw new Error(
-          `Failed to fetch characters: ${charactersError.message}`
-        );
-      }
+      return transformedData;
+    } else {
+      console.warn(
+        "❌ JOIN query failed, trying manual approach:",
+        error.message
+      );
+    }
+  } catch (joinError) {
+    console.warn(
+      "🔄 JOIN query failed, trying manual join...",
+      joinError.message
+    );
+  }
 
-      if (!characters || characters.length === 0) {
-        return [];
-      }
+  try {
+    const { data: characters, error: charactersError } = await supabase
+      .from("characters")
+      .select("*")
+      .eq("active", true)
+      .order("created_at", { ascending: false });
 
-      const discordUserIds = [
-        ...new Set(
-          characters.map((char) => char.discord_user_id).filter(Boolean)
-        ),
-      ];
+    if (charactersError) {
+      throw new Error(`Failed to fetch characters: ${charactersError.message}`);
+    }
 
-      if (discordUserIds.length === 0) {
-        return characters.map((char) => ({ ...char, discord_users: null }));
-      }
+    if (!characters || characters.length === 0) {
+      return [];
+    }
 
+    const characterIds = characters.map((char) => char.id);
+    const { data: characterResources } = await supabase
+      .from("character_resources")
+      .select("*")
+      .in("character_id", characterIds);
+
+    const resourcesMap = {};
+    if (characterResources) {
+      characterResources.forEach((resource) => {
+        resourcesMap[resource.character_id] = resource;
+      });
+    }
+
+    const discordUserIds = [
+      ...new Set(
+        characters.map((char) => char.discord_user_id).filter(Boolean)
+      ),
+    ];
+    let userMap = {};
+
+    if (discordUserIds.length > 0) {
       const { data: discordUsers, error: usersError } = await supabase
         .from("discord_users")
         .select("discord_user_id, username, display_name")
         .in("discord_user_id", discordUserIds);
 
       if (usersError) {
-        console.warn(
-          "⚠️ Failed to load discord users, continuing without user info:",
-          usersError.message
-        );
-        return characters.map((char) => ({ ...char, discord_users: null }));
-      }
-
-      const userMap = {};
-      if (discordUsers) {
+        console.warn("⚠️ Failed to load discord users:", usersError.message);
+      } else if (discordUsers) {
         discordUsers.forEach((user) => {
           userMap[user.discord_user_id] = user;
         });
       }
+    }
 
-      const charactersWithUsers = characters.map((character) => ({
+    const charactersWithUsers = characters.map((character) => {
+      const resources = resourcesMap[character.id] || {};
+
+      return {
         ...character,
         discord_users: userMap[character.discord_user_id] || null,
-      }));
+        inspiration: resources.inspiration || 0,
+        sorceryPoints: resources.sorcery_points || 0,
+        corruptionPoints: resources.corruption_points || 0,
+        spellSlots1: resources.spell_slots_1 || 0,
+        spellSlots2: resources.spell_slots_2 || 0,
+        spellSlots3: resources.spell_slots_3 || 0,
+        spellSlots4: resources.spell_slots_4 || 0,
+        spellSlots5: resources.spell_slots_5 || 0,
+        spellSlots6: resources.spell_slots_6 || 0,
+        spellSlots7: resources.spell_slots_7 || 0,
+        spellSlots8: resources.spell_slots_8 || 0,
+        spellSlots9: resources.spell_slots_9 || 0,
+        maxSpellSlots1: resources.max_spell_slots_1 || 0,
+        maxSpellSlots2: resources.max_spell_slots_2 || 0,
+        maxSpellSlots3: resources.max_spell_slots_3 || 0,
+        maxSpellSlots4: resources.max_spell_slots_4 || 0,
+        maxSpellSlots5: resources.max_spell_slots_5 || 0,
+        maxSpellSlots6: resources.max_spell_slots_6 || 0,
+        maxSpellSlots7: resources.max_spell_slots_7 || 0,
+        maxSpellSlots8: resources.max_spell_slots_8 || 0,
+        maxSpellSlots9: resources.max_spell_slots_9 || 0,
+      };
+    });
 
-      return charactersWithUsers;
-    }
+    return charactersWithUsers;
   } catch (error) {
     console.error("💥 Error in getAllCharacters:", error);
 
@@ -109,6 +250,9 @@ const getAllCharacters = async () => {
       return (data || []).map((character) => ({
         ...character,
         discord_users: null,
+        inspiration: 0,
+        sorceryPoints: 0,
+        corruptionPoints: 0,
       }));
     } catch (lastResortError) {
       console.error(

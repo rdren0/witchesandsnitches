@@ -26,6 +26,7 @@ import SpellSlotTracker from "./Sections/SpellSlotTracker";
 import SorceryPointTracker from "./Sections/SorceryPointTracker";
 import { useCallback } from "react";
 import { getDiscordWebhook } from "../../App/const";
+import InspirationTracker from "./InspirationTracker";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -453,32 +454,33 @@ const CharacterSheet = ({
           .from("characters")
           .select(
             `
-        *, 
-        initiative_ability,
-        character_resources (
-          corruption_points,
-          sorcery_points,
-          max_sorcery_points,
-          spell_slots_1,
-          spell_slots_2,
-          spell_slots_3,
-          spell_slots_4,
-          spell_slots_5,
-          spell_slots_6,
-          spell_slots_7,
-          spell_slots_8,
-          spell_slots_9,
-          max_spell_slots_1,
-          max_spell_slots_2,
-          max_spell_slots_3,
-          max_spell_slots_4,
-          max_spell_slots_5,
-          max_spell_slots_6,
-          max_spell_slots_7,
-          max_spell_slots_8,
-          max_spell_slots_9
-        )
-      `
+    *, 
+    initiative_ability,
+    character_resources (
+      inspiration,
+      corruption_points,
+      sorcery_points,
+      max_sorcery_points,
+      spell_slots_1,
+      spell_slots_2,
+      spell_slots_3,
+      spell_slots_4,
+      spell_slots_5,
+      spell_slots_6,
+      spell_slots_7,
+      spell_slots_8,
+      spell_slots_9,
+      max_spell_slots_1,
+      max_spell_slots_2,
+      max_spell_slots_3,
+      max_spell_slots_4,
+      max_spell_slots_5,
+      max_spell_slots_6,
+      max_spell_slots_7,
+      max_spell_slots_8,
+      max_spell_slots_9
+    )
+  `
           )
           .eq("id", selectedCharacter.id)
           .single();
@@ -490,32 +492,33 @@ const CharacterSheet = ({
           .from("characters")
           .select(
             `
-        *, 
-        initiative_ability,
-        character_resources (
-          corruption_points,
-          sorcery_points,
-          max_sorcery_points,
-          spell_slots_1,
-          spell_slots_2,
-          spell_slots_3,
-          spell_slots_4,
-          spell_slots_5,
-          spell_slots_6,
-          spell_slots_7,
-          spell_slots_8,
-          spell_slots_9,
-          max_spell_slots_1,
-          max_spell_slots_2,
-          max_spell_slots_3,
-          max_spell_slots_4,
-          max_spell_slots_5,
-          max_spell_slots_6,
-          max_spell_slots_7,
-          max_spell_slots_8,
-          max_spell_slots_9
-        )
-      `
+    *, 
+    initiative_ability,
+    character_resources (
+      inspiration,
+      corruption_points,
+      sorcery_points,
+      max_sorcery_points,
+      spell_slots_1,
+      spell_slots_2,
+      spell_slots_3,
+      spell_slots_4,
+      spell_slots_5,
+      spell_slots_6,
+      spell_slots_7,
+      spell_slots_8,
+      spell_slots_9,
+      max_spell_slots_1,
+      max_spell_slots_2,
+      max_spell_slots_3,
+      max_spell_slots_4,
+      max_spell_slots_5,
+      max_spell_slots_6,
+      max_spell_slots_7,
+      max_spell_slots_8,
+      max_spell_slots_9
+    )
+  `
           )
           .eq("id", selectedCharacter.id)
           .eq("discord_user_id", discordUserId)
@@ -586,7 +589,7 @@ const CharacterSheet = ({
             data.skill_proficiencies || [],
             data.skill_expertise || []
           ),
-
+          inspiration: resources.inspiration ?? false,
           spellSlots1: resources.spell_slots_1 || 0,
           spellSlots2: resources.spell_slots_2 || 0,
           spellSlots3: resources.spell_slots_3 || 0,
@@ -1045,6 +1048,14 @@ const CharacterSheet = ({
                         marginBottom: "18px",
                       }}
                     >
+                      <InspirationTracker
+                        character={character}
+                        supabase={supabase}
+                        discordUserId={discordUserId}
+                        setCharacter={setCharacter}
+                        selectedCharacterId={selectedCharacter.id}
+                        isAdmin={isUserAdmin}
+                      />
                       <button
                         style={{
                           backgroundColor: "#9d4edd",
@@ -1062,9 +1073,8 @@ const CharacterSheet = ({
                           gap: "8px",
                           opacity: character.currentHitDice <= 0 ? 0.6 : 1,
                           transition: "all 0.2s ease",
-                          minWidth: "140px",
                           justifyContent: "center",
-                          width: "160px",
+                          width: "120px",
                           height: "40px",
                         }}
                         onClick={handleShortRestClick}
@@ -1088,9 +1098,8 @@ const CharacterSheet = ({
                           gap: "8px",
                           opacity: isLongResting ? 0.7 : 1,
                           transition: "all 0.2s ease",
-                          minWidth: "140px",
                           justifyContent: "center",
-                          width: "160px",
+                          width: "120px",
                           height: "40px",
                         }}
                         onClick={handleLongRest}
@@ -1113,9 +1122,9 @@ const CharacterSheet = ({
                           alignItems: "center",
                           gap: "8px",
                           transition: "all 0.2s ease",
-                          width: "160px",
-                          height: "40px",
                           justifyContent: "center",
+                          width: "120px",
+                          height: "40px",
                         }}
                         onClick={() => setShowLevelUp(true)}
                         title={`Level up ${character.name} to level ${

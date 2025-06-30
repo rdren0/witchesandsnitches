@@ -216,6 +216,7 @@ const getAdditionalStyles = (theme) => ({
   spellName: {
     fontWeight: "500",
     fontSize: "14px",
+    display: "flex",
   },
   tagsContainer: {
     display: "flex",
@@ -501,6 +502,7 @@ export const SubjectCard = ({
 
   const [attemptingSpells, setAttemptingSpells] = useState({});
   const [alternateAttemptsModal, setAlternateAttemptsModal] = useState(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   const [openMenus, setOpenMenus] = useState({});
   const [editingSpell, setEditingSpell] = useState(null);
@@ -610,6 +612,13 @@ export const SubjectCard = ({
     loadSpellProgress();
     // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId]);
+
+  const toggleDescription = (spellName) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [spellName]: !prev[spellName],
+    }));
+  };
 
   const activeSearchTerm = searchTerm || globalSearchTerm;
 
@@ -902,6 +911,7 @@ export const SubjectCard = ({
     const hasFailedAttempt = failedAttempts[spellName] || false;
     const isAttempting = attemptingSpells[spellName] || false;
     const isMastered = attempts[1] && attempts[2];
+    const isDescriptionExpanded = expandedDescriptions[spellName];
 
     const hasArithmancticTag =
       spellObj.tags?.includes("Arithmantic") ||
@@ -933,7 +943,7 @@ export const SubjectCard = ({
         </span>
       ) : null;
 
-    return (
+    const mainRow = (
       <tr
         key={spellName}
         style={{
@@ -948,6 +958,34 @@ export const SubjectCard = ({
           <div style={styles.spellNameContainer}>
             <span style={styles.spellName}>
               {highlightSearchTerm(spellName)}
+              {spellObj.description && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleDescription(spellName);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "2px",
+                    display: "flex",
+                    alignItems: "center",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  }}
+                  title={
+                    isDescriptionExpanded
+                      ? "Hide description"
+                      : "Show description"
+                  }
+                >
+                  {isDescriptionExpanded ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )}
+                </button>
+              )}
             </span>
             {modifierDisplay}
             <div style={styles.tagsContainer}>
@@ -1168,6 +1206,93 @@ export const SubjectCard = ({
         </td>
       </tr>
     );
+
+    const descriptionRow =
+      isDescriptionExpanded && spellObj.description ? (
+        <tr key={`${spellName}-description`}>
+          <td colSpan="6" style={{ padding: "0", border: "none" }}>
+            <div
+              style={{
+                margin: "0 16px 12px 16px",
+                padding: "16px",
+                backgroundColor: theme === "dark" ? "#374151" : "#f8fafc",
+                border: `1px solid ${theme === "dark" ? "#4b5563" : "#e2e8f0"}`,
+                borderRadius: "8px",
+                fontSize: "14px",
+                lineHeight: "1.5",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: "600",
+                  color: theme === "dark" ? "#60a5fa" : "#1e40af",
+                  marginBottom: "8px",
+                  fontSize: "16px",
+                }}
+              >
+                {spellName}
+              </div>
+              <div
+                style={{
+                  fontStyle: "italic",
+                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  marginBottom: "12px",
+                  fontSize: "13px",
+                }}
+              >
+                {spellObj.level} •{" "}
+                {spellObj.castingTime || "Unknown casting time"} • Range:{" "}
+                {spellObj.range || "Unknown"} • Duration:{" "}
+                {spellObj.duration || "Unknown"}
+              </div>
+              <div
+                style={{
+                  whiteSpace: "pre-line",
+                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  marginBottom: "12px",
+                }}
+              >
+                {highlightSearchTerm(spellObj.description)}
+              </div>
+              {spellObj.higherLevels && (
+                <div
+                  style={{
+                    marginBottom: "12px",
+                    fontStyle: "italic",
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  }}
+                >
+                  <strong>At Higher Levels:</strong> {spellObj.higherLevels}
+                </div>
+              )}
+              {spellObj.tags && spellObj.tags.length > 0 && (
+                <div>
+                  {spellObj.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 8px",
+                        backgroundColor:
+                          theme === "dark" ? "#4b5563" : "#e5e7eb",
+                        color: theme === "dark" ? "#d1d5db" : "#374151",
+                        fontSize: "12px",
+                        borderRadius: "4px",
+                        marginRight: "6px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {highlightSearchTerm(tag)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      ) : null;
+
+    return [mainRow, descriptionRow].filter(Boolean);
   };
 
   const startEditing = (spellName) => {
@@ -1655,6 +1780,7 @@ export const SubjectCard = ({
             )}
           </div>
         </div>
+        <p style={styles.subjectDescription}>{subjectData.description}</p>
         <div style={styles.subjectStats}>
           <span style={styles.subjectStatText}>
             {masteredCount}/{totalSpells} Mastered ({progressPercentage}%)
