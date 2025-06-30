@@ -55,6 +55,8 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     inventoryAdded,
     potionQuality,
     recipeQuality,
+    diceQuantity = 1,
+    diceType = 20,
   } = rollResult;
 
   const getTypeColor = () => {
@@ -127,6 +129,15 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
       ruined: "#dc2626",
     };
     return colors[quality] || "#6b7280";
+  };
+
+  const getDiceFormula = () => {
+    if (type === "flexible") {
+      const advantageText =
+        rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
+      return `${diceQuantity}d${diceType}${advantageText}`;
+    }
+    return null;
   };
 
   return (
@@ -204,6 +215,19 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
                   }}
                 >
                   {getRollTypeIndicator()}
+                </div>
+              )}
+              {getDiceFormula() && (
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#6b7280",
+                    fontWeight: "500",
+                    marginTop: "2px",
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {getDiceFormula()}
                 </div>
               )}
             </div>
@@ -3048,16 +3072,26 @@ export const rollResearch = async ({
   }
 };
 
-export const rollFlexibleDie = (diceType = 20, rollType = "normal") => {
+export const rollFlexibleDie = (
+  diceQuantity = 1,
+  diceType = 20,
+  rollType = "normal"
+) => {
   const roller = new DiceRoller();
   let notation;
 
+  // Handle advantage/disadvantage for any number of dice
   if (rollType === "advantage") {
-    notation = `2d${diceType}kh1`;
+    // Roll double the dice and keep the highest [quantity]
+    // e.g., 2d20 advantage = 4d20kh2
+    notation = `${diceQuantity * 2}d${diceType}kh${diceQuantity}`;
   } else if (rollType === "disadvantage") {
-    notation = `2d${diceType}kl1`;
+    // Roll double the dice and keep the lowest [quantity]
+    // e.g., 2d20 disadvantage = 4d20kl2
+    notation = `${diceQuantity * 2}d${diceType}kl${diceQuantity}`;
   } else {
-    notation = `1d${diceType}`;
+    // Normal rolls
+    notation = `${diceQuantity}d${diceType}`;
   }
 
   const roll = roller.roll(notation);
@@ -3065,12 +3099,14 @@ export const rollFlexibleDie = (diceType = 20, rollType = "normal") => {
     total: roll.total,
     notation: roll.notation,
     output: roll.output,
+    diceQuantity: diceQuantity,
     diceType: diceType,
     rollType: rollType,
   };
 };
 
 export const rollFlexibleDice = async ({
+  diceQuantity = 1,
   diceType = 20,
   rollType = "normal",
   modifier = 0,
@@ -3088,13 +3124,16 @@ export const rollFlexibleDice = async ({
   setIsRolling(true);
 
   try {
-    const diceResult = rollFlexibleDie(diceType, rollType);
+    const diceResult = rollFlexibleDie(diceQuantity, diceType, rollType);
     const diceRoll = diceResult.total;
     const mod = parseInt(modifier) || 0;
     const total = diceRoll + mod;
 
-    const isCriticalSuccess = diceType === 20 && diceRoll === 20;
-    const isCriticalFailure = diceType === 20 && diceRoll === 1;
+    // Critical success/failure only applies to d20 rolls
+    const isCriticalSuccess =
+      diceType === 20 && diceQuantity === 1 && diceRoll === 20;
+    const isCriticalFailure =
+      diceType === 20 && diceQuantity === 1 && diceRoll === 1;
 
     if (showRollResult) {
       showRollResult({
@@ -3106,6 +3145,7 @@ export const rollFlexibleDice = async ({
         isCriticalFailure,
         type: "flexible",
         description: description,
+        diceQuantity: diceQuantity,
         diceType: diceType,
         rollType: rollType,
       });
@@ -3118,7 +3158,7 @@ export const rollFlexibleDice = async ({
       const rollTypeText =
         rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
       alert(
-        `${title}: d${diceType}${rollTypeText}(${diceRoll}) + ${mod} = ${total}${criticalText}`
+        `${title}: ${diceQuantity}d${diceType}${rollTypeText}(${diceRoll}) + ${mod} = ${total}${criticalText}`
       );
     }
 
@@ -3142,21 +3182,23 @@ export const rollFlexibleDice = async ({
         ? ` (${rollType.charAt(0).toUpperCase() + rollType.slice(1)})`
         : "";
 
+    const advantageInfo =
+      rollType !== "normal"
+        ? `${
+            rollType === "advantage" ? "🎯 Advantage" : "⚠️ Disadvantage"
+          } Roll`
+        : "";
+
     const message = {
       embeds: [
         {
           title: rollTitle,
-          description:
-            rollType !== "normal"
-              ? `${
-                  rollType === "advantage" ? "🎯 Advantage" : "⚠️ Disadvantage"
-                } Roll${rollType !== "normal" ? rollTypeDescription : ""}`
-              : "",
+          description: advantageInfo,
           color: embedColor,
           fields: [
             {
               name: "Roll Details",
-              value: `d${diceType}${rollTypeDescription}: ${diceRoll} ${
+              value: `${diceQuantity}d${diceType}${rollTypeDescription}: ${diceRoll} ${
                 mod >= 0 ? "+" : ""
               }${mod} = **${total}**${
                 isCriticalSuccess
@@ -3218,11 +3260,11 @@ export const useRollFunctions = () => {
     rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
     rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),
     rollResearch: (params) => rollResearch({ ...params, showRollResult }),
-    rollFlexibleDice: (params) =>
-      rollFlexibleDice({ ...params, showRollResult }),
     rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),
     rollCookRecipe: (params) => rollCookRecipe({ ...params, showRollResult }),
     rollMagicCasting: (params) =>
       rollMagicCasting({ ...params, showRollResult }),
+    rollFlexibleDice: (params) =>
+      rollFlexibleDice({ ...params, showRollResult }),
   };
 };

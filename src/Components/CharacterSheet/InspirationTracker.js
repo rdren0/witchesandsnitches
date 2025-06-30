@@ -33,7 +33,7 @@ const InspirationTracker = ({
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("character_resources")
         .upsert(updateData, {
           onConflict: "character_id,discord_user_id",

@@ -10,10 +10,11 @@ const FlexibleDiceRoller = ({
   style = {},
   compact = false,
 }) => {
-  const { rollFlexibleDice } = useRollFunctions(); // Assuming this function exists or needs to be created
+  const { rollFlexibleDice } = useRollFunctions();
   const { theme } = useTheme();
+  const [diceQuantity, setDiceQuantity] = useState(1);
   const [diceType, setDiceType] = useState(20);
-  const [rollType, setRollType] = useState("normal"); // normal, advantage, disadvantage
+  const [rollType, setRollType] = useState("normal");
   const [modifier, setModifier] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
@@ -31,7 +32,15 @@ const FlexibleDiceRoller = ({
   };
 
   const decrementDiceType = () => {
-    setDiceType((prev) => Math.max(2, parseInt(prev) - 1)); // Minimum d2
+    setDiceType((prev) => Math.max(2, parseInt(prev) - 1));
+  };
+
+  const incrementDiceQuantity = () => {
+    setDiceQuantity((prevState) => prevState + 1);
+  };
+
+  const decrementDiceQuantity = () => {
+    setDiceQuantity((prevState) => Math.max(1, prevState - 1));
   };
 
   const handleRoll = () => {
@@ -40,8 +49,8 @@ const FlexibleDiceRoller = ({
       ? `Rolling ${customTitle.toLowerCase()}`
       : description;
 
-    // Use the new rollFlexibleDice function
     rollFlexibleDice({
+      diceQuantity: parseInt(diceQuantity) || 1,
       diceType: parseInt(diceType),
       rollType: rollType,
       modifier: parseInt(modifier) || 0,
@@ -212,7 +221,7 @@ const FlexibleDiceRoller = ({
       : rollType === "disadvantage"
       ? " (DIS)"
       : "";
-  const formula = `1d${diceType}${
+  const formula = `${diceQuantity}d${diceType}${
     displayModifier !== 0 ? modifierText : ""
   }${advantageText}`;
 
@@ -251,6 +260,42 @@ const FlexibleDiceRoller = ({
 
         <div style={styles.inputRow}>
           <div style={styles.inputContainer}>
+            <label style={styles.label}>Dice Quantity</label>
+            <div style={styles.modifierContainer}>
+              <button
+                type="button"
+                onClick={decrementDiceQuantity}
+                style={styles.modifierButton}
+              >
+                <Minus size={14} />
+              </button>
+              <input
+                type="number"
+                value={diceQuantity}
+                min="1"
+                max="100"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 1;
+                  setDiceQuantity(Math.max(1, Math.min(100, value)));
+                }}
+                style={{
+                  ...styles.modifierInput,
+                  textAlign: "center",
+                  fontWeight: "600",
+                  minWidth: "60px",
+                }}
+              />
+              <button
+                type="button"
+                onClick={incrementDiceQuantity}
+                style={styles.modifierButton}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div style={styles.inputContainer}>
             <label style={styles.label}>Dice Type</label>
             <div style={styles.modifierContainer}>
               <button
@@ -285,7 +330,7 @@ const FlexibleDiceRoller = ({
                   e.target.style.backgroundColor = "transparent";
                   e.target.parentElement.style.borderColor =
                     theme === "dark" ? "#4b5563" : "#d1d5db";
-                  // Ensure valid value on blur
+
                   const value = parseInt(e.target.value) || 2;
                   setDiceType(Math.max(2, Math.min(9999, value)));
                 }}
@@ -419,7 +464,7 @@ const FlexibleDiceRoller = ({
         style={styles.rollButton}
       >
         <Dice6 size={16} />
-        {isRolling ? "Rolling..." : `Roll d${diceType}`}
+        {isRolling ? "Rolling..." : `Roll ${diceQuantity}d${diceType}`}
       </button>
     </div>
   );
