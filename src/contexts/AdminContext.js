@@ -128,7 +128,7 @@ export const AdminProvider = ({ children, user }) => {
     if (!isUserAdmin && adminMode) {
       setAdminMode(false);
     }
-  }, [isUserAdmin, adminMode]);
+  }, [isUserAdmin, adminMode, setAdminMode]);
 
   const loadAllUsers = async () => {
     if (!isUserAdmin) {
