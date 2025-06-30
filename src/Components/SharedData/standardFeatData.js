@@ -304,13 +304,13 @@ export const standardFeats = [
   {
     name: "Ember of the Fire Giant",
     preview:
-      "Fire giant powers. +1 Str/Con/Wis, fire resistance, burning aura.",
+      "Fire giant heritage. +1 Str/Con/Wis, fire resistance, flame burst.",
     description: [
+      "Prerequisites: Vigor Caster, Giant's Blood, or Troll Blood.",
       "Increase Strength, Constitution, or Wisdom by 1.",
       "Gain resistance to fire damage.",
-      "Searing Ignition: Replace one attack with 15-foot radius fire burst.",
-      "Targets make Dex save (DC 8 + prof + ability mod) or take 1d8 + prof fire damage and blinded until next turn.",
-      "Use prof bonus times per long rest, once per turn maximum.",
+      "Searing Ignition: Replace one attack with 15-foot radius flame burst (Dex save, 1d8 + prof bonus fire damage, blinds until next turn).",
+      "Use Searing Ignition proficiency bonus times per long rest, max once per turn.",
     ],
     benefits: {
       abilityScoreIncrease: {
@@ -330,19 +330,15 @@ export const standardFeats = [
         {
           name: "Searing Ignition",
           type: "active",
-          usage: "attack_replacement",
-          uses: "proficiency_bonus",
-          recharge: "long_rest",
-          area: "15_foot_radius",
-          damage: "1d8_plus_proficiency_fire",
-          save: "dexterity",
-          effect: "blinded_until_next_turn",
+          usage: "prof_bonus_per_long_rest",
+          description:
+            "15-foot flame burst, 1d8 + prof fire damage, blinds on fail",
         },
       ],
     },
     prerequisites: {
       anyOf: [
-        { type: "castingStyle", value: "Vigor Caster" },
+        { type: "feat", value: "Vigor Caster" },
         { type: "innateHeritage", value: "Giant's Blood" },
         { type: "innateHeritage", value: "Troll Blood" },
       ],
@@ -703,6 +699,79 @@ export const standardFeats = [
     },
   },
   {
+    name: "Mounted Combatant",
+    preview: "Combat expertise while mounted. +1 Str/Dex/Wis.",
+    description: [
+      "Increase Strength, Dexterity, or Wisdom by 1.",
+      "While mounted, advantage on attack rolls against unmounted creatures within 5 feet that are smaller than your mount.",
+      "If mount makes Dex save for half damage, it takes no damage on success, half on failure.",
+      "While mounted, you can force attacks against your mount to hit you instead.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity", "wisdom"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Mounted Strike",
+          type: "passive",
+          description:
+            "Advantage on attacks against smaller unmounted creatures while mounted",
+        },
+        {
+          name: "Leap Aside",
+          type: "passive",
+          description:
+            "Mount takes no damage on successful Dex save, half on failure",
+        },
+        {
+          name: "Veer",
+          type: "reaction",
+          description: "Force attacks against mount to hit you instead",
+        },
+      ],
+    },
+  },
+  {
+    name: "Mystic Surge",
+    preview: "Metamagic mastery. 2 sorcery points, Surging Spell metamagic.",
+    description: [
+      "Gain 2 sorcery points for Metamagic use only.",
+      "Regain all sorcery points on long rest.",
+      "Learn new metamagic: Surging Spell.",
+      "Surging Spell: Once per round when casting damage spells on 2 or fewer targets, spend sorcery points (up to proficiency bonus) to add 1d6 damage per point.",
+    ],
+    benefits: {
+      abilityScoreIncrease: null,
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {
+        sorceryPoints: 2,
+        metamagicOptions: {
+          count: 1,
+          type: "specific",
+          options: ["Surging Spell"],
+        },
+      },
+      specialAbilities: [],
+    },
+  },
+  {
     name: "Observant",
     preview: "Sharp senses and lip reading. +1 Int/Wis.",
     description: [
@@ -842,11 +911,11 @@ export const standardFeats = [
   },
   {
     name: "Sentinel",
-    preview: "Control battlefield with opportunity attacks.",
+    preview: "Defensive combat mastery. Opportunity attack control.",
     description: [
-      "Opportunity attacks reduce target speed to 0.",
-      "Creatures provoke opportunity attacks even with Disengage.",
-      "React to attack creatures attacking your allies within 5 feet.",
+      "Opportunity attacks reduce target's speed to 0 for the turn.",
+      "Creatures provoke opportunity attacks even when Disengaging.",
+      "When creature within 5 feet attacks someone else, use reaction to attack them.",
     ],
     benefits: {
       abilityScoreIncrease: null,
@@ -860,11 +929,60 @@ export const standardFeats = [
       spellcasting: {},
       specialAbilities: [
         {
-          name: "Sentinel",
+          name: "Guardian",
           type: "passive",
-          description: "Enhanced opportunity attacks and battlefield control",
+          description:
+            "Opportunity attacks stop movement, ignore Disengage, protective strikes",
         },
       ],
+    },
+  },
+  {
+    name: "Sharpshooter",
+    preview: "Ranged weapon mastery. Ignore range/cover penalties.",
+    description: [
+      "No disadvantage on long range attacks.",
+      "Ranged weapon attacks ignore half and three-quarters cover.",
+      "Before making ranged weapon attack, choose -5 penalty for +10 damage.",
+    ],
+    benefits: {
+      abilityScoreIncrease: null,
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Precision Shot",
+          type: "passive",
+          description:
+            "No long range disadvantage, ignore cover, power attack option",
+        },
+      ],
+    },
+  },
+  {
+    name: "Skilled",
+    preview: "Versatile training. Gain 3 skill or tool proficiencies.",
+    description: [
+      "Gain proficiency in any combination of three skills or tools.",
+      "Repeatable: You can take this feat multiple times.",
+    ],
+    benefits: {
+      abilityScoreIncrease: null,
+      skillProficiencies: [{ type: "choice", count: 3 }],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [],
     },
   },
   {
@@ -914,6 +1032,33 @@ export const standardFeats = [
     },
   },
   {
+    name: "Street Rat",
+    preview: "Thievery expertise. +1 Dex, pickpocketing in combat.",
+    description: [
+      "Increase Dexterity by 1.",
+      "When a creature within 5 feet fails an attack or ability check, make Sleight of Hand check (DC 10 + target's Dex mod).",
+      "On success, steal one unrestrained/unwielded item.",
+    ],
+    benefits: {
+      abilityScoreIncrease: { ability: "dexterity", amount: 1 },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Opportunistic Theft",
+          type: "reaction",
+          description: "Steal items when enemies fail rolls within 5 feet",
+        },
+      ],
+    },
+  },
+  {
     name: "Superior Wandless",
     preview: "Cast all locked-in spells without a wand.",
     description: [
@@ -942,6 +1087,70 @@ export const standardFeats = [
     },
   },
   {
+    name: "Tattoo Artist",
+    preview: "Magical tattooing. +1 Cha, tattoo kit, enchanted inks.",
+    description: [
+      "Increase Charisma by 1.",
+      "Gain proficiency with Tattoo Kit.",
+      "Spend Free Period or Downtime Slot with willing recipient to create magical tattoo.",
+      "DC 16 Charisma (Performance) check to complete tattoo.",
+      "Choose three enchanted ink types from available selection.",
+    ],
+    benefits: {
+      abilityScoreIncrease: { ability: "charisma", amount: 1 },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Tattooist",
+          type: "active",
+          description: "Create magical tattoos with enchanted inks",
+        },
+        {
+          name: "Inked",
+          type: "choice",
+          description: "Choose three enchanted ink types for your kit",
+        },
+      ],
+    },
+  },
+  {
+    name: "Tavern Brawler",
+    preview: "Unarmed combat expertise. Enhanced unarmed strikes.",
+    description: [
+      "Unarmed strikes deal 1d4 + Strength modifier bludgeoning damage.",
+      "Proficient with improvised weapons.",
+      "Grapple as bonus action after hitting with unarmed strike or improvised weapon.",
+    ],
+    benefits: {
+      abilityScoreIncrease: null,
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {
+        enhancedUnarmedStrike: true,
+      },
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Brawler",
+          type: "passive",
+          description:
+            "Enhanced unarmed strikes, improvised weapon proficiency, bonus grapple",
+        },
+      ],
+    },
+  },
+  {
     name: "Tough",
     preview: "Increased hit points. +2 HP per level.",
     description: [
@@ -960,6 +1169,38 @@ export const standardFeats = [
         hitPointsPerLevel: 2,
       },
       spellcasting: {},
+      specialAbilities: [],
+    },
+  },
+  {
+    name: "Wandless Magic",
+    preview: "Cast specific spells without a wand.",
+    description: [
+      "Cast these spells without wand or somatic components if you know them:",
+      "accio, alohomora, colovaria, illegibilus, incendio, glacia, pereo, wingardium leviosa.",
+      "Cannot expend higher level spell slots when casting this way.",
+    ],
+    benefits: {
+      abilityScoreIncrease: null,
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {
+        wandlessSpells: [
+          "accio",
+          "alohomora",
+          "colovaria",
+          "illegibilus",
+          "incendio",
+          "glacia",
+          "pereo",
+          "wingardium leviosa",
+        ],
+      },
       specialAbilities: [],
     },
   },

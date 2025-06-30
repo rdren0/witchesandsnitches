@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { characterService } from "../services/characterService";
+import { useCallback } from "react";
 
 const AdminContext = createContext();
 
@@ -101,28 +102,31 @@ export const AdminProvider = ({ children, user }) => {
     }
   }, [isUserAdmin, searchParams, setSearchParams]);
 
-  const setAdminMode = (isActive) => {
-    if (!isUserAdmin) {
-      console.warn("Cannot set admin mode: user is not an admin");
-      return;
-    }
-
-    setAdminModeState(isActive);
-
-    if (setSearchParams && typeof setSearchParams === "function") {
-      try {
-        const newParams = new URLSearchParams(searchParams);
-        if (isActive) {
-          newParams.set("admin", "true");
-        } else {
-          newParams.delete("admin");
-        }
-        setSearchParams(newParams, { replace: true });
-      } catch (error) {
-        console.warn("Failed to update URL parameters:", error);
+  const setAdminMode = useCallback(
+    (isActive) => {
+      if (!isUserAdmin) {
+        console.warn("Cannot set admin mode: user is not an admin");
+        return;
       }
-    }
-  };
+
+      setAdminModeState(isActive);
+
+      if (setSearchParams && typeof setSearchParams === "function") {
+        try {
+          const newParams = new URLSearchParams(searchParams);
+          if (isActive) {
+            newParams.set("admin", "true");
+          } else {
+            newParams.delete("admin");
+          }
+          setSearchParams(newParams, { replace: true });
+        } catch (error) {
+          console.warn("Failed to update URL parameters:", error);
+        }
+      }
+    },
+    [isUserAdmin, setAdminModeState, setSearchParams, searchParams]
+  );
 
   useEffect(() => {
     if (!isUserAdmin && adminMode) {

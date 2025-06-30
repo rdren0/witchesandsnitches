@@ -479,24 +479,9 @@ const LevelUpModal = ({
       const castingStyle = character.casting_style || character.castingStyle;
       const castingData = hpData[castingStyle];
 
-      let newFullHP = 1;
+      const currentFullHP = character.hit_points || character.hitPoints || 1;
 
-      if (castingData) {
-        const finalConstitution =
-          isAsiLevel &&
-          levelUpData.asiChoice === "asi" &&
-          levelUpData.abilityIncreases.some(
-            (inc) => inc.ability === "Constitution"
-          )
-            ? getAbilityScore("constitution") + 1
-            : getAbilityScore("constitution");
-
-        const conMod = Math.floor((finalConstitution - 10) / 2);
-        const baseHP = castingData.base + conMod;
-        const additionalHP =
-          (newLevel - 1) * (castingData.avgPerLevel + conMod);
-        newFullHP = Math.max(1, baseHP + additionalHP);
-      }
+      let newFullHP = currentFullHP + levelUpData.hitPointIncrease;
 
       const updatedCharacter = {
         ...character,
@@ -522,9 +507,16 @@ const LevelUpModal = ({
           ...currentAbilityScores,
         };
 
+        let constitutionIncreased = false;
+
         levelUpData.abilityIncreases.forEach((increase) => {
           const abilityKey = increase.ability.toLowerCase();
           const newScore = parseInt(increase.to, 10);
+
+          if (abilityKey === "constitution") {
+            constitutionIncreased = true;
+          }
+
           if (!isNaN(newScore) && newScore > 0 && newScore <= 30) {
             newAbilityScores[abilityKey] = newScore;
           } else {
@@ -543,21 +535,20 @@ const LevelUpModal = ({
           updatedCharacter[ability] = newAbilityScores[ability];
         });
 
-        if (
-          levelUpData.abilityIncreases.some(
-            (inc) => inc.ability.toLowerCase() === "constitution"
-          )
-        ) {
+        if (constitutionIncreased && castingData) {
+          const oldConMod = Math.floor(
+            (getAbilityScore("constitution") - 10) / 2
+          );
           const newConMod = Math.floor(
             (newAbilityScores.constitution - 10) / 2
           );
-          const newBaseHP = castingData.base + newConMod;
-          const newAdditionalHP =
-            (newLevel - 1) * (castingData.avgPerLevel + newConMod);
-          const recalculatedFullHP = Math.max(1, newBaseHP + newAdditionalHP);
+          const conModIncrease = newConMod - oldConMod;
 
-          updatedCharacter.hit_points = recalculatedFullHP;
-          updatedCharacter.hitPoints = recalculatedFullHP;
+          const additionalHPFromCon = conModIncrease * newLevel;
+          newFullHP += additionalHPFromCon;
+
+          updatedCharacter.hit_points = newFullHP;
+          updatedCharacter.hitPoints = newFullHP;
         }
       }
 
@@ -580,6 +571,9 @@ const LevelUpModal = ({
           };
 
           let constitutionChanged = false;
+          const oldConMod = Math.floor(
+            (getAbilityScore("constitution") - 10) / 2
+          );
 
           selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
             let abilityToIncrease;
@@ -619,13 +613,13 @@ const LevelUpModal = ({
             const newConMod = Math.floor(
               (newAbilityScores.constitution - 10) / 2
             );
-            const newBaseHP = castingData.base + newConMod;
-            const newAdditionalHP =
-              (newLevel - 1) * (castingData.avgPerLevel + newConMod);
-            const recalculatedFullHP = Math.max(1, newBaseHP + newAdditionalHP);
+            const conModIncrease = newConMod - oldConMod;
 
-            updatedCharacter.hit_points = recalculatedFullHP;
-            updatedCharacter.hitPoints = recalculatedFullHP;
+            const additionalHPFromCon = conModIncrease * newLevel;
+            newFullHP += additionalHPFromCon;
+
+            updatedCharacter.hit_points = newFullHP;
+            updatedCharacter.hitPoints = newFullHP;
           }
 
           const currentSkills = [
