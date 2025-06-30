@@ -32,6 +32,7 @@ import { AdminProvider, useAdmin } from "../contexts/AdminContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
+import { LOCAL_HOST, WEBSITE } from "./const";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -86,7 +87,8 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
     if (username.length > 30) {
       return "Username must be less than 30 characters";
     }
-    // eslint-disable-next-line
+
+    /* eslint-disable-next-line*/
     if (!/^[a-zA-Z0-9_\-\.\s@\+!#\$%&\*\(\)\[\]\{\}'",:;?=]+$/.test(username)) {
       return "Invalid characters in username";
     }
@@ -201,7 +203,7 @@ const AuthComponent = ({
   onSignIn,
   onSignOut,
   isLoading,
-  onAdminToggleClick, // Add this prop
+  onAdminToggleClick,
 }) => {
   const { theme } = useTheme();
   const { isUserAdmin, adminMode } = useAdmin();
@@ -211,28 +213,53 @@ const AuthComponent = ({
   if (user) {
     return (
       <div style={styles.authSection}>
-        {/* Fixed Admin Button - no nesting */}
+        {/* Admin Button */}
         {(isUserAdmin || true) && (
           <button
-            onClick={onAdminToggleClick} // Use the prop passed from AppContent
+            onClick={onAdminToggleClick}
             style={{
               ...styles.themeButton,
-              backgroundColor: theme.surface,
-              color: adminMode ? "#ffd700" : theme.primary,
+              backgroundColor: adminMode ? "#ffd700" : theme.surface,
+              color: adminMode ? theme.secondary : theme.primary,
               border: adminMode
-                ? "2px solid #ffd700"
+                ? "2px solid #ffaa00"
                 : `1px solid ${theme.border}`,
               fontWeight: adminMode ? "bold" : "normal",
+
+              transform: adminMode ? "scale(1.05)" : "scale(1)",
+              transition: "all 0.2s ease",
+              position: "relative",
+              textShadow: adminMode ? "0 1px 2px rgba(0, 0, 0, 0.3)" : "none",
             }}
             title={
               isUserAdmin
                 ? adminMode
-                  ? "Exit Admin Mode"
-                  : "Enter Admin Mode"
-                : "Unlock Admin Mode"
+                  ? "🔓 Admin Mode ACTIVE - Click to exit"
+                  : "🔒 Enter Admin Mode"
+                : "🔑 Unlock Admin Mode"
             }
           >
-            {adminMode ? <Shield size={16} /> : <Key size={16} />}
+            {/* Removed console.log here */}
+            {adminMode ? (
+              <>
+                <Shield size={16} />
+                {/* Simple active indicator */}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-4px",
+                    right: "-4px",
+                    width: "6px",
+                    height: "6px",
+                    backgroundColor: "#ff0000",
+                    borderRadius: "50%",
+                    border: "1px solid white",
+                  }}
+                />
+              </>
+            ) : (
+              <Key size={16} />
+            )}
           </button>
         )}
 
@@ -261,7 +288,7 @@ const AuthComponent = ({
                 justifyContent: "center",
               }}
             >
-              <User size={20} color="white" />
+              <User size={20} color={theme.secondary} />
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -309,7 +336,7 @@ const AuthComponent = ({
           transition: "background-color 0.2s",
           minWidth: "80px",
           backgroundColor: "#5865f2",
-          color: "white",
+          color: theme.secondary,
           opacity: isLoading ? 0.6 : 1,
         }}
         disabled={isLoading}
@@ -345,7 +372,7 @@ const Navigation = ({ characters }) => {
       });
     }
 
-    if (isUserAdmin) {
+    if (adminMode) {
       return [
         ...baseTabs,
         {
@@ -376,8 +403,9 @@ const Navigation = ({ characters }) => {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "20px",
-        width: "100%",
+        justifyContent: "space-evenly",
+        width: "90%",
+        marginRight: "16px",
       }}
     >
       <div
@@ -397,6 +425,7 @@ const Navigation = ({ characters }) => {
             height: "60px",
             width: "auto",
             transition: "opacity 0.2s ease",
+            marginRight: "16px",
           }}
         />
       </div>
@@ -405,21 +434,65 @@ const Navigation = ({ characters }) => {
         {visibleTabs.map((tab) => {
           const isActive = isActiveTab(tab.path);
           const isAdminTab = tab.key === "admin";
+
           return (
             <button
               key={tab.key}
               style={{
-                ...styles.tabButton,
-                ...(isActive ? styles.tabButtonActive : {}),
-                ...(isAdminTab && adminMode
+                padding: "12px 20px",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                minWidth: "120px",
+
+                ...(isActive
                   ? {
-                      backgroundColor: "#ffd70020",
-                      borderColor: "#ffd700",
-                      color: "#b8860b",
+                      backgroundColor: theme.surface,
+                      color: theme.text,
+                      fontWeight: "600",
+                      boxShadow: `0 2px 4px rgba(0, 0, 0, 0.1)`,
+                      border: `1px solid ${theme.border}`,
+                    }
+                  : {
+                      backgroundColor: "transparent",
+                      color: theme.text,
+                      fontWeight: "400",
+                      opacity: 0.85,
+                    }),
+
+                ...(isAdminTab && adminMode && isActive
+                  ? {
+                      backgroundColor: "#ffd700",
+                      color: theme.primary,
+                      fontWeight: "bold",
+                    }
+                  : isAdminTab && adminMode
+                  ? {
+                      backgroundColor: "#ffd70030",
+                      color: theme.text,
+                      opacity: 0.9,
                     }
                   : {}),
               }}
               onClick={() => navigate(tab.path)}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.target.style.backgroundColor = theme.primary + "15";
+                  e.target.style.opacity = "1";
+                  e.target.style.color = theme.text;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.target.style.backgroundColor = "transparent";
+                  e.target.style.opacity =
+                    isAdminTab && adminMode ? "0.9" : "0.85";
+                  e.target.style.color = theme.text;
+                }
+              }}
             >
               {isAdminTab && (
                 <Shield size={16} style={{ marginRight: "6px" }} />
@@ -435,8 +508,18 @@ const Navigation = ({ characters }) => {
 
 const CharacterSubNavigation = () => {
   const { theme } = useTheme();
+  const { adminMode } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const navigateWithAdminMode = (path) => {
+    if (adminMode) {
+      const separator = path.includes("?") ? "&" : "?";
+      navigate(`${path}${separator}admin=true`);
+    } else {
+      navigate(path);
+    }
+  };
 
   const characterSubtabs = [
     { path: "/character/sheet", label: "Character Sheet", key: "sheet" },
@@ -461,7 +544,7 @@ const CharacterSubNavigation = () => {
       <nav
         style={{
           display: "flex",
-          gap: "4px",
+          gap: "2px",
           margin: "0 auto",
           paddingTop: "8px",
         }}
@@ -473,23 +556,40 @@ const CharacterSubNavigation = () => {
             <button
               key={subtab.key}
               style={{
-                background: active ? theme.surface : "transparent",
                 border: "none",
-                borderRadius: "8px 8px 0 0",
-                padding: "10px 16px 12px 16px",
+                borderRadius: "12px 12px 0 0",
+                padding: "12px 18px 14px 18px",
                 fontSize: "14px",
-                fontWeight: active ? "600" : "500",
-                color: active ? theme.text : theme.textSecondary,
                 cursor: "pointer",
-                transition: "all 0.2s ease",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 position: "relative",
                 marginBottom: "-1px",
-                borderBottom: active
-                  ? `2px solid ${theme.primary}`
-                  : "2px solid transparent",
-                minWidth: "120px",
+                minWidth: "130px",
+
+                ...(active
+                  ? {
+                      background: `linear-gradient(135deg, ${theme.surface}, ${theme.surface}CC)`,
+                      color: theme.text,
+                      fontWeight: "700",
+                      borderBottom: `4px solid ${theme.primary}`,
+                      boxShadow: `
+                    0 -4px 8px rgba(0, 0, 0, 0.1),
+                    0 0 0 1px ${theme.border},
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1)
+                  `,
+                      transform: "translateY(-2px)",
+                      zIndex: 10,
+                    }
+                  : {
+                      background: `linear-gradient(135deg, ${theme.background}40, ${theme.background}20)`,
+                      color: theme.primary,
+                      fontWeight: "400",
+                      borderBottom: "4px solid transparent",
+                      opacity: 0.5,
+                      transform: "translateY(0px)",
+                    }),
               }}
-              onClick={() => navigate(subtab.path)}
+              onClick={() => navigateWithAdminMode(subtab.path)}
             >
               {subtab.label}
             </button>
@@ -593,6 +693,7 @@ function AppContent() {
   const styles = createAppStyles(theme);
   const location = useLocation();
   const navigate = useNavigate();
+  const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
 
   const [user, setUser] = useState(null);
   const [customUsername, setCustomUsername] = useState("");
@@ -604,8 +705,7 @@ function AppContent() {
   const [charactersError, setCharactersError] = useState(null);
   const [initialCharacterId, setInitialCharacterId] = useState(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
-  const [adminMode, setAdminMode] = useState(false);
-  const [isUserAdmin, setIsUserAdmin] = useState(false);
+
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -645,31 +745,6 @@ function AppContent() {
       }, 100),
     [setThemeSelectedCharacter]
   );
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!discordUserId) {
-        setIsUserAdmin(false);
-        return;
-      }
-
-      try {
-        const adminStatus = await characterService.isUserAdmin(discordUserId);
-        setIsUserAdmin(adminStatus);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        setIsUserAdmin(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, [discordUserId]);
-
-  useEffect(() => {
-    if (!isUserAdmin) {
-      setAdminMode(false);
-    }
-  }, [isUserAdmin]);
 
   useEffect(() => {
     setThemeSelectedCharacter(selectedCharacter);
@@ -778,8 +853,28 @@ function AppContent() {
     [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
   );
 
+  const loadCustomUsername = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("username")
+        .eq("discord_user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setCustomUsername(data.username || "");
+      } else if (error && error.code !== "PGRST116") {
+        console.error("Error loading custom username:", error);
+      }
+    } catch (error) {
+      console.error("Error loading custom username:", error);
+    }
+  }, [user]);
+
   const loadCharacters = useCallback(async () => {
-    if (!discordUserId || loadingRef.current) {
+    if (!discordUserId || (loadingRef.current && !adminMode)) {
       return;
     }
     loadingRef.current = true;
@@ -841,14 +936,12 @@ function AppContent() {
           : null,
       }));
 
-      // PERFORMANCE OPTIMIZATION: Use built-in sort for better performance
       const sortedCharacters = transformedCharacters.sort((a, b) => {
         return new Date(a.createdAt) - new Date(b.createdAt);
       });
 
       setCharacters(sortedCharacters);
 
-      // PERFORMANCE OPTIMIZATION: Defer character selection to idle time
       requestIdleCallback(() => {
         selectInitialCharacter(sortedCharacters);
       });
@@ -862,7 +955,6 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-    // eslint-disable-next-line
   }, [
     discordUserId,
     adminMode,
@@ -870,14 +962,14 @@ function AppContent() {
     selectInitialCharacter,
     customUsername,
     user,
+    loadCustomUsername,
   ]);
 
   useEffect(() => {
     if (discordUserId && hasAttemptedLoad) {
       setHasAttemptedLoad(false);
     }
-    // eslint-disable-next-line
-  }, [adminMode]);
+  }, [adminMode, discordUserId, hasAttemptedLoad]);
 
   useEffect(() => {
     if (discordUserId && !hasAttemptedLoad && !charactersLoading) {
@@ -905,27 +997,6 @@ function AppContent() {
     };
   }, []);
 
-  const loadCustomUsername = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("username")
-        .eq("discord_user_id", user.id)
-        .maybeSingle();
-
-      if (!error && data) {
-        setCustomUsername(data.username || "");
-      } else if (error && error.code !== "PGRST116") {
-        // Ignore "not found" errors
-        console.error("Error loading custom username:", error);
-      }
-    } catch (error) {
-      console.error("Error loading custom username:", error);
-    }
-  }, [user]);
-
   useEffect(() => {
     if (user) {
       requestIdleCallback(() => {
@@ -940,8 +1011,7 @@ function AppContent() {
       setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
-    // eslint-disable-next-line
-  }, [user]);
+  }, [user, loadCustomUsername, setThemeSelectedCharacter]);
 
   useEffect(() => {
     if (location.pathname === "/character") {
@@ -1021,9 +1091,7 @@ function AppContent() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: {
-          redirectTo: isLocalhost
-            ? "http://localhost:3000"
-            : "https://witchesandsnitches.com",
+          redirectTo: isLocalhost ? LOCAL_HOST : WEBSITE,
         },
       });
 

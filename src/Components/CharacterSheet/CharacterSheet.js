@@ -437,6 +437,19 @@ const CharacterSheet = ({
     []
   );
 
+  const canModifyCharacter = (
+    character,
+    adminMode,
+    isUserAdmin,
+    currentUserId
+  ) => {
+    if (character.discord_user_id === currentUserId) return true;
+
+    if (adminMode && isUserAdmin) return true;
+
+    return false;
+  };
+
   const fetchCharacterDetails = useCallback(async () => {
     if (!selectedCharacter?.id) {
       setCharacter(null);
@@ -450,37 +463,38 @@ const CharacterSheet = ({
       let data, error;
 
       if (adminMode && isUserAdmin) {
+        // Admin can access any character
         const response = await supabase
           .from("characters")
           .select(
             `
-    *, 
-    initiative_ability,
-    character_resources (
-      inspiration,
-      corruption_points,
-      sorcery_points,
-      max_sorcery_points,
-      spell_slots_1,
-      spell_slots_2,
-      spell_slots_3,
-      spell_slots_4,
-      spell_slots_5,
-      spell_slots_6,
-      spell_slots_7,
-      spell_slots_8,
-      spell_slots_9,
-      max_spell_slots_1,
-      max_spell_slots_2,
-      max_spell_slots_3,
-      max_spell_slots_4,
-      max_spell_slots_5,
-      max_spell_slots_6,
-      max_spell_slots_7,
-      max_spell_slots_8,
-      max_spell_slots_9
-    )
-  `
+          *, 
+          initiative_ability,
+          character_resources (
+            corruption_points,
+            sorcery_points,
+            max_sorcery_points,
+            spell_slots_1,
+            spell_slots_2,
+            spell_slots_3,
+            spell_slots_4,
+            spell_slots_5,
+            spell_slots_6,
+            spell_slots_7,
+            spell_slots_8,
+            spell_slots_9,
+            max_spell_slots_1,
+            max_spell_slots_2,
+            max_spell_slots_3,
+            max_spell_slots_4,
+            max_spell_slots_5,
+            max_spell_slots_6,
+            max_spell_slots_7,
+            max_spell_slots_8,
+            max_spell_slots_9,
+            inspiration
+          )
+        `
           )
           .eq("id", selectedCharacter.id)
           .single();
@@ -492,33 +506,33 @@ const CharacterSheet = ({
           .from("characters")
           .select(
             `
-    *, 
-    initiative_ability,
-    character_resources (
-      inspiration,
-      corruption_points,
-      sorcery_points,
-      max_sorcery_points,
-      spell_slots_1,
-      spell_slots_2,
-      spell_slots_3,
-      spell_slots_4,
-      spell_slots_5,
-      spell_slots_6,
-      spell_slots_7,
-      spell_slots_8,
-      spell_slots_9,
-      max_spell_slots_1,
-      max_spell_slots_2,
-      max_spell_slots_3,
-      max_spell_slots_4,
-      max_spell_slots_5,
-      max_spell_slots_6,
-      max_spell_slots_7,
-      max_spell_slots_8,
-      max_spell_slots_9
-    )
-  `
+          *, 
+          initiative_ability,
+          character_resources (
+            corruption_points,
+            sorcery_points,
+            max_sorcery_points,
+            spell_slots_1,
+            spell_slots_2,
+            spell_slots_3,
+            spell_slots_4,
+            spell_slots_5,
+            spell_slots_6,
+            spell_slots_7,
+            spell_slots_8,
+            spell_slots_9,
+            max_spell_slots_1,
+            max_spell_slots_2,
+            max_spell_slots_3,
+            max_spell_slots_4,
+            max_spell_slots_5,
+            max_spell_slots_6,
+            max_spell_slots_7,
+            max_spell_slots_8,
+            max_spell_slots_9,
+            inspiration
+          )
+        `
           )
           .eq("id", selectedCharacter.id)
           .eq("discord_user_id", discordUserId)
@@ -589,7 +603,7 @@ const CharacterSheet = ({
             data.skill_proficiencies || [],
             data.skill_expertise || []
           ),
-          inspiration: resources.inspiration ?? false,
+          inspiration: resources.inspiration ?? 0,
           spellSlots1: resources.spell_slots_1 || 0,
           spellSlots2: resources.spell_slots_2 || 0,
           spellSlots3: resources.spell_slots_3 || 0,
@@ -624,6 +638,8 @@ const CharacterSheet = ({
           wisdom: effectiveAbilityScores.wisdom || 10,
           year: `Level ${data.level}`,
 
+          // Admin mode: store the original owner info
+          discord_user_id: data.discord_user_id,
           ownerId: data.discord_user_id,
         };
 
@@ -673,6 +689,11 @@ const CharacterSheet = ({
   const handleLongRest = async () => {
     if (!character) return;
 
+    if (!canModifyCharacter(character, adminMode, isUserAdmin, discordUserId)) {
+      alert("You don't have permission to modify this character.");
+      return;
+    }
+
     const currentHP = character.currentHitPoints ?? character.hitPoints;
     const maxHP = character.maxHitPoints || character.hitPoints;
     const currentHitDice = character.currentHitDice;
@@ -702,6 +723,9 @@ const CharacterSheet = ({
       const hpRestored = maxHP - currentHP;
       const hitDiceRestored = maxHitDice - currentHitDice;
 
+      // Use the character's original owner ID for database operations
+      const characterOwnerId = character.discord_user_id || character.ownerId;
+
       const { error: characterError } = await supabase
         .from("characters")
         .update({
@@ -710,7 +734,7 @@ const CharacterSheet = ({
           updated_at: new Date().toISOString(),
         })
         .eq("id", character.id)
-        .eq("discord_user_id", discordUserId);
+        .eq("discord_user_id", characterOwnerId);
 
       if (characterError) {
         console.error("Error updating character:", characterError);
@@ -721,7 +745,7 @@ const CharacterSheet = ({
       if (hasSpellSlots) {
         const spellSlotUpdates = {
           character_id: character.id,
-          discord_user_id: discordUserId,
+          discord_user_id: characterOwnerId,
           updated_at: new Date().toISOString(),
         };
 
@@ -951,17 +975,31 @@ const CharacterSheet = ({
   }
 
   if (characters.length === 0) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.errorContainer}>
-          <h2>No Characters Found</h2>
-          <p>
-            You haven't created any characters yet. Go to Character Creation to
-            get started!
-          </p>
+    if (adminMode && isUserAdmin) {
+      return (
+        <div style={styles.container}>
+          <div style={styles.errorContainer}>
+            <h2>No Characters in Database</h2>
+            <p>
+              No characters have been created yet by any users. Characters will
+              appear here once players start creating them.
+            </p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <div style={styles.container}>
+          <div style={styles.errorContainer}>
+            <h2>No Characters Found</h2>
+            <p>
+              You haven't created any characters yet. Go to Character Creation
+              to get started!
+            </p>
+          </div>
+        </div>
+      );
+    }
   }
 
   if (!selectedCharacter) {
