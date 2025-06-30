@@ -349,7 +349,7 @@ const AuthComponent = ({
 
 const Navigation = ({ characters }) => {
   const { theme } = useTheme();
-  const { isUserAdmin, adminMode } = useAdmin();
+  const { adminMode } = useAdmin();
   const styles = createAppStyles(theme);
   const navigate = useNavigate();
   const location = useLocation();
