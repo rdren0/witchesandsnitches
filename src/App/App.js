@@ -955,21 +955,14 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-  }, [
-    discordUserId,
-    adminMode,
-    isUserAdmin,
-    selectInitialCharacter,
-    customUsername,
-    user,
-    loadCustomUsername,
-  ]);
+    // eslint-disable-next-line
+  }, [discordUserId, adminMode, isUserAdmin, customUsername, user]);
 
   useEffect(() => {
-    if (discordUserId && hasAttemptedLoad) {
+    if (discordUserId) {
       setHasAttemptedLoad(false);
     }
-  }, [adminMode, discordUserId, hasAttemptedLoad]);
+  }, [adminMode, discordUserId]);
 
   useEffect(() => {
     if (discordUserId && !hasAttemptedLoad && !charactersLoading) {
