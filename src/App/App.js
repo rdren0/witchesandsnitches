@@ -565,6 +565,7 @@ const CharacterSubNavigation = () => {
                 position: "relative",
                 marginBottom: "-1px",
                 minWidth: "130px",
+                color: theme.primary,
 
                 ...(active
                   ? {
@@ -582,10 +583,9 @@ const CharacterSubNavigation = () => {
                     }
                   : {
                       background: `linear-gradient(135deg, ${theme.background}40, ${theme.background}20)`,
-                      color: theme.primary,
+                      color: theme.text,
                       fontWeight: "400",
                       borderBottom: "4px solid transparent",
-                      opacity: 0.5,
                       transform: "translateY(0px)",
                     }),
               }}
