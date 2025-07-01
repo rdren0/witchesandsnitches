@@ -57,6 +57,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     recipeQuality,
     diceQuantity = 1,
     diceType = 20,
+    individualDiceResults, // New prop for individual dice results
   } = rollResult;
 
   const getTypeColor = () => {
@@ -138,6 +139,148 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
       return `${diceQuantity}d${diceType}${advantageText}`;
     }
     return null;
+  };
+
+  // New function to render individual dice results
+  const renderIndividualDiceResults = () => {
+    if (
+      !individualDiceResults ||
+      !individualDiceResults.keptDice ||
+      individualDiceResults.keptDice.length <= 1
+    ) {
+      return null;
+    }
+
+    const {
+      keptDice,
+      discardedDice,
+      rollType: diceRollType,
+    } = individualDiceResults;
+
+    return (
+      <div
+        style={{
+          marginTop: "16px",
+          padding: "12px",
+          backgroundColor: "rgba(255, 255, 255, 0.5)",
+          borderRadius: "8px",
+          border: `1px solid ${borderColor}30`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: "12px",
+            fontWeight: "600",
+            color: "#6b7280",
+            marginBottom: "8px",
+            textAlign: "center",
+          }}
+        >
+          Individual Dice Results
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "6px",
+            justifyContent: "center",
+          }}
+        >
+          {/* Render kept dice */}
+          {keptDice.map((die, index) => (
+            <div
+              key={`kept-${index}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "32px",
+                height: "32px",
+                backgroundColor: getDiceColor(),
+                color: "white",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: "700",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              }}
+            >
+              {die}
+            </div>
+          ))}
+
+          {/* Render discarded dice (for advantage/disadvantage) */}
+          {discardedDice.length > 0 && (
+            <>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  margin: "0 4px",
+                }}
+              >
+                |
+              </div>
+              {discardedDice.map((die, index) => (
+                <div
+                  key={`discarded-${index}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "32px",
+                    height: "32px",
+                    backgroundColor: "#9ca3af",
+                    color: "white",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    opacity: 0.6,
+                    textDecoration: "line-through",
+                  }}
+                >
+                  {die}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Explanation text for advantage/disadvantage */}
+        {(diceRollType === "advantage" || diceRollType === "disadvantage") &&
+          discardedDice.length > 0 && (
+            <div
+              style={{
+                fontSize: "10px",
+                color: "#6b7280",
+                textAlign: "center",
+                marginTop: "6px",
+              }}
+            >
+              {diceRollType === "advantage"
+                ? "Highest dice kept"
+                : "Lowest dice kept"}{" "}
+              | Crossed out dice discarded
+            </div>
+          )}
+
+        {/* Show sum for normal multi-dice rolls */}
+        {diceRollType === "normal" && keptDice.length > 1 && (
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#6b7280",
+              textAlign: "center",
+              marginTop: "6px",
+            }}
+          >
+            Sum: {keptDice.join(" + ")} = {rollValue}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -262,156 +405,106 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         >
           <div
             style={{
-              fontSize: "56px",
+              fontSize: "48px",
               fontWeight: "900",
               color: getDiceColor(),
               lineHeight: "1",
-              marginBottom: "12px",
+              marginBottom: "8px",
               textShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
-            {total}
+            {rollValue}
           </div>
-
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              fontSize: "16px",
-              color: "#6b7280",
-              fontWeight: "500",
+              fontSize: "18px",
+              color: textColor,
+              fontWeight: "600",
               marginBottom: "4px",
             }}
           >
-            <span
-              style={{
-                fontSize: "20px",
-                fontWeight: "600",
-                color: textColor,
-              }}
-            >
-              {rollValue}
-            </span>
-            <span>+</span>
-            <span
-              style={{
-                fontSize: "20px",
-                fontWeight: "600",
-                color: textColor,
-              }}
-            >
-              {modifier >= 0 ? modifier : `(${modifier})`}
-            </span>
+            {modifier >= 0 ? "+" : ""}
+            {modifier} = {total}
           </div>
-
-          <div
-            style={{
-              fontSize: "12px",
-              color: "#9ca3af",
-              fontWeight: "500",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            dice + modifier
-          </div>
-
           {(isCriticalSuccess || isCriticalFailure) && (
             <div
               style={{
                 fontSize: "14px",
                 fontWeight: "700",
-                color: isCriticalSuccess ? "#92400e" : "#991b1b",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                marginTop: "12px",
-                padding: "6px 12px",
-                backgroundColor: isCriticalSuccess
-                  ? "rgba(245, 158, 11, 0.1)"
-                  : "rgba(239, 68, 68, 0.1)",
-                borderRadius: "6px",
-                border: `1px solid ${
-                  isCriticalSuccess ? "#f59e0b" : "#ef4444"
-                }40`,
+                color: isCriticalSuccess ? "#f59e0b" : "#ef4444",
+                marginTop: "8px",
               }}
             >
               {isCriticalSuccess
-                ? "✨ Critical Success!"
-                : "💀 Critical Failure!"}
+                ? "✨ CRITICAL SUCCESS!"
+                : "💥 CRITICAL FAILURE!"}
             </div>
           )}
+
+          {/* Render individual dice results */}
+          {renderIndividualDiceResults()}
         </div>
 
         {description && (
           <div
             style={{
+              textAlign: "center",
               fontSize: "14px",
-              color: "#374151",
+              color: "#6b7280",
               marginBottom: "16px",
               padding: "12px",
-              backgroundColor: "rgba(255, 255, 255, 0.8)",
+              backgroundColor: "rgba(255, 255, 255, 0.5)",
               borderRadius: "8px",
-              fontWeight: "500",
             }}
           >
             {description}
           </div>
         )}
 
-        {(type === "potion" || type === "recipe") && (
-          <div style={{ marginBottom: "16px" }}>
-            {(potionQuality || recipeQuality) && (
+        {/* Potion quality display */}
+        {potionQuality && (
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: getQualityColor(potionQuality),
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              borderRadius: "8px",
+              border: `2px solid ${getQualityColor(potionQuality)}40`,
+            }}
+          >
+            Potion Quality:{" "}
+            {potionQuality.charAt(0).toUpperCase() + potionQuality.slice(1)}
+            {inventoryAdded && (
               <div
-                style={{
-                  display: "inline-block",
-                  backgroundColor: getQualityColor(
-                    potionQuality || recipeQuality
-                  ),
-                  color: "white",
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  textTransform: "capitalize",
-                  marginBottom: "12px",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
+                style={{ fontSize: "12px", color: "#059669", marginTop: "4px" }}
               >
-                {potionQuality || recipeQuality} Quality
+                ✅ Added to inventory
               </div>
             )}
+          </div>
+        )}
 
-            {inventoryAdded !== undefined && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  padding: "8px 16px",
-                  borderRadius: "20px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  backgroundColor: inventoryAdded ? "#10b981" : "#ef4444",
-                  color: "white",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-              >
-                {inventoryAdded ? (
-                  <>
-                    <Star size={16} />
-                    Added to Inventory!
-                  </>
-                ) : (
-                  <>
-                    <X size={16} />
-                    Failed to add to inventory
-                  </>
-                )}
-              </div>
-            )}
+        {/* Recipe quality display */}
+        {recipeQuality && (
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: getQualityColor(recipeQuality),
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              borderRadius: "8px",
+              border: `2px solid ${getQualityColor(recipeQuality)}40`,
+            }}
+          >
+            Recipe Quality:{" "}
+            {recipeQuality.charAt(0).toUpperCase() + recipeQuality.slice(1)}
           </div>
         )}
 
@@ -419,7 +512,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           onClick={onClose}
           style={{
             width: "100%",
-            padding: "12px",
+            padding: "12px 20px",
             backgroundColor: getDiceColor(),
             color: "white",
             border: "none",
@@ -427,32 +520,16 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             fontSize: "16px",
             fontWeight: "600",
             cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
             transition: "all 0.2s ease",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
         >
-          {type === "potion"
-            ? "Continue Brewing"
-            : type === "recipe"
-            ? "Continue Cooking"
-            : "Continue"}
+          Close
         </button>
       </div>
-
-      <style>
-        {`
-          @keyframes rollModalAppear {
-            from {
-              opacity: 0;
-              transform: scale(0.9) translateY(-20px);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-        `}
-      </style>
     </div>
   );
 };
@@ -3138,6 +3215,14 @@ export const rollFlexibleDie = (
   }
 
   const roll = roller.roll(notation);
+
+  // Extract individual dice results from the roll
+  const individualDiceResults = extractIndividualDiceResults(
+    roll,
+    rollType,
+    diceQuantity
+  );
+
   return {
     total: roll.total,
     notation: roll.notation,
@@ -3145,9 +3230,67 @@ export const rollFlexibleDie = (
     diceQuantity: diceQuantity,
     diceType: diceType,
     rollType: rollType,
+    individualDiceResults: individualDiceResults, // New field for individual dice
   };
 };
 
+// Helper function to extract individual dice results from DiceRoller output
+const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
+  try {
+    // The DiceRoller library stores individual dice results in the rolls array
+    if (roll.rolls && roll.rolls.length > 0) {
+      const diceRoll = roll.rolls[0]; // Get the first (and usually only) dice group
+
+      if (diceRoll.rolls) {
+        let individualResults = diceRoll.rolls.map((die) => die.value);
+
+        // For advantage/disadvantage, we need to show which dice were kept
+        if (rollType === "advantage" || rollType === "disadvantage") {
+          // The DiceRoller marks kept dice, but we'll show all dice with indication
+          const keptDice = diceRoll.rolls
+            .filter((die) => !die.discarded)
+            .map((die) => die.value);
+          const discardedDice = diceRoll.rolls
+            .filter((die) => die.discarded)
+            .map((die) => die.value);
+
+          return {
+            allDice: individualResults,
+            keptDice: keptDice,
+            discardedDice: discardedDice,
+            rollType: rollType,
+          };
+        } else {
+          // Normal rolls - just return the individual dice values
+          return {
+            allDice: individualResults,
+            keptDice: individualResults,
+            discardedDice: [],
+            rollType: rollType,
+          };
+        }
+      }
+    }
+
+    // Fallback: if we can't parse the structure, return empty arrays
+    return {
+      allDice: [],
+      keptDice: [],
+      discardedDice: [],
+      rollType: rollType,
+    };
+  } catch (error) {
+    console.error("Error extracting individual dice results:", error);
+    return {
+      allDice: [],
+      keptDice: [],
+      discardedDice: [],
+      rollType: rollType,
+    };
+  }
+};
+
+// Updated rollFlexibleDice function to pass individual dice results
 export const rollFlexibleDice = async ({
   diceQuantity = 1,
   diceType = 20,
@@ -3191,6 +3334,7 @@ export const rollFlexibleDice = async ({
         diceQuantity: diceQuantity,
         diceType: diceType,
         rollType: rollType,
+        individualDiceResults: diceResult.individualDiceResults, // Pass individual dice results
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -3200,8 +3344,15 @@ export const rollFlexibleDice = async ({
         : "";
       const rollTypeText =
         rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
+
+      // Enhanced alert to show individual dice results
+      const individualDiceText =
+        diceResult.individualDiceResults.keptDice.length > 1
+          ? ` [${diceResult.individualDiceResults.keptDice.join(", ")}]`
+          : "";
+
       alert(
-        `${title}: ${diceQuantity}d${diceType}${rollTypeText}(${diceRoll}) + ${mod} = ${total}${criticalText}`
+        `${title}: ${diceQuantity}d${diceType}${rollTypeText}${individualDiceText}(${diceRoll}) + ${mod} = ${total}${criticalText}`
       );
     }
 
@@ -3232,32 +3383,49 @@ export const rollFlexibleDice = async ({
           } Roll`
         : "";
 
+    // Enhanced Discord message with individual dice results
+    const individualDiceField =
+      diceResult.individualDiceResults.keptDice.length > 1
+        ? {
+            name: "Individual Dice",
+            value: `[${diceResult.individualDiceResults.keptDice.join(", ")}]`,
+            inline: true,
+          }
+        : null;
+
+    const fields = [
+      {
+        name: "Roll Details",
+        value: `${diceQuantity}d${diceType}${rollTypeDescription}: ${diceRoll} ${
+          mod >= 0 ? "+" : ""
+        }${mod} = **${total}**${
+          isCriticalSuccess
+            ? "\n✨ **Critical Success!**"
+            : isCriticalFailure
+            ? "\n💀 **Critical Failure!**"
+            : ""
+        }`,
+        inline: false,
+      },
+      {
+        name: "Dice Formula",
+        value: diceResult.notation,
+        inline: true,
+      },
+    ];
+
+    // Add individual dice field if there are multiple dice
+    if (individualDiceField) {
+      fields.push(individualDiceField);
+    }
+
     const message = {
       embeds: [
         {
           title: rollTitle,
           description: advantageInfo,
           color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `${diceQuantity}d${diceType}${rollTypeDescription}: ${diceRoll} ${
-                mod >= 0 ? "+" : ""
-              }${mod} = **${total}**${
-                isCriticalSuccess
-                  ? "\n✨ **Critical Success!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Critical Failure!**"
-                  : ""
-              }`,
-              inline: false,
-            },
-            {
-              name: "Dice Formula",
-              value: diceResult.notation,
-              inline: true,
-            },
-          ],
+          fields: fields,
           footer: {
             text: `Witches and Snitches - Flexible Roll • Today at ${new Date().toLocaleTimeString(
               [],
