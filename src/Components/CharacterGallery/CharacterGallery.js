@@ -8,54 +8,246 @@ import {
   Search,
   X,
   Save,
-  // Heart,
-  // UserX,
-  // User,
-  // AlertTriangle,
+  Heart,
+  UserX,
+  User,
+  AlertTriangle,
+  Tag,
+  Plus,
+  Edit3,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "../../styles/masterStyles";
 import { ALL_CHARACTERS } from "./characters";
 
-// const RelationshipBadge = ({ relationship, theme }) => {
-//   const getRelationshipStyle = (rel) => {
-//     switch (rel) {
-//       case "friend":
-//         return { color: "#10b981", icon: Heart, label: "Friend" };
-//       case "enemy":
-//         return { color: "#ef4444", icon: UserX, label: "Enemy" };
-//       case "neutral":
-//         return { color: "#6b7280", icon: User, label: "Neutral" };
-//       case "suspicious":
-//         return { color: "#f59e0b", icon: AlertTriangle, label: "Suspicious" };
-//       default:
-//         return { color: theme.textSecondary, icon: User, label: "Unknown" };
-//     }
-//   };
+const DEFAULT_TAGS = [
+  "Study Buddy",
+  "Rival",
+  "Crush",
+  "Mentor",
+  "Family",
+  "Quidditch Player",
+  "Prefect",
+  "Class Partner",
+  "Knows Secret",
+  "Trustworthy",
+  "Suspicious",
+  "Helpful",
+  "Dangerous",
+  "????",
+  "Funny",
+  "Smart",
+  "Popular",
+  "Outcast",
+  "Teacher's Pet",
+];
 
-//   const style = getRelationshipStyle(relationship);
-//   const IconComponent = style.icon;
+const RelationshipBadge = ({ relationship, theme }) => {
+  const getRelationshipStyle = (rel) => {
+    switch (rel) {
+      case "friend":
+        return { color: "#10b981", icon: Heart, label: "Friend" };
+      case "enemy":
+        return { color: "#ef4444", icon: UserX, label: "Enemy" };
+      case "neutral":
+        return { color: "#6b7280", icon: User, label: "Neutral" };
+      case "suspicious":
+        return { color: "#f59e0b", icon: AlertTriangle, label: "Suspicious" };
+      default:
+        return { color: theme.textSecondary, icon: User, label: "Unknown" };
+    }
+  };
 
-//   return (
-//     <div
-//       style={{
-//         display: "inline-flex",
-//         alignItems: "center",
-//         gap: "4px",
-//         padding: "2px 6px",
-//         borderRadius: "12px",
-//         backgroundColor: style.color + "20",
-//         border: `1px solid ${style.color}40`,
-//         fontSize: "11px",
-//         fontWeight: "500",
-//         color: style.color,
-//       }}
-//     >
-//       <IconComponent size={12} />
-//       {style.label}
-//     </div>
-//   );
-// };
+  const style = getRelationshipStyle(relationship);
+  const IconComponent = style.icon;
+
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "2px 6px",
+        borderRadius: "12px",
+        backgroundColor: style.color + "20",
+        border: `1px solid ${style.color}40`,
+        fontSize: "11px",
+        fontWeight: "500",
+        color: style.color,
+      }}
+    >
+      <IconComponent size={12} />
+      {style.label}
+    </div>
+  );
+};
+
+const CustomTag = ({ tag, onRemove, theme, removable = false }) => {
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "2px 6px",
+        borderRadius: "12px",
+        backgroundColor: theme.primary + "20",
+        border: `1px solid ${theme.primary}40`,
+        fontSize: "10px",
+        fontWeight: "500",
+        color: theme.primary,
+        maxWidth: "120px",
+      }}
+    >
+      <Tag size={10} />
+      <span
+        style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {tag}
+      </span>
+      {removable && (
+        <button
+          onClick={onRemove}
+          style={{
+            background: "none",
+            border: "none",
+            color: theme.primary,
+            cursor: "pointer",
+            padding: "0",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <X size={10} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+const TagSelector = ({ existingTags, onAddTag, theme }) => {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [customTag, setCustomTag] = useState("");
+
+  const availableTags = DEFAULT_TAGS.filter(
+    (tag) => !existingTags.includes(tag)
+  );
+
+  const handleAddCustomTag = () => {
+    if (customTag.trim() && !existingTags.includes(customTag.trim())) {
+      onAddTag(customTag.trim());
+      setCustomTag("");
+      setShowSuggestions(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setShowSuggestions(!showSuggestions)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "4px 8px",
+          fontSize: "11px",
+          backgroundColor: theme.surface,
+          color: theme.textSecondary,
+          border: `1px dashed ${theme.border}`,
+          borderRadius: "4px",
+          cursor: "pointer",
+          width: "100%",
+          justifyContent: "center",
+        }}
+      >
+        <Plus size={12} />
+        Add Tag
+      </button>
+
+      {showSuggestions && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            backgroundColor: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: "4px",
+            boxShadow: `0 2px 8px ${theme.textSecondary}20`,
+            zIndex: 1000,
+            maxHeight: "200px",
+            overflowY: "auto",
+          }}
+        >
+          <div style={{ padding: "8px" }}>
+            <input
+              type="text"
+              placeholder="Create custom tag..."
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleAddCustomTag()}
+              style={{
+                width: "100%",
+                padding: "4px",
+                fontSize: "11px",
+                border: `1px solid ${theme.border}`,
+                borderRadius: "4px",
+                backgroundColor: theme.background,
+                color: theme.text,
+                marginBottom: "8px",
+              }}
+            />
+            {availableTags.length > 0 && (
+              <div
+                style={{
+                  fontSize: "10px",
+                  color: theme.textSecondary,
+                  marginBottom: "4px",
+                }}
+              >
+                Suggestions:
+              </div>
+            )}
+            {availableTags.slice(0, 10).map((tag) => (
+              <button
+                key={tag}
+                onClick={() => {
+                  onAddTag(tag);
+                  setShowSuggestions(false);
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  backgroundColor: "transparent",
+                  color: theme.text,
+                  border: "none",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  borderRadius: "2px",
+                }}
+                onMouseEnter={(e) =>
+                  (e.target.style.backgroundColor = theme.primary + "20")
+                }
+                onMouseLeave={(e) =>
+                  (e.target.style.backgroundColor = "transparent")
+                }
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CharacterCard = ({
   character,
@@ -77,6 +269,7 @@ const CharacterCard = ({
   const [lastInteraction, setLastInteraction] = useState(
     npcNote?.last_interaction || ""
   );
+  const [customTags, setCustomTags] = useState(npcNote?.custom_tags || []);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveNote = async () => {
@@ -93,6 +286,7 @@ const CharacterCard = ({
         notes: noteText.trim(),
         relationship: relationship,
         last_interaction: lastInteraction.trim(),
+        custom_tags: customTags,
         updated_at: new Date().toISOString(),
       };
 
@@ -129,14 +323,26 @@ const CharacterCard = ({
     setNoteText(npcNote?.notes || "");
     setRelationship(npcNote?.relationship || "unknown");
     setLastInteraction(npcNote?.last_interaction || "");
+    setCustomTags(npcNote?.custom_tags || []);
     setIsEditingNote(false);
   };
 
-  // const hasNote =
-  //   npcNote &&
-  //   (npcNote.notes?.trim() ||
-  //     npcNote.relationship !== "unknown" ||
-  //     npcNote.last_interaction?.trim());
+  const handleAddTag = (tag) => {
+    if (!customTags.includes(tag)) {
+      setCustomTags([...customTags, tag]);
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setCustomTags(customTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const hasNote =
+    npcNote &&
+    (npcNote.notes?.trim() ||
+      npcNote.relationship !== "unknown" ||
+      npcNote.last_interaction?.trim() ||
+      (npcNote.custom_tags && npcNote.custom_tags.length > 0));
 
   return (
     <div style={styles.characterCard}>
@@ -207,17 +413,34 @@ const CharacterCard = ({
         >
           {character.school} • {character.type}
         </div>
-        {/* 
+
         {hasNote && !isEditingNote && (
           <div style={{ marginBottom: "8px" }}>
-            <RelationshipBadge relationship={relationship} theme={theme} />
+            <RelationshipBadge
+              relationship={npcNote.relationship}
+              theme={theme}
+            />
+            {npcNote.custom_tags && npcNote.custom_tags.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                  marginTop: "6px",
+                }}
+              >
+                {npcNote.custom_tags.map((tag, index) => (
+                  <CustomTag key={index} tag={tag} theme={theme} />
+                ))}
+              </div>
+            )}
           </div>
-        )} */}
+        )}
 
         <div style={{ marginTop: "8px" }}>
           {!isEditingNote ? (
             <div>
-              {/* {hasNote ? (
+              {hasNote ? (
                 <div style={{ marginBottom: "8px" }}>
                   {npcNote.notes && (
                     <div
@@ -257,8 +480,8 @@ const CharacterCard = ({
                 >
                   No notes yet...
                 </div>
-              )} */}
-              {/* <button
+              )}
+              <button
                 onClick={() => setIsEditingNote(true)}
                 style={{
                   display: "flex",
@@ -277,7 +500,7 @@ const CharacterCard = ({
               >
                 <Edit3 size={12} />
                 {hasNote ? "Edit Notes" : "Add Notes"}
-              </button> */}
+              </button>
             </div>
           ) : (
             <div style={{ fontSize: "12px" }}>
@@ -312,6 +535,43 @@ const CharacterCard = ({
                   <option value="suspicious">Suspicious</option>
                   <option value="enemy">Enemy</option>
                 </select>
+              </div>
+
+              <div style={{ marginBottom: "8px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "10px",
+                    color: theme.textSecondary,
+                    marginBottom: "2px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Custom Tags:
+                </label>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "4px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {customTags.map((tag, index) => (
+                    <CustomTag
+                      key={index}
+                      tag={tag}
+                      theme={theme}
+                      removable={true}
+                      onRemove={() => handleRemoveTag(tag)}
+                    />
+                  ))}
+                </div>
+                <TagSelector
+                  existingTags={customTags}
+                  onAddTag={handleAddTag}
+                  theme={theme}
+                />
               </div>
 
               <div style={{ marginBottom: "8px" }}>
@@ -603,7 +863,6 @@ export const CharacterGallery = ({
       setNpcNotes(notesMap);
     } catch (error) {
       console.error("Error loading NPC notes:", error);
-    } finally {
     }
   };
 
@@ -688,7 +947,9 @@ export const CharacterGallery = ({
       character.type.toLowerCase().includes(searchLower) ||
       (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
       (note?.relationship &&
-        note.relationship.toLowerCase().includes(searchLower))
+        note.relationship.toLowerCase().includes(searchLower)) ||
+      (note?.custom_tags &&
+        note.custom_tags.some((tag) => tag.toLowerCase().includes(searchLower)))
     );
   });
 
@@ -731,7 +992,7 @@ export const CharacterGallery = ({
           <Search size={20} style={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Search NPCs by name, school, type, or your notes..."
+            placeholder="Search NPCs by name, school, type, notes, or tags..."
             value={searchTerm}
             onChange={handleSearchChange}
             style={{
@@ -778,7 +1039,8 @@ export const CharacterGallery = ({
                 <Search size={48} color={theme.textSecondary} />
                 <p>No characters found matching "{searchTerm}"</p>
                 <p style={{ fontSize: "14px", marginTop: "8px" }}>
-                  Try searching by name, school, character type, or your notes.
+                  Try searching by name, school, character type, your notes, or
+                  custom tags.
                 </p>
               </div>
             )}
