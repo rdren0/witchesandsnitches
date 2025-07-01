@@ -403,7 +403,7 @@ const Navigation = ({ characters }) => {
       style={{
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-evenly",
+        justifyContent: "space-between",
         width: "90%",
         marginRight: "16px",
       }}
