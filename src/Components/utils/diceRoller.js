@@ -262,27 +262,62 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         >
           <div
             style={{
-              fontSize: "48px",
+              fontSize: "56px",
               fontWeight: "900",
               color: getDiceColor(),
               lineHeight: "1",
-              marginBottom: "8px",
+              marginBottom: "12px",
               textShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
-            {rollValue}
+            {total}
           </div>
+
           <div
             style={{
-              fontSize: "18px",
-              color: textColor,
-              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              fontSize: "16px",
+              color: "#6b7280",
+              fontWeight: "500",
               marginBottom: "4px",
             }}
           >
-            {modifier >= 0 ? "+" : ""}
-            {modifier} = {total}
+            <span
+              style={{
+                fontSize: "20px",
+                fontWeight: "600",
+                color: textColor,
+              }}
+            >
+              {rollValue}
+            </span>
+            <span>+</span>
+            <span
+              style={{
+                fontSize: "20px",
+                fontWeight: "600",
+                color: textColor,
+              }}
+            >
+              {modifier >= 0 ? modifier : `(${modifier})`}
+            </span>
           </div>
+
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#9ca3af",
+              fontWeight: "500",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            dice + modifier
+          </div>
+
           {(isCriticalSuccess || isCriticalFailure) && (
             <div
               style={{
@@ -291,7 +326,15 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
                 color: isCriticalSuccess ? "#92400e" : "#991b1b",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
-                marginTop: "8px",
+                marginTop: "12px",
+                padding: "6px 12px",
+                backgroundColor: isCriticalSuccess
+                  ? "rgba(245, 158, 11, 0.1)"
+                  : "rgba(239, 68, 68, 0.1)",
+                borderRadius: "6px",
+                border: `1px solid ${
+                  isCriticalSuccess ? "#f59e0b" : "#ef4444"
+                }40`,
               }}
             >
               {isCriticalSuccess

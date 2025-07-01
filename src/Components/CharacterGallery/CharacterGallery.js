@@ -24,7 +24,6 @@ const DEFAULT_TAGS = [
   "Study Buddy",
   "Rival",
   "Crush",
-  "Mentor",
   "Quidditch Player",
   "Prefect",
   "Knows Secret",
@@ -33,10 +32,6 @@ const DEFAULT_TAGS = [
   "Helpful",
   "Dangerous",
   "????",
-  "Smart",
-  "Popular",
-  "Outcast",
-  "Teacher's Pet",
 ];
 
 const RelationshipBadge = ({ relationship, theme }) => {
