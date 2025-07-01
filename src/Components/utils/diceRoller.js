@@ -1,6 +1,6 @@
 import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { X, Dice6, Star } from "lucide-react";
+import { X, Dice6 } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
 import { spellsData } from "../SpellBook/spells";
 import { getDiscordWebhook } from "../../App/const";
