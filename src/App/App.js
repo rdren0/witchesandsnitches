@@ -335,8 +335,8 @@ const AuthComponent = ({
           cursor: "pointer",
           transition: "background-color 0.2s",
           minWidth: "80px",
-          backgroundColor: "#5865f2",
-          color: theme.secondary,
+          backgroundColor: theme.primary,
+          color: theme.text,
           opacity: isLoading ? 0.6 : 1,
         }}
         disabled={isLoading}
@@ -1286,7 +1286,13 @@ function AppContent() {
             element={
               <ProtectedRoute user={user}>
                 {characterSelector}
-                <DowntimeSheet />
+                <DowntimeSheet
+                  user={user}
+                  selectedCharacter={selectedCharacter}
+                  supabase={supabase}
+                  adminMode={adminMode}
+                  isUserAdmin={isUserAdmin}
+                />
               </ProtectedRoute>
             }
           />
