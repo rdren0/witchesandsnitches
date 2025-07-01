@@ -25,17 +25,14 @@ const DEFAULT_TAGS = [
   "Rival",
   "Crush",
   "Mentor",
-  "Family",
   "Quidditch Player",
   "Prefect",
-  "Class Partner",
   "Knows Secret",
   "Trustworthy",
   "Suspicious",
   "Helpful",
   "Dangerous",
   "????",
-  "Funny",
   "Smart",
   "Popular",
   "Outcast",
@@ -290,27 +287,20 @@ const CharacterCard = ({
         updated_at: new Date().toISOString(),
       };
 
-      if (npcNote?.id) {
-        const { error } = await supabase
-          .from("character_npc_notes")
-          .update(noteData)
-          .eq("id", npcNote.id);
+      // Use UPSERT to handle both INSERT and UPDATE cases
+      const { data, error } = await supabase
+        .from("character_npc_notes")
+        .upsert(noteData, {
+          onConflict: "character_id,discord_user_id,npc_name",
+          ignoreDuplicates: false,
+        })
+        .select()
+        .single();
 
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("character_npc_notes")
-          .insert([noteData])
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        onUpdateNote(character.name, { ...noteData, id: data.id });
-      }
+      if (error) throw error;
 
       setIsEditingNote(false);
-      onUpdateNote(character.name, noteData);
+      onUpdateNote(character.name, { ...noteData, id: data.id });
     } catch (error) {
       console.error("Error saving note:", error);
       alert("Failed to save note. Please try again.");
