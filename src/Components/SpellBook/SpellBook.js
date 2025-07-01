@@ -9,13 +9,7 @@ import { spellsData } from "./spells";
 import { useCallback } from "react";
 import CastingTiles from "../CharacterSheet/CastingTiles";
 
-const SpellBook = ({
-  supabase,
-  user,
-  customUsername,
-  selectedCharacter,
-  characters,
-}) => {
+const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const { theme } = useTheme();
   const styles = createThemedSpellBookStyles(theme);
   const [expandedSections, setExpandedSections] = useState({});
@@ -450,7 +444,6 @@ const SpellBook = ({
             <SubjectCard
               key={subjectName}
               criticalSuccesses={criticalSuccesses}
-              customUsername={customUsername}
               discordUserId={discordUserId}
               expandedSections={expandedSections}
               expandedSubjects={expandedSubjects}

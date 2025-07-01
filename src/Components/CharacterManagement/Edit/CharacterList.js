@@ -16,6 +16,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { characterService } from "../../../services/characterService";
 import CharacterEditor from "./CharacterEditor";
+import { gameSessionOptions } from "../../../App/const";
 
 const CharacterList = ({
   user,
@@ -252,10 +253,8 @@ const CharacterList = ({
 
     if (filterValue) {
       if (adminMode) {
-        // Filter by game session in admin mode
         filtered = filtered.filter((char) => char.gameSession === filterValue);
       } else {
-        // Filter by house in regular mode
         filtered = filtered.filter((char) => char.house === filterValue);
       }
     }
@@ -308,16 +307,10 @@ const CharacterList = ({
     }
   };
 
-  // Updated function to get houses or game sessions based on admin mode
   const getFilterOptions = () => {
     if (adminMode) {
-      // Get all unique game sessions
-      const gameSessions = [
-        ...new Set(savedCharacters.map((char) => char.gameSession)),
-      ].filter(Boolean);
-      return gameSessions.sort();
+      return gameSessionOptions;
     } else {
-      // Get all unique houses
       const houses = [
         ...new Set(savedCharacters.map((char) => char.house)),
       ].filter(Boolean);

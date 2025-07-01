@@ -20,13 +20,10 @@ import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
-import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
-import CorruptionTracker from "./Sections/CorruptionTracker";
-import SpellSlotTracker from "./Sections/SpellSlotTracker";
-import SorceryPointTracker from "./Sections/SorceryPointTracker";
 import { useCallback } from "react";
 import { getDiscordWebhook } from "../../App/const";
 import InspirationTracker from "./InspirationTracker";
+import CharacterTabbedPanel from "./CharacterTabbedPanel";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -49,23 +46,11 @@ const pulseKeyframes = `
 
 const getCharacterSheetLayoutStyles = (theme) => ({
   display: "grid",
-  gridTemplateColumns: "3fr 1fr",
+  gridTemplateColumns: "1fr 2fr",
   gap: "24px",
   alignItems: "start",
   marginBottom: "20px",
   width: "100%",
-
-  "@media (max-width: 1024px)": {
-    gridTemplateColumns: "1fr",
-    gap: "20px",
-  },
-});
-
-const getRightSideStackStyles = (theme) => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: "20px",
-  height: "fit-content",
 });
 
 const CharacterSheet = ({
@@ -1229,7 +1214,6 @@ const CharacterSheet = ({
                   gap: "12px",
                 }}
               >
-                {/* Enhanced HP Tile */}
                 <div
                   style={{
                     ...getEnhancedHPStyle(character, {
@@ -1272,7 +1256,6 @@ const CharacterSheet = ({
                   >
                     Hit Points
                   </div>
-                  {/* Unconscious indicator */}
                   {(character.currentHitPoints ?? character.hitPoints) ===
                     0 && (
                     <div
@@ -1296,7 +1279,6 @@ const CharacterSheet = ({
                       💀
                     </div>
                   )}
-                  {/* Low health warning */}
                   {(character.currentHitPoints ?? character.hitPoints) > 0 &&
                     (character.currentHitPoints ?? character.hitPoints) /
                       (character.maxHitPoints ?? character.hitPoints) <=
@@ -1322,8 +1304,6 @@ const CharacterSheet = ({
                       </div>
                     )}
                 </div>
-
-                {/* Initiative Tile */}
                 <div
                   style={{ ...styles.statCard, ...styles.statCardBrown }}
                   onClick={() =>
@@ -1351,7 +1331,6 @@ const CharacterSheet = ({
                     Initiative
                   </div>
                 </div>
-                {/* Spell Attack Tile (Clickable) */}
                 {getSpellcastingAbility(character.castingStyle) && (
                   <div
                     style={{
@@ -1389,7 +1368,6 @@ const CharacterSheet = ({
                   </div>
                 )}
 
-                {/* Spellcasting Ability Check Tile (Clickable) */}
                 {getSpellcastingAbility(character.castingStyle) && (
                   <div
                     style={{
@@ -1435,8 +1413,6 @@ const CharacterSheet = ({
                     </div>
                   </div>
                 )}
-
-                {/* Armor Class Tile */}
                 <div
                   style={{
                     ...styles.statCard,
@@ -1457,7 +1433,6 @@ const CharacterSheet = ({
                   </div>
                 </div>
 
-                {/* Hit Dice Tile */}
                 <div
                   style={{
                     ...styles.statCard,
@@ -1479,8 +1454,6 @@ const CharacterSheet = ({
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
-
-                {/* Proficiency Tile */}
                 <div
                   style={{
                     ...styles.statCard,
@@ -1519,8 +1492,6 @@ const CharacterSheet = ({
                     Proficiency
                   </div>
                 </div>
-
-                {/* Spell Save DC Tile (Plain) */}
                 {getSpellcastingAbility(character.castingStyle) && (
                   <div
                     style={{
@@ -1564,10 +1535,7 @@ const CharacterSheet = ({
               character={character}
               discordWebhookUrl={discordWebhookUrl}
             />
-
-            {/* IMPROVED LAYOUT SECTION */}
             <div style={getCharacterSheetLayoutStyles(theme)}>
-              {/* Left side - Skills */}
               <Skills
                 character={character}
                 supabase={supabase}
@@ -1577,36 +1545,15 @@ const CharacterSheet = ({
                 isRolling={isRolling}
                 modifiers={modifiers(character)}
               />
-              {/* Right side - Corruption, Sorcery Points, and Dice Roller stacked */}
-              <div style={getRightSideStackStyles(theme)}>
-                <FlexibleDiceRoller
-                  title="Custom Roll"
-                  description={`Rolling for ${character.name}`}
-                  character={character}
-                />
-                <SpellSlotTracker
-                  character={character}
-                  supabase={supabase}
-                  discordUserId={discordUserId}
-                  setCharacter={setCharacter}
-                  selectedCharacterId={selectedCharacter.id}
-                />
-                <SorceryPointTracker
-                  key="sorcery-points"
-                  character={character}
-                  supabase={supabase}
-                  discordUserId={discordUserId}
-                  setCharacter={setCharacter}
-                  selectedCharacterId={selectedCharacter.id}
-                />
-                <CorruptionTracker
-                  character={character}
-                  supabase={supabase}
-                  discordUserId={discordUserId}
-                  setCharacter={setCharacter}
-                  selectedCharacterId={selectedCharacter.id}
-                />
-              </div>
+
+              <CharacterTabbedPanel
+                supabase={supabase}
+                user={user}
+                selectedCharacter={character}
+                characters={characters}
+                setCharacter={setCharacter}
+                discordUserId={discordUserId}
+              />
             </div>
           </>
         )}

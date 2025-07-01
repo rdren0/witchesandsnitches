@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { BookOpen, Beaker, Package, FileText } from "lucide-react";
+import { BookOpen, Beaker, Package, Skull, Wand, Dices } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import SpellBook from "../SpellBook/SpellBook";
 import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
+import SpellSlotTracker from "./Sections/SpellSlotTracker";
+import SorceryPointTracker from "./Sections/SorceryPointTracker";
+import CorruptionTracker from "./Sections/CorruptionTracker";
 
 const CharacterTabbedPanel = ({
   supabase,
   user,
-  customUsername,
   selectedCharacter,
   characters,
   setCharacter,
@@ -89,16 +91,42 @@ const CharacterTabbedPanel = ({
     {
       id: "diceRoller",
       label: "Dice Roller",
-      icon: BookOpen,
+      icon: Dices,
       component: (
-        <FlexibleDiceRoller
-          title="Custom Roll"
-          description={`Rolling for ${selectedCharacter.name}`}
-          character={selectedCharacter}
-        />
+        <>
+          <FlexibleDiceRoller
+            title="Custom Roll"
+            description={`Rolling for ${selectedCharacter.name}`}
+            character={selectedCharacter}
+          />
+        </>
       ),
     },
 
+    {
+      id: "slots",
+      label: "Spell & Sorcery",
+      icon: Wand,
+      component: (
+        <>
+          <SpellSlotTracker
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
+            setCharacter={setCharacter}
+            selectedCharacterId={selectedCharacter.id}
+          />
+          <SorceryPointTracker
+            key="sorcery-points"
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
+            setCharacter={setCharacter}
+            selectedCharacterId={selectedCharacter.id}
+          />
+        </>
+      ),
+    },
     {
       id: "spellbook",
       label: "Spellbook",
@@ -108,7 +136,6 @@ const CharacterTabbedPanel = ({
           supabase={supabase}
           user={user}
           discordUserId={discordUserId}
-          customUsername={customUsername}
           selectedCharacter={selectedCharacter}
           setCharacter={setCharacter}
           selectedCharacterId={selectedCharacter.id}
@@ -141,6 +168,20 @@ const CharacterTabbedPanel = ({
         />
       ),
     },
+    {
+      id: " corruption",
+      label: "Corruption",
+      icon: Skull,
+      component: (
+        <CorruptionTracker
+          character={selectedCharacter}
+          supabase={supabase}
+          discordUserId={discordUserId}
+          setCharacter={setCharacter}
+          selectedCharacterId={selectedCharacter.id}
+        />
+      ),
+    },
   ];
 
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
@@ -159,18 +200,6 @@ const CharacterTabbedPanel = ({
                 ...(isActive ? styles.activeTab : {}),
               }}
               onClick={() => setActiveTab(tab.id)}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = theme.primary + "10";
-                  e.target.style.color = theme.primary;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = "transparent";
-                  e.target.style.color = theme.textSecondary;
-                }
-              }}
             >
               <Icon size={16} />
               <span style={{ fontSize: "13px" }}>{tab.label}</span>
