@@ -145,18 +145,6 @@ const CharacterTabbedPanel = ({
       ),
     },
     {
-      id: "inventory",
-      label: "Inventory",
-      icon: Package,
-      component: (
-        <Inventory
-          user={user}
-          selectedCharacter={selectedCharacter}
-          supabase={supabase}
-        />
-      ),
-    },
-    {
       id: "potions",
       label: "Potions",
       icon: Beaker,
@@ -164,6 +152,18 @@ const CharacterTabbedPanel = ({
         <PotionBrewingSystem
           user={user}
           character={selectedCharacter}
+          supabase={supabase}
+        />
+      ),
+    },
+    {
+      id: "inventory",
+      label: "Inventory",
+      icon: Package,
+      component: (
+        <Inventory
+          user={user}
+          selectedCharacter={selectedCharacter}
           supabase={supabase}
         />
       ),
