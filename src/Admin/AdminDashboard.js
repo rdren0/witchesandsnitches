@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Shield, Gamepad2, Star } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import GameSessionInspirationManager from "./GameSessionInspirationManager";
+import SessionManagement from "./SessionManagement ";
 
 const AdminDashboard = ({ supabase }) => {
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState("inspiration");
+  const [activeTab, setActiveTab] = useState("sessions");
 
   const adminStyles = {
     container: {
@@ -73,8 +74,9 @@ const AdminDashboard = ({ supabase }) => {
     },
     activeTab: {
       backgroundColor: theme.primary,
-      color: theme.text,
+      color: theme.secondary,
       fontWeight: "600",
+      color: theme.textSecondary,
     },
     tabContent: {
       backgroundColor: theme.surface,
@@ -82,6 +84,7 @@ const AdminDashboard = ({ supabase }) => {
       border: `2px solid ${theme.border}`,
       minHeight: "400px",
       overflow: "hidden",
+      color: theme.text,
     },
     placeholder: {
       padding: "60px 40px",
@@ -95,15 +98,7 @@ const AdminDashboard = ({ supabase }) => {
       id: "sessions",
       label: "Session Management",
       icon: Gamepad2,
-      component: (
-        <div style={adminStyles.placeholder}>
-          <Gamepad2 size={48} />
-          <h3 style={{ marginTop: "16px", color: theme.text }}>
-            Session Management
-          </h3>
-          <p>Game session management features will be implemented here.</p>
-        </div>
-      ),
+      component: <SessionManagement supabase={supabase} />,
     },
     {
       id: "inspiration",
@@ -111,35 +106,6 @@ const AdminDashboard = ({ supabase }) => {
       icon: Star,
       component: <GameSessionInspirationManager supabase={supabase} />,
     },
-
-    //  {
-    //   id: "users",
-    //   label: "User Management",
-    //   icon: Users,
-    //   component: (
-    //     <div style={adminStyles.placeholder}>
-    //       <Users size={48} />
-    //       <h3 style={{ marginTop: "16px", color: theme.text }}>
-    //         User Management
-    //       </h3>
-    //       <p>User management features will be implemented here.</p>
-    //     </div>
-    //   ),
-    // },
-    // {
-    //   id: "settings",
-    //   label: "System Settings",
-    //   icon: Settings,
-    //   component: (
-    //     <div style={adminStyles.placeholder}>
-    //       <Settings size={48} />
-    //       <h3 style={{ marginTop: "16px", color: theme.text }}>
-    //         System Settings
-    //       </h3>
-    //       <p>System configuration options will be implemented here.</p>
-    //     </div>
-    //   ),
-    // },
   ];
 
   const activeTabData = tabs.find((tab) => tab.id === activeTab);

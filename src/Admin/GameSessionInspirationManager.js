@@ -233,7 +233,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
         `
         )
         .eq("active", true)
-        .is("archived_at", null)
         .order("game_session")
         .order("name");
 
@@ -278,9 +277,17 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }
       });
 
-      const sessionsArray = Array.from(sessionsMap.values()).sort((a, b) => {
-        return a.name.localeCompare(b.name);
-      });
+      const sessionsArray = Array.from(sessionsMap.values())
+        .map((session) => ({
+          ...session,
+
+          characters: session.characters.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          ),
+        }))
+        .sort((a, b) => {
+          return a.name.localeCompare(b.name);
+        });
 
       setSessions(sessionsArray);
     } catch (err) {
