@@ -34,10 +34,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     setRunicTags({});
   }, [selectedCharacter?.id]);
 
-  const getAvailableSpellsData = useCallback(
-    () => ({ ...spellsData }),
-    [selectedCharacter]
-  );
+  const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
 
   const getFilteredSpellsData = useCallback(() => {
     const availableSpells = getAvailableSpellsData();

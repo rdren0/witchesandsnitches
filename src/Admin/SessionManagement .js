@@ -13,6 +13,7 @@ import { gameSessionOptions } from "../App/const";
 
 const SessionManagement = ({ supabase }) => {
   const { theme } = useTheme();
+  // eslint-disable-next-line
   const [characters, setCharacters] = useState([]);
   const [gameSessions, setGameSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +79,7 @@ const SessionManagement = ({ supabase }) => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line
   }, [supabase]);
 
   const groupCharactersBySession = (characters) => {
@@ -289,7 +291,7 @@ const SessionManagement = ({ supabase }) => {
       borderRadius: "8px",
       border: `2px solid ${theme.primary}`,
       backgroundColor: theme.primary,
-      color: theme.secondary,
+      color: theme.text,
       fontSize: "14px",
       fontWeight: "600",
       cursor: "pointer",

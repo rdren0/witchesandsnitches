@@ -73,7 +73,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
       borderRadius: "8px",
       border: `2px solid ${theme.primary}`,
       backgroundColor: theme.primary,
-      color: theme.secondary,
       fontSize: "14px",
       fontWeight: "600",
       cursor: "pointer",
@@ -81,6 +80,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
       alignItems: "center",
       gap: "8px",
       transition: "all 0.2s ease",
+      color: theme.text,
     },
     sessionCard: {
       backgroundColor: theme.surface,

@@ -1553,6 +1553,8 @@ const CharacterSheet = ({
                 characters={characters}
                 setCharacter={setCharacter}
                 discordUserId={discordUserId}
+                adminMode={adminMode}
+                isUserAdmin={isUserAdmin}
               />
             </div>
           </>

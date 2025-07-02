@@ -74,7 +74,6 @@ const AdminDashboard = ({ supabase }) => {
     },
     activeTab: {
       backgroundColor: theme.primary,
-      color: theme.secondary,
       fontWeight: "600",
       color: theme.textSecondary,
     },
