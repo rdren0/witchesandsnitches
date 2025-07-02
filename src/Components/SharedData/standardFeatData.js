@@ -862,6 +862,51 @@ export const standardFeats = [
     },
   },
   {
+    name: "Poison Expert",
+    preview:
+      "Master of poisons. +1 Wis/Con/Int, Potioneer's kit, -5 poison craft DC, advantage vs poison.",
+    description: [
+      "Increase your Wisdom, Constitution, or Intelligence score by 1, to a maximum of 20.",
+      "You gain a Potioneer's kit and proficiency with a Potioneer's kit.",
+      "Reduce 5 from the DC to craft the next quality tier of poisons (Ex: Superior DC is 30-5 = 25.)",
+      "You have advantage on saving throws against poison.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["wisdom", "constitution", "intelligence"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Potioneer's Kit Proficiency",
+          type: "passive",
+          description:
+            "You gain a Potioneer's kit and proficiency with a Potioneer's kit",
+        },
+        {
+          name: "Poison Crafting Expertise",
+          type: "passive",
+          description:
+            "Reduce 5 from the DC to craft the next quality tier of poisons",
+        },
+        {
+          name: "Poison Resistance",
+          type: "passive",
+          description: "You have advantage on saving throws against poison",
+        },
+      ],
+    },
+  },
+  {
     name: "Resilient",
     preview: "Gain proficiency in one saving throw. +1 to that ability.",
     description: [

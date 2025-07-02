@@ -73,7 +73,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
       borderRadius: "8px",
       border: `2px solid ${theme.primary}`,
       backgroundColor: theme.primary,
-      color: theme.text,
+      color: theme.secondary,
       fontSize: "14px",
       fontWeight: "600",
       cursor: "pointer",
@@ -92,7 +92,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     },
     sessionHeader: {
       padding: "20px",
-      backgroundColor: theme.surface,
+      backgroundColor: theme.primary,
       color: theme.secondary,
       display: "flex",
       justifyContent: "space-between",
@@ -111,10 +111,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
       alignItems: "center",
       gap: "16px",
       fontSize: "14px",
-      backgroundColor: theme.background,
-      padding: "8px",
-      borderRadius: "12px",
-      border: `2px solid ${theme.border}`,
     },
     characterGrid: {
       display: "grid",
@@ -220,7 +216,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
     setError(null);
 
     try {
-      // Fetch all characters with their game sessions and inspiration data
       const { data: characters, error: charactersError } = await supabase
         .from("characters")
         .select(
@@ -230,11 +225,15 @@ const GameSessionInspirationManager = ({ supabase }) => {
           level,
           game_session,
           discord_user_id,
+          active,
+          archived_at,
           character_resources (
             inspiration
           )
         `
         )
+        .eq("active", true)
+        .is("archived_at", null)
         .order("game_session")
         .order("name");
 
@@ -242,11 +241,18 @@ const GameSessionInspirationManager = ({ supabase }) => {
         throw charactersError;
       }
 
-      // Group characters by game session
       const sessionsMap = new Map();
 
       characters.forEach((character) => {
-        const sessionName = character.game_session || "No Session";
+        if (
+          !character.game_session ||
+          character.game_session.trim() === "" ||
+          character.game_session.toLowerCase() === "development"
+        ) {
+          return;
+        }
+
+        const sessionName = character.game_session;
 
         if (!sessionsMap.has(sessionName)) {
           sessionsMap.set(sessionName, {
@@ -272,10 +278,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }
       });
 
-      // Convert map to array and sort
       const sessionsArray = Array.from(sessionsMap.values()).sort((a, b) => {
-        if (a.name === "No Session") return 1;
-        if (b.name === "No Session") return -1;
         return a.name.localeCompare(b.name);
       });
 
@@ -298,7 +301,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
     setUpdating((prev) => new Set(prev).add(updateKey));
 
     try {
-      // Update the character_resources table
       const { error: updateError } = await supabase
         .from("character_resources")
         .upsert(
@@ -317,7 +319,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
         throw updateError;
       }
 
-      // Send Discord notification
       const discordWebhookUrl = getDiscordWebhook(gameSession);
       if (discordWebhookUrl) {
         const embed = {
@@ -352,7 +353,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }
       }
 
-      // Update local state
       setSessions((prevSessions) =>
         prevSessions.map((session) => ({
           ...session,
@@ -471,7 +471,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
                   <Users size={16} style={{ marginRight: "4px" }} />
                   {session.totalCharacters} characters
                 </span>
-                <span style={{ color: "#f59e0b" }}>
+                <span>
                   <Star size={16} style={{ marginRight: "4px" }} />
                   {session.withInspiration} with inspiration
                 </span>
