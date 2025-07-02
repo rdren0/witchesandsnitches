@@ -13,30 +13,8 @@ export const hasSubclassFeature = (character, featureName) => {
   return character?.subclassFeatures?.includes(featureName) || false;
 };
 
-export const getResearcherBonuses = (character) => {
-  if (!hasSubclassFeature(character, "Researcher")) {
-    return {
-      researchBonus: 0,
-      grantsDoubleTags: false,
-      hasDevictoAccess: false,
-    };
-  }
-
-  const wisdomMod = Math.floor((character.abilityScores.wisdom - 10) / 2);
-  return {
-    researchBonus: Math.floor(wisdomMod / 2),
-    grantsDoubleTags: true,
-    hasDevictoAccess: true,
-  };
-};
-
 const getResearchModifier = (spellName, subject, character) => {
   let modifier = getSpellModifier(spellName, subject, character);
-
-  if (hasSubclassFeature(character, "Researcher")) {
-    const researcherBonuses = getResearcherBonuses(character);
-    modifier += researcherBonuses.researchBonus;
-  }
 
   return modifier;
 };
@@ -105,16 +83,6 @@ const getModifierInfo = (spellName, subject, character) => {
 
 const getResearchModifierInfo = (spellName, subject, character) => {
   const baseInfo = getModifierInfo(spellName, subject, character);
-
-  if (hasSubclassFeature(character, "Researcher")) {
-    const researcherBonuses = getResearcherBonuses(character);
-    return {
-      ...baseInfo,
-      researcherBonus: researcherBonuses.researchBonus,
-      hasResearcherBonus: true,
-      source: baseInfo.source + " + Researcher",
-    };
-  }
 
   return {
     ...baseInfo,
@@ -244,10 +212,6 @@ const getSpellTags = (spell, character, isResearched = false) => {
   return baseTags;
 };
 
-const hasDevictoAccess = (character) => {
-  return hasSubclassFeature(character, "Researcher");
-};
-
 const validateSubclassFeatures = (character) => {
   const validFeatures = [
     "Researcher",
@@ -277,13 +241,6 @@ const getCharacterBonuses = (character) => {
     enhancedCasting: {},
   };
 
-  if (hasSubclassFeature(character, "Researcher")) {
-    const researcherBonuses = getResearcherBonuses(character);
-    bonuses.research += researcherBonuses.researchBonus;
-    bonuses.spellTags.push("Auto Arithmantic/Runic on research");
-    bonuses.specialAccess.push("Enhanced Devicto");
-  }
-
   return bonuses;
 };
 
@@ -296,7 +253,6 @@ export {
   getResearchModifierInfo,
   getResearchModifier,
   getSpellTags,
-  hasDevictoAccess,
   validateSubclassFeatures,
   getCharacterBonuses,
 };

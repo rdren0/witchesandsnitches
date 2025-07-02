@@ -34,47 +34,10 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     setRunicTags({});
   }, [selectedCharacter?.id]);
 
-  const getAvailableSpellsData = useCallback(() => {
-    let availableSpells = { ...spellsData };
-
-    if (hasSubclassFeature(selectedCharacter, "Researcher")) {
-      const jhcLevels = { ...availableSpells["Jinxes, Hexes & Curses"].levels };
-      const cantrips = [...jhcLevels.Cantrips];
-
-      const devictoIndex = cantrips.findIndex(
-        (spell) => spell.name === "Devicto"
-      );
-      const enhancedDevicto = {
-        name: "Devicto",
-        level: "Cantrip",
-        castingTime: "Action",
-        range: "60 Feet",
-        duration: "Instantaneous",
-        year: 4,
-        tags: ["Arithmantic", "Runic"],
-        description:
-          "An advanced hex that overwhelms the target with magical interference. The spell disrupts the target's concentration and magical abilities through a combination of mathematical precision and runic power. When enhanced through extensive study, this spell demonstrates the perfect fusion of analytical and symbolic magical theory.",
-        higherLevels:
-          "When you cast this spell using a spell slot of 1st level or higher, you can target one additional creature for each slot level above 0.",
-        restriction: false,
-        researcherEnhanced: true,
-      };
-
-      if (devictoIndex >= 0) {
-        cantrips[devictoIndex] = enhancedDevicto;
-      } else {
-        cantrips.push(enhancedDevicto);
-      }
-
-      jhcLevels.Cantrips = cantrips;
-      availableSpells["Jinxes, Hexes & Curses"] = {
-        ...availableSpells["Jinxes, Hexes & Curses"],
-        levels: jhcLevels,
-      };
-    }
-
-    return availableSpells;
-  }, [selectedCharacter]);
+  const getAvailableSpellsData = useCallback(
+    () => ({ ...spellsData }),
+    [selectedCharacter]
+  );
 
   const getFilteredSpellsData = useCallback(() => {
     const availableSpells = getAvailableSpellsData();
@@ -293,35 +256,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
           }}
         >
           {error}
-        </div>
-      )}
-
-      {/* Show Researcher status banner */}
-      {hasSubclassFeature(selectedCharacter, "Researcher") && (
-        <div
-          style={{
-            backgroundColor: "rgba(139, 92, 246, 0.1)",
-            border: "1px solid rgba(139, 92, 246, 0.3)",
-            color: "#8b5cf6",
-            padding: "12px",
-            borderRadius: "8px",
-            margin: "16px 20px",
-            fontSize: "14px",
-            fontWeight: "600",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          📚 <strong>Researcher Active:</strong>
-          <span style={{ fontWeight: "normal" }}>
-            +
-            {Math.floor(
-              Math.floor((selectedCharacter.abilityScores.wisdom - 10) / 2) / 2
-            )}{" "}
-            to research checks, researched spells gain both Arithmantic and
-            Runic tags, enhanced Devicto access
-          </span>
         </div>
       )}
 

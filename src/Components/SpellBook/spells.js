@@ -954,8 +954,6 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Instantaneous",
           year: 4,
-          // Special tags for Researcher subclass
-          tags: ["Arithmantic", "Runic"],
           description:
             "An advanced hex that overwhelms the target with magical interference. The spell disrupts the target's concentration and magical abilities through a combination of mathematical precision and runic power. When enhanced through extensive study, this spell demonstrates the perfect fusion of analytical and symbolic magical theory.",
           higherLevels:

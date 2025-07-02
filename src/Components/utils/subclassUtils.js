@@ -1,10 +1,6 @@
-// subclassUtils.js - Helper functions for managing subclass features and bonuses
-
 import { getAbilityModifier } from "../Spells/utils";
 
-// Valid subclass features for validation
 export const VALID_SUBCLASS_FEATURES = [
-  // Arithmancy & Runes subclass
   "Researcher",
   "School of Magic Expert",
   "Enhanced Spellwork",
@@ -16,7 +12,6 @@ export const VALID_SUBCLASS_FEATURES = [
   "Perfected Spellwork",
   "Spell Tome",
 
-  // Other subclasses (add as needed)
   "Auror Training",
   "Curse-Breaking",
   "Study Buddy",
@@ -27,7 +22,6 @@ export const VALID_SUBCLASS_FEATURES = [
   "Harmonancy",
 ];
 
-// Subclass information
 export const SUBCLASS_INFO = {
   "Arithmancy & Runes": {
     name: "Arithmancy & Runes",
@@ -59,7 +53,6 @@ export const SUBCLASS_INFO = {
   },
 };
 
-// Check if character has a specific subclass feature
 export const hasSubclassFeature = (character, featureName) => {
   if (
     !character?.subclassFeatures ||
@@ -70,11 +63,9 @@ export const hasSubclassFeature = (character, featureName) => {
   return character.subclassFeatures.includes(featureName);
 };
 
-// Get all features for a character's subclass level
 export const getAvailableFeatures = (subclassName, level = 1) => {
   const features = [];
 
-  // Add level-appropriate features based on subclass
   if (subclassName === "Arithmancy & Runes") {
     if (level >= 1) features.push("Researcher", "School of Magic Expert");
     if (level >= 6) features.push("Enhanced Spellwork", "Private Lessons");
@@ -86,7 +77,6 @@ export const getAvailableFeatures = (subclassName, level = 1) => {
   return features;
 };
 
-// Validate character's subclass features
 export const validateCharacterFeatures = (character) => {
   if (!character.subclassFeatures) return true;
 
@@ -105,31 +95,15 @@ export const validateCharacterFeatures = (character) => {
   return validFeatures && levelAppropriate;
 };
 
-// Get Researcher-specific bonuses
 export const getResearcherBonuses = (character) => {
-  if (!hasSubclassFeature(character, "Researcher")) {
-    return {
-      researchBonus: 0,
-      grantsDoubleTags: false,
-      hasDevictoAccess: false,
-      wisdomModifier: 0,
-    };
-  }
-
-  const wisdomModifier = getAbilityModifier(
-    character.abilityScores?.wisdom || 10
-  );
-  const researchBonus = Math.floor(wisdomModifier / 2);
-
   return {
-    researchBonus: Math.max(0, researchBonus), // Minimum 0
-    grantsDoubleTags: true,
-    hasDevictoAccess: true,
-    wisdomModifier,
+    researchBonus: 0,
+    grantsDoubleTags: false,
+    hasDevictoAccess: false,
+    wisdomModifier: 0,
   };
 };
 
-// Get all bonuses for a character
 export const getAllCharacterBonuses = (character) => {
   const bonuses = {
     research: 0,
@@ -141,7 +115,6 @@ export const getAllCharacterBonuses = (character) => {
     passiveEffects: [],
   };
 
-  // Researcher bonuses
   if (hasSubclassFeature(character, "Researcher")) {
     const researcherBonuses = getResearcherBonuses(character);
     bonuses.research += researcherBonuses.researchBonus;
@@ -151,7 +124,6 @@ export const getAllCharacterBonuses = (character) => {
     );
   }
 
-  // Enhanced Spellwork bonuses
   if (hasSubclassFeature(character, "Enhanced Spellwork")) {
     bonuses.enhancedSpells.push(
       "Runic spells: +1 minute duration, 1d6 psychic damage/round"
@@ -161,7 +133,6 @@ export const getAllCharacterBonuses = (character) => {
     );
   }
 
-  // Nimble Fingers bonuses
   if (hasSubclassFeature(character, "Nimble Fingers")) {
     const dexModifier = getAbilityModifier(
       character.abilityScores?.dexterity || 10
@@ -171,12 +142,9 @@ export const getAllCharacterBonuses = (character) => {
     bonuses.passiveEffects.push("Sleight of Hand proficiency/expertise");
   }
 
-  // Add other subclass bonuses as they're implemented
-
   return bonuses;
 };
 
-// Get spell enhancement based on tags and character features
 export const getSpellEnhancements = (spellName, spellTags, character) => {
   const enhancements = {
     duration: null,
@@ -191,7 +159,6 @@ export const getSpellEnhancements = (spellName, spellTags, character) => {
   const hasArithmantic = spellTags.includes("Arithmantic");
   const hasRunic = spellTags.includes("Runic");
 
-  // Enhanced Spellwork feature effects
   if (hasSubclassFeature(character, "Enhanced Spellwork")) {
     if (hasRunic) {
       enhancements.duration = "+1 minute";
@@ -204,7 +171,6 @@ export const getSpellEnhancements = (spellName, spellTags, character) => {
     }
   }
 
-  // Perfected Spellwork feature effects
   if (hasSubclassFeature(character, "Perfected Spellwork")) {
     if (hasRunic) {
       enhancements.special.push("Maximum damage dice once per round");
@@ -215,7 +181,6 @@ export const getSpellEnhancements = (spellName, spellTags, character) => {
     }
   }
 
-  // Spells with both tags get special bonuses
   if (hasArithmantic && hasRunic) {
     if (hasSubclassFeature(character, "Spellmaker")) {
       enhancements.special.push("Cast using 1 lower spell slot level");
@@ -236,7 +201,6 @@ export const getSpellEnhancements = (spellName, spellTags, character) => {
   return enhancements;
 };
 
-// Create a character with subclass features
 export const createCharacterWithSubclass = (
   baseCharacter,
   subclassName,
@@ -252,7 +216,6 @@ export const createCharacterWithSubclass = (
   };
 };
 
-// Update character's subclass features
 export const updateCharacterSubclass = (character, updates) => {
   const validUpdates = {};
 
@@ -280,7 +243,6 @@ export const updateCharacterSubclass = (character, updates) => {
   };
 };
 
-// Get display information for character's subclass
 export const getSubclassDisplayInfo = (character) => {
   if (!character.subclass) {
     return {
@@ -305,19 +267,6 @@ export const getSubclassDisplayInfo = (character) => {
   };
 };
 
-// Export utility for spell access checks
-export const hasSpellAccess = (character, spellName) => {
-  // Check for special Researcher access to Devicto
-  if (spellName === "Devicto" && hasSubclassFeature(character, "Researcher")) {
-    return true;
-  }
-
-  // Add other special access checks here
-
-  return false; // Default to normal access rules
-};
-
-// Get tooltip text for subclass features
 export const getFeatureTooltip = (featureName) => {
   const tooltips = {
     Researcher:
@@ -344,7 +293,6 @@ export default {
   createCharacterWithSubclass,
   updateCharacterSubclass,
   getSubclassDisplayInfo,
-  hasSpellAccess,
   getFeatureTooltip,
   validateCharacterFeatures,
   VALID_SUBCLASS_FEATURES,

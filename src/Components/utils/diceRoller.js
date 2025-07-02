@@ -11,34 +11,6 @@ const hasSubclassFeature = (character, featureName) => {
   return character?.subclassFeatures?.includes(featureName) || false;
 };
 
-const getResearcherBonuses = (character) => {
-  if (!hasSubclassFeature(character, "Researcher")) {
-    return {
-      researchBonus: 0,
-      grantsDoubleTags: false,
-      hasDevictoAccess: false,
-      wisdomModifier: 0,
-    };
-  }
-
-  const getAbilityModifier = (score) => {
-    if (score === null || score === undefined) return 0;
-    return Math.floor((score - 10) / 2);
-  };
-
-  const wisdomModifier = getAbilityModifier(
-    character.abilityScores?.wisdom || 10
-  );
-  const researchBonus = Math.floor(wisdomModifier / 2);
-
-  return {
-    researchBonus: Math.max(0, researchBonus),
-    grantsDoubleTags: true,
-    hasDevictoAccess: true,
-    wisdomModifier,
-  };
-};
-
 export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   if (!isOpen || !rollResult) return null;
 
@@ -3019,11 +2991,6 @@ export const rollResearch = async ({
     let modifier = getSpellModifier(spellName, subject, selectedCharacter);
 
     let researcherBonus = 0;
-    if (hasSubclassFeature(selectedCharacter, "Researcher")) {
-      const researcherBonuses = getResearcherBonuses(selectedCharacter);
-      researcherBonus = researcherBonuses.researchBonus;
-      modifier += researcherBonus;
-    }
 
     const diceResult = rollDice();
     const d20Roll = diceResult.total;
