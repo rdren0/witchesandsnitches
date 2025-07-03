@@ -564,7 +564,6 @@ const SpellSlotTracker = ({
           </div>
         </div>
 
-        {/* Still render Sorcery Points even if no spell slots */}
         <SorceryPointTracker
           character={character}
           supabase={supabase}
@@ -627,7 +626,6 @@ const SpellSlotTracker = ({
 
   return (
     <div style={styles.resourcesContainer}>
-      {/* Spell Slots Component */}
       <div style={styles.container}>
         <div style={styles.header}>
           <div style={styles.headerTitle}>
@@ -648,7 +646,6 @@ const SpellSlotTracker = ({
 
         <div style={styles.slotsGrid}>{spellAndSorceryTiles}</div>
 
-        {/* Custom Spell Slots Modal */}
         {showCustomModal && (
           <div style={styles.modal} onClick={() => setShowCustomModal(false)}>
             <div
@@ -742,7 +739,6 @@ const SpellSlotTracker = ({
           </div>
         )}
 
-        {/* Modal for adding/using spell slots */}
         {showModal && (
           <div style={styles.modal} onClick={() => setShowModal(false)}>
             <div

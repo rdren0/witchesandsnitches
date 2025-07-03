@@ -139,7 +139,6 @@ const InspirationTracker = ({
 
   return (
     <>
-      {/* Inspiration Tile */}
       <div
         style={getTileStyle()}
         onClick={handleTileClick}
@@ -169,7 +168,6 @@ const InspirationTracker = ({
           Inspiration
         </div>
 
-        {/* Loading indicator */}
         {isUpdating && (
           <div
             style={{
@@ -193,7 +191,6 @@ const InspirationTracker = ({
         )}
       </div>
 
-      {/* Confirmation Modal */}
       {showModal && (
         <div
           style={{

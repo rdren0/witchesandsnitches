@@ -607,7 +607,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                     >
                       Quality Thresholds:
                     </div>
-                    {/* FIXED: Show total needed (including modifier) instead of raw die requirement */}
                     {[
                       "superior",
                       "exceptional",
@@ -731,7 +730,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                     )}
                     <span style={styles.diceValue}>
                       {lastResult.diceRoll || lastResult.roll}
-                      {/* FIXED: Always show character modifier */}
                       <Plus size={12} style={{ margin: "0 2px" }} />
                       {lastResult.characterModifier >= 0 ? "+" : ""}
                       {lastResult.characterModifier}

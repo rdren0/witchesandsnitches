@@ -353,7 +353,6 @@ const FlexibleDiceRoller = ({
             >
               d{diceType}
             </div>
-            {/* Quick preset buttons for common dice */}
             {!compact && (
               <div
                 style={{

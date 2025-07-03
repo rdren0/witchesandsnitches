@@ -135,7 +135,6 @@ function BasicInfo({
         </div>
       )}
 
-      {/* Level and Hit Points */}
       <div style={styles.levelHpGrid}>
         <div style={styles.levelContainer}>
           <label style={styles.label}>Level</label>

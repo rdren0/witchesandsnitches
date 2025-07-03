@@ -187,7 +187,6 @@ const EnhancedSkillsSection = ({
         </div>
       ) : (
         <div style={styles.skillsContainer}>
-          {/* Innate Heritage Skills Section */}
           {innateHeritageSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h4
@@ -266,7 +265,6 @@ const EnhancedSkillsSection = ({
             </div>
           )}
 
-          {/* Background Skills Section */}
           {backgroundSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h4
@@ -345,7 +343,6 @@ const EnhancedSkillsSection = ({
             </div>
           )}
 
-          {/* Subclass Skills Section */}
           {subclassSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h4
@@ -423,7 +420,6 @@ const EnhancedSkillsSection = ({
             </div>
           )}
 
-          {/* Subclass Expertise Skills Section */}
           {expertiseSkills.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h4
@@ -497,7 +493,6 @@ const EnhancedSkillsSection = ({
             </div>
           )}
 
-          {/* Casting Style Skills Section */}
           <div>
             <h4 style={styles.skillsSubheader}>
               {character.castingStyle} Skills ({castingStyleSkills.length}/2
@@ -700,7 +695,6 @@ const EnhancedSkillsSection = ({
             )}
           </div>
 
-          {/* Expertise Summary */}
           {(character.skill_expertise || character.skillExpertise || [])
             .length > 0 && (
             <div
@@ -731,7 +725,6 @@ const EnhancedSkillsSection = ({
             </div>
           )}
 
-          {/* Summary */}
           <div
             style={{
               marginTop: "12px",

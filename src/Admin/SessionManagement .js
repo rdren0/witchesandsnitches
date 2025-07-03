@@ -7,6 +7,7 @@ import {
   AlertCircle,
   RefreshCw,
   BarChart3,
+  Star,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { gameSessionOptions } from "../App/const";
@@ -302,7 +303,7 @@ const SessionManagement = ({ supabase }) => {
     },
     statsGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
       gap: "20px",
       marginBottom: "30px",
     },
@@ -337,7 +338,6 @@ const SessionManagement = ({ supabase }) => {
       border: `2px solid ${theme.border}`,
       padding: "20px",
       transition: "all 0.2s ease",
-      width: "600px",
       minHeight: "400px",
     },
     sessionHeader: {
@@ -385,7 +385,7 @@ const SessionManagement = ({ supabase }) => {
     },
     characterItem: {
       display: "grid",
-      gridTemplateColumns: "2fr 50px 60px 70px 1.5fr 1.2fr 40px",
+      gridTemplateColumns: "180px 30px 100px 120px 150px 220px 130px 1fr",
       alignItems: "center",
       padding: "10px 12px",
       backgroundColor: theme.background,
@@ -396,7 +396,7 @@ const SessionManagement = ({ supabase }) => {
     },
     characterHeader: {
       display: "grid",
-      gridTemplateColumns: "2fr 50px 60px 70px 1.5fr 1.2fr 40px",
+      gridTemplateColumns: "180px 30px 100px 120px 150px 220px 130px 1fr",
       alignItems: "center",
       padding: "8px 12px",
       backgroundColor: theme.primary + "15",
@@ -417,12 +417,17 @@ const SessionManagement = ({ supabase }) => {
       fontWeight: "500",
       textAlign: "center",
     },
+    casting: {
+      color: theme.textSecondary,
+      fontWeight: "500",
+      textAlign: "center",
+    },
     characterHouse: {
       padding: "2px 6px",
       borderRadius: "10px",
       fontSize: "10px",
       fontWeight: "500",
-      color: "white",
+      color: theme.text,
       textAlign: "center",
       justifySelf: "center",
     },
@@ -621,27 +626,27 @@ const SessionManagement = ({ supabase }) => {
               <div style={styles.charactersList}>
                 <div style={styles.characterHeader}>
                   <span>Name</span>
-                  <span style={{ textAlign: "center" }}>Lv</span>
+                  <span style={{ textAlign: "center" }}>Level</span>
+                  <span style={{ textAlign: "center" }}>Casting</span>
                   <span style={{ textAlign: "center" }}>House</span>
                   <span style={{ textAlign: "center" }}>HP</span>
                   <span style={{ textAlign: "center" }}>Subclass</span>
                   <span style={{ textAlign: "center" }}>Background</span>
-                  <span style={{ textAlign: "center" }}>✨</span>
+                  <span style={{ textAlign: "center" }}>✨Inspo✨</span>
                 </div>
 
                 {session.characters.map((character) => (
                   <div key={character.id} style={styles.characterItem}>
                     <span style={styles.characterName}>{character.name}</span>
                     <span style={styles.characterLevel}>{character.level}</span>
+                    <span style={styles.casting}>{character.castingStyle}</span>
                     <span
                       style={{
                         ...styles.characterHouse,
                         backgroundColor: getHouseColor(character.house),
                       }}
                     >
-                      {character.house === "No House"
-                        ? "—"
-                        : character.house.slice(0, 4)}
+                      {character.house === "No House" ? "—" : character.house}
                     </span>
                     <div style={styles.characterHP}>
                       <span style={{ fontSize: "10px", color: theme.text }}>
@@ -676,12 +681,12 @@ const SessionManagement = ({ supabase }) => {
                     <div
                       style={{
                         ...styles.inspirationIndicator,
-                        ...(character.inspiration
-                          ? styles.hasInspiration
-                          : styles.noInspiration),
                       }}
                     >
-                      {character.inspiration ? "✨" : "—"}
+                      <Star
+                        fill={character.inspiration ? "#f59e0b" : "transparent"}
+                        color={character.inspiration ? "#f59e0b" : "white"}
+                      />
                     </div>
                   </div>
                 ))}

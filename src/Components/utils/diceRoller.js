@@ -29,7 +29,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     recipeQuality,
     diceQuantity = 1,
     diceType = 20,
-    individualDiceResults, // New prop for individual dice results
+    individualDiceResults,
   } = rollResult;
 
   const getTypeColor = () => {
@@ -113,7 +113,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     return null;
   };
 
-  // New function to render individual dice results
   const renderIndividualDiceResults = () => {
     if (
       !individualDiceResults ||
@@ -159,7 +158,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             justifyContent: "center",
           }}
         >
-          {/* Render kept dice */}
           {keptDice.map((die, index) => (
             <div
               key={`kept-${index}`}
@@ -181,7 +179,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             </div>
           ))}
 
-          {/* Render discarded dice (for advantage/disadvantage) */}
           {discardedDice.length > 0 && (
             <>
               <div
@@ -220,7 +217,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Explanation text for advantage/disadvantage */}
         {(diceRollType === "advantage" || diceRollType === "disadvantage") &&
           discardedDice.length > 0 && (
             <div
@@ -238,7 +234,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             </div>
           )}
 
-        {/* Show sum for normal multi-dice rolls */}
         {diceRollType === "normal" && keptDice.length > 1 && (
           <div
             style={{
@@ -413,7 +408,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Render individual dice results */}
           {renderIndividualDiceResults()}
         </div>
 
@@ -433,7 +427,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Potion quality display */}
         {potionQuality && (
           <div
             style={{
@@ -459,8 +452,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
             )}
           </div>
         )}
-
-        {/* Recipe quality display */}
         {recipeQuality && (
           <div
             style={{
@@ -3167,23 +3158,16 @@ export const rollFlexibleDie = (
   const roller = new DiceRoller();
   let notation;
 
-  // Handle advantage/disadvantage for any number of dice
   if (rollType === "advantage") {
-    // Roll double the dice and keep the highest [quantity]
-    // e.g., 2d20 advantage = 4d20kh2
     notation = `${diceQuantity * 2}d${diceType}kh${diceQuantity}`;
   } else if (rollType === "disadvantage") {
-    // Roll double the dice and keep the lowest [quantity]
-    // e.g., 2d20 disadvantage = 4d20kl2
     notation = `${diceQuantity * 2}d${diceType}kl${diceQuantity}`;
   } else {
-    // Normal rolls
     notation = `${diceQuantity}d${diceType}`;
   }
 
   const roll = roller.roll(notation);
 
-  // Extract individual dice results from the roll
   const individualDiceResults = extractIndividualDiceResults(
     roll,
     rollType,
@@ -3197,23 +3181,19 @@ export const rollFlexibleDie = (
     diceQuantity: diceQuantity,
     diceType: diceType,
     rollType: rollType,
-    individualDiceResults: individualDiceResults, // New field for individual dice
+    individualDiceResults: individualDiceResults,
   };
 };
 
-// Helper function to extract individual dice results from DiceRoller output
 const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
   try {
-    // The DiceRoller library stores individual dice results in the rolls array
     if (roll.rolls && roll.rolls.length > 0) {
-      const diceRoll = roll.rolls[0]; // Get the first (and usually only) dice group
+      const diceRoll = roll.rolls[0];
 
       if (diceRoll.rolls) {
         let individualResults = diceRoll.rolls.map((die) => die.value);
 
-        // For advantage/disadvantage, we need to show which dice were kept
         if (rollType === "advantage" || rollType === "disadvantage") {
-          // The DiceRoller marks kept dice, but we'll show all dice with indication
           const keptDice = diceRoll.rolls
             .filter((die) => !die.discarded)
             .map((die) => die.value);
@@ -3228,7 +3208,6 @@ const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
             rollType: rollType,
           };
         } else {
-          // Normal rolls - just return the individual dice values
           return {
             allDice: individualResults,
             keptDice: individualResults,
@@ -3239,7 +3218,6 @@ const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
       }
     }
 
-    // Fallback: if we can't parse the structure, return empty arrays
     return {
       allDice: [],
       keptDice: [],
@@ -3257,7 +3235,6 @@ const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
   }
 };
 
-// Updated rollFlexibleDice function to pass individual dice results
 export const rollFlexibleDice = async ({
   diceQuantity = 1,
   diceType = 20,
@@ -3282,7 +3259,6 @@ export const rollFlexibleDice = async ({
     const mod = parseInt(modifier) || 0;
     const total = diceRoll + mod;
 
-    // Critical success/failure only applies to d20 rolls
     const isCriticalSuccess =
       diceType === 20 && diceQuantity === 1 && diceRoll === 20;
     const isCriticalFailure =
@@ -3301,7 +3277,7 @@ export const rollFlexibleDice = async ({
         diceQuantity: diceQuantity,
         diceType: diceType,
         rollType: rollType,
-        individualDiceResults: diceResult.individualDiceResults, // Pass individual dice results
+        individualDiceResults: diceResult.individualDiceResults,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -3312,7 +3288,6 @@ export const rollFlexibleDice = async ({
       const rollTypeText =
         rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
 
-      // Enhanced alert to show individual dice results
       const individualDiceText =
         diceResult.individualDiceResults.keptDice.length > 1
           ? ` [${diceResult.individualDiceResults.keptDice.join(", ")}]`
@@ -3350,7 +3325,6 @@ export const rollFlexibleDice = async ({
           } Roll`
         : "";
 
-    // Enhanced Discord message with individual dice results
     const individualDiceField =
       diceResult.individualDiceResults.keptDice.length > 1
         ? {
@@ -3381,7 +3355,6 @@ export const rollFlexibleDice = async ({
       },
     ];
 
-    // Add individual dice field if there are multiple dice
     if (individualDiceField) {
       fields.push(individualDiceField);
     }

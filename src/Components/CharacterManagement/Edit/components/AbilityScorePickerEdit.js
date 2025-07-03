@@ -29,7 +29,6 @@ export const AbilityScorePicker = ({
 
   useEffect(() => {}, [heritageChoices, character.innateHeritage]);
 
-  
   useEffect(() => {}, [heritageChoices, character.innateHeritage]);
   const {
     totalModifiers,
@@ -535,7 +534,6 @@ export const AbilityScorePicker = ({
                 )}
               </div>
 
-              {/* Show effective modifier prominently */}
               <div
                 style={
                   effectiveScore !== null
@@ -599,7 +597,6 @@ export const AbilityScorePicker = ({
                       }}
                       placeholder="Enter..."
                     />
-                    {/* Show breakdown for manual mode */}
                     {score !== null && hasModifier && (
                       <div style={enhancedStyles.scoreBreakdown}>
                         Base: {score}
@@ -698,7 +695,6 @@ export const AbilityScorePicker = ({
         })}
       </div>
 
-      {/* Show modifier summary */}
       {showModifiers &&
         Object.values(totalModifiers).some((mod) => mod > 0) && (
           <div

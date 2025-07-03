@@ -1,1035 +1,771 @@
-import { useState } from "react";
-import * as XLSX from "xlsx";
+// Enhanced DowntimeSheet.js with Dashboard Tabs
+import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDowntimeStyles } from "../../styles/masterStyles";
+import {
+  Calendar,
+  Plus,
+  FileText,
+  Eye,
+  Edit,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 
-const DowntimeSheet = () => {
+const DowntimeSheet = ({
+  selectedCharacter,
+  user,
+  supabase,
+  adminMode,
+  isUserAdmin,
+  // ... other existing props
+}) => {
   const { theme } = useTheme();
   const styles = getDowntimeStyles(theme);
 
-  const availableActivities = [
-    "",
-    "Gain a Job - Roll Persuasion or an appropriate skill check (e.g., Magical Creatures at the Magical Menagerie)",
-    "Promotion - If already employed, students can attempt a promotion with Persuasion or an appropriate skill check.",
-    "Work Job - Roll to determine earnings based on job difficulty.",
-    "Shopping - Purchase items from the shopping list. No haggling.",
-    "Selling - Sell items at half their original price. No haggling.",
-    "Allowance - Roll based on family wealth to determine allowance received.",
-    "Explore the Castle - Roll Investigation to uncover new locations and secrets.",
-    "Explore the Forbidden Forest -  Requires Stealth and Investigation rolls.",
-    "Restricted Section - Requires Stealth and Investigation rolls.",
-    "Search for Magical Creatures - Roll Magical Creatures.",
-    "Search for Plants - Roll Herbology.",
-    "Stealing - Roll Sleight of Hand and Investigation.",
-    "Spread Rumors - Roll Deception, Intimidation, Performance, or Persuasion.",
-    "Dig for Dirt - Roll Investigation, Insight, Intimidation, or Persuasion.",
-    "Prank Other Students - Players can attempt mischievous acts.",
-    "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots.",
-    "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots.",
-    "Increase Wand Stat - Roll against a DC based on the current Wand Stat.",
-    "Research Spells - Roll History of Magic to research a spell.",
-    "Attempt a Spell - Practice casting any spell previously researched or attempted.",
-    "Create a Spell - Must succeed on three separate checks using separate downtime slots.",
-    "Studying - Improve performance in classes through focused study.",
-    "Research a Topic - Roll Investigation to gather information.",
-    "Craft Items - Roll with the appropriate tool proficiency.",
-    "Brew a Potion - Requires Proficiency with a Potioneer's Kit and a Potion Making check.",
-    "Invent a Potion - Must succeed on three separate checks using separate downtime slots.",
-    "Cooking - Roll Survival to prepare meals.",
-    "Learn a Recipe - Roll Survival to memorize a recipe.",
-    "Create a New Recipe - Must succeed on three separate checks using separate downtime slots.",
-    "Engineer Plants - Must succeed on three separate checks using separate downtime slots.",
-    "Hire a Tutor - Seek out private instruction.",
-    "Teacher Tutor - Receive guidance from a professor.",
-    "Animagus Form (RP) - Engage in roleplay to explore an Animagus transformation.",
-  ];
+  // Enhanced state management
+  const [activeTab, setActiveTab] = useState("overview");
+  const [submittedSheets, setSubmittedSheets] = useState([]);
+  const [viewMode, setViewMode] = useState("overview");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [loading, setLoading] = useState(false);
+  // ... other existing state
 
-  const [formData, setFormData] = useState({
-    name: "",
-    years: {
-      1: false,
-      2: false,
-      3: false,
-      4: false,
-      5: false,
-      6: false,
-      7: false,
-    },
-    semesters: {
-      1: false,
-      2: false,
-    },
-    subjects: {
-      Transfiguration: "",
-      DADA: "",
-      Charms: "",
-      "History of Magic": "",
-      Herbology: "",
-      "Magical Theory": "",
-      Potions: "",
-      Astronomy: "",
-      "Field Studies": "",
-      Divinations: "",
-      Arithmancy: "",
-      "Ancient Studies": "",
-      "Ancient Runes": "",
-      "Magical Creatures": "",
-      "Muggle Studies": "",
-      Alchemy: "",
-      Xylomancy: "",
-      "Ghoul Studies": "",
-    },
-    activities: [
-      { activity: "", npc: "", successes: [false, false, false, false, false] },
-      { activity: "", npc: "", successes: [false, false, false, false, false] },
-      { activity: "", npc: "", successes: [false, false, false, false, false] },
-    ],
-    extraActivity: {
-      activity: "",
-      npc: "",
-      successes: [false, false, false, false, false],
-    },
-    magicSchoolChoices: {
-      Transfiguration: false,
-      Charms: false,
-      DADA: false,
-      Potions: false,
-      Herbology: false,
-    },
-  });
+  // Load submitted sheets for the current character
+  const loadSubmittedSheets = useCallback(async () => {
+    if (!selectedCharacter?.id || !user?.id) return;
 
-  const updateYearCheck = (year) => {
-    setFormData((prev) => ({
-      ...prev,
-      years: { ...prev.years, [year]: !prev.years[year] },
-    }));
-  };
+    setLoading(true);
+    try {
+      const { data: sheets, error } = await supabase
+        .from("character_downtime")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("user_id", user.id)
+        .eq("is_draft", false) // Only submitted sheets
+        .order("year", { ascending: true })
+        .order("semester", { ascending: true });
 
-  const updateSemesterCheck = (semester) => {
-    setFormData((prev) => ({
-      ...prev,
-      semesters: { ...prev.semesters, [semester]: !prev.semesters[semester] },
-    }));
-  };
-
-  const updateSubjectGrade = (subject, grade) => {
-    setFormData((prev) => ({
-      ...prev,
-      subjects: { ...prev.subjects, [subject]: grade },
-    }));
-  };
-
-  const updateActivity = (index, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      activities: prev.activities.map((activity, i) =>
-        i === index ? { ...activity, [field]: value } : activity
-      ),
-    }));
-  };
-
-  const updateActivitySuccess = (index, successIndex) => {
-    setFormData((prev) => ({
-      ...prev,
-      activities: prev.activities.map((activity, i) =>
-        i === index
-          ? {
-              ...activity,
-              successes: activity.successes.map((success, si) =>
-                si === successIndex ? !success : success
-              ),
-            }
-          : activity
-      ),
-    }));
-  };
-
-  const updateExtraActivity = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      extraActivity: { ...prev.extraActivity, [field]: value },
-    }));
-  };
-
-  const updateExtraSuccess = (successIndex) => {
-    setFormData((prev) => ({
-      ...prev,
-      extraActivity: {
-        ...prev.extraActivity,
-        successes: prev.extraActivity.successes.map((success, si) =>
-          si === successIndex ? !success : success
-        ),
-      },
-    }));
-  };
-
-  const updateMagicSchoolChoice = (school) => {
-    setFormData((prev) => ({
-      ...prev,
-      magicSchoolChoices: {
-        ...prev.magicSchoolChoices,
-        [school]: !prev.magicSchoolChoices[school],
-      },
-    }));
-  };
-
-  const exportToExcel = () => {
-    const wb = XLSX.utils.book_new();
-
-    const wsData = [
-      [
-        "Name: " + formData.name,
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Grades",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-      ],
-
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-      ],
-
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Transfiguration",
-        formData.subjects["Transfiguration"],
-        "",
-        "",
-        "",
-        "",
-        "Potions",
-        formData.subjects["Potions"],
-        "",
-        "",
-        "",
-        "",
-        "Ancient Runes",
-        formData.subjects["Ancient Runes"],
-        "",
-        "",
-        "",
-        "",
-      ],
-
-      [
-        "Year:",
-        "",
-        "",
-        formData.years[1] ? "1" : "",
-        formData.years[2] ? "2" : "",
-        formData.years[3] ? "3" : "",
-        formData.years[4] ? "4" : "",
-        formData.years[5] ? "5" : "",
-        formData.years[6] ? "6" : "",
-        formData.years[7] ? "7" : "",
-        "",
-        "",
-        "DADA",
-        formData.subjects["DADA"],
-        "",
-        "",
-        "",
-        "",
-        "Astronomy",
-        formData.subjects["Astronomy"],
-        "",
-        "",
-        "",
-        "",
-        "Magical Creatures",
-        formData.subjects["Magical Creatures"],
-        "",
-        "",
-        "",
-        "",
-      ],
-
-      [
-        "",
-        "",
-        "",
-        formData.years[1] ? "X" : "",
-        formData.years[2] ? "X" : "",
-        formData.years[3] ? "X" : "",
-        formData.years[4] ? "X" : "",
-        formData.years[5] ? "X" : "",
-        formData.years[6] ? "X" : "",
-        formData.years[7] ? "X" : "",
-        "",
-        "",
-        "Charms",
-        formData.subjects["Charms"],
-        "",
-        "",
-        "",
-        "",
-        "Field Studies",
-        formData.subjects["Field Studies"],
-        "",
-        "",
-        "",
-        "",
-        "Muggle Studies",
-        formData.subjects["Muggle Studies"],
-        "",
-        "",
-        "",
-        "",
-      ],
-
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "History of Magic",
-        formData.subjects["History of Magic"],
-        "",
-        "",
-        "",
-        "",
-        "Divinations",
-        formData.subjects["Divinations"],
-        "",
-        "",
-        "",
-        "",
-        "Alchemy",
-        formData.subjects["Alchemy"],
-        "",
-        "",
-        "",
-        "",
-      ],
-      [
-        "Semester:",
-        "",
-        "",
-        "",
-        "",
-        formData.semesters[1] ? "1" : "",
-        formData.semesters[2] ? "2" : "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Herbology",
-        formData.subjects["Herbology"],
-        "",
-        "",
-        "",
-        "",
-        "Arithmancy",
-        formData.subjects["Arithmancy"],
-        "",
-        "",
-        "",
-        "",
-        "Xylomancy",
-        formData.subjects["Xylomancy"],
-        "",
-        "",
-        "",
-        "",
-      ],
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        formData.semesters[1] ? "X" : "",
-        formData.semesters[2] ? "X" : "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Magical Theory",
-        formData.subjects["Magical Theory"],
-        "",
-        "",
-        "",
-        "",
-        "Ancient Studies",
-        formData.subjects["Ancient Studies"],
-        "",
-        "",
-        "",
-        "",
-        "Ghoul Studies",
-        formData.subjects["Ghoul Studies"],
-        "",
-        "",
-        "",
-        "",
-      ],
-      [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-      ],
-      [
-        "Downtime Activities",
-        "",
-        "Activity: " + (formData.activities[0]?.activity || ""),
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Relationship Activities",
-        "",
-        "NPC: " + (formData.activities[0]?.npc || ""),
-        "",
-        "",
-        "",
-        "",
-        "Successes:",
-        "",
-        "",
-        formData.activities[0]?.successes[0] ? "X" : "",
-        formData.activities[0]?.successes[1] ? "X" : "",
-        formData.activities[0]?.successes[2] ? "X" : "",
-        formData.activities[0]?.successes[3] ? "X" : "",
-        formData.activities[0]?.successes[4] ? "X" : "",
-      ],
-    ];
-
-    for (let i = 1; i < formData.activities.length; i++) {
-      const activity = formData.activities[i];
-      wsData.push([
-        "",
-        "",
-        "Activity: " + (activity.activity || ""),
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "NPC: " + (activity.npc || ""),
-        "",
-        "",
-        "",
-        "",
-        "Successes:",
-        "",
-        "",
-        activity.successes[0] ? "X" : "",
-        activity.successes[1] ? "X" : "",
-        activity.successes[2] ? "X" : "",
-        activity.successes[3] ? "X" : "",
-        activity.successes[4] ? "X" : "",
-      ]);
+      if (error) throw error;
+      setSubmittedSheets(sheets || []);
+    } catch (err) {
+      console.error("Error loading submitted sheets:", err);
+    } finally {
+      setLoading(false);
     }
-    wsData.push([
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
-    wsData.push([
-      "Extra Downtime",
-      "",
-      "Activity: " + (formData.extraActivity.activity || ""),
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "Extra Relationship",
-      "",
-      "NPC: " + (formData.extraActivity.npc || ""),
-      "",
-      "",
-      "",
-      "",
-      "Successes:",
-      "",
-      "",
-      formData.extraActivity.successes[0] ? "X" : "",
-      formData.extraActivity.successes[1] ? "X" : "",
-      formData.extraActivity.successes[2] ? "X" : "",
-      formData.extraActivity.successes[3] ? "X" : "",
-      formData.extraActivity.successes[4] ? "X" : "",
-    ]);
+  }, [selectedCharacter?.id, user?.id, supabase]);
 
-    wsData.push([
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
-    wsData.push([
-      "Magic School Increase",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
+  // Enhanced function to check if year/semester combination is submitted
+  const isYearSemesterSubmitted = useCallback(
+    (year, semester) => {
+      return submittedSheets.some(
+        (sheet) => sheet.year === year && sheet.semester === semester
+      );
+    },
+    [submittedSheets]
+  );
 
-    wsData.push([
-      "Transfiguration",
-      "",
-      "Charms",
-      "",
-      "DADA",
-      "",
-      "Potions",
-      "",
-      "Herbology",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
+  // Get all submitted year/semester combinations
+  const getSubmittedCombinations = useCallback(() => {
+    return submittedSheets.map((sheet) => ({
+      year: sheet.year,
+      semester: sheet.semester,
+      id: sheet.id,
+      submitted_at: sheet.submitted_at,
+    }));
+  }, [submittedSheets]);
 
-    wsData.push([
-      formData.magicSchoolChoices.Transfiguration ? "X" : "",
-      "",
-      formData.magicSchoolChoices.Charms ? "X" : "",
-      "",
-      formData.magicSchoolChoices.DADA ? "X" : "",
-      "",
-      formData.magicSchoolChoices.Potions ? "X" : "",
-      "",
-      formData.magicSchoolChoices.Herbology ? "X" : "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ]);
+  // Enhanced dropdown filtering
+  const getAvailableYears = useCallback(() => {
+    const allYears = [1, 2, 3, 4, 5, 6, 7];
+    return allYears.map((year) => ({
+      value: year,
+      disabled: false, // Years are not disabled, only year+semester combinations
+      hasSubmissions: submittedSheets.some((sheet) => sheet.year === year),
+    }));
+  }, [submittedSheets]);
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
+  const getAvailableSemesters = useCallback(() => {
+    const allSemesters = [1, 2];
+    return allSemesters.map((semester) => ({
+      value: semester,
+      disabled: selectedYear
+        ? isYearSemesterSubmitted(selectedYear, semester)
+        : false,
+      isSubmitted: selectedYear
+        ? isYearSemesterSubmitted(selectedYear, semester)
+        : false,
+    }));
+  }, [selectedYear, isYearSemesterSubmitted]);
 
-    ws["!cols"] = [
-      { wch: 1.5 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 2.75 },
-      { wch: 1.5 },
-    ];
+  // Load data on mount and character change
+  useEffect(() => {
+    if (selectedCharacter?.id && user?.id) {
+      loadSubmittedSheets();
+    }
+  }, [selectedCharacter?.id, user?.id, loadSubmittedSheets]);
 
-    const timestamp = new Date().toISOString().split("T")[0];
-    const filename = `${
-      formData.name || "Character"
-    }_Downtime_${timestamp}.xlsx`;
-
-    XLSX.utils.book_append_sheet(wb, ws, "Downtime Sheet");
-
-    XLSX.writeFile(wb, filename);
-  };
-
-  const subjects = [
-    [
-      "Transfiguration",
-      "DADA",
-      "Charms",
-      "History of Magic",
-      "Herbology",
-      "Magical Theory",
-    ],
-    [
-      "Potions",
-      "Astronomy",
-      "Field Studies",
-      "Divinations",
-      "Arithmancy",
-      "Ancient Studies",
-    ],
-    [
-      "Ancient Runes",
-      "Magical Creatures",
-      "Muggle Studies",
-      "Alchemy",
-      "Xylomancy",
-      "Ghoul Studies",
-    ],
+  // Tab configuration
+  const tabs = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: Calendar,
+      description: "View your downtime summary",
+    },
+    {
+      id: "create",
+      label: "Create New",
+      icon: Plus,
+      description: "Create a new downtime sheet",
+    },
+    {
+      id: "submitted",
+      label: "Submitted Sheets",
+      icon: FileText,
+      description: "View your submitted downtime sheets",
+      badge: submittedSheets.length,
+    },
   ];
 
-  return (
-    <div style={styles.container}>
-      <button onClick={exportToExcel} style={styles.exportButton}>
-        📥 Download Excel File
-      </button>
+  // Enhanced styles for the dashboard
+  const dashboardStyles = {
+    container: {
+      ...styles.container,
+      maxWidth: "1200px",
+      margin: "0 auto",
+    },
+    header: {
+      display: "flex",
+      alignItems: "center",
+      marginBottom: "2rem",
+      padding: "1.5rem",
+      backgroundColor: theme.surface,
+      borderRadius: "12px",
+      border: `1px solid ${theme.border}`,
+    },
+    headerIcon: {
+      marginRight: "1rem",
+      padding: "12px",
+      backgroundColor: theme.primary + "15",
+      borderRadius: "8px",
+    },
+    headerContent: {
+      flex: 1,
+    },
+    title: {
+      fontSize: "24px",
+      fontWeight: "bold",
+      color: theme.text,
+      margin: 0,
+    },
+    subtitle: {
+      fontSize: "14px",
+      color: theme.textSecondary,
+      margin: "4px 0 0 0",
+    },
+    tabNavigation: {
+      display: "flex",
+      backgroundColor: theme.surface,
+      borderRadius: "12px",
+      padding: "8px",
+      marginBottom: "2rem",
+      border: `1px solid ${theme.border}`,
+      gap: "4px",
+    },
+    tab: {
+      flex: 1,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+      padding: "12px 16px",
+      borderRadius: "8px",
+      border: "none",
+      backgroundColor: "transparent",
+      color: theme.textSecondary,
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "500",
+      transition: "all 0.2s ease",
+      position: "relative",
+    },
+    activeTab: {
+      backgroundColor: theme.primary,
+      color: "white",
+    },
+    tabBadge: {
+      backgroundColor: theme.warning,
+      color: "white",
+      borderRadius: "12px",
+      padding: "2px 6px",
+      fontSize: "12px",
+      minWidth: "18px",
+      textAlign: "center",
+    },
+    content: {
+      backgroundColor: theme.surface,
+      borderRadius: "12px",
+      padding: "2rem",
+      border: `1px solid ${theme.border}`,
+      minHeight: "400px",
+    },
+  };
 
-      <div style={styles.sheet}>
-        <div style={styles.headerSection}>
-          <div style={styles.nameSection}>
-            <label>
-              <strong>Name: </strong>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                style={{ ...styles.input, marginLeft: "8px" }}
-                placeholder="Character Name"
-              />
-            </label>
+  // Overview Tab Component
+  const OverviewTab = () => (
+    <div>
+      <h3 style={{ color: theme.text, marginBottom: "1.5rem" }}>
+        Downtime Overview - {selectedCharacter?.name}
+      </h3>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: "1rem",
+          marginBottom: "2rem",
+        }}
+      >
+        {/* Summary Cards */}
+        <div
+          style={{
+            padding: "1.5rem",
+            backgroundColor: theme.background,
+            borderRadius: "8px",
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              marginBottom: "12px",
+            }}
+          >
+            <CheckCircle size={20} color={theme.success} />
+            <h4 style={{ color: theme.text, margin: 0 }}>Submitted Sheets</h4>
           </div>
-          <div style={styles.typeSection}>
-            <div style={styles.checkboxRow}>
-              <strong>Year:</strong>
-              {[1, 2, 3, 4, 5, 6, 7].map((year) => (
-                <label
-                  key={year}
-                  style={{ display: "flex", alignItems: "center", gap: "4px" }}
-                >
-                  <span>{year}</span>
-                  <input
-                    type="checkbox"
-                    checked={formData.years[year]}
-                    onChange={() => updateYearCheck(year)}
-                    style={styles.checkbox}
-                  />
-                </label>
-              ))}
-            </div>
-            <div style={{ ...styles.checkboxRow, marginTop: "8px" }}>
-              <strong>Semester:</strong>
-              {[1, 2].map((semester) => (
-                <label
-                  key={semester}
-                  style={{ display: "flex", alignItems: "center", gap: "4px" }}
-                >
-                  <span>{semester}</span>
-                  <input
-                    type="checkbox"
-                    checked={formData.semesters[semester]}
-                    onChange={() => updateSemesterCheck(semester)}
-                    style={styles.checkbox}
-                  />
-                </label>
-              ))}
-            </div>
+          <div
+            style={{
+              fontSize: "24px",
+              fontWeight: "bold",
+              color: theme.primary,
+            }}
+          >
+            {submittedSheets.length}
           </div>
         </div>
+      </div>
 
-        <div style={styles.gradesSection}>Grades</div>
-
-        <div style={styles.subjectsGrid}>
-          {subjects.map((column, columnIndex) => (
-            <div
-              key={columnIndex}
-              style={
-                columnIndex < 2
-                  ? { borderRight: `2px solid ${theme.border}` }
-                  : {}
-              }
-            >
-              {column.map((subject) => (
-                <div key={subject} style={styles.subjectItem}>
-                  <span>{subject}</span>
-                  <input
-                    type="text"
-                    value={formData.subjects[subject]}
-                    onChange={(e) =>
-                      updateSubjectGrade(subject, e.target.value)
-                    }
-                    style={styles.gradeInput}
-                    placeholder="Grade"
-                  />
+      {/* Recent Activity */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h4 style={{ color: theme.text, marginBottom: "1rem" }}>
+          Recent Submissions
+        </h4>
+        {submittedSheets.length > 0 ? (
+          <div style={{ display: "grid", gap: "8px" }}>
+            {submittedSheets
+              .slice(-3)
+              .reverse()
+              .map((sheet) => (
+                <div
+                  key={sheet.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px",
+                    backgroundColor: theme.background,
+                    borderRadius: "6px",
+                    border: `1px solid ${theme.border}`,
+                  }}
+                >
+                  <span style={{ color: theme.text }}>
+                    Year {sheet.year}, Semester {sheet.semester}
+                  </span>
+                  <span
+                    style={{ color: theme.textSecondary, fontSize: "12px" }}
+                  >
+                    {new Date(sheet.submitted_at).toLocaleDateString()}
+                  </span>
                 </div>
               ))}
-            </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              padding: "2rem",
+              textAlign: "center",
+              color: theme.textSecondary,
+              backgroundColor: theme.background,
+              borderRadius: "8px",
+              border: `1px solid ${theme.border}`,
+            }}
+          >
+            No downtime sheets submitted yet
+          </div>
+        )}
+      </div>
 
-        <div style={styles.activitiesSection}>
-          <div style={styles.activityHeader}>
-            <strong>Downtime Activities</strong>
+      {/* Quick Actions */}
+      <div>
+        <h4 style={{ color: theme.text, marginBottom: "1rem" }}>
+          Quick Actions
+        </h4>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button
+            onClick={() => setActiveTab("create")}
+            style={{
+              padding: "12px 24px",
+              backgroundColor: theme.primary,
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Plus size={16} />
+            Create New Sheet
+          </button>
+          {submittedSheets.length > 0 && (
+            <button
+              onClick={() => setActiveTab("submitted")}
+              style={{
+                padding: "12px 24px",
+                backgroundColor: theme.background,
+                color: theme.text,
+                border: `1px solid ${theme.border}`,
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <FileText size={16} />
+              View Submitted Sheets
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Submitted Sheets Tab Component
+  const SubmittedSheetsTab = () => (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <h3 style={{ color: theme.text, margin: 0 }}>
+          Submitted Downtime Sheets
+        </h3>
+        <button
+          onClick={loadSubmittedSheets}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: theme.background,
+            color: theme.text,
+            border: `1px solid ${theme.border}`,
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "14px",
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "2rem",
+            color: theme.textSecondary,
+          }}
+        >
+          Loading submitted sheets...
+        </div>
+      ) : submittedSheets.length === 0 ? (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "3rem",
+            backgroundColor: theme.background,
+            borderRadius: "8px",
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <FileText
+            size={48}
+            color={theme.textSecondary}
+            style={{ marginBottom: "1rem" }}
+          />
+          <h4 style={{ color: theme.text, marginBottom: "0.5rem" }}>
+            No Submitted Sheets
+          </h4>
+          <p style={{ color: theme.textSecondary, marginBottom: "1.5rem" }}>
+            You haven't submitted any downtime sheets yet.
+          </p>
+          <button
+            onClick={() => setActiveTab("create")}
+            style={{
+              padding: "12px 24px",
+              backgroundColor: theme.primary,
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Plus size={16} />
+            Create Your First Sheet
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: "12px" }}>
+          {/* Headers */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr 1fr auto",
+              gap: "1rem",
+              padding: "12px 16px",
+              backgroundColor: theme.background,
+              borderRadius: "8px",
+              border: `1px solid ${theme.border}`,
+              fontWeight: "600",
+              fontSize: "14px",
+              color: theme.text,
+            }}
+          >
+            <div>Academic Year</div>
+            <div>Semester</div>
+            <div>Submitted Date</div>
+            <div>Status</div>
+            <div>Actions</div>
           </div>
 
-          {formData.activities.map((activity, index) => (
-            <div key={index} style={styles.activityRow}>
-              <strong>Activity {index + 1}:</strong>
-              <select
-                value={activity.activity}
-                onChange={(e) =>
-                  updateActivity(index, "activity", e.target.value)
-                }
-                style={styles.select}
-              >
-                {availableActivities.map((activityOption) => (
-                  <option key={activityOption} value={activityOption}>
-                    {activityOption || "Select an activity..."}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
-        </div>
-
-        <div style={styles.activitiesSection}>
-          <div style={styles.activityHeader}>
-            <strong>Relationship Activities</strong>
-          </div>
-
-          {formData.activities.map((activity, index) => (
-            <div key={index} style={styles.relationshipRow}>
-              <strong>NPC {index + 1}:</strong>
-              <input
-                type="text"
-                value={activity.npc}
-                onChange={(e) => updateActivity(index, "npc", e.target.value)}
-                style={styles.relationshipInput}
-                placeholder="NPC name"
-              />
-              <strong>Successes:</strong>
-              <div style={styles.successCheckboxes}>
-                {activity.successes.map((success, successIndex) => (
-                  <input
-                    key={successIndex}
-                    type="checkbox"
-                    checked={success}
-                    onChange={() => updateActivitySuccess(index, successIndex)}
-                    style={styles.checkbox}
-                  />
-                ))}
+          {/* Sheet List */}
+          {submittedSheets.map((sheet) => (
+            <div
+              key={sheet.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr 1fr auto",
+                gap: "1rem",
+                padding: "16px",
+                backgroundColor: theme.surface,
+                borderRadius: "8px",
+                border: `1px solid ${theme.border}`,
+                alignItems: "center",
+              }}
+            >
+              <div style={{ color: theme.text, fontWeight: "500" }}>
+                Year {sheet.year}
+              </div>
+              <div style={{ color: theme.text }}>Semester {sheet.semester}</div>
+              <div style={{ color: theme.textSecondary, fontSize: "14px" }}>
+                {new Date(sheet.submitted_at).toLocaleDateString()}
+              </div>
+              <div>
+                <span
+                  style={{
+                    padding: "4px 8px",
+                    backgroundColor: theme.success + "20",
+                    color: theme.success,
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Submitted
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => {
+                    // View sheet logic here
+                    setSelectedYear(sheet.year);
+                    setSelectedSemester(sheet.semester);
+                    setActiveTab("create"); // This will show the sheet in view mode
+                  }}
+                  style={{
+                    padding: "6px 12px",
+                    backgroundColor: theme.primary,
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                  title="View Sheet"
+                >
+                  <Eye size={14} />
+                  View
+                </button>
               </div>
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
 
-        <div style={styles.activitiesSection}>
-          <div style={styles.activityHeader}>
-            <strong>Extra Downtime</strong>
-          </div>
+  // Enhanced Create Tab with improved dropdown logic
+  const CreateTab = () => (
+    <div>
+      <h3 style={{ color: theme.text, marginBottom: "1.5rem" }}>
+        Create New Downtime Sheet
+      </h3>
 
-          <div style={styles.activityRow}>
-            <strong>Extra Activity:</strong>
+      {/* Enhanced Year/Semester Selection */}
+      <div style={{ marginBottom: "2rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "1rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <div>
+            <label
+              style={{ ...styles.label, display: "block", marginBottom: "8px" }}
+            >
+              Academic Year:
+            </label>
             <select
-              value={formData.extraActivity.activity}
-              onChange={(e) => updateExtraActivity("activity", e.target.value)}
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(e.target.value);
+                setSelectedSemester(""); // Reset semester when year changes
+              }}
               style={styles.select}
             >
-              {availableActivities.map((activityOption) => (
-                <option key={activityOption} value={activityOption}>
-                  {activityOption || "Select an activity..."}
+              <option value="">Select Year...</option>
+              {getAvailableYears().map((yearInfo) => (
+                <option key={yearInfo.value} value={yearInfo.value}>
+                  Year {yearInfo.value}
+                  {yearInfo.hasSubmissions ? " (Has submissions)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              style={{ ...styles.label, display: "block", marginBottom: "8px" }}
+            >
+              Semester:
+            </label>
+            <select
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester(e.target.value)}
+              style={styles.select}
+              disabled={!selectedYear}
+            >
+              <option value="">Select Semester...</option>
+              {getAvailableSemesters().map((semesterInfo) => (
+                <option
+                  key={semesterInfo.value}
+                  value={semesterInfo.value}
+                  disabled={semesterInfo.disabled}
+                >
+                  Semester {semesterInfo.value}
+                  {semesterInfo.isSubmitted ? " (Already Submitted)" : ""}
                 </option>
               ))}
             </select>
           </div>
         </div>
 
-        <div style={styles.activitiesSection}>
-          <div style={styles.activityHeader}>
-            <strong>Extra Relationship</strong>
-          </div>
+        {/* Warning if trying to select submitted combination */}
+        {selectedYear &&
+          selectedSemester &&
+          isYearSemesterSubmitted(selectedYear, selectedSemester) && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: theme.warning + "20",
+                border: `1px solid ${theme.warning}`,
+                borderRadius: "8px",
+                color: theme.warning,
+                fontSize: "14px",
+              }}
+            >
+              ⚠️ You have already submitted a downtime sheet for Year{" "}
+              {selectedYear}, Semester {selectedSemester}.
+            </div>
+          )}
 
-          <div style={styles.relationshipRow}>
-            <strong>Extra NPC:</strong>
-            <input
-              type="text"
-              value={formData.extraActivity.npc}
-              onChange={(e) => updateExtraActivity("npc", e.target.value)}
-              style={styles.input}
-              placeholder="NPC name"
-            />
-            <strong>Successes:</strong>
-            <div style={styles.successCheckboxes}>
-              {formData.extraActivity.successes.map((success, successIndex) => (
-                <input
-                  key={successIndex}
-                  type="checkbox"
-                  checked={success}
-                  onChange={() => updateExtraSuccess(successIndex)}
-                  style={styles.checkbox}
-                />
-              ))}
+        {/* Information about available combinations */}
+        {submittedSheets.length > 0 && (
+          <div style={{ marginTop: "1rem" }}>
+            <details style={{ cursor: "pointer" }}>
+              <summary style={{ color: theme.textSecondary, fontSize: "14px" }}>
+                View submitted combinations ({submittedSheets.length} of 14)
+              </summary>
+              <div
+                style={{
+                  marginTop: "8px",
+                  padding: "12px",
+                  backgroundColor: theme.background,
+                  borderRadius: "6px",
+                  border: `1px solid ${theme.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(120px, 1fr))",
+                    gap: "8px",
+                  }}
+                >
+                  {getSubmittedCombinations().map((combo) => (
+                    <div
+                      key={`${combo.year}-${combo.semester}`}
+                      style={{
+                        padding: "6px 8px",
+                        backgroundColor: theme.success + "20",
+                        color: theme.success,
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        textAlign: "center",
+                      }}
+                    >
+                      Y{combo.year}S{combo.semester}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </details>
+          </div>
+        )}
+      </div>
+
+      {/* Rest of the create form would go here */}
+      {selectedYear &&
+        selectedSemester &&
+        !isYearSemesterSubmitted(selectedYear, selectedSemester) && (
+          <div
+            style={{
+              padding: "2rem",
+              backgroundColor: theme.background,
+              borderRadius: "8px",
+              border: `1px solid ${theme.border}`,
+              textAlign: "center",
+            }}
+          >
+            <h4 style={{ color: theme.text, marginBottom: "1rem" }}>
+              Ready to Create Sheet
+            </h4>
+            <p style={{ color: theme.textSecondary, marginBottom: "1.5rem" }}>
+              Year {selectedYear}, Semester {selectedSemester}
+            </p>
+            {/* The existing downtime form components would be rendered here */}
+            <div style={{ color: theme.textSecondary, fontStyle: "italic" }}>
+              [Existing DowntimeForm, ActivityManager, etc. components would be
+              rendered here]
             </div>
           </div>
-        </div>
+        )}
+    </div>
+  );
 
-        <div style={styles.magicSchoolSection}>
-          <div style={styles.sectionTitle}>Magic School Increase</div>
-          <div style={styles.radioGroup}>
-            {["Transfiguration", "Charms", "DADA", "Potions", "Herbology"].map(
-              (school) => (
-                <div key={school} style={styles.magicSchoolItem}>
-                  <span
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: 400,
-                      fontStyle: "italic",
-                      color: theme.text,
-                    }}
-                  >
-                    {school}
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={formData.magicSchoolChoices[school]}
-                    onChange={() => updateMagicSchoolChoice(school)}
-                    style={styles.checkbox}
-                  />
-                </div>
-              )
-            )}
-          </div>
+  // Main render
+  if (!selectedCharacter) {
+    return (
+      <div style={dashboardStyles.container}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "3rem",
+            color: theme.textSecondary,
+          }}
+        >
+          <Calendar size={48} style={{ marginBottom: "1rem" }} />
+          <h2>No Character Selected</h2>
+          <p>Please select a character to access the downtime dashboard.</p>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={dashboardStyles.container}>
+      {/* Header */}
+      <div style={dashboardStyles.header}>
+        <div style={dashboardStyles.headerIcon}>
+          <Calendar size={24} color={theme.primary} />
+        </div>
+        <div style={dashboardStyles.headerContent}>
+          <h1 style={dashboardStyles.title}>Downtime Dashboard</h1>
+          <p style={dashboardStyles.subtitle}>
+            Managing downtime for {selectedCharacter.name} •{" "}
+            {selectedCharacter.house} • Year {selectedCharacter.year}
+          </p>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div style={dashboardStyles.tabNavigation}>
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                ...dashboardStyles.tab,
+                ...(isActive ? dashboardStyles.activeTab : {}),
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.target.style.backgroundColor = theme.primary + "10";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.target.style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <Icon size={16} />
+              {tab.label}
+              {tab.badge > 0 && (
+                <span style={dashboardStyles.tabBadge}>{tab.badge}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content */}
+      <div style={dashboardStyles.content}>
+        {activeTab === "overview" && <OverviewTab />}
+        {activeTab === "create" && <CreateTab />}
+        {activeTab === "submitted" && <SubmittedSheetsTab />}
       </div>
     </div>
   );

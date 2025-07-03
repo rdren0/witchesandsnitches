@@ -322,7 +322,6 @@ export const CorruptionTracker = ({
         )}
       </div>
 
-      {/* Gain Corruption Section */}
       <div style={{ marginBottom: "20px" }}>
         <button
           onClick={() => setShowGainSection(!showGainSection)}
@@ -393,7 +392,6 @@ export const CorruptionTracker = ({
         )}
       </div>
 
-      {/* Absolve Corruption Section */}
       <div style={{ marginBottom: "20px" }}>
         <button
           onClick={() => setShowRedeemSection(!showRedeemSection)}
@@ -456,7 +454,6 @@ export const CorruptionTracker = ({
         )}
       </div>
 
-      {/* Info Section */}
       <div
         style={{
           fontSize: "12px",

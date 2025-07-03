@@ -311,10 +311,9 @@ const CharacterList = ({
     if (adminMode) {
       return gameSessionOptions;
     } else {
-      const houses = [
-        ...new Set(savedCharacters.map((char) => char.house)),
-      ].filter(Boolean);
-      return houses.sort();
+      return gameSessionOptions.filter((game) =>
+        savedCharacters.find((char) => game === char.gameSession)
+      );
     }
   };
 
@@ -409,9 +408,7 @@ const CharacterList = ({
             onChange={(e) => setFilterValue(e.target.value)}
             style={styles.filterSelect}
           >
-            <option value="">
-              {adminMode ? "All Game Sessions" : "All Houses"}
-            </option>
+            <option value="">All Game Sessions</option>
             {getFilterOptions().map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -526,7 +523,6 @@ const CharacterList = ({
                 </div>
 
                 <div style={styles.characterCardBody}>
-                  {/* Owner info in admin mode */}
                   {adminMode && character.ownerInfo && (
                     <div
                       style={{

@@ -213,7 +213,6 @@ const AuthComponent = ({
   if (user) {
     return (
       <div style={styles.authSection}>
-        {/* Admin Button */}
         {(isUserAdmin || true) && (
           <button
             onClick={onAdminToggleClick}
@@ -239,11 +238,9 @@ const AuthComponent = ({
                 : "🔑 Unlock Admin Mode"
             }
           >
-            {/* Removed console.log here */}
             {adminMode ? (
               <>
                 <Shield size={16} />
-                {/* Simple active indicator */}
                 <span
                   style={{
                     position: "absolute",

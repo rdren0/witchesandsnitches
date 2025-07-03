@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "../../styles/masterStyles";
-import { ALL_CHARACTERS } from "./characters";
+import { ALL_CHARACTERS } from "../SharedData/charactersData";
 
 const DEFAULT_TAGS = [
   "Study Buddy",

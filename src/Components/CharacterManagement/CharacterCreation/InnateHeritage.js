@@ -299,7 +299,6 @@ const HeritageChoiceSelector = ({
                         {option.description}
                       </div>
 
-                      {/* Show what this choice grants - check multiple levels */}
                       {checkForSkillProficiencies(option).length > 0 && (
                         <div style={styles.choiceBenefits}>
                           <strong>Skills:</strong>{" "}
@@ -731,7 +730,6 @@ export const InnateHeritage = ({
         </div>
       )}
 
-      {/* Heritage Modifier Pills */}
       {character.innateHeritage && (
         <HeritageAbilityModifierPills
           heritage={character.innateHeritage}
@@ -877,7 +875,6 @@ export const InnateHeritage = ({
                   {heritageData?.description || "No preview available."}
                 </div>
 
-                {/* Heritage Choice Selector */}
                 {isSelected && (
                   <HeritageChoiceSelector
                     heritage={heritage}
@@ -904,7 +901,6 @@ export const InnateHeritage = ({
                       )) || "No description available."}
                     </ul>
 
-                    {/* Skill Proficiencies */}
                     {!!heritageData?.modifiers?.skillProficiencies.length && (
                       <div style={{ marginBottom: "16px" }}>
                         <h5
@@ -949,7 +945,6 @@ export const InnateHeritage = ({
                       </div>
                     )}
 
-                    {/* Show base skill proficiencies */}
                     {checkForSkillProficiencies(heritageData).length > 0 && (
                       <div
                         style={{
@@ -992,7 +987,6 @@ export const InnateHeritage = ({
                       </div>
                     )}
 
-                    {/* Show base tool proficiencies */}
                     {(heritageData?.modifiers?.other
                       ?.artisanalToolProficiency ||
                       heritageData?.modifiers?.other
@@ -1037,7 +1031,6 @@ export const InnateHeritage = ({
                       </div>
                     )}
 
-                    {/* Show other special abilities */}
                     {!!heritageData?.modifiers?.other.length &&
                       Object.keys(heritageData.modifiers.other).length > 0 && (
                         <div
@@ -1118,7 +1111,6 @@ export const InnateHeritage = ({
                         </div>
                       )}
 
-                    {/* Show fixed modifiers - check multiple levels */}
                     {checkForModifiers(heritageData, "abilityIncreases").filter(
                       (increase) => increase.type === "fixed"
                     ).length > 0 && (

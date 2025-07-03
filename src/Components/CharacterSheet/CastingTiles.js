@@ -93,7 +93,6 @@ const CastingTiles = ({ character }) => {
 
   return (
     <div style={styles.abilityCard}>
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -134,7 +133,6 @@ const CastingTiles = ({ character }) => {
                 justifyContent: "space-between",
               }}
             >
-              {/* School Name */}
               <div
                 style={{
                   ...styles.abilityName,
@@ -148,7 +146,6 @@ const CastingTiles = ({ character }) => {
                 {school.name}
               </div>
 
-              {/* Wand Button */}
               <button
                 style={{
                   ...getTotalButtonStyle(),
@@ -173,7 +170,6 @@ const CastingTiles = ({ character }) => {
                 <br />
                 {formatModifier(school.wandMod)}
               </button>
-              {/* Total Button */}
               <button
                 style={{
                   ...getTotalButtonStyle(),

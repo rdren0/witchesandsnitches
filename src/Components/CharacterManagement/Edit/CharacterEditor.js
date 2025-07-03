@@ -758,7 +758,6 @@ const CharacterEditor = ({
   }
   return (
     <div style={enhancedStyles.panel}>
-      {/* Header */}
       <div
         style={{
           ...enhancedStyles.header,
@@ -795,7 +794,6 @@ const CharacterEditor = ({
         </div>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div style={enhancedStyles.errorContainer}>
           <AlertTriangle size={16} />
@@ -803,7 +801,6 @@ const CharacterEditor = ({
         </div>
       )}
 
-      {/* Editing Warning */}
       <div style={enhancedStyles.editingWarning}>
         <AlertTriangle size={16} />
         <div>
@@ -816,7 +813,6 @@ const CharacterEditor = ({
         </div>
       </div>
 
-      {/* Bulk Actions */}
       <div style={enhancedStyles.bulkActions}>
         <button
           onClick={unlockAllSections}
@@ -844,7 +840,6 @@ const CharacterEditor = ({
         </button>
       </div>
 
-      {/* Section 1: Basic Information */}
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="Basic Information"
@@ -876,7 +871,6 @@ const CharacterEditor = ({
         </div>
       </div>
 
-      {/* Section 2: House and Subclass */}
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="House and Subclass"
@@ -920,7 +914,6 @@ const CharacterEditor = ({
         </div>
       </div>
 
-      {/* Section 3: Level 1 Choice and Progression */}
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="Level 1 Choice and Progression"
@@ -962,7 +955,6 @@ const CharacterEditor = ({
           />
         </div>
       </div>
-      {/* Skills Section */}
       <EnhancedSkillsSection
         character={character}
         handleSkillToggle={handleSkillToggle}
@@ -970,7 +962,6 @@ const CharacterEditor = ({
         styles={styles}
         theme={theme}
       />
-      {/* Section 4: Ability Scores */}
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="Ability Scores"
@@ -1007,7 +998,6 @@ const CharacterEditor = ({
         </div>
       </div>
 
-      {/* Section 5: Magic Modifiers */}
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="Magic Modifiers"
@@ -1034,7 +1024,6 @@ const CharacterEditor = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div style={enhancedStyles.actionButtons}>
         <button
           onClick={handleCancel}

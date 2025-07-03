@@ -49,7 +49,6 @@ const HouseAndSubclassSection = ({
         }}
       />
 
-      {/* Background */}
       <EnhancedBackgroundSelector
         value={character.background}
         onChange={(backgroundName) => {

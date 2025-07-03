@@ -491,7 +491,6 @@ const EnhancedSubclassSelector = ({
           )}
         </h5>
 
-        {/* Regular features */}
         {levelData.features.map((feature, index) => (
           <div
             key={`feature-${index}`}
@@ -518,7 +517,6 @@ const EnhancedSubclassSelector = ({
           </div>
         ))}
 
-        {/* Choices */}
         {hasChoices && (
           <>
             {isSelected && (
@@ -541,7 +539,6 @@ const EnhancedSubclassSelector = ({
 
               return (
                 <div key={`choice-${index}`}>
-                  {/* Main choice */}
                   <div
                     style={
                       isSelected
@@ -614,7 +611,6 @@ const EnhancedSubclassSelector = ({
                     )}
                   </div>
 
-                  {/* Nested choices - only show if main choice is selected */}
                   {isSelected && isMainChoiceSelected && hasNestedChoices && (
                     <div
                       style={{
@@ -872,7 +868,6 @@ const EnhancedSubclassSelector = ({
         )}
       </h3>
 
-      {/* Save Status Display */}
       {autoSave && (saving || saveError) && (
         <div
           style={{
@@ -924,7 +919,6 @@ const EnhancedSubclassSelector = ({
         )}
       </div>
 
-      {/* Enhanced choice summary for higher level characters */}
       {selectedSubclass &&
         choiceStatus.total > 0 &&
         renderChoiceSummary(choiceStatus)}
@@ -1049,15 +1043,12 @@ const EnhancedSubclassSelector = ({
                       : styles.featDescription
                   }
                 >
-                  {/* Render all available level features */}
                   {availableLevels.map((level) =>
                     renderLevelFeatures(subclass, level)
                   )}
 
-                  {/* Show locked features */}
                   {renderLockedFeatures(subclass)}
 
-                  {/* Summary */}
                   <div
                     style={isSelected ? styles.summarySelected : styles.summary}
                   >

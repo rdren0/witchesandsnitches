@@ -91,15 +91,10 @@ export const StepIndicator = ({
 
   return (
     <div style={containerStyle}>
-      {/* Horizontal line */}
       <div style={lineStyle} />
-
-      {/* Step circle */}
       <div style={circleStyle}>
         {totalSteps ? `${step}/${totalSteps}` : step}
       </div>
-
-      {/* Optional label */}
       {label && <div style={labelStyle}>{label}</div>}
     </div>
   );
