@@ -2,10 +2,10 @@ import { useAdmin } from "../../contexts/AdminContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDowntimeStyles } from "../../styles/masterStyles";
 import { allSkills } from "../SharedData/data";
-import { ALL_CHARACTERS } from "../SharedData/charactersData";
 
 import React, { useMemo, useCallback } from "react";
 import DiceSelection from "./DiceSelection";
+import { wandModifiers, activityPatterns } from "../SharedData/downtime";
 
 const ActivityManager = ({
   formData,
@@ -23,78 +23,22 @@ const ActivityManager = ({
 }) => {
   const { adminMode } = useAdmin();
   const { theme } = useTheme();
-  const styles = getDowntimeStyles(theme);
+  const styles = useMemo(() => getDowntimeStyles(theme), [theme]);
 
-  const wandModifiers = [
-    { name: "divinations", displayName: "Divinations", ability: "wisdom" },
-    {
-      name: "transfiguration",
-      displayName: "Transfiguration",
-      ability: "strength",
-    },
-    { name: "charms", displayName: "Charms", ability: "dexterity" },
-    { name: "healing", displayName: "Healing", ability: "intelligence" },
-    {
-      name: "jinxesHexesCurses",
-      displayName: "Jinxes/Hexes/Curses",
-      ability: "charisma",
-    },
-  ];
-
-  // FIXED: Define activityPatterns BEFORE getSkillChoiceInfo
-  const activityPatterns = {
-    digForDirt: /dig\s+for\s+dirt/i,
-    spreadRumors: /spread\s+rumors/i,
-    gainJob: /gain\s+a?\s*job.*persuasion\s+or\s+an?\s+appropriate/i,
-    promotion: /promotion.*persuasion\s+or\s+an?\s+appropriate/i,
-    suggestedSkill:
-      /(roll\s+(\w+(?:\s+\w+)*)).*or\s+an?\s+appropriate\s+skill/i,
-    stealthAndInvestigation: /stealth\s+and\s+investigation\s+rolls/i,
-    sleightAndInvestigation:
-      /sleight\s+of\s+hand\s+and\s+investigation\s+rolls/i,
-    explorecastle: /explore\s+the\s+castle.*roll\s+investigation/i,
-    rollInvestigation: /roll\s+investigation(?!\s*,)/i,
-    rollPersuasion: /roll\s+persuasion(?!\s*,)/i,
-    rollMagicalCreatures: /roll\s+magical\s+creatures/i,
-    rollHerbology: /roll\s+herbology/i,
-    rollHistoryOfMagic: /roll\s+history\s+of\s+magic/i,
-  };
+  const defaultNPCEncounters = useMemo(
+    () => [
+      { name: "", successes: [false, false, false, false, false] },
+      { name: "", successes: [false, false, false, false, false] },
+      { name: "", successes: [false, false, false, false, false] },
+    ],
+    []
+  );
 
   const getSkillChoiceInfo = useMemo(() => {
     return (activityText) => {
       if (!activityText) return { type: "free", skills: null };
 
       const text = activityText.trim();
-
-      if (activityPatterns.digForDirt.test(text)) {
-        return {
-          type: "limited",
-          skills: ["investigation", "insight", "intimidation", "persuasion"],
-        };
-      }
-
-      if (activityPatterns.spreadRumors.test(text)) {
-        return {
-          type: "limited",
-          skills: ["deception", "intimidation", "performance", "persuasion"],
-        };
-      }
-
-      if (activityPatterns.gainJob.test(text)) {
-        return {
-          type: "suggested",
-          skills: ["persuasion"],
-          allowAll: true,
-        };
-      }
-
-      if (activityPatterns.promotion.test(text)) {
-        return {
-          type: "suggested",
-          skills: ["persuasion"],
-          allowAll: true,
-        };
-      }
 
       const suggestedMatch = text.match(activityPatterns.suggestedSkill);
       if (suggestedMatch) {
@@ -123,6 +67,31 @@ const ActivityManager = ({
             allowAll: true,
           };
         }
+      }
+
+      if (activityPatterns.digForDirt.test(text)) {
+        return {
+          type: "limited",
+          skills: ["investigation", "insight", "intimidation", "persuasion"],
+        };
+      }
+
+      if (activityPatterns.spreadRumors.test(text)) {
+        return {
+          type: "limited",
+          skills: ["deception", "intimidation", "performance", "persuasion"],
+        };
+      }
+
+      if (
+        activityPatterns.gainJob.test(text) ||
+        activityPatterns.promotion.test(text)
+      ) {
+        return {
+          type: "suggested",
+          skills: ["persuasion"],
+          allowAll: true,
+        };
       }
 
       if (activityPatterns.stealthAndInvestigation.test(text)) {
@@ -182,13 +151,10 @@ const ActivityManager = ({
         skills: null,
       };
     };
-  }, []);
+  }, [activityPatterns]);
 
-  // FIXED: Removed auto-assignment to prevent re-renders
   const updateActivity = useCallback(
     (index, field, value) => {
-      if (!canEdit()) return;
-
       setFormData((prev) => ({
         ...prev,
         activities: prev.activities.map((activity, i) =>
@@ -196,84 +162,84 @@ const ActivityManager = ({
         ),
       }));
     },
-    [canEdit]
+    [setFormData]
   );
 
-  const updateActivitySuccess = (index, successIndex) => {
-    if (!adminMode) return;
+  const updateActivitySuccess = useCallback(
+    (index, successIndex) => {
+      if (!adminMode) return;
 
-    setFormData((prev) => ({
-      ...prev,
-      activities: prev.activities.map((activity, i) =>
-        i === index
-          ? {
-              ...activity,
-              successes: activity.successes.map((success, si) =>
-                si === successIndex ? !success : success
-              ),
-            }
-          : activity
-      ),
-    }));
-  };
-
-  const updateNPCEncounter = (index, field, value) => {
-    if (!canEdit()) return;
-    setFormData((prev) => {
-      const npcEncounters = prev.npcEncounters || [
-        { name: "", successes: [false, false, false, false, false] },
-        { name: "", successes: [false, false, false, false, false] },
-        { name: "", successes: [false, false, false, false, false] },
-      ];
-
-      const updatedNpcEncounters = npcEncounters.map((npc, i) =>
-        i === index ? { ...npc, [field]: value } : npc
-      );
-
-      return {
+      setFormData((prev) => ({
         ...prev,
-        npcEncounters: updatedNpcEncounters,
-      };
-    });
-  };
+        activities: prev.activities.map((activity, i) =>
+          i === index
+            ? {
+                ...activity,
+                successes: activity.successes.map((success, si) =>
+                  si === successIndex ? !success : success
+                ),
+              }
+            : activity
+        ),
+      }));
+    },
+    [adminMode, setFormData]
+  );
 
-  const updateNPCSuccess = (index, successIndex) => {
-    if (!adminMode) return;
+  const updateNPCEncounter = useCallback(
+    (index, field, value) => {
+      if (!canEdit()) return;
+      setFormData((prev) => {
+        const npcEncounters = prev.npcEncounters || defaultNPCEncounters;
 
-    setFormData((prev) => {
-      const npcEncounters = prev.npcEncounters || [
-        { name: "", successes: [false, false, false, false, false] },
-        { name: "", successes: [false, false, false, false, false] },
-        { name: "", successes: [false, false, false, false, false] },
-      ];
+        const updatedNpcEncounters = npcEncounters.map((npc, i) =>
+          i === index ? { ...npc, [field]: value } : npc
+        );
 
-      const updatedNpcEncounters = npcEncounters.map((npc, i) =>
-        i === index
-          ? {
-              ...npc,
-              successes: npc.successes.map((success, si) =>
-                si === successIndex ? !success : success
-              ),
-            }
-          : npc
-      );
+        return {
+          ...prev,
+          npcEncounters: updatedNpcEncounters,
+        };
+      });
+    },
+    [canEdit, setFormData, defaultNPCEncounters]
+  );
 
-      return {
-        ...prev,
-        npcEncounters: updatedNpcEncounters,
-      };
-    });
-  };
+  const updateNPCSuccess = useCallback(
+    (index, successIndex) => {
+      if (!adminMode) return;
 
-  // FIXED: More stable updateRollAssignment
+      setFormData((prev) => {
+        const npcEncounters = prev.npcEncounters || defaultNPCEncounters;
+
+        const updatedNpcEncounters = npcEncounters.map((npc, i) =>
+          i === index
+            ? {
+                ...npc,
+                successes: npc.successes.map((success, si) =>
+                  si === successIndex ? !success : success
+                ),
+              }
+            : npc
+        );
+
+        return {
+          ...prev,
+          npcEncounters: updatedNpcEncounters,
+        };
+      });
+    },
+    [adminMode, setFormData, defaultNPCEncounters]
+  );
+
   const updateRollAssignment = useCallback(
     (assignment, field, value) => {
       if (!canEdit()) return;
 
       setRollAssignments((prev) => {
-        // Prevent unnecessary updates if value hasn't changed
+        // CRITICAL: Check if value actually changed
         if (prev[assignment]?.[field] === value) {
-          return prev;
+          return prev; // No change = no re-render
         }
 
         return {
@@ -285,7 +251,7 @@ const ActivityManager = ({
         };
       });
     },
-    [canEdit]
+    [canEdit, setRollAssignments]
   );
 
   const requiresDualChecks = (activityText) => {
@@ -375,11 +341,6 @@ const ActivityManager = ({
     return `${value}`;
   };
 
-  const getRequiredSkills = (activityText) => {
-    const choiceInfo = getSkillChoiceInfo(activityText);
-    return choiceInfo.type === "locked" ? choiceInfo.skills : null;
-  };
-
   const getSkillChoiceType = (activityText) => {
     return getSkillChoiceInfo(activityText);
   };
@@ -404,7 +365,7 @@ const ActivityManager = ({
   };
 
   const EnhancedSkillSelector = React.memo(
-    ({ assignment, activityText, isSecondSkill = false, activityKey }) => {
+    ({ assignment, activityText, isSecondSkill = false, onSkillChange }) => {
       const choiceInfo = getSkillChoiceType(activityText);
       const currentSkill = isSecondSkill
         ? assignment?.secondSkill || assignment?.secondWandModifier || ""
@@ -467,22 +428,9 @@ const ActivityManager = ({
             <label style={styles.label}>Skill/Modifier:</label>
             <div style={{ position: "relative" }}>
               <select
-                value={currentSkill}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const fieldName = isSecondSkill ? "secondSkill" : "skill";
-                  const wandFieldName = isSecondSkill
-                    ? "secondWandModifier"
-                    : "wandModifier";
-
-                  if (isWandModifier(value)) {
-                    updateRollAssignment(activityKey, wandFieldName, value);
-                    updateRollAssignment(activityKey, fieldName, "");
-                  } else {
-                    updateRollAssignment(activityKey, fieldName, value);
-                    updateRollAssignment(activityKey, wandFieldName, "");
-                  }
-                }}
+                value={currentSkill || ""}
+                key={`${activityText}-${isSecondSkill ? "second" : "first"}`}
+                onChange={onSkillChange}
                 style={styles.select}
                 disabled={!canEdit()}
               >
@@ -558,21 +506,7 @@ const ActivityManager = ({
             <div style={{ position: "relative" }}>
               <select
                 value={currentSkill}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const fieldName = isSecondSkill ? "secondSkill" : "skill";
-                  const wandFieldName = isSecondSkill
-                    ? "secondWandModifier"
-                    : "wandModifier";
-
-                  if (isWandModifier(value)) {
-                    updateRollAssignment(activityKey, wandFieldName, value);
-                    updateRollAssignment(activityKey, fieldName, "");
-                  } else {
-                    updateRollAssignment(activityKey, fieldName, value);
-                    updateRollAssignment(activityKey, wandFieldName, "");
-                  }
-                }}
+                onChange={onSkillChange}
                 style={styles.select}
                 disabled={!canEdit()}
               >
@@ -617,21 +551,7 @@ const ActivityManager = ({
           <label style={styles.label}>Skill/Modifier:</label>
           <select
             value={currentSkill}
-            onChange={(e) => {
-              const value = e.target.value;
-              const fieldName = isSecondSkill ? "secondSkill" : "skill";
-              const wandFieldName = isSecondSkill
-                ? "secondWandModifier"
-                : "wandModifier";
-
-              if (isWandModifier(value)) {
-                updateRollAssignment(activityKey, wandFieldName, value);
-                updateRollAssignment(activityKey, fieldName, "");
-              } else {
-                updateRollAssignment(activityKey, fieldName, value);
-                updateRollAssignment(activityKey, wandFieldName, "");
-              }
-            }}
+            onChange={onSkillChange}
             style={styles.select}
             disabled={!canEdit()}
           >
@@ -809,7 +729,19 @@ const ActivityManager = ({
                     assignment={assignment}
                     activityText={activity.activity}
                     isSecondSkill={false}
-                    activityKey={activityKey}
+                    onSkillChange={(e) => {
+                      const value = e.target.value;
+                      const fieldName = "skill";
+                      const wandFieldName = "wandModifier";
+
+                      if (isWandModifier(value)) {
+                        updateRollAssignment(activityKey, wandFieldName, value);
+                        updateRollAssignment(activityKey, fieldName, "");
+                      } else {
+                        updateRollAssignment(activityKey, fieldName, value);
+                        updateRollAssignment(activityKey, wandFieldName, "");
+                      }
+                    }}
                   />
                 </div>
 
@@ -818,7 +750,11 @@ const ActivityManager = ({
                   <textarea
                     value={assignment?.notes || ""}
                     onChange={(e) =>
-                      updateRollAssignment(activityKey, "notes", e.target.value)
+                      updateRollAssignment(
+                        `activity${index + 1}`,
+                        "notes",
+                        e.target.value
+                      )
                     }
                     placeholder="Optional notes for this roll"
                     style={styles.textarea}
@@ -844,7 +780,6 @@ const ActivityManager = ({
                       formatModifier={formatModifier}
                       unassignDice={unassignDice}
                       dicePool={dicePool}
-                      rollAssignments={rollAssignments}
                       assignment={activityKey}
                       isSecondDie={true}
                       label="Second Die"
@@ -897,7 +832,23 @@ const ActivityManager = ({
                       assignment={assignment}
                       activityText={activity.activity}
                       isSecondSkill={true}
-                      activityKey={activityKey}
+                      onSkillChange={(e) => {
+                        const value = e.target.value;
+                        const fieldName = "secondSkill";
+                        const wandFieldName = "secondWandModifier";
+
+                        if (isWandModifier(value)) {
+                          updateRollAssignment(
+                            activityKey,
+                            wandFieldName,
+                            value
+                          );
+                          updateRollAssignment(activityKey, fieldName, "");
+                        } else {
+                          updateRollAssignment(activityKey, fieldName, value);
+                          updateRollAssignment(activityKey, wandFieldName, "");
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -1003,7 +954,6 @@ const ActivityManager = ({
               formatModifier={formatModifier}
               unassignDice={unassignDice}
               dicePool={dicePool}
-              rollAssignments={rollAssignments}
               assignment="npc1"
               label="Die"
               skillModifier={(() => {
@@ -1174,7 +1124,6 @@ const ActivityManager = ({
               formatModifier={formatModifier}
               unassignDice={unassignDice}
               dicePool={dicePool}
-              rollAssignments={rollAssignments}
               assignment="npc2"
               label="Die"
               skillModifier={(() => {
@@ -1226,7 +1175,7 @@ const ActivityManager = ({
               >
                 <option value="">Select modifier...</option>
                 <optgroup label="Skills">
-                  {[...allSkills]
+                  {allSkills
                     .sort((a, b) => a.displayName.localeCompare(b.displayName))
                     .map((skill) => {
                       const modifier = getSkillModifier(skill.name);

@@ -1,4 +1,3 @@
-// Enhanced DowntimeActions.js to work with the new tab system
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -10,17 +9,23 @@ import {
   Download,
   Eye,
   Edit,
+  FileText,
 } from "lucide-react";
 
 const DowntimeActions = ({
   currentSheet,
   setCurrentSheet,
   formData,
+  setFormData,
   rollAssignments,
+  setRollAssignments,
   dicePool,
+  setDicePool,
   selectedCharacter,
   selectedYear,
   selectedSemester,
+  setSelectedYear,
+  setSelectedSemester,
   user,
   supabase,
   canEdit,
@@ -28,21 +33,18 @@ const DowntimeActions = ({
   setIsSubmitted,
   adminMode,
   isUserAdmin,
-  isEditing,
-  setIsEditing,
   loading,
   setLoading,
   submittedSheets,
   loadSubmittedSheets,
+  loadDrafts, // Add this prop
   extraFieldsUnlocked,
-  activeTab, // NEW: Current active tab
-  setActiveTab, // NEW: Function to change tabs
+  setExtraFieldsUnlocked,
+  setActiveTab,
   isYearSemesterSubmitted,
-  // ... other existing props
 }) => {
   const { theme } = useTheme();
 
-  // Enhanced styles for the new tab system
   const enhancedStyles = {
     actionContainer: {
       backgroundColor: theme.surface,
@@ -178,7 +180,6 @@ const DowntimeActions = ({
     },
   };
 
-  // Validation function (existing)
   const validateForm = () => {
     if (!selectedCharacter || !selectedYear || !selectedSemester) {
       alert("Please select a character, year, and semester.");
@@ -193,32 +194,20 @@ const DowntimeActions = ({
     return true;
   };
 
-  // Enhanced save draft function with tab integration
   const saveDraft = async () => {
     if (!validateForm()) return;
 
-    if (isSubmitted && !adminMode) {
-      alert(
-        "Cannot save draft - sheet has already been submitted. Only admins can modify submitted sheets."
-      );
-      return;
-    }
-
-    if (currentSheet?.admin_completed && !isUserAdmin) {
-      alert(
-        "Cannot save draft - sheet has been completed by an administrator."
-      );
-      return;
-    }
-
-    // Check for existing submission before saving
-    if (
-      isYearSemesterSubmitted(selectedYear, selectedSemester) &&
-      !currentSheet
-    ) {
-      alert(
-        `You have already submitted a downtime sheet for Year ${selectedYear}, Semester ${selectedSemester}.`
-      );
+    // Simplified logic - if user can't edit, they can't save
+    if (!canEdit()) {
+      if (currentSheet?.is_draft) {
+        alert("You don't have permission to edit this draft.");
+      } else if (currentSheet && !currentSheet.is_draft) {
+        alert(
+          "Cannot save draft - sheet has already been submitted. Only admins can modify submitted sheets."
+        );
+      } else {
+        alert("You don't have permission to save this sheet.");
+      }
       return;
     }
 
@@ -274,7 +263,13 @@ const DowntimeActions = ({
 
       setCurrentSheet(result);
       setIsSubmitted(false);
-      loadSubmittedSheets(); // Refresh the submitted sheets list
+
+      // Reload both submitted sheets and drafts
+      loadSubmittedSheets();
+      if (loadDrafts) {
+        loadDrafts();
+      }
+
       alert("Draft saved successfully! You can continue editing later.");
     } catch (err) {
       console.error("Error saving draft:", err);
@@ -284,16 +279,15 @@ const DowntimeActions = ({
     }
   };
 
-  // Enhanced submit function with tab integration
   const submitSheet = async () => {
     if (!validateForm()) return;
 
-    if (currentSheet?.admin_completed && !isUserAdmin) {
-      alert("Cannot submit - sheet has been completed by an administrator.");
+    // Simplified permission check
+    if (!canEdit()) {
+      alert("You don't have permission to submit this sheet.");
       return;
     }
 
-    // Enhanced validation for duplicate submissions
     if (
       isYearSemesterSubmitted(selectedYear, selectedSemester) &&
       !currentSheet
@@ -356,10 +350,14 @@ const DowntimeActions = ({
 
       setCurrentSheet(result);
       setIsSubmitted(true);
-      loadSubmittedSheets(); // Refresh the submitted sheets list
-      alert("Downtime sheet submitted successfully!");
 
-      // Navigate to submitted sheets tab to show the new submission
+      // Reload both submitted sheets and drafts (since this draft is now submitted)
+      loadSubmittedSheets();
+      if (loadDrafts) {
+        loadDrafts();
+      }
+
+      alert("Downtime sheet submitted successfully!");
       setActiveTab("submitted");
     } catch (err) {
       console.error("Error submitting sheet:", err);
@@ -369,12 +367,12 @@ const DowntimeActions = ({
     }
   };
 
-  // Enhanced delete function with tab integration
   const deleteSheet = async () => {
     if (!currentSheet) return;
 
-    if (currentSheet.admin_completed && !isUserAdmin) {
-      alert("Cannot delete - sheet has been completed by an administrator.");
+    // Simplified permission check
+    if (!canEdit()) {
+      alert("You don't have permission to delete this sheet.");
       return;
     }
 
@@ -382,9 +380,8 @@ const DowntimeActions = ({
       !window.confirm(
         "Are you sure you want to delete this downtime sheet? This action cannot be undone."
       )
-    ) {
+    )
       return;
-    }
 
     setLoading(true);
     try {
@@ -395,11 +392,77 @@ const DowntimeActions = ({
 
       if (error) throw error;
 
+      // Clear current sheet and reset form
       setCurrentSheet(null);
-      loadSubmittedSheets(); // Refresh the submitted sheets list
-      alert("Downtime sheet deleted successfully.");
+      if (setSelectedYear) setSelectedYear("");
+      if (setSelectedSemester) setSelectedSemester("");
+      if (setFormData) {
+        setFormData({
+          activities: [
+            {
+              activity: "",
+              npc: "",
+              successes: [false, false, false, false, false],
+            },
+            {
+              activity: "",
+              npc: "",
+              successes: [false, false, false, false, false],
+            },
+            {
+              activity: "",
+              npc: "",
+              successes: [false, false, false, false, false],
+            },
+          ],
+          selectedMagicSchool: "",
+        });
+      }
+      if (setDicePool) setDicePool([]);
+      if (setRollAssignments) {
+        setRollAssignments({
+          activity1: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+          },
+          activity2: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+          },
+          activity3: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+          },
+          relationship1: { diceIndex: null, skill: "", notes: "" },
+          relationship2: { diceIndex: null, skill: "", notes: "" },
+          relationship3: { diceIndex: null, skill: "", notes: "" },
+        });
+      }
+      if (setExtraFieldsUnlocked) setExtraFieldsUnlocked(false);
+      setIsSubmitted(false);
 
-      // Navigate back to overview after deletion
+      // Reload both submitted sheets and drafts
+      loadSubmittedSheets();
+      if (loadDrafts) {
+        loadDrafts();
+      }
+
+      alert("Downtime sheet deleted successfully!");
       setActiveTab("overview");
     } catch (err) {
       console.error("Error deleting sheet:", err);
@@ -409,18 +472,15 @@ const DowntimeActions = ({
     }
   };
 
-  // Copy sheet as template with tab integration
   const copyAsTemplate = () => {
     if (!currentSheet) return;
 
-    // Navigate to create mode with pre-filled data
     setActiveTab("create");
     alert(
       "Sheet copied as template! Select a new year/semester combination to create a new sheet."
     );
   };
 
-  // Generate text summary for export (existing function)
   const generateTextSummary = () => {
     let summary = `DOWNTIME SHEET - ${selectedCharacter.name}\n`;
     summary += `Year ${selectedYear}, Semester ${selectedSemester}\n\n`;
@@ -454,7 +514,6 @@ const DowntimeActions = ({
     return summary;
   };
 
-  // Export to clipboard (existing function)
   const exportToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generateTextSummary());
@@ -465,9 +524,7 @@ const DowntimeActions = ({
     }
   };
 
-  // Determine current mode and render appropriate actions
   const renderActions = () => {
-    // Don't show actions if trying to create a duplicate
     if (
       selectedYear &&
       selectedSemester &&
@@ -505,10 +562,9 @@ const DowntimeActions = ({
       );
     }
 
-    // Show actions based on current state
-    const isViewOnly = currentSheet?.admin_completed && !isUserAdmin;
     const isDraft = currentSheet && currentSheet.is_draft;
     const isSubmittedSheet = currentSheet && !currentSheet.is_draft;
+    const userCanEdit = canEdit();
 
     return (
       <div style={enhancedStyles.actionContainer}>
@@ -527,12 +583,12 @@ const DowntimeActions = ({
             {isSubmittedSheet ? (
               <>
                 <Send size={14} />
-                Submitted Sheet
+                Submitted Sheet {!userCanEdit && "(Read Only)"}
               </>
             ) : isDraft ? (
               <>
                 <Edit size={14} />
-                Draft Sheet
+                Draft Sheet {!userCanEdit && "(Read Only)"}
               </>
             ) : (
               <>
@@ -547,29 +603,29 @@ const DowntimeActions = ({
         <div style={enhancedStyles.actionSection}>
           <h3 style={enhancedStyles.sectionTitle}>
             {currentSheet ? (
-              isSubmittedSheet ? (
-                <Eye size={18} />
-              ) : (
+              userCanEdit ? (
                 <Edit size={18} />
+              ) : (
+                <Eye size={18} />
               )
             ) : (
               <Save size={18} />
             )}
             {currentSheet
-              ? isSubmittedSheet
-                ? "View Actions"
-                : "Edit Actions"
+              ? userCanEdit
+                ? "Edit Actions"
+                : "View Actions"
               : "Create Actions"}
           </h3>
 
           <div style={enhancedStyles.actionGrid}>
             {/* Create/Edit Mode Actions */}
-            {(!currentSheet || (currentSheet && canEdit())) && (
+            {userCanEdit && (
               <>
                 <button
                   onClick={saveDraft}
                   style={enhancedStyles.secondaryButton}
-                  disabled={loading || !canEdit()}
+                  disabled={loading}
                 >
                   <Save size={16} />
                   {currentSheet ? "Save Changes" : "Save Draft"}
@@ -578,7 +634,7 @@ const DowntimeActions = ({
                 <button
                   onClick={submitSheet}
                   style={enhancedStyles.primaryButton}
-                  disabled={loading || !canEdit()}
+                  disabled={loading}
                 >
                   <Send size={16} />
                   {currentSheet ? "Update & Submit" : "Submit Sheet"}
@@ -598,7 +654,7 @@ const DowntimeActions = ({
             )}
 
             {/* View Mode Actions */}
-            {currentSheet && !canEdit() && (
+            {currentSheet && !userCanEdit && (
               <>
                 <button
                   onClick={copyAsTemplate}

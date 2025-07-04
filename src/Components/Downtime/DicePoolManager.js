@@ -1,4 +1,3 @@
-// DicePoolManager.js
 import { useState, useCallback } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDowntimeStyles } from "../../styles/masterStyles";
@@ -14,22 +13,19 @@ const DicePoolManager = ({
   const { theme } = useTheme();
   const styles = getDowntimeStyles(theme);
 
-  // Track if extra dice have been added
   const [extraDiceAdded, setExtraDiceAdded] = useState(false);
 
   const rollDice = useCallback(() => {
     if (!canEdit()) return;
 
-    // Always start with 6 dice
     const baseDiceCount = 6;
     const newPool = Array.from(
       { length: baseDiceCount },
       () => Math.floor(Math.random() * 20) + 1
     );
     setDicePool(newPool);
-    setExtraDiceAdded(false); // Reset extra dice state
+    setExtraDiceAdded(false);
 
-    // Reset all assignments when new dice are rolled
     setRollAssignments((prev) => {
       const resetAssignments = {};
       Object.keys(prev).forEach((key) => {
@@ -46,7 +42,6 @@ const DicePoolManager = ({
   const addExtraDie = useCallback(() => {
     if (!canEdit()) return;
 
-    // Add one more die to the pool
     const extraDie = Math.floor(Math.random() * 20) + 1;
     setDicePool((prev) => [...prev, extraDie]);
     setExtraDiceAdded(true);
@@ -138,7 +133,7 @@ const DicePoolManager = ({
             {getSortedDiceOptions().map(({ value, index }) => {
               const usage = getDiceUsage(index);
               const isUsed = !!usage;
-              const isExtraDie = index >= 6; // Mark dice beyond the first 6 as extra
+              const isExtraDie = index >= 6;
 
               return (
                 <div
