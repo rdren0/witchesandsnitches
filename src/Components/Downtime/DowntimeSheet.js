@@ -1846,9 +1846,6 @@ const DowntimeSheet = ({
                       style={inlineStyles.radioInput}
                     />
                     Year {yearInfo.year}
-                    {hasSubmissions && (
-                      <span style={inlineStyles.submittedBadge}>✓</span>
-                    )}
                   </label>
                 );
               })}
@@ -2078,12 +2075,12 @@ const DowntimeSheet = ({
               setViewMode={() => {}}
               setActiveTab={setActiveTab}
               isYearSemesterSubmitted={isYearSemesterSubmitted}
-              loadDrafts={loadDrafts} 
-              setFormData={setFormData} 
-              setRollAssignments={setRollAssignments} 
-              setDicePool={setDicePool} 
-              setSelectedYear={setSelectedYear} 
-              setSelectedSemester={setSelectedSemester} 
+              loadDrafts={loadDrafts}
+              setFormData={setFormData}
+              setRollAssignments={setRollAssignments}
+              setDicePool={setDicePool}
+              setSelectedYear={setSelectedYear}
+              setSelectedSemester={setSelectedSemester}
               setExtraFieldsUnlocked={setExtraFieldsUnlocked}
             />
           </div>
