@@ -7,8 +7,11 @@ export const activityRequiresDualChecks = (activityText) => {
   const text = activityText.toLowerCase();
 
   return (
-    text.includes("stealth and investigation rolls") ||
-    text.includes("sleight of hand and investigation")
+    text.includes("stealth and investigation") ||
+    text.includes("sleight of hand and investigation") ||
+    text.includes("explore the forbidden forest") ||
+    text.includes("restricted section") ||
+    text.includes("stealing")
   );
 };
 
@@ -16,55 +19,6 @@ export const getActivitySkillInfo = (activityText) => {
   if (!activityText) return { type: "free", skills: null };
 
   const text = activityText.toLowerCase();
-
-  if (text.includes("stealth and investigation rolls")) {
-    return {
-      type: "locked",
-      skills: ["stealth", "investigation"],
-    };
-  }
-
-  if (text.includes("sleight of hand and investigation")) {
-    return {
-      type: "locked",
-      skills: ["sleightOfHand", "investigation"],
-    };
-  }
-
-  if (text.includes("roll investigation")) {
-    return {
-      type: "locked",
-      skills: ["investigation"],
-    };
-  }
-
-  if (text.includes("roll magical creatures")) {
-    return {
-      type: "locked",
-      skills: ["careOfMagicalCreatures"],
-    };
-  }
-
-  if (text.includes("roll herbology")) {
-    return {
-      type: "locked",
-      skills: ["herbology"],
-    };
-  }
-
-  if (text.includes("roll history of magic")) {
-    return {
-      type: "locked",
-      skills: ["historyOfMagic"],
-    };
-  }
-
-  if (text.includes("roll survival")) {
-    return {
-      type: "locked",
-      skills: ["survival"],
-    };
-  }
 
   if (text.includes("dig for dirt")) {
     return {
@@ -88,41 +42,93 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
-  if (text.includes("craft items")) {
-    return {
-      type: "free",
-      skills: null,
-    };
-  }
-
-  if (text.includes("brew a potion")) {
+  if (text.includes("stealth and investigation")) {
     return {
       type: "locked",
-      skills: ["potionMaking"],
+      skills: ["stealth", "investigation"],
     };
   }
 
-  if (text.includes("shopping") || text.includes("selling")) {
+  if (text.includes("sleight of hand and investigation")) {
     return {
-      type: "none",
-      skills: null,
-    };
-  }
-
-  if (text.includes("animagus form (rp)")) {
-    return {
-      type: "roleplay",
-      skills: null,
+      type: "locked",
+      skills: ["sleightOfHand", "investigation"],
     };
   }
 
   if (
-    text.includes("three separate checks") ||
-    text.includes("separate downtime slots")
+    text.includes("explore the castle") &&
+    text.includes("roll investigation")
   ) {
     return {
-      type: "multi-session",
-      skills: null,
+      type: "locked",
+      skills: ["investigation"],
+    };
+  }
+
+  if (
+    text.includes("research spells") &&
+    text.includes("roll history of magic")
+  ) {
+    return {
+      type: "locked",
+      skills: ["historyOfMagic"],
+    };
+  }
+
+  if (
+    text.includes("search for magical creatures") &&
+    text.includes("roll magical creatures")
+  ) {
+    return {
+      type: "locked",
+      skills: ["magicalCreatures"],
+    };
+  }
+
+  if (text.includes("search for plants") && text.includes("roll herbology")) {
+    return {
+      type: "locked",
+      skills: ["herbology"],
+    };
+  }
+
+  if (text.includes("roll persuasion") && !text.includes("or")) {
+    return {
+      type: "locked",
+      skills: ["persuasion"],
+    };
+  }
+
+  if (
+    text.includes("roll investigation") &&
+    !text.includes("or") &&
+    !text.includes(",")
+  ) {
+    return {
+      type: "locked",
+      skills: ["investigation"],
+    };
+  }
+
+  if (text.includes("roll magical creatures") && !text.includes("or")) {
+    return {
+      type: "locked",
+      skills: ["magicalCreatures"],
+    };
+  }
+
+  if (text.includes("roll herbology") && !text.includes("or")) {
+    return {
+      type: "locked",
+      skills: ["herbology"],
+    };
+  }
+
+  if (text.includes("roll history of magic") && !text.includes("or")) {
+    return {
+      type: "locked",
+      skills: ["historyOfMagic"],
     };
   }
 
@@ -133,8 +139,18 @@ export const getActivitySkillInfo = (activityText) => {
 };
 
 export const calculateModifier = (skillOrWandName, selectedCharacter) => {
+  if (!skillOrWandName || !selectedCharacter) return 0;
+
+  const wandModifier = wandModifiers.find((w) => w.name === skillOrWandName);
+  if (wandModifier) {
+    return selectedCharacter.magicModifiers?.[skillOrWandName] || 0;
+  }
+
   const skill = allSkills.find((s) => s.name === skillOrWandName);
-  if (!skill) return 0;
+  if (!skill) {
+    console.warn(`Skill "${skillOrWandName}" not found in allSkills array`);
+    return 0;
+  }
 
   let abilityMod = 0;
   if (selectedCharacter[skill.ability] !== undefined) {
@@ -160,6 +176,7 @@ export const calculateModifier = (skillOrWandName, selectedCharacter) => {
       selectedCharacter.skillExpertise ||
       selectedCharacter.skill_expertise ||
       [];
+
     if (skillExpertise.includes(skill.displayName)) {
       skillLevel = 2;
     } else if (skillProficiencies.includes(skill.displayName)) {
@@ -178,50 +195,46 @@ export const calculateModifier = (skillOrWandName, selectedCharacter) => {
   return abilityMod;
 };
 
+export const validateSkillName = (skillName) => {
+  if (!skillName) return false;
+  return allSkills.some((skill) => skill.name === skillName);
+};
+
 export const activityRequiresNoDiceRoll = (activityText) => {
   if (!activityText) return false;
-
   const text = activityText.toLowerCase();
   return (
     text.includes("shopping") ||
     text.includes("selling") ||
-    text.includes("animagus form (rp)")
+    text.includes("work job")
   );
-};
-
-export const isRoleplayOnlyActivity = (activityText) => {
-  if (!activityText) return false;
-
-  const text = activityText.toLowerCase();
-  return text.includes("animagus form (rp)");
 };
 
 export const isMultiSessionActivity = (activityText) => {
   if (!activityText) return false;
-
   const text = activityText.toLowerCase();
   return (
-    text.includes("three separate checks") ||
-    text.includes("separate downtime slots")
+    text.includes("increase an ability score") ||
+    text.includes("gain proficiency or expertise") ||
+    text.includes("create a spell") ||
+    text.includes("three separate checks")
   );
 };
 
 export const shouldUseCustomDiceForActivity = (activityText) => {
   if (!activityText) return false;
-
   const text = activityText.toLowerCase();
   return text.includes("allowance");
 };
 
 export const getCustomDiceTypeForActivity = (activityText) => {
   if (!activityText) return null;
-
   const text = activityText.toLowerCase();
+
   if (text.includes("allowance")) {
     return {
       diceType: "2d12",
-      discardD20: true,
-      description: "Discard one d20 and roll 2d12 instead",
+      description: "Roll 2d12 instead of d20 for allowance determination",
     };
   }
 
@@ -230,18 +243,42 @@ export const getCustomDiceTypeForActivity = (activityText) => {
 
 export const activityRequiresSpecialRules = (activityText) => {
   return (
+    activityRequiresNoDiceRoll(activityText) ||
     isMultiSessionActivity(activityText) ||
-    shouldUseCustomDiceForActivity(activityText) ||
-    isRoleplayOnlyActivity(activityText)
+    shouldUseCustomDiceForActivity(activityText)
   );
 };
 
 export const getMultiSessionInfo = (activityText) => {
-  if (!isMultiSessionActivity(activityText)) return null;
+  if (!activityText) return null;
+  const text = activityText.toLowerCase();
 
-  return {
-    requiredSessions: 3,
-    description:
-      "This activity requires success on 3 separate downtime sessions to complete.",
-  };
+  if (text.includes("increase an ability score")) {
+    return {
+      description:
+        "Requires three separate successful checks across different downtime sessions",
+    };
+  }
+
+  if (text.includes("gain proficiency or expertise")) {
+    return {
+      description:
+        "Requires three separate successful checks across different downtime sessions",
+    };
+  }
+
+  if (text.includes("create a spell")) {
+    return {
+      description:
+        "Requires three separate successful checks across different downtime sessions",
+    };
+  }
+
+  return null;
+};
+
+export const isRoleplayOnlyActivity = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+  return text.includes("prank other students");
 };

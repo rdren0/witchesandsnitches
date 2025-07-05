@@ -18,6 +18,7 @@ import {
   activityRequiresSpecialRules,
   getMultiSessionInfo,
   isRoleplayOnlyActivity,
+  validateSkillName,
 } from "./downtimeHelpers";
 import SkillSelector from "./SkillSelector";
 
@@ -170,10 +171,11 @@ const DowntimeForm = ({
       console.log({ activity });
       if (activity.activity) {
         const skillInfo = getActivitySkillInfo(activity.activity);
+        const assignmentKey = `activity${index + 1}`;
+        const currentAssignment = rollAssignments[assignmentKey];
+        console.log({ skillInfo });
+
         if (skillInfo.type === "locked" && skillInfo.skills) {
-          const assignmentKey = `activity${index + 1}`;
-          const currentAssignment = rollAssignments[assignmentKey];
-          console.log({ skillInfo });
           if (
             skillInfo.skills[0] &&
             (!currentAssignment?.skill || currentAssignment.skill === "")
@@ -188,6 +190,47 @@ const DowntimeForm = ({
           ) {
             updateRollAssignment(index, "secondSkill", skillInfo.skills[1]);
           }
+        } else if (
+          (skillInfo.type === "limited" || skillInfo.type === "suggested") &&
+          skillInfo.skills
+        ) {
+          if (
+            currentAssignment?.skill &&
+            !skillInfo.skills.includes(currentAssignment.skill)
+          ) {
+            console.warn(
+              `Invalid skill "${currentAssignment.skill}" for activity "${activity.activity}". Clearing.`
+            );
+            updateRollAssignment(index, "skill", "");
+          }
+
+          if (
+            currentAssignment?.secondSkill &&
+            !skillInfo.skills.includes(currentAssignment.secondSkill)
+          ) {
+            console.warn(
+              `Invalid second skill "${currentAssignment.secondSkill}" for activity "${activity.activity}". Clearing.`
+            );
+            updateRollAssignment(index, "secondSkill", "");
+          }
+        }
+
+        if (
+          currentAssignment?.skill &&
+          !validateSkillName(currentAssignment.skill)
+        ) {
+          console.error(
+            `Skill "${currentAssignment.skill}" not found in allSkills. This may cause modifier calculation issues.`
+          );
+        }
+
+        if (
+          currentAssignment?.secondSkill &&
+          !validateSkillName(currentAssignment.secondSkill)
+        ) {
+          console.error(
+            `Second skill "${currentAssignment.secondSkill}" not found in allSkills. This may cause modifier calculation issues.`
+          );
         }
       }
     });
@@ -253,7 +296,14 @@ const DowntimeForm = ({
 
   const getModifierValue = useCallback(
     (modifierName) => {
-      return calculateModifier(modifierName, selectedCharacter);
+      if (!modifierName) {
+        console.warn("getModifierValue called with empty modifierName");
+        return 0;
+      }
+
+      const result = calculateModifier(modifierName, selectedCharacter);
+      console.log(`Modifier for "${modifierName}":`, result);
+      return result;
     },
     [selectedCharacter]
   );
@@ -493,7 +543,6 @@ const DowntimeForm = ({
               <small>{customDiceInfo.description}</small>
             </div>
 
-            {/* Show custom dice roll button or result */}
             <div>
               <button
                 onClick={() => handleCustomDiceRoll(activityText)}
@@ -534,6 +583,20 @@ const DowntimeForm = ({
       }
 
       if (activityRequiresDualChecks(activityText)) {
+        const hasSecondDieAssigned =
+          assignment.secondDiceIndex !== null &&
+          assignment.secondDiceIndex !== undefined;
+
+        const totalDualCheckActivities = dualCheckActivities.length;
+        const currentExtraDice = Math.max(0, dicePool.length - 6);
+        const canAddMoreDice = currentExtraDice < totalDualCheckActivities;
+
+        const totalDiceNeeded = 6 + totalDualCheckActivities;
+        const needsExtraDie =
+          !hasSecondDieAssigned &&
+          canAddMoreDice &&
+          dicePool.length < totalDiceNeeded;
+
         return (
           <div
             style={{
@@ -543,7 +606,7 @@ const DowntimeForm = ({
               marginTop: "1rem",
             }}
           >
-            {/* First Skill/Die Pair */}
+            {/* First Die Column */}
             <div>
               <SkillSelector
                 activityText={activityText}
@@ -592,7 +655,7 @@ const DowntimeForm = ({
               </div>
             </div>
 
-            {/* Second Skill/Die Pair */}
+            {/* Second Die Column */}
             <div>
               <SkillSelector
                 activityText={activityText}
@@ -607,37 +670,70 @@ const DowntimeForm = ({
 
               <div style={{ marginTop: "0.5rem" }}>
                 <label style={styles.label}>Second Die</label>
-                {renderDiceValue(assignment, dicePool, true) || (
-                  <select
-                    style={styles.select}
-                    value=""
-                    onChange={(e) =>
-                      assignDice(index, parseInt(e.target.value), true)
+
+                {/* Show Extra Die button if no dice available and can add more */}
+                {needsExtraDie && editable ? (
+                  <button
+                    onClick={addExtraDie}
+                    disabled={!canAddMoreDice}
+                    style={{
+                      ...styles.button,
+                      ...styles.secondaryButton,
+                      width: "100%",
+                      fontSize: "0.875rem",
+                      padding: "0.75rem",
+                      marginTop: "0.5rem",
+                      ...(!canAddMoreDice
+                        ? { opacity: 0.6, cursor: "not-allowed" }
+                        : {}),
+                    }}
+                    title={
+                      canAddMoreDice
+                        ? "Add an extra die for this dual check activity"
+                        : `Maximum extra dice reached (${currentExtraDice}/${totalDualCheckActivities})`
                     }
-                    disabled={!editable}
                   >
-                    <option value="">Select die...</option>
-                    {getSortedDiceOptions
-                      .filter(
-                        ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
-                      )
-                      .map(({ value, index: diceIndex }) => (
-                        <option key={diceIndex} value={diceIndex}>
-                          {value}
-                        </option>
-                      ))}
-                  </select>
+                    + Add Extra Die ({currentExtraDice}/
+                    {totalDualCheckActivities})
+                  </button>
+                ) : (
+                  <>
+                    {renderDiceValue(assignment, dicePool, true) || (
+                      <select
+                        style={styles.select}
+                        value=""
+                        onChange={(e) =>
+                          assignDice(index, parseInt(e.target.value), true)
+                        }
+                        disabled={!editable}
+                      >
+                        <option value="">Select die...</option>
+                        {getSortedDiceOptions
+                          .filter(
+                            ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                          )
+                          .map(({ value, index: diceIndex }) => (
+                            <option key={diceIndex} value={diceIndex}>
+                              {value}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                    {assignment.secondDiceIndex !== null &&
+                      assignment.secondDiceIndex !== undefined &&
+                      editable && (
+                        <button
+                          style={{
+                            ...styles.removeButton,
+                            marginTop: "0.5rem",
+                          }}
+                          onClick={() => unassignDice(index, true)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                  </>
                 )}
-                {assignment.secondDiceIndex !== null &&
-                  assignment.secondDiceIndex !== undefined &&
-                  editable && (
-                    <button
-                      style={{ ...styles.removeButton, marginTop: "0.5rem" }}
-                      onClick={() => unassignDice(index, true)}
-                    >
-                      Remove
-                    </button>
-                  )}
               </div>
             </div>
           </div>
@@ -693,6 +789,9 @@ const DowntimeForm = ({
       updateRollAssignment,
       editable,
       selectedCharacter,
+      addExtraDie,
+      dicePool.length,
+      dualCheckActivities.length,
     ]
   );
 
@@ -1028,7 +1127,6 @@ const DowntimeForm = ({
 
   return (
     <div style={styles.container}>
-      {/* Dice Pool Section */}
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>🎲 Dice Pool</h2>
 
@@ -1045,7 +1143,6 @@ const DowntimeForm = ({
             {dicePool.length === 0 ? "Roll Dice Pool" : "Reroll Dice"}
           </button>
 
-          {/* Only show general Add Extra Die if no activities require dual checks */}
           {dicePool.length > 0 &&
             !formData.activities.some((activity) =>
               activityRequiresDualChecks(activity.activity)
@@ -1114,7 +1211,6 @@ const DowntimeForm = ({
         )}
       </div>
 
-      {/* Activities Section */}
       {dicePool.length > 0 && (
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>⚡ Activities</h2>
@@ -1139,34 +1235,6 @@ const DowntimeForm = ({
                   <h3 style={{ color: theme.text, margin: 0 }}>
                     Activity {index + 1}
                   </h3>
-
-                  {/* Add Extra Die button for dual check activities */}
-                  {activityRequiresDualChecks(activity.activity) &&
-                    editable && (
-                      <button
-                        onClick={addExtraDie}
-                        disabled={shouldDisableExtraDie}
-                        style={{
-                          ...styles.extraDieButton,
-                          ...(shouldDisableExtraDie
-                            ? {
-                                opacity: 0.5,
-                                cursor: "not-allowed",
-                                backgroundColor: theme.textSecondary,
-                              }
-                            : {}),
-                        }}
-                        title={
-                          shouldDisableExtraDie
-                            ? `Maximum extra dice reached (${extraDiceCount}/${dualCheckActivities.length})`
-                            : "Add an extra die for this dual check activity"
-                        }
-                      >
-                        + Extra Die{" "}
-                        {dualCheckActivities.length > 0 &&
-                          `(${extraDiceCount}/${dualCheckActivities.length})`}
-                      </button>
-                    )}
                 </div>
 
                 <div
@@ -1204,7 +1272,6 @@ const DowntimeForm = ({
                     </select>
                   </div>
 
-                  {/* Skill Selector - only show here for single check activities that need dice */}
                   {!activityRequiresDualChecks(activity.activity) &&
                     activity.activity &&
                     !activityRequiresNoDiceRoll(activity.activity) &&
@@ -1223,7 +1290,6 @@ const DowntimeForm = ({
                       />
                     )}
 
-                  {/* Placeholder for dual check activities */}
                   {activityRequiresDualChecks(activity.activity) && (
                     <div style={styles.inputGroup}>
                       <label style={styles.label}>Dual Check Activity</label>
@@ -1244,7 +1310,6 @@ const DowntimeForm = ({
                   )}
                 </div>
 
-                {/* Activity Description */}
                 {activityDescription && (
                   <div style={styles.activityDescription}>
                     <strong>Description:</strong>
@@ -1266,11 +1331,9 @@ const DowntimeForm = ({
                   />
                 </div>
 
-                {/* Special Activity Info */}
                 {activity.activity &&
                   renderSpecialActivityInfo(activity.activity)}
 
-                {/* Dice Assignment based on activity type */}
                 {activity.activity &&
                   renderDiceAssignment(activity, index, assignment)}
               </div>
@@ -1279,7 +1342,6 @@ const DowntimeForm = ({
         </div>
       )}
 
-      {/* Action Buttons */}
       {dicePool.length > 0 && editable && (
         <div style={styles.actionButtons}>
           <button
