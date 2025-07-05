@@ -83,12 +83,6 @@ const DicePoolManager = ({
     return null;
   };
 
-  const getSortedDiceOptions = () => {
-    return dicePool
-      .map((value, index) => ({ value, index }))
-      .sort((a, b) => b.value - a.value);
-  };
-
   const getAvailableDice = () => {
     return dicePool.filter((_, index) => !getDiceUsage(index));
   };

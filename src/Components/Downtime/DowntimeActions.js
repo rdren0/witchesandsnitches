@@ -37,7 +37,7 @@ const DowntimeActions = ({
   setLoading,
   submittedSheets,
   loadSubmittedSheets,
-  loadDrafts, // Add this prop
+  loadDrafts,
   extraFieldsUnlocked,
   setExtraFieldsUnlocked,
   setActiveTab,
@@ -197,7 +197,6 @@ const DowntimeActions = ({
   const saveDraft = async () => {
     if (!validateForm()) return;
 
-    // Simplified logic - if user can't edit, they can't save
     if (!canEdit()) {
       if (currentSheet?.is_draft) {
         alert("You don't have permission to edit this draft.");
@@ -219,6 +218,12 @@ const DowntimeActions = ({
       semester: selectedSemester,
       activities: formData.activities,
       selected_magic_school: formData.selectedMagicSchool,
+
+      npc_encounters: formData.npcEncounters || [
+        { name: "", successes: [false, false, false, false, false] },
+        { name: "", successes: [false, false, false, false, false] },
+        { name: "", successes: [false, false, false, false, false] },
+      ],
       dice_pool: dicePool,
       roll_assignments: rollAssignments,
       extra_fields_unlocked: extraFieldsUnlocked,
@@ -264,7 +269,6 @@ const DowntimeActions = ({
       setCurrentSheet(result);
       setIsSubmitted(false);
 
-      // Reload both submitted sheets and drafts
       loadSubmittedSheets();
       if (loadDrafts) {
         loadDrafts();
@@ -282,7 +286,6 @@ const DowntimeActions = ({
   const submitSheet = async () => {
     if (!validateForm()) return;
 
-    // Simplified permission check
     if (!canEdit()) {
       alert("You don't have permission to submit this sheet.");
       return;
@@ -312,6 +315,12 @@ const DowntimeActions = ({
       semester: selectedSemester,
       activities: formData.activities,
       selected_magic_school: formData.selectedMagicSchool,
+
+      npc_encounters: formData.npcEncounters || [
+        { name: "", successes: [false, false, false, false, false] },
+        { name: "", successes: [false, false, false, false, false] },
+        { name: "", successes: [false, false, false, false, false] },
+      ],
       dice_pool: dicePool,
       roll_assignments: rollAssignments,
       extra_fields_unlocked: extraFieldsUnlocked,
@@ -351,7 +360,6 @@ const DowntimeActions = ({
       setCurrentSheet(result);
       setIsSubmitted(true);
 
-      // Reload both submitted sheets and drafts (since this draft is now submitted)
       loadSubmittedSheets();
       if (loadDrafts) {
         loadDrafts();
@@ -370,7 +378,6 @@ const DowntimeActions = ({
   const deleteSheet = async () => {
     if (!currentSheet) return;
 
-    // Simplified permission check
     if (!canEdit()) {
       alert("You don't have permission to delete this sheet.");
       return;
@@ -392,7 +399,6 @@ const DowntimeActions = ({
 
       if (error) throw error;
 
-      // Clear current sheet and reset form
       setCurrentSheet(null);
       if (setSelectedYear) setSelectedYear("");
       if (setSelectedSemester) setSelectedSemester("");
@@ -416,6 +422,11 @@ const DowntimeActions = ({
             },
           ],
           selectedMagicSchool: "",
+          npcEncounters: [
+            { name: "", successes: [false, false, false, false, false] },
+            { name: "", successes: [false, false, false, false, false] },
+            { name: "", successes: [false, false, false, false, false] },
+          ],
         });
       }
       if (setDicePool) setDicePool([]);
@@ -456,7 +467,6 @@ const DowntimeActions = ({
       if (setExtraFieldsUnlocked) setExtraFieldsUnlocked(false);
       setIsSubmitted(false);
 
-      // Reload both submitted sheets and drafts
       loadSubmittedSheets();
       if (loadDrafts) {
         loadDrafts();

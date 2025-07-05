@@ -33,6 +33,7 @@ import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import { LOCAL_HOST, WEBSITE } from "./const";
+import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -1283,7 +1284,7 @@ function AppContent() {
             element={
               <ProtectedRoute user={user}>
                 {characterSelector}
-                <DowntimeSheet
+                <DowntimeWrapper
                   user={user}
                   selectedCharacter={selectedCharacter}
                   supabase={supabase}

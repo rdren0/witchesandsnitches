@@ -4,34 +4,34 @@ import { getDowntimeStyles } from "../../styles/masterStyles";
 import {
   Calendar,
   Plus,
+  Edit3,
   FileText,
+  Trash2,
   Eye,
   CheckCircle,
-  Edit3,
-  Trash2,
 } from "lucide-react";
+import { getAllActivities, wandModifiers } from "../SharedData/downtime";
+import { allSkills } from "../SharedData/data";
 
-import DicePoolManager from "./DicePoolManager";
-import ActivityManager from "./ActivityManager";
-import DowntimeActions from "./DowntimeActions";
-
-const DowntimeSheet = ({
-  selectedCharacter,
-  user,
-  supabase,
-  adminMode,
-  isUserAdmin,
-}) => {
+const DowntimeSheet = ({ selectedCharacter, user, supabase, isUserAdmin }) => {
   const { theme } = useTheme();
-
   const styles = useMemo(() => getDowntimeStyles(theme), [theme]);
 
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [submittedSheets, setSubmittedSheets] = useState([]);
   const [viewMode, setViewMode] = useState("list");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dicePool, setDicePool] = useState([]);
+
+  const sortedDiceOptions = useMemo(() => {
+    if (!dicePool || dicePool.length === 0) return [];
+    return dicePool
+      .map((value, index) => ({ value, index }))
+      .sort((a, b) => b.value - a.value);
+  }, [dicePool]);
   const [viewingSheet, setViewingSheet] = useState(null);
   const [drafts, setDrafts] = useState([]);
 
@@ -40,7 +40,6 @@ const DowntimeSheet = ({
   const [isEditing, setIsEditing] = useState(false);
   const [extraFieldsUnlocked, setExtraFieldsUnlocked] = useState(false);
 
-  const [dicePool, setDicePool] = useState([]);
   const [rollAssignments, setRollAssignments] = useState({
     activity1: {
       diceIndex: null,
@@ -81,47 +80,30 @@ const DowntimeSheet = ({
       { activity: "", npc: "", successes: [false, false, false, false, false] },
     ],
     selectedMagicSchool: "",
+    npcEncounters: [
+      { name: "", successes: [false, false, false, false, false] },
+      { name: "", successes: [false, false, false, false, false] },
+      { name: "", successes: [false, false, false, false, false] },
+    ],
   });
 
-  const availableActivities = useMemo(
-    () => [
-      "",
-      "Gain a Job - Roll Persuasion or an appropriate skill check (e.g., Magical Creatures at the Magical Menagerie)",
-      "Promotion - If already employed, students can attempt a promotion with Persuasion or an appropriate skill check.",
-      "Work Job - Roll to determine earnings based on job difficulty.",
-      "Shopping - Purchase items from the shopping list. No haggling.",
-      "Selling - Sell items at half their original price. No haggling.",
-      "Allowance - Roll based on family wealth to determine allowance received.",
-      "Explore the Castle - Roll Investigation to uncover new locations and secrets.",
-      "Explore the Forbidden Forest -  Requires Stealth and Investigation rolls.",
-      "Restricted Section - Requires Stealth and Investigation rolls.",
-      "Search for Magical Creatures - Roll Magical Creatures.",
-      "Search for Plants - Roll Herbology.",
-      "Stealing - Roll Sleight of Hand and Investigation.",
-      "Spread Rumors - Roll Deception, Intimidation, Performance, or Persuasion.",
-      "Dig for Dirt - Roll Investigation, Insight, Intimidation, or Persuasion.",
-      "Prank Other Students - Players can attempt mischievous acts.",
-      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots.",
-      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots.",
-      "Increase Wand Stat - Roll against a DC based on the current Wand Stat.",
-      "Research Spells - Roll History of Magic to research a spell.",
-      "Attempt a Spell - Practice casting any spell previously researched or attempted.",
-      "Create a Spell - Must succeed on three separate checks using separate downtime slots.",
-      "Studying - Improve performance in classes through focused study.",
-      "Research a Topic - Roll Investigation to gather information.",
-      "Craft Items - Roll with the appropriate tool proficiency.",
-      "Brew a Potion - Requires Proficiency with a Potioneer's Kit and a Potion Making check.",
-      "Invent a Potion - Must succeed on three separate checks using separate downtime slots.",
-      "Cooking - Roll Survival to prepare meals.",
-      "Learn a Recipe - Roll Survival to memorize a recipe.",
-      "Create a New Recipe - Must succeed on three separate checks using separate downtime slots.",
-      "Engineer Plants - Must succeed on three separate checks using separate downtime slots.",
-      "Hire a Tutor - Seek out private instruction.",
-      "Teacher Tutor - Receive guidance from a professor.",
-      "Animagus Form (RP) - Engage in roleplay to explore an Animagus transformation.",
-    ],
-    []
-  );
+  const canEdit = useCallback(() => {
+    if (isUserAdmin) {
+      return true;
+    }
+
+    if (!currentSheet) {
+      return true;
+    }
+
+    if (currentSheet.is_draft) {
+      return currentSheet.user_id === user?.id;
+    }
+
+    return false;
+  }, [isUserAdmin, currentSheet, user?.id]);
+
+  const editable = canEdit();
 
   const dashboardStyles = useMemo(
     () => ({
@@ -208,6 +190,332 @@ const DowntimeSheet = ({
     }),
     [theme, styles]
   );
+  const inlineStyles = useMemo(
+    () => ({
+      headingStyle: { color: theme.text, marginBottom: "1.5rem" },
+      sectionStyle: { marginBottom: "2rem" },
+      selectionContainer: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "2rem",
+        marginBottom: "1rem",
+      },
+      radioGroupContainer: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+      },
+      groupLabel: {
+        fontSize: "16px",
+        fontWeight: "bold",
+        color: theme.text,
+        marginBottom: "12px",
+      },
+      radioGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+        gap: "8px",
+      },
+      radioOption: {
+        display: "flex",
+        alignItems: "center",
+        padding: "10px 12px",
+        borderRadius: "8px",
+        border: `2px solid ${theme.border}`,
+        backgroundColor: theme.surface,
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        fontSize: "14px",
+        position: "relative",
+      },
+      radioOptionSelected: {
+        borderColor: theme.primary,
+        backgroundColor: theme.primary + "15",
+        color: theme.primary,
+        fontWeight: "500",
+      },
+      radioOptionDisabled: {
+        backgroundColor: theme.background,
+        color: theme.textSecondary,
+        cursor: "not-allowed",
+        opacity: 0.6,
+      },
+      radioOptionSubmitted: {
+        backgroundColor: theme.success + "15",
+        borderColor: theme.success,
+        color: theme.success,
+        cursor: "not-allowed",
+      },
+      radioInput: {
+        marginRight: "8px",
+        accentColor: theme.primary,
+      },
+      submittedBadge: {
+        fontSize: "10px",
+        padding: "2px 4px",
+        backgroundColor: theme.success,
+        color: "white",
+        borderRadius: "3px",
+        marginLeft: "auto",
+        fontWeight: "bold",
+      },
+      warningStyle: {
+        padding: "12px",
+        backgroundColor: theme.warning + "20",
+        border: `1px solid ${theme.warning}`,
+        borderRadius: "8px",
+        color: theme.warning,
+        fontSize: "14px",
+      },
+    }),
+    [theme]
+  );
+
+  // Check if a die is assigned
+  const isDiceAssigned = useCallback(
+    (diceIndex) => {
+      for (const assignment of Object.values(rollAssignments)) {
+        if (
+          assignment.diceIndex === diceIndex ||
+          assignment.secondDiceIndex === diceIndex
+        ) {
+          return true;
+        }
+      }
+      return false;
+    },
+    [rollAssignments]
+  );
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  useEffect(() => {
+    if (dicePool && dicePool.length > 0 && !hasInitialized) {
+      setDicePool(dicePool);
+      setHasInitialized(true);
+    }
+  }, [dicePool, hasInitialized]);
+
+  useEffect(() => {
+    if (
+      rollAssignments &&
+      Object.keys(rollAssignments).length > 0 &&
+      !hasInitialized
+    ) {
+      setRollAssignments(rollAssignments);
+    }
+  }, [rollAssignments, hasInitialized]);
+
+  useEffect(() => {
+    if (formData && formData.activities && !hasInitialized) {
+      setFormData(formData);
+    }
+  }, [formData, hasInitialized]);
+
+  // Reset hasInitialized when currentSheet changes (loading different sheet)
+  useEffect(() => {
+    setHasInitialized(false);
+  }, [currentSheet?.id]);
+
+  // Get available activities from downtime.js
+  const availableActivities = useMemo(() => {
+    return getAllActivities().map((activity) => ({
+      value: activity,
+      label: activity ? activity.split(" - ")[0] : "Select Activity",
+    }));
+  }, []);
+
+  // Get available skills and wand modifiers
+  const skillOptions = useMemo(() => {
+    const options = [{ value: "", label: "Select Skill/Modifier" }];
+
+    // Add regular skills
+    allSkills.forEach((skill) => {
+      options.push({
+        value: skill.name,
+        label: skill.displayName,
+        type: "skill",
+      });
+    });
+
+    // Add wand modifiers
+    wandModifiers.forEach((wand) => {
+      options.push({
+        value: wand.name,
+        label: `${wand.displayName} (Wand)`,
+        type: "wand",
+      });
+    });
+
+    return options;
+  }, []);
+
+  // Calculate ability modifier
+  const getAbilityModifier = useCallback((score) => {
+    return Math.floor((score - 10) / 2);
+  }, []);
+
+  // Calculate skill modifier
+  const getSkillModifier = useCallback(
+    (skillName) => {
+      if (!skillName || !selectedCharacter) return 0;
+
+      const skills = {
+        acrobatics: { ability: "dexterity" },
+        "animal handling": { ability: "wisdom" },
+        arcana: { ability: "intelligence" },
+        athletics: { ability: "strength" },
+        deception: { ability: "charisma" },
+        history: { ability: "intelligence" },
+        insight: { ability: "wisdom" },
+        intimidation: { ability: "charisma" },
+        investigation: { ability: "intelligence" },
+        medicine: { ability: "wisdom" },
+        nature: { ability: "intelligence" },
+        perception: { ability: "wisdom" },
+        performance: { ability: "charisma" },
+        persuasion: { ability: "charisma" },
+        religion: { ability: "intelligence" },
+        "sleight of hand": { ability: "dexterity" },
+        stealth: { ability: "dexterity" },
+        survival: { ability: "wisdom" },
+      };
+
+      const skill = skills[skillName.toLowerCase()];
+      if (!skill) return 0;
+
+      const abilityMod = getAbilityModifier(
+        selectedCharacter[skill.ability] || 10
+      );
+      const skillLevel = selectedCharacter.skills?.[skillName] || 0;
+      const profBonus = selectedCharacter.proficiencyBonus || 2;
+
+      if (skillLevel === 0) return abilityMod;
+      if (skillLevel === 1) return abilityMod + profBonus;
+      if (skillLevel === 2) return abilityMod + 2 * profBonus;
+
+      return abilityMod;
+    },
+    [getAbilityModifier, selectedCharacter]
+  );
+
+  // Calculate wand modifier
+  const getWandModifier = useCallback(
+    (wandModifierName) => {
+      if (!selectedCharacter?.magicModifiers || !wandModifierName) return 0;
+      return selectedCharacter.magicModifiers[wandModifierName] || 0;
+    },
+    [selectedCharacter]
+  );
+
+  // Get modifier value (skill or wand)
+  const getModifierValue = useCallback(
+    (modifierName) => {
+      if (!modifierName) return 0;
+
+      // Check if it's a wand modifier
+      const wandMod = wandModifiers.find((w) => w.name === modifierName);
+      if (wandMod) {
+        return getWandModifier(modifierName);
+      }
+
+      // Otherwise treat as skill
+      return getSkillModifier(modifierName);
+    },
+    [getSkillModifier, getWandModifier]
+  );
+
+  // Format modifier display
+  const formatModifier = (modifier) => {
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  };
+
+  // Roll dice for the pool
+  const rollDice = useCallback(() => {
+    if (!canEdit()) return;
+
+    const newPool = Array.from(
+      { length: 6 },
+      () => Math.floor(Math.random() * 20) + 1
+    );
+    setDicePool(newPool);
+
+    // Clear all dice assignments when rerolling
+    setRollAssignments((prev) => {
+      const resetAssignments = {};
+      Object.keys(prev).forEach((key) => {
+        resetAssignments[key] = {
+          ...prev[key],
+          diceIndex: null,
+          secondDiceIndex: null,
+        };
+      });
+      return resetAssignments;
+    });
+  }, []);
+
+  // Add extra die
+  const addExtraDie = useCallback(() => {
+    if (!canEdit()) return;
+
+    const extraDie = Math.floor(Math.random() * 20) + 1;
+    setDicePool((prev) => [...prev, extraDie]);
+  }, []);
+
+  // Update activity data
+  const updateActivity = useCallback(
+    (index, field, value) => {
+      if (!canEdit()) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        activities: prev.activities.map((activity, i) =>
+          i === index ? { ...activity, [field]: value } : activity
+        ),
+      }));
+    },
+    [editable]
+  );
+
+  // Update roll assignment
+  const updateRollAssignment = useCallback(
+    (activityIndex, field, value) => {
+      if (!canEdit()) return;
+
+      const assignmentKey = `activity${activityIndex + 1}`;
+      setRollAssignments((prev) => ({
+        ...prev,
+        [assignmentKey]: {
+          ...prev[assignmentKey],
+          [field]: value,
+        },
+      }));
+    },
+    [editable]
+  );
+
+  const loadDrafts = useCallback(async () => {
+    if (!selectedCharacter?.id || !user?.id) return;
+
+    setLoading(true);
+    try {
+      const { data: draftSheets, error } = await supabase
+        .from("character_downtime")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("user_id", user.id)
+        .eq("is_draft", true)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      setDrafts(draftSheets || []);
+    } catch (err) {
+      console.error("Error loading drafts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCharacter?.id, user?.id, supabase]);
 
   const loadSubmittedSheets = useCallback(async () => {
     if (!selectedCharacter?.id || !user?.id) return;
@@ -231,28 +539,156 @@ const DowntimeSheet = ({
       setLoading(false);
     }
   }, [selectedCharacter?.id, user?.id, supabase]);
-
-  const loadDrafts = useCallback(async () => {
-    if (!selectedCharacter?.id || !user?.id) return;
-
-    setLoading(true);
-    try {
-      const { data: draftSheets, error } = await supabase
-        .from("character_downtime")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("user_id", user.id)
-        .eq("is_draft", true)
-        .order("updated_at", { ascending: false });
-
-      if (error) throw error;
-      setDrafts(draftSheets || []);
-    } catch (err) {
-      console.error("Error loading drafts:", err);
-    } finally {
-      setLoading(false);
+  // Save as draft
+  const saveAsDraft = useCallback(async () => {
+    if (
+      !selectedCharacter?.id ||
+      !user?.id ||
+      !selectedYear ||
+      !selectedSemester
+    ) {
+      alert("Missing required information to save draft.");
+      return;
     }
-  }, [selectedCharacter?.id, user?.id, supabase]);
+
+    setIsSavingDraft(true);
+    try {
+      const draftData = {
+        character_id: selectedCharacter.id,
+        user_id: user.id,
+        character_name: selectedCharacter.name,
+        year: selectedYear,
+        semester: selectedSemester,
+        activities: formData.activities,
+        dice_pool: dicePool,
+        roll_assignments: rollAssignments,
+        selected_magic_school: formData.selectedMagicSchool || null,
+        is_draft: true,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (currentSheet?.id) {
+        const { error } = await supabase
+          .from("character_downtime")
+          .update(draftData)
+          .eq("id", currentSheet.id);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("character_downtime")
+          .insert([draftData])
+          .select()
+          .single();
+
+        if (error) throw error;
+        setCurrentSheet(data);
+      }
+
+      alert("Draft saved successfully!");
+      if (loadDrafts) loadDrafts();
+    } catch (err) {
+      console.error("Error saving draft:", err);
+      alert("Failed to save draft. Please try again.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [
+    selectedCharacter,
+    user,
+    selectedYear,
+    selectedSemester,
+    formData,
+    dicePool,
+    rollAssignments,
+    currentSheet,
+    supabase,
+    setCurrentSheet,
+    loadDrafts,
+  ]);
+
+  // Submit downtime sheet
+  const submitDowntimeSheet = useCallback(async () => {
+    if (
+      !selectedCharacter?.id ||
+      !user?.id ||
+      !selectedYear ||
+      !selectedSemester
+    ) {
+      alert("Missing required information to submit.");
+      return;
+    }
+
+    // Validation
+    if (dicePool.length === 0) {
+      alert("Please roll dice before submitting.");
+      return;
+    }
+
+    const hasActivities = formData.activities.some(
+      (activity) => activity.activity
+    );
+    if (!hasActivities) {
+      alert("Please select at least one activity.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const submissionData = {
+        character_id: selectedCharacter.id,
+        user_id: user.id,
+        character_name: selectedCharacter.name,
+        year: selectedYear,
+        semester: selectedSemester,
+        activities: formData.activities,
+        dice_pool: dicePool,
+        roll_assignments: rollAssignments,
+        selected_magic_school: formData.selectedMagicSchool || null,
+        is_draft: false,
+        submitted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (currentSheet?.id) {
+        const { error } = await supabase
+          .from("character_downtime")
+          .update(submissionData)
+          .eq("id", currentSheet.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("character_downtime")
+          .insert([submissionData]);
+
+        if (error) throw error;
+      }
+
+      alert("Downtime sheet submitted successfully!");
+      if (loadSubmittedSheets) loadSubmittedSheets();
+      if (loadDrafts) loadDrafts();
+      if (setActiveTab) setActiveTab("overview");
+    } catch (err) {
+      console.error("Error submitting downtime sheet:", err);
+      alert("Failed to submit downtime sheet. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [
+    selectedCharacter,
+    user,
+    selectedYear,
+    selectedSemester,
+    formData,
+    dicePool,
+    rollAssignments,
+    currentSheet,
+    supabase,
+    loadSubmittedSheets,
+    loadDrafts,
+    setActiveTab,
+  ]);
 
   const loadSheetForViewing = useCallback(
     async (sheetId) => {
@@ -410,22 +846,6 @@ const DowntimeSheet = ({
     );
   }, [formData.activities, requiresDualChecks]);
 
-  const canEdit = useCallback(() => {
-    if (isUserAdmin) {
-      return true;
-    }
-
-    if (!currentSheet) {
-      return true;
-    }
-
-    if (currentSheet.is_draft) {
-      return currentSheet.user_id === user?.id;
-    }
-
-    return false;
-  }, [isUserAdmin, currentSheet, user?.id]);
-
   const assignDice = useCallback(
     (assignment, diceIndex, isSecondDie = false) => {
       if (!canEdit()) return;
@@ -472,12 +892,6 @@ const DowntimeSheet = ({
     },
     [rollAssignments]
   );
-
-  const getSortedDiceOptions = useCallback(() => {
-    return dicePool
-      .map((value, index) => ({ value, index }))
-      .sort((a, b) => b.value - a.value);
-  }, [dicePool]);
 
   const loadSheet = useCallback(async () => {
     if (!selectedCharacter?.id || !user || !selectedYear || !selectedSemester) {
@@ -531,6 +945,11 @@ const DowntimeSheet = ({
             },
           ],
           selectedMagicSchool: "",
+          npcEncounters: [
+            { name: "", successes: [false, false, false, false, false] },
+            { name: "", successes: [false, false, false, false, false] },
+            { name: "", successes: [false, false, false, false, false] },
+          ],
         });
         setDicePool([]);
         setRollAssignments({
@@ -869,87 +1288,6 @@ const DowntimeSheet = ({
       </div>
     );
   };
-
-  const inlineStyles = useMemo(
-    () => ({
-      headingStyle: { color: theme.text, marginBottom: "1.5rem" },
-      sectionStyle: { marginBottom: "2rem" },
-      selectionContainer: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "2rem",
-        marginBottom: "1rem",
-      },
-      radioGroupContainer: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-      },
-      groupLabel: {
-        fontSize: "16px",
-        fontWeight: "bold",
-        color: theme.text,
-        marginBottom: "12px",
-      },
-      radioGrid: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-        gap: "8px",
-      },
-      radioOption: {
-        display: "flex",
-        alignItems: "center",
-        padding: "10px 12px",
-        borderRadius: "8px",
-        border: `2px solid ${theme.border}`,
-        backgroundColor: theme.surface,
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        fontSize: "14px",
-        position: "relative",
-      },
-      radioOptionSelected: {
-        borderColor: theme.primary,
-        backgroundColor: theme.primary + "15",
-        color: theme.primary,
-        fontWeight: "500",
-      },
-      radioOptionDisabled: {
-        backgroundColor: theme.background,
-        color: theme.textSecondary,
-        cursor: "not-allowed",
-        opacity: 0.6,
-      },
-      radioOptionSubmitted: {
-        backgroundColor: theme.success + "15",
-        borderColor: theme.success,
-        color: theme.success,
-        cursor: "not-allowed",
-      },
-      radioInput: {
-        marginRight: "8px",
-        accentColor: theme.primary,
-      },
-      submittedBadge: {
-        fontSize: "10px",
-        padding: "2px 4px",
-        backgroundColor: theme.success,
-        color: "white",
-        borderRadius: "3px",
-        marginLeft: "auto",
-        fontWeight: "bold",
-      },
-      warningStyle: {
-        padding: "12px",
-        backgroundColor: theme.warning + "20",
-        border: `1px solid ${theme.warning}`,
-        borderRadius: "8px",
-        color: theme.warning,
-        fontSize: "14px",
-      },
-    }),
-    [theme]
-  );
 
   const OverviewTab = () => (
     <div>
@@ -2022,67 +2360,368 @@ const DowntimeSheet = ({
                 </p>
               </div>
             )}
+            <div style={styles.container}>
+              {/* Dice Pool Section */}
+              <div style={styles.section}>
+                <h2 style={styles.sectionTitle}>🎲 Dice Pool</h2>
 
-            <DicePoolManager
-              dicePool={dicePool}
-              setDicePool={setDicePool}
-              rollAssignments={rollAssignments}
-              setRollAssignments={setRollAssignments}
-              selectedCharacter={selectedCharacter}
-              canEdit={canEdit}
-              hasDualCheckActivity={hasDualCheckActivity}
-            />
+                <div style={styles.buttonGroup}>
+                  <button
+                    onClick={rollDice}
+                    disabled={!editable}
+                    style={{
+                      ...styles.button,
+                      ...styles.primaryButton,
+                      ...(!editable
+                        ? { opacity: 0.6, cursor: "not-allowed" }
+                        : {}),
+                    }}
+                  >
+                    {dicePool.length === 0 ? "Roll Dice Pool" : "Reroll Dice"}
+                  </button>
 
-            <ActivityManager
-              formData={formData}
-              setFormData={setFormData}
-              availableActivities={availableActivities}
-              rollAssignments={rollAssignments}
-              setRollAssignments={setRollAssignments}
-              dicePool={dicePool}
-              selectedCharacter={selectedCharacter}
-              canEdit={canEdit}
-              assignDice={assignDice}
-              unassignDice={unassignDice}
-              getDiceUsage={getDiceUsage}
-              getSortedDiceOptions={getSortedDiceOptions}
-            />
+                  {dicePool.length > 0 && (
+                    <button
+                      onClick={addExtraDie}
+                      disabled={!editable}
+                      style={{
+                        ...styles.button,
+                        ...styles.secondaryButton,
+                        ...(!editable
+                          ? { opacity: 0.6, cursor: "not-allowed" }
+                          : {}),
+                      }}
+                    >
+                      Add Extra Die
+                    </button>
+                  )}
+                </div>
 
-            <DowntimeActions
-              currentSheet={currentSheet}
-              setCurrentSheet={setCurrentSheet}
-              formData={formData}
-              rollAssignments={rollAssignments}
-              dicePool={dicePool}
-              selectedCharacter={selectedCharacter}
-              selectedYear={selectedYear}
-              selectedSemester={selectedSemester}
+                {dicePool.length > 0 ? (
+                  <>
+                    <div style={styles.diceGrid}>
+                      {sortedDiceOptions.map(({ value, index }) => {
+                        const isAssigned = isDiceAssigned(index);
+                        const isExtra = index >= 6;
+
+                        return (
+                          <div
+                            key={index}
+                            style={{
+                              ...styles.dice,
+                              ...(isAssigned
+                                ? styles.diceAssigned
+                                : isExtra
+                                ? styles.diceExtra
+                                : styles.diceAvailable),
+                            }}
+                          >
+                            {value}
+                            {isExtra && (
+                              <span style={{ fontSize: "0.75rem" }}>★</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div
+                      style={{
+                        color: theme.textSecondary,
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      Total: {dicePool.length} dice | Available:{" "}
+                      {
+                        dicePool.filter((_, index) => !isDiceAssigned(index))
+                          .length
+                      }{" "}
+                      | Assigned:{" "}
+                      {
+                        dicePool.filter((_, index) => isDiceAssigned(index))
+                          .length
+                      }
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color: theme.textSecondary,
+                      backgroundColor: theme.background,
+                      borderRadius: "8px",
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    Click "Roll Dice Pool" to generate your 6 dice for this
+                    downtime session
+                  </div>
+                )}
+              </div>
+
+              {/* Activities Section */}
+              {dicePool.length > 0 && (
+                <div style={styles.section}>
+                  <h2 style={styles.sectionTitle}>⚡ Activities</h2>
+
+                  {formData.activities.map((activity, index) => {
+                    const assignmentKey = `activity${index + 1}`;
+                    const assignment = rollAssignments[assignmentKey] || {};
+
+                    return (
+                      <div key={index} style={styles.activityCard}>
+                        <h3 style={{ color: theme.text, marginBottom: "1rem" }}>
+                          Activity {index + 1}
+                        </h3>
+
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "1rem",
+                          }}
+                        >
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}>Activity Type</label>
+                            <select
+                              style={styles.select}
+                              value={activity.activity || ""}
+                              onChange={(e) =>
+                                updateActivity(
+                                  index,
+                                  "activity",
+                                  e.target.value
+                                )
+                              }
+                              disabled={!editable}
+                            >
+                              {availableActivities.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}>Skill/Modifier</label>
+                            <select
+                              style={styles.select}
+                              value={assignment.skill || ""}
+                              onChange={(e) =>
+                                updateRollAssignment(
+                                  index,
+                                  "skill",
+                                  e.target.value
+                                )
+                              }
+                              disabled={!editable}
+                            >
+                              {skillOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div style={styles.inputGroup}>
+                          <label style={styles.label}>Notes</label>
+                          <textarea
+                            style={styles.textarea}
+                            placeholder="Activity notes and details..."
+                            value={assignment.notes || ""}
+                            onChange={(e) =>
+                              updateRollAssignment(
+                                index,
+                                "notes",
+                                e.target.value
+                              )
+                            }
+                            disabled={!editable}
+                          />
+                        </div>
+
+                        {/* Dice Assignment */}
+                        <div style={styles.diceAssignment}>
+                          {/* Primary Die */}
+                          <div>
+                            <label style={styles.label}>Primary Die</label>
+                            {assignment.diceIndex !== null &&
+                            assignment.diceIndex !== undefined ? (
+                              <div style={styles.assignedDice}>
+                                <div style={styles.diceValue}>
+                                  d20: {dicePool[assignment.diceIndex]}
+                                </div>
+                                {assignment.skill && (
+                                  <div style={styles.total}>
+                                    Total: {dicePool[assignment.diceIndex]}{" "}
+                                    {formatModifier(
+                                      getModifierValue(assignment.skill)
+                                    )}{" "}
+                                    ={" "}
+                                    {dicePool[assignment.diceIndex] +
+                                      getModifierValue(assignment.skill)}
+                                  </div>
+                                )}
+                                {editable && (
+                                  <button
+                                    style={styles.removeButton}
+                                    onClick={() => unassignDice(index, false)}
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <select
+                                style={styles.select}
+                                value=""
+                                onChange={(e) =>
+                                  assignDice(
+                                    index,
+                                    parseInt(e.target.value),
+                                    false
+                                  )
+                                }
+                                disabled={!editable}
+                              >
+                                <option value="">Select die...</option>
+                                {sortedDiceOptions
+                                  .filter(
+                                    ({ index: diceIndex }) =>
+                                      !isDiceAssigned(diceIndex)
+                                  )
+                                  .map(({ value, index: diceIndex }) => (
+                                    <option key={diceIndex} value={diceIndex}>
+                                      d20: {value}
+                                    </option>
+                                  ))}
+                              </select>
+                            )}
+                          </div>
+
+                          {/* Second Die (for dual checks) */}
+                          {requiresDualChecks(activity.activity) && (
+                            <div>
+                              <label style={styles.label}>
+                                Second Die (Dual Check)
+                              </label>
+                              {assignment.secondDiceIndex !== null &&
+                              assignment.secondDiceIndex !== undefined ? (
+                                <div style={styles.assignedDice}>
+                                  <div style={styles.diceValue}>
+                                    d20: {dicePool[assignment.secondDiceIndex]}
+                                  </div>
+                                  {assignment.skill && (
+                                    <div style={styles.total}>
+                                      Total:{" "}
+                                      {dicePool[assignment.secondDiceIndex]}{" "}
+                                      {formatModifier(
+                                        getModifierValue(assignment.skill)
+                                      )}{" "}
+                                      ={" "}
+                                      {dicePool[assignment.secondDiceIndex] +
+                                        getModifierValue(assignment.skill)}
+                                    </div>
+                                  )}
+                                  {editable && (
+                                    <button
+                                      style={styles.removeButton}
+                                      onClick={() => unassignDice(index, true)}
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <select
+                                  style={styles.select}
+                                  value=""
+                                  onChange={(e) =>
+                                    assignDice(
+                                      index,
+                                      parseInt(e.target.value),
+                                      true
+                                    )
+                                  }
+                                  disabled={!editable}
+                                >
+                                  <option value="">Select die...</option>
+                                  {sortedDiceOptions
+                                    .filter(
+                                      ({ index: diceIndex }) =>
+                                        !isDiceAssigned(diceIndex)
+                                    )
+                                    .map(({ value, index: diceIndex }) => (
+                                      <option key={diceIndex} value={diceIndex}>
+                                        d20: {value}
+                                      </option>
+                                    ))}
+                                </select>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              {dicePool.length > 0 && editable && (
+                <div style={styles.actionButtons}>
+                  <button
+                    onClick={saveAsDraft}
+                    disabled={isSavingDraft}
+                    style={{
+                      ...styles.button,
+                      ...styles.secondaryButton,
+                      ...(isSavingDraft
+                        ? { opacity: 0.6, cursor: "not-allowed" }
+                        : {}),
+                    }}
+                  >
+                    {isSavingDraft ? "Saving..." : "Save as Draft"}
+                  </button>
+
+                  <button
+                    onClick={submitDowntimeSheet}
+                    disabled={isSubmitting}
+                    style={{
+                      ...styles.button,
+                      ...styles.successButton,
+                      ...(isSubmitting
+                        ? { opacity: 0.6, cursor: "not-allowed" }
+                        : {}),
+                    }}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Downtime Sheet"}
+                  </button>
+                </div>
+              )}
+            </div>
+            {/* 
+            <DowntimeForm
               user={user}
+              selectedCharacter={selectedCharacter}
               supabase={supabase}
-              canEdit={canEdit}
-              isSubmitted={isSubmitted}
-              setIsSubmitted={setIsSubmitted}
               adminMode={adminMode}
               isUserAdmin={isUserAdmin}
-              isEditing={isEditing}
-              setIsEditing={setIsEditing}
-              loading={loading}
-              setLoading={setLoading}
-              submittedSheets={submittedSheets}
+              selectedYear={selectedYear}
+              selectedSemester={selectedSemester}
+              currentSheet={currentSheet}
+              setCurrentSheet={setCurrentSheet}
+              dicePool={dicePool}
+              rollAssignments={rollAssignments}
+              formData={formData}
               loadSubmittedSheets={loadSubmittedSheets}
-              extraFieldsUnlocked={extraFieldsUnlocked}
-              viewMode="create"
-              setViewMode={() => {}}
-              setActiveTab={setActiveTab}
-              isYearSemesterSubmitted={isYearSemesterSubmitted}
               loadDrafts={loadDrafts}
-              setFormData={setFormData}
-              setRollAssignments={setRollAssignments}
-              setDicePool={setDicePool}
-              setSelectedYear={setSelectedYear}
-              setSelectedSemester={setSelectedSemester}
-              setExtraFieldsUnlocked={setExtraFieldsUnlocked}
-            />
+              setActiveTab={setActiveTab}
+            /> */}
           </div>
         )}
     </div>
@@ -2133,16 +2772,6 @@ const DowntimeSheet = ({
               style={{
                 ...dashboardStyles.tab,
                 ...(isActive ? dashboardStyles.activeTab : {}),
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = theme.primary + "10";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = "transparent";
-                }
               }}
             >
               <Icon size={16} />
