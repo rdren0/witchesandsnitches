@@ -613,6 +613,7 @@ export const SubjectCard = ({
 
   useEffect(() => {
     loadSpellProgress();
+    // eslint-disable-next-line
   }, [selectedCharacter?.id, selectedCharacter?.discord_user_id]);
 
   const toggleDescription = (spellName) => {
