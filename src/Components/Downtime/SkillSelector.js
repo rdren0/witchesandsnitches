@@ -46,6 +46,7 @@ const SkillSelector = memo(
           borderRadius: "6px",
           fontSize: "14px",
           cursor: canEdit() ? "pointer" : "not-allowed",
+          height: "42px",
         },
         autoSelected: {
           backgroundColor: theme.background,
@@ -55,7 +56,7 @@ const SkillSelector = memo(
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          minHeight: "40px",
+          minHeight: "42px",
         },
         badge: {
           fontSize: "11px",

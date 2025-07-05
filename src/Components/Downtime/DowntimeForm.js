@@ -17,7 +17,6 @@ import {
   getCustomDiceTypeForActivity,
   activityRequiresSpecialRules,
   getMultiSessionInfo,
-  isRoleplayOnlyActivity,
   validateSkillName,
 } from "./downtimeHelpers";
 import SkillSelector from "./SkillSelector";
@@ -460,32 +459,7 @@ const DowntimeForm = ({
     (activityText) => {
       if (!activityText) return null;
 
-      if (isRoleplayOnlyActivity(activityText)) {
-        return (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: theme.info + "20",
-              border: `1px solid ${theme.info}`,
-              borderRadius: "6px",
-              marginTop: "1rem",
-              textAlign: "center",
-            }}
-          >
-            <strong>🎭 Roleplay Activity</strong>
-            <br />
-            <small>
-              This activity is entirely roleplay-based and doesn't require dice
-              rolls.
-            </small>
-          </div>
-        );
-      }
-
-      if (
-        activityRequiresNoDiceRoll(activityText) &&
-        !isRoleplayOnlyActivity(activityText)
-      ) {
+      if (activityRequiresNoDiceRoll(activityText)) {
         return (
           <div
             style={{
@@ -575,9 +549,7 @@ const DowntimeForm = ({
 
       if (
         activityRequiresNoDiceRoll(activityText) ||
-        isMultiSessionActivity(activityText) ||
-        shouldUseCustomDiceForActivity(activityText) ||
-        isRoleplayOnlyActivity(activityText)
+        shouldUseCustomDiceForActivity(activityText)
       ) {
         return null;
       }
@@ -1275,9 +1247,7 @@ const DowntimeForm = ({
                   {!activityRequiresDualChecks(activity.activity) &&
                     activity.activity &&
                     !activityRequiresNoDiceRoll(activity.activity) &&
-                    !isMultiSessionActivity(activity.activity) &&
-                    !shouldUseCustomDiceForActivity(activity.activity) &&
-                    !isRoleplayOnlyActivity(activity.activity) && (
+                    !shouldUseCustomDiceForActivity(activity.activity) && (
                       <SkillSelector
                         activityText={activity.activity}
                         assignment={assignment}
@@ -1295,13 +1265,15 @@ const DowntimeForm = ({
                       <label style={styles.label}>Dual Check Activity</label>
                       <div
                         style={{
-                          padding: "8px 12px",
+                          paddingTop: "10px",
                           backgroundColor: theme.primary + "20",
                           border: `1px solid ${theme.primary}`,
                           borderRadius: "6px",
                           fontSize: "14px",
                           color: theme.primary,
                           fontWeight: "600",
+                          height: "42px",
+                          textAlign: "center",
                         }}
                       >
                         Requires Two Skill Checks

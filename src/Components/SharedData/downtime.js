@@ -94,7 +94,6 @@ export const downtime = {
       "Create a New Recipe - Must succeed on three separate checks using separate downtime slots",
     ],
   },
-
   herbology_advanced: {
     name: "Advanced Herbology",
     description: "Advanced plant manipulation and engineering",

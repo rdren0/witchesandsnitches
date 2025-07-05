@@ -66,6 +66,13 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
+  if (text.includes("cooking")) {
+    return {
+      type: "locked",
+      skills: ["survival"],
+    };
+  }
+
   if (
     text.includes("research spells") &&
     text.includes("roll history of magic")
@@ -253,21 +260,10 @@ export const getMultiSessionInfo = (activityText) => {
   if (!activityText) return null;
   const text = activityText.toLowerCase();
 
-  if (text.includes("increase an ability score")) {
-    return {
-      description:
-        "Requires three separate successful checks across different downtime sessions",
-    };
-  }
+  const isMultiSessionPattern =
+    /(increase an ability score|gain proficiency|gain expertise|create a spell|engineer plants|invent a potion|create a new recipe)/;
 
-  if (text.includes("gain proficiency or expertise")) {
-    return {
-      description:
-        "Requires three separate successful checks across different downtime sessions",
-    };
-  }
-
-  if (text.includes("create a spell")) {
+  if (isMultiSessionPattern.test(text)) {
     return {
       description:
         "Requires three separate successful checks across different downtime sessions",
@@ -275,10 +271,4 @@ export const getMultiSessionInfo = (activityText) => {
   }
 
   return null;
-};
-
-export const isRoleplayOnlyActivity = (activityText) => {
-  if (!activityText) return false;
-  const text = activityText.toLowerCase();
-  return text.includes("prank other students");
 };
