@@ -5,11 +5,10 @@ export const activityRequiresDualChecks = (activityText) => {
   if (!activityText) return false;
 
   const text = activityText.toLowerCase();
+
   return (
-    text.includes("stealth and investigation") ||
-    text.includes("sleight of hand and investigation") ||
-    (text.includes(" and ") &&
-      (text.includes("roll") || text.includes("requires")))
+    text.includes("stealth and investigation rolls") ||
+    text.includes("sleight of hand and investigation")
   );
 };
 
@@ -18,8 +17,7 @@ export const getActivitySkillInfo = (activityText) => {
 
   const text = activityText.toLowerCase();
 
-  // Dual check activities
-  if (text.includes("stealth and investigation")) {
+  if (text.includes("stealth and investigation rolls")) {
     return {
       type: "locked",
       skills: ["stealth", "investigation"],
@@ -33,18 +31,10 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
-  // Single skill activities
   if (text.includes("roll investigation")) {
     return {
       type: "locked",
       skills: ["investigation"],
-    };
-  }
-
-  if (text.includes("roll persuasion")) {
-    return {
-      type: "locked",
-      skills: ["persuasion"],
     };
   }
 
@@ -69,7 +59,13 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
-  // Limited choice activities
+  if (text.includes("roll survival")) {
+    return {
+      type: "locked",
+      skills: ["survival"],
+    };
+  }
+
   if (text.includes("dig for dirt")) {
     return {
       type: "limited",
@@ -84,7 +80,6 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
-  // Suggested skill activities
   if (text.includes("gain a job") || text.includes("promotion")) {
     return {
       type: "suggested",
@@ -93,7 +88,44 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
-  // Default to free choice
+  if (text.includes("craft items")) {
+    return {
+      type: "free",
+      skills: null,
+    };
+  }
+
+  if (text.includes("brew a potion")) {
+    return {
+      type: "locked",
+      skills: ["potionMaking"],
+    };
+  }
+
+  if (text.includes("shopping") || text.includes("selling")) {
+    return {
+      type: "none",
+      skills: null,
+    };
+  }
+
+  if (text.includes("animagus form (rp)")) {
+    return {
+      type: "roleplay",
+      skills: null,
+    };
+  }
+
+  if (
+    text.includes("three separate checks") ||
+    text.includes("separate downtime slots")
+  ) {
+    return {
+      type: "multi-session",
+      skills: null,
+    };
+  }
+
   return {
     type: "free",
     skills: null,
@@ -101,19 +133,9 @@ export const getActivitySkillInfo = (activityText) => {
 };
 
 export const calculateModifier = (skillOrWandName, selectedCharacter) => {
-  if (!skillOrWandName || !selectedCharacter) return 0;
-
-  // Check if it's a wand modifier
-  const wandModifier = wandModifiers.find((w) => w.name === skillOrWandName);
-  if (wandModifier) {
-    return selectedCharacter.magicModifiers?.[skillOrWandName] || 0;
-  }
-
-  // It's a skill
   const skill = allSkills.find((s) => s.name === skillOrWandName);
   if (!skill) return 0;
 
-  // Get ability modifier
   let abilityMod = 0;
   if (selectedCharacter[skill.ability] !== undefined) {
     abilityMod = Math.floor((selectedCharacter[skill.ability] - 10) / 2);
@@ -123,7 +145,6 @@ export const calculateModifier = (skillOrWandName, selectedCharacter) => {
     );
   }
 
-  // Get skill proficiency
   let skillLevel = 0;
   if (
     selectedCharacter.skills &&
@@ -139,7 +160,6 @@ export const calculateModifier = (skillOrWandName, selectedCharacter) => {
       selectedCharacter.skillExpertise ||
       selectedCharacter.skill_expertise ||
       [];
-
     if (skillExpertise.includes(skill.displayName)) {
       skillLevel = 2;
     } else if (skillProficiencies.includes(skill.displayName)) {
@@ -147,15 +167,81 @@ export const calculateModifier = (skillOrWandName, selectedCharacter) => {
     }
   }
 
-  // Calculate proficiency bonus
   const profBonus =
     selectedCharacter.proficiencyBonus ||
     (selectedCharacter.level ? Math.ceil(selectedCharacter.level / 4) + 1 : 2);
 
-  // Calculate final modifier
   if (skillLevel === 0) return abilityMod;
   if (skillLevel === 1) return abilityMod + profBonus;
   if (skillLevel === 2) return abilityMod + 2 * profBonus;
 
   return abilityMod;
+};
+
+export const activityRequiresNoDiceRoll = (activityText) => {
+  if (!activityText) return false;
+
+  const text = activityText.toLowerCase();
+  return (
+    text.includes("shopping") ||
+    text.includes("selling") ||
+    text.includes("animagus form (rp)")
+  );
+};
+
+export const isRoleplayOnlyActivity = (activityText) => {
+  if (!activityText) return false;
+
+  const text = activityText.toLowerCase();
+  return text.includes("animagus form (rp)");
+};
+
+export const isMultiSessionActivity = (activityText) => {
+  if (!activityText) return false;
+
+  const text = activityText.toLowerCase();
+  return (
+    text.includes("three separate checks") ||
+    text.includes("separate downtime slots")
+  );
+};
+
+export const shouldUseCustomDiceForActivity = (activityText) => {
+  if (!activityText) return false;
+
+  const text = activityText.toLowerCase();
+  return text.includes("allowance");
+};
+
+export const getCustomDiceTypeForActivity = (activityText) => {
+  if (!activityText) return null;
+
+  const text = activityText.toLowerCase();
+  if (text.includes("allowance")) {
+    return {
+      diceType: "2d12",
+      discardD20: true,
+      description: "Discard one d20 and roll 2d12 instead",
+    };
+  }
+
+  return null;
+};
+
+export const activityRequiresSpecialRules = (activityText) => {
+  return (
+    isMultiSessionActivity(activityText) ||
+    shouldUseCustomDiceForActivity(activityText) ||
+    isRoleplayOnlyActivity(activityText)
+  );
+};
+
+export const getMultiSessionInfo = (activityText) => {
+  if (!isMultiSessionActivity(activityText)) return null;
+
+  return {
+    requiredSessions: 3,
+    description:
+      "This activity requires success on 3 separate downtime sessions to complete.",
+  };
 };

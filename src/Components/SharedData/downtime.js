@@ -1,4 +1,3 @@
-// SharedData/downtime.js
 export const downtime = {
   employment: {
     name: "Employment & Economics",
@@ -86,56 +85,38 @@ export const downtime = {
     ],
   },
 
-  relationships: {
-    name: "Building Relationships",
-    description: "Activities focused on developing relationships with NPCs",
+  cooking: {
+    name: "Cooking & Recipes",
+    description: "Food preparation and culinary activities",
     activities: [
-      "Spend time with Professor - Build rapport with faculty members",
-      "Study with Fellow Students - Collaborative learning and friendship building",
-      "Help Younger Students - Mentoring and relationship building",
-      "Visit Hogsmeade with Friends - Social outings and bonding",
-      "Write Letters to Family - Maintain family connections",
+      "Cooking - Roll Survival to prepare meals",
+      "Learn a Recipe - Roll Survival to memorize a recipe",
+      "Create a New Recipe - Must succeed on three separate checks using separate downtime slots",
     ],
   },
 
-  house_activities: {
-    name: "House Activities",
-    description: "House-specific and dormitory activities",
+  herbology_advanced: {
+    name: "Advanced Herbology",
+    description: "Advanced plant manipulation and engineering",
     activities: [
-      "Organize House Event - Plan and execute house gatherings",
-      "Common Room Activities - Games, studying, and socializing",
-      "House Competition Preparation - Training for inter-house events",
+      "Engineer Plants - Must succeed on three separate checks using separate downtime slots",
     ],
   },
 
-  creative: {
-    name: "Creative Pursuits",
-    description: "Artistic and creative activities",
+  tutoring: {
+    name: "Tutoring & Education",
+    description: "Seeking additional instruction and guidance",
     activities: [
-      "Write for School Newspaper - Journalism and creative writing",
-      "Practice Musical Instrument - Develop musical talents",
-      "Paint or Draw - Artistic expression and skill development",
-      "Write Poetry or Stories - Creative writing pursuits",
+      "Hire a Tutor - Seek out private instruction",
+      "Teacher Tutor - Receive guidance from a professor",
     ],
   },
 
-  physical: {
-    name: "Physical Activities",
-    description: "Sports, exercise, and physical pursuits",
+  special_magic: {
+    name: "Special Magical Arts",
+    description: "Advanced and specialized magical practices",
     activities: [
-      "Quidditch Practice - Individual skill improvement",
-      "Physical Training - Improve physical fitness and abilities",
-      "Flying Practice - Improve flying skills outside of Quidditch",
-    ],
-  },
-
-  special_events: {
-    name: "Special Events",
-    description: "Seasonal and special occasion activities",
-    activities: [
-      "Attend School Dance - Social events and formal gatherings",
-      "Participate in Holiday Celebrations - Seasonal festivities",
-      "Help with School Events - Volunteer for special occasions",
+      "Animagus Form (RP) - Engage in roleplay to explore an Animagus transformation",
     ],
   },
 
@@ -148,7 +129,6 @@ export const downtime = {
   },
 };
 
-// Helper function to get all activities as a flat array
 export const getAllActivities = () => {
   const activities = [""];
   Object.values(downtime).forEach((category) => {
@@ -159,12 +139,10 @@ export const getAllActivities = () => {
   return activities;
 };
 
-// Helper function to get activities by category
 export const getActivitiesByCategory = (categoryKey) => {
   return downtime[categoryKey]?.activities || [];
 };
 
-// Helper function to find which category an activity belongs to
 export const findActivityCategory = (activityText) => {
   for (const [categoryKey, category] of Object.entries(downtime)) {
     if (category.activities && category.activities.includes(activityText)) {
@@ -176,38 +154,6 @@ export const findActivityCategory = (activityText) => {
     }
   }
   return null;
-};
-
-// Helper function to get activity difficulty/complexity info
-export const getActivityInfo = (activityText) => {
-  const text = activityText.toLowerCase();
-
-  // Determine if activity requires multiple rolls
-  const requiresMultipleRolls =
-    text.includes("stealth and investigation") ||
-    text.includes("sleight of hand and investigation") ||
-    text.includes("three separate checks");
-
-  // Determine suggested skills based on activity type
-  let suggestedSkills = [];
-  if (text.includes("persuasion")) suggestedSkills.push("persuasion");
-  if (text.includes("investigation")) suggestedSkills.push("investigation");
-  if (text.includes("stealth")) suggestedSkills.push("stealth");
-  if (text.includes("deception")) suggestedSkills.push("deception");
-  if (text.includes("intimidation")) suggestedSkills.push("intimidation");
-  if (text.includes("performance")) suggestedSkills.push("performance");
-  if (text.includes("sleight of hand")) suggestedSkills.push("sleight_of_hand");
-  if (text.includes("magical creatures"))
-    suggestedSkills.push("animal_handling");
-  if (text.includes("herbology")) suggestedSkills.push("nature");
-  if (text.includes("history")) suggestedSkills.push("history");
-  if (text.includes("insight")) suggestedSkills.push("insight");
-
-  return {
-    requiresMultipleRolls,
-    suggestedSkills,
-    category: findActivityCategory(activityText),
-  };
 };
 
 export const wandModifiers = [
@@ -225,19 +171,3 @@ export const wandModifiers = [
     ability: "charisma",
   },
 ];
-
-export const activityPatterns = {
-  digForDirt: /dig\s+for\s+dirt/i,
-  spreadRumors: /spread\s+rumors/i,
-  gainJob: /gain\s+a?\s*job.*persuasion\s+or\s+an?\s+appropriate/i,
-  promotion: /promotion.*persuasion\s+or\s+an?\s+appropriate/i,
-  suggestedSkill: /(roll\s+(\w+(?:\s+\w+)*)).*or\s+an?\s+appropriate\s+skill/i,
-  stealthAndInvestigation: /stealth\s+and\s+investigation\s+rolls/i,
-  sleightAndInvestigation: /sleight\s+of\s+hand\s+and\s+investigation\s+rolls/i,
-  explorecastle: /explore\s+the\s+castle.*roll\s+investigation/i,
-  rollInvestigation: /roll\s+investigation(?!\s*,)/i,
-  rollPersuasion: /roll\s+persuasion(?!\s*,)/i,
-  rollMagicalCreatures: /roll\s+magical\s+creatures/i,
-  rollHerbology: /roll\s+herbology/i,
-  rollHistoryOfMagic: /roll\s+history\s+of\s+magic/i,
-};

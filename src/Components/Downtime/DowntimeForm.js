@@ -1,11 +1,23 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getAllActivities, wandModifiers } from "../SharedData/downtime";
+import {
+  getAllActivities,
+  wandModifiers,
+  downtime,
+} from "../SharedData/downtime";
 import { allSkills } from "../SharedData/data";
 import { formatModifier, modifiers } from "../CharacterSheet/utils";
 import {
   calculateModifier,
   activityRequiresDualChecks,
+  getActivitySkillInfo,
+  activityRequiresNoDiceRoll,
+  isMultiSessionActivity,
+  shouldUseCustomDiceForActivity,
+  getCustomDiceTypeForActivity,
+  activityRequiresSpecialRules,
+  getMultiSessionInfo,
+  isRoleplayOnlyActivity,
 } from "./downtimeHelpers";
 import SkillSelector from "./SkillSelector";
 
@@ -43,6 +55,7 @@ const DowntimeForm = ({
         secondDiceIndex: null,
         secondSkill: "",
         secondWandModifier: "",
+        customDice: null,
       },
       activity2: {
         diceIndex: null,
@@ -52,6 +65,7 @@ const DowntimeForm = ({
         secondDiceIndex: null,
         secondSkill: "",
         secondWandModifier: "",
+        customDice: null,
       },
       activity3: {
         diceIndex: null,
@@ -61,6 +75,7 @@ const DowntimeForm = ({
         secondDiceIndex: null,
         secondSkill: "",
         secondWandModifier: "",
+        customDice: null,
       },
     }
   );
@@ -90,7 +105,6 @@ const DowntimeForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
-  // Count activities requiring dual checks and extra dice logic
   const dualCheckActivities = useMemo(() => {
     return formData.activities.filter((activity) =>
       activityRequiresDualChecks(activity.activity)
@@ -128,6 +142,57 @@ const DowntimeForm = ({
     }
   }, [initialFormData, hasInitialized]);
 
+  const canEdit = useCallback(() => {
+    if (isUserAdmin) return true;
+    if (!currentSheet) return true;
+    if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
+    return false;
+  }, [isUserAdmin, currentSheet, user?.id]);
+
+  const updateRollAssignment = useCallback(
+    (activityIndex, field, value) => {
+      if (!canEdit()) return;
+
+      const assignmentKey = `activity${activityIndex + 1}`;
+      setRollAssignments((prev) => ({
+        ...prev,
+        [assignmentKey]: {
+          ...prev[assignmentKey],
+          [field]: value,
+        },
+      }));
+    },
+    [canEdit]
+  );
+
+  useEffect(() => {
+    formData.activities.forEach((activity, index) => {
+      console.log({ activity });
+      if (activity.activity) {
+        const skillInfo = getActivitySkillInfo(activity.activity);
+        if (skillInfo.type === "locked" && skillInfo.skills) {
+          const assignmentKey = `activity${index + 1}`;
+          const currentAssignment = rollAssignments[assignmentKey];
+          console.log({ skillInfo });
+          if (
+            skillInfo.skills[0] &&
+            (!currentAssignment?.skill || currentAssignment.skill === "")
+          ) {
+            updateRollAssignment(index, "skill", skillInfo.skills[0]);
+          }
+
+          if (
+            skillInfo.skills[1] &&
+            (!currentAssignment?.secondSkill ||
+              currentAssignment.secondSkill === "")
+          ) {
+            updateRollAssignment(index, "secondSkill", skillInfo.skills[1]);
+          }
+        }
+      }
+    });
+  }, [formData.activities, rollAssignments, updateRollAssignment]);
+
   useEffect(() => {
     setHasInitialized(false);
   }, [currentSheet?.id]);
@@ -143,6 +208,37 @@ const DowntimeForm = ({
       })),
     ];
   }, []);
+
+  const rollCustomDice = useCallback((activityText) => {
+    const customDiceInfo = getCustomDiceTypeForActivity(activityText);
+    if (customDiceInfo && customDiceInfo.diceType === "2d12") {
+      return [
+        Math.floor(Math.random() * 12) + 1,
+        Math.floor(Math.random() * 12) + 1,
+      ];
+    }
+    return null;
+  }, []);
+
+  const handleCustomDiceRoll = useCallback(
+    (activityIndex, activityText) => {
+      if (!canEdit()) return;
+
+      const customDice = rollCustomDice(activityText);
+      if (customDice) {
+        setRollAssignments((prev) => ({
+          ...prev,
+          [`activity${activityIndex + 1}`]: {
+            ...prev[`activity${activityIndex + 1}`],
+            customDice: customDice,
+            diceIndex: null,
+            secondDiceIndex: null,
+          },
+        }));
+      }
+    },
+    [canEdit, rollCustomDice]
+  );
 
   const getActivityDescription = useCallback(
     (activityValue) => {
@@ -178,25 +274,19 @@ const DowntimeForm = ({
           ...prev[key],
           diceIndex: null,
           secondDiceIndex: null,
+          customDice: null,
         };
       });
       return resetAssignments;
     });
-  }, []);
+  }, [canEdit]);
 
   const addExtraDie = useCallback(() => {
     if (!canEdit()) return;
 
     const extraDie = Math.floor(Math.random() * 20) + 1;
     setDicePool((prev) => [...prev, extraDie]);
-  }, []);
-
-  const canEdit = useCallback(() => {
-    if (isUserAdmin) return true;
-    if (!currentSheet) return true;
-    if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
-    return false;
-  }, [isUserAdmin, currentSheet, user?.id]);
+  }, [canEdit]);
 
   const isDiceAssigned = useCallback(
     (diceIndex) => {
@@ -259,27 +349,352 @@ const DowntimeForm = ({
     [canEdit]
   );
 
-  const updateRollAssignment = useCallback(
-    (activityIndex, field, value) => {
-      if (!canEdit()) return;
-
-      const assignmentKey = `activity${activityIndex + 1}`;
-      setRollAssignments((prev) => ({
-        ...prev,
-        [assignmentKey]: {
-          ...prev[assignmentKey],
-          [field]: value,
-        },
-      }));
-    },
-    [canEdit]
-  );
-
   const getSortedDiceOptions = useMemo(() => {
     return dicePool
       .map((value, index) => ({ value, index }))
       .sort((a, b) => b.value - a.value);
   }, [dicePool]);
+
+  const renderDiceValue = useCallback(
+    (assignment, dicePool, isSecond = false) => {
+      const diceIndexKey = isSecond ? "secondDiceIndex" : "diceIndex";
+      const skillKey = isSecond ? "secondSkill" : "skill";
+      if (assignment.customDice && !isSecond) {
+        return (
+          <div style={styles.assignedDice}>
+            <div style={styles.diceValue}>
+              2d12: {assignment.customDice[0]} + {assignment.customDice[1]} ={" "}
+              {assignment.customDice[0] + assignment.customDice[1]}
+            </div>
+            {assignment[skillKey] && (
+              <div style={styles.total}>
+                Total: {assignment.customDice[0] + assignment.customDice[1]}{" "}
+                {formatModifier(getModifierValue(assignment[skillKey]))} ={" "}
+                {assignment.customDice[0] +
+                  assignment.customDice[1] +
+                  getModifierValue(assignment[skillKey])}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      if (
+        assignment[diceIndexKey] !== null &&
+        assignment[diceIndexKey] !== undefined
+      ) {
+        return (
+          <div style={styles.assignedDice}>
+            <div style={styles.diceValue}>
+              {dicePool[assignment[diceIndexKey]]}
+            </div>
+            {assignment[skillKey] && (
+              <div style={styles.total}>
+                Total: {dicePool[assignment[diceIndexKey]]}{" "}
+                {formatModifier(getModifierValue(assignment[skillKey]))} ={" "}
+                {dicePool[assignment[diceIndexKey]] +
+                  getModifierValue(assignment[skillKey])}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      return null;
+    },
+    [getModifierValue]
+  );
+  const editable = canEdit();
+
+  const renderSpecialActivityInfo = useCallback(
+    (activityText) => {
+      if (!activityText) return null;
+
+      if (isRoleplayOnlyActivity(activityText)) {
+        return (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: theme.info + "20",
+              border: `1px solid ${theme.info}`,
+              borderRadius: "6px",
+              marginTop: "1rem",
+              textAlign: "center",
+            }}
+          >
+            <strong>🎭 Roleplay Activity</strong>
+            <br />
+            <small>
+              This activity is entirely roleplay-based and doesn't require dice
+              rolls.
+            </small>
+          </div>
+        );
+      }
+
+      if (
+        activityRequiresNoDiceRoll(activityText) &&
+        !isRoleplayOnlyActivity(activityText)
+      ) {
+        return (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: theme.info + "20",
+              border: `1px solid ${theme.info}`,
+              borderRadius: "6px",
+              marginTop: "1rem",
+              textAlign: "center",
+            }}
+          >
+            <strong>📋 No Dice Roll Required</strong>
+            <br />
+            <small>
+              This activity doesn't require a dice roll to complete.
+            </small>
+          </div>
+        );
+      }
+
+      if (isMultiSessionActivity(activityText)) {
+        const multiSessionInfo = getMultiSessionInfo(activityText);
+        return (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: theme.warning + "20",
+              border: `1px solid ${theme.warning}`,
+              borderRadius: "6px",
+              marginTop: "1rem",
+            }}
+          >
+            <strong>⏳ Multi-Session Activity</strong>
+            <br />
+            <small>{multiSessionInfo.description}</small>
+          </div>
+        );
+      }
+
+      if (shouldUseCustomDiceForActivity(activityText)) {
+        const customDiceInfo = getCustomDiceTypeForActivity(activityText);
+        return (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: theme.warning + "20",
+              border: `1px solid ${theme.warning}`,
+              borderRadius: "6px",
+              marginTop: "1rem",
+            }}
+          >
+            <div style={{ marginBottom: "0.5rem" }}>
+              <strong>🎲 Special Dice Rules</strong>
+              <br />
+              <small>{customDiceInfo.description}</small>
+            </div>
+
+            {/* Show custom dice roll button or result */}
+            <div>
+              <button
+                onClick={() => handleCustomDiceRoll(activityText)}
+                disabled={!editable}
+                style={{
+                  ...styles.button,
+                  ...styles.secondaryButton,
+                  fontSize: "0.875rem",
+                  padding: "0.5rem 1rem",
+                  ...(!editable ? { opacity: 0.6, cursor: "not-allowed" } : {}),
+                }}
+              >
+                Roll {customDiceInfo.diceType}
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    },
+    [theme, editable, handleCustomDiceRoll]
+  );
+
+  const renderDiceAssignment = useCallback(
+    (activity, index, assignment) => {
+      const activityText = activity.activity;
+
+      if (!activityText) return null;
+
+      if (
+        activityRequiresNoDiceRoll(activityText) ||
+        isMultiSessionActivity(activityText) ||
+        shouldUseCustomDiceForActivity(activityText) ||
+        isRoleplayOnlyActivity(activityText)
+      ) {
+        return null;
+      }
+
+      if (activityRequiresDualChecks(activityText)) {
+        return (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1rem",
+              marginTop: "1rem",
+            }}
+          >
+            {/* First Skill/Die Pair */}
+            <div>
+              <SkillSelector
+                activityText={activityText}
+                assignment={assignment}
+                isSecondSkill={false}
+                onChange={(value) =>
+                  updateRollAssignment(index, "skill", value)
+                }
+                canEdit={() => editable}
+                selectedCharacter={selectedCharacter}
+              />
+
+              <div style={{ marginTop: "0.5rem" }}>
+                <label style={styles.label}>Primary Die</label>
+                {renderDiceValue(assignment, dicePool, false) || (
+                  <select
+                    style={styles.select}
+                    value=""
+                    onChange={(e) =>
+                      assignDice(index, parseInt(e.target.value), false)
+                    }
+                    disabled={!editable}
+                  >
+                    <option value="">Select die...</option>
+                    {getSortedDiceOptions
+                      .filter(
+                        ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                      )
+                      .map(({ value, index: diceIndex }) => (
+                        <option key={diceIndex} value={diceIndex}>
+                          {value}
+                        </option>
+                      ))}
+                  </select>
+                )}
+                {assignment.diceIndex !== null &&
+                  assignment.diceIndex !== undefined &&
+                  editable && (
+                    <button
+                      style={{ ...styles.removeButton, marginTop: "0.5rem" }}
+                      onClick={() => unassignDice(index, false)}
+                    >
+                      Remove
+                    </button>
+                  )}
+              </div>
+            </div>
+
+            {/* Second Skill/Die Pair */}
+            <div>
+              <SkillSelector
+                activityText={activityText}
+                assignment={assignment}
+                isSecondSkill={true}
+                onChange={(value) =>
+                  updateRollAssignment(index, "secondSkill", value)
+                }
+                canEdit={() => editable}
+                selectedCharacter={selectedCharacter}
+              />
+
+              <div style={{ marginTop: "0.5rem" }}>
+                <label style={styles.label}>Second Die</label>
+                {renderDiceValue(assignment, dicePool, true) || (
+                  <select
+                    style={styles.select}
+                    value=""
+                    onChange={(e) =>
+                      assignDice(index, parseInt(e.target.value), true)
+                    }
+                    disabled={!editable}
+                  >
+                    <option value="">Select die...</option>
+                    {getSortedDiceOptions
+                      .filter(
+                        ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                      )
+                      .map(({ value, index: diceIndex }) => (
+                        <option key={diceIndex} value={diceIndex}>
+                          {value}
+                        </option>
+                      ))}
+                  </select>
+                )}
+                {assignment.secondDiceIndex !== null &&
+                  assignment.secondDiceIndex !== undefined &&
+                  editable && (
+                    <button
+                      style={{ ...styles.removeButton, marginTop: "0.5rem" }}
+                      onClick={() => unassignDice(index, true)}
+                    >
+                      Remove
+                    </button>
+                  )}
+              </div>
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div style={styles.diceAssignment}>
+            <div>
+              <label style={styles.label}>Primary Die</label>
+              {renderDiceValue(assignment, dicePool, false) || (
+                <select
+                  style={styles.select}
+                  value=""
+                  onChange={(e) =>
+                    assignDice(index, parseInt(e.target.value), false)
+                  }
+                  disabled={!editable}
+                >
+                  <option value="">Select die...</option>
+                  {getSortedDiceOptions
+                    .filter(
+                      ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                    )
+                    .map(({ value, index: diceIndex }) => (
+                      <option key={diceIndex} value={diceIndex}>
+                        {value}
+                      </option>
+                    ))}
+                </select>
+              )}
+              {assignment.diceIndex !== null &&
+                assignment.diceIndex !== undefined &&
+                editable && (
+                  <button
+                    style={{ ...styles.removeButton, marginTop: "0.5rem" }}
+                    onClick={() => unassignDice(index, false)}
+                  >
+                    Remove
+                  </button>
+                )}
+            </div>
+          </div>
+        );
+      }
+    },
+    [
+      activityRequiresDualChecks,
+      renderDiceValue,
+      getSortedDiceOptions,
+      isDiceAssigned,
+      assignDice,
+      unassignDice,
+      updateRollAssignment,
+      editable,
+      selectedCharacter,
+    ]
+  );
 
   const saveAsDraft = useCallback(async () => {
     if (
@@ -611,8 +1026,6 @@ const DowntimeForm = ({
     },
   };
 
-  const editable = canEdit();
-
   return (
     <div style={styles.container}>
       {/* Dice Pool Section */}
@@ -773,27 +1186,42 @@ const DowntimeForm = ({
                       }
                       disabled={!editable}
                     >
-                      {availableActivities.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
+                      <option value="">Select Activity</option>
+                      {Object.entries(downtime).map(
+                        ([categoryKey, categoryInfo]) => {
+                          return categoryInfo.activities.map(
+                            (activityName, actIndex) => (
+                              <option
+                                key={`${categoryKey}-${actIndex}`}
+                                value={activityName}
+                              >
+                                {activityName.split(" - ")[0]}
+                              </option>
+                            )
+                          );
+                        }
+                      )}
                     </select>
                   </div>
 
-                  {/* Skill Selector - only show here for single check activities */}
-                  {!activityRequiresDualChecks(activity.activity) && (
-                    <SkillSelector
-                      activityText={activity.activity}
-                      assignment={assignment}
-                      isSecondSkill={false}
-                      onChange={(value) =>
-                        updateRollAssignment(index, "skill", value)
-                      }
-                      canEdit={() => editable}
-                      selectedCharacter={selectedCharacter}
-                    />
-                  )}
+                  {/* Skill Selector - only show here for single check activities that need dice */}
+                  {!activityRequiresDualChecks(activity.activity) &&
+                    activity.activity &&
+                    !activityRequiresNoDiceRoll(activity.activity) &&
+                    !isMultiSessionActivity(activity.activity) &&
+                    !shouldUseCustomDiceForActivity(activity.activity) &&
+                    !isRoleplayOnlyActivity(activity.activity) && (
+                      <SkillSelector
+                        activityText={activity.activity}
+                        assignment={assignment}
+                        isSecondSkill={false}
+                        onChange={(value) =>
+                          updateRollAssignment(index, "skill", value)
+                        }
+                        canEdit={() => editable}
+                        selectedCharacter={selectedCharacter}
+                      />
+                    )}
 
                   {/* Placeholder for dual check activities */}
                   {activityRequiresDualChecks(activity.activity) && (
@@ -838,208 +1266,13 @@ const DowntimeForm = ({
                   />
                 </div>
 
-                {/* Dual Check Layout */}
-                {activityRequiresDualChecks(activity.activity) ? (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "1rem",
-                      marginTop: "1rem",
-                    }}
-                  >
-                    {/* First Skill/Die Pair */}
-                    <div>
-                      <SkillSelector
-                        activityText={activity.activity}
-                        assignment={assignment}
-                        isSecondSkill={false}
-                        onChange={(value) =>
-                          updateRollAssignment(index, "skill", value)
-                        }
-                        canEdit={() => editable}
-                        selectedCharacter={selectedCharacter}
-                      />
+                {/* Special Activity Info */}
+                {activity.activity &&
+                  renderSpecialActivityInfo(activity.activity)}
 
-                      <div style={{ marginTop: "0.5rem" }}>
-                        <label style={styles.label}>Primary Die</label>
-                        {assignment.diceIndex !== null &&
-                        assignment.diceIndex !== undefined ? (
-                          <div style={styles.assignedDice}>
-                            <div style={styles.diceValue}>
-                              {dicePool[assignment.diceIndex]}
-                            </div>
-                            {assignment.skill && (
-                              <div style={styles.total}>
-                                Total: {dicePool[assignment.diceIndex]}{" "}
-                                {formatModifier(
-                                  getModifierValue(assignment.skill)
-                                )}{" "}
-                                ={" "}
-                                {dicePool[assignment.diceIndex] +
-                                  getModifierValue(assignment.skill)}
-                              </div>
-                            )}
-                            {editable && (
-                              <button
-                                style={styles.removeButton}
-                                onClick={() => unassignDice(index, false)}
-                              >
-                                Remove
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <select
-                            style={styles.select}
-                            value=""
-                            onChange={(e) =>
-                              assignDice(index, parseInt(e.target.value), false)
-                            }
-                            disabled={!editable}
-                          >
-                            <option value="">Select die...</option>
-                            {getSortedDiceOptions
-                              .filter(
-                                ({ index: diceIndex }) =>
-                                  !isDiceAssigned(diceIndex)
-                              )
-                              .map(({ value, index: diceIndex }) => (
-                                <option key={diceIndex} value={diceIndex}>
-                                  {value}
-                                </option>
-                              ))}
-                          </select>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Second Skill/Die Pair */}
-                    <div>
-                      <SkillSelector
-                        activityText={activity.activity}
-                        assignment={assignment}
-                        isSecondSkill={true}
-                        onChange={(value) =>
-                          updateRollAssignment(index, "secondSkill", value)
-                        }
-                        canEdit={() => editable}
-                        selectedCharacter={selectedCharacter}
-                      />
-
-                      <div style={{ marginTop: "0.5rem" }}>
-                        <label style={styles.label}>Second Die</label>
-                        {assignment.secondDiceIndex !== null &&
-                        assignment.secondDiceIndex !== undefined ? (
-                          <div style={styles.assignedDice}>
-                            <div style={styles.diceValue}>
-                              {dicePool[assignment.secondDiceIndex]}
-                            </div>
-                            {(assignment.skill || assignment.secondSkill) && (
-                              <div style={styles.total}>
-                                Total: {dicePool[assignment.secondDiceIndex]}{" "}
-                                {formatModifier(
-                                  getModifierValue(
-                                    assignment.secondSkill || assignment.skill
-                                  )
-                                )}{" "}
-                                ={" "}
-                                {dicePool[assignment.secondDiceIndex] +
-                                  getModifierValue(
-                                    assignment.secondSkill || assignment.skill
-                                  )}
-                              </div>
-                            )}
-                            {editable && (
-                              <button
-                                style={styles.removeButton}
-                                onClick={() => unassignDice(index, true)}
-                              >
-                                Remove
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <select
-                            style={styles.select}
-                            value=""
-                            onChange={(e) =>
-                              assignDice(index, parseInt(e.target.value), true)
-                            }
-                            disabled={!editable}
-                          >
-                            <option value="">Select die...</option>
-                            {getSortedDiceOptions
-                              .filter(
-                                ({ index: diceIndex }) =>
-                                  !isDiceAssigned(diceIndex)
-                              )
-                              .map(({ value, index: diceIndex }) => (
-                                <option key={diceIndex} value={diceIndex}>
-                                  {value}
-                                </option>
-                              ))}
-                          </select>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* Single Check Layout */
-                  <div style={styles.diceAssignment}>
-                    <div>
-                      <label style={styles.label}>Primary Die</label>
-                      {assignment.diceIndex !== null &&
-                      assignment.diceIndex !== undefined ? (
-                        <div style={styles.assignedDice}>
-                          <div style={styles.diceValue}>
-                            {dicePool[assignment.diceIndex]}
-                          </div>
-                          {assignment.skill && (
-                            <div style={styles.total}>
-                              Total: {dicePool[assignment.diceIndex]}{" "}
-                              {formatModifier(
-                                getModifierValue(assignment.skill)
-                              )}{" "}
-                              ={" "}
-                              {dicePool[assignment.diceIndex] +
-                                getModifierValue(assignment.skill)}
-                            </div>
-                          )}
-                          {editable && (
-                            <button
-                              style={styles.removeButton}
-                              onClick={() => unassignDice(index, false)}
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <select
-                          style={styles.select}
-                          value=""
-                          onChange={(e) =>
-                            assignDice(index, parseInt(e.target.value), false)
-                          }
-                          disabled={!editable}
-                        >
-                          <option value="">Select die...</option>
-                          {getSortedDiceOptions
-                            .filter(
-                              ({ index: diceIndex }) =>
-                                !isDiceAssigned(diceIndex)
-                            )
-                            .map(({ value, index: diceIndex }) => (
-                              <option key={diceIndex} value={diceIndex}>
-                                {value}
-                              </option>
-                            ))}
-                        </select>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* Dice Assignment based on activity type */}
+                {activity.activity &&
+                  renderDiceAssignment(activity, index, assignment)}
               </div>
             );
           })}
