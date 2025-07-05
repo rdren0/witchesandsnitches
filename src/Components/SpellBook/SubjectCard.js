@@ -545,14 +545,17 @@ export const SubjectCard = ({
     getSubjectStats(subjectName);
 
   const loadSpellProgress = async () => {
-    if (!selectedCharacter || !discordUserId) return;
+    if (!selectedCharacter) return;
+
+    const characterOwnerDiscordId = selectedCharacter.discord_user_id;
+    if (!characterOwnerDiscordId) return;
 
     try {
       const { data, error } = await supabase
         .from("spell_progress_summary")
         .select("*")
         .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId);
+        .eq("discord_user_id", characterOwnerDiscordId);
 
       if (error) {
         console.error("Error fetching spell progress:", error);
@@ -610,8 +613,7 @@ export const SubjectCard = ({
 
   useEffect(() => {
     loadSpellProgress();
-    // eslint-disable-next-line
-  }, [selectedCharacter?.id, discordUserId]);
+  }, [selectedCharacter?.id, selectedCharacter?.discord_user_id]);
 
   const toggleDescription = (spellName) => {
     setExpandedDescriptions((prev) => ({
@@ -655,14 +657,17 @@ export const SubjectCard = ({
     isSuccess,
     isNaturalTwenty = false
   ) => {
-    if (!selectedCharacter || !discordUserId) return;
+    if (!selectedCharacter) return;
+
+    const characterOwnerDiscordId = selectedCharacter.discord_user_id;
+    if (!characterOwnerDiscordId) return;
 
     try {
       const { data: existingProgress, error: fetchError } = await supabase
         .from("spell_progress_summary")
         .select("*")
         .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
+        .eq("discord_user_id", characterOwnerDiscordId)
         .eq("spell_name", spellName)
         .single();
 
@@ -695,12 +700,11 @@ export const SubjectCard = ({
       } else {
         const insertData = {
           character_id: selectedCharacter.id,
-          discord_user_id: discordUserId,
+          discord_user_id: characterOwnerDiscordId,
           spell_name: spellName,
           successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
           has_natural_twenty: isNaturalTwenty,
           has_failed_attempt: !isSuccess,
-          researched: false,
         };
 
         const { error: insertError } = await supabase
@@ -711,8 +715,6 @@ export const SubjectCard = ({
           console.error("Error inserting spell progress:", insertError);
         }
       }
-
-      await loadSpellProgress();
     } catch (error) {
       console.error("Error updating spell progress summary:", error);
     }
@@ -813,9 +815,10 @@ export const SubjectCard = ({
                     subject,
                     selectedCharacter,
                     setSpellAttempts,
-                    discordUserId,
+                    discordUserId: selectedCharacter.discord_user_id,
                     setAttemptingSpells,
                     setCriticalSuccesses,
+                    setFailedAttempts,
                     updateSpellProgressSummary,
                   });
                   setAlternateAttemptsModal(null);
@@ -846,9 +849,10 @@ export const SubjectCard = ({
                     subject,
                     selectedCharacter,
                     setSpellAttempts,
-                    discordUserId,
+                    discordUserId: selectedCharacter.discord_user_id,
                     setAttemptingSpells,
                     setCriticalSuccesses,
+                    setFailedAttempts,
                     updateSpellProgressSummary,
                   });
                   setAlternateAttemptsModal(null);
@@ -1001,7 +1005,7 @@ export const SubjectCard = ({
                   {tag}
                 </span>
               ))}
-              {!isMastered && (hasAttempts || hasFailedAttempt) && (
+              {(isMastered || hasAttempts || hasFailedAttempt) && (
                 <span
                   style={{
                     fontSize: "10px",
@@ -1010,13 +1014,35 @@ export const SubjectCard = ({
                     borderRadius: "10px",
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
-                    backgroundColor: hasAttempts
-                      ? theme.success || "#10b981"
-                      : theme.error || "#ef4444",
-                    color: "white",
+                    backgroundColor:
+                      isMastered && hasCriticalSuccess
+                        ? "#ffd700" // Gold for critical mastery
+                        : isMastered
+                        ? theme.success || "#10b981" // Green for mastery
+                        : hasAttempts
+                        ? "#f59e0b" // Yellow for successful attempts
+                        : hasFailedAttempt
+                        ? theme.error || "#ef4444" // Red for only failed attempts
+                        : "#6b7280",
+                    color:
+                      (isMastered && hasCriticalSuccess) || hasAttempts
+                        ? "#000000" // Black text on gold/yellow
+                        : "white", // White text on green/red
+                    boxShadow:
+                      isMastered && hasCriticalSuccess
+                        ? "0 0 8px rgba(255, 215, 0, 0.5)"
+                        : "none",
                   }}
                 >
-                  Attempted
+                  {isMastered && hasCriticalSuccess
+                    ? "★ Critical"
+                    : isMastered
+                    ? "Mastered"
+                    : hasAttempts
+                    ? "Attempted"
+                    : hasFailedAttempt
+                    ? "Failed" // ✅ This was the missing piece!
+                    : "Unknown"}
                 </span>
               )}
               {isResearched && (
@@ -1120,9 +1146,10 @@ export const SubjectCard = ({
                 getSpellModifier,
                 selectedCharacter,
                 setSpellAttempts,
-                discordUserId,
+                discordUserId: selectedCharacter.discord_user_id,
                 setAttemptingSpells,
                 setCriticalSuccesses,
+                setFailedAttempts,
                 updateSpellProgressSummary,
               })
             }
@@ -1407,6 +1434,7 @@ export const SubjectCard = ({
         const researcherBonus = Math.floor(wisdomModifier / 2);
         modifier += researcherBonus;
       }
+      const characterOwnerDiscordId = selectedCharacter.discord_user_id;
 
       const rollResult = await rollResearch({
         spellName,
@@ -1438,7 +1466,7 @@ export const SubjectCard = ({
           .from("spell_progress_summary")
           .select("*")
           .eq("character_id", selectedCharacter.id)
-          .eq("discord_user_id", discordUserId)
+          .eq("discord_user_id", characterOwnerDiscordId)
           .eq("spell_name", spellName)
           .single();
 
@@ -1477,7 +1505,7 @@ export const SubjectCard = ({
         } else {
           const insertData = {
             character_id: selectedCharacter.id,
-            discord_user_id: discordUserId,
+            discord_user_id: characterOwnerDiscordId,
             spell_name: spellName,
             successful_attempts: rollResult.isNaturalTwenty ? 1 : 0,
             has_natural_twenty: false,
@@ -1524,14 +1552,17 @@ export const SubjectCard = ({
   };
 
   const saveEdit = async () => {
-    if (!selectedCharacter || !discordUserId || !editingSpell) return;
+    if (!selectedCharacter || !editingSpell) return;
+
+    const characterOwnerDiscordId = selectedCharacter.discord_user_id;
+    if (!characterOwnerDiscordId) return;
 
     try {
       const { data: existingProgress, error: fetchError } = await supabase
         .from("spell_progress_summary")
         .select("*")
         .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId)
+        .eq("discord_user_id", characterOwnerDiscordId)
         .eq("spell_name", editingSpell)
         .single();
 
@@ -1562,7 +1593,7 @@ export const SubjectCard = ({
       } else {
         const insertData = {
           character_id: selectedCharacter.id,
-          discord_user_id: discordUserId,
+          discord_user_id: characterOwnerDiscordId,
           spell_name: editingSpell,
           ...updateData,
         };

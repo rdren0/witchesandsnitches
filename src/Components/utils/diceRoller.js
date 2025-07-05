@@ -1961,6 +1961,7 @@ export const attemptSpell = async ({
   discordUserId,
   setAttemptingSpells,
   setCriticalSuccesses,
+  setFailedAttempts,
   updateSpellProgressSummary,
 }) => {
   const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
@@ -2035,6 +2036,11 @@ export const attemptSpell = async ({
           [spellName]: newAttempts,
         };
       });
+    } else {
+      setFailedAttempts((prev) => ({
+        ...prev,
+        [spellName]: true,
+      }));
     }
 
     if (!discordWebhookUrl) {
@@ -2150,6 +2156,7 @@ export const attemptArithmancySpell = async ({
   discordUserId,
   setAttemptingSpells,
   setCriticalSuccesses,
+  setFailedAttempts,
   updateSpellProgressSummary,
 }) => {
   const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
@@ -2227,6 +2234,11 @@ export const attemptArithmancySpell = async ({
           [spellName]: newAttempts,
         };
       });
+    } else {
+      setFailedAttempts((prev) => ({
+        ...prev,
+        [spellName]: true,
+      }));
     }
 
     if (!discordWebhookUrl) {
@@ -2334,6 +2346,7 @@ export const attemptRunesSpell = async ({
   discordUserId,
   setAttemptingSpells,
   setCriticalSuccesses,
+  setFailedAttempts,
   updateSpellProgressSummary,
 }) => {
   const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
@@ -2411,6 +2424,11 @@ export const attemptRunesSpell = async ({
           [spellName]: newAttempts,
         };
       });
+    } else {
+      setFailedAttempts((prev) => ({
+        ...prev,
+        [spellName]: true,
+      }));
     }
 
     if (!discordWebhookUrl) {
