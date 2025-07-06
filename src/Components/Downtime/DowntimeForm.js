@@ -17,6 +17,7 @@ import {
   getCustomDiceTypeForActivity,
   activityRequiresSpecialRules,
   getMultiSessionInfo,
+  getSpecialActivityInfo,
   validateSkillName,
 } from "./downtimeHelpers";
 import SkillSelector from "./SkillSelector";
@@ -56,6 +57,7 @@ const DowntimeForm = ({
         secondSkill: "",
         secondWandModifier: "",
         customDice: null,
+        jobType: null,
       },
       activity2: {
         diceIndex: null,
@@ -66,6 +68,7 @@ const DowntimeForm = ({
         secondSkill: "",
         secondWandModifier: "",
         customDice: null,
+        jobType: null,
       },
       activity3: {
         diceIndex: null,
@@ -76,6 +79,7 @@ const DowntimeForm = ({
         secondSkill: "",
         secondWandModifier: "",
         customDice: null,
+        jobType: null,
       },
     }
   );
@@ -105,6 +109,8 @@ const DowntimeForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
+  const [extraDiceAssignments, setExtraDiceAssignments] = useState({});
+
   const dualCheckActivities = useMemo(() => {
     return formData.activities.filter((activity) =>
       activityRequiresDualChecks(activity.activity)
@@ -118,6 +124,30 @@ const DowntimeForm = ({
   const shouldDisableExtraDie = useMemo(() => {
     return extraDiceCount >= dualCheckActivities.length;
   }, [extraDiceCount, dualCheckActivities.length]);
+
+  useEffect(() => {
+    const currentDualCheckCount = dualCheckActivities.length;
+    const currentExtraDiceCount = Math.max(0, dicePool.length - 6);
+
+    if (currentExtraDiceCount > currentDualCheckCount) {
+      const excessDice = currentExtraDiceCount - currentDualCheckCount;
+
+      setDicePool((prev) => prev.slice(0, prev.length - excessDice));
+
+      setExtraDiceAssignments((prev) => {
+        const updated = { ...prev };
+        const removedStartIndex = dicePool.length - excessDice;
+
+        Object.keys(updated).forEach((key) => {
+          if (updated[key] >= removedStartIndex) {
+            delete updated[key];
+          }
+        });
+
+        return updated;
+      });
+    }
+  }, [dualCheckActivities.length, dicePool.length]);
 
   useEffect(() => {
     if (initialDicePool && initialDicePool.length > 0 && !hasInitialized) {
@@ -167,12 +197,10 @@ const DowntimeForm = ({
 
   useEffect(() => {
     formData.activities.forEach((activity, index) => {
-      console.log({ activity });
       if (activity.activity) {
         const skillInfo = getActivitySkillInfo(activity.activity);
         const assignmentKey = `activity${index + 1}`;
         const currentAssignment = rollAssignments[assignmentKey];
-        console.log({ skillInfo });
 
         if (skillInfo.type === "locked" && skillInfo.skills) {
           if (
@@ -251,35 +279,63 @@ const DowntimeForm = ({
     ];
   }, []);
 
-  const rollCustomDice = useCallback((activityText) => {
+  const rollCustomDice = useCallback((activityText, jobType = "medium") => {
     const customDiceInfo = getCustomDiceTypeForActivity(activityText);
-    if (customDiceInfo && customDiceInfo.diceType === "2d12") {
-      return [
-        Math.floor(Math.random() * 12) + 1,
-        Math.floor(Math.random() * 12) + 1,
-      ];
+    if (customDiceInfo && customDiceInfo.rollFunction) {
+      return customDiceInfo.rollFunction(jobType);
     }
     return null;
   }, []);
 
   const handleCustomDiceRoll = useCallback(
-    (activityIndex, activityText) => {
-      if (!canEdit()) return;
+    (activityText, jobType) => {
+      if (!canEdit()) {
+        return;
+      }
 
-      const customDice = rollCustomDice(activityText);
-      if (customDice) {
-        setRollAssignments((prev) => ({
-          ...prev,
-          [`activity${activityIndex + 1}`]: {
-            ...prev[`activity${activityIndex + 1}`],
-            customDice: customDice,
-            diceIndex: null,
-            secondDiceIndex: null,
-          },
-        }));
+      try {
+        const customDice = rollCustomDice(activityText, jobType);
+
+        if (customDice) {
+          const activityIndex = formData.activities.findIndex(
+            (activity) => activity.activity === activityText
+          );
+
+          if (activityIndex !== -1) {
+            const assignmentKey = `activity${activityIndex + 1}`;
+
+            setRollAssignments((prev) => {
+              const updated = {
+                ...prev,
+                [assignmentKey]: {
+                  ...prev[assignmentKey],
+                  customDice: customDice,
+                  jobType: jobType,
+                  diceIndex: null,
+                  secondDiceIndex: null,
+                },
+              };
+              return updated;
+            });
+
+            const diceSum = customDice[0] + customDice[1];
+            const jobTypeLabel =
+              {
+                easy: "2D8",
+                medium: "2D10",
+                hard: "2D12",
+              }[jobType] || "2D10";
+          } else {
+            console.error("Activity not found in activities list");
+          }
+        } else {
+          console.error("No custom dice returned from roll function");
+        }
+      } catch (error) {
+        console.error("Error in handleCustomDiceRoll:", error);
       }
     },
-    [canEdit, rollCustomDice]
+    [canEdit, rollCustomDice, formData.activities, setRollAssignments]
   );
 
   const getActivityDescription = useCallback(
@@ -301,7 +357,6 @@ const DowntimeForm = ({
       }
 
       const result = calculateModifier(modifierName, selectedCharacter);
-      console.log(`Modifier for "${modifierName}":`, result);
       return result;
     },
     [selectedCharacter]
@@ -316,6 +371,8 @@ const DowntimeForm = ({
     );
     setDicePool(newPool);
 
+    setExtraDiceAssignments({});
+
     setRollAssignments((prev) => {
       const resetAssignments = {};
       Object.keys(prev).forEach((key) => {
@@ -324,6 +381,7 @@ const DowntimeForm = ({
           diceIndex: null,
           secondDiceIndex: null,
           customDice: null,
+          jobType: null,
         };
       });
       return resetAssignments;
@@ -336,6 +394,22 @@ const DowntimeForm = ({
     const extraDie = Math.floor(Math.random() * 20) + 1;
     setDicePool((prev) => [...prev, extraDie]);
   }, [canEdit]);
+
+  const addExtraDieForActivity = useCallback(
+    (activityKey) => {
+      if (!canEdit()) return;
+
+      const extraDie = Math.floor(Math.random() * 20) + 1;
+      const newExtraDiceIndex = dicePool.length;
+
+      setDicePool((prev) => [...prev, extraDie]);
+      setExtraDiceAssignments((prev) => ({
+        ...prev,
+        [activityKey]: newExtraDiceIndex,
+      }));
+    },
+    [canEdit, dicePool.length]
+  );
 
   const isDiceAssigned = useCallback(
     (diceIndex) => {
@@ -357,6 +431,14 @@ const DowntimeForm = ({
       if (!canEdit()) return;
 
       const assignmentKey = `activity${activityIndex + 1}`;
+
+      if (isSecondDie && diceIndex >= 6) {
+        setExtraDiceAssignments((prev) => ({
+          ...prev,
+          [assignmentKey]: diceIndex,
+        }));
+      }
+
       setRollAssignments((prev) => ({
         ...prev,
         [assignmentKey]: {
@@ -373,6 +455,15 @@ const DowntimeForm = ({
       if (!canEdit()) return;
 
       const assignmentKey = `activity${activityIndex + 1}`;
+
+      if (isSecondDie) {
+        setExtraDiceAssignments((prev) => {
+          const updated = { ...prev };
+          delete updated[assignmentKey];
+          return updated;
+        });
+      }
+
       setRollAssignments((prev) => ({
         ...prev,
         [assignmentKey]: {
@@ -388,40 +479,291 @@ const DowntimeForm = ({
     (index, field, value) => {
       if (!canEdit()) return;
 
+      const previousActivity = formData.activities[index]?.activity;
+      const wasDualCheck = activityRequiresDualChecks(previousActivity);
+      const willBeDualCheck =
+        field === "activity" ? activityRequiresDualChecks(value) : wasDualCheck;
+
+      const wasCustomDice = shouldUseCustomDiceForActivity(previousActivity);
+      const willBeCustomDice =
+        field === "activity"
+          ? shouldUseCustomDiceForActivity(value)
+          : wasCustomDice;
+
       setFormData((prev) => ({
         ...prev,
         activities: prev.activities.map((activity, i) =>
           i === index ? { ...activity, [field]: value } : activity
         ),
       }));
+
+      const activityKey = `activity${index + 1}`;
+      const assignment = rollAssignments[activityKey];
+
+      if (field === "activity") {
+        if (wasCustomDice && !willBeCustomDice) {
+          setRollAssignments((prev) => ({
+            ...prev,
+            [activityKey]: {
+              diceIndex: null,
+              skill: "",
+              wandModifier: "",
+              notes: prev[activityKey]?.notes || "",
+              secondDiceIndex: null,
+              secondSkill: "",
+              secondWandModifier: "",
+              customDice: null,
+              jobType: null,
+            },
+          }));
+        } else if (!wasCustomDice && willBeCustomDice) {
+          setRollAssignments((prev) => ({
+            ...prev,
+            [activityKey]: {
+              diceIndex: null,
+              skill: "",
+              wandModifier: "",
+              notes: prev[activityKey]?.notes || "",
+              secondDiceIndex: null,
+              secondSkill: "",
+              secondWandModifier: "",
+              customDice: null,
+              jobType: null,
+            },
+          }));
+        } else if (
+          wasCustomDice &&
+          willBeCustomDice &&
+          previousActivity !== value
+        ) {
+          setRollAssignments((prev) => ({
+            ...prev,
+            [activityKey]: {
+              diceIndex: null,
+              skill: "",
+              wandModifier: "",
+              notes: prev[activityKey]?.notes || "",
+              secondDiceIndex: null,
+              secondSkill: "",
+              secondWandModifier: "",
+              customDice: null,
+              jobType: null,
+            },
+          }));
+        } else if (
+          !wasCustomDice &&
+          !willBeCustomDice &&
+          previousActivity !== value
+        ) {
+          setRollAssignments((prev) => ({
+            ...prev,
+            [activityKey]: {
+              ...prev[activityKey],
+              skill: "",
+              secondSkill: "",
+              wandModifier: "",
+              secondWandModifier: "",
+            },
+          }));
+        }
+      }
+
+      if (field === "activity" && wasDualCheck && !willBeDualCheck) {
+        if (
+          assignment?.secondDiceIndex !== null &&
+          assignment?.secondDiceIndex !== undefined
+        ) {
+          const extraDiceIndex = extraDiceAssignments[activityKey];
+          if (extraDiceIndex !== undefined && extraDiceIndex >= 6) {
+            setDicePool((prev) => {
+              const newPool = [...prev];
+              newPool.splice(extraDiceIndex, 1);
+              return newPool;
+            });
+
+            setExtraDiceAssignments((prev) => {
+              const updated = { ...prev };
+              delete updated[activityKey];
+
+              Object.keys(updated).forEach((key) => {
+                if (updated[key] > extraDiceIndex) {
+                  updated[key] = updated[key] - 1;
+                }
+              });
+
+              return updated;
+            });
+
+            setRollAssignments((prev) => {
+              const updated = { ...prev };
+              Object.keys(updated).forEach((key) => {
+                const assignment = updated[key];
+                if (assignment.diceIndex > extraDiceIndex) {
+                  updated[key] = {
+                    ...assignment,
+                    diceIndex: assignment.diceIndex - 1,
+                  };
+                }
+                if (assignment.secondDiceIndex > extraDiceIndex) {
+                  updated[key] = {
+                    ...assignment,
+                    secondDiceIndex: assignment.secondDiceIndex - 1,
+                  };
+                }
+              });
+              return updated;
+            });
+          } else {
+            setDicePool((prev) => {
+              if (prev.length > 6) {
+                return prev.slice(0, -1);
+              }
+              return prev;
+            });
+          }
+        }
+      }
+
+      if (field === "activity" && !value) {
+        if (
+          wasDualCheck &&
+          assignment?.secondDiceIndex !== null &&
+          assignment?.secondDiceIndex !== undefined
+        ) {
+          const extraDiceIndex = extraDiceAssignments[activityKey];
+          if (extraDiceIndex !== undefined && extraDiceIndex >= 6) {
+            setDicePool((prev) => {
+              const newPool = [...prev];
+              newPool.splice(extraDiceIndex, 1);
+              return newPool;
+            });
+
+            setExtraDiceAssignments((prev) => {
+              const updated = { ...prev };
+              delete updated[activityKey];
+
+              Object.keys(updated).forEach((key) => {
+                if (updated[key] > extraDiceIndex) {
+                  updated[key] = updated[key] - 1;
+                }
+              });
+
+              return updated;
+            });
+
+            setRollAssignments((prev) => {
+              const updated = { ...prev };
+              Object.keys(updated).forEach((key) => {
+                const assignment = updated[key];
+                if (assignment.diceIndex > extraDiceIndex) {
+                  updated[key] = {
+                    ...assignment,
+                    diceIndex: assignment.diceIndex - 1,
+                  };
+                }
+                if (assignment.secondDiceIndex > extraDiceIndex) {
+                  updated[key] = {
+                    ...assignment,
+                    secondDiceIndex: assignment.secondDiceIndex - 1,
+                  };
+                }
+              });
+              return updated;
+            });
+          } else {
+            setDicePool((prev) => {
+              if (prev.length > 6) {
+                return prev.slice(0, -1);
+              }
+              return prev;
+            });
+          }
+        }
+
+        setRollAssignments((prev) => ({
+          ...prev,
+          [activityKey]: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+        }));
+      }
     },
-    [canEdit]
+    [
+      canEdit,
+      formData.activities,
+      rollAssignments,
+      extraDiceAssignments,
+      setFormData,
+      setRollAssignments,
+      setDicePool,
+      setExtraDiceAssignments,
+    ]
   );
 
   const getSortedDiceOptions = useMemo(() => {
-    return dicePool
+    const baseDice = dicePool
+      .slice(0, 6)
       .map((value, index) => ({ value, index }))
       .sort((a, b) => b.value - a.value);
+
+    const extraDice = dicePool
+      .slice(6)
+      .map((value, index) => ({ value, index: index + 6 }));
+
+    return [...baseDice, ...extraDice];
   }, [dicePool]);
 
   const renderDiceValue = useCallback(
     (assignment, dicePool, isSecond = false) => {
       const diceIndexKey = isSecond ? "secondDiceIndex" : "diceIndex";
       const skillKey = isSecond ? "secondSkill" : "skill";
+
       if (assignment.customDice && !isSecond) {
+        const isWorkJob = assignment.jobType !== undefined;
+        const diceSum = assignment.customDice[0] + assignment.customDice[1];
+
         return (
           <div style={styles.assignedDice}>
             <div style={styles.diceValue}>
-              2d12: {assignment.customDice[0]} + {assignment.customDice[1]} ={" "}
-              {assignment.customDice[0] + assignment.customDice[1]}
+              {isWorkJob ? (
+                <>
+                  {assignment.jobType === "easy" && "2D8: "}
+                  {assignment.jobType === "medium" && "2D10: "}
+                  {assignment.jobType === "hard" && "2D12: "}
+                  {assignment.customDice[0]} + {assignment.customDice[1]} ={" "}
+                  {diceSum}
+                  {isWorkJob && (
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        color: theme.textSecondary,
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Earnings: {diceSum} × 2 = {diceSum * 2} Galleons
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  2d12: {assignment.customDice[0]} + {assignment.customDice[1]}{" "}
+                  = {diceSum}
+                </>
+              )}
             </div>
-            {assignment[skillKey] && (
+            {assignment[skillKey] && !isWorkJob && (
               <div style={styles.total}>
-                Total: {assignment.customDice[0] + assignment.customDice[1]}{" "}
+                Total: {diceSum}{" "}
                 {formatModifier(getModifierValue(assignment[skillKey]))} ={" "}
-                {assignment.customDice[0] +
-                  assignment.customDice[1] +
-                  getModifierValue(assignment[skillKey])}
+                {diceSum + getModifierValue(assignment[skillKey])}
               </div>
             )}
           </div>
@@ -451,7 +793,7 @@ const DowntimeForm = ({
 
       return null;
     },
-    [getModifierValue]
+    [getModifierValue, theme.textSecondary]
   );
   const editable = canEdit();
 
@@ -460,6 +802,7 @@ const DowntimeForm = ({
       if (!activityText) return null;
 
       if (activityRequiresNoDiceRoll(activityText)) {
+        const specialInfo = getSpecialActivityInfo(activityText);
         return (
           <div
             style={{
@@ -474,7 +817,8 @@ const DowntimeForm = ({
             <strong>📋 No Dice Roll Required</strong>
             <br />
             <small>
-              This activity doesn't require a dice roll to complete.
+              {specialInfo?.description ||
+                "This activity doesn't require a dice roll to complete."}
             </small>
           </div>
         );
@@ -501,6 +845,8 @@ const DowntimeForm = ({
 
       if (shouldUseCustomDiceForActivity(activityText)) {
         const customDiceInfo = getCustomDiceTypeForActivity(activityText);
+        const isWorkJob = activityText.toLowerCase().includes("work job");
+
         return (
           <div
             style={{
@@ -517,9 +863,47 @@ const DowntimeForm = ({
               <small>{customDiceInfo.description}</small>
             </div>
 
+            {isWorkJob && (
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color: theme.text,
+                  }}
+                >
+                  Job Difficulty:
+                </label>
+                <select
+                  style={{
+                    width: "100%",
+                    padding: "0.5rem",
+                    borderRadius: "4px",
+                    border: `1px solid ${theme.border}`,
+                    backgroundColor: theme.surface,
+                    color: theme.text,
+                    fontSize: "0.875rem",
+                    marginTop: "0.25rem",
+                  }}
+                  defaultValue="medium"
+                  id={`job-difficulty-${activityText}`}
+                >
+                  <option value="easy">Easy Job (2D8 + promotions)</option>
+                  <option value="medium">Medium Job (2D10 + promotions)</option>
+                  <option value="hard">Hard Job (2D12 + promotions)</option>
+                </select>
+              </div>
+            )}
+
             <div>
               <button
-                onClick={() => handleCustomDiceRoll(activityText)}
+                onClick={() => {
+                  const jobType = isWorkJob
+                    ? document.getElementById(`job-difficulty-${activityText}`)
+                        ?.value || "medium"
+                    : undefined;
+                  handleCustomDiceRoll(activityText, jobType);
+                }}
                 disabled={!editable}
                 style={{
                   ...styles.button,
@@ -536,6 +920,41 @@ const DowntimeForm = ({
         );
       }
 
+      const specialInfo = getSpecialActivityInfo(activityText);
+      if (specialInfo) {
+        let iconAndTitle = "";
+        let bgColor = theme.info;
+
+        switch (specialInfo.type) {
+          case "job_application":
+            iconAndTitle = "💼 Job Application";
+            bgColor = theme.success;
+            break;
+          case "promotion":
+            iconAndTitle = "📈 Promotion Attempt";
+            bgColor = theme.success;
+            break;
+          default:
+            iconAndTitle = "ℹ️ Special Activity";
+        }
+
+        return (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: bgColor + "20",
+              border: `1px solid ${bgColor}`,
+              borderRadius: "6px",
+              marginTop: "1rem",
+            }}
+          >
+            <strong>{iconAndTitle}</strong>
+            <br />
+            <small>{specialInfo.description}</small>
+          </div>
+        );
+      }
+
       return null;
     },
     [theme, editable, handleCustomDiceRoll]
@@ -547,10 +966,22 @@ const DowntimeForm = ({
 
       if (!activityText) return null;
 
-      if (
-        activityRequiresNoDiceRoll(activityText) ||
-        shouldUseCustomDiceForActivity(activityText)
-      ) {
+      if (activityRequiresNoDiceRoll(activityText)) {
+        return null;
+      }
+
+      if (shouldUseCustomDiceForActivity(activityText)) {
+        if (assignment.customDice) {
+          return (
+            <div style={styles.diceAssignment}>
+              <div>
+                <label style={styles.label}>Roll Result</label>
+                {renderDiceValue(assignment, dicePool, false)}
+              </div>
+            </div>
+          );
+        }
+
         return null;
       }
 
@@ -578,7 +1009,6 @@ const DowntimeForm = ({
               marginTop: "1rem",
             }}
           >
-            {/* First Die Column */}
             <div>
               <SkillSelector
                 activityText={activityText}
@@ -627,7 +1057,6 @@ const DowntimeForm = ({
               </div>
             </div>
 
-            {/* Second Die Column */}
             <div>
               <SkillSelector
                 activityText={activityText}
@@ -643,10 +1072,11 @@ const DowntimeForm = ({
               <div style={{ marginTop: "0.5rem" }}>
                 <label style={styles.label}>Second Die</label>
 
-                {/* Show Extra Die button if no dice available and can add more */}
                 {needsExtraDie && editable ? (
                   <button
-                    onClick={addExtraDie}
+                    onClick={() =>
+                      addExtraDieForActivity(`activity${index + 1}`)
+                    }
                     disabled={!canAddMoreDice}
                     style={{
                       ...styles.button,
@@ -761,7 +1191,7 @@ const DowntimeForm = ({
       updateRollAssignment,
       editable,
       selectedCharacter,
-      addExtraDie,
+      addExtraDieForActivity,
       dicePool.length,
       dualCheckActivities.length,
     ]
@@ -812,11 +1242,9 @@ const DowntimeForm = ({
         setCurrentSheet(data);
       }
 
-      alert("Draft saved successfully!");
       if (loadDrafts) loadDrafts();
     } catch (err) {
       console.error("Error saving draft:", err);
-      alert("Failed to save draft. Please try again.");
     } finally {
       setIsSavingDraft(false);
     }
@@ -1114,23 +1542,6 @@ const DowntimeForm = ({
           >
             {dicePool.length === 0 ? "Roll Dice Pool" : "Reroll Dice"}
           </button>
-
-          {dicePool.length > 0 &&
-            !formData.activities.some((activity) =>
-              activityRequiresDualChecks(activity.activity)
-            ) && (
-              <button
-                onClick={addExtraDie}
-                disabled={!editable}
-                style={{
-                  ...styles.button,
-                  ...styles.secondaryButton,
-                  ...(!editable ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-                }}
-              >
-                Add Extra Die
-              </button>
-            )}
         </div>
 
         {dicePool.length > 0 ? (
@@ -1159,11 +1570,54 @@ const DowntimeForm = ({
               })}
             </div>
 
-            <div style={{ color: theme.textSecondary, fontSize: "0.875rem" }}>
-              Total: {dicePool.length} dice | Available:{" "}
-              {dicePool.filter((_, index) => !isDiceAssigned(index)).length} |
-              Assigned:{" "}
-              {dicePool.filter((_, index) => isDiceAssigned(index)).length}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                color: theme.textSecondary,
+                fontSize: "0.875rem",
+                marginTop: "1rem",
+              }}
+            >
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <span>Total: {dicePool.length} dice</span>
+                <span>
+                  Available:{" "}
+                  {dicePool.filter((_, index) => !isDiceAssigned(index)).length}
+                </span>
+                <span>
+                  Assigned:{" "}
+                  {dicePool.filter((_, index) => isDiceAssigned(index)).length}
+                </span>
+              </div>
+
+              {dicePool.length > 6 && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                    padding: "0.25rem 0.5rem",
+                    backgroundColor: theme.warning + "15",
+                    borderRadius: "4px",
+                    border: `1px solid ${theme.warning}30`,
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: theme.warning || "#f59e0b",
+                    }}
+                  >
+                    ★
+                  </span>
+                  <span style={{ color: theme.warning || "#f59e0b" }}>
+                    Extra Dice From Activity
+                  </span>
+                </div>
+              )}
             </div>
           </>
         ) : (

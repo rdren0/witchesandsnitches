@@ -72,29 +72,17 @@ export const AdminToggle = ({ user, onAdminModeChange, adminMode = false }) => {
     setIsVerifying(true);
 
     try {
-      console.log("🔍 Attempting environment password verification...");
-
-      // Only try environment variable method (no more database fallback)
       await characterService.verifyAdminPassword(discordUserId, password);
 
-      console.log("✅ Environment password verification succeeded!");
-
-      // Update local admin status
       setIsAdmin(true);
 
-      // Enable admin mode
       onAdminModeChange(true);
 
-      // Close modal
       setShowPasswordModal(false);
-
-      // Show success message
-      console.log("🪄 Alohomora! Access to the Restricted Section granted!");
     } catch (error) {
       console.error("❌ Password verification failed!");
       console.error("Error:", error);
 
-      // Re-throw to let modal handle the error display
       throw error;
     } finally {
       setIsVerifying(false);

@@ -113,8 +113,6 @@ export const CorruptionTracker = ({
         console.error("Database error updating corruption points:", error);
 
         if (error.code === "PGRST116") {
-          console.log("Character resources not found, creating...");
-
           const { error: createError } = await supabase
             .from("character_resources")
             .insert({

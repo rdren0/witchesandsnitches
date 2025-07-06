@@ -1145,7 +1145,7 @@ const DowntimeWrapper = ({
                   }}
                   style={{
                     ...styles.button,
-                    backgroundColor: theme.textSecondary,
+                    backgroundColor: theme.primary,
                   }}
                 >
                   Start New Sheet

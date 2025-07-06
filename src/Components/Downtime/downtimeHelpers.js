@@ -1,5 +1,8 @@
 import { allSkills } from "../SharedData/data";
 import { wandModifiers } from "../SharedData/downtime";
+import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+
+const roller = new DiceRoller();
 
 export const activityRequiresDualChecks = (activityText) => {
   if (!activityText) return false;
@@ -39,6 +42,7 @@ export const getActivitySkillInfo = (activityText) => {
       type: "suggested",
       skills: ["persuasion"],
       allowAll: true,
+      note: "Use Magical Creatures at Magical Menagerie",
     };
   }
 
@@ -210,11 +214,7 @@ export const validateSkillName = (skillName) => {
 export const activityRequiresNoDiceRoll = (activityText) => {
   if (!activityText) return false;
   const text = activityText.toLowerCase();
-  return (
-    text.includes("shopping") ||
-    text.includes("selling") ||
-    text.includes("work job")
-  );
+  return text.includes("shopping") || text.includes("selling");
 };
 
 export const isMultiSessionActivity = (activityText) => {
@@ -231,7 +231,7 @@ export const isMultiSessionActivity = (activityText) => {
 export const shouldUseCustomDiceForActivity = (activityText) => {
   if (!activityText) return false;
   const text = activityText.toLowerCase();
-  return text.includes("allowance");
+  return text.includes("allowance") || text.includes("work job");
 };
 
 export const getCustomDiceTypeForActivity = (activityText) => {
@@ -242,6 +242,76 @@ export const getCustomDiceTypeForActivity = (activityText) => {
     return {
       diceType: "2d12",
       description: "Roll 2d12 instead of d20 for allowance determination",
+      rollFunction: () => {
+        try {
+          const roller = new DiceRoller();
+          const result = roller.roll("2d12");
+
+          const individualDice = result.rolls[0].rolls.map((die) => die.value);
+          return individualDice;
+        } catch (error) {
+          console.error("Error rolling allowance dice:", error);
+          return [
+            Math.floor(Math.random() * 12) + 1,
+            Math.floor(Math.random() * 12) + 1,
+          ];
+        }
+      },
+    };
+  }
+
+  if (text.includes("work job")) {
+    return {
+      diceType: "Job Earnings",
+      description:
+        "Based on job difficulty level. Admin will determine job level and promotions.",
+      rollFunction: (jobType = "medium") => {
+        try {
+          let diceNotation;
+          let sides;
+
+          switch (jobType.toLowerCase()) {
+            case "easy":
+              diceNotation = "2D8";
+              sides = 8;
+              break;
+            case "hard":
+              diceNotation = "2D12";
+              sides = 12;
+              break;
+            case "medium":
+            default:
+              diceNotation = "2D10";
+              sides = 10;
+              break;
+          }
+
+          const roller = new DiceRoller();
+          const result = roller.roll(diceNotation);
+
+          const individualDice = result.rolls[0].rolls.map((die) => die.value);
+          return individualDice;
+        } catch (error) {
+          console.error("Error rolling job earnings dice:", error);
+          // Fallback to manual roll if DiceRoller fails
+          let sides;
+          switch (jobType.toLowerCase()) {
+            case "easy":
+              sides = 8;
+              break;
+            case "hard":
+              sides = 12;
+              break;
+            default:
+              sides = 10;
+              break;
+          }
+          return [
+            Math.floor(Math.random() * sides) + 1,
+            Math.floor(Math.random() * sides) + 1,
+          ];
+        }
+      },
     };
   }
 
@@ -267,6 +337,53 @@ export const getMultiSessionInfo = (activityText) => {
     return {
       description:
         "Requires three separate successful checks across different downtime sessions",
+    };
+  }
+
+  return null;
+};
+
+export const getSpecialActivityInfo = (activityText) => {
+  if (!activityText) return null;
+  const text = activityText.toLowerCase();
+
+  if (text.includes("gain a job")) {
+    return {
+      type: "job_application",
+      description:
+        "Job difficulty determines DC: Easy (DC 10), Medium (DC 15), Hard (DC 20). Use Magical Creatures check at Magical Menagerie.",
+    };
+  }
+
+  if (text.includes("promotion")) {
+    return {
+      type: "promotion",
+      description:
+        "Job difficulty + current promotions determines DC: Easy (DC 10 + promotions), Medium (DC 15 + promotions), Hard (DC 20 + promotions). Use Magical Creatures check at Magical Menagerie.",
+    };
+  }
+
+  if (text.includes("work job")) {
+    return {
+      type: "work_earnings",
+      description:
+        "Earnings based on job level: Easy (2D8 + 1D8 per promotion), Medium (2d10 + 1d10 per promotion), Hard (2d12 + 1d12 per promotion). All amounts ×2 Galleons.",
+    };
+  }
+
+  if (text.includes("shopping")) {
+    return {
+      type: "shopping",
+      description:
+        "Purchase items from shopping list at half buy price. No haggling allowed. Can be done without using a downtime slot.",
+    };
+  }
+
+  if (text.includes("selling")) {
+    return {
+      type: "selling",
+      description:
+        "Sell items at half their original price. No haggling allowed. Can be done without using a downtime slot.",
     };
   }
 

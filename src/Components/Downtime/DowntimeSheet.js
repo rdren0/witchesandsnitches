@@ -585,11 +585,9 @@ const DowntimeSheet = ({ selectedCharacter, user, supabase, isUserAdmin }) => {
         setCurrentSheet(data);
       }
 
-      alert("Draft saved successfully!");
       if (loadDrafts) loadDrafts();
     } catch (err) {
       console.error("Error saving draft:", err);
-      alert("Failed to save draft. Please try again.");
     } finally {
       setIsSavingDraft(false);
     }
@@ -692,8 +690,6 @@ const DowntimeSheet = ({ selectedCharacter, user, supabase, isUserAdmin }) => {
 
   const loadSheetForViewing = useCallback(
     async (sheetId) => {
-      console.log("Loading sheet for viewing:", sheetId);
-
       if (!sheetId) {
         console.error("No sheet ID provided");
         alert("Invalid sheet ID");
@@ -708,15 +704,12 @@ const DowntimeSheet = ({ selectedCharacter, user, supabase, isUserAdmin }) => {
 
       setLoading(true);
       try {
-        console.log("Fetching sheet from database...");
         const { data: sheet, error } = await supabase
           .from("character_downtime")
           .select("*")
           .eq("id", sheetId)
           .eq("user_id", user.id)
           .single();
-
-        console.log("Database response:", { sheet, error });
 
         if (error) {
           console.error("Database error:", error);
@@ -729,7 +722,6 @@ const DowntimeSheet = ({ selectedCharacter, user, supabase, isUserAdmin }) => {
           return;
         }
 
-        console.log("Setting viewing sheet and switching to view mode");
         setViewingSheet(sheet);
         setViewMode("viewing");
       } catch (err) {
@@ -1579,7 +1571,6 @@ const DowntimeSheet = ({ selectedCharacter, user, supabase, isUserAdmin }) => {
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button
                     onClick={() => {
-                      console.log("View button clicked for sheet:", sheet.id);
                       loadSheetForViewing(sheet.id);
                     }}
                     disabled={loading}

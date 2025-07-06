@@ -353,14 +353,6 @@ export const CharacterSelector = ({
                 <button
                   onClick={handleShowAll}
                   style={enhancedStyles.allButton}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.primary;
-                    e.target.style.color = theme.surface;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = theme.primary + "20";
-                    e.target.style.color = theme.primary;
-                  }}
                   title="Show all characters (Ctrl+A)"
                   type="button"
                 >
@@ -398,7 +390,6 @@ export const CharacterSelector = ({
                           ? enhancedStyles.dropdownOptionSelected
                           : {}),
                       }}
-                      onMouseEnter={() => setFocusedIndex(index)}
                     >
                       <div style={{ fontWeight: "600", marginBottom: "2px" }}>
                         {char.name}

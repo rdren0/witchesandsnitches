@@ -295,18 +295,7 @@ const OverviewTab = ({ stats, styles }) => {
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div
-              key={index}
-              style={styles.statCard}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
+            <div key={index} style={styles.statCard}>
               <div style={styles.statIcon}>
                 <Icon size={32} color={card.color} />
               </div>

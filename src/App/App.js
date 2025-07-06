@@ -476,21 +476,6 @@ const Navigation = ({ characters }) => {
                   : {}),
               }}
               onClick={() => navigate(tab.path)}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = theme.primary + "15";
-                  e.target.style.opacity = "1";
-                  e.target.style.color = theme.text;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = "transparent";
-                  e.target.style.opacity =
-                    isAdminTab && adminMode ? "0.9" : "0.85";
-                  e.target.style.color = theme.text;
-                }
-              }}
             >
               {isAdminTab && (
                 <Shield size={16} style={{ marginRight: "6px" }} />
@@ -775,21 +760,15 @@ function AppContent() {
     setIsVerifying(true);
 
     try {
-      console.log("🔍 Attempting environment password verification...");
-
       const discordUserId = user?.user_metadata?.provider_id;
 
       await characterService.verifyAdminPassword(discordUserId, password);
-
-      console.log("✅ Environment password verification succeeded!");
 
       setIsUserAdmin(true);
 
       setAdminMode(true);
 
       setShowPasswordModal(false);
-
-      console.log("🪄 Alohomora! Access to the Restricted Section granted!");
     } catch (error) {
       console.error("❌ Password verification failed!");
       console.error("Error:", error);

@@ -273,8 +273,6 @@ const DowntimeActions = ({
       if (loadDrafts) {
         loadDrafts();
       }
-
-      alert("Draft saved successfully! You can continue editing later.");
     } catch (err) {
       console.error("Error saving draft:", err);
       alert("Failed to save draft. Please try again.");

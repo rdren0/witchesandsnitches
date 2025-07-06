@@ -323,12 +323,10 @@ const verifyAdminPassword = async (discordUserId, password) => {
     const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
 
     if (!ADMIN_PASSWORD) {
-      console.log("❌ No admin password configured");
       throw new Error("The magical registry is not properly configured");
     }
 
     if (password !== ADMIN_PASSWORD) {
-      console.log("❌ Password doesn't match");
       throw new Error("The unlocking charm failed");
     }
 
@@ -338,7 +336,6 @@ const verifyAdminPassword = async (discordUserId, password) => {
       granted_by: "website",
       granted_at: new Date().toISOString(),
     };
-    console.log("Insert data object:", insertData);
 
     const { error } = await supabase
       .from("user_roles")
@@ -349,12 +346,6 @@ const verifyAdminPassword = async (discordUserId, password) => {
       console.error("❌ Database error (not a duplicate key):", error);
       console.error("This is the actual error causing the failure!");
       throw new Error(`Database error: ${error.message}`);
-    }
-
-    if (error && error.code === "23505") {
-      console.log(
-        "ℹ️ Duplicate key error - user already has admin role (this is fine)"
-      );
     }
 
     return true;

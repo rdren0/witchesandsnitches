@@ -103,21 +103,6 @@ const DicePoolManager = ({
           >
             {dicePool.length === 0 ? "Roll Dice" : "Reroll Dice"}
           </button>
-
-          {dicePool.length > 0 && hasDualCheckActivity() && (
-            <button
-              onClick={addExtraDie}
-              disabled={!canEdit()}
-              style={{
-                ...styles.button,
-                backgroundColor: canEdit() ? "#f59e0b" : "#9ca3af",
-                cursor: canEdit() ? "pointer" : "not-allowed",
-                fontSize: "14px",
-              }}
-            >
-              Add Extra Die
-            </button>
-          )}
         </div>
       </div>
 

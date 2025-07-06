@@ -592,12 +592,7 @@ const AdminDowntimeManager = ({ supabase }) => {
                 <div
                   key={sheet.id}
                   style={styles.sheetItem}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.background;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
+                
                 >
                   <div style={styles.characterInfo}>
                     <div style={styles.characterName}>
