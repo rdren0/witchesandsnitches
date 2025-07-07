@@ -35,6 +35,27 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
+  if (text.includes("invent a potion")) {
+    return {
+      type: "limited",
+      skills: ["potionMaking", "herbology", "survival"],
+    };
+  }
+
+  if (text.includes("research a topic")) {
+    return {
+      type: "locked",
+      skills: ["investigation"],
+    };
+  }
+
+  if (text.includes("learn a recipe")) {
+    return {
+      type: "locked",
+      skills: ["survival"],
+    };
+  }
+
   if (text.includes("gain a job") || text.includes("promotion")) {
     return {
       type: "suggested",
@@ -70,8 +91,8 @@ export const getActivitySkillInfo = (activityText) => {
 
   if (text.includes("cooking")) {
     return {
-      type: "locked",
-      skills: ["survival"],
+      type: "limited",
+      skills: ["survival", "muggleStudies"],
     };
   }
 

@@ -328,39 +328,49 @@ const AdminDowntimeReviewForm = React.memo(
       [theme]
     );
 
+    // Replace the reviewButtonStyles section with this more subtle styling:
+
     const reviewButtonStyles = useMemo(
       () => ({
-        successButton: {
+        successOption: {
           ...styles.reviewButton,
           backgroundColor:
-            reviewStatus === "success" ? "#10b981" : theme.surface,
-          color: reviewStatus === "success" ? "white" : theme.text,
-          border: `2px solid ${
+            reviewStatus === "success" ? "#10b98120" : "transparent",
+          color: reviewStatus === "success" ? "#10b981" : theme.textSecondary,
+          border: `1px solid ${
             reviewStatus === "success" ? "#10b981" : theme.border
           }`,
+          padding: "8px 12px",
+          fontSize: "13px",
+          fontWeight: reviewStatus === "success" ? "600" : "400",
         },
-        failureButton: {
+        failureOption: {
           ...styles.reviewButton,
           backgroundColor:
-            reviewStatus === "failure" ? "#ef4444" : theme.surface,
-          color: reviewStatus === "failure" ? "white" : theme.text,
-          border: `2px solid ${
+            reviewStatus === "failure" ? "#ef444420" : "transparent",
+          color: reviewStatus === "failure" ? "#ef4444" : theme.textSecondary,
+          border: `1px solid ${
             reviewStatus === "failure" ? "#ef4444" : theme.border
           }`,
+          padding: "8px 12px",
+          fontSize: "13px",
+          fontWeight: reviewStatus === "failure" ? "600" : "400",
         },
-        pendingButton: {
+        pendingOption: {
           ...styles.reviewButton,
           backgroundColor:
-            reviewStatus === "pending" ? "#f59e0b" : theme.surface,
-          color: reviewStatus === "pending" ? "white" : theme.text,
-          border: `2px solid ${
+            reviewStatus === "pending" ? "#f59e0b20" : "transparent",
+          color: reviewStatus === "pending" ? "#f59e0b" : theme.textSecondary,
+          border: `1px solid ${
             reviewStatus === "pending" ? "#f59e0b" : theme.border
           }`,
+          padding: "8px 12px",
+          fontSize: "13px",
+          fontWeight: reviewStatus === "pending" ? "600" : "400",
         },
       }),
       [styles.reviewButton, reviewStatus, theme]
     );
-
     const calculateModifierValue = useCallback((modifierName, character) => {
       if (!modifierName || !character) return 0;
 
@@ -1015,28 +1025,39 @@ const AdminDowntimeReviewForm = React.memo(
                 Overall Review Status
               </h3>
 
-              <div style={styles.reviewButtons}>
-                <button
-                  onClick={() => setReviewStatus("success")}
-                  style={reviewButtonStyles.successButton}
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    ...styles.label,
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
                 >
-                  <Check size={16} />
-                  Approve
-                </button>
-                <button
-                  onClick={() => setReviewStatus("failure")}
-                  style={reviewButtonStyles.failureButton}
-                >
-                  <X size={16} />
-                  Reject
-                </button>
-                <button
-                  onClick={() => setReviewStatus("pending")}
-                  style={reviewButtonStyles.pendingButton}
-                >
-                  <AlertCircle size={16} />
-                  Pending
-                </button>
+                  Select Review Outcome:
+                </label>
+                <div style={styles.reviewButtons}>
+                  <div
+                    onClick={() => setReviewStatus("success")}
+                    style={reviewButtonStyles.successOption}
+                  >
+                    <Check size={14} />
+                    Approve
+                  </div>
+                  <div
+                    onClick={() => setReviewStatus("failure")}
+                    style={reviewButtonStyles.failureOption}
+                  >
+                    <X size={14} />
+                    Reject
+                  </div>
+                  <div
+                    onClick={() => setReviewStatus("pending")}
+                    style={reviewButtonStyles.pendingOption}
+                  >
+                    <AlertCircle size={14} />
+                    Pending
+                  </div>
+                </div>
               </div>
 
               <div style={{ marginBottom: "16px" }}>

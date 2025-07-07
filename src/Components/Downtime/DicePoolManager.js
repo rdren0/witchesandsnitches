@@ -346,11 +346,7 @@ const DicePoolManager = ({
       color: theme.error,
       opacity: 0.7,
     },
-    diceExtra: {
-      backgroundColor: theme.warning + "20",
-      borderColor: theme.warning,
-      color: theme.warning,
-    },
+
     buttonGroup: {
       display: "flex",
       gap: "1rem",
@@ -403,9 +399,10 @@ const DicePoolManager = ({
                       ...styles.dice,
                       ...(isAssigned
                         ? styles.diceAssigned
-                        : isExtra
-                        ? styles.diceExtra
                         : styles.diceAvailable),
+                      ...(isExtra && {
+                        color: theme.warning,
+                      }),
                     }}
                   >
                     {value}

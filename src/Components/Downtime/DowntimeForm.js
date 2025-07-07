@@ -1365,7 +1365,7 @@ const DowntimeForm = ({
                           marginTop: "0.25rem",
                         }}
                       >
-                        Once your downtime is approved you will need to modifer
+                        Once your downtime is approved you will need to modify
                         your wand value manually.
                       </div>
                     </div>
@@ -1685,15 +1685,7 @@ const DowntimeForm = ({
                       alignItems: "center",
                       gap: "8px",
                     }}
-                  >
-                    <span style={{ fontSize: "16px" }}>
-                      {assignment.result === "success" ? "✓" : "✗"}
-                    </span>
-                    <strong>
-                      Relationship interaction{" "}
-                      {assignment.result === "success" ? "succeeded" : "failed"}
-                    </strong>
-                  </div>
+                  ></div>
                 )}
               </div>
             );

@@ -82,7 +82,7 @@ const AdminDashboard = ({ supabase }) => {
       borderRadius: "8px",
       border: "none",
       backgroundColor: "transparent",
-      color: theme.textSecondary,
+      color: theme.text,
       fontSize: "14px",
       fontWeight: "500",
       cursor: "pointer",
@@ -96,7 +96,7 @@ const AdminDashboard = ({ supabase }) => {
     activeTab: {
       backgroundColor: theme.primary,
       fontWeight: "600",
-      color: theme.textSecondary,
+      color: theme.text,
     },
     tabContent: {
       backgroundColor: theme.surface,
@@ -106,7 +106,7 @@ const AdminDashboard = ({ supabase }) => {
       overflow: "hidden",
       color: theme.text,
     },
-    // Overview tab styles
+
     overviewGrid: {
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
@@ -162,12 +162,27 @@ const AdminDashboard = ({ supabase }) => {
 
   const loadDashboardStats = useCallback(async () => {
     try {
-      const { count: charactersCount } = await supabase
+      const { data: allCharacters } = await supabase
         .from("characters")
-        .select("*", { count: "exact", head: true })
+        .select("discord_user_id, game_session")
         .eq("active", true);
 
-      // Get downtime sheets that need admin review (not drafts, and pending review)
+      const validCharacters =
+        allCharacters?.filter(
+          (char) =>
+            char.game_session &&
+            char.game_session.trim() !== "" &&
+            char.game_session.toLowerCase() !== "development"
+        ) || [];
+
+      const uniqueUsers = new Set(
+        validCharacters.map((c) => c.discord_user_id)
+      );
+
+      const uniqueSessions = new Set(
+        validCharacters.map((c) => c.game_session)
+      );
+
       const { data: downtimeSheets } = await supabase
         .from("character_downtime")
         .select("review_status, is_draft");
@@ -179,20 +194,11 @@ const AdminDashboard = ({ supabase }) => {
             (!sheet.review_status || sheet.review_status === "pending")
         ).length || 0;
 
-      const { data: sessions } = await supabase
-        .from("characters")
-        .select("game_session")
-        .eq("active", true)
-        .not("game_session", "is", null);
-
-      const activeSessions = new Set(
-        sessions?.map((s) => s.game_session).filter(Boolean)
-      ).size;
-
       setDashboardStats({
-        totalCharacters: charactersCount || 0,
+        totalCharacters: validCharacters.length,
+        activeUsers: uniqueUsers.size,
         downtimeSheets: pendingReviewCount,
-        activeSessions: activeSessions || 0,
+        activeSessions: uniqueSessions.size,
       });
     } catch (error) {
       console.error("Error loading dashboard stats:", error);
@@ -288,20 +294,29 @@ const OverviewTab = ({ stats, styles, onTabChange }) => {
 
   const statCards = [
     {
+      icon: FileText,
+      number: stats.totalCharacters,
+      label: "Total Characters",
+      description: "Characters in active sessions",
+      color: "#06b6d4",
+      clickAction: () => onTabChange("sessions"),
+    },
+
+    {
+      icon: FileText,
+      number: stats.activeUsers,
+      label: "Active Users",
+      description: "Unique players across sessions",
+      color: "#10b981",
+      clickAction: () => onTabChange("sessions"),
+    },
+    {
       icon: Database,
       number: stats.activeSessions,
       label: "Active Sessions",
       description: "Unique game sessions",
       color: "#8b5cf6",
       clickAction: () => onTabChange("sessions"),
-    },
-    {
-      icon: FileText,
-      number: stats.totalCharacters,
-      label: "Total Characters",
-      description: "Created across all sessions",
-      color: "#10b981",
-      clickAction: () => onTabChange("inspiration"),
     },
     {
       icon: Calendar,
@@ -510,7 +525,6 @@ const ArchiveManagement = ({ supabase }) => {
     setRestoring((prev) => new Set(prev).add(characterId));
 
     try {
-      // Use direct Supabase call instead of characterService to avoid the restored_at column issue
       const { data, error } = await supabase
         .from("characters")
         .update({

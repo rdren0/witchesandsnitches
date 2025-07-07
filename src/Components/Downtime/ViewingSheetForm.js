@@ -102,14 +102,6 @@ const ViewingSheetForm = ({
         fontWeight: "bold",
         color: theme.primary,
       },
-
-      adminSection: {
-        marginTop: "1.5rem",
-        padding: "1rem",
-        backgroundColor: theme.warning + "10",
-        border: `1px solid ${theme.warning}`,
-        borderRadius: "6px",
-      },
       resultButton: {
         padding: "0.5rem 1rem",
         border: "none",
@@ -149,6 +141,13 @@ const ViewingSheetForm = ({
         backgroundColor: theme.success + "20",
         color: theme.success,
         border: `1px solid ${theme.success}`,
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 1rem",
+        borderRadius: "6px",
+        fontWeight: "600",
+        marginBottom: "1rem",
       },
       partialIndicator: {
         backgroundColor: "#f59e0b20",
@@ -166,6 +165,13 @@ const ViewingSheetForm = ({
         backgroundColor: theme.error + "20",
         color: theme.error,
         border: `1px solid ${theme.error}`,
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 1rem",
+        borderRadius: "6px",
+        fontWeight: "600",
+        marginBottom: "1rem",
       },
       textarea: {
         width: "100%",
@@ -351,7 +357,7 @@ const ViewingSheetForm = ({
       if (!resultConfig) return null;
 
       return (
-        <div style={styles.adminSection}>
+        <div>
           <div style={resultConfig.style}>
             {resultConfig.icon}
             {resultConfig.text}
@@ -423,7 +429,15 @@ const ViewingSheetForm = ({
           <div>
             <div style={styles.label}>Status</div>
             <div style={styles.value}>
-              {viewingSheet.is_draft ? "📝 Draft" : "✅ Submitted"}
+              {viewingSheet.is_draft
+                ? "📝 Draft"
+                : viewingSheet.review_status === "success"
+                ? "✅ Approved"
+                : viewingSheet.review_status === "failure"
+                ? "❌ Rejected"
+                : viewingSheet.review_status === "pending"
+                ? "⏳ Pending Review"
+                : "✅ Submitted"}
             </div>
           </div>
           {viewingSheet.selected_magic_school && (
