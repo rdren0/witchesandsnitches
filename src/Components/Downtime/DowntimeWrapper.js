@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Calendar,
-  Edit3,
-  Plus,
-  FileText,
-  Eye,
-  Trash2,
-  ArrowLeft,
-} from "lucide-react";
+import { Calendar, Edit3, Plus, FileText, Eye, Trash2 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import DowntimeForm from "./DowntimeForm";
 import ViewingSheetForm from "./ViewingSheetForm";
@@ -187,7 +179,10 @@ const DowntimeWrapper = ({
   const isYearSemesterSubmitted = useCallback(
     (year, semester) => {
       return submittedSheets.some(
-        (sheet) => sheet.year === year && sheet.semester === semester
+        (sheet) =>
+          sheet.year === year &&
+          sheet.semester === semester &&
+          sheet.review_status !== "failure"
       );
     },
     [submittedSheets]
@@ -329,8 +324,6 @@ const DowntimeWrapper = ({
 
   const handleEditDraft = useCallback(
     (draft) => {
-      console.log("Loading draft for editing:", draft);
-
       setCurrentSheet(draft);
 
       setSelectedYear(draft.year);
@@ -437,114 +430,123 @@ const DowntimeWrapper = ({
     ]
   );
 
-  const handleDeleteDraft = useCallback(async (draftId) => {
-    if (!window.confirm("Are you sure you want to delete this draft?")) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("character_downtime")
-        .delete()
-        .eq("id", draftId)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      loadDrafts();
-
-      if (currentSheet?.id === draftId) {
-        setCurrentSheet(null);
-        setSelectedYear("");
-        setSelectedSemester("");
-        setDicePool([]);
-        setRollAssignments({
-          activity1: {
-            diceIndex: null,
-            skill: "",
-            wandModifier: "",
-            notes: "",
-            secondDiceIndex: null,
-            secondSkill: "",
-            secondWandModifier: "",
-            customDice: null,
-            jobType: null,
-          },
-          activity2: {
-            diceIndex: null,
-            skill: "",
-            wandModifier: "",
-            notes: "",
-            secondDiceIndex: null,
-            secondSkill: "",
-            secondWandModifier: "",
-            customDice: null,
-            jobType: null,
-          },
-          activity3: {
-            diceIndex: null,
-            skill: "",
-            wandModifier: "",
-            notes: "",
-            secondDiceIndex: null,
-            secondSkill: "",
-            secondWandModifier: "",
-            customDice: null,
-            jobType: null,
-          },
-          relationship1: {
-            diceIndex: null,
-            skill: "",
-            notes: "",
-            adminNotes: "",
-            result: null,
-          },
-          relationship2: {
-            diceIndex: null,
-            skill: "",
-            notes: "",
-            adminNotes: "",
-            result: null,
-          },
-          relationship3: {
-            diceIndex: null,
-            skill: "",
-            notes: "",
-            adminNotes: "",
-            result: null,
-          },
-        });
-        setFormData({
-          activities: [
-            {
-              activity: "",
-              npc: "",
-              successes: [false, false, false, false, false],
-            },
-            {
-              activity: "",
-              npc: "",
-              successes: [false, false, false, false, false],
-            },
-            {
-              activity: "",
-              npc: "",
-              successes: [false, false, false, false, false],
-            },
-          ],
-          relationships: [
-            { npcName: "", notes: "" },
-            { npcName: "", notes: "" },
-            { npcName: "", notes: "" },
-          ],
-          selectedMagicSchool: "",
-        });
+  const handleDeleteDraft = useCallback(
+    async (draftId) => {
+      if (!window.confirm("Are you sure you want to delete this draft?")) {
+        return;
       }
-    } catch (err) {
-      console.error("Error deleting draft:", err);
-      alert("Failed to delete draft. Please try again.");
-    }
-  });
+
+      try {
+        const { error } = await supabase
+          .from("character_downtime")
+          .delete()
+          .eq("id", draftId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        loadDrafts();
+
+        if (currentSheet?.id === draftId) {
+          setCurrentSheet(null);
+          setSelectedYear("");
+          setSelectedSemester("");
+          setDicePool([]);
+          setRollAssignments({
+            activity1: {
+              diceIndex: null,
+              skill: "",
+              wandModifier: "",
+              notes: "",
+              secondDiceIndex: null,
+              secondSkill: "",
+              secondWandModifier: "",
+              customDice: null,
+              jobType: null,
+            },
+            activity2: {
+              diceIndex: null,
+              skill: "",
+              wandModifier: "",
+              notes: "",
+              secondDiceIndex: null,
+              secondSkill: "",
+              secondWandModifier: "",
+              customDice: null,
+              jobType: null,
+            },
+            activity3: {
+              diceIndex: null,
+              skill: "",
+              wandModifier: "",
+              notes: "",
+              secondDiceIndex: null,
+              secondSkill: "",
+              secondWandModifier: "",
+              customDice: null,
+              jobType: null,
+            },
+            relationship1: {
+              diceIndex: null,
+              skill: "",
+              notes: "",
+              adminNotes: "",
+              result: null,
+            },
+            relationship2: {
+              diceIndex: null,
+              skill: "",
+              notes: "",
+              adminNotes: "",
+              result: null,
+            },
+            relationship3: {
+              diceIndex: null,
+              skill: "",
+              notes: "",
+              adminNotes: "",
+              result: null,
+            },
+          });
+          setFormData({
+            activities: [
+              {
+                activity: "",
+                npc: "",
+                successes: [false, false, false, false, false],
+              },
+              {
+                activity: "",
+                npc: "",
+                successes: [false, false, false, false, false],
+              },
+              {
+                activity: "",
+                npc: "",
+                successes: [false, false, false, false, false],
+              },
+            ],
+            selectedMagicSchool: "",
+          });
+        }
+      } catch (err) {
+        console.error("Error deleting draft:", err);
+        alert("Failed to delete draft. Please try again.");
+      }
+    },
+    [
+      supabase,
+      user.id,
+      loadDrafts,
+      currentSheet,
+      setCurrentSheet,
+      setSelectedYear,
+      setSelectedSemester,
+      setDicePool,
+      setRollAssignments,
+      setFormData,
+    ]
+  );
 
   const tabs = useMemo(
     () => [
@@ -919,6 +921,70 @@ const DowntimeWrapper = ({
       return <ViewingSheetWrapper />;
     }
 
+    const getReviewStatusDisplay = (sheet) => {
+      if (sheet.is_draft) {
+        return (
+          <span
+            style={{
+              padding: "4px 8px",
+              backgroundColor: theme.textSecondary + "20",
+              color: theme.textSecondary,
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "500",
+            }}
+          >
+            📝 Draft
+          </span>
+        );
+      }
+
+      const status = sheet.review_status || "pending";
+      const statusConfig = {
+        pending: {
+          bg: theme.primary + "20",
+          color: theme.primary,
+          icon: "⏳",
+          text: "Pending Review",
+        },
+        success: {
+          bg: theme.success + "20",
+          color: theme.success,
+          icon: "✅",
+          text: "Approved",
+        },
+        failure: {
+          bg: theme.error + "20",
+          color: theme.error,
+          icon: "❌",
+          text: "Rejected",
+          description:
+            "Your downtime sheet needs revisions. Check the admin feedback below and use the 'Edit & Resubmit' button to make changes.",
+        },
+      };
+
+      const config = statusConfig[status] || statusConfig.pending;
+
+      return (
+        <span
+          style={{
+            padding: "4px 8px",
+            backgroundColor: config.bg,
+            color: config.color,
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: "500",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        >
+          <span>{config.icon}</span>
+          <span>{config.text}</span>
+        </span>
+      );
+    };
+
     return (
       <div>
         <div style={styles.viewingHeader}>
@@ -962,23 +1028,8 @@ const DowntimeWrapper = ({
                   <div style={styles.listItemSubtitle}>
                     Submitted: {new Date(sheet.submitted_at).toLocaleString()}
                   </div>
-                  <div style={{ marginTop: "4px" }}>
-                    <span
-                      style={{
-                        padding: "2px 6px",
-                        backgroundColor: sheet.admin_completed
-                          ? theme.success + "20"
-                          : theme.primary + "20",
-                        color: sheet.admin_completed
-                          ? theme.success
-                          : theme.primary,
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {sheet.admin_completed ? "Completed" : "Submitted"}
-                    </span>
+                  <div style={{ marginTop: "8px" }}>
+                    {getReviewStatusDisplay(sheet)}
                   </div>
                 </div>
                 <div style={styles.listItemActions}>
@@ -1015,6 +1066,104 @@ const DowntimeWrapper = ({
       }));
     };
 
+    const handleEditRejected = (sheet) => {
+      setCurrentSheet(sheet);
+
+      setSelectedYear(sheet.year);
+      setSelectedSemester(sheet.semester);
+
+      setFormData({
+        activities: sheet.activities || [
+          {
+            activity: "",
+            npc: "",
+            successes: [false, false, false, false, false],
+          },
+          {
+            activity: "",
+            npc: "",
+            successes: [false, false, false, false, false],
+          },
+          {
+            activity: "",
+            npc: "",
+            successes: [false, false, false, false, false],
+          },
+        ],
+        relationships: sheet.relationships || [
+          { npcName: "", notes: "" },
+          { npcName: "", notes: "" },
+          { npcName: "", notes: "" },
+        ],
+        selectedMagicSchool: sheet.selected_magic_school || "",
+      });
+
+      setDicePool(sheet.dice_pool || []);
+
+      const normalizedAssignments = normalizeRollAssignments(
+        sheet.roll_assignments || {
+          activity1: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          activity2: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          activity3: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          relationship1: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+          relationship2: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+          relationship3: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+        }
+      );
+      setRollAssignments(normalizedAssignments);
+
+      setActiveTab("create");
+      setViewingSheet(null);
+      setViewMode("edit");
+    };
     return (
       <ViewingSheetForm
         viewingSheet={viewingSheet}
@@ -1026,6 +1175,7 @@ const DowntimeWrapper = ({
           setViewingSheet(null);
         }}
         onUpdateAssignment={handleUpdateAssignment}
+        onEditRejected={handleEditRejected}
         supabase={supabase}
         user={user}
       />

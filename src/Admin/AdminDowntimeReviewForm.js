@@ -500,7 +500,7 @@ const AdminDowntimeReviewForm = React.memo(
             ...activity,
             admin_status: activityReviews[index]?.status || "pending",
             admin_notes: activityReviews[index]?.notes || "",
-            result: activityReviews[index]?.result || "pending",
+            result: activityReviews[index]?.status || "pending",
             admin_rewards: activityReviews[index]?.rewards || "",
           })) || [];
 
@@ -951,8 +951,11 @@ const AdminDowntimeReviewForm = React.memo(
                         : styles.pendingBadge),
                     }}
                   >
-                    {reviewStatus.charAt(0).toUpperCase() +
-                      reviewStatus.slice(1)}
+                    {reviewStatus === "success"
+                      ? "Approved"
+                      : reviewStatus === "failure"
+                      ? "Rejected"
+                      : "Pending"}
                   </span>
                 </div>
               </div>
@@ -1001,7 +1004,7 @@ const AdminDowntimeReviewForm = React.memo(
                   style={reviewButtonStyles.failureButton}
                 >
                   <X size={16} />
-                  Deny
+                  Reject
                 </button>
                 <button
                   onClick={() => setReviewStatus("pending")}
@@ -1025,7 +1028,11 @@ const AdminDowntimeReviewForm = React.memo(
                     marginLeft: "8px",
                   }}
                 >
-                  {reviewStatus.charAt(0).toUpperCase() + reviewStatus.slice(1)}
+                  {reviewStatus === "success"
+                    ? "Approved"
+                    : reviewStatus === "failure"
+                    ? "Rejected"
+                    : "Pending"}
                 </span>
               </div>
 

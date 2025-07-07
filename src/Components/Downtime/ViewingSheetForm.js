@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { ArrowLeft, CheckCircle, XCircle, Edit } from "lucide-react";
+import { useMemo } from "react";
+import { ArrowLeft, CheckCircle, CircleAlert, XCircle } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { allSkills } from "../SharedData/data";
 import { calculateModifier } from "./downtimeHelpers";
@@ -10,6 +10,7 @@ const ViewingSheetForm = ({
   isUserAdmin,
   adminMode,
   onBack,
+  onEditRejected,
   onUpdateAssignment,
   supabase,
   user,
@@ -122,6 +123,11 @@ const ViewingSheetForm = ({
         backgroundColor: theme.success,
         color: "white",
       },
+      partialButton: {
+        backgroundColor: "#f59e0b",
+        color: "white",
+      },
+
       failureButton: {
         backgroundColor: theme.error,
         color: "white",
@@ -143,6 +149,18 @@ const ViewingSheetForm = ({
         backgroundColor: theme.success + "20",
         color: theme.success,
         border: `1px solid ${theme.success}`,
+      },
+      partialIndicator: {
+        backgroundColor: "#f59e0b20",
+        color: "#f59e0b",
+        border: "1px solid #f59e0b",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 1rem",
+        borderRadius: "6px",
+        fontWeight: "600",
+        marginBottom: "1rem",
       },
       failureIndicator: {
         backgroundColor: theme.error + "20",
@@ -167,9 +185,125 @@ const ViewingSheetForm = ({
         gap: "1rem",
         marginBottom: "1.5rem",
       },
+      reviewStatusBadge: {
+        padding: "8px 12px",
+        borderRadius: "6px",
+        fontSize: "14px",
+        fontWeight: "600",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "8px",
+        marginBottom: "1rem",
+      },
+      adminFeedbackSection: {
+        backgroundColor: theme.primary + "10",
+        border: `2px solid ${theme.primary + "30"}`,
+        borderRadius: "8px",
+        padding: "16px",
+        marginBottom: "1.5rem",
+      },
+      adminFeedbackTitle: {
+        fontSize: "16px",
+        fontWeight: "600",
+        color: theme.primary,
+        marginBottom: "8px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+      },
+      adminFeedbackText: {
+        fontSize: "14px",
+        lineHeight: "1.6",
+        color: theme.text,
+        whiteSpace: "pre-wrap",
+      },
     }),
     [theme]
   );
+
+  const getViewingReviewStatus = (sheet, theme) => {
+    if (sheet.is_draft) {
+      return (
+        <div
+          style={{
+            padding: "12px 16px",
+            backgroundColor: theme.textSecondary + "20",
+            color: theme.textSecondary,
+            borderRadius: "8px",
+            fontSize: "14px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "1.5rem",
+          }}
+        >
+          📝 Draft Status
+        </div>
+      );
+    }
+
+    const status = sheet.review_status || "pending";
+    const statusConfig = {
+      pending: {
+        bg: theme.primary + "20",
+        color: theme.primary,
+        icon: "⏳",
+        text: "Pending Admin Review",
+        description:
+          "Your downtime sheet has been submitted and is awaiting review by an admin.",
+      },
+      success: {
+        bg: theme.success + "20",
+        color: theme.success,
+        icon: "✅",
+        text: "Approved",
+        description:
+          "Your downtime sheet has been reviewed and approved by an admin.",
+      },
+      failure: {
+        bg: theme.error + "20",
+        color: theme.error,
+        icon: "❌",
+        text: "Rejected",
+        description:
+          "Your downtime sheet has been reviewed but needs revisions. Check the admin feedback below.",
+      },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    return (
+      <div
+        style={{
+          padding: "12px 16px",
+          backgroundColor: config.bg,
+          color: config.color,
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "600",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "16px" }}>{config.icon}</span>
+          <span>Review Status: {config.text}</span>
+        </div>
+        <div
+          style={{
+            fontSize: "12px",
+            opacity: 0.8,
+            fontWeight: "normal",
+          }}
+        >
+          {config.description}
+        </div>
+      </div>
+    );
+  };
 
   const getSkillDisplayName = (skillName) => {
     const skill = allSkills.find((s) => s.name === skillName);
@@ -186,137 +320,53 @@ const ViewingSheetForm = ({
     return value > 0 ? `+${value}` : `${value}`;
   };
 
-  const updateAssignmentResult = async (assignmentKey, field, value) => {
-    if (!isUserAdmin || !adminMode) return;
-
-    try {
-      const updatedAssignments = {
-        ...viewingSheet.roll_assignments,
-        [assignmentKey]: {
-          ...viewingSheet.roll_assignments[assignmentKey],
-          [field]: value,
-        },
+  const renderAdminControls = (assignmentKey, assignment) => {
+    if (assignment.result) {
+      const getResultConfig = (result) => {
+        switch (result) {
+          case "success":
+            return {
+              style: styles.successIndicator,
+              icon: <CheckCircle size={16} />,
+              text: "Success",
+            };
+          case "partial":
+            return {
+              style: styles.partialIndicator,
+              icon: <CircleAlert size={16} />,
+              text: "Partial Success",
+            };
+          case "failure":
+            return {
+              style: styles.failureIndicator,
+              icon: <XCircle size={16} />,
+              text: "Failure",
+            };
+          default:
+            return null;
+        }
       };
 
-      const { error } = await supabase
-        .from("character_downtime")
-        .update({
-          roll_assignments: updatedAssignments,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", viewingSheet.id);
+      const resultConfig = getResultConfig(assignment.result);
+      if (!resultConfig) return null;
 
-      if (error) throw error;
-
-      if (onUpdateAssignment) {
-        onUpdateAssignment(assignmentKey, field, value);
-      }
-    } catch (err) {
-      console.error("Error updating assignment:", err);
-      alert("Failed to update result. Please try again.");
-    }
-  };
-
-  const renderAdminControls = (assignmentKey, assignment) => {
-    if (!isUserAdmin || !adminMode) {
-      if (assignment.result) {
-        return (
-          <div style={styles.adminSection}>
-            <div
-              style={
-                assignment.result === "success"
-                  ? styles.successIndicator
-                  : styles.failureIndicator
-              }
-            >
-              {assignment.result === "success" ? (
-                <>
-                  <CheckCircle size={16} />
-                  Success
-                </>
-              ) : (
-                <>
-                  <XCircle size={16} />
-                  Failure
-                </>
-              )}
-            </div>
-            {assignment.adminNotes && (
-              <div>
-                <div style={styles.label}>Admin Notes:</div>
-                <div style={styles.value}>{assignment.adminNotes}</div>
-              </div>
-            )}
+      return (
+        <div style={styles.adminSection}>
+          <div style={resultConfig.style}>
+            {resultConfig.icon}
+            {resultConfig.text}
           </div>
-        );
-      }
-      return null;
+          {assignment.adminNotes && (
+            <div>
+              <div style={styles.label}>Admin Notes:</div>
+              <div style={styles.value}>{assignment.adminNotes}</div>
+            </div>
+          )}
+        </div>
+      );
     }
-
-    return (
-      <div style={styles.adminSection}>
-        <div style={styles.label}>Admin Controls</div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <button
-            onClick={() =>
-              updateAssignmentResult(assignmentKey, "result", "success")
-            }
-            style={{
-              ...styles.resultButton,
-              ...styles.successButton,
-              opacity: assignment.result === "success" ? 1 : 0.7,
-            }}
-          >
-            <CheckCircle size={14} style={{ marginRight: "4px" }} />
-            Success
-          </button>
-          <button
-            onClick={() =>
-              updateAssignmentResult(assignmentKey, "result", "failure")
-            }
-            style={{
-              ...styles.resultButton,
-              ...styles.failureButton,
-              opacity: assignment.result === "failure" ? 1 : 0.7,
-            }}
-          >
-            <XCircle size={14} style={{ marginRight: "4px" }} />
-            Failure
-          </button>
-          <button
-            onClick={() =>
-              updateAssignmentResult(assignmentKey, "result", null)
-            }
-            style={{
-              ...styles.resultButton,
-              ...styles.pendingButton,
-              opacity: !assignment.result ? 1 : 0.7,
-            }}
-          >
-            Pending
-          </button>
-        </div>
-
-        <div>
-          <div style={styles.label}>Admin Notes:</div>
-          <textarea
-            style={styles.textarea}
-            value={assignment.adminNotes || ""}
-            onChange={(e) =>
-              updateAssignmentResult(
-                assignmentKey,
-                "adminNotes",
-                e.target.value
-              )
-            }
-            placeholder="Add notes about the result..."
-          />
-        </div>
-      </div>
-    );
+    return null;
   };
-
   if (!viewingSheet) return null;
 
   return (
@@ -334,11 +384,28 @@ const ViewingSheetForm = ({
             ).toLocaleDateString()}
           </p>
         </div>
-        <button onClick={onBack} style={styles.backButton}>
-          <ArrowLeft size={16} />
-          Back to List
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          {/* Add this edit button for rejected sheets */}
+          {viewingSheet.review_status === "failure" &&
+            viewingSheet.user_id === user?.id && (
+              <button
+                onClick={() => onEditRejected(viewingSheet)}
+                style={{
+                  ...styles.backButton,
+                  backgroundColor: theme.warning,
+                }}
+              >
+                ✏️ Edit & Resubmit
+              </button>
+            )}
+
+          <button onClick={onBack} style={styles.backButton}>
+            <ArrowLeft size={16} />
+            Back to List
+          </button>
+        </div>
       </div>
+      {getViewingReviewStatus(viewingSheet, theme)}
 
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>📋 Character Information</h3>
@@ -369,6 +436,25 @@ const ViewingSheetForm = ({
           )}
         </div>
       </div>
+      {viewingSheet.admin_feedback && (
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>💬 Admin Feedback</h3>
+          <div
+            style={{
+              padding: "16px",
+              backgroundColor: theme.primary + "10",
+              border: `1px solid ${theme.primary + "30"}`,
+              borderRadius: "8px",
+              fontSize: "14px",
+              lineHeight: "1.6",
+              color: theme.text,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {viewingSheet.admin_feedback}
+          </div>
+        </div>
+      )}
       {viewingSheet.dice_pool && viewingSheet.dice_pool.length > 0 && (
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>🎲 Dice Pool Reference</h3>
@@ -445,7 +531,7 @@ const ViewingSheetForm = ({
                     <div style={styles.value}>{assignment.notes}</div>
                   </div>
                 )}
-                {console.log({ assignmentKey })}
+
                 {renderAdminControls(assignmentKey, assignment)}
               </div>
             );
@@ -504,7 +590,7 @@ const ViewingSheetForm = ({
                     <div style={styles.value}>{relationship.notes}</div>
                   </div>
                 )}
-                {console.log("testing")}
+
                 {renderAdminControls(assignmentKey, assignment)}
               </div>
             );

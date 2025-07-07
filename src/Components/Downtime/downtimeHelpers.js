@@ -2,8 +2,6 @@ import { allSkills } from "../SharedData/data";
 import { wandModifiers } from "../SharedData/downtime";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
-const roller = new DiceRoller();
-
 export const activityRequiresDualChecks = (activityText) => {
   if (!activityText) return false;
 
@@ -268,21 +266,17 @@ export const getCustomDiceTypeForActivity = (activityText) => {
       rollFunction: (jobType = "medium") => {
         try {
           let diceNotation;
-          let sides;
 
           switch (jobType.toLowerCase()) {
             case "easy":
               diceNotation = "2D8";
-              sides = 8;
               break;
             case "hard":
               diceNotation = "2D12";
-              sides = 12;
               break;
             case "medium":
             default:
               diceNotation = "2D10";
-              sides = 10;
               break;
           }
 
@@ -293,7 +287,7 @@ export const getCustomDiceTypeForActivity = (activityText) => {
           return individualDice;
         } catch (error) {
           console.error("Error rolling job earnings dice:", error);
-          // Fallback to manual roll if DiceRoller fails
+
           let sides;
           switch (jobType.toLowerCase()) {
             case "easy":

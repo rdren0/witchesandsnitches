@@ -1,12 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import {
-  getAllActivities,
-  wandModifiers,
-  downtime,
-} from "../SharedData/downtime";
-import { allSkills } from "../SharedData/data";
-import { formatModifier, modifiers } from "../CharacterSheet/utils";
+import { getAllActivities, downtime } from "../SharedData/downtime";
+import { formatModifier } from "../CharacterSheet/utils";
 import {
   calculateModifier,
   activityRequiresDualChecks,
@@ -15,7 +10,6 @@ import {
   isMultiSessionActivity,
   shouldUseCustomDiceForActivity,
   getCustomDiceTypeForActivity,
-  activityRequiresSpecialRules,
   getMultiSessionInfo,
   getSpecialActivityInfo,
   validateSkillName,
@@ -44,6 +38,145 @@ const DowntimeForm = ({
   setActiveTab,
 }) => {
   const { theme } = useTheme();
+  const styles = useMemo(
+    () => ({
+      container: {
+        maxWidth: "1200px",
+        margin: "0 auto",
+        padding: "1.5rem",
+        backgroundColor: theme.background,
+      },
+      section: {
+        marginBottom: "2rem",
+        padding: "1.5rem",
+        backgroundColor: theme.surface,
+        borderRadius: "12px",
+        border: `1px solid ${theme.border}`,
+      },
+      sectionTitle: {
+        fontSize: "1.5rem",
+        fontWeight: "600",
+        color: theme.text,
+        marginBottom: "1rem",
+        borderBottom: `2px solid ${theme.primary}`,
+        paddingBottom: "0.5rem",
+      },
+      activityCard: {
+        padding: "1.5rem",
+        backgroundColor: theme.background,
+        borderRadius: "8px",
+        border: `1px solid ${theme.border}`,
+        marginBottom: "1rem",
+      },
+      inputGroup: {
+        marginBottom: "1rem",
+      },
+      label: {
+        display: "block",
+        fontSize: "0.875rem",
+        fontWeight: "600",
+        color: theme.text,
+        marginBottom: "0.5rem",
+      },
+      input: {
+        width: "100%",
+        padding: "0.75rem",
+        borderRadius: "6px",
+        border: `1px solid ${theme.border}`,
+        backgroundColor: theme.surface,
+        color: theme.text,
+        fontSize: "0.875rem",
+      },
+      select: {
+        width: "100%",
+        padding: "0.75rem",
+        borderRadius: "6px",
+        border: `1px solid ${theme.border}`,
+        backgroundColor: theme.surface,
+        color: theme.text,
+        fontSize: "0.875rem",
+      },
+      textarea: {
+        width: "100%",
+        padding: "0.75rem",
+        borderRadius: "6px",
+        border: `1px solid ${theme.border}`,
+        backgroundColor: theme.surface,
+        color: theme.text,
+        fontSize: "0.875rem",
+        resize: "none",
+        height: "80px",
+      },
+      activityDescription: {
+        padding: "1rem",
+        backgroundColor: theme.primary + "10",
+        border: `1px solid ${theme.primary + "30"}`,
+        borderRadius: "6px",
+        fontSize: "0.875rem",
+        color: theme.text,
+        lineHeight: "1.5",
+        marginTop: "0.5rem",
+        marginBottom: "0.5rem",
+      },
+      diceAssignment: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        gap: "1rem",
+        marginTop: "1rem",
+      },
+      assignedDice: {
+        padding: "1rem",
+        backgroundColor: theme.primary + "15",
+        borderRadius: "8px",
+        border: `2px solid ${theme.primary}`,
+        textAlign: "center",
+      },
+      diceValue: {
+        fontSize: "1.5rem",
+        fontWeight: "bold",
+        color: theme.primary,
+        marginBottom: "0.5rem",
+      },
+      total: {
+        fontSize: "1rem",
+        fontWeight: "600",
+        color: theme.text,
+        marginBottom: "0.5rem",
+      },
+      removeButton: {
+        padding: "0.25rem 0.75rem",
+        backgroundColor: theme.error + "15",
+        color: theme.error,
+        border: `1px solid ${theme.error}`,
+        borderRadius: "4px",
+        fontSize: "0.75rem",
+        cursor: "pointer",
+      },
+      button: {
+        padding: "0.75rem 1.5rem",
+        borderRadius: "8px",
+        border: "none",
+        fontWeight: "600",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+      },
+      secondaryButton: {
+        backgroundColor: theme.warning,
+        color: "white",
+      },
+      successButton: {
+        backgroundColor: theme.success,
+        color: "white",
+      },
+      actionButtons: {
+        display: "flex",
+        gap: "1rem",
+        justifyContent: "center",
+        paddingTop: "1rem",
+      },
+    }),
+    [theme]
+  );
   const [hasInitialized, setHasInitialized] = useState(false);
 
   const [dicePool, setDicePool] = useState(initialDicePool || []);
@@ -143,8 +276,11 @@ const DowntimeForm = ({
     if (isUserAdmin) return true;
     if (!currentSheet) return true;
     if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
+    if (currentSheet.review_status === "failure")
+      return currentSheet.user_id === user?.id;
     return false;
   }, [isUserAdmin, currentSheet, user?.id]);
+
   const diceManager = DicePoolManager({
     dicePool,
     setDicePool,
@@ -552,7 +688,7 @@ const DowntimeForm = ({
 
       return null;
     },
-    [getModifierValue, theme.textSecondary]
+    [getModifierValue, theme.textSecondary, styles]
   );
 
   const editable = canEdit();
@@ -724,7 +860,7 @@ const DowntimeForm = ({
 
       return null;
     },
-    [theme, editable, diceManager.functions, formData.activities]
+    [theme, editable, diceManager.functions, formData.activities, styles]
   );
 
   const renderDiceAssignment = useCallback(
@@ -979,7 +1115,8 @@ const DowntimeForm = ({
       selectedCharacter,
       diceManager.functions,
       diceManager.data.dualCheckActivities.length,
-      dicePool.length,
+      dicePool,
+      styles,
     ]
   );
 
@@ -1131,148 +1268,9 @@ const DowntimeForm = ({
     setActiveTab,
   ]);
 
-  const styles = {
-    container: {
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "1.5rem",
-      backgroundColor: theme.background,
-    },
-    section: {
-      marginBottom: "2rem",
-      padding: "1.5rem",
-      backgroundColor: theme.surface,
-      borderRadius: "12px",
-      border: `1px solid ${theme.border}`,
-    },
-    sectionTitle: {
-      fontSize: "1.5rem",
-      fontWeight: "600",
-      color: theme.text,
-      marginBottom: "1rem",
-      borderBottom: `2px solid ${theme.primary}`,
-      paddingBottom: "0.5rem",
-    },
-    activityCard: {
-      padding: "1.5rem",
-      backgroundColor: theme.background,
-      borderRadius: "8px",
-      border: `1px solid ${theme.border}`,
-      marginBottom: "1rem",
-    },
-    inputGroup: {
-      marginBottom: "1rem",
-    },
-    label: {
-      display: "block",
-      fontSize: "0.875rem",
-      fontWeight: "600",
-      color: theme.text,
-      marginBottom: "0.5rem",
-    },
-    input: {
-      width: "100%",
-      padding: "0.75rem",
-      borderRadius: "6px",
-      border: `1px solid ${theme.border}`,
-      backgroundColor: theme.surface,
-      color: theme.text,
-      fontSize: "0.875rem",
-    },
-    select: {
-      width: "100%",
-      padding: "0.75rem",
-      borderRadius: "6px",
-      border: `1px solid ${theme.border}`,
-      backgroundColor: theme.surface,
-      color: theme.text,
-      fontSize: "0.875rem",
-    },
-    textarea: {
-      width: "100%",
-      padding: "0.75rem",
-      borderRadius: "6px",
-      border: `1px solid ${theme.border}`,
-      backgroundColor: theme.surface,
-      color: theme.text,
-      fontSize: "0.875rem",
-      resize: "none",
-      height: "80px",
-    },
-    activityDescription: {
-      padding: "1rem",
-      backgroundColor: theme.primary + "10",
-      border: `1px solid ${theme.primary + "30"}`,
-      borderRadius: "6px",
-      fontSize: "0.875rem",
-      color: theme.text,
-      lineHeight: "1.5",
-      marginTop: "0.5rem",
-      marginBottom: "0.5rem",
-    },
-    diceAssignment: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-      gap: "1rem",
-      marginTop: "1rem",
-    },
-    assignedDice: {
-      padding: "1rem",
-      backgroundColor: theme.primary + "15",
-      borderRadius: "8px",
-      border: `2px solid ${theme.primary}`,
-      textAlign: "center",
-    },
-    diceValue: {
-      fontSize: "1.5rem",
-      fontWeight: "bold",
-      color: theme.primary,
-      marginBottom: "0.5rem",
-    },
-    total: {
-      fontSize: "1rem",
-      fontWeight: "600",
-      color: theme.text,
-      marginBottom: "0.5rem",
-    },
-    removeButton: {
-      padding: "0.25rem 0.75rem",
-      backgroundColor: theme.error + "15",
-      color: theme.error,
-      border: `1px solid ${theme.error}`,
-      borderRadius: "4px",
-      fontSize: "0.75rem",
-      cursor: "pointer",
-    },
-    button: {
-      padding: "0.75rem 1.5rem",
-      borderRadius: "8px",
-      border: "none",
-      fontWeight: "600",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    },
-    secondaryButton: {
-      backgroundColor: theme.warning,
-      color: "white",
-    },
-    successButton: {
-      backgroundColor: theme.success,
-      color: "white",
-    },
-    actionButtons: {
-      display: "flex",
-      gap: "1rem",
-      justifyContent: "center",
-      paddingTop: "1rem",
-    },
-  };
-
   return (
     <div style={styles.container}>
-      {/* Dice Pool Manager Component */}
       {diceManager.component}
-
       {dicePool.length > 0 && (
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>⚡ Activities</h2>
@@ -1408,23 +1406,6 @@ const DowntimeForm = ({
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>🤝 NPC Relationships</h2>
 
-          <div
-            style={{
-              marginBottom: "1.5rem",
-              padding: "12px",
-              backgroundColor: theme.background,
-              border: `1px solid ${theme.border}`,
-              borderRadius: "8px",
-              fontSize: "14px",
-              color: theme.textSecondary,
-            }}
-          >
-            <strong>Build relationships with NPCs during downtime.</strong>
-            <br />
-            Assign 1 die from your pool to each relationship check. Only Insight
-            or Persuasion skills may be used.
-          </div>
-
           {(formData.relationships || []).map((relationship, index) => {
             const assignmentKey = `relationship${index + 1}`;
             const assignment = rollAssignments[assignmentKey] || {};
@@ -1442,23 +1423,6 @@ const DowntimeForm = ({
                   <h3 style={{ color: theme.text, margin: 0 }}>
                     Relationship {index + 1}
                   </h3>
-                  {assignment.diceIndex !== null && assignment.skill && (
-                    <div
-                      style={{
-                        padding: "4px 8px",
-                        backgroundColor: `${theme.primary}20`,
-                        border: `1px solid ${theme.primary}`,
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        color: theme.primary,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {allSkills.find((s) => s.name === assignment.skill)
-                        ?.displayName || assignment.skill}{" "}
-                      Check
-                    </div>
-                  )}
                 </div>
 
                 <div

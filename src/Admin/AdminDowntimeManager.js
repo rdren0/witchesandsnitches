@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import {
-  Eye,
-  Trash2,
-  FileText,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
+import { Trash2, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
 import AdminDowntimeReviewForm from "./AdminDowntimeReviewForm";
 import { gameSessionOptions } from "../App/const";
 
@@ -22,12 +14,11 @@ const AdminDowntimeManager = ({ supabase }) => {
   const [selectedGameSession, setSelectedGameSession] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
-  const [selectedReviewStatus, setSelectedReviewStatus] = useState("");
   const [searchCharacterName, setSearchCharacterName] = useState("");
 
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState(null);
+  const [activeTab, setActiveTab] = useState("pending");
 
   const [stats, setStats] = useState({
     total: 0,
@@ -40,7 +31,6 @@ const AdminDowntimeManager = ({ supabase }) => {
   const styles = {
     container: {
       padding: "24px",
-
       margin: "0 auto",
     },
     header: {
@@ -265,6 +255,44 @@ const AdminDowntimeManager = ({ supabase }) => {
     },
   };
 
+  const tabStyles = {
+    tabContainer: {
+      display: "flex",
+      marginBottom: "24px",
+      borderBottom: `1px solid ${theme.border}`,
+    },
+    tab: {
+      padding: "12px 24px",
+      border: "none",
+      backgroundColor: "transparent",
+      color: theme.textSecondary,
+      fontSize: "16px",
+      fontWeight: "600",
+      cursor: "pointer",
+      borderBottom: "3px solid transparent",
+      transition: "all 0.2s ease",
+    },
+    activeTab: {
+      color: theme.primary,
+      borderBottomColor: theme.primary,
+    },
+    tabBadge: {
+      marginLeft: "8px",
+      padding: "2px 8px",
+      borderRadius: "12px",
+      fontSize: "12px",
+      fontWeight: "600",
+    },
+    pendingBadge: {
+      backgroundColor: "#f59e0b20",
+      color: "#f59e0b",
+    },
+    approvedBadge: {
+      backgroundColor: "#10b98120",
+      color: "#10b981",
+    },
+  };
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -288,7 +316,7 @@ const AdminDowntimeManager = ({ supabase }) => {
 
       if (sheetsError) throw sheetsError;
 
-      const { data: characters, error: charactersError } = await supabase
+      const { error: charactersError } = await supabase
         .from("characters")
         .select("game_session")
         .not("game_session", "is", null);
@@ -319,8 +347,36 @@ const AdminDowntimeManager = ({ supabase }) => {
     }
   }, [supabase]);
 
+  const getTabCounts = () => {
+    const submitted = downtimeSheets.filter((sheet) => !sheet.is_draft);
+    return {
+      pending: submitted.filter(
+        (sheet) =>
+          !sheet.review_status ||
+          sheet.review_status === "pending" ||
+          sheet.review_status === "failure"
+      ).length,
+      approved: submitted.filter((sheet) => sheet.review_status === "success")
+        .length,
+    };
+  };
+
   const applyFilters = useCallback(() => {
     let filtered = [...downtimeSheets];
+
+    if (activeTab === "pending") {
+      filtered = filtered.filter(
+        (sheet) =>
+          !sheet.is_draft &&
+          (!sheet.review_status ||
+            sheet.review_status === "pending" ||
+            sheet.review_status === "failure")
+      );
+    } else if (activeTab === "approved") {
+      filtered = filtered.filter(
+        (sheet) => !sheet.is_draft && sheet.review_status === "success"
+      );
+    }
 
     if (selectedGameSession) {
       filtered = filtered.filter(
@@ -340,18 +396,6 @@ const AdminDowntimeManager = ({ supabase }) => {
       );
     }
 
-    if (selectedReviewStatus) {
-      if (selectedReviewStatus === "draft") {
-        filtered = filtered.filter((sheet) => sheet.is_draft);
-      } else {
-        filtered = filtered.filter(
-          (sheet) =>
-            !sheet.is_draft &&
-            (sheet.review_status || "pending") === selectedReviewStatus
-        );
-      }
-    }
-
     if (searchCharacterName) {
       filtered = filtered.filter(
         (sheet) =>
@@ -367,10 +411,10 @@ const AdminDowntimeManager = ({ supabase }) => {
     setFilteredSheets(filtered);
   }, [
     downtimeSheets,
+    activeTab,
     selectedGameSession,
     selectedYear,
     selectedSemester,
-    selectedReviewStatus,
     searchCharacterName,
   ]);
 
@@ -378,13 +422,7 @@ const AdminDowntimeManager = ({ supabase }) => {
     setSelectedGameSession("");
     setSelectedYear("");
     setSelectedSemester("");
-    setSelectedReviewStatus("");
     setSearchCharacterName("");
-  };
-
-  const viewSheetDetails = (sheet) => {
-    setSelectedSheet(sheet);
-    setShowDetailModal(true);
   };
 
   const reviewSheet = (sheet) => {
@@ -441,7 +479,7 @@ const AdminDowntimeManager = ({ supabase }) => {
         icon: CheckCircle,
         text: "Approved",
       },
-      failure: { style: styles.deniedReview, icon: XCircle, text: "Denied" },
+      failure: { style: styles.deniedReview, icon: XCircle, text: "Rejected" },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -513,7 +551,7 @@ const AdminDowntimeManager = ({ supabase }) => {
           <div style={{ ...styles.statNumber, color: "#ef4444" }}>
             {stats.denied}
           </div>
-          <div style={styles.statLabel}>Denied</div>
+          <div style={styles.statLabel}>Rejected</div>
         </div>
         <div style={styles.statCard}>
           <div style={{ ...styles.statNumber, color: "#6b7280" }}>
@@ -523,6 +561,35 @@ const AdminDowntimeManager = ({ supabase }) => {
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div style={tabStyles.tabContainer}>
+        <button
+          style={{
+            ...tabStyles.tab,
+            ...(activeTab === "pending" ? tabStyles.activeTab : {}),
+          }}
+          onClick={() => setActiveTab("pending")}
+        >
+          Pending & Rejected
+          <span style={{ ...tabStyles.tabBadge, ...tabStyles.pendingBadge }}>
+            {getTabCounts().pending}
+          </span>
+        </button>
+        <button
+          style={{
+            ...tabStyles.tab,
+            ...(activeTab === "approved" ? tabStyles.activeTab : {}),
+          }}
+          onClick={() => setActiveTab("approved")}
+        >
+          Approved
+          <span style={{ ...tabStyles.tabBadge, ...tabStyles.approvedBadge }}>
+            {getTabCounts().approved}
+          </span>
+        </button>
+      </div>
+
+      {/* Filters - Removed Review Status filter since it's handled by tabs */}
       <div style={styles.filtersContainer}>
         <div style={styles.filtersGrid}>
           <div style={styles.filterGroup}>
@@ -571,21 +638,6 @@ const AdminDowntimeManager = ({ supabase }) => {
           </div>
 
           <div style={styles.filterGroup}>
-            <label style={styles.label}>Review Status</label>
-            <select
-              style={styles.select}
-              value={selectedReviewStatus}
-              onChange={(e) => setSelectedReviewStatus(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending Review</option>
-              <option value="success">Approved</option>
-              <option value="failure">Denied</option>
-              <option value="draft">Drafts</option>
-            </select>
-          </div>
-
-          <div style={styles.filterGroup}>
             <label style={styles.label}>Character Name</label>
             <input
               type="text"
@@ -602,9 +654,13 @@ const AdminDowntimeManager = ({ supabase }) => {
         </button>
       </div>
 
+      {/* Sheets Container */}
       <div style={styles.sheetsContainer}>
         <div style={styles.sheetsHeader}>
-          <h2>Downtime Sheets ({filteredSheets.length})</h2>
+          <h2>
+            {activeTab === "pending" ? "Pending & Rejected" : "Approved"} Sheets
+            ({filteredSheets.length})
+          </h2>
         </div>
 
         {filteredSheets.length > 0 ? (
@@ -667,7 +723,10 @@ const AdminDowntimeManager = ({ supabase }) => {
           </>
         ) : (
           <div style={styles.emptyState}>
-            <div>No downtime sheets found matching your filters.</div>
+            <div>
+              No {activeTab === "pending" ? "pending or rejected" : "approved"}{" "}
+              sheets found matching your filters.
+            </div>
           </div>
         )}
       </div>

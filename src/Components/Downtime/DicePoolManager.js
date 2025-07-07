@@ -1,8 +1,7 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   activityRequiresDualChecks,
-  shouldUseCustomDiceForActivity,
   getCustomDiceTypeForActivity,
 } from "./downtimeHelpers";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";

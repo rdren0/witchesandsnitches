@@ -88,8 +88,7 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
       return "Username must be less than 30 characters";
     }
 
-    /* eslint-disable-next-line*/
-    if (!/^[a-zA-Z0-9_\-\.\s@\+!#\$%&\*\(\)\[\]\{\}'",:;?=]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_\-.\s@+!#$%&*()[\]{}'",:;?=]+$/.test(username)) {
       return "Invalid characters in username";
     }
     return null;
@@ -691,6 +690,9 @@ function AppContent() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const [isInitializing, setIsInitializing] = useState(true);
+  const initTimeoutRef = useRef(null);
+
   const getInitialSelectedCharacter = () => {
     try {
       const savedCharacterId = sessionStorage.getItem("selectedCharacterId");
@@ -715,7 +717,6 @@ function AppContent() {
     () =>
       debounce((character) => {
         setSelectedCharacter(character);
-        setThemeSelectedCharacter(character);
         if (character) {
           sessionStorage.setItem(
             "selectedCharacterId",
@@ -725,11 +726,15 @@ function AppContent() {
           sessionStorage.removeItem("selectedCharacterId");
         }
       }, 100),
-    [setThemeSelectedCharacter]
+    []
   );
 
+  const prevSelectedCharacterRef = useRef();
   useEffect(() => {
-    setThemeSelectedCharacter(selectedCharacter);
+    if (prevSelectedCharacterRef.current !== selectedCharacter) {
+      setThemeSelectedCharacter(selectedCharacter);
+      prevSelectedCharacterRef.current = selectedCharacter;
+    }
   }, [selectedCharacter, setThemeSelectedCharacter]);
 
   const resetSelectedCharacter = (newCharacter = null) => {
@@ -815,16 +820,17 @@ function AppContent() {
         characterToSelect &&
         (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
       ) {
-        requestIdleCallback(() => {
-          debouncedSelectCharacter(characterToSelect);
-          setInitialCharacterId(null);
-        });
-      } else if (characterToSelect) {
-        sessionStorage.setItem(
-          "selectedCharacterId",
-          characterToSelect.id.toString()
-        );
+        debouncedSelectCharacter(characterToSelect);
+        setInitialCharacterId(null);
       }
+
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+
+      initTimeoutRef.current = setTimeout(() => {
+        setIsInitializing(false);
+      }, 1000);
     },
     [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
   );
@@ -931,8 +937,15 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-    // eslint-disable-next-line
-  }, [discordUserId, adminMode, isUserAdmin, customUsername, user]);
+  }, [
+    discordUserId,
+    adminMode,
+    isUserAdmin,
+    customUsername,
+    user,
+    selectInitialCharacter,
+    loadCustomUsername,
+  ]);
 
   useEffect(() => {
     if (discordUserId) {
@@ -1009,9 +1022,24 @@ function AppContent() {
     hasAttemptedLoad,
   ]);
 
-  const handleCharacterChange = (character) => {
-    debouncedSelectCharacter(character);
-  };
+  const handleCharacterChange = useCallback(
+    (character) => {
+      if (isInitializing) {
+        return;
+      }
+
+      debouncedSelectCharacter(character);
+    },
+    [debouncedSelectCharacter, isInitializing]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const updateCustomUsername = async (newUsername) => {
     if (!user) return;
@@ -1115,7 +1143,7 @@ function AppContent() {
       characters={characters}
       selectedCharacter={selectedCharacter}
       onCharacterChange={handleCharacterChange}
-      isLoading={charactersLoading}
+      isLoading={charactersLoading || isInitializing}
       error={charactersError}
       adminMode={adminMode}
     />
