@@ -16,7 +16,6 @@ import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import SpellSlotTracker from "./Sections/SpellSlotTracker";
 import SorceryPointTracker from "./Sections/SorceryPointTracker";
 import CorruptionTracker from "./Sections/CorruptionTracker";
-// import DowntimeSheet from "../Downtime/DowntimeSheet";
 
 const CharacterTabbedPanel = ({
   supabase,

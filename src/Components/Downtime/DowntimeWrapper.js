@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import DowntimeForm from "./DowntimeForm";
+import ViewingSheetForm from "./ViewingSheetForm";
 
 const DowntimeWrapper = ({
   user,
@@ -60,6 +61,9 @@ const DowntimeWrapper = ({
       secondSkill: "",
       secondWandModifier: "",
     },
+    relationship1: { diceIndex: null, skill: "", notes: "", adminNotes: "" },
+    relationship2: { diceIndex: null, skill: "", notes: "", adminNotes: "" },
+    relationship3: { diceIndex: null, skill: "", notes: "", adminNotes: "" },
   });
   const [formData, setFormData] = useState({
     activities: [
@@ -82,6 +86,24 @@ const DowntimeWrapper = ({
     selectedMagicSchool: "",
   });
 
+  const normalizeRollAssignments = (rollAssignments) => {
+    if (!rollAssignments) return rollAssignments;
+
+    const normalized = { ...rollAssignments };
+
+    ["relationship1", "relationship2", "relationship3"].forEach((key) => {
+      if (normalized[key] && normalized[key].skill) {
+        if (normalized[key].skill === "Insight") {
+          normalized[key].skill = "insight";
+        }
+        if (normalized[key].skill === "Persuasion") {
+          normalized[key].skill = "persuasion";
+        }
+      }
+    });
+
+    return normalized;
+  };
   const loadSubmittedSheets = useCallback(async () => {
     if (!selectedCharacter?.id || !user?.id) return;
 
@@ -252,6 +274,9 @@ const DowntimeWrapper = ({
         secondSkill: "",
         secondWandModifier: "",
       },
+      relationship1: { diceIndex: null, skill: "", notes: "", adminNotes: "" },
+      relationship2: { diceIndex: null, skill: "", notes: "", adminNotes: "" },
+      relationship3: { diceIndex: null, skill: "", notes: "", adminNotes: "" },
     });
     setFormData({
       activities: [
@@ -302,12 +327,14 @@ const DowntimeWrapper = ({
     [currentSheet, resetFormState]
   );
 
-  const handleEditDraft = useCallback(async (draft) => {
-    try {
-      setSelectedYear(draft.year);
-      setSelectedSemester(draft.semester);
+  const handleEditDraft = useCallback(
+    (draft) => {
+      console.log("Loading draft for editing:", draft);
 
       setCurrentSheet(draft);
+
+      setSelectedYear(draft.year);
+      setSelectedSemester(draft.semester);
 
       setFormData({
         activities: draft.activities || [
@@ -327,12 +354,17 @@ const DowntimeWrapper = ({
             successes: [false, false, false, false, false],
           },
         ],
+        relationships: draft.relationships || [
+          { npcName: "", notes: "" },
+          { npcName: "", notes: "" },
+          { npcName: "", notes: "" },
+        ],
         selectedMagicSchool: draft.selected_magic_school || "",
       });
 
       setDicePool(draft.dice_pool || []);
 
-      setRollAssignments(
+      const normalizedAssignments = normalizeRollAssignments(
         draft.roll_assignments || {
           activity1: {
             diceIndex: null,
@@ -342,6 +374,8 @@ const DowntimeWrapper = ({
             secondDiceIndex: null,
             secondSkill: "",
             secondWandModifier: "",
+            customDice: null,
+            jobType: null,
           },
           activity2: {
             diceIndex: null,
@@ -351,6 +385,8 @@ const DowntimeWrapper = ({
             secondDiceIndex: null,
             secondSkill: "",
             secondWandModifier: "",
+            customDice: null,
+            jobType: null,
           },
           activity3: {
             diceIndex: null,
@@ -360,47 +396,155 @@ const DowntimeWrapper = ({
             secondDiceIndex: null,
             secondSkill: "",
             secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          relationship1: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+          relationship2: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+          relationship3: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
           },
         }
       );
+      setRollAssignments(normalizedAssignments);
 
       setActiveTab("create");
-    } catch (err) {
-      console.error("Error loading draft for editing:", err);
-      alert("Failed to load draft for editing.");
-    }
-  }, []);
-
-  const handleDeleteDraft = useCallback(
-    async (draftId) => {
-      if (
-        !window.confirm(
-          "Are you sure you want to delete this draft? This action cannot be undone."
-        )
-      ) {
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const { error } = await supabase
-          .from("character_downtime")
-          .delete()
-          .eq("id", draftId);
-
-        if (error) throw error;
-
-        loadDrafts();
-        alert("Draft deleted successfully.");
-      } catch (err) {
-        console.error("Error deleting draft:", err);
-        alert("Failed to delete draft. Please try again.");
-      } finally {
-        setLoading(false);
-      }
     },
-    [supabase, loadDrafts]
+    [
+      setCurrentSheet,
+      setSelectedYear,
+      setSelectedSemester,
+      setFormData,
+      setDicePool,
+      setRollAssignments,
+      setActiveTab,
+    ]
   );
+
+  const handleDeleteDraft = useCallback(async (draftId) => {
+    if (!window.confirm("Are you sure you want to delete this draft?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("character_downtime")
+        .delete()
+        .eq("id", draftId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      loadDrafts();
+
+      if (currentSheet?.id === draftId) {
+        setCurrentSheet(null);
+        setSelectedYear("");
+        setSelectedSemester("");
+        setDicePool([]);
+        setRollAssignments({
+          activity1: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          activity2: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          activity3: {
+            diceIndex: null,
+            skill: "",
+            wandModifier: "",
+            notes: "",
+            secondDiceIndex: null,
+            secondSkill: "",
+            secondWandModifier: "",
+            customDice: null,
+            jobType: null,
+          },
+          relationship1: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+          relationship2: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+          relationship3: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+            result: null,
+          },
+        });
+        setFormData({
+          activities: [
+            {
+              activity: "",
+              npc: "",
+              successes: [false, false, false, false, false],
+            },
+            {
+              activity: "",
+              npc: "",
+              successes: [false, false, false, false, false],
+            },
+            {
+              activity: "",
+              npc: "",
+              successes: [false, false, false, false, false],
+            },
+          ],
+          relationships: [
+            { npcName: "", notes: "" },
+            { npcName: "", notes: "" },
+            { npcName: "", notes: "" },
+          ],
+          selectedMagicSchool: "",
+        });
+      }
+    } catch (err) {
+      console.error("Error deleting draft:", err);
+      alert("Failed to delete draft. Please try again.");
+    }
+  });
 
   const tabs = useMemo(
     () => [
@@ -664,13 +808,6 @@ const DowntimeWrapper = ({
                     {new Date(sheet.submitted_at).toLocaleDateString()}
                   </div>
                 </div>
-                <button
-                  onClick={() => loadSheetForViewing(sheet.id)}
-                  style={styles.button}
-                >
-                  <Eye size={14} />
-                  View
-                </button>
               </div>
             ))}
           </div>
@@ -685,7 +822,7 @@ const DowntimeWrapper = ({
 
   const DraftsTab = () => {
     if (viewMode === "viewing" && viewingSheet) {
-      return <ViewingSheetForm />;
+      return <ViewingSheetWrapper />;
     }
 
     return (
@@ -779,7 +916,7 @@ const DowntimeWrapper = ({
 
   const SubmittedSheetsTab = () => {
     if (viewMode === "viewing" && viewingSheet) {
-      return <ViewingSheetForm />;
+      return <ViewingSheetWrapper />;
     }
 
     return (
@@ -862,223 +999,36 @@ const DowntimeWrapper = ({
     );
   };
 
-  const ViewingSheetForm = () => {
+  const ViewingSheetWrapper = () => {
     if (!viewingSheet) return null;
 
+    const handleUpdateAssignment = (assignmentKey, field, value) => {
+      setViewingSheet((prev) => ({
+        ...prev,
+        roll_assignments: {
+          ...prev.roll_assignments,
+          [assignmentKey]: {
+            ...prev.roll_assignments[assignmentKey],
+            [field]: value,
+          },
+        },
+      }));
+    };
+
     return (
-      <div>
-        <div style={styles.viewingHeader}>
-          <h3 style={styles.listItemTitle}>
-            Viewing: {viewingSheet.character_name} - Year {viewingSheet.year},
-            Semester {viewingSheet.semester}
-          </h3>
-          <button
-            onClick={() => {
-              setViewMode("list");
-              setViewingSheet(null);
-            }}
-            style={styles.backButton}
-          >
-            <ArrowLeft size={16} />
-            Back to List
-          </button>
-        </div>
-
-        <div style={styles.content}>
-          <div style={{ marginBottom: "2rem" }}>
-            <h4 style={styles.sectionTitle}>Character Information</h4>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: "1rem",
-              }}
-            >
-              <div>
-                <div style={styles.listItemSubtitle}>Character Name</div>
-                <div style={styles.listItemTitle}>
-                  {viewingSheet.character_name}
-                </div>
-              </div>
-              <div>
-                <div style={styles.listItemSubtitle}>Academic Period</div>
-                <div style={styles.listItemTitle}>
-                  Year {viewingSheet.year}, Semester {viewingSheet.semester}
-                </div>
-              </div>
-              <div>
-                <div style={styles.listItemSubtitle}>Submitted</div>
-                <div style={styles.listItemTitle}>
-                  {new Date(
-                    viewingSheet.submitted_at || viewingSheet.updated_at
-                  ).toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <div style={styles.listItemSubtitle}>Status</div>
-                <div style={styles.listItemTitle}>
-                  {viewingSheet.is_draft
-                    ? "📝 Draft"
-                    : viewingSheet.admin_completed
-                    ? "✅ Completed"
-                    : "📋 Submitted"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {viewingSheet.selected_magic_school && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h4 style={styles.sectionTitle}>Magic School Selection</h4>
-              <div style={styles.listItemTitle}>
-                {viewingSheet.selected_magic_school}
-              </div>
-            </div>
-          )}
-
-          {viewingSheet.dice_pool && viewingSheet.dice_pool.length > 0 && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h4 style={styles.sectionTitle}>Dice Pool</h4>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(60px, 1fr))",
-                  gap: "0.5rem",
-                }}
-              >
-                {viewingSheet.dice_pool.map((dice, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      padding: "0.5rem",
-                      textAlign: "center",
-                      backgroundColor: theme.background,
-                      borderRadius: "8px",
-                      border: `1px solid ${theme.border}`,
-                      fontSize: "1rem",
-                      fontWeight: "bold",
-                      color: theme.text,
-                    }}
-                  >
-                    {dice}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={{ marginBottom: "2rem" }}>
-            <h4 style={styles.sectionTitle}>Activities</h4>
-            {viewingSheet.activities && viewingSheet.activities.length > 0 ? (
-              <div style={{ display: "grid", gap: "1rem" }}>
-                {viewingSheet.activities
-                  .filter((activity) => activity.activity)
-                  .map((activity, index) => (
-                    <div key={index} style={styles.listItem}>
-                      <div style={styles.listItemInfo}>
-                        <div style={styles.listItemTitle}>
-                          Activity {index + 1}: {activity.activity}
-                        </div>
-                        {activity.npc && (
-                          <div style={styles.listItemSubtitle}>
-                            NPC: {activity.npc}
-                          </div>
-                        )}
-                        {activity.successes && (
-                          <div style={{ marginTop: "8px" }}>
-                            <div style={styles.listItemSubtitle}>
-                              Successes:
-                            </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "4px",
-                                marginTop: "4px",
-                              }}
-                            >
-                              {activity.successes.map((success, i) => (
-                                <div
-                                  key={i}
-                                  style={{
-                                    width: "20px",
-                                    height: "20px",
-                                    borderRadius: "50%",
-                                    backgroundColor: success
-                                      ? theme.success
-                                      : theme.background,
-                                    border: `2px solid ${
-                                      success ? theme.success : theme.border
-                                    }`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "12px",
-                                    color: success
-                                      ? "white"
-                                      : theme.textSecondary,
-                                  }}
-                                >
-                                  {success ? "✓" : "○"}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            ) : (
-              <div style={styles.emptyState}>
-                <p style={styles.emptyStateText}>No activities recorded.</p>
-              </div>
-            )}
-          </div>
-
-          {viewingSheet.roll_assignments && (
-            <div>
-              <h4 style={styles.sectionTitle}>Roll Assignments</h4>
-              <div style={{ display: "grid", gap: "1rem" }}>
-                {Object.entries(viewingSheet.roll_assignments).map(
-                  ([key, assignment]) => {
-                    if (!assignment.skill && !assignment.diceIndex) return null;
-                    return (
-                      <div key={key} style={styles.listItem}>
-                        <div style={styles.listItemInfo}>
-                          <div style={styles.listItemTitle}>
-                            {key.replace("activity", "Activity ")}
-                          </div>
-                          {assignment.skill && (
-                            <div style={styles.listItemSubtitle}>
-                              Skill: {assignment.skill}
-                            </div>
-                          )}
-                          {assignment.diceIndex !== null && (
-                            <div style={styles.listItemSubtitle}>
-                              Dice:{" "}
-                              {viewingSheet.dice_pool[assignment.diceIndex]}
-                            </div>
-                          )}
-                          {assignment.wandModifier && (
-                            <div style={styles.listItemSubtitle}>
-                              Wand Modifier: {assignment.wandModifier}
-                            </div>
-                          )}
-                          {assignment.notes && (
-                            <div style={styles.listItemSubtitle}>
-                              Notes: {assignment.notes}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <ViewingSheetForm
+        viewingSheet={viewingSheet}
+        selectedCharacter={selectedCharacter}
+        isUserAdmin={isUserAdmin}
+        adminMode={adminMode}
+        onBack={() => {
+          setViewMode("list");
+          setViewingSheet(null);
+        }}
+        onUpdateAssignment={handleUpdateAssignment}
+        supabase={supabase}
+        user={user}
+      />
     );
   };
 
@@ -1120,7 +1070,6 @@ const DowntimeWrapper = ({
       </div>
 
       <div style={styles.content}>
-        {/* Create tab with year/semester selection and form */}
         {activeTab === "create" && (
           <div>
             <div
@@ -1178,7 +1127,6 @@ const DowntimeWrapper = ({
               </div>
             )}
 
-            {/* Year/Semester Selection */}
             <div
               style={{
                 marginBottom: "2rem",
@@ -1258,7 +1206,6 @@ const DowntimeWrapper = ({
               </div>
             </div>
 
-            {/* Show message if combination is already submitted */}
             {selectedYear &&
               selectedSemester &&
               isYearSemesterSubmitted(selectedYear, selectedSemester) && (
@@ -1286,7 +1233,6 @@ const DowntimeWrapper = ({
                 </div>
               )}
 
-            {/* Downtime Form */}
             {selectedYear &&
               selectedSemester &&
               !isYearSemesterSubmitted(selectedYear, selectedSemester) && (
@@ -1306,6 +1252,9 @@ const DowntimeWrapper = ({
                   setRollAssignments={setRollAssignments}
                   formData={formData}
                   setFormData={setFormData}
+                  initialDicePool={dicePool}
+                  initialRollAssignments={rollAssignments}
+                  initialFormData={formData}
                   loadSubmittedSheets={loadSubmittedSheets}
                   loadDrafts={loadDrafts}
                   setActiveTab={setActiveTab}
@@ -1314,7 +1263,6 @@ const DowntimeWrapper = ({
           </div>
         )}
 
-        {/* Other tabs */}
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "drafts" && <DraftsTab />}
         {activeTab === "submitted" && <SubmittedSheetsTab />}

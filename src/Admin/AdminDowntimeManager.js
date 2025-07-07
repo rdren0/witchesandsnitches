@@ -1,78 +1,73 @@
-// AdminDowntimeManager.js
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import {
-  Calendar,
-  User,
-  FileText,
-  Download,
-  Edit,
-  Trash2,
   Eye,
-  Search,
+  Trash2,
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
+import AdminDowntimeReviewForm from "./AdminDowntimeReviewForm";
+import { gameSessionOptions } from "../App/const";
 
 const AdminDowntimeManager = ({ supabase }) => {
   const { theme } = useTheme();
-
-  // State management
   const [downtimeSheets, setDowntimeSheets] = useState([]);
   const [filteredSheets, setFilteredSheets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filter states
   const [selectedGameSession, setSelectedGameSession] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedReviewStatus, setSelectedReviewStatus] = useState("");
   const [searchCharacterName, setSearchCharacterName] = useState("");
 
-  // Available options
-  const [gameSessions, setGameSessions] = useState([]);
-  const [availableYears] = useState([1, 2, 3, 4, 5, 6, 7]);
-  const [availableSemesters] = useState([1, 2]);
-
-  // Detail view
-  const [selectedSheet, setSelectedSheet] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedSheet, setSelectedSheet] = useState(null);
 
-  // Styles
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    denied: 0,
+    drafts: 0,
+  });
+
   const styles = {
     container: {
       padding: "24px",
-      backgroundColor: theme.background,
-      minHeight: "100vh",
+
+      margin: "0 auto",
     },
     header: {
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
       marginBottom: "32px",
-      padding: "20px",
-      backgroundColor: theme.surface,
-      borderRadius: "12px",
-      border: `2px solid ${theme.border}`,
     },
     title: {
       fontSize: "28px",
       fontWeight: "bold",
       color: theme.text,
-      margin: 0,
+      marginBottom: "8px",
     },
     subtitle: {
       fontSize: "16px",
       color: theme.textSecondary,
-      margin: "8px 0 0 0",
     },
     filtersContainer: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-      gap: "16px",
-      padding: "20px",
       backgroundColor: theme.surface,
+      padding: "24px",
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
       marginBottom: "24px",
+    },
+    filtersGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+      gap: "16px",
+      marginBottom: "16px",
     },
     filterGroup: {
       display: "flex",
@@ -155,7 +150,7 @@ const AdminDowntimeManager = ({ supabase }) => {
       padding: "16px 20px",
       borderBottom: `1px solid ${theme.border}`,
       display: "grid",
-      gridTemplateColumns: "1fr 120px 120px 120px 150px 120px",
+      gridTemplateColumns: "1fr 80px 100px  100px 100px 100px",
       gap: "16px",
       alignItems: "center",
       transition: "background-color 0.2s ease",
@@ -165,7 +160,7 @@ const AdminDowntimeManager = ({ supabase }) => {
       backgroundColor: theme.background,
       borderBottom: `2px solid ${theme.border}`,
       display: "grid",
-      gridTemplateColumns: "1fr 120px 120px 120px 150px 120px",
+      gridTemplateColumns: "1fr 80px 100px  100px 100px 100px",
       gap: "16px",
       alignItems: "center",
       fontSize: "14px",
@@ -201,10 +196,31 @@ const AdminDowntimeManager = ({ supabase }) => {
       backgroundColor: "#f59e0b",
       color: "white",
     },
+    reviewStatusBadge: {
+      padding: "4px 8px",
+      borderRadius: "4px",
+      fontSize: "12px",
+      fontWeight: "600",
+      textAlign: "center",
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+    },
+    pendingReview: {
+      backgroundColor: "#f59e0b",
+      color: "white",
+    },
+    approvedReview: {
+      backgroundColor: "#10b981",
+      color: "white",
+    },
+    deniedReview: {
+      backgroundColor: "#ef4444",
+      color: "white",
+    },
     actionButtons: {
       display: "flex",
       gap: "8px",
-      justifyContent: "flex-end",
     },
     actionButton: {
       padding: "6px 8px",
@@ -220,8 +236,8 @@ const AdminDowntimeManager = ({ supabase }) => {
       backgroundColor: "#3b82f6",
       color: "white",
     },
-    editButton: {
-      backgroundColor: "#f59e0b",
+    reviewButton: {
+      backgroundColor: "#8b5cf6",
       color: "white",
     },
     deleteButton: {
@@ -231,43 +247,6 @@ const AdminDowntimeManager = ({ supabase }) => {
     emptyState: {
       padding: "60px 20px",
       textAlign: "center",
-      color: theme.textSecondary,
-    },
-    modalOverlay: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000,
-    },
-    modal: {
-      backgroundColor: theme.surface,
-      borderRadius: "12px",
-      padding: "24px",
-      maxWidth: "800px",
-      maxHeight: "80vh",
-      overflowY: "auto",
-      border: `2px solid ${theme.border}`,
-    },
-    modalHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "20px",
-      paddingBottom: "16px",
-      borderBottom: `1px solid ${theme.border}`,
-    },
-    closeButton: {
-      padding: "8px",
-      backgroundColor: "transparent",
-      border: "none",
-      cursor: "pointer",
-      borderRadius: "4px",
       color: theme.textSecondary,
     },
     loadingContainer: {
@@ -286,13 +265,11 @@ const AdminDowntimeManager = ({ supabase }) => {
     },
   };
 
-  // Load all downtime sheets and game sessions
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Load downtime sheets with character and user info
       const { data: sheets, error: sheetsError } = await supabase
         .from("character_downtime")
         .select(
@@ -311,7 +288,6 @@ const AdminDowntimeManager = ({ supabase }) => {
 
       if (sheetsError) throw sheetsError;
 
-      // Load unique game sessions
       const { data: characters, error: charactersError } = await supabase
         .from("characters")
         .select("game_session")
@@ -319,13 +295,22 @@ const AdminDowntimeManager = ({ supabase }) => {
 
       if (charactersError) throw charactersError;
 
-      const uniqueSessions = [
-        ...new Set(characters.map((c) => c.game_session).filter(Boolean)),
-      ].sort();
-      setGameSessions(uniqueSessions);
-
       setDowntimeSheets(sheets || []);
       setFilteredSheets(sheets || []);
+
+      const submitted = sheets?.filter((sheet) => !sheet.is_draft) || [];
+      const newStats = {
+        total: submitted.length,
+        pending: submitted.filter(
+          (sheet) => !sheet.review_status || sheet.review_status === "pending"
+        ).length,
+        approved: submitted.filter((sheet) => sheet.review_status === "success")
+          .length,
+        denied: submitted.filter((sheet) => sheet.review_status === "failure")
+          .length,
+        drafts: sheets?.filter((sheet) => sheet.is_draft).length || 0,
+      };
+      setStats(newStats);
     } catch (err) {
       setError(err.message);
       console.error("Error loading downtime data:", err);
@@ -334,7 +319,6 @@ const AdminDowntimeManager = ({ supabase }) => {
     }
   }, [supabase]);
 
-  // Filter sheets based on current filters
   const applyFilters = useCallback(() => {
     let filtered = [...downtimeSheets];
 
@@ -356,6 +340,18 @@ const AdminDowntimeManager = ({ supabase }) => {
       );
     }
 
+    if (selectedReviewStatus) {
+      if (selectedReviewStatus === "draft") {
+        filtered = filtered.filter((sheet) => sheet.is_draft);
+      } else {
+        filtered = filtered.filter(
+          (sheet) =>
+            !sheet.is_draft &&
+            (sheet.review_status || "pending") === selectedReviewStatus
+        );
+      }
+    }
+
     if (searchCharacterName) {
       filtered = filtered.filter(
         (sheet) =>
@@ -374,24 +370,28 @@ const AdminDowntimeManager = ({ supabase }) => {
     selectedGameSession,
     selectedYear,
     selectedSemester,
+    selectedReviewStatus,
     searchCharacterName,
   ]);
 
-  // Clear all filters
   const clearFilters = () => {
     setSelectedGameSession("");
     setSelectedYear("");
     setSelectedSemester("");
+    setSelectedReviewStatus("");
     setSearchCharacterName("");
   };
 
-  // View sheet details
   const viewSheetDetails = (sheet) => {
     setSelectedSheet(sheet);
     setShowDetailModal(true);
   };
 
-  // Delete sheet
+  const reviewSheet = (sheet) => {
+    setSelectedSheet(sheet);
+    setShowReviewModal(true);
+  };
+
   const deleteSheet = async (sheetId) => {
     if (
       !window.confirm(
@@ -417,17 +417,44 @@ const AdminDowntimeManager = ({ supabase }) => {
     }
   };
 
-  const getStats = () => {
-    const total = filteredSheets.length;
-    const submitted = filteredSheets.filter((s) => !s.is_draft).length;
-    const drafts = filteredSheets.filter((s) => s.is_draft).length;
-    const uniqueCharacters = new Set(filteredSheets.map((s) => s.character_id))
-      .size;
-
-    return { total, submitted, drafts, uniqueCharacters };
+  const handleReviewComplete = () => {
+    setShowReviewModal(false);
+    setSelectedSheet(null);
+    loadData();
   };
 
-  // Effects
+  const getReviewStatusDisplay = (sheet) => {
+    if (sheet.is_draft) {
+      return (
+        <span style={{ ...styles.reviewStatusBadge, ...styles.draftBadge }}>
+          <FileText size={12} />
+          Draft
+        </span>
+      );
+    }
+
+    const status = sheet.review_status || "pending";
+    const statusConfig = {
+      pending: { style: styles.pendingReview, icon: Clock, text: "Pending" },
+      success: {
+        style: styles.approvedReview,
+        icon: CheckCircle,
+        text: "Approved",
+      },
+      failure: { style: styles.deniedReview, icon: XCircle, text: "Denied" },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+    const Icon = config.icon;
+
+    return (
+      <span style={{ ...styles.reviewStatusBadge, ...config.style }}>
+        <Icon size={12} />
+        {config.text}
+      </span>
+    );
+  };
+
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -436,188 +463,176 @@ const AdminDowntimeManager = ({ supabase }) => {
     applyFilters();
   }, [applyFilters]);
 
-  // Render loading state
   if (loading) {
     return (
       <div style={styles.container}>
         <div style={styles.loadingContainer}>
-          <div>Loading downtime data...</div>
+          <div>Loading downtime sheets...</div>
         </div>
       </div>
     );
   }
 
-  // Render error state
   if (error) {
     return (
       <div style={styles.container}>
         <div style={styles.errorContainer}>
-          <h3>Error Loading Data</h3>
-          <p>{error}</p>
-          <button onClick={loadData} style={styles.clearButton}>
-            Retry
-          </button>
+          Error loading downtime sheets: {error}
         </div>
       </div>
     );
   }
 
-  const stats = getStats();
-
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <Calendar size={32} color={theme.primary} />
-        <div>
-          <h1 style={styles.title}>Downtime Management</h1>
-          <p style={styles.subtitle}>
-            View and manage all submitted downtime sheets across game sessions
-          </p>
-        </div>
-      </div>
-
-      <div style={styles.filtersContainer}>
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>Game Session</label>
-          <select
-            value={selectedGameSession}
-            onChange={(e) => setSelectedGameSession(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">All Sessions</option>
-            {gameSessions.map((session) => (
-              <option key={session} value={session}>
-                {session}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>Academic Year</label>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">All Years</option>
-            {availableYears.map((year) => (
-              <option key={year} value={year}>
-                Year {year}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>Semester</label>
-          <select
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">All Semesters</option>
-            {availableSemesters.map((semester) => (
-              <option key={semester} value={semester}>
-                Semester {semester}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>Character Name</label>
-          <input
-            type="text"
-            value={searchCharacterName}
-            onChange={(e) => setSearchCharacterName(e.target.value)}
-            placeholder="Search character..."
-            style={styles.input}
-          />
-        </div>
-
-        <div style={styles.filterGroup}>
-          <label style={styles.label}>&nbsp;</label>
-          <button onClick={clearFilters} style={styles.clearButton}>
-            Clear Filters
-          </button>
-        </div>
+        <h1 style={styles.title}>Downtime Management</h1>
+        <p style={styles.subtitle}>
+          Review and manage player downtime submissions
+        </p>
       </div>
 
       <div style={styles.statsContainer}>
         <div style={styles.statCard}>
           <div style={styles.statNumber}>{stats.total}</div>
-          <div style={styles.statLabel}>Total Sheets</div>
+          <div style={styles.statLabel}>Total Submissions</div>
         </div>
         <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.submitted}</div>
-          <div style={styles.statLabel}>Submitted</div>
+          <div style={{ ...styles.statNumber, color: "#f59e0b" }}>
+            {stats.pending}
+          </div>
+          <div style={styles.statLabel}>Pending Review</div>
         </div>
         <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.drafts}</div>
+          <div style={{ ...styles.statNumber, color: "#10b981" }}>
+            {stats.approved}
+          </div>
+          <div style={styles.statLabel}>Approved</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={{ ...styles.statNumber, color: "#ef4444" }}>
+            {stats.denied}
+          </div>
+          <div style={styles.statLabel}>Denied</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={{ ...styles.statNumber, color: "#6b7280" }}>
+            {stats.drafts}
+          </div>
           <div style={styles.statLabel}>Drafts</div>
         </div>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.uniqueCharacters}</div>
-          <div style={styles.statLabel}>Unique Characters</div>
+      </div>
+
+      <div style={styles.filtersContainer}>
+        <div style={styles.filtersGrid}>
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Game Session</label>
+            <select
+              style={styles.select}
+              value={selectedGameSession}
+              onChange={(e) => setSelectedGameSession(e.target.value)}
+            >
+              <option value="">All Sessions</option>
+              {gameSessionOptions.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Year</label>
+            <select
+              style={styles.select}
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              <option value="">All Years</option>
+              {[1, 2, 3, 4, 5, 6, 7].map((year) => (
+                <option key={year} value={year}>
+                  Year {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Semester</label>
+            <select
+              style={styles.select}
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester(e.target.value)}
+            >
+              <option value="">All Semesters</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Review Status</label>
+            <select
+              style={styles.select}
+              value={selectedReviewStatus}
+              onChange={(e) => setSelectedReviewStatus(e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending Review</option>
+              <option value="success">Approved</option>
+              <option value="failure">Denied</option>
+              <option value="draft">Drafts</option>
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Character Name</label>
+            <input
+              type="text"
+              style={styles.input}
+              placeholder="Search by character name..."
+              value={searchCharacterName}
+              onChange={(e) => setSearchCharacterName(e.target.value)}
+            />
+          </div>
         </div>
+
+        <button onClick={clearFilters} style={styles.clearButton}>
+          Clear Filters
+        </button>
       </div>
 
       <div style={styles.sheetsContainer}>
         <div style={styles.sheetsHeader}>
-          <h3>Downtime Sheets ({filteredSheets.length})</h3>
-          <button onClick={loadData} style={styles.clearButton}>
-            Refresh
-          </button>
+          <h2>Downtime Sheets ({filteredSheets.length})</h2>
         </div>
 
-        {filteredSheets.length === 0 ? (
-          <div style={styles.emptyState}>
-            <FileText size={48} color={theme.textSecondary} />
-            <h3>No downtime sheets found</h3>
-            <p>No sheets match your current filter criteria.</p>
-          </div>
-        ) : (
+        {filteredSheets.length > 0 ? (
           <>
             <div style={styles.sheetHeader}>
-              <div>Character / Session</div>
+              <div>Character</div>
               <div>Year</div>
               <div>Semester</div>
-              <div>Status</div>
+              <div>Review Status</div>
               <div>Submitted</div>
               <div>Actions</div>
             </div>
             <div style={styles.sheetsList}>
               {filteredSheets.map((sheet) => (
-                <div
-                  key={sheet.id}
-                  style={styles.sheetItem}
-                
-                >
+                <div key={sheet.id} style={styles.sheetItem}>
                   <div style={styles.characterInfo}>
                     <div style={styles.characterName}>
                       {sheet.characters?.name || sheet.character_name}
                     </div>
                     <div style={styles.gameSession}>
-                      {sheet.characters?.game_session || "No Session"}
+                      {sheet.characters?.game_session || "Unknown Session"}
                     </div>
                   </div>
 
                   <div>Year {sheet.year}</div>
                   <div>Semester {sheet.semester}</div>
 
-                  <div>
-                    <span
-                      style={{
-                        ...styles.statusBadge,
-                        ...(!sheet.is_draft
-                          ? styles.submittedBadge
-                          : styles.draftBadge),
-                      }}
-                    >
-                      {!sheet.is_draft ? "Submitted" : "Draft"}
-                    </span>
-                  </div>
+                  <div>{getReviewStatusDisplay(sheet)}</div>
 
                   <div>
                     {!sheet.is_draft && sheet.submitted_at
@@ -626,13 +641,18 @@ const AdminDowntimeManager = ({ supabase }) => {
                   </div>
 
                   <div style={styles.actionButtons}>
-                    <button
-                      onClick={() => viewSheetDetails(sheet)}
-                      style={{ ...styles.actionButton, ...styles.viewButton }}
-                      title="View Details"
-                    >
-                      <Eye size={16} />
-                    </button>
+                    {!sheet.is_draft && (
+                      <button
+                        onClick={() => reviewSheet(sheet)}
+                        style={{
+                          ...styles.actionButton,
+                          ...styles.reviewButton,
+                        }}
+                        title="Review & Finalize"
+                      >
+                        <FileText size={16} />
+                      </button>
+                    )}
                     <button
                       onClick={() => deleteSheet(sheet.id)}
                       style={{ ...styles.actionButton, ...styles.deleteButton }}
@@ -645,92 +665,20 @@ const AdminDowntimeManager = ({ supabase }) => {
               ))}
             </div>
           </>
+        ) : (
+          <div style={styles.emptyState}>
+            <div>No downtime sheets found matching your filters.</div>
+          </div>
         )}
       </div>
 
-      {showDetailModal && selectedSheet && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h2>Downtime Sheet Details</h2>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                style={styles.closeButton}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div>
-              <h3>Character Information</h3>
-              <p>
-                <strong>Name:</strong>{" "}
-                {selectedSheet.characters?.name || selectedSheet.character_name}
-              </p>
-              <p>
-                <strong>Game Session:</strong>{" "}
-                {selectedSheet.characters?.game_session || "Unknown"}
-              </p>
-              <p>
-                <strong>Academic Period:</strong> Year {selectedSheet.year},
-                Semester {selectedSheet.semester}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                {selectedSheet.submitted_at ? "Submitted" : "Draft"}
-              </p>
-              {selectedSheet.submitted_at && (
-                <p>
-                  <strong>Submitted:</strong>{" "}
-                  {new Date(selectedSheet.submitted_at).toLocaleString()}
-                </p>
-              )}
-
-              <h3>Activities</h3>
-              {selectedSheet.activities?.map((activity, index) => (
-                <div
-                  key={index}
-                  style={{
-                    marginBottom: "16px",
-                    padding: "12px",
-                    backgroundColor: theme.background,
-                    borderRadius: "6px",
-                  }}
-                >
-                  <p>
-                    <strong>Activity {index + 1}:</strong>{" "}
-                    {activity.activity || "Not selected"}
-                  </p>
-                  {activity.npc && (
-                    <p>
-                      <strong>NPC/Location:</strong> {activity.npc}
-                    </p>
-                  )}
-                  <p>
-                    <strong>Successes:</strong>{" "}
-                    {activity.successes?.filter((s) => s).length || 0}/5
-                  </p>
-                </div>
-              ))}
-
-              {selectedSheet.selected_magic_school && (
-                <div>
-                  <h3>Magic School Selection</h3>
-                  <p>
-                    <strong>Selected School:</strong>{" "}
-                    {selectedSheet.selected_magic_school}
-                  </p>
-                </div>
-              )}
-
-              <h3>Dice Pool</h3>
-              <p>
-                <strong>Dice Rolls:</strong>{" "}
-                {selectedSheet.dice_pool?.join(", ") || "None"}
-              </p>
-            </div>
-          </div>
-        </div>
+      {showReviewModal && selectedSheet && (
+        <AdminDowntimeReviewForm
+          supabase={supabase}
+          sheetId={selectedSheet.id}
+          onClose={() => setShowReviewModal(false)}
+          onReviewComplete={handleReviewComplete}
+        />
       )}
     </div>
   );

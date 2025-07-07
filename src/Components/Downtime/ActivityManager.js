@@ -150,7 +150,6 @@ const ActivityManager = ({
         </p>
       </div>
 
-      {/* Pass props directly - no context needed */}
       {[0, 1, 2].map((index) => (
         <ActivityItem
           key={index}
@@ -193,7 +192,6 @@ const ActivityManager = ({
         </p>
       </div>
 
-      {/* You'll need to update NPCEncounterItem similarly */}
       {[0, 1, 2].map((index) => (
         <NPCEncounterItem
           key={index}

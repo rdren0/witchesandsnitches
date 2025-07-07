@@ -457,9 +457,24 @@ const DowntimeActions = ({
             secondSkill: "",
             secondWandModifier: "",
           },
-          relationship1: { diceIndex: null, skill: "", notes: "" },
-          relationship2: { diceIndex: null, skill: "", notes: "" },
-          relationship3: { diceIndex: null, skill: "", notes: "" },
+          relationship1: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+          },
+          relationship2: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+          },
+          relationship3: {
+            diceIndex: null,
+            skill: "",
+            notes: "",
+            adminNotes: "",
+          },
         });
       }
       if (setExtraFieldsUnlocked) setExtraFieldsUnlocked(false);
@@ -576,7 +591,6 @@ const DowntimeActions = ({
 
     return (
       <div style={enhancedStyles.actionContainer}>
-        {/* Status Indicator */}
         {currentSheet && (
           <div
             style={{
@@ -607,7 +621,6 @@ const DowntimeActions = ({
           </div>
         )}
 
-        {/* Action Buttons */}
         <div style={enhancedStyles.actionSection}>
           <h3 style={enhancedStyles.sectionTitle}>
             {currentSheet ? (
@@ -627,7 +640,6 @@ const DowntimeActions = ({
           </h3>
 
           <div style={enhancedStyles.actionGrid}>
-            {/* Create/Edit Mode Actions */}
             {userCanEdit && (
               <>
                 <button
@@ -661,7 +673,6 @@ const DowntimeActions = ({
               </>
             )}
 
-            {/* View Mode Actions */}
             {currentSheet && !userCanEdit && (
               <>
                 <button
@@ -682,7 +693,6 @@ const DowntimeActions = ({
               </>
             )}
 
-            {/* Navigation Actions */}
             <button
               onClick={() => setActiveTab("overview")}
               style={enhancedStyles.backButton}

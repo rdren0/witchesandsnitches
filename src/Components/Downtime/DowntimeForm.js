@@ -21,6 +21,7 @@ import {
   validateSkillName,
 } from "./downtimeHelpers";
 import SkillSelector from "./SkillSelector";
+import DicePoolManager from "./DicePoolManager";
 
 const DowntimeForm = ({
   user,
@@ -81,6 +82,28 @@ const DowntimeForm = ({
         customDice: null,
         jobType: null,
       },
+
+      relationship1: {
+        diceIndex: null,
+        skill: "",
+        notes: "",
+        adminNotes: "",
+        result: null,
+      },
+      relationship2: {
+        diceIndex: null,
+        skill: "",
+        notes: "",
+        adminNotes: "",
+        result: null,
+      },
+      relationship3: {
+        diceIndex: null,
+        skill: "",
+        notes: "",
+        adminNotes: "",
+        result: null,
+      },
     }
   );
   const [formData, setFormData] = useState(
@@ -102,6 +125,11 @@ const DowntimeForm = ({
           successes: [false, false, false, false, false],
         },
       ],
+      relationships: [
+        { npcName: "", notes: "" },
+        { npcName: "", notes: "" },
+        { npcName: "", notes: "" },
+      ],
       selectedMagicSchool: "",
     }
   );
@@ -111,43 +139,23 @@ const DowntimeForm = ({
 
   const [extraDiceAssignments, setExtraDiceAssignments] = useState({});
 
-  const dualCheckActivities = useMemo(() => {
-    return formData.activities.filter((activity) =>
-      activityRequiresDualChecks(activity.activity)
-    );
-  }, [formData.activities]);
-
-  const extraDiceCount = useMemo(() => {
-    return Math.max(0, dicePool.length - 6);
-  }, [dicePool.length]);
-
-  const shouldDisableExtraDie = useMemo(() => {
-    return extraDiceCount >= dualCheckActivities.length;
-  }, [extraDiceCount, dualCheckActivities.length]);
-
-  useEffect(() => {
-    const currentDualCheckCount = dualCheckActivities.length;
-    const currentExtraDiceCount = Math.max(0, dicePool.length - 6);
-
-    if (currentExtraDiceCount > currentDualCheckCount) {
-      const excessDice = currentExtraDiceCount - currentDualCheckCount;
-
-      setDicePool((prev) => prev.slice(0, prev.length - excessDice));
-
-      setExtraDiceAssignments((prev) => {
-        const updated = { ...prev };
-        const removedStartIndex = dicePool.length - excessDice;
-
-        Object.keys(updated).forEach((key) => {
-          if (updated[key] >= removedStartIndex) {
-            delete updated[key];
-          }
-        });
-
-        return updated;
-      });
-    }
-  }, [dualCheckActivities.length, dicePool.length]);
+  const canEdit = useCallback(() => {
+    if (isUserAdmin) return true;
+    if (!currentSheet) return true;
+    if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
+    return false;
+  }, [isUserAdmin, currentSheet, user?.id]);
+  const diceManager = DicePoolManager({
+    dicePool,
+    setDicePool,
+    rollAssignments,
+    setRollAssignments,
+    extraDiceAssignments,
+    setExtraDiceAssignments,
+    formData,
+    canEdit: () => canEdit(),
+    selectedCharacter,
+  });
 
   useEffect(() => {
     if (initialDicePool && initialDicePool.length > 0 && !hasInitialized) {
@@ -168,16 +176,16 @@ const DowntimeForm = ({
 
   useEffect(() => {
     if (initialFormData && initialFormData.activities && !hasInitialized) {
-      setFormData(initialFormData);
+      setFormData({
+        ...initialFormData,
+        relationships: initialFormData.relationships || [
+          { npcName: "", notes: "" },
+          { npcName: "", notes: "" },
+          { npcName: "", notes: "" },
+        ],
+      });
     }
   }, [initialFormData, hasInitialized]);
-
-  const canEdit = useCallback(() => {
-    if (isUserAdmin) return true;
-    if (!currentSheet) return true;
-    if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
-    return false;
-  }, [isUserAdmin, currentSheet, user?.id]);
 
   const updateRollAssignment = useCallback(
     (activityIndex, field, value) => {
@@ -217,10 +225,7 @@ const DowntimeForm = ({
           ) {
             updateRollAssignment(index, "secondSkill", skillInfo.skills[1]);
           }
-        } else if (
-          (skillInfo.type === "limited" || skillInfo.type === "suggested") &&
-          skillInfo.skills
-        ) {
+        } else if (skillInfo.type === "limited" && skillInfo.skills) {
           if (
             currentAssignment?.skill &&
             !skillInfo.skills.includes(currentAssignment.skill)
@@ -279,65 +284,6 @@ const DowntimeForm = ({
     ];
   }, []);
 
-  const rollCustomDice = useCallback((activityText, jobType = "medium") => {
-    const customDiceInfo = getCustomDiceTypeForActivity(activityText);
-    if (customDiceInfo && customDiceInfo.rollFunction) {
-      return customDiceInfo.rollFunction(jobType);
-    }
-    return null;
-  }, []);
-
-  const handleCustomDiceRoll = useCallback(
-    (activityText, jobType) => {
-      if (!canEdit()) {
-        return;
-      }
-
-      try {
-        const customDice = rollCustomDice(activityText, jobType);
-
-        if (customDice) {
-          const activityIndex = formData.activities.findIndex(
-            (activity) => activity.activity === activityText
-          );
-
-          if (activityIndex !== -1) {
-            const assignmentKey = `activity${activityIndex + 1}`;
-
-            setRollAssignments((prev) => {
-              const updated = {
-                ...prev,
-                [assignmentKey]: {
-                  ...prev[assignmentKey],
-                  customDice: customDice,
-                  jobType: jobType,
-                  diceIndex: null,
-                  secondDiceIndex: null,
-                },
-              };
-              return updated;
-            });
-
-            const diceSum = customDice[0] + customDice[1];
-            const jobTypeLabel =
-              {
-                easy: "2D8",
-                medium: "2D10",
-                hard: "2D12",
-              }[jobType] || "2D10";
-          } else {
-            console.error("Activity not found in activities list");
-          }
-        } else {
-          console.error("No custom dice returned from roll function");
-        }
-      } catch (error) {
-        console.error("Error in handleCustomDiceRoll:", error);
-      }
-    },
-    [canEdit, rollCustomDice, formData.activities, setRollAssignments]
-  );
-
   const getActivityDescription = useCallback(
     (activityValue) => {
       if (!activityValue) return "";
@@ -362,118 +308,10 @@ const DowntimeForm = ({
     [selectedCharacter]
   );
 
-  const rollDice = useCallback(() => {
-    if (!canEdit()) return;
-
-    const newPool = Array.from(
-      { length: 6 },
-      () => Math.floor(Math.random() * 20) + 1
-    );
-    setDicePool(newPool);
-
-    setExtraDiceAssignments({});
-
-    setRollAssignments((prev) => {
-      const resetAssignments = {};
-      Object.keys(prev).forEach((key) => {
-        resetAssignments[key] = {
-          ...prev[key],
-          diceIndex: null,
-          secondDiceIndex: null,
-          customDice: null,
-          jobType: null,
-        };
-      });
-      return resetAssignments;
-    });
-  }, [canEdit]);
-
-  const addExtraDie = useCallback(() => {
-    if (!canEdit()) return;
-
-    const extraDie = Math.floor(Math.random() * 20) + 1;
-    setDicePool((prev) => [...prev, extraDie]);
-  }, [canEdit]);
-
-  const addExtraDieForActivity = useCallback(
-    (activityKey) => {
-      if (!canEdit()) return;
-
-      const extraDie = Math.floor(Math.random() * 20) + 1;
-      const newExtraDiceIndex = dicePool.length;
-
-      setDicePool((prev) => [...prev, extraDie]);
-      setExtraDiceAssignments((prev) => ({
-        ...prev,
-        [activityKey]: newExtraDiceIndex,
-      }));
-    },
-    [canEdit, dicePool.length]
-  );
-
-  const isDiceAssigned = useCallback(
-    (diceIndex) => {
-      for (const assignment of Object.values(rollAssignments)) {
-        if (
-          assignment.diceIndex === diceIndex ||
-          assignment.secondDiceIndex === diceIndex
-        ) {
-          return true;
-        }
-      }
-      return false;
-    },
-    [rollAssignments]
-  );
-
-  const assignDice = useCallback(
-    (activityIndex, diceIndex, isSecondDie = false) => {
-      if (!canEdit()) return;
-
-      const assignmentKey = `activity${activityIndex + 1}`;
-
-      if (isSecondDie && diceIndex >= 6) {
-        setExtraDiceAssignments((prev) => ({
-          ...prev,
-          [assignmentKey]: diceIndex,
-        }));
-      }
-
-      setRollAssignments((prev) => ({
-        ...prev,
-        [assignmentKey]: {
-          ...prev[assignmentKey],
-          [isSecondDie ? "secondDiceIndex" : "diceIndex"]: diceIndex,
-        },
-      }));
-    },
-    [canEdit]
-  );
-
-  const unassignDice = useCallback(
-    (activityIndex, isSecondDie = false) => {
-      if (!canEdit()) return;
-
-      const assignmentKey = `activity${activityIndex + 1}`;
-
-      if (isSecondDie) {
-        setExtraDiceAssignments((prev) => {
-          const updated = { ...prev };
-          delete updated[assignmentKey];
-          return updated;
-        });
-      }
-
-      setRollAssignments((prev) => ({
-        ...prev,
-        [assignmentKey]: {
-          ...prev[assignmentKey],
-          [isSecondDie ? "secondDiceIndex" : "diceIndex"]: null,
-        },
-      }));
-    },
-    [canEdit]
-  );
+  const formatModifierValue = useCallback((value) => {
+    if (value === 0) return "+0";
+    return value > 0 ? `+${value}` : `${value}`;
+  }, []);
 
   const updateActivity = useCallback(
     (index, field, value) => {
@@ -569,115 +407,18 @@ const DowntimeForm = ({
       }
 
       if (field === "activity" && wasDualCheck && !willBeDualCheck) {
-        if (
-          assignment?.secondDiceIndex !== null &&
-          assignment?.secondDiceIndex !== undefined
-        ) {
-          const extraDiceIndex = extraDiceAssignments[activityKey];
-          if (extraDiceIndex !== undefined && extraDiceIndex >= 6) {
-            setDicePool((prev) => {
-              const newPool = [...prev];
-              newPool.splice(extraDiceIndex, 1);
-              return newPool;
-            });
-
-            setExtraDiceAssignments((prev) => {
-              const updated = { ...prev };
-              delete updated[activityKey];
-
-              Object.keys(updated).forEach((key) => {
-                if (updated[key] > extraDiceIndex) {
-                  updated[key] = updated[key] - 1;
-                }
-              });
-
-              return updated;
-            });
-
-            setRollAssignments((prev) => {
-              const updated = { ...prev };
-              Object.keys(updated).forEach((key) => {
-                const assignment = updated[key];
-                if (assignment.diceIndex > extraDiceIndex) {
-                  updated[key] = {
-                    ...assignment,
-                    diceIndex: assignment.diceIndex - 1,
-                  };
-                }
-                if (assignment.secondDiceIndex > extraDiceIndex) {
-                  updated[key] = {
-                    ...assignment,
-                    secondDiceIndex: assignment.secondDiceIndex - 1,
-                  };
-                }
-              });
-              return updated;
-            });
-          } else {
-            setDicePool((prev) => {
-              if (prev.length > 6) {
-                return prev.slice(0, -1);
-              }
-              return prev;
-            });
-          }
-        }
+        diceManager.functions.removeExtraDiceForActivity(
+          activityKey,
+          assignment
+        );
       }
 
       if (field === "activity" && !value) {
-        if (
-          wasDualCheck &&
-          assignment?.secondDiceIndex !== null &&
-          assignment?.secondDiceIndex !== undefined
-        ) {
-          const extraDiceIndex = extraDiceAssignments[activityKey];
-          if (extraDiceIndex !== undefined && extraDiceIndex >= 6) {
-            setDicePool((prev) => {
-              const newPool = [...prev];
-              newPool.splice(extraDiceIndex, 1);
-              return newPool;
-            });
-
-            setExtraDiceAssignments((prev) => {
-              const updated = { ...prev };
-              delete updated[activityKey];
-
-              Object.keys(updated).forEach((key) => {
-                if (updated[key] > extraDiceIndex) {
-                  updated[key] = updated[key] - 1;
-                }
-              });
-
-              return updated;
-            });
-
-            setRollAssignments((prev) => {
-              const updated = { ...prev };
-              Object.keys(updated).forEach((key) => {
-                const assignment = updated[key];
-                if (assignment.diceIndex > extraDiceIndex) {
-                  updated[key] = {
-                    ...assignment,
-                    diceIndex: assignment.diceIndex - 1,
-                  };
-                }
-                if (assignment.secondDiceIndex > extraDiceIndex) {
-                  updated[key] = {
-                    ...assignment,
-                    secondDiceIndex: assignment.secondDiceIndex - 1,
-                  };
-                }
-              });
-              return updated;
-            });
-          } else {
-            setDicePool((prev) => {
-              if (prev.length > 6) {
-                return prev.slice(0, -1);
-              }
-              return prev;
-            });
-          }
+        if (wasDualCheck) {
+          diceManager.functions.removeExtraDiceForActivity(
+            activityKey,
+            assignment
+          );
         }
 
         setRollAssignments((prev) => ({
@@ -700,26 +441,40 @@ const DowntimeForm = ({
       canEdit,
       formData.activities,
       rollAssignments,
-      extraDiceAssignments,
       setFormData,
       setRollAssignments,
-      setDicePool,
-      setExtraDiceAssignments,
+      diceManager.functions,
     ]
   );
 
-  const getSortedDiceOptions = useMemo(() => {
-    const baseDice = dicePool
-      .slice(0, 6)
-      .map((value, index) => ({ value, index }))
-      .sort((a, b) => b.value - a.value);
+  const updateRelationshipAssignment = useCallback(
+    (assignmentKey, field, value) => {
+      if (!canEdit()) return;
 
-    const extraDice = dicePool
-      .slice(6)
-      .map((value, index) => ({ value, index: index + 6 }));
+      setRollAssignments((prev) => ({
+        ...prev,
+        [assignmentKey]: {
+          ...prev[assignmentKey],
+          [field]: value,
+        },
+      }));
+    },
+    [canEdit]
+  );
 
-    return [...baseDice, ...extraDice];
-  }, [dicePool]);
+  const updateRelationship = useCallback(
+    (index, field, value) => {
+      if (!canEdit()) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        relationships: prev.relationships.map((relationship, i) =>
+          i === index ? { ...relationship, [field]: value } : relationship
+        ),
+      }));
+    },
+    [canEdit]
+  );
 
   const renderDiceValue = useCallback(
     (assignment, dicePool, isSecond = false) => {
@@ -774,17 +529,21 @@ const DowntimeForm = ({
         assignment[diceIndexKey] !== null &&
         assignment[diceIndexKey] !== undefined
       ) {
+        const diceValue = dicePool[assignment[diceIndexKey]];
+        const skillName = assignment[skillKey];
+        const hasSkill = skillName && skillName !== "";
+        const modifierValue = hasSkill ? getModifierValue(skillName) : 0;
+        const totalValue = diceValue + modifierValue;
+
         return (
           <div style={styles.assignedDice}>
             <div style={styles.diceValue}>
-              {dicePool[assignment[diceIndexKey]]}
+              {hasSkill ? totalValue : diceValue}
             </div>
-            {assignment[skillKey] && (
+            {hasSkill && (
               <div style={styles.total}>
-                Total: {dicePool[assignment[diceIndexKey]]}{" "}
-                {formatModifier(getModifierValue(assignment[skillKey]))} ={" "}
-                {dicePool[assignment[diceIndexKey]] +
-                  getModifierValue(assignment[skillKey])}
+                Total: {diceValue} {formatModifier(modifierValue)} ={" "}
+                {totalValue}
               </div>
             )}
           </div>
@@ -795,6 +554,7 @@ const DowntimeForm = ({
     },
     [getModifierValue, theme.textSecondary]
   );
+
   const editable = canEdit();
 
   const renderSpecialActivityInfo = useCallback(
@@ -902,7 +662,14 @@ const DowntimeForm = ({
                     ? document.getElementById(`job-difficulty-${activityText}`)
                         ?.value || "medium"
                     : undefined;
-                  handleCustomDiceRoll(activityText, jobType);
+                  const activityIndex = formData.activities.findIndex(
+                    (activity) => activity.activity === activityText
+                  );
+                  diceManager.functions.handleCustomDiceRoll(
+                    activityText,
+                    jobType,
+                    activityIndex
+                  );
                 }}
                 disabled={!editable}
                 style={{
@@ -957,7 +724,7 @@ const DowntimeForm = ({
 
       return null;
     },
-    [theme, editable, handleCustomDiceRoll]
+    [theme, editable, diceManager.functions, formData.activities]
   );
 
   const renderDiceAssignment = useCallback(
@@ -990,7 +757,8 @@ const DowntimeForm = ({
           assignment.secondDiceIndex !== null &&
           assignment.secondDiceIndex !== undefined;
 
-        const totalDualCheckActivities = dualCheckActivities.length;
+        const totalDualCheckActivities =
+          diceManager.data.dualCheckActivities.length;
         const currentExtraDice = Math.max(0, dicePool.length - 6);
         const canAddMoreDice = currentExtraDice < totalDualCheckActivities;
 
@@ -1028,14 +796,19 @@ const DowntimeForm = ({
                     style={styles.select}
                     value=""
                     onChange={(e) =>
-                      assignDice(index, parseInt(e.target.value), false)
+                      diceManager.functions.assignDice(
+                        index,
+                        parseInt(e.target.value),
+                        false
+                      )
                     }
                     disabled={!editable}
                   >
                     <option value="">Select die...</option>
-                    {getSortedDiceOptions
+                    {diceManager.functions.getSortedDiceOptions
                       .filter(
-                        ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                        ({ index: diceIndex }) =>
+                          !diceManager.functions.isDiceAssigned(diceIndex)
                       )
                       .map(({ value, index: diceIndex }) => (
                         <option key={diceIndex} value={diceIndex}>
@@ -1049,7 +822,9 @@ const DowntimeForm = ({
                   editable && (
                     <button
                       style={{ ...styles.removeButton, marginTop: "0.5rem" }}
-                      onClick={() => unassignDice(index, false)}
+                      onClick={() =>
+                        diceManager.functions.unassignDice(index, false)
+                      }
                     >
                       Remove
                     </button>
@@ -1075,7 +850,9 @@ const DowntimeForm = ({
                 {needsExtraDie && editable ? (
                   <button
                     onClick={() =>
-                      addExtraDieForActivity(`activity${index + 1}`)
+                      diceManager.functions.addExtraDieForActivity(
+                        `activity${index + 1}`
+                      )
                     }
                     disabled={!canAddMoreDice}
                     style={{
@@ -1105,14 +882,19 @@ const DowntimeForm = ({
                         style={styles.select}
                         value=""
                         onChange={(e) =>
-                          assignDice(index, parseInt(e.target.value), true)
+                          diceManager.functions.assignDice(
+                            index,
+                            parseInt(e.target.value),
+                            true
+                          )
                         }
                         disabled={!editable}
                       >
                         <option value="">Select die...</option>
-                        {getSortedDiceOptions
+                        {diceManager.functions.getSortedDiceOptions
                           .filter(
-                            ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                            ({ index: diceIndex }) =>
+                              !diceManager.functions.isDiceAssigned(diceIndex)
                           )
                           .map(({ value, index: diceIndex }) => (
                             <option key={diceIndex} value={diceIndex}>
@@ -1129,7 +911,9 @@ const DowntimeForm = ({
                             ...styles.removeButton,
                             marginTop: "0.5rem",
                           }}
-                          onClick={() => unassignDice(index, true)}
+                          onClick={() =>
+                            diceManager.functions.unassignDice(index, true)
+                          }
                         >
                           Remove
                         </button>
@@ -1150,14 +934,19 @@ const DowntimeForm = ({
                   style={styles.select}
                   value=""
                   onChange={(e) =>
-                    assignDice(index, parseInt(e.target.value), false)
+                    diceManager.functions.assignDice(
+                      index,
+                      parseInt(e.target.value),
+                      false
+                    )
                   }
                   disabled={!editable}
                 >
                   <option value="">Select die...</option>
-                  {getSortedDiceOptions
+                  {diceManager.functions.getSortedDiceOptions
                     .filter(
-                      ({ index: diceIndex }) => !isDiceAssigned(diceIndex)
+                      ({ index: diceIndex }) =>
+                        !diceManager.functions.isDiceAssigned(diceIndex)
                     )
                     .map(({ value, index: diceIndex }) => (
                       <option key={diceIndex} value={diceIndex}>
@@ -1171,7 +960,9 @@ const DowntimeForm = ({
                 editable && (
                   <button
                     style={{ ...styles.removeButton, marginTop: "0.5rem" }}
-                    onClick={() => unassignDice(index, false)}
+                    onClick={() =>
+                      diceManager.functions.unassignDice(index, false)
+                    }
                   >
                     Remove
                   </button>
@@ -1182,18 +973,13 @@ const DowntimeForm = ({
       }
     },
     [
-      activityRequiresDualChecks,
       renderDiceValue,
-      getSortedDiceOptions,
-      isDiceAssigned,
-      assignDice,
-      unassignDice,
       updateRollAssignment,
       editable,
       selectedCharacter,
-      addExtraDieForActivity,
+      diceManager.functions,
+      diceManager.data.dualCheckActivities.length,
       dicePool.length,
-      dualCheckActivities.length,
     ]
   );
 
@@ -1217,6 +1003,7 @@ const DowntimeForm = ({
         year: selectedYear,
         semester: selectedSemester,
         activities: formData.activities,
+        relationships: formData.relationships,
         dice_pool: dicePool,
         roll_assignments: rollAssignments,
         selected_magic_school: formData.selectedMagicSchool || null,
@@ -1241,7 +1028,7 @@ const DowntimeForm = ({
         if (error) throw error;
         setCurrentSheet(data);
       }
-
+      alert("Draft saved successfully!");
       if (loadDrafts) loadDrafts();
     } catch (err) {
       console.error("Error saving draft:", err);
@@ -1295,6 +1082,7 @@ const DowntimeForm = ({
         year: selectedYear,
         semester: selectedSemester,
         activities: formData.activities,
+        relationships: formData.relationships,
         dice_pool: dicePool,
         roll_assignments: rollAssignments,
         selected_magic_school: formData.selectedMagicSchool || null,
@@ -1365,62 +1153,6 @@ const DowntimeForm = ({
       borderBottom: `2px solid ${theme.primary}`,
       paddingBottom: "0.5rem",
     },
-    diceGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))",
-      gap: "0.75rem",
-      marginBottom: "1rem",
-    },
-    dice: {
-      padding: "1rem",
-      textAlign: "center",
-      borderRadius: "8px",
-      fontSize: "1.25rem",
-      fontWeight: "bold",
-      border: "2px solid",
-      transition: "all 0.2s ease",
-    },
-    diceAvailable: {
-      backgroundColor: theme.success + "20",
-      borderColor: theme.success,
-      color: theme.success,
-    },
-    diceAssigned: {
-      backgroundColor: theme.error + "20",
-      borderColor: theme.error,
-      color: theme.error,
-      opacity: 0.7,
-    },
-    diceExtra: {
-      backgroundColor: theme.warning + "20",
-      borderColor: theme.warning,
-      color: theme.warning,
-    },
-    buttonGroup: {
-      display: "flex",
-      gap: "1rem",
-      marginBottom: "1rem",
-    },
-    button: {
-      padding: "0.75rem 1.5rem",
-      borderRadius: "8px",
-      border: "none",
-      fontWeight: "600",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    },
-    primaryButton: {
-      backgroundColor: theme.primary,
-      color: "white",
-    },
-    secondaryButton: {
-      backgroundColor: theme.warning,
-      color: "white",
-    },
-    successButton: {
-      backgroundColor: theme.success,
-      color: "white",
-    },
     activityCard: {
       padding: "1.5rem",
       backgroundColor: theme.background,
@@ -1437,6 +1169,15 @@ const DowntimeForm = ({
       fontWeight: "600",
       color: theme.text,
       marginBottom: "0.5rem",
+    },
+    input: {
+      width: "100%",
+      padding: "0.75rem",
+      borderRadius: "6px",
+      border: `1px solid ${theme.border}`,
+      backgroundColor: theme.surface,
+      color: theme.text,
+      fontSize: "0.875rem",
     },
     select: {
       width: "100%",
@@ -1503,19 +1244,21 @@ const DowntimeForm = ({
       fontSize: "0.75rem",
       cursor: "pointer",
     },
-    extraDieButton: {
-      padding: "0.5rem 1rem",
-      fontSize: "0.875rem",
-      fontWeight: "600",
-      backgroundColor: theme.warning,
-      color: "white",
+    button: {
+      padding: "0.75rem 1.5rem",
+      borderRadius: "8px",
       border: "none",
-      borderRadius: "6px",
+      fontWeight: "600",
       cursor: "pointer",
       transition: "all 0.2s ease",
-      display: "flex",
-      alignItems: "center",
-      gap: "0.25rem",
+    },
+    secondaryButton: {
+      backgroundColor: theme.warning,
+      color: "white",
+    },
+    successButton: {
+      backgroundColor: theme.success,
+      color: "white",
     },
     actionButtons: {
       display: "flex",
@@ -1527,115 +1270,8 @@ const DowntimeForm = ({
 
   return (
     <div style={styles.container}>
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>🎲 Dice Pool</h2>
-
-        <div style={styles.buttonGroup}>
-          <button
-            onClick={rollDice}
-            disabled={!editable}
-            style={{
-              ...styles.button,
-              ...styles.primaryButton,
-              ...(!editable ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-            }}
-          >
-            {dicePool.length === 0 ? "Roll Dice Pool" : "Reroll Dice"}
-          </button>
-        </div>
-
-        {dicePool.length > 0 ? (
-          <>
-            <div style={styles.diceGrid}>
-              {getSortedDiceOptions.map(({ value, index }) => {
-                const isAssigned = isDiceAssigned(index);
-                const isExtra = index >= 6;
-
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      ...styles.dice,
-                      ...(isAssigned
-                        ? styles.diceAssigned
-                        : isExtra
-                        ? styles.diceExtra
-                        : styles.diceAvailable),
-                    }}
-                  >
-                    {value}
-                    {isExtra && <span style={{ fontSize: "0.75rem" }}>★</span>}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                color: theme.textSecondary,
-                fontSize: "0.875rem",
-                marginTop: "1rem",
-              }}
-            >
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <span>Total: {dicePool.length} dice</span>
-                <span>
-                  Available:{" "}
-                  {dicePool.filter((_, index) => !isDiceAssigned(index)).length}
-                </span>
-                <span>
-                  Assigned:{" "}
-                  {dicePool.filter((_, index) => isDiceAssigned(index)).length}
-                </span>
-              </div>
-
-              {dicePool.length > 6 && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                    padding: "0.25rem 0.5rem",
-                    backgroundColor: theme.warning + "15",
-                    borderRadius: "4px",
-                    border: `1px solid ${theme.warning}30`,
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      color: theme.warning || "#f59e0b",
-                    }}
-                  >
-                    ★
-                  </span>
-                  <span style={{ color: theme.warning || "#f59e0b" }}>
-                    Extra Dice From Activity
-                  </span>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "2rem",
-              color: theme.textSecondary,
-              backgroundColor: theme.background,
-              borderRadius: "8px",
-              border: `1px solid ${theme.border}`,
-            }}
-          >
-            Click "Roll Dice Pool" to generate your 6 dice for this downtime
-            session
-          </div>
-        )}
-      </div>
+      {/* Dice Pool Manager Component */}
+      {diceManager.component}
 
       {dicePool.length > 0 && (
         <div style={styles.section}>
@@ -1762,6 +1398,238 @@ const DowntimeForm = ({
 
                 {activity.activity &&
                   renderDiceAssignment(activity, index, assignment)}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {dicePool.length > 0 && (
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>🤝 NPC Relationships</h2>
+
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              padding: "12px",
+              backgroundColor: theme.background,
+              border: `1px solid ${theme.border}`,
+              borderRadius: "8px",
+              fontSize: "14px",
+              color: theme.textSecondary,
+            }}
+          >
+            <strong>Build relationships with NPCs during downtime.</strong>
+            <br />
+            Assign 1 die from your pool to each relationship check. Only Insight
+            or Persuasion skills may be used.
+          </div>
+
+          {(formData.relationships || []).map((relationship, index) => {
+            const assignmentKey = `relationship${index + 1}`;
+            const assignment = rollAssignments[assignmentKey] || {};
+
+            return (
+              <div key={index} style={styles.activityCard}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <h3 style={{ color: theme.text, margin: 0 }}>
+                    Relationship {index + 1}
+                  </h3>
+                  {assignment.diceIndex !== null && assignment.skill && (
+                    <div
+                      style={{
+                        padding: "4px 8px",
+                        backgroundColor: `${theme.primary}20`,
+                        border: `1px solid ${theme.primary}`,
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        color: theme.primary,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {allSkills.find((s) => s.name === assignment.skill)
+                        ?.displayName || assignment.skill}{" "}
+                      Check
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr 1fr",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>NPC Name</label>
+                    <input
+                      style={styles.input}
+                      type="text"
+                      value={relationship.npcName || ""}
+                      onChange={(e) =>
+                        updateRelationship(index, "npcName", e.target.value)
+                      }
+                      placeholder="Enter NPC name..."
+                      disabled={!canEdit()}
+                    />
+                  </div>
+
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Skill</label>
+                    <select
+                      style={styles.select}
+                      value={assignment.skill || ""}
+                      onChange={(e) =>
+                        updateRelationshipAssignment(
+                          assignmentKey,
+                          "skill",
+                          e.target.value
+                        )
+                      }
+                      disabled={!canEdit()}
+                    >
+                      <option value="">Select Skill</option>
+                      <option value="insight">
+                        Insight (
+                        {formatModifierValue(getModifierValue("insight"))})
+                      </option>
+                      <option value="persuasion">
+                        Persuasion (
+                        {formatModifierValue(getModifierValue("persuasion"))})
+                      </option>
+                    </select>
+                  </div>
+
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Assigned Die</label>
+                    <select
+                      style={styles.select}
+                      value={
+                        assignment.diceIndex !== null
+                          ? assignment.diceIndex
+                          : ""
+                      }
+                      onChange={(e) =>
+                        diceManager.functions.assignRelationshipDice(
+                          index,
+                          parseInt(e.target.value)
+                        )
+                      }
+                      disabled={!canEdit()}
+                    >
+                      <option value="">Select die...</option>
+                      {diceManager.functions.getSortedDiceOptions
+                        .filter(
+                          ({ index: diceIndex }) =>
+                            !diceManager.functions.isDiceAssigned(diceIndex) ||
+                            diceIndex === assignment.diceIndex
+                        )
+                        .map(({ value, index: diceIndex }) => (
+                          <option key={diceIndex} value={diceIndex}>
+                            {value}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {assignment.diceIndex !== null && assignment.skill && (
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Roll Result</label>
+                    <div style={styles.assignedDice}>
+                      <div style={styles.diceValue}>
+                        {dicePool[assignment.diceIndex] +
+                          getModifierValue(assignment.skill)}
+                      </div>
+                      <div style={styles.total}>
+                        Total: {dicePool[assignment.diceIndex]}{" "}
+                        {formatModifierValue(
+                          getModifierValue(assignment.skill)
+                        )}{" "}
+                        ={" "}
+                        {dicePool[assignment.diceIndex] +
+                          getModifierValue(assignment.skill)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Your Approach</label>
+                  <textarea
+                    style={styles.textarea}
+                    value={relationship.notes || ""}
+                    onChange={(e) =>
+                      updateRelationship(index, "notes", e.target.value)
+                    }
+                    placeholder="Describe how you want to interact with this NPC and what you hope to achieve..."
+                    disabled={!canEdit()}
+                    rows={3}
+                  />
+                </div>
+
+                {isUserAdmin && adminMode && (
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Admin Notes</label>
+                    <textarea
+                      style={styles.textarea}
+                      value={assignment.adminNotes || ""}
+                      onChange={(e) =>
+                        updateRelationshipAssignment(
+                          assignmentKey,
+                          "adminNotes",
+                          e.target.value
+                        )
+                      }
+                      placeholder="Admin notes about this relationship interaction..."
+                      rows={2}
+                    />
+                  </div>
+                )}
+
+                {assignment.result && (
+                  <div
+                    style={{
+                      padding: "12px",
+                      marginTop: "12px",
+                      backgroundColor:
+                        assignment.result === "success"
+                          ? `${theme.success}15`
+                          : `${theme.error}15`,
+                      border: `1px solid ${
+                        assignment.result === "success"
+                          ? theme.success
+                          : theme.error
+                      }`,
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      color:
+                        assignment.result === "success"
+                          ? theme.success
+                          : theme.error,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <span style={{ fontSize: "16px" }}>
+                      {assignment.result === "success" ? "✓" : "✗"}
+                    </span>
+                    <strong>
+                      Relationship interaction{" "}
+                      {assignment.result === "success" ? "succeeded" : "failed"}
+                    </strong>
+                  </div>
+                )}
               </div>
             );
           })}

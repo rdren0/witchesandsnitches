@@ -128,6 +128,7 @@ const InspirationTracker = ({
       justifyContent: "center",
       width: "120px",
       height: "40px",
+      pointer: hasInspiration ? "pointer" : "not-allowed",
     };
 
     if (hasInspiration) {
