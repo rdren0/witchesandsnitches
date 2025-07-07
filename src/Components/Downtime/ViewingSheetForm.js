@@ -401,8 +401,11 @@ const ViewingSheetForm = ({
             if (!activity.activity) return null;
 
             const assignmentKey = `activity${index + 1}`;
-            const assignment =
-              viewingSheet.roll_assignments?.[assignmentKey] || {};
+            const assignment = {
+              ...(viewingSheet.roll_assignments?.[assignmentKey] || {}),
+              result: activity.result || activity.admin_status,
+              adminNotes: activity.admin_notes,
+            };
             const diceValue = viewingSheet.dice_pool?.[assignment.diceIndex];
             const modifier = assignment.skill
               ? getModifierValue(assignment.skill)
