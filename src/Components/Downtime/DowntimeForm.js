@@ -1211,6 +1211,9 @@ const DowntimeForm = ({
     }
 
     setIsSubmitting(true);
+    const isResubmission =
+      currentSheet && currentSheet.review_status === "failure";
+
     try {
       const submissionData = {
         character_id: selectedCharacter.id,
@@ -1224,8 +1227,14 @@ const DowntimeForm = ({
         roll_assignments: rollAssignments,
         selected_magic_school: formData.selectedMagicSchool || null,
         is_draft: false,
+
         submitted_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        ...(isResubmission
+          ? {
+              review_status: "pending",
+            }
+          : {}),
       };
 
       if (currentSheet?.id) {
@@ -1273,6 +1282,98 @@ const DowntimeForm = ({
       {diceManager.component}
       {dicePool.length > 0 && (
         <div style={styles.section}>
+          {dicePool.length > 0 && (
+            <div style={styles.section}>
+              <h2 style={styles.sectionTitle}>
+                🎓 School of Magic Advancement
+              </h2>
+              <div style={styles.activityCard}>
+                <div style={{ marginBottom: "1rem" }}>
+                  <p
+                    style={{
+                      color: theme.text,
+                      fontSize: "0.875rem",
+                      lineHeight: "1.5",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    Choose one school of magic to improve by +1 during this
+                    downtime period. This represents focused study and practice
+                    in that magical discipline.
+                  </p>
+
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Select School of Magic</label>
+                    <select
+                      style={styles.select}
+                      value={formData.selectedMagicSchool || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          selectedMagicSchool: e.target.value,
+                        }))
+                      }
+                      disabled={!editable}
+                    >
+                      <option value="">Choose a school of magic...</option>
+                      <option value="divinations">
+                        Divinations (Wisdom-based)
+                      </option>
+                      <option value="charms">Charms (Dexterity-based)</option>
+                      <option value="transfiguration">
+                        Transfiguration (Strength-based)
+                      </option>
+                      <option value="healing">
+                        Healing (Intelligence-based)
+                      </option>
+                      <option value="jinxesHexesCurses">
+                        Jinxes, Hexes, and Curses (Charisma-based)
+                      </option>
+                    </select>
+                  </div>
+
+                  {formData.selectedMagicSchool && (
+                    <div
+                      style={{
+                        padding: "1rem",
+                        backgroundColor: theme.primary + "15",
+                        border: `1px solid ${theme.primary}`,
+                        borderRadius: "6px",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color: theme.text,
+                          fontWeight: "600",
+                        }}
+                      >
+                        ✨ Selected:{" "}
+                        {formData.selectedMagicSchool === "jinxesHexesCurses"
+                          ? "JHC"
+                          : formData.selectedMagicSchool
+                              .charAt(0)
+                              .toUpperCase() +
+                            formData.selectedMagicSchool.slice(1)}{" "}
+                        +1
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: theme.textSecondary,
+                          marginTop: "0.25rem",
+                        }}
+                      >
+                        Once your downtime is approved you will need to modifer
+                        your wand value manually.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <h2 style={styles.sectionTitle}>⚡ Activities</h2>
 
           {formData.activities.map((activity, index) => {

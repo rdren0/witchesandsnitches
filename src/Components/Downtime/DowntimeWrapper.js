@@ -75,6 +75,11 @@ const DowntimeWrapper = ({
         successes: [false, false, false, false, false],
       },
     ],
+    relationships: [
+      { npcName: "", notes: "" },
+      { npcName: "", notes: "" },
+      { npcName: "", notes: "" },
+    ],
     selectedMagicSchool: "",
   });
 
@@ -886,13 +891,6 @@ const DowntimeWrapper = ({
                   )}
                 </div>
                 <div style={styles.listItemActions}>
-                  <button
-                    onClick={() => loadSheetForViewing(draft.id)}
-                    style={styles.button}
-                  >
-                    <Eye size={14} />
-                    View
-                  </button>
                   <button
                     onClick={() => handleEditDraft(draft)}
                     style={styles.button}

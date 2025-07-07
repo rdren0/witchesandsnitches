@@ -26,7 +26,6 @@ const AdminDowntimeReviewForm = React.memo(
     const [activityReviews, setActivityReviews] = useState({});
     const [relationshipReviews, setRelationshipReviews] = useState({});
 
-    // Memoize styles to prevent recreation on every render
     const styles = useMemo(
       () => ({
         overlay: {
@@ -329,7 +328,6 @@ const AdminDowntimeReviewForm = React.memo(
       [theme]
     );
 
-    // Memoize button styles that depend on reviewStatus
     const reviewButtonStyles = useMemo(
       () => ({
         successButton: {
@@ -428,7 +426,6 @@ const AdminDowntimeReviewForm = React.memo(
         setAdminFeedback(sheet.admin_feedback || "");
         setAdminNotes(sheet.admin_notes || "");
 
-        // Initialize activity reviews
         const activityReviewsInit = {};
         if (sheet.activities) {
           sheet.activities.forEach((activity, index) => {
@@ -441,7 +438,6 @@ const AdminDowntimeReviewForm = React.memo(
         }
         setActivityReviews(activityReviewsInit);
 
-        // Initialize relationship reviews
         const relationshipReviewsInit = {};
         if (sheet.roll_assignments) {
           ["relationship1", "relationship2", "relationship3"].forEach((key) => {
@@ -466,7 +462,6 @@ const AdminDowntimeReviewForm = React.memo(
       loadDowntimeSheet();
     }, [loadDowntimeSheet]);
 
-    // Memoized update functions to prevent recreation
     const updateActivityReview = useCallback((activityIndex, field, value) => {
       setActivityReviews((prev) => ({
         ...prev,
@@ -552,7 +547,6 @@ const AdminDowntimeReviewForm = React.memo(
       onReviewComplete,
     ]);
 
-    // Memoize rendered activities to prevent unnecessary recalculations
     const renderedActivities = useMemo(() => {
       if (!downtimeSheet?.activities) return null;
 
@@ -750,7 +744,6 @@ const AdminDowntimeReviewForm = React.memo(
       formatModifier,
     ]);
 
-    // Memoize rendered relationships
     const renderedRelationships = useMemo(() => {
       if (!downtimeSheet?.roll_assignments) return null;
 
@@ -937,6 +930,37 @@ const AdminDowntimeReviewForm = React.memo(
                           downtimeSheet.submitted_at
                         ).toLocaleDateString()
                       : "Not submitted"}
+                  </span>
+                </div>
+
+                <div style={styles.infoItem}>
+                  <span style={styles.label}>Magic School Advancement</span>
+                  <span style={styles.value}>
+                    {downtimeSheet.selected_magic_school ? (
+                      <>
+                        {downtimeSheet.selected_magic_school ===
+                        "jinxesHexesCurses"
+                          ? "Jinxes, Hexes, and Curses"
+                          : downtimeSheet.selected_magic_school
+                              .charAt(0)
+                              .toUpperCase() +
+                            downtimeSheet.selected_magic_school.slice(1)}{" "}
+                        <span
+                          style={{ color: theme.success, fontWeight: "bold" }}
+                        >
+                          (+1)
+                        </span>
+                      </>
+                    ) : (
+                      <span
+                        style={{
+                          color: theme.textSecondary,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        None selected
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div style={styles.infoItem}>
