@@ -227,6 +227,14 @@ export const CharacterSelector = ({
     [styles, theme]
   );
 
+  const handleShowAll = useCallback(() => {
+    setSearchTerm("");
+    setIsEditing(false);
+    setFocusedIndex(-1);
+    setIsDropdownOpen(true);
+    searchInputRef.current?.focus();
+  }, []);
+
   const handleKeyDown = useCallback(
     (e) => {
       if (e.ctrlKey && e.key === "a" && isDropdownOpen) {
@@ -273,7 +281,13 @@ export const CharacterSelector = ({
           break;
       }
     },
-    [isDropdownOpen, focusedIndex, filteredCharacters, handleCharacterSelect]
+    [
+      isDropdownOpen,
+      focusedIndex,
+      filteredCharacters,
+      handleCharacterSelect,
+      handleShowAll,
+    ]
   );
 
   const handleInputFocus = useCallback(() => {
@@ -289,14 +303,6 @@ export const CharacterSelector = ({
     setIsEditing(true);
     setIsDropdownOpen(true);
     setFocusedIndex(-1);
-  }, []);
-
-  const handleShowAll = useCallback(() => {
-    setSearchTerm("");
-    setIsEditing(false);
-    setFocusedIndex(-1);
-    setIsDropdownOpen(true);
-    searchInputRef.current?.focus();
   }, []);
 
   const toggleDropdown = useCallback(() => {

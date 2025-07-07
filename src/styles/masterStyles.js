@@ -245,7 +245,7 @@ const createCharacterSheetStyles = (theme) => ({
     borderColor: "#755224",
   },
   statCardBrownHover: {
-    backgroundColor: "#755224" + "10",
+    backgroundColor: `#755224${"10"}`,
     transform: "translateY(-2px)",
     boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
   },
@@ -1443,8 +1443,7 @@ export const createCharacterCreationStyles = (theme) => ({
     color: "#10B981",
     textAlign: "center",
     padding: "10px",
-
-    backgroundColor: "#10B981" + "20",
+    backgroundColor: `#10B981${"20"}`,
     border: "2px solid #10B981",
     borderRadius: "6px",
     minWidth: "60px",
@@ -5848,7 +5847,7 @@ export const createDowntimeStyles = (theme) => ({
     margin: "0",
   },
   adminCompletedNotice: {
-    backgroundColor: "#8b5cf6" + "20",
+    backgroundColor: `#8b5cf6${"20"}`,
     color: "#8b5cf6",
     padding: "16px",
     borderRadius: "8px",
@@ -5857,7 +5856,7 @@ export const createDowntimeStyles = (theme) => ({
     textAlign: "center",
   },
   completedNotice: {
-    backgroundColor: "#8b5cf6" + "20",
+    backgroundColor: `#8b5cf6${"20"}`,
     color: "#8b5cf6",
     padding: "12px",
     borderRadius: "6px",
