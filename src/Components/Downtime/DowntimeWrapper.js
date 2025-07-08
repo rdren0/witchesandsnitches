@@ -638,9 +638,6 @@ const DowntimeWrapper = ({
       color: "white",
     },
     badge: {
-      position: "absolute",
-      top: "0.25rem",
-      right: "0.25rem",
       backgroundColor: theme.error,
       color: "white",
       borderRadius: "50%",
