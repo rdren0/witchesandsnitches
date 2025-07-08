@@ -280,13 +280,55 @@ const GameSessionInspirationManager = ({ supabase }) => {
       const sessionsArray = Array.from(sessionsMap.values())
         .map((session) => ({
           ...session,
-
           characters: session.characters.sort((a, b) =>
             a.name.localeCompare(b.name)
           ),
         }))
         .sort((a, b) => {
-          return a.name.localeCompare(b.name);
+          const today = new Date().getDay();
+
+          const dayMap = {
+            Sunday: 0,
+            Monday: 1,
+            Tuesday: 2,
+            Wednesday: 3,
+            Thursday: 4,
+            Friday: 5,
+            Saturday: 6,
+          };
+
+          const getDayFromSession = (sessionName) => {
+            const dayPart = sessionName.split(" - ")[0];
+            return dayMap[dayPart];
+          };
+
+          const dayA = getDayFromSession(a.name);
+          const dayB = getDayFromSession(b.name);
+
+          if (dayA === undefined && dayB === undefined) {
+            return a.name.localeCompare(b.name);
+          }
+          if (dayA === undefined) return 1;
+          if (dayB === undefined) return -1;
+
+          const getPriority = (day) => {
+            return (day - today + 7) % 7;
+          };
+
+          const priorityA = getPriority(dayA);
+          const priorityB = getPriority(dayB);
+
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+
+          const indexA = gameSessionOptions.indexOf(a.name);
+          const indexB = gameSessionOptions.indexOf(b.name);
+
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+
+          return indexA - indexB;
         });
 
       setSessions(sessionsArray);
