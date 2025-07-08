@@ -2,7 +2,10 @@ import { useMemo } from "react";
 import { ArrowLeft, CheckCircle, CircleAlert, XCircle } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { allSkills } from "../SharedData/data";
-import { calculateModifier } from "./downtimeHelpers";
+import {
+  calculateModifier,
+  activityRequiresDualChecks,
+} from "./downtimeHelpers";
 
 const ViewingSheetForm = ({
   viewingSheet,
@@ -119,7 +122,6 @@ const ViewingSheetForm = ({
         backgroundColor: "#f59e0b",
         color: "white",
       },
-
       failureButton: {
         backgroundColor: theme.error,
         color: "white",
@@ -222,6 +224,34 @@ const ViewingSheetForm = ({
         lineHeight: "1.6",
         color: theme.text,
         whiteSpace: "pre-wrap",
+      },
+      // New styles for dual roll display
+      dualRollContainer: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "1rem",
+        marginBottom: "1rem",
+      },
+      rollContainer: {
+        padding: "0.75rem",
+        backgroundColor: theme.surface + "40",
+        border: `1px solid ${theme.border}`,
+        borderRadius: "6px",
+      },
+      rollLabel: {
+        fontSize: "0.875rem",
+        fontWeight: "600",
+        color: theme.textSecondary,
+        marginBottom: "0.5rem",
+      },
+      dualCheckNotice: {
+        backgroundColor: `${theme.info || "#3b82f6"}15`,
+        border: `1px solid ${theme.info || "#3b82f6"}30`,
+        borderRadius: "8px",
+        padding: "12px",
+        marginBottom: "16px",
+        fontSize: "14px",
+        color: theme.text,
       },
     }),
     [theme]
@@ -326,6 +356,41 @@ const ViewingSheetForm = ({
     return value > 0 ? `+${value}` : `${value}`;
   };
 
+  const renderRollInfo = (
+    assignment,
+    dicePool,
+    skillField,
+    diceField,
+    label
+  ) => {
+    const skill = assignment[skillField];
+    const diceValue = dicePool?.[assignment[diceField]];
+
+    if (!skill || diceValue === undefined || diceValue === null) {
+      return null;
+    }
+
+    const modifier = getModifierValue(skill);
+    const total = diceValue + modifier;
+
+    return (
+      <div style={styles.rollContainer}>
+        <div style={styles.rollLabel}>{label}</div>
+        <div>
+          <div style={styles.label}>Skill Used:</div>
+          <div style={styles.value}>
+            {getSkillDisplayName(skill)} ({formatModifier(modifier)})
+          </div>
+        </div>
+        <div style={styles.rollInfo}>
+          <div style={styles.diceValue}>
+            Roll: {diceValue} {formatModifier(modifier)} = {total}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderAdminControls = (assignmentKey, assignment) => {
     if (assignment.result) {
       const getResultConfig = (result) => {
@@ -373,6 +438,7 @@ const ViewingSheetForm = ({
     }
     return null;
   };
+
   if (!viewingSheet) return null;
 
   return (
@@ -391,7 +457,6 @@ const ViewingSheetForm = ({
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          {/* Add this edit button for rejected sheets */}
           {viewingSheet.review_status === "failure" &&
             viewingSheet.user_id === user?.id && (
               <button
@@ -450,6 +515,7 @@ const ViewingSheetForm = ({
           )}
         </div>
       </div>
+
       {viewingSheet.admin_feedback && (
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>💬 Admin Feedback</h3>
@@ -469,6 +535,7 @@ const ViewingSheetForm = ({
           </div>
         </div>
       )}
+
       {viewingSheet.dice_pool && viewingSheet.dice_pool.length > 0 && (
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>🎲 Dice Pool Reference</h3>
@@ -506,37 +573,62 @@ const ViewingSheetForm = ({
               result: activity.result || activity.admin_status,
               adminNotes: activity.admin_notes,
             };
-            const diceValue = viewingSheet.dice_pool?.[assignment.diceIndex];
-            const modifier = assignment.skill
-              ? getModifierValue(assignment.skill)
-              : 0;
-            const total = diceValue ? diceValue + modifier : null;
+
+            const isDualCheck = activityRequiresDualChecks(activity.activity);
 
             return (
               <div key={index} style={styles.card}>
                 <div style={styles.cardTitle}>Activity {index + 1}</div>
+
+                {isDualCheck && (
+                  <div style={styles.dualCheckNotice}>
+                    <div
+                      style={{
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                        color: theme.info || "#3b82f6",
+                      }}
+                    >
+                      📋 Dual Check Activity
+                    </div>
+                    <div>
+                      This activity required{" "}
+                      <strong>two separate dice rolls</strong>.
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <div style={styles.label}>Selected Activity:</div>
                   <div style={styles.value}>{activity.activity}</div>
                 </div>
 
-                {assignment.skill && (
-                  <div>
-                    <div style={styles.label}>Skill Used:</div>
-                    <div style={styles.value}>
-                      {getSkillDisplayName(assignment.skill)} (
-                      {formatModifier(modifier)})
-                    </div>
+                {isDualCheck ? (
+                  <div style={styles.dualRollContainer}>
+                    {renderRollInfo(
+                      assignment,
+                      viewingSheet.dice_pool,
+                      "skill",
+                      "diceIndex",
+                      "First Roll"
+                    )}
+                    {renderRollInfo(
+                      assignment,
+                      viewingSheet.dice_pool,
+                      "secondSkill",
+                      "secondDiceIndex",
+                      "Second Roll"
+                    )}
                   </div>
-                )}
-
-                {diceValue && assignment.skill && (
-                  <div style={styles.rollInfo}>
-                    <div style={styles.diceValue}>
-                      Roll: {diceValue} {formatModifier(modifier)} = {total}
-                    </div>
-                  </div>
+                ) : (
+                  assignment.skill &&
+                  renderRollInfo(
+                    assignment,
+                    viewingSheet.dice_pool,
+                    "skill",
+                    "diceIndex",
+                    "Roll Result"
+                  )
                 )}
 
                 {assignment.notes && (
@@ -565,11 +657,6 @@ const ViewingSheetForm = ({
             const assignmentKey = `relationship${index + 1}`;
             const assignment =
               viewingSheet.roll_assignments?.[assignmentKey] || {};
-            const diceValue = viewingSheet.dice_pool?.[assignment.diceIndex];
-            const modifier = assignment.skill
-              ? getModifierValue(assignment.skill)
-              : 0;
-            const total = diceValue ? diceValue + modifier : null;
 
             return (
               <div key={index} style={styles.card}>
@@ -580,22 +667,12 @@ const ViewingSheetForm = ({
                   <div style={styles.value}>{relationship.npcName}</div>
                 </div>
 
-                {assignment.skill && (
-                  <div>
-                    <div style={styles.label}>Skill Used:</div>
-                    <div style={styles.value}>
-                      {getSkillDisplayName(assignment.skill)} (
-                      {formatModifier(modifier)})
-                    </div>
-                  </div>
-                )}
-
-                {diceValue && assignment.skill && (
-                  <div style={styles.rollInfo}>
-                    <div style={styles.diceValue}>
-                      Roll: {diceValue} {formatModifier(modifier)} = {total}
-                    </div>
-                  </div>
+                {renderRollInfo(
+                  assignment,
+                  viewingSheet.dice_pool,
+                  "skill",
+                  "diceIndex",
+                  "Roll Result"
                 )}
 
                 {relationship.notes && (

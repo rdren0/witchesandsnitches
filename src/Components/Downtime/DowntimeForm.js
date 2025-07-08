@@ -1628,20 +1628,6 @@ const DowntimeForm = ({
                   </div>
                 )}
 
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Your Approach</label>
-                  <textarea
-                    style={styles.textarea}
-                    value={relationship.notes || ""}
-                    onChange={(e) =>
-                      updateRelationship(index, "notes", e.target.value)
-                    }
-                    placeholder="Describe how you want to interact with this NPC and what you hope to achieve..."
-                    disabled={!canEdit()}
-                    rows={3}
-                  />
-                </div>
-
                 {isUserAdmin && adminMode && (
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Admin Notes</label>

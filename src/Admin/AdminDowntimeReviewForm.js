@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import { calculateModifier } from "../Components/Downtime/downtimeHelpers";
+import {
+  calculateModifier,
+  activityRequiresDualChecks,
+} from "../Components/Downtime/downtimeHelpers";
 import {
   Check,
   X,
@@ -324,11 +327,37 @@ const AdminDowntimeReviewForm = React.memo(
           borderRadius: "8px",
           marginBottom: "20px",
         },
+        // New styles for dual roll display
+        dualRollContainer: {
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "1rem",
+          marginBottom: "1rem",
+        },
+        dualCheckNotice: {
+          backgroundColor: `${theme.info || "#3b82f6"}15`,
+          border: `1px solid ${theme.info || "#3b82f6"}30`,
+          borderRadius: "8px",
+          padding: "12px",
+          marginBottom: "16px",
+          fontSize: "14px",
+          color: theme.text,
+        },
+        rollContainer: {
+          backgroundColor: theme.surface + "20",
+          border: `1px solid ${theme.border}`,
+          borderRadius: "6px",
+          padding: "12px",
+        },
+        rollLabel: {
+          fontSize: "0.875rem",
+          fontWeight: "600",
+          color: theme.textSecondary,
+          marginBottom: "8px",
+        },
       }),
       [theme]
     );
-
-    // Replace the reviewButtonStyles section with this more subtle styling:
 
     const reviewButtonStyles = useMemo(
       () => ({
@@ -371,6 +400,7 @@ const AdminDowntimeReviewForm = React.memo(
       }),
       [styles.reviewButton, reviewStatus, theme]
     );
+
     const calculateModifierValue = useCallback((modifierName, character) => {
       if (!modifierName || !character) return 0;
 
@@ -400,6 +430,39 @@ const AdminDowntimeReviewForm = React.memo(
     const formatModifier = useCallback((modifier) => {
       return modifier >= 0 ? `+${modifier}` : `${modifier}`;
     }, []);
+
+    const renderRollInfo = useCallback(
+      (assignment, dicePool, character, skillField, diceField, label) => {
+        const skill = assignment[skillField];
+        const diceValue = dicePool?.[assignment[diceField]];
+
+        if (!skill || diceValue === undefined || diceValue === null) {
+          return null;
+        }
+
+        const modifier = calculateModifierValue(skill, character);
+        const total = diceValue + modifier;
+
+        return (
+          <div style={styles.rollContainer}>
+            <div style={styles.rollLabel}>{label}</div>
+            <div style={styles.rollBreakdown}>
+              <span style={styles.rollValue}>({diceValue || 0})</span>
+              <span style={styles.modifier}>{formatModifier(modifier)}</span>
+              <span style={styles.equals}> = </span>
+              <span style={styles.total}>{total}</span>
+            </div>
+            <div style={styles.skillUsed}>
+              Using{" "}
+              {allSkills.find((skillObj) => skillObj.name === skill)
+                ?.displayName || skill}{" "}
+              {formatModifier(modifier)}
+            </div>
+          </div>
+        );
+      },
+      [calculateModifierValue, formatModifier, styles]
+    );
 
     const loadDowntimeSheet = useCallback(async () => {
       if (!sheetId || !supabase) return;
@@ -563,6 +626,7 @@ const AdminDowntimeReviewForm = React.memo(
       return downtimeSheet.activities.map((activity, index) => {
         const activityAssignment =
           downtimeSheet.roll_assignments?.[`activity${index + 1}`];
+
         if (!activityAssignment) {
           return (
             <div key={index} style={styles.activity}>
@@ -601,6 +665,8 @@ const AdminDowntimeReviewForm = React.memo(
             </div>
           );
         }
+
+        const isDualCheck = activityRequiresDualChecks(activity.activity);
 
         if (activityAssignment.customDice) {
           const diceSum =
@@ -669,13 +735,7 @@ const AdminDowntimeReviewForm = React.memo(
           );
         }
 
-        const diceValue =
-          downtimeSheet.dice_pool?.[activityAssignment.diceIndex];
         const character = downtimeSheet.characters;
-        const modifier = activityAssignment.skill
-          ? calculateModifierValue(activityAssignment.skill, character)
-          : 0;
-        const total = (diceValue || 0) + modifier;
 
         return (
           <div key={index} style={styles.activity}>
@@ -688,43 +748,67 @@ const AdminDowntimeReviewForm = React.memo(
               )}
             </div>
 
-            {diceValue !== undefined && diceValue !== null && (
-              <div style={styles.rollResultSection}>
-                <div style={styles.rollResultHeader}>
-                  <strong>Roll Result:</strong>
+            {isDualCheck && (
+              <div style={styles.dualCheckNotice}>
+                <div
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: "4px",
+                    color: theme.info || "#3b82f6",
+                  }}
+                >
+                  📋 Dual Check Activity
                 </div>
-                <div style={styles.rollBreakdown}>
-                  <span style={styles.rollValue}>({diceValue || 0})</span>
-                  {activityAssignment.skill && (
-                    <>
-                      <span style={styles.modifier}>
-                        {formatModifier(modifier)}
-                      </span>
-                      <span style={styles.equals}> = </span>
-                      <span style={styles.total}>{total}</span>
-                    </>
+                <div>
+                  This activity required{" "}
+                  <strong>two separate dice rolls</strong>.
+                </div>
+              </div>
+            )}
+
+            {isDualCheck ? (
+              <div style={styles.dualRollContainer}>
+                {renderRollInfo(
+                  activityAssignment,
+                  downtimeSheet.dice_pool,
+                  character,
+                  "skill",
+                  "diceIndex",
+                  "First Roll"
+                )}
+                {renderRollInfo(
+                  activityAssignment,
+                  downtimeSheet.dice_pool,
+                  character,
+                  "secondSkill",
+                  "secondDiceIndex",
+                  "Second Roll"
+                )}
+              </div>
+            ) : (
+              activityAssignment.skill && (
+                <div style={styles.rollResultSection}>
+                  <div style={styles.rollResultHeader}>
+                    <strong>Roll Result:</strong>
+                  </div>
+                  {renderRollInfo(
+                    activityAssignment,
+                    downtimeSheet.dice_pool,
+                    character,
+                    "skill",
+                    "diceIndex",
+                    "Roll"
                   )}
                 </div>
+              )
+            )}
 
-                {activityAssignment.skill && (
-                  <div style={styles.skillUsed}>
-                    Using{" "}
-                    {
-                      allSkills.find(
-                        (skill) => skill.name === activityAssignment.skill
-                      ).displayName
-                    }{" "}
-                    {formatModifier(modifier)}
-                  </div>
-                )}
-                {activityAssignment.notes && (
-                  <div style={styles.playerNotes}>
-                    <div style={styles.label}>Player Notes:</div>
-                    <div style={styles.notesContent}>
-                      {activityAssignment.notes}
-                    </div>
-                  </div>
-                )}
+            {activityAssignment.notes && (
+              <div style={styles.playerNotes}>
+                <div style={styles.label}>Player Notes:</div>
+                <div style={styles.notesContent}>
+                  {activityAssignment.notes}
+                </div>
               </div>
             )}
 
@@ -759,8 +843,8 @@ const AdminDowntimeReviewForm = React.memo(
       activityReviews,
       styles,
       updateActivityReview,
-      calculateModifierValue,
-      formatModifier,
+      renderRollInfo,
+      theme,
     ]);
 
     const renderedRelationships = useMemo(() => {
@@ -774,45 +858,22 @@ const AdminDowntimeReviewForm = React.memo(
           };
           if (!assignment || assignment.diceIndex === null) return null;
 
-          const diceValue = downtimeSheet.dice_pool?.[assignment.diceIndex];
           const character = downtimeSheet.characters;
-          const modifier = assignment.skill
-            ? calculateModifierValue(assignment.skill, character)
-            : 0;
-          const total = (diceValue || 0) + modifier;
+
           return (
             <div key={key} style={styles.activity}>
               <div style={styles.relationshipHeader}>
                 {assignment.npcName && <h4>NPC: {assignment.npcName}</h4>}
               </div>
 
-              <div style={styles.rollResultSection}>
-                <div style={styles.rollResultHeader}>
-                  <strong>Roll Result:</strong>
-                </div>
-                <div style={styles.rollBreakdown}>
-                  <span style={styles.rollValue}>({diceValue || 0})</span>
-                  {assignment.skill && (
-                    <>
-                      <span style={styles.modifier}>
-                        {formatModifier(modifier)}
-                      </span>
-                      <span style={styles.equals}> = </span>
-                      <span style={styles.total}>{total}</span>
-                    </>
-                  )}
-                </div>
-                {assignment.skill && (
-                  <div style={styles.skillUsed}>
-                    Using{" "}
-                    {
-                      allSkills.find((skill) => skill.name === assignment.skill)
-                        .displayName
-                    }{" "}
-                    {formatModifier(modifier)}
-                  </div>
-                )}
-              </div>
+              {renderRollInfo(
+                assignment,
+                downtimeSheet.dice_pool,
+                character,
+                "skill",
+                "diceIndex",
+                "Roll Result"
+              )}
 
               {assignment.notes && (
                 <div style={styles.playerNotes}>
@@ -859,8 +920,7 @@ const AdminDowntimeReviewForm = React.memo(
       relationshipReviews,
       styles,
       updateRelationshipReview,
-      calculateModifierValue,
-      formatModifier,
+      renderRollInfo,
     ]);
 
     if (loading) {
