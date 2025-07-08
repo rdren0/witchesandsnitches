@@ -209,6 +209,107 @@ const GameSessionInspirationManager = ({ supabase }) => {
       padding: "60px 20px",
       color: theme.textSecondary,
     },
+    removeButton: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: "none",
+      backgroundColor: "#ef4444",
+      color: "white",
+      fontSize: "12px",
+      fontWeight: "600",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      transition: "all 0.2s ease",
+      width: "100%",
+      justifyContent: "center",
+    },
+  };
+
+  const removeInspiration = async (
+    characterId,
+    discordUserId,
+    characterName,
+    gameSession
+  ) => {
+    const updateKey = `${characterId}-${discordUserId}`;
+    setUpdating((prev) => new Set(prev).add(updateKey));
+
+    try {
+      const { error: updateError } = await supabase
+        .from("character_resources")
+        .upsert(
+          {
+            character_id: characterId,
+            discord_user_id: discordUserId,
+            inspiration: false,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "character_id,discord_user_id",
+          }
+        );
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      const discordWebhookUrl = getDiscordWebhook(gameSession);
+      if (discordWebhookUrl) {
+        const embed = {
+          title: `${characterName} - Inspiration Redeemed by Admin`,
+          color: 0xef4444,
+          fields: [
+            {
+              name: "Status",
+              value: "💫 Inspiration Redeemed!",
+              inline: true,
+            },
+            {
+              name: "Redeemed by",
+              value: "Admin Dashboard",
+              inline: true,
+            },
+          ],
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "Witches and Snitches - Admin Action",
+          },
+        };
+
+        try {
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        } catch (discordError) {
+          console.error("Error sending Discord notification:", discordError);
+        }
+      }
+
+      setSessions((prevSessions) =>
+        prevSessions.map((session) => ({
+          ...session,
+          characters: session.characters.map((char) =>
+            char.id === characterId ? { ...char, hasInspiration: false } : char
+          ),
+          withInspiration: session.characters.filter((char) =>
+            char.id === characterId ? false : char.hasInspiration
+          ).length,
+        }))
+      );
+    } catch (err) {
+      console.error("Error removing inspiration:", err);
+      alert(`Failed to remove inspiration: ${err.message}`);
+    } finally {
+      setUpdating((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(updateKey);
+        return newSet;
+      });
+    }
   };
 
   const loadGameSessionsData = useCallback(async () => {
@@ -565,7 +666,30 @@ const GameSessionInspirationManager = ({ supabase }) => {
                         </div>
                       </div>
 
-                      {!character.hasInspiration && (
+                      {character.hasInspiration ? (
+                        <button
+                          onClick={() =>
+                            removeInspiration(
+                              character.id,
+                              character.discord_user_id,
+                              character.name,
+                              character.game_session
+                            )
+                          }
+                          disabled={isUpdating}
+                          style={{
+                            ...styles.removeButton,
+                            ...(isUpdating ? styles.grantButtonDisabled : {}),
+                          }}
+                        >
+                          {isUpdating ? (
+                            <Loader size={14} className="animate-spin" />
+                          ) : (
+                            <Star size={14} />
+                          )}
+                          {isUpdating ? "Removing..." : "Remove Inspiration"}
+                        </button>
+                      ) : (
                         <button
                           onClick={() =>
                             grantInspiration(
