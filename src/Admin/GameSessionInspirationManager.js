@@ -92,7 +92,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     },
     sessionHeader: {
       padding: "20px",
-      backgroundColor: theme.primary,
+      backgroundColor: theme.text,
       color: theme.secondary,
       display: "flex",
       justifyContent: "space-between",
@@ -425,7 +425,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>
-          <Gamepad2 size={32} />
+          <Star size={32} />
           Game Session Inspiration Manager
         </h1>
         <p style={styles.subtitle}>

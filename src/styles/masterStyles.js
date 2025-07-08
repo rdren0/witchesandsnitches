@@ -5292,7 +5292,7 @@ export const createCharacterNotesStyles = (theme) => ({
   },
   editEntryButton: {
     padding: "6px",
-    backgroundColor: theme.background,
+    backgroundColor: theme.secondary,
     border: `1px solid ${theme.border}`,
     borderRadius: "4px",
     cursor: "pointer",
@@ -5303,7 +5303,7 @@ export const createCharacterNotesStyles = (theme) => ({
   },
   deleteEntryButton: {
     padding: "6px",
-    backgroundColor: "#fef2f2",
+    backgroundColor: theme.warning,
     border: "1px solid #fecaca",
     borderRadius: "4px",
     cursor: "pointer",
@@ -5314,7 +5314,7 @@ export const createCharacterNotesStyles = (theme) => ({
   },
   duplicateEntryButton: {
     padding: "6px",
-    backgroundColor: "#c1eef5",
+    backgroundColor: theme.primary,
     border: `1px solid #457880`,
     borderRadius: "4px",
     cursor: "pointer",
