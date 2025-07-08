@@ -168,7 +168,6 @@ const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
     <div style={styles.modifierPillsContainer}>
       <div style={styles.pillsLabel}>Background Bonuses:</div>
       <div style={styles.pillsRow}>
-        {/* Ability Score Pills */}
         {Object.entries(abilityModifiers)
           .filter(([_, value]) => value > 0)
           .map(([ability, bonus]) => (
@@ -186,7 +185,6 @@ const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
             </div>
           ))}
 
-        {/* Initiative Pills */}
         {hasInitiativeChanges && (
           <div
             style={styles.initiativePill}
@@ -324,7 +322,6 @@ const EnhancedBackgroundSelector = ({
         )}
       </div>
 
-      {/* Background Modifier Pills */}
       {selectedBackground && (
         <BackgroundModifierPills
           selectedBackground={selectedBackground}
@@ -419,7 +416,6 @@ const EnhancedBackgroundSelector = ({
                       : styles.featDescription
                   }
                 >
-                  {/* Full Description */}
                   <div style={{ marginBottom: "16px" }}>
                     <p
                       style={{
@@ -433,7 +429,6 @@ const EnhancedBackgroundSelector = ({
                     </p>
                   </div>
 
-                  {/* Show modifiers in expanded view */}
                   {hasModifiers && (
                     <div
                       style={{
@@ -482,7 +477,6 @@ const EnhancedBackgroundSelector = ({
                     </div>
                   )}
 
-                  {/* Skill Proficiencies */}
                   {data.skillProficiencies && (
                     <div style={{ marginBottom: "16px" }}>
                       <h5
@@ -525,7 +519,6 @@ const EnhancedBackgroundSelector = ({
                     </div>
                   )}
 
-                  {/* Tool Proficiencies */}
                   {data.toolProficiencies && (
                     <div style={{ marginBottom: "16px" }}>
                       <h5
@@ -568,7 +561,6 @@ const EnhancedBackgroundSelector = ({
                     </div>
                   )}
 
-                  {/* Background Features */}
                   {data.features && (
                     <div style={{ marginBottom: "16px" }}>
                       <h5
@@ -610,7 +602,6 @@ const EnhancedBackgroundSelector = ({
                     </div>
                   )}
 
-                  {/* Background Bonus */}
                   {data.backgroundBonus && (
                     <div style={{ marginBottom: "16px" }}>
                       <h5
@@ -637,7 +628,6 @@ const EnhancedBackgroundSelector = ({
                     </div>
                   )}
 
-                  {/* Equipment */}
                   {data.typicalEquipment && (
                     <div style={{ marginBottom: "8px" }}>
                       <h5

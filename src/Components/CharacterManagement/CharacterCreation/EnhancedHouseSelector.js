@@ -568,14 +568,12 @@ const EnhancedHouseSelector = ({
                       houseFeatures[house] &&
                       houseFeatures[house] && (
                         <div style={styles.houseDetails}>
-                          {/* House ASI Modifier Pills */}
                           <HouseAbilityModifierPills
                             house={house}
                             houseChoices={houseChoices}
                             styles={styles}
                           />
 
-                          {/* Ability Score Bonuses (Traditional Display) */}
                           <div style={styles.sectionContainer}>
                             <h4 style={styles.sectionTitle}>
                               ➕ Ability Score Details
@@ -606,7 +604,6 @@ const EnhancedHouseSelector = ({
                               </span>
                             </div>
                           </div>
-                          {/* House Ability Choice */}
                           {!readOnly && (
                             <HouseAbilityChoice
                               house={house}
@@ -615,7 +612,6 @@ const EnhancedHouseSelector = ({
                               styles={styles}
                             />
                           )}
-                          {/* Features */}
                           <div style={styles.sectionContainer}>
                             <h4 style={styles.sectionTitle}>
                               🪄 House Features

@@ -22,7 +22,6 @@ import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
 
 import { createAppStyles } from "../styles/masterStyles";
-import DowntimeSheet from "../Components/Downtime/DowntimeSheet";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
@@ -33,6 +32,7 @@ import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import { LOCAL_HOST, WEBSITE } from "./const";
+import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -88,8 +88,7 @@ const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
       return "Username must be less than 30 characters";
     }
 
-    /* eslint-disable-next-line*/
-    if (!/^[a-zA-Z0-9_\-\.\s@\+!#\$%&\*\(\)\[\]\{\}'",:;?=]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_\-.\s@+!#$%&*()[\]{}'",:;?=]+$/.test(username)) {
       return "Invalid characters in username";
     }
     return null;
@@ -213,7 +212,6 @@ const AuthComponent = ({
   if (user) {
     return (
       <div style={styles.authSection}>
-        {/* Admin Button */}
         {(isUserAdmin || true) && (
           <button
             onClick={onAdminToggleClick}
@@ -239,11 +237,9 @@ const AuthComponent = ({
                 : "🔑 Unlock Admin Mode"
             }
           >
-            {/* Removed console.log here */}
             {adminMode ? (
               <>
                 <Shield size={16} />
-                {/* Simple active indicator */}
                 <span
                   style={{
                     position: "absolute",
@@ -478,21 +474,6 @@ const Navigation = ({ characters }) => {
                   : {}),
               }}
               onClick={() => navigate(tab.path)}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = theme.primary + "15";
-                  e.target.style.opacity = "1";
-                  e.target.style.color = theme.text;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = "transparent";
-                  e.target.style.opacity =
-                    isAdminTab && adminMode ? "0.9" : "0.85";
-                  e.target.style.color = theme.text;
-                }
-              }}
             >
               {isAdminTab && (
                 <Shield size={16} style={{ marginRight: "6px" }} />
@@ -709,6 +690,9 @@ function AppContent() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const [isInitializing, setIsInitializing] = useState(true);
+  const initTimeoutRef = useRef(null);
+
   const getInitialSelectedCharacter = () => {
     try {
       const savedCharacterId = sessionStorage.getItem("selectedCharacterId");
@@ -733,7 +717,6 @@ function AppContent() {
     () =>
       debounce((character) => {
         setSelectedCharacter(character);
-        setThemeSelectedCharacter(character);
         if (character) {
           sessionStorage.setItem(
             "selectedCharacterId",
@@ -743,11 +726,15 @@ function AppContent() {
           sessionStorage.removeItem("selectedCharacterId");
         }
       }, 100),
-    [setThemeSelectedCharacter]
+    []
   );
 
+  const prevSelectedCharacterRef = useRef();
   useEffect(() => {
-    setThemeSelectedCharacter(selectedCharacter);
+    if (prevSelectedCharacterRef.current !== selectedCharacter) {
+      setThemeSelectedCharacter(selectedCharacter);
+      prevSelectedCharacterRef.current = selectedCharacter;
+    }
   }, [selectedCharacter, setThemeSelectedCharacter]);
 
   const resetSelectedCharacter = (newCharacter = null) => {
@@ -777,21 +764,15 @@ function AppContent() {
     setIsVerifying(true);
 
     try {
-      console.log("🔍 Attempting environment password verification...");
-
       const discordUserId = user?.user_metadata?.provider_id;
 
       await characterService.verifyAdminPassword(discordUserId, password);
-
-      console.log("✅ Environment password verification succeeded!");
 
       setIsUserAdmin(true);
 
       setAdminMode(true);
 
       setShowPasswordModal(false);
-
-      console.log("🪄 Alohomora! Access to the Restricted Section granted!");
     } catch (error) {
       console.error("❌ Password verification failed!");
       console.error("Error:", error);
@@ -839,16 +820,17 @@ function AppContent() {
         characterToSelect &&
         (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
       ) {
-        requestIdleCallback(() => {
-          debouncedSelectCharacter(characterToSelect);
-          setInitialCharacterId(null);
-        });
-      } else if (characterToSelect) {
-        sessionStorage.setItem(
-          "selectedCharacterId",
-          characterToSelect.id.toString()
-        );
+        debouncedSelectCharacter(characterToSelect);
+        setInitialCharacterId(null);
       }
+
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+
+      initTimeoutRef.current = setTimeout(() => {
+        setIsInitializing(false);
+      }, 1000);
     },
     [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
   );
@@ -955,8 +937,15 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-    // eslint-disable-next-line
-  }, [discordUserId, adminMode, isUserAdmin, customUsername, user]);
+  }, [
+    discordUserId,
+    adminMode,
+    isUserAdmin,
+    customUsername,
+    user,
+    selectInitialCharacter,
+    loadCustomUsername,
+  ]);
 
   useEffect(() => {
     if (discordUserId) {
@@ -1033,9 +1022,24 @@ function AppContent() {
     hasAttemptedLoad,
   ]);
 
-  const handleCharacterChange = (character) => {
-    debouncedSelectCharacter(character);
-  };
+  const handleCharacterChange = useCallback(
+    (character) => {
+      if (isInitializing) {
+        return;
+      }
+
+      debouncedSelectCharacter(character);
+    },
+    [debouncedSelectCharacter, isInitializing]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const updateCustomUsername = async (newUsername) => {
     if (!user) return;
@@ -1139,7 +1143,7 @@ function AppContent() {
       characters={characters}
       selectedCharacter={selectedCharacter}
       onCharacterChange={handleCharacterChange}
-      isLoading={charactersLoading}
+      isLoading={charactersLoading || isInitializing}
       error={charactersError}
       adminMode={adminMode}
     />
@@ -1286,7 +1290,7 @@ function AppContent() {
             element={
               <ProtectedRoute user={user}>
                 {characterSelector}
-                <DowntimeSheet
+                <DowntimeWrapper
                   user={user}
                   selectedCharacter={selectedCharacter}
                   supabase={supabase}

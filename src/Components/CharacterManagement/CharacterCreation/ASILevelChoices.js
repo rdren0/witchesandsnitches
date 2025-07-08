@@ -213,7 +213,6 @@ const ASIFeatBenefitPills = ({
     <div style={styles.modifierPillsContainer}>
       <div style={styles.pillsLabel}>Feat Benefits:</div>
       <div style={styles.pillsRow}>
-        {/* Ability Score Pills */}
         {Object.entries(benefits.abilityModifiers)
           .filter(([_, value]) => value > 0)
           .map(([ability, totalBonus]) => {
@@ -236,7 +235,6 @@ const ASIFeatBenefitPills = ({
             );
           })}
 
-        {/* Skill Proficiency Pills */}
         {benefits.skillProficiencies
           .filter((sp) => sp.skill)
           .map((skillProf, index) => (
@@ -252,7 +250,6 @@ const ASIFeatBenefitPills = ({
             </div>
           ))}
 
-        {/* Expertise Pills */}
         {benefits.expertise.map((exp, index) => (
           <div
             key={`expertise-${index}`}
@@ -264,7 +261,6 @@ const ASIFeatBenefitPills = ({
           </div>
         ))}
 
-        {/* Resistance Pills */}
         {benefits.resistances.map((resistance, index) => (
           <div
             key={`resistance-${index}`}
@@ -278,7 +274,6 @@ const ASIFeatBenefitPills = ({
           </div>
         ))}
 
-        {/* Immunity Pills */}
         {benefits.immunities.map((immunity, index) => (
           <div
             key={`immunity-${index}`}
@@ -292,7 +287,6 @@ const ASIFeatBenefitPills = ({
           </div>
         ))}
 
-        {/* Combat Bonus Pills */}
         {Object.entries(benefits.combatBonuses).map(([bonusType, bonuses]) =>
           bonuses.map((bonus, index) => (
             <div
@@ -314,7 +308,6 @@ const ASIFeatBenefitPills = ({
           ))
         )}
 
-        {/* Speed Pills */}
         {Object.entries(benefits.speeds).map(([speedType, speeds]) =>
           speeds.map((speed, index) => (
             <div
@@ -332,7 +325,6 @@ const ASIFeatBenefitPills = ({
           ))
         )}
 
-        {/* Special Abilities Pills */}
         {benefits.specialAbilities.slice(0, 3).map((ability, index) => (
           <div
             key={`ability-${index}`}
@@ -412,7 +404,6 @@ const ASIFeatAdapter = ({
 
   return (
     <div>
-      {/* Show feat benefits if feat is selected */}
       {choice.selectedFeat && (
         <ASIFeatBenefitPills
           selectedFeat={choice.selectedFeat}
@@ -726,7 +717,6 @@ const ASILevelChoices = ({
               total, max +1 per ability) or a Standard Feat.
             </div>
 
-            {/* Choice Type Selection */}
             <div style={styles.level1ChoiceContainer}>
               <label
                 style={
@@ -781,7 +771,6 @@ const ASILevelChoices = ({
               </label>
             </div>
 
-            {/* ASI Selection */}
             {choice.type === "asi" && (
               <div style={{ marginTop: "16px" }}>
                 {(choice.abilityScoreIncreases || []).length === 2 ? (
@@ -924,7 +913,6 @@ const ASILevelChoices = ({
                     />
                   </div>
 
-                  {/* Progress indicator */}
                   <div
                     style={{
                       marginTop: "12px",
@@ -959,7 +947,6 @@ const ASILevelChoices = ({
               </div>
             )}
 
-            {/* Feat Selection */}
             {choice.type === "feat" && (
               <div style={{ marginTop: "16px" }}>
                 {choice.selectedFeat ? (
@@ -998,7 +985,6 @@ const ASILevelChoices = ({
               </div>
             )}
 
-            {/* Show selection status */}
             {!choice.type && (
               <div
                 style={{

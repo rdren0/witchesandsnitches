@@ -304,7 +304,6 @@ const SorceryPointTracker = ({
         </div>
       </div>
 
-      {/* Sorcery Points Modal */}
       {showSorceryModal && (
         <div style={styles.modal} onClick={() => setShowSorceryModal(false)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>

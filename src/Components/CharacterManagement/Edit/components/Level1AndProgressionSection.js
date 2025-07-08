@@ -43,7 +43,6 @@ const Level1AndProgressionSection = ({
         label="Skills & Features & Backgrounds"
       />
 
-      {/* Character Progression Summary */}
       {character.level > 1 && (
         <div style={styles.fieldContainer}>
           <div
@@ -112,7 +111,6 @@ const Level1AndProgressionSection = ({
         </div>
       )}
 
-      {/* Level 1 Choice Section */}
       <div style={styles.fieldContainer}>
         <div style={styles.lockedFieldHeader}>
           <h3 style={styles.skillsHeader}>
@@ -203,7 +201,6 @@ const Level1AndProgressionSection = ({
         </div>
       </div>
 
-      {/* Level 1 Choice Content */}
       {character.level1ChoiceType === "innate" && (
         <InnateHeritage
           character={character}
@@ -241,7 +238,6 @@ const Level1AndProgressionSection = ({
         </div>
       )}
 
-      {/* ASI/Feat Choices for levels 4, 8, 12, 16, 19 */}
       {getAvailableASILevels(character.level).map((level) => {
         const choice = character.asiChoices?.[level] || {};
         const hasSelectedChoice =
@@ -274,7 +270,6 @@ const Level1AndProgressionSection = ({
               total, max +1 per ability) or a Standard Feat.
             </div>
 
-            {/* Choice Type Selection */}
             <div style={styles.level1ChoiceContainer}>
               <label
                 style={
@@ -329,7 +324,6 @@ const Level1AndProgressionSection = ({
               </label>
             </div>
 
-            {/* ASI Selection */}
             {choice.type === "asi" && (
               <div style={{ marginTop: "16px" }}>
                 <div style={styles.completionMessage}>
@@ -369,7 +363,6 @@ const Level1AndProgressionSection = ({
               </div>
             )}
 
-            {/* Feat Selection */}
             {choice.type === "feat" && (
               <div style={{ marginTop: "16px" }}>
                 {choice.selectedFeat ? (
@@ -408,7 +401,6 @@ const Level1AndProgressionSection = ({
               </div>
             )}
 
-            {/* Show selection status */}
             {!choice.type && (
               <div
                 style={{

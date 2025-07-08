@@ -224,7 +224,6 @@ const ComprehensiveFeatBenefitPills = ({
     <div style={styles.modifierPillsContainer}>
       <div style={styles.pillsLabel}>Feat Benefits:</div>
       <div style={styles.pillsRow}>
-        {/* Ability Score Pills */}
         {Object.entries(benefits.abilityModifiers)
           .filter(([_, value]) => value > 0)
           .map(([ability, totalBonus]) => {
@@ -247,7 +246,6 @@ const ComprehensiveFeatBenefitPills = ({
             );
           })}
 
-        {/* Skill Proficiency Pills */}
         {benefits.skillProficiencies
           .filter((sp) => sp.skill) // Only show fixed skills, not choices
           .map((skillProf, index) => (
@@ -263,7 +261,6 @@ const ComprehensiveFeatBenefitPills = ({
             </div>
           ))}
 
-        {/* Expertise Pills */}
         {benefits.expertise.map((exp, index) => (
           <div
             key={`expertise-${index}`}
@@ -275,7 +272,6 @@ const ComprehensiveFeatBenefitPills = ({
           </div>
         ))}
 
-        {/* Resistance Pills */}
         {benefits.resistances.map((resistance, index) => (
           <div
             key={`resistance-${index}`}
@@ -289,7 +285,6 @@ const ComprehensiveFeatBenefitPills = ({
           </div>
         ))}
 
-        {/* Immunity Pills */}
         {benefits.immunities.map((immunity, index) => (
           <div
             key={`immunity-${index}`}
@@ -303,7 +298,6 @@ const ComprehensiveFeatBenefitPills = ({
           </div>
         ))}
 
-        {/* Combat Bonus Pills */}
         {Object.entries(benefits.combatBonuses).map(([bonusType, bonuses]) =>
           bonuses.map((bonus, index) => (
             <div
@@ -325,7 +319,6 @@ const ComprehensiveFeatBenefitPills = ({
           ))
         )}
 
-        {/* Speed Pills */}
         {Object.entries(benefits.speeds).map(([speedType, speeds]) =>
           speeds.map((speed, index) => (
             <div
@@ -343,7 +336,6 @@ const ComprehensiveFeatBenefitPills = ({
           ))
         )}
 
-        {/* Special Abilities Pills */}
         {benefits.specialAbilities.slice(0, 3).map(
           (
             ability,
@@ -362,7 +354,6 @@ const ComprehensiveFeatBenefitPills = ({
           )
         )}
 
-        {/* Show count if there are more special abilities */}
         {benefits.specialAbilities.length > 3 && (
           <div
             style={styles.abilityPill}
@@ -411,7 +402,6 @@ const FeatChoicesSection = ({
     <div style={styles.featChoiceContainer}>
       <div style={styles.featChoiceLabel}>Make your selections:</div>
 
-      {/* Ability Score Choices */}
       {(feat.benefits.abilityScoreIncrease?.type === "choice" ||
         feat.benefits.abilityScoreIncrease?.type === "choice_any") && (
         <div style={styles.choiceSection}>
@@ -455,7 +445,6 @@ const FeatChoicesSection = ({
         </div>
       )}
 
-      {/* Skill Proficiency Choices */}
       {feat.benefits.skillProficiencies
         ?.filter((sp) => sp.type === "choice")
         .map((skillChoice, index) => {
@@ -972,7 +961,6 @@ export const EnhancedFeatureSelector = ({
 
       <div style={enhancedStyles.helpText}>{getHelpText()}</div>
 
-      {/* Comprehensive Benefit Pills */}
       {selectedFeats.length > 0 && (
         <ComprehensiveFeatBenefitPills
           selectedFeats={selectedFeats}
@@ -1125,7 +1113,6 @@ export const EnhancedFeatureSelector = ({
                   {feat.preview}
                 </div>
 
-                {/* Feat Choices */}
                 {isSelected && (
                   <FeatChoicesSection
                     feat={feat}
@@ -1150,7 +1137,6 @@ export const EnhancedFeatureSelector = ({
                       ))}
                     </ul>
 
-                    {/* Show all benefits in description */}
                     {hasBenefits && (
                       <div
                         style={{
@@ -1165,7 +1151,6 @@ export const EnhancedFeatureSelector = ({
                           Mechanical Benefits:
                         </strong>
                         <div style={{ margin: "4px 0 0 0", fontSize: "12px" }}>
-                          {/* Show all benefit types */}
                           {feat.benefits.abilityScoreIncrease && (
                             <div
                               style={{ color: "#10b981", marginBottom: "2px" }}
@@ -1246,7 +1231,6 @@ export const EnhancedFeatureSelector = ({
                       </div>
                     )}
 
-                    {/* Prerequisites */}
                     {feat.prerequisites && (
                       <div
                         style={{

@@ -295,7 +295,6 @@ const CharacterSheetModals = ({
 
   return (
     <>
-      {/* Hit Dice Modal */}
       {showHitDiceModal && character && (
         <div
           style={{
@@ -535,7 +534,6 @@ const CharacterSheetModals = ({
         </div>
       )}
 
-      {/* Enhanced HP Management Modal */}
       {showDamageModal && character && (
         <div
           style={{
@@ -600,7 +598,6 @@ const CharacterSheetModals = ({
               </button>
             </div>
 
-            {/* Current HP Display */}
             <div
               style={{
                 textAlign: "center",
@@ -634,7 +631,6 @@ const CharacterSheetModals = ({
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div style={{ marginBottom: "20px" }}>
               <div
                 style={{
@@ -770,7 +766,6 @@ const CharacterSheetModals = ({
               </div>
             </div>
 
-            {/* Custom Damage */}
             <div style={{ marginBottom: "16px" }}>
               <div
                 style={{
@@ -844,7 +839,6 @@ const CharacterSheetModals = ({
               </div>
             </div>
 
-            {/* Custom Heal */}
             <div style={{ marginBottom: "16px" }}>
               <div
                 style={{
@@ -922,7 +916,6 @@ const CharacterSheetModals = ({
               </div>
             </div>
 
-            {/* Full Heal */}
             <div>
               <button
                 onClick={handleFullHeal}

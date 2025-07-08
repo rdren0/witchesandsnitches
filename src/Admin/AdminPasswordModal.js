@@ -234,15 +234,6 @@ const AdminPasswordModal = ({
           <button
             style={styles.closeButton}
             onClick={onClose}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor =
-                styles.closeButtonHover.backgroundColor;
-              e.target.style.color = styles.closeButtonHover.color;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "transparent";
-              e.target.style.color = theme.textSecondary;
-            }}
             disabled={isLoading}
           >
             <X size={20} />
@@ -283,12 +274,6 @@ const AdminPasswordModal = ({
                 type="button"
                 style={styles.togglePasswordButton}
                 onClick={() => setShowPassword(!showPassword)}
-                onMouseEnter={(e) => {
-                  e.target.style.color = theme.text;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = theme.textSecondary;
-                }}
                 disabled={isLoading}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -309,16 +294,6 @@ const AdminPasswordModal = ({
             type="button"
             style={styles.cancelButton}
             onClick={onClose}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor =
-                styles.cancelButtonHover.backgroundColor;
-              e.target.style.color = styles.cancelButtonHover.color;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor =
-                styles.cancelButton.backgroundColor;
-              e.target.style.color = styles.cancelButton.color;
-            }}
             disabled={isLoading}
           >
             Cancel
@@ -327,18 +302,6 @@ const AdminPasswordModal = ({
             type="submit"
             style={styles.submitButton}
             onClick={handleSubmit}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.target.style.backgroundColor =
-                  styles.submitButtonHover.backgroundColor;
-                e.target.style.transform = styles.submitButtonHover.transform;
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor =
-                styles.submitButton.backgroundColor;
-              e.target.style.transform = "none";
-            }}
             disabled={isLoading}
           >
             {isLoading ? (

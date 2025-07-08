@@ -128,6 +128,7 @@ const InspirationTracker = ({
       justifyContent: "center",
       width: "120px",
       height: "40px",
+      pointer: hasInspiration ? "pointer" : "not-allowed",
     };
 
     if (hasInspiration) {
@@ -139,7 +140,6 @@ const InspirationTracker = ({
 
   return (
     <>
-      {/* Inspiration Tile */}
       <div
         style={getTileStyle()}
         onClick={handleTileClick}
@@ -169,7 +169,6 @@ const InspirationTracker = ({
           Inspiration
         </div>
 
-        {/* Loading indicator */}
         {isUpdating && (
           <div
             style={{
@@ -193,7 +192,6 @@ const InspirationTracker = ({
         )}
       </div>
 
-      {/* Confirmation Modal */}
       {showModal && (
         <div
           style={{

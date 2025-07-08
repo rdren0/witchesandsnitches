@@ -808,7 +808,6 @@ export const SubjectCard = ({
             </p>
 
             <div style={styles.alternateButtonsGrid}>
-              {/* Arithmancy Button */}
               <button
                 onClick={() => {
                   attemptArithmancySpell({
@@ -842,7 +841,6 @@ export const SubjectCard = ({
                 </div>
               </button>
 
-              {/* Runes Button */}
               <button
                 onClick={() => {
                   attemptRunesSpell({
@@ -876,7 +874,6 @@ export const SubjectCard = ({
                 </div>
               </button>
 
-              {/* Research Button */}
               <button
                 onClick={() => {
                   markSpellAsResearched(spellName);

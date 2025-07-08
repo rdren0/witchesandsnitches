@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { BookOpen, Beaker, Package, Skull, Wand, Dices } from "lucide-react";
+import {
+  BookOpen,
+  Beaker,
+  Package,
+  Skull,
+  Wand,
+  Dices,
+  // Bed,
+} from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import SpellBook from "../SpellBook/SpellBook";
 import PotionBrewingSystem from "../Potions/Potions";
@@ -16,6 +24,8 @@ const CharacterTabbedPanel = ({
   characters,
   setCharacter,
   discordUserId,
+  adminMode,
+  isUserAdmin,
 }) => {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("spellbook");
@@ -169,7 +179,7 @@ const CharacterTabbedPanel = ({
       ),
     },
     {
-      id: " corruption",
+      id: "corruption",
       label: "Corruption",
       icon: Skull,
       component: (
@@ -182,6 +192,20 @@ const CharacterTabbedPanel = ({
         />
       ),
     },
+    // {
+    //   id: "downtime",
+    //   label: "Downtime",
+    //   icon: Bed,
+    //   component: (
+    //     <DowntimeSheet
+    //       user={user}
+    //       selectedCharacter={selectedCharacter}
+    //       supabase={supabase}
+    //       adminMode={adminMode}
+    //       isUserAdmin={isUserAdmin}
+    //     />
+    //   ),
+    // },
   ];
 
   const activeTabData = tabs.find((tab) => tab.id === activeTab);

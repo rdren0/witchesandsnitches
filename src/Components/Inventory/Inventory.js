@@ -339,7 +339,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         />
 
         <div style={styles.inventorySection}>
-          {/* UPDATED: Header with refresh indicator */}
           <div style={styles.header}>
             <h1 style={styles.title}>
               <Package size={28} color={theme.primary} />
@@ -427,7 +426,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     Add New Item
                   </button>
 
-                  {/* NEW: Check for new items button */}
                   <button
                     onClick={handleManualRefresh}
                     disabled={isRefreshing}

@@ -134,7 +134,6 @@ const SavingThrows = ({ character }) => {
               >
                 {formatModifier(saveData.total)}
               </div>
-              {/* Optional: Show proficiency indicator instead of base score */}
               <div style={styles.abilityScore}>
                 {saveData.isProficient ? "PROF" : ""}
               </div>

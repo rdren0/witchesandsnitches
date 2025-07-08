@@ -704,7 +704,6 @@ const LevelUpModal = ({
                 margin: "0 auto",
               }}
             >
-              {/* Average Option */}
               <div
                 style={{
                   border: `2px solid ${
@@ -763,7 +762,6 @@ const LevelUpModal = ({
                 </div>
               </div>
 
-              {/* Roll Option */}
               <div
                 style={{
                   border: `2px solid ${
@@ -840,7 +838,6 @@ const LevelUpModal = ({
                 )}
               </div>
 
-              {/* Manual Option */}
               <div
                 style={{
                   border: `2px solid ${
@@ -938,7 +935,6 @@ const LevelUpModal = ({
                 Ability Score Improvement or Feat
               </h3>
 
-              {/* Choice Selection */}
               <div
                 style={{
                   display: "grid",
@@ -1010,7 +1006,6 @@ const LevelUpModal = ({
                 </label>
               </div>
 
-              {/* ASI Selection */}
               {levelUpData.asiChoice === "asi" && (
                 <div>
                   <h4
@@ -1135,7 +1130,6 @@ const LevelUpModal = ({
                 </div>
               )}
 
-              {/* Feat Selection */}
               {levelUpData.asiChoice === "feat" && (
                 <div>
                   <div
@@ -1314,7 +1308,6 @@ const LevelUpModal = ({
                             </div>
                           )}
 
-                          {/* Feat Choices */}
                           {isSelected && (
                             <div style={{ padding: "16px" }}>
                               {getFeatChoicesNeeded(feat).map((choice) => (
@@ -1977,7 +1970,6 @@ const LevelUpModal = ({
             </h2>
           </div>
 
-          {/* Progress Steps */}
           <div
             style={{
               display: "flex",

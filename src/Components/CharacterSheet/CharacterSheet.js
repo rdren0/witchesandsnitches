@@ -1077,7 +1077,7 @@ const CharacterSheet = ({
                         discordUserId={discordUserId}
                         setCharacter={setCharacter}
                         selectedCharacterId={selectedCharacter.id}
-                        isAdmin={isUserAdmin}
+                        isAdmin={adminMode}
                       />
                       <button
                         style={{

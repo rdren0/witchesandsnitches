@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { User, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterSelectorStyles } from "../../styles/masterStyles";
@@ -19,20 +19,25 @@ export const CharacterSelector = ({
   const searchInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const theme = contextTheme || {
-    surface: "#ffffff",
-    background: "#f8fafc",
-    text: "#1f2937",
-    textSecondary: "#6b7280",
-    primary: "#6366f1",
-    secondary: "#8b5cf6",
-    success: "#10b981",
-    warning: "#f59e0b",
-    error: "#ef4444",
-    border: "#e5e7eb",
-  };
+  const defaultTheme = useMemo(
+    () => ({
+      surface: "#ffffff",
+      background: "#f8fafc",
+      text: "#1f2937",
+      textSecondary: "#6b7280",
+      primary: "#6366f1",
+      secondary: "#8b5cf6",
+      success: "#10b981",
+      warning: "#f59e0b",
+      error: "#ef4444",
+      border: "#e5e7eb",
+    }),
+    []
+  );
 
-  const styles = createCharacterSelectorStyles(theme);
+  const theme = contextTheme || defaultTheme;
+
+  const styles = useMemo(() => createCharacterSelectorStyles(theme), [theme]);
 
   const shouldShowDropdown = characters.length > 1;
   const singleCharacter = characters.length === 1 ? characters[0] : null;
@@ -59,9 +64,29 @@ export const CharacterSelector = ({
     });
   }, [characters, searchTerm, isEditing]);
 
+  const handleCharacterSelect = useCallback(
+    (character) => {
+      onCharacterChange(character);
+      setSearchTerm("");
+      setIsDropdownOpen(false);
+      setFocusedIndex(-1);
+      setIsEditing(false);
+    },
+    [onCharacterChange]
+  );
+
+  const hasSetSingleCharacter = useRef(false);
+
   useEffect(() => {
-    if (singleCharacter && !selectedCharacter) {
+    if (
+      singleCharacter &&
+      !selectedCharacter &&
+      !hasSetSingleCharacter.current
+    ) {
+      hasSetSingleCharacter.current = true;
       onCharacterChange(singleCharacter);
+    } else if (!singleCharacter) {
+      hasSetSingleCharacter.current = false;
     }
   }, [singleCharacter, selectedCharacter, onCharacterChange]);
 
@@ -83,201 +108,204 @@ export const CharacterSelector = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const enhancedStyles = {
-    ...styles,
-    searchDropdownContainer: {
-      position: "relative",
-      width: "100%",
-    },
-    searchInputContainer: {
-      position: "relative",
-      width: "100%",
-    },
-    searchInput: {
-      width: "100%",
-      padding: "12px 40px 12px 40px",
-      fontSize: "14px",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "8px",
-      backgroundColor: theme.surface,
-      color: theme.text,
-      outline: "none",
-      transition: "all 0.2s ease",
-      cursor: "text",
-      boxSizing: "border-box",
-    },
-    searchInputFocused: {
-      borderColor: theme.primary,
-      boxShadow: `0 0 0 3px ${theme.primary}20`,
-    },
-    searchIcon: {
-      position: "absolute",
-      left: "12px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      color: theme.textSecondary,
-      pointerEvents: "none",
-    },
-    dropdownToggle: {
-      position: "absolute",
-      right: "8px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      color: theme.textSecondary,
-      cursor: "pointer",
-      padding: "2px",
-      borderRadius: "4px",
-      transition: "color 0.2s ease",
-    },
-    allButton: {
-      position: "absolute",
-      right: "32px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      backgroundColor: theme.primary + "20",
-      color: theme.primary,
-      border: `1px solid ${theme.primary}`,
-      borderRadius: "4px",
-      padding: "4px 8px",
-      fontSize: "11px",
-      fontWeight: "600",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-      userSelect: "none",
-    },
-    allButtonHover: {
-      backgroundColor: theme.primary,
-      color: theme.surface,
-    },
-    dropdown: {
-      position: "absolute",
-      top: "100%",
-      left: "0",
-      right: "0",
-      backgroundColor: theme.surface,
-      border: `2px solid ${theme.primary}`,
-      borderTop: "none",
-      borderRadius: "0 0 8px 8px",
-      maxHeight: "300px",
-      overflowY: "auto",
-      zIndex: 1000,
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    },
-    dropdownOption: {
-      padding: "12px 16px",
-      cursor: "pointer",
-      fontSize: "14px",
-      color: theme.text,
-      borderBottom: `1px solid ${theme.border}`,
-      transition: "background-color 0.1s ease",
-    },
-    dropdownOptionHovered: {
-      backgroundColor: theme.primary + "10",
-    },
-    dropdownOptionSelected: {
-      backgroundColor: theme.primary + "20",
-      fontWeight: "600",
-    },
-    noResults: {
-      padding: "16px",
-      textAlign: "center",
-      color: theme.textSecondary,
-      fontStyle: "italic",
-      fontSize: "14px",
-    },
-    selectedDisplay: {
-      padding: "12px 40px 12px 40px",
-      fontSize: "14px",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "8px",
-      backgroundColor: theme.background,
-      color: theme.text,
-      minHeight: "44px",
-      display: "flex",
-      alignItems: "center",
-      boxSizing: "border-box",
-    },
-  };
+  const enhancedStyles = useMemo(
+    () => ({
+      ...styles,
+      searchDropdownContainer: {
+        position: "relative",
+        width: "100%",
+      },
+      searchInputContainer: {
+        position: "relative",
+        width: "100%",
+      },
+      searchInput: {
+        width: "100%",
+        padding: "12px 40px 12px 40px",
+        fontSize: "14px",
+        border: `2px solid ${theme.border}`,
+        borderRadius: "8px",
+        backgroundColor: theme.surface,
+        color: theme.text,
+        outline: "none",
+        transition: "all 0.2s ease",
+        cursor: "text",
+        boxSizing: "border-box",
+      },
+      searchInputFocused: {
+        borderColor: theme.primary,
+        boxShadow: `0 0 0 3px ${theme.primary}20`,
+      },
+      searchIcon: {
+        position: "absolute",
+        left: "12px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        color: theme.textSecondary,
+        pointerEvents: "none",
+      },
+      dropdownToggle: {
+        position: "absolute",
+        right: "8px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        color: theme.textSecondary,
+        cursor: "pointer",
+        padding: "2px",
+        borderRadius: "4px",
+        transition: "color 0.2s ease",
+      },
+      allButton: {
+        position: "absolute",
+        right: "32px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        backgroundColor: theme.primary + "20",
+        color: theme.primary,
+        border: `1px solid ${theme.primary}`,
+        borderRadius: "4px",
+        padding: "4px 8px",
+        fontSize: "11px",
+        fontWeight: "600",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        userSelect: "none",
+      },
+      allButtonHover: {
+        backgroundColor: theme.primary,
+        color: theme.surface,
+      },
+      dropdown: {
+        position: "absolute",
+        top: "100%",
+        left: "0",
+        right: "0",
+        backgroundColor: theme.surface,
+        border: `2px solid ${theme.primary}`,
+        borderTop: "none",
+        borderRadius: "0 0 8px 8px",
+        maxHeight: "300px",
+        overflowY: "auto",
+        zIndex: 1000,
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+      },
+      dropdownOption: {
+        padding: "12px 16px",
+        cursor: "pointer",
+        fontSize: "14px",
+        color: theme.text,
+        borderBottom: `1px solid ${theme.border}`,
+        transition: "background-color 0.1s ease",
+      },
+      dropdownOptionHovered: {
+        backgroundColor: theme.primary + "10",
+      },
+      dropdownOptionSelected: {
+        backgroundColor: theme.primary + "20",
+        fontWeight: "600",
+      },
+      noResults: {
+        padding: "16px",
+        textAlign: "center",
+        color: theme.textSecondary,
+        fontStyle: "italic",
+        fontSize: "14px",
+      },
+      selectedDisplay: {
+        padding: "12px 40px 12px 40px",
+        fontSize: "14px",
+        border: `2px solid ${theme.border}`,
+        borderRadius: "8px",
+        backgroundColor: theme.background,
+        color: theme.text,
+        minHeight: "44px",
+        display: "flex",
+        alignItems: "center",
+        boxSizing: "border-box",
+      },
+    }),
+    [styles, theme]
+  );
 
-  const handleKeyDown = (e) => {
-    if (e.ctrlKey && e.key === "a" && isDropdownOpen) {
-      e.preventDefault();
-      handleShowAll();
-      return;
-    }
-
-    if (!isDropdownOpen) {
-      if (e.key === "Enter" || e.key === "ArrowDown") {
-        setIsDropdownOpen(true);
-        setFocusedIndex(0);
-        setIsEditing(false);
-        e.preventDefault();
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setFocusedIndex((prev) =>
-          prev < filteredCharacters.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (focusedIndex >= 0 && filteredCharacters[focusedIndex]) {
-          handleCharacterSelect(filteredCharacters[focusedIndex]);
-        }
-        break;
-      case "Escape":
-        setIsDropdownOpen(false);
-        setFocusedIndex(-1);
-        setIsEditing(false);
-        setSearchTerm("");
-        searchInputRef.current?.blur();
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleCharacterSelect = (character) => {
-    onCharacterChange(character);
+  const handleShowAll = useCallback(() => {
     setSearchTerm("");
-    setIsDropdownOpen(false);
-    setFocusedIndex(-1);
     setIsEditing(false);
-  };
+    setFocusedIndex(-1);
+    setIsDropdownOpen(true);
+    searchInputRef.current?.focus();
+  }, []);
 
-  const handleInputFocus = () => {
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.ctrlKey && e.key === "a" && isDropdownOpen) {
+        e.preventDefault();
+        handleShowAll();
+        return;
+      }
+
+      if (!isDropdownOpen) {
+        if (e.key === "Enter" || e.key === "ArrowDown") {
+          setIsDropdownOpen(true);
+          setFocusedIndex(0);
+          setIsEditing(false);
+          e.preventDefault();
+        }
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusedIndex((prev) =>
+            prev < filteredCharacters.length - 1 ? prev + 1 : prev
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (focusedIndex >= 0 && filteredCharacters[focusedIndex]) {
+            handleCharacterSelect(filteredCharacters[focusedIndex]);
+          }
+          break;
+        case "Escape":
+          setIsDropdownOpen(false);
+          setFocusedIndex(-1);
+          setIsEditing(false);
+          setSearchTerm("");
+          searchInputRef.current?.blur();
+          break;
+        default:
+          break;
+      }
+    },
+    [
+      isDropdownOpen,
+      focusedIndex,
+      filteredCharacters,
+      handleCharacterSelect,
+      handleShowAll,
+    ]
+  );
+
+  const handleInputFocus = useCallback(() => {
     if (characters.length > 1) {
       setIsDropdownOpen(true);
       setIsEditing(false);
     }
-  };
+  }, [characters.length]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const value = e.target.value;
     setSearchTerm(value);
     setIsEditing(true);
     setIsDropdownOpen(true);
     setFocusedIndex(-1);
-  };
+  }, []);
 
-  const handleShowAll = () => {
-    setSearchTerm("");
-    setIsEditing(false);
-    setFocusedIndex(-1);
-    setIsDropdownOpen(true);
-
-    searchInputRef.current?.focus();
-  };
-
-  const toggleDropdown = () => {
+  const toggleDropdown = useCallback(() => {
     if (characters.length > 1) {
       const wasOpen = isDropdownOpen;
       setIsDropdownOpen(!isDropdownOpen);
@@ -289,18 +317,18 @@ export const CharacterSelector = ({
         searchInputRef.current?.focus();
       }
     }
-  };
+  }, [characters.length, isDropdownOpen]);
 
-  const formatCharacterDisplay = (char) => {
+  const formatCharacterDisplay = useCallback((char) => {
     if (!char) return "";
     return `${char.name} (${char.castingStyle || "Unknown Class"}) - Level ${
       char.level || "?"
     } - ${char.house || "No House"}${
       char.gameSession ? ` - ${char.gameSession}` : ""
     }`;
-  };
+  }, []);
 
-  const getDisplayValue = () => {
+  const getDisplayValue = useCallback(() => {
     if (isDropdownOpen && isEditing) {
       return searchTerm;
     }
@@ -308,16 +336,16 @@ export const CharacterSelector = ({
       return selectedCharacter.name;
     }
     return selectedCharacter ? selectedCharacter.name : "";
-  };
+  }, [isDropdownOpen, isEditing, searchTerm, selectedCharacter]);
 
-  const getPlaceholder = () => {
+  const getPlaceholder = useCallback(() => {
     if (isLoading) return "Loading characters...";
     if (characters.length === 0) return "No characters available";
     if (characters.length === 1) return characters[0].name;
     return selectedCharacter
       ? selectedCharacter.name
       : "Search and select a character...";
-  };
+  }, [isLoading, characters, selectedCharacter]);
 
   if (!user) return null;
 
@@ -353,14 +381,6 @@ export const CharacterSelector = ({
                 <button
                   onClick={handleShowAll}
                   style={enhancedStyles.allButton}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.primary;
-                    e.target.style.color = theme.surface;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = theme.primary + "20";
-                    e.target.style.color = theme.primary;
-                  }}
                   title="Show all characters (Ctrl+A)"
                   type="button"
                 >
@@ -398,7 +418,6 @@ export const CharacterSelector = ({
                           ? enhancedStyles.dropdownOptionSelected
                           : {}),
                       }}
-                      onMouseEnter={() => setFocusedIndex(index)}
                     >
                       <div style={{ fontWeight: "600", marginBottom: "2px" }}>
                         {char.name}

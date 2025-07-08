@@ -229,7 +229,6 @@ export const ASIFeatSelector = ({
 
   return (
     <div>
-      {/* Search Filter */}
       <div style={styles.featFilterContainer}>
         <input
           type="text"
@@ -266,7 +265,6 @@ export const ASIFeatSelector = ({
         )}
       </div>
 
-      {/* Duplicate Warning */}
       {currentlySelectedUnavailable && (
         <div
           style={{
@@ -281,7 +279,6 @@ export const ASIFeatSelector = ({
         </div>
       )}
 
-      {/* Exclusion Info */}
       {excludedFeats.length > 0 && (
         <div
           style={{
@@ -300,7 +297,6 @@ export const ASIFeatSelector = ({
         </div>
       )}
 
-      {/* Feat List */}
       <div style={styles.featContainer}>
         {filteredFeats.length === 0 ? (
           <div style={styles.noFeatsMessage}>

@@ -113,8 +113,6 @@ export const CorruptionTracker = ({
         console.error("Database error updating corruption points:", error);
 
         if (error.code === "PGRST116") {
-          console.log("Character resources not found, creating...");
-
           const { error: createError } = await supabase
             .from("character_resources")
             .insert({
@@ -322,7 +320,6 @@ export const CorruptionTracker = ({
         )}
       </div>
 
-      {/* Gain Corruption Section */}
       <div style={{ marginBottom: "20px" }}>
         <button
           onClick={() => setShowGainSection(!showGainSection)}
@@ -393,7 +390,6 @@ export const CorruptionTracker = ({
         )}
       </div>
 
-      {/* Absolve Corruption Section */}
       <div style={{ marginBottom: "20px" }}>
         <button
           onClick={() => setShowRedeemSection(!showRedeemSection)}
@@ -456,7 +452,6 @@ export const CorruptionTracker = ({
         )}
       </div>
 
-      {/* Info Section */}
       <div
         style={{
           fontSize: "12px",

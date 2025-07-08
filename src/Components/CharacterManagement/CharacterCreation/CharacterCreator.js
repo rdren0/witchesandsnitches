@@ -831,7 +831,6 @@ const CharacterCreator = ({
         </div>
       )}
 
-      {/* Basic Character Information */}
       <StepIndicator step={1} totalSteps={5} label="Basic Information" />
       <BasicInfo
         character={character}
@@ -858,7 +857,6 @@ const CharacterCreator = ({
 
       <StepIndicator step={3} totalSteps={5} label="Features & Backgrounds" />
 
-      {/* Subclass */}
       <EnhancedSubclassSelector
         value={character.subclass}
         onChange={(value) => handleInputChange("subclass", value)}
@@ -872,14 +870,12 @@ const CharacterCreator = ({
         }
       />
 
-      {/* Character Progression Summary */}
       <CharacterProgressionSummary
         character={character}
         featInfo={featInfo}
         styles={styles}
       />
 
-      {/* Level 1 Choice */}
       <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>
           {character.level === 1
@@ -948,7 +944,6 @@ const CharacterCreator = ({
         </div>
       </div>
 
-      {/* Innate Heritage */}
       {isInnateHeritage && (
         <InnateHeritage
           character={character}
@@ -959,7 +954,6 @@ const CharacterCreator = ({
         />
       )}
 
-      {/* Starting Feat */}
       {isFeat && (
         <div style={styles.fieldContainer}>
           <FeatRequirementsInfo character={character} />
@@ -978,7 +972,6 @@ const CharacterCreator = ({
         </div>
       )}
 
-      {/* ASI Level Choices */}
       <ASILevelChoices
         character={character}
         expandedFeats={expandedFeats}
@@ -992,7 +985,6 @@ const CharacterCreator = ({
         styles={styles}
       />
 
-      {/* Background */}
       <EnhancedBackgroundSelector
         value={character.background}
         onChange={(backgroundName) => {
@@ -1005,7 +997,6 @@ const CharacterCreator = ({
         disabled={false}
       />
 
-      {/* Skills Section */}
       <EnhancedSkillsSection
         character={character}
         handleSkillToggle={handleSkillToggle}
@@ -1016,7 +1007,6 @@ const CharacterCreator = ({
 
       <StepIndicator step={4} totalSteps={5} label="Ability Scores" />
 
-      {/* Ability Scores */}
       <AbilityScorePicker
         allStatsAssigned={allStatsAssigned}
         assignStat={assignStat}
@@ -1048,7 +1038,6 @@ const CharacterCreator = ({
       />
       <StepIndicator step={5} totalSteps={5} label="Wand Modifiers" />
 
-      {/* Magic Subject Modifiers */}
       <div style={styles.fieldContainer}>
         <h3 style={styles.skillsHeader}>Magic Subject Modifiers</h3>
         <div style={styles.helpText}>
@@ -1112,7 +1101,6 @@ const CharacterCreator = ({
           ))}
         </div>
       </div>
-      {/* Action Buttons */}
       <div style={styles.actionButtons}>
         <button
           onClick={resetForm}

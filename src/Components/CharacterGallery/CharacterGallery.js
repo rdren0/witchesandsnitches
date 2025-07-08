@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "../../styles/masterStyles";
-import { ALL_CHARACTERS } from "./characters";
+import { ALL_CHARACTERS } from "../SharedData/charactersData";
 
 const DEFAULT_TAGS = [
   "Study Buddy",
@@ -224,12 +224,6 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
                   cursor: "pointer",
                   borderRadius: "2px",
                 }}
-                onMouseEnter={(e) =>
-                  (e.target.style.backgroundColor = theme.primary + "20")
-                }
-                onMouseLeave={(e) =>
-                  (e.target.style.backgroundColor = "transparent")
-                }
               >
                 {tag}
               </button>
