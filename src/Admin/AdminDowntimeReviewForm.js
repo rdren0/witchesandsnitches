@@ -705,6 +705,14 @@ const AdminDowntimeReviewForm = React.memo(
                     </>
                   )}
                 </div>
+                {activityAssignment.notes && (
+                  <div style={styles.playerNotes}>
+                    <div style={styles.label}>Player Notes:</div>
+                    <div style={styles.notesContent}>
+                      {activityAssignment.notes}
+                    </div>
+                  </div>
+                )}
                 {activityAssignment.skill && (
                   <div style={styles.skillUsed}>
                     Using{" "}
