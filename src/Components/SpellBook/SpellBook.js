@@ -23,11 +23,10 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const [runicTags, setRunicTags] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [attemptFilter, setAttemptFilter] = useState("all");
-  const [yearFilter, setYearFilter] = useState("all"); // New year filter state
+  const [yearFilter, setYearFilter] = useState("all");
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  // Filter options
   const attemptFilterOptions = [
     { value: "all", label: "All Spells" },
     { value: "unattempted", label: "Unattempted" },
@@ -39,7 +38,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
 
   const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
 
-  // Get available years from individual spell year properties
   const getAvailableYears = useCallback(() => {
     const availableSpells = getAvailableSpellsData();
     const years = new Set();
@@ -49,7 +47,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
         spells.forEach((spell) => {
           if (spell.year !== null && spell.year !== undefined) {
             years.add(spell.year);
-            // Temporary debug log
+
             if (spell.name === "Cantis" || spell.name === "Aguamenti") {
               console.log(
                 `Debug: Found ${spell.name} in ${subjectName}-${levelName} with year: ${spell.year}`
@@ -82,10 +80,9 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     setResearchedSpells({});
     setArithmancticTags({});
     setRunicTags({});
-    setYearFilter("all"); // Reset year filter when character changes
+    setYearFilter("all");
   }, [selectedCharacter?.id]);
 
-  // Helper function to check spell attempt status
   const getSpellAttemptStatus = useCallback(
     (spellName) => {
       const attempts = spellAttempts[spellName] || {};
@@ -110,7 +107,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     const availableSpells = getAvailableSpellsData();
     let filteredData = {};
 
-    // First apply search filter
     if (searchTerm.trim()) {
       const lowerSearchTerm = searchTerm.toLowerCase();
 
@@ -120,19 +116,16 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
 
         Object.entries(subjectData.levels).forEach(([level, spells]) => {
           const filteredSpells = spells.filter((spell) => {
-            // Check inherent tags
             const hasInherentTag = spell.tags?.some((tag) =>
               tag.toLowerCase().includes(lowerSearchTerm)
             );
 
-            // Check manually assigned tags
             const hasManualArithmancticTag =
               arithmancticTags[spell.name] &&
               "arithmantic".includes(lowerSearchTerm);
             const hasManualRunicTag =
               runicTags[spell.name] && "runic".includes(lowerSearchTerm);
 
-            // Check if it's a researched spell with Researcher bonus (auto-tags)
             const isResearchedWithResearcher =
               researchedSpells[spell.name] &&
               hasSubclassFeature(selectedCharacter, "Researcher");
@@ -176,7 +169,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
       filteredData = { ...availableSpells };
     }
 
-    // Then apply year filter
     if (yearFilter !== "all") {
       const yearFilteredData = {};
       const targetYear = parseInt(yearFilter);
@@ -190,7 +182,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
 
         Object.entries(subjectData.levels).forEach(([level, spells]) => {
           const filteredSpells = spells.filter((spell) => {
-            // Handle both number and string year values, and check for null/undefined
             const spellYear = spell.year;
             if (spellYear === null || spellYear === undefined) return false;
 
@@ -198,7 +189,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
               typeof spellYear === "string" ? parseInt(spellYear) : spellYear;
             const matches = normalizedSpellYear === targetYear;
 
-            // Debug specific spells
             if (
               spell.name === "Cantis" ||
               spell.name === "Aguamenti" ||
@@ -237,7 +227,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
       filteredData = yearFilteredData;
     }
 
-    // Finally apply attempt filter
     if (attemptFilter !== "all") {
       const finalFilteredData = {};
 
