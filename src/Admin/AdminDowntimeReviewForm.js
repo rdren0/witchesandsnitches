@@ -1063,7 +1063,49 @@ const AdminDowntimeReviewForm = React.memo(
                 </div>
               </div>
             </div>
-
+            {downtimeSheet.dice_pool && downtimeSheet.dice_pool.length > 0 && (
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>🎲 Dice Pool Reference</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
+                  {downtimeSheet.dice_pool.map((dice, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "0.75rem 1rem",
+                        backgroundColor: theme.primary + "20",
+                        border: `2px solid ${theme.primary}`,
+                        borderRadius: "8px",
+                        fontWeight: "700",
+                        fontSize: "1rem",
+                        color: theme.primary,
+                        minWidth: "50px",
+                        textAlign: "center",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {dice}
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      marginLeft: "1rem",
+                      fontSize: "0.875rem",
+                      color: theme.textSecondary,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Total: {downtimeSheet.dice_pool.length} dice
+                  </div>
+                </div>
+              </div>
+            )}
             <div style={styles.mainGrid}>
               <div style={styles.leftPanel}>
                 <div style={styles.section}>
