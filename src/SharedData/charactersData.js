@@ -1,4 +1,4 @@
-import * as images from "../../Images";
+import * as images from "../Images";
 
 export const ALL_CHARACTERS = [
   // ILVERMORNY ClassmateS (sorted by last name)

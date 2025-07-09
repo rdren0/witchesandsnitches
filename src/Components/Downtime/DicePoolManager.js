@@ -3,6 +3,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import {
   activityRequiresDualChecks,
   getCustomDiceTypeForActivity,
+  activityRequiresExtraDie,
 } from "./downtimeHelpers";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
@@ -19,6 +20,26 @@ const DicePoolManager = ({
 }) => {
   const { theme } = useTheme();
 
+  const getDualCheckActivitiesCount = () => {
+    return formData.activities.filter((activity) =>
+      activityRequiresDualChecks(activity.activity)
+    ).length;
+  };
+
+  const getSpellActivitiesCount = () => {
+    return formData.activities.filter((activity) =>
+      activityRequiresExtraDie(activity.activity)
+    ).length;
+  };
+
+  const getRequiredDiceCount = () => {
+    const baseDice = 6;
+    const dualCheckActivities = getDualCheckActivitiesCount();
+    const spellActivities = getSpellActivitiesCount();
+
+    return baseDice + dualCheckActivities + spellActivities;
+  };
+
   const dualCheckActivities = useMemo(() => {
     return formData.activities.filter((activity) =>
       activityRequiresDualChecks(activity.activity)
@@ -30,33 +51,53 @@ const DicePoolManager = ({
   }, [dicePool.length]);
 
   const shouldDisableExtraDie = useMemo(() => {
-    return extraDiceCount >= dualCheckActivities.length;
-  }, [extraDiceCount, dualCheckActivities.length]);
+    const totalRequired =
+      getDualCheckActivitiesCount() + getSpellActivitiesCount();
+    return extraDiceCount >= totalRequired;
+  }, [extraDiceCount, getDualCheckActivitiesCount, getSpellActivitiesCount]);
 
+  // Auto-adjust dice pool based on required activities
   useEffect(() => {
-    const currentDualCheckCount = dualCheckActivities.length;
-    const currentExtraDiceCount = Math.max(0, dicePool.length - 6);
+    const requiredDiceCount = getRequiredDiceCount();
+    const currentDiceCount = dicePool.length;
 
-    if (currentExtraDiceCount > currentDualCheckCount) {
-      const excessDice = currentExtraDiceCount - currentDualCheckCount;
+    if (currentDiceCount > 0 && currentDiceCount < requiredDiceCount) {
+      // Add extra dice for spell activities
+      const dicesToAdd = requiredDiceCount - currentDiceCount;
+      const roller = new DiceRoller();
+      const newDice = Array.from(
+        { length: dicesToAdd },
+        () => roller.roll("1d20").total
+      );
 
-      setDicePool((prev) => prev.slice(0, prev.length - excessDice));
+      setDicePool((prev) => [...prev, ...newDice]);
+    } else if (currentDiceCount > requiredDiceCount) {
+      // Remove excess dice
+      const currentDualCheckCount = getDualCheckActivitiesCount();
+      const currentSpellActivities = getSpellActivitiesCount();
+      const maxExtraDice = currentDualCheckCount + currentSpellActivities;
+      const currentExtraDiceCount = Math.max(0, dicePool.length - 6);
 
-      setExtraDiceAssignments((prev) => {
-        const updated = { ...prev };
-        const removedStartIndex = dicePool.length - excessDice;
+      if (currentExtraDiceCount > maxExtraDice) {
+        const excessDice = currentExtraDiceCount - maxExtraDice;
+        setDicePool((prev) => prev.slice(0, prev.length - excessDice));
 
-        Object.keys(updated).forEach((key) => {
-          if (updated[key] >= removedStartIndex) {
-            delete updated[key];
-          }
+        setExtraDiceAssignments((prev) => {
+          const updated = { ...prev };
+          const removedStartIndex = dicePool.length - excessDice;
+
+          Object.keys(updated).forEach((key) => {
+            if (updated[key] >= removedStartIndex) {
+              delete updated[key];
+            }
+          });
+
+          return updated;
         });
-
-        return updated;
-      });
+      }
     }
   }, [
-    dualCheckActivities.length,
+    formData.activities,
     dicePool.length,
     setDicePool,
     setExtraDiceAssignments,
@@ -65,11 +106,14 @@ const DicePoolManager = ({
   const rollDice = useCallback(() => {
     if (!canEdit()) return;
 
+    const requiredDiceCount = getRequiredDiceCount();
     const roller = new DiceRoller();
-    const newPool = Array.from({ length: 6 }, () => roller.roll("1d20").total);
+    const newPool = Array.from(
+      { length: requiredDiceCount },
+      () => roller.roll("1d20").total
+    );
 
     setDicePool(newPool);
-
     setExtraDiceAssignments({});
 
     setRollAssignments((prev) => {
@@ -85,7 +129,13 @@ const DicePoolManager = ({
       });
       return resetAssignments;
     });
-  }, [canEdit, setDicePool, setExtraDiceAssignments, setRollAssignments]);
+  }, [
+    canEdit,
+    setDicePool,
+    setExtraDiceAssignments,
+    setRollAssignments,
+    getRequiredDiceCount,
+  ]);
 
   const addExtraDieForActivity = useCallback(
     (activityKey) => {
@@ -366,6 +416,10 @@ const DicePoolManager = ({
     },
   };
 
+  const requiredDiceCount = getRequiredDiceCount();
+  const dualCheckCount = getDualCheckActivitiesCount();
+  const spellActivityCount = getSpellActivitiesCount();
+
   return {
     component: (
       <div style={styles.section}>
@@ -391,6 +445,7 @@ const DicePoolManager = ({
               {getSortedDiceOptions.map(({ value, index }) => {
                 const isAssigned = isDiceAssigned(index);
                 const isExtra = index >= 6;
+                const isSpellDie = isExtra && index >= 6 + dualCheckCount;
 
                 return (
                   <div
@@ -400,13 +455,26 @@ const DicePoolManager = ({
                       ...(isAssigned
                         ? styles.diceAssigned
                         : styles.diceAvailable),
-                      ...(isExtra && {
-                        color: theme.warning,
+                      ...(isSpellDie && {
+                        color: theme.primary,
+                        borderColor: theme.primary,
+                        backgroundColor: theme.primary + "20",
                       }),
+                      ...(isExtra &&
+                        !isSpellDie && {
+                          color: theme.warning,
+                          borderColor: theme.warning,
+                          backgroundColor: theme.warning + "20",
+                        }),
                     }}
                   >
                     {value}
-                    {isExtra && <span style={{ fontSize: "0.75rem" }}>★</span>}
+                    {isSpellDie && (
+                      <span style={{ fontSize: "0.75rem" }}>✨</span>
+                    )}
+                    {isExtra && !isSpellDie && (
+                      <span style={{ fontSize: "0.75rem" }}>★</span>
+                    )}
                   </div>
                 );
               })}
@@ -434,32 +502,51 @@ const DicePoolManager = ({
                 </span>
               </div>
 
-              {dicePool.length > 6 && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                    padding: "0.25rem 0.5rem",
-                    backgroundColor: theme.warning + "15",
-                    borderRadius: "4px",
-                    border: `1px solid ${theme.warning}30`,
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  <span
+              <div style={{ display: "flex", gap: "1rem" }}>
+                {dualCheckCount > 0 && (
+                  <div
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: theme.warning + "15",
+                      borderRadius: "4px",
+                      border: `1px solid ${theme.warning}30`,
                       fontSize: "0.75rem",
-                      color: theme.warning || "#f59e0b",
                     }}
                   >
-                    ★
-                  </span>
-                  <span style={{ color: theme.warning || "#f59e0b" }}>
-                    Extra Dice From Activity
-                  </span>
-                </div>
-              )}
+                    <span style={{ fontSize: "0.75rem", color: theme.warning }}>
+                      ★
+                    </span>
+                    <span style={{ color: theme.warning }}>
+                      +{dualCheckCount} Dual Check
+                    </span>
+                  </div>
+                )}
+
+                {spellActivityCount > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: theme.primary + "15",
+                      borderRadius: "4px",
+                      border: `1px solid ${theme.primary}30`,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.75rem", color: theme.primary }}>
+                      ✨
+                    </span>
+                    <span style={{ color: theme.primary }}>
+                      +{spellActivityCount} Spell Activity
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         ) : (
@@ -473,8 +560,22 @@ const DicePoolManager = ({
               border: `1px solid ${theme.border}`,
             }}
           >
-            Click "Roll Dice Pool" to generate your 6 dice for this downtime
+            Click "Roll Dice Pool" to generate your dice for this downtime
             session
+            <br />
+            <small style={{ marginTop: "0.5rem", display: "block" }}>
+              {requiredDiceCount > 6 && (
+                <>
+                  Will generate {requiredDiceCount} dice ({6} base
+                  {dualCheckCount > 0 && <> + {dualCheckCount} dual-check</>}
+                  {spellActivityCount > 0 && (
+                    <> + {spellActivityCount} spell activity</>
+                  )}
+                  )
+                </>
+              )}
+              {requiredDiceCount === 6 && "Will generate 6 base dice"}
+            </small>
           </div>
         )}
       </div>
@@ -497,6 +598,8 @@ const DicePoolManager = ({
       dualCheckActivities,
       extraDiceCount,
       shouldDisableExtraDie,
+      requiredDiceCount,
+      spellActivitiesCount: spellActivityCount,
     },
   };
 };
