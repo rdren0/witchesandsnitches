@@ -1,6 +1,6 @@
-import { allSkills } from "../SharedData/data";
-import { wandModifiers } from "../SharedData/downtime";
+import { allSkills } from "../../SharedData/data";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+import { wandModifiers } from "../../SharedData/downtime";
 
 export const activityRequiresDualChecks = (activityText) => {
   if (!activityText) return false;
@@ -16,10 +16,25 @@ export const activityRequiresDualChecks = (activityText) => {
   );
 };
 
+export const activityRequiresSpellSelection = (activityText) => {
+  if (!activityText) return false;
+
+  const text = activityText.toLowerCase();
+
+  return text.includes("research spells") || text.includes("attempt a spell");
+};
+
 export const getActivitySkillInfo = (activityText) => {
   if (!activityText) return { type: "free", skills: null };
 
   const text = activityText.toLowerCase();
+
+  if (text.includes("research spells") || text.includes("attempt a spell")) {
+    return {
+      type: "spell",
+      requiresSpell: true,
+    };
+  }
 
   if (text.includes("dig for dirt")) {
     return {
@@ -93,16 +108,6 @@ export const getActivitySkillInfo = (activityText) => {
     return {
       type: "limited",
       skills: ["survival", "muggleStudies"],
-    };
-  }
-
-  if (
-    text.includes("research spells") &&
-    text.includes("roll history of magic")
-  ) {
-    return {
-      type: "locked",
-      skills: ["historyOfMagic"],
     };
   }
 
@@ -333,11 +338,20 @@ export const getCustomDiceTypeForActivity = (activityText) => {
   return null;
 };
 
+export const activityRequiresExtraDie = (activityText) => {
+  if (!activityText) return false;
+
+  const text = activityText.toLowerCase();
+
+  return text.includes("research spells") || text.includes("attempt a spell");
+};
+
 export const activityRequiresSpecialRules = (activityText) => {
   return (
     activityRequiresNoDiceRoll(activityText) ||
     isMultiSessionActivity(activityText) ||
-    shouldUseCustomDiceForActivity(activityText)
+    shouldUseCustomDiceForActivity(activityText) ||
+    activityRequiresExtraDie(activityText)
   );
 };
 
@@ -399,6 +413,22 @@ export const getSpecialActivityInfo = (activityText) => {
       type: "selling",
       description:
         "Sell items at half their original price. No haggling allowed. Can be done without using a downtime slot.",
+    };
+  }
+
+  if (text.includes("research spells")) {
+    return {
+      type: "spell_research",
+      description:
+        "Select up to 2 spells to research using History of Magic checks. DC varies based on spell year and character year. Adds an extra die to your dice pool.",
+    };
+  }
+
+  if (text.includes("attempt a spell")) {
+    return {
+      type: "spell_attempt",
+      description:
+        "Select up to 2 spells to attempt casting (must be researched or previously attempted). Uses appropriate spell casting mechanics. Adds an extra die to your dice pool.",
     };
   }
 

@@ -56,13 +56,11 @@ const DicePoolManager = ({
     return extraDiceCount >= totalRequired;
   }, [extraDiceCount, getDualCheckActivitiesCount, getSpellActivitiesCount]);
 
-  // Auto-adjust dice pool based on required activities
   useEffect(() => {
     const requiredDiceCount = getRequiredDiceCount();
     const currentDiceCount = dicePool.length;
 
     if (currentDiceCount > 0 && currentDiceCount < requiredDiceCount) {
-      // Add extra dice for spell activities
       const dicesToAdd = requiredDiceCount - currentDiceCount;
       const roller = new DiceRoller();
       const newDice = Array.from(
@@ -72,7 +70,6 @@ const DicePoolManager = ({
 
       setDicePool((prev) => [...prev, ...newDice]);
     } else if (currentDiceCount > requiredDiceCount) {
-      // Remove excess dice
       const currentDualCheckCount = getDualCheckActivitiesCount();
       const currentSpellActivities = getSpellActivitiesCount();
       const maxExtraDice = currentDualCheckCount + currentSpellActivities;
@@ -153,20 +150,23 @@ const DicePoolManager = ({
     [canEdit, dicePool.length, setDicePool, setExtraDiceAssignments]
   );
 
-  const isDiceAssigned = useCallback(
-    (diceIndex) => {
-      for (const assignment of Object.values(rollAssignments)) {
-        if (
-          assignment.diceIndex === diceIndex ||
-          assignment.secondDiceIndex === diceIndex
-        ) {
-          return true;
-        }
-      }
-      return false;
-    },
-    [rollAssignments]
-  );
+  const isDiceAssigned = (diceIndex) => {
+    const isAssignedToActivities = Object.values(rollAssignments).some(
+      (assignment) =>
+        assignment.diceIndex === diceIndex ||
+        assignment.secondDiceIndex === diceIndex ||
+        assignment.firstSpellDice === diceIndex ||
+        assignment.secondSpellDice === diceIndex
+    );
+
+    const isAssignedToRelationships = [
+      "relationship1",
+      "relationship2",
+      "relationship3",
+    ].some((key) => rollAssignments[key]?.diceIndex === diceIndex);
+
+    return isAssignedToActivities || isAssignedToRelationships;
+  };
 
   const assignDice = useCallback(
     (activityIndex, diceIndex, isSecondDie = false) => {

@@ -14,7 +14,7 @@ import {
   User,
   Scroll,
 } from "lucide-react";
-import { allSkills } from "../Components/SharedData/data";
+import { allSkills } from "../SharedData/data";
 
 const AdminDowntimeReviewForm = React.memo(
   ({ supabase, sheetId, onClose, onReviewComplete }) => {

@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getActivitySkillInfo, calculateModifier } from "./downtimeHelpers";
-import { allSkills } from "../SharedData/data";
-import { wandModifiers } from "../SharedData/downtime";
+import { allSkills } from "../../SharedData/data";
+import { wandModifiers } from "../../SharedData/downtime";
 
 const SkillSelector = memo(
   ({
