@@ -21,7 +21,7 @@ export const activityRequiresSpellSelection = (activityText) => {
 
   const text = activityText.toLowerCase();
 
-  return text.includes("research spells") || text.includes("attempt a spell");
+  return text.includes("research spells") || text.includes("attempt spells");
 };
 
 export const getActivitySkillInfo = (activityText) => {
@@ -29,7 +29,7 @@ export const getActivitySkillInfo = (activityText) => {
 
   const text = activityText.toLowerCase();
 
-  if (text.includes("research spells") || text.includes("attempt a spell")) {
+  if (text.includes("research spells") || text.includes("attempt spells")) {
     return {
       type: "spell",
       requiresSpell: true,
@@ -343,7 +343,7 @@ export const activityRequiresExtraDie = (activityText) => {
 
   const text = activityText.toLowerCase();
 
-  return text.includes("research spells") || text.includes("attempt a spell");
+  return text.includes("research spells") || text.includes("attempt spells");
 };
 
 export const activityRequiresSpecialRules = (activityText) => {

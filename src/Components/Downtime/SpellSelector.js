@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { X, Crown, Eye, Search } from "lucide-react";
+import { X, Crown, Eye, Search, Star, Check } from "lucide-react";
 import { spellsData } from "../SpellBook/spells";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -28,6 +28,8 @@ const SpellSelector = ({
   const { theme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSpellSlot, setActiveSpellSlot] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [hoveredSpell, setHoveredSpell] = useState(null);
 
   const useNewInterface = activityIndex !== undefined;
 
@@ -40,8 +42,7 @@ const SpellSelector = ({
     isResearchActivity ??
     activityText?.toLowerCase().includes("research spells");
   const isAttempt =
-    isAttemptActivity ??
-    activityText?.toLowerCase().includes("attempt a spell");
+    isAttemptActivity ?? activityText?.toLowerCase().includes("attempt spells");
 
   const calculateSpellDC = useCallback(
     (_, spellData) => {
@@ -81,7 +82,7 @@ const SpellSelector = ({
 
   const calculateDiceResult = useCallback(
     (spellSlot, spellName) => {
-      if (!spellName) return null;
+      if (!spellName || !selectedCharacter) return null;
 
       const spellData = getSpellData(spellName);
       if (!spellData) return null;
@@ -131,6 +132,61 @@ const SpellSelector = ({
       selectedCharacter,
       calculateSpellDC,
     ]
+  );
+
+  // Get spell status and determine if it should be disabled
+  const getSpellStatus = useCallback(
+    (spell) => {
+      const attempts = spellAttempts?.[spell.name] || 0;
+      const isMastered = attempts >= 2;
+      const hasBeenResearched = researchedSpells?.[spell.name] || false;
+      const hasSuccessfulAttempts = attempts > 0;
+      const hasFailedAttempts = (failedAttempts?.[spell.name] || 0) > 0;
+
+      let isDisabled = false;
+      let disabledReason = "";
+
+      if (isResearch) {
+        // For research: disable if already researched, attempted, or failed
+        if (isMastered) {
+          isDisabled = true;
+          disabledReason = "Mastered";
+        } else if (hasBeenResearched) {
+          isDisabled = true;
+          disabledReason = "Already researched";
+        } else if (hasSuccessfulAttempts) {
+          isDisabled = true;
+          disabledReason = "Previously attempted";
+        } else if (hasFailedAttempts) {
+          isDisabled = true;
+          disabledReason = "Previously attempted (unsuccessfully)";
+        }
+      } else if (isAttempt) {
+        // For attempt: disable if mastered, but allow if researched/attempted/failed
+        if (isMastered) {
+          isDisabled = true;
+          disabledReason = "Already mastered";
+        } else if (
+          !hasBeenResearched &&
+          !hasSuccessfulAttempts &&
+          !hasFailedAttempts
+        ) {
+          // This spell hasn't been touched at all, don't show it for attempts
+          return { shouldShow: false };
+        }
+      }
+
+      return {
+        shouldShow: true,
+        isDisabled,
+        disabledReason,
+        isMastered,
+        hasBeenResearched,
+        hasSuccessfulAttempts,
+        hasFailedAttempts,
+      };
+    },
+    [isResearch, isAttempt, spellAttempts, researchedSpells, failedAttempts]
   );
 
   const styles = {
@@ -192,8 +248,10 @@ const SpellSelector = ({
       marginBottom: "0.5rem",
     },
     diceValue: {
-      fontWeight: "600",
+      fontSize: "1.5rem",
+      fontWeight: "bold",
       color: theme.success,
+      marginBottom: "0.5rem",
     },
     calculationDisplay: {
       padding: "0.75rem",
@@ -282,24 +340,49 @@ const SpellSelector = ({
       cursor: "pointer",
       marginTop: "0.5rem",
     },
+    // New styles for disabled spells
+    spellOptionDisabled: {
+      padding: "0.75rem",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "6px",
+      marginBottom: "0.5rem",
+      cursor: "not-allowed",
+      backgroundColor: theme.surfaceSecondary || "#f3f4f6",
+      opacity: 0.6,
+    },
+    disabledReason: {
+      fontSize: "12px",
+      fontStyle: "italic",
+      color: theme.textSecondary || "#6b7280",
+      marginTop: "0.25rem",
+    },
   };
 
   const handleSpellClick = (spellSlot) => {
     if (!canEdit) return;
     setActiveSpellSlot(spellSlot);
     setSearchTerm("");
+    setHoveredSpell(null);
     setIsModalOpen(true);
   };
 
-  const handleSpellSelection = (spellName) => {
+  const handleSpellSelection = (spell) => {
+    const status = getSpellStatus(spell);
+
+    // Don't allow selection if disabled
+    if (status.isDisabled) {
+      return;
+    }
+
     if (useNewInterface) {
-      onSpellSelect(activityIndex, activeSpellSlot, spellName);
+      onSpellSelect(activityIndex, activeSpellSlot, spell.name);
     } else {
-      onSpellSelect?.(activeSpellSlot, spellName);
+      onSpellSelect?.(activeSpellSlot, spell.name);
     }
     setIsModalOpen(false);
     setActiveSpellSlot(null);
     setSearchTerm("");
+    setHoveredSpell(null);
   };
 
   const handleDiceAssign = (spellSlot, diceIndex) => {
@@ -444,8 +527,6 @@ const SpellSelector = ({
     );
   };
 
-  const [searchTerm, setSearchTerm] = useState("");
-
   const availableSpells = useMemo(() => {
     const spells = [];
     Object.entries(spellsData).forEach(([subject, subjectData]) => {
@@ -461,51 +542,33 @@ const SpellSelector = ({
       }
     });
 
-    const filteredSpells = spells.filter((spell) => {
-      const attempts = spellAttempts?.[spell.name] || 0;
-      const isMastered = attempts >= 2;
-      if (isMastered) {
+    // Filter spells based on research/attempt mode and search term
+    const eligibleSpells = spells.filter((spell) => {
+      const status = getSpellStatus(spell);
+
+      // Don't show spells that shouldn't be shown at all
+      if (!status.shouldShow) {
         return false;
       }
 
-      if (isResearch) {
-        const hasBeenResearched = researchedSpells?.[spell.name] || false;
-        const hasSuccessfulAttempts = attempts > 0;
-        const hasFailedAttempts = (failedAttempts?.[spell.name] || 0) > 0;
+      // Apply search filter
+      if (searchTerm && searchTerm.trim()) {
+        const lowerSearchTerm = searchTerm.toLowerCase().trim();
+        const spellName = (spell.name || "").toLowerCase();
+        const spellSubject = (spell.subject || "").toLowerCase();
+        const nameMatches = spellName.includes(lowerSearchTerm);
+        const subjectMatches = spellSubject.includes(lowerSearchTerm);
 
-        return !(
-          hasBeenResearched ||
-          hasSuccessfulAttempts ||
-          hasFailedAttempts
-        );
-      } else if (isAttempt) {
-        const hasBeenResearched = researchedSpells?.[spell.name] || false;
-        const hasSuccessfulAttempts = attempts > 0;
-        const hasFailedAttempts = (failedAttempts?.[spell.name] || 0) > 0;
-
-        return hasBeenResearched || hasSuccessfulAttempts || hasFailedAttempts;
+        if (!nameMatches && !subjectMatches) {
+          return false;
+        }
       }
 
       return true;
     });
 
-    const searchFiltered = searchTerm
-      ? filteredSpells.filter(
-          (spell) =>
-            spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            spell.subject?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : filteredSpells;
-
-    return searchFiltered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [
-    searchTerm,
-    failedAttempts,
-    researchedSpells,
-    spellAttempts,
-    isResearch,
-    isAttempt,
-  ]);
+    return eligibleSpells.sort((a, b) => a.name.localeCompare(b.name));
+  }, [searchTerm, getSpellStatus]);
 
   return (
     <div>
@@ -520,11 +583,11 @@ const SpellSelector = ({
           onClick={() => {
             setIsModalOpen(false);
             setSearchTerm("");
+            setHoveredSpell(null);
           }}
         >
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
             <h3>Select Spell</h3>
-
             <div style={{ marginBottom: "1rem", position: "relative" }}>
               <Search
                 size={16}
@@ -552,26 +615,51 @@ const SpellSelector = ({
               />
             </div>
 
-            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+            {/* Force complete re-render with key based on search term and spell count */}
+            <div
+              key={`spell-list-${searchTerm}-${availableSpells.length}`}
+              style={{ maxHeight: "400px", overflowY: "auto" }}
+            >
               {availableSpells.length > 0 ? (
-                availableSpells.map((spell) => {
-                  const attempts = spellAttempts?.[spell.name] || 0;
-                  const isResearched = researchedSpells?.[spell.name] || false;
-                  const hasFailed = failedAttempts?.[spell.name] || false;
-                  const isMastered = attempts >= 2;
+                // Create a completely new array to force React to rebuild everything
+                [...availableSpells].map((spell, index) => {
+                  const status = getSpellStatus(spell);
+                  const isDisabled = status.isDisabled;
+
+                  const isHovered = hoveredSpell === `${spell.name}-${index}`;
 
                   return (
                     <div
-                      key={spell.name}
-                      style={{
-                        padding: "0.75rem",
-                        border: `1px solid ${theme.border}`,
-                        borderRadius: "6px",
-                        marginBottom: "0.5rem",
-                        cursor: "pointer",
-                        backgroundColor: theme.surface,
-                      }}
-                      onClick={() => handleSpellSelection(spell.name)}
+                      // Use a completely unique key that includes search term
+                      key={`spell-${spell.name}-${spell.subject}-${searchTerm}-${index}`}
+                      style={
+                        isDisabled
+                          ? styles.spellOptionDisabled
+                          : {
+                              padding: "0.75rem",
+                              border: `1px solid ${
+                                isHovered ? theme.primary : theme.border
+                              }`,
+                              borderRadius: "6px",
+                              marginBottom: "0.5rem",
+                              cursor: "pointer",
+                              backgroundColor: isHovered
+                                ? theme.primary + "10"
+                                : theme.surface,
+                              transition: "all 0.2s ease",
+                              transform: isHovered
+                                ? "translateY(-1px)"
+                                : "translateY(0)",
+                              boxShadow: isHovered
+                                ? `0 2px 8px ${theme.primary}20`
+                                : "none",
+                            }
+                      }
+                      onClick={() => handleSpellSelection(spell)}
+                      onMouseEnter={() =>
+                        !isDisabled && setHoveredSpell(`${spell.name}-${index}`)
+                      }
+                      onMouseLeave={() => setHoveredSpell(null)}
                     >
                       <div
                         style={{
@@ -586,9 +674,47 @@ const SpellSelector = ({
                               fontWeight: "600",
                               display: "flex",
                               alignItems: "center",
+                              gap: "0.5rem",
                             }}
                           >
                             {spell.name}
+                            {/* Show golden star for mastered spells */}
+                            {status.isMastered && (
+                              <Star
+                                size={14}
+                                color="#ffd700"
+                                fill="#ffd700"
+                                title="Mastered"
+                              />
+                            )}
+                            {/* Show checkmarks for attempted spells in research mode */}
+                            {isResearch && !status.isMastered && (
+                              <>
+                                {status.hasSuccessfulAttempts && (
+                                  <Check
+                                    size={14}
+                                    color="#10b981"
+                                    title="Previously attempted successfully"
+                                  />
+                                )}
+                                {!status.hasSuccessfulAttempts &&
+                                  status.hasFailedAttempts && (
+                                    <Check
+                                      size={14}
+                                      color="#ef4444"
+                                      title="Previously attempted (unsuccessfully)"
+                                    />
+                                  )}
+                              </>
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: theme.textSecondary,
+                            }}
+                          >
+                            {spell.description}
                           </div>
                           <div
                             style={{
@@ -598,6 +724,11 @@ const SpellSelector = ({
                           >
                             {spell.subject} • {spell.level} • Year {spell.year}
                           </div>
+                          {isDisabled && (
+                            <div style={styles.disabledReason}>
+                              {status.disabledReason}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -605,6 +736,7 @@ const SpellSelector = ({
                 })
               ) : (
                 <div
+                  key={`no-results-${searchTerm}`}
                   style={{
                     padding: "2rem",
                     textAlign: "center",
@@ -612,18 +744,20 @@ const SpellSelector = ({
                   }}
                 >
                   {searchTerm
-                    ? "No spells found matching your search."
-                    : "No spells available. You need to have researched, attempted, or failed a spell for it to appear here."}
+                    ? `No spells found matching "${searchTerm}".`
+                    : isResearch
+                    ? "No spells available for research. All eligible spells have been researched, attempted, or failed."
+                    : "No spells available for attempts. You need to research spells first or have attempted/failed spells."}
                 </div>
               )}
             </div>
-
             <button
               style={{
                 marginTop: "1rem",
                 padding: "0.5rem 1rem",
-                backgroundColor: theme.primary,
+                backgroundColor: theme.warning,
                 color: theme.text,
+                fontWeight: 700,
                 border: `1px solid ${theme.border}`,
                 borderRadius: "4px",
                 cursor: "pointer",
@@ -631,6 +765,7 @@ const SpellSelector = ({
               onClick={() => {
                 setIsModalOpen(false);
                 setSearchTerm("");
+                setHoveredSpell(null);
               }}
             >
               Cancel

@@ -489,14 +489,44 @@ const DowntimeForm = ({
     [canEdit]
   );
 
-  const calculateResearchDC = useCallback(
-    (playerYear, spellYear, spellName, character) => {
-      const yearDifference = Math.max(0, spellYear - playerYear);
-      const baseDC = 10 + yearDifference * 2;
-      return baseDC;
-    },
-    []
-  );
+  const calculateResearchDC = (
+    playerYear,
+    spellYear,
+    spellName,
+    selectedCharacter
+  ) => {
+    let baseDC = 8 + 2 * playerYear;
+
+    const yearDifference = spellYear - playerYear;
+    if (yearDifference > 0) {
+      baseDC += 2 * playerYear;
+    } else if (yearDifference < 0) {
+      baseDC += yearDifference * 2;
+    }
+
+    const difficultSpells = [
+      "Abscondi",
+      "Pellucidi Pellis",
+      "Sagittario",
+      "Confringo",
+      "Devieto",
+      "Stupefy",
+      "Petrificus Totalus",
+      "Protego",
+      "Protego Maxima",
+      "Finite Incantatem",
+      "Bombarda",
+      "Episkey",
+      "Expelliarmus",
+      "Incarcerous",
+    ];
+
+    if (difficultSpells.includes(spellName)) {
+      baseDC += 3;
+    }
+
+    return Math.max(5, baseDC);
+  };
 
   const getSpellData = useCallback((spellName) => {
     if (!spellName) return null;
@@ -550,7 +580,7 @@ const DowntimeForm = ({
 
         const isAttemptActivity = activity.activity
           ?.toLowerCase()
-          .includes("attempt a spell");
+          .includes("attempt spells");
         const isResearchActivity = activity.activity
           ?.toLowerCase()
           .includes("research spells");
@@ -752,7 +782,7 @@ const DowntimeForm = ({
 
         const isAttemptActivity = activity.activity
           ?.toLowerCase()
-          .includes("attempt a spell");
+          .includes("attempt spells");
         const isResearchActivity = activity.activity
           ?.toLowerCase()
           .includes("research spells");
@@ -1490,7 +1520,6 @@ const DowntimeForm = ({
                       ...styles.button,
                       ...styles.secondaryButton,
                       width: "100%",
-                      fontSize: "0.875rem",
                       padding: "0.75rem",
                       marginTop: "0.5rem",
                       ...(!canAddMoreDice
@@ -1624,8 +1653,6 @@ const DowntimeForm = ({
       alert("Missing required information to save draft.");
       return;
     }
-
-    console.lg("🔍 SAVING DRAFT - selectedSpells state:", selectedSpells);
 
     setIsSavingDraft(true);
     try {
@@ -2053,7 +2080,7 @@ const DowntimeForm = ({
                         .includes("research spells")}
                       isAttemptActivity={activity.activity
                         ?.toLowerCase()
-                        .includes("attempt a spell")}
+                        .includes("attempt spells")}
                     />
                   </div>
                 )}
