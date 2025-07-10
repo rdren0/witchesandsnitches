@@ -63,7 +63,7 @@ export const downtime = {
     description: "Activities related to learning and practicing magic",
     activities: [
       "Research Spells - Roll History of Magic to research a spell",
-      "Attempt a Spell - Practice casting any spell previously researched or attempted",
+      "Attempt a Spells - Practice casting any spell previously researched or attempted",
       "Create a Spell - Must succeed on three separate checks using separate downtime slots",
       "Studying - Improve performance in classes through focused study",
     ],

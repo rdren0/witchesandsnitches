@@ -1,362 +1,77 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  Search,
-  Wand2,
-  BookOpen,
-  X,
-  Lock,
-  Crown,
-  Eye,
-  EyeClosed,
-  CircleEqual,
-} from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useState, useMemo, useCallback } from "react";
+import { X, Crown, Eye, Search } from "lucide-react";
 import { spellsData } from "../SpellBook/spells";
+import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const SpellSelector = ({
-  activityText,
-  selectedSpells = { first: "", second: "" },
+  activityIndex,
   onSpellSelect,
-  canEdit = true,
-  selectedCharacter,
-
-  spellDiceAssignments = { first: null, second: null },
   onDiceAssign,
-  availableDiceOptions = [],
-  dicePool = [],
+  rollAssignments,
 
-  onAttemptSpell,
+  activityText,
+  spellDiceAssignments,
 
-  spellAttempts = {},
-  researchedSpells = {},
-
-  failedAttempts = {},
-
-  containerStyle = {},
+  selectedSpells,
+  canEdit,
+  selectedCharacter,
+  spellAttempts,
+  researchedSpells,
+  failedAttempts,
+  availableDiceOptions,
+  dicePool,
+  containerStyle,
+  isResearchActivity,
+  isAttemptActivity,
 }) => {
   const { theme } = useTheme();
-  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSpellSlot, setActiveSpellSlot] = useState(null);
-  const isResearchActivity = activityText
-    ?.toLowerCase()
-    .includes("research spells");
-  const isAttemptActivity = activityText
-    ?.toLowerCase()
-    .includes("attempt a spell");
 
-  const styles = {
-    container: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: "1rem",
-      marginTop: "1rem",
-      ...containerStyle,
-    },
-    spellColumn: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "0.75rem",
-      padding: "1rem",
-      backgroundColor: theme.surface,
-      borderRadius: "8px",
-      border: `1px solid ${theme.border}`,
-    },
-    columnHeader: {
-      fontWeight: "600",
-      fontSize: "0.875rem",
-      color: theme.text,
-      textAlign: "center",
-      paddingBottom: "0.5rem",
-      borderBottom: `1px solid ${theme.border}`,
-    },
-    inputGroup: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "0.5rem",
-    },
-    label: {
-      fontWeight: "600",
-      fontSize: "0.875rem",
-      color: theme.text,
-    },
-    selectedSpell: {
-      padding: "0.75rem",
-      backgroundColor: theme.background,
-      border: `1px solid ${theme.border}`,
-      borderRadius: "6px",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      cursor: canEdit ? "pointer" : "default",
-    },
-    selectedSpellInfo: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "0.25rem",
-    },
-    spellName: {
-      fontWeight: "600",
-      color: theme.text,
-      fontSize: "0.875rem",
-    },
-    spellDetails: {
-      fontSize: "0.75rem",
-      color: theme.textSecondary,
-    },
-    clearButton: {
-      background: "none",
-      border: "none",
-      color: theme.textSecondary,
-      cursor: "pointer",
-      padding: "0.25rem",
-      borderRadius: "4px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    placeholder: {
-      padding: "0.75rem",
-      backgroundColor: theme.background,
-      border: `2px dashed ${theme.border}`,
-      borderRadius: "6px",
-      textAlign: "center",
-      color: theme.textSecondary,
-      fontSize: "0.875rem",
-      cursor: canEdit ? "pointer" : "default",
-    },
+  const useNewInterface = activityIndex !== undefined;
 
-    modalOverlay: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000,
-      padding: "20px",
+  const activityKey = useNewInterface ? `activity${activityIndex + 1}` : null;
+  const assignment = useNewInterface
+    ? rollAssignments?.[activityKey] || {}
+    : {};
+
+  const isResearch =
+    isResearchActivity ??
+    activityText?.toLowerCase().includes("research spells");
+  const isAttempt =
+    isAttemptActivity ??
+    activityText?.toLowerCase().includes("attempt a spell");
+
+  const calculateSpellDC = useCallback(
+    (_, spellData) => {
+      if (!spellData || !selectedCharacter) return 10;
+
+      const playerYear = selectedCharacter.year || 1;
+      const spellYear = spellData.year || 1;
+
+      if (isResearch) {
+        const yearDifference = Math.max(0, spellYear - playerYear);
+        return 10 + yearDifference * 2;
+      } else {
+        let baseDC = 8 + 2 * spellYear;
+        if (spellYear > playerYear) {
+          baseDC += (spellYear - playerYear) * 2;
+        }
+        return Math.max(5, baseDC);
+      }
     },
-    modal: {
-      backgroundColor: theme.surface,
-      borderRadius: "12px",
-      width: "100%",
-      maxWidth: "600px",
-      maxHeight: "80vh",
-      border: `1px solid ${theme.border}`,
-      boxShadow:
-        "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      display: "flex",
-      flexDirection: "column",
-    },
-    modalHeader: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "1.5rem",
-      borderBottom: `1px solid ${theme.border}`,
-    },
-    modalTitle: {
-      fontSize: "1.25rem",
-      fontWeight: "600",
-      color: theme.text,
-      margin: 0,
-    },
-    closeButton: {
-      background: "none",
-      border: "none",
-      color: theme.textSecondary,
-      cursor: "pointer",
-      padding: "0.5rem",
-      borderRadius: "6px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all 0.2s ease",
-    },
-    modalContent: {
-      padding: "1.5rem",
-      flex: 1,
-      overflow: "hidden",
-      display: "flex",
-      flexDirection: "column",
-    },
-    searchContainer: {
-      position: "relative",
-      marginBottom: "1rem",
-    },
-    searchInput: {
-      width: "100%",
-      padding: "0.75rem 2.5rem 0.75rem 1rem",
-      border: `1px solid ${theme.border}`,
-      borderRadius: "6px",
-      backgroundColor: theme.background,
-      color: theme.text,
-      fontSize: "0.875rem",
-    },
-    searchIcon: {
-      position: "absolute",
-      right: "1rem",
-      top: "50%",
-      transform: "translateY(-50%)",
-      color: theme.textSecondary,
-    },
-    spellList: {
-      flex: 1,
-      overflowY: "auto",
-      maxHeight: "400px",
-    },
-    spellItem: {
-      padding: "1rem",
-      borderBottom: `1px solid ${theme.border}`,
-      cursor: "pointer",
-      transition: "background-color 0.2s ease",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    spellItemDisabled: {
-      opacity: 0.5,
-      cursor: "not-allowed",
-      backgroundColor: theme.border + "10",
-    },
-    spellItemMastered: {
-      opacity: 0.7,
-      cursor: "not-allowed",
-      backgroundColor: theme.success + "10",
-      border: `1px solid ${theme.success}20`,
-    },
-    spellItemInfo: {
-      flex: 1,
-    },
-    spellItemName: {
-      fontWeight: "600",
-      color: theme.text,
-      fontSize: "0.875rem",
-      marginBottom: "0.25rem",
-    },
-    spellItemDetails: {
-      fontSize: "0.75rem",
-      color: theme.textSecondary,
-    },
-    spellItemStatus: {
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-      fontSize: "0.75rem",
-      color: theme.textSecondary,
-    },
-    lockIcon: {
-      color: theme.error || "#ef4444",
-    },
-    masteredIcon: {
-      color: theme.success || "#10b981",
-    },
-    failedAttemptsIcon: {
-      color: theme.primary || "#10b981",
-    },
-    diceSelector: {
-      padding: "0.5rem",
-      border: `1px solid ${theme.border}`,
-      borderRadius: "6px",
-      backgroundColor: theme.background,
-      color: theme.text,
-      fontSize: "0.875rem",
-      cursor: "pointer",
-    },
-    assignedDice: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0.5rem",
-      backgroundColor: theme.primary + "15",
-      border: `1px solid ${theme.primary}`,
-      borderRadius: "6px",
-    },
-    diceValue: {
-      fontWeight: "600",
-      color: theme.primary,
-      fontSize: "0.875rem",
-    },
-    removeButton: {
-      background: "none",
-      border: "none",
-      color: theme.textSecondary,
-      cursor: "pointer",
-      fontSize: "0.75rem",
-      padding: "0.25rem 0.5rem",
-      borderRadius: "4px",
-      transition: "all 0.2s ease",
-    },
-    attemptButton: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "0.5rem",
-      padding: "0.75rem",
-      backgroundColor: theme.primary,
-      color: "white",
-      border: "none",
-      borderRadius: "6px",
-      fontWeight: "600",
-      fontSize: "0.875rem",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-      width: "100%",
-    },
-    attemptButtonDisabled: {
-      backgroundColor: theme.textSecondary,
-      cursor: "not-allowed",
-    },
-    activityInfo: {
-      padding: "1rem",
-      backgroundColor: theme.primary + "15",
-      border: `1px solid ${theme.primary}`,
-      borderRadius: "8px",
-      marginBottom: "1rem",
-    },
-    activityTitle: {
-      fontWeight: "600",
-      color: theme.primary,
-      fontSize: "0.875rem",
-      marginBottom: "0.5rem",
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
-    },
-    activityDescription: {
-      fontSize: "0.875rem",
-      color: theme.text,
-      lineHeight: "1.4",
-    },
-    validationMessage: {
-      fontSize: "0.75rem",
-      color: theme.error || "#ef4444",
-      marginTop: "0.25rem",
-      textAlign: "center",
-    },
-    masteredMessage: {
-      fontSize: "0.75rem",
-      color: theme.success || "#10b981",
-      marginTop: "0.25rem",
-      textAlign: "center",
-    },
-  };
+    [isResearch, selectedCharacter]
+  );
 
   const getSpellData = useCallback((spellName) => {
     if (!spellName) return null;
-
     for (const [subject, subjectData] of Object.entries(spellsData)) {
       if (subjectData.levels) {
-        for (const [, levelSpells] of Object.entries(subjectData.levels)) {
+        for (const [level, levelSpells] of Object.entries(subjectData.levels)) {
           const spell = levelSpells.find((s) => s.name === spellName);
           if (spell) {
-            return {
-              ...spell,
-              subject: subject,
-            };
+            return { ...spell, subject: subject };
           }
         }
       }
@@ -364,270 +79,290 @@ const SpellSelector = ({
     return null;
   }, []);
 
-  const availableSpells = useMemo(() => {
-    const spells = [];
+  const calculateDiceResult = useCallback(
+    (spellSlot, spellName) => {
+      if (!spellName) return null;
 
-    Object.entries(spellsData).forEach(([subject, subjectData]) => {
-      if (subjectData.levels) {
-        Object.entries(subjectData.levels).forEach(([level, levelSpells]) => {
-          levelSpells.forEach((spell) => {
-            spells.push({
-              ...spell,
-              subject: subject,
-            });
-          });
-        });
-      }
-    });
+      const spellData = getSpellData(spellName);
+      if (!spellData) return null;
 
-    const validSpellNames = new Set([
-      ...Object.keys(failedAttempts || {}),
-      ...Object.keys(researchedSpells || {}),
-      ...Object.keys(spellAttempts || {}),
-    ]);
-
-    const relevantSpells = spells.filter((spell) =>
-      validSpellNames.has(spell.name)
-    );
-
-    const filtered = searchTerm
-      ? relevantSpells.filter(
-          (spell) =>
-            spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            spell.subject?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : relevantSpells;
-
-    return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [searchTerm, failedAttempts, researchedSpells, spellAttempts, spellsData]);
-
-  const isSpellMastered = useCallback(
-    (spellName) => {
-      const successfulAttempts = spellAttempts?.[spellName] || 0;
-
-      return successfulAttempts >= 2;
-    },
-    [spellAttempts]
-  );
-
-  const canSpellBeAttempted = useCallback(
-    (spellName) => {
-      if (isResearchActivity) {
-        return true;
+      let diceIndex;
+      if (useNewInterface) {
+        const diceField =
+          spellSlot === "first" ? "firstSpellDice" : "secondSpellDice";
+        diceIndex = assignment[diceField];
+      } else {
+        diceIndex = spellDiceAssignments?.[spellSlot];
       }
 
-      if (isSpellMastered(spellName)) {
-        return false;
-      }
+      if (diceIndex === null || diceIndex === undefined) return null;
 
-      if (isAttemptActivity) {
-        const hasBeenResearched = researchedSpells?.[spellName] || false;
-        const hasSuccessfulAttempts =
-          spellAttempts?.[spellName] && spellAttempts[spellName] > 0;
-        const hasFailedAttempts =
-          failedAttempts?.[spellName] && failedAttempts[spellName] > 0;
+      const diceValue = dicePool[diceIndex];
+      if (!diceValue) return null;
 
-        return hasBeenResearched || hasSuccessfulAttempts || hasFailedAttempts;
-      }
+      const modifier = getSpellModifier(
+        spellName,
+        spellData.subject,
+        selectedCharacter
+      );
+      const total = diceValue + modifier;
+      const dc = calculateSpellDC(spellName, spellData);
+      const passes = total >= dc;
 
-      return true;
+      return {
+        diceValue,
+        modifier,
+        total,
+        dc,
+        passes,
+        modifierInfo: getModifierInfo(
+          spellName,
+          spellData.subject,
+          selectedCharacter
+        ),
+      };
     },
     [
-      isResearchActivity,
-      isAttemptActivity,
-      researchedSpells,
-      spellAttempts,
-      failedAttempts,
-      isSpellMastered,
+      useNewInterface,
+      assignment,
+      spellDiceAssignments,
+      dicePool,
+      getSpellData,
+      selectedCharacter,
+      calculateSpellDC,
     ]
   );
 
-  const getSpellStatus = useCallback(
-    (spellName) => {
-      const hasBeenResearched = researchedSpells?.[spellName] || false;
-      const successfulAttempts = spellAttempts?.[spellName] || 0;
-      const failedAttemptCount = failedAttempts?.[spellName] || false;
-      const totalAttempts = successfulAttempts + failedAttemptCount;
+  const styles = {
+    container: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "1rem",
 
-      if (isSpellMastered(spellName)) {
-        return "Mastered";
-      }
-
-      const statusParts = [];
-
-      if (hasBeenResearched) {
-        statusParts.push("Researched");
-      }
-
-      if (totalAttempts > 0) {
-        if (successfulAttempts > 0 && failedAttemptCount > 0) {
-          statusParts.push(`${successfulAttempts}/${totalAttempts} successful`);
-        } else if (successfulAttempts > 0) {
-          statusParts.push(`${successfulAttempts} successful`);
-        } else if (failedAttemptCount) {
-          statusParts.push(` Attempted`);
-        }
-      }
-
-      if (statusParts.length > 0) {
-        return statusParts.join(" • ");
-      }
-
-      return "Not researched";
+      ...containerStyle,
     },
-    [researchedSpells, spellAttempts, failedAttempts, isSpellMastered]
-  );
-
-  const getSpellBlockReason = useCallback(
-    (spellName) => {
-      if (isSpellMastered(spellName)) {
-        return "Already mastered";
-      }
-
-      if (isAttemptActivity) {
-        const hasBeenResearched = researchedSpells?.[spellName] || false;
-        const hasAnyAttempts =
-          (spellAttempts?.[spellName] || 0) > 0 ||
-          (failedAttempts?.[spellName] || 0) > 0;
-
-        if (!hasBeenResearched && !hasAnyAttempts) {
-          return "Must be researched or previously attempted";
-        }
-      }
-
-      return null;
+    spellSlot: {
+      borderRadius: "8px",
     },
-    [
-      isAttemptActivity,
-      researchedSpells,
-      spellAttempts,
-      failedAttempts,
-      isSpellMastered,
-    ]
-  );
+    label: {
+      display: "block",
+      fontSize: "14px",
+      fontWeight: "600",
+      marginBottom: "0.5rem",
+      color: theme.text,
+    },
+    selectedSpell: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "0.75rem",
+      backgroundColor: theme.primary + "10",
+      border: `1px solid ${theme.primary}`,
+      borderRadius: "6px",
+      cursor: canEdit ? "pointer" : "default",
+      marginBottom: "0.5rem",
+    },
+    placeholder: {
+      padding: "0.75rem",
+      backgroundColor: theme.background,
+      border: `2px dashed ${theme.border}`,
+      borderRadius: "6px",
+      cursor: canEdit ? "pointer" : "default",
+      textAlign: "center",
+      color: theme.textSecondary,
+      marginBottom: "0.5rem",
+    },
+    diceSelector: {
+      width: "100%",
+      padding: "0.5rem",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "4px",
+      backgroundColor: theme.surface,
+      color: theme.text,
+      marginBottom: "0.5rem",
+    },
+    assignedDice: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "0.5rem",
+      backgroundColor: theme.success + "20",
+      border: `1px solid ${theme.success}`,
+      borderRadius: "4px",
+      marginBottom: "0.5rem",
+    },
+    diceValue: {
+      fontWeight: "600",
+      color: theme.success,
+    },
+    calculationDisplay: {
+      padding: "0.75rem",
+      backgroundColor: theme.surface,
+      border: `1px solid ${theme.info}`,
+      borderRadius: "6px",
+      fontSize: "14px",
+    },
+    calculationText: {
+      fontWeight: "600",
+      marginBottom: "0.25rem",
+    },
+    passText: {
+      color: theme.success,
+      fontWeight: "600",
+    },
+    failText: {
+      color: theme.error,
+      fontWeight: "600",
+    },
+    removeButton: {
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      color: theme.textSecondary,
+      padding: "0.25rem",
+      borderRadius: "4px",
+    },
+    modal: {
+      position: "fixed",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      backgroundColor: theme.surface,
+      border: `1px solid ${theme.border}`,
+      borderRadius: "12px",
+      padding: "2rem",
+      width: "50vw",
+      maxHeight: "80vh",
+      overflow: "auto",
+      zIndex: 1000,
+    },
+    modalOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      zIndex: 999,
+    },
+    assignedDiceContainer: {
+      marginBottom: "1rem",
+    },
+    assignedDiceTile: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      padding: "12px",
+      backgroundColor: theme.success + "20",
+      border: `2px solid ${theme.success}`,
+      borderRadius: "8px",
+      transition: "all 0.2s ease",
+    },
+    diceDisplay: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
 
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape" && isModalOpen) {
-        setIsModalOpen(false);
-        setActiveSpellSlot(null);
-        setSearchTerm("");
-      }
-    };
+      width: "24px",
+      height: "32px",
+    },
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isModalOpen]);
+    diceLabel: {
+      fontSize: "12px",
+      color: theme.textSecondary,
+      fontWeight: "500",
+    },
+    removeDiceButton: {
+      padding: "0.25rem 0.75rem",
+      backgroundColor: theme.error + "15",
+      color: theme.error,
+      border: `1px solid ${theme.error}`,
+      borderRadius: "4px",
+      fontSize: "0.75rem",
+      cursor: "pointer",
+      marginTop: "0.5rem",
+    },
+  };
 
   const handleSpellClick = (spellSlot) => {
     if (!canEdit) return;
     setActiveSpellSlot(spellSlot);
-    setIsModalOpen(true);
     setSearchTerm("");
+    setIsModalOpen(true);
   };
 
-  const handleSpellSelect = (spellName) => {
-    if (activeSpellSlot && onSpellSelect) {
-      onSpellSelect(activeSpellSlot, spellName);
+  const handleSpellSelection = (spellName) => {
+    if (useNewInterface) {
+      onSpellSelect(activityIndex, activeSpellSlot, spellName);
+    } else {
+      onSpellSelect?.(activeSpellSlot, spellName);
     }
     setIsModalOpen(false);
     setActiveSpellSlot(null);
     setSearchTerm("");
   };
 
+  const handleDiceAssign = (spellSlot, diceIndex) => {
+    if (useNewInterface) {
+      onDiceAssign(activityIndex, spellSlot, diceIndex);
+    } else {
+      onDiceAssign?.(spellSlot, diceIndex);
+    }
+  };
+
   const handleClearSpell = (spellSlot, e) => {
     e.stopPropagation();
-    if (onSpellSelect) {
-      onSpellSelect(spellSlot, "");
-    }
-    if (onDiceAssign) {
-      onDiceAssign(spellSlot, null);
-    }
-  };
-
-  const handleDiceAssign = (spellSlot, diceIndex) => {
-    if (onDiceAssign) {
-      onDiceAssign(spellSlot, diceIndex);
-    }
-  };
-
-  const handleAttempt = (spellSlot) => {
-    const spellName = selectedSpells[spellSlot];
-    const diceIndex = spellDiceAssignments[spellSlot];
-
-    if (onAttemptSpell && spellName && diceIndex !== null) {
-      onAttemptSpell(spellSlot, spellName, diceIndex);
-    }
-  };
-
-  const canAttemptSpell = (spellSlot) => {
-    const spellName = selectedSpells[spellSlot];
-    const diceIndex = spellDiceAssignments[spellSlot];
-
-    if (!spellName || diceIndex === null || !canEdit) {
-      return false;
-    }
-    return canSpellBeAttempted(spellName);
-  };
-
-  const handleModalBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setIsModalOpen(false);
-      setActiveSpellSlot(null);
-      setSearchTerm("");
+    if (useNewInterface) {
+      onSpellSelect(activityIndex, spellSlot, "");
+      onDiceAssign(activityIndex, spellSlot, null);
+    } else {
+      onSpellSelect?.(spellSlot, "");
+      onDiceAssign?.(spellSlot, null);
     }
   };
 
   const renderSpellSelector = (spellSlot, label) => {
     const spellName = selectedSpells[spellSlot];
-    const spellData = getSpellData(spellName);
-    const assignedDiceIndex = spellDiceAssignments[spellSlot];
-    const isMastered = spellName && isSpellMastered(spellName);
-    const blockReason = spellName && getSpellBlockReason(spellName);
-    const hasFailedAttempt = failedAttempts[spellName];
-    return (
-      <div style={styles.spellColumn}>
-        <div style={styles.columnHeader}>{label}</div>
+    const spellData = spellName ? getSpellData(spellName) : null;
 
-        {/* Spell Selection */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Spell</label>
+    let assignedDiceIndex;
+    if (useNewInterface) {
+      const diceField =
+        spellSlot === "first" ? "firstSpellDice" : "secondSpellDice";
+      assignedDiceIndex = assignment[diceField];
+    } else {
+      assignedDiceIndex = spellDiceAssignments?.[spellSlot];
+    }
+
+    const diceResult = calculateDiceResult(spellSlot, spellName);
+
+    const successfulAttempts = spellAttempts?.[spellName] || 0;
+    const isMastered = successfulAttempts >= 2;
+    const hasFailedAttempt = failedAttempts?.[spellName] || false;
+
+    return (
+      <div style={styles.spellSlot}>
+        <label style={styles.label}>{label}</label>
+
+        <div>
           {spellName && spellData ? (
             <div
               style={styles.selectedSpell}
               onClick={() => handleSpellClick(spellSlot)}
             >
-              <div style={styles.selectedSpellInfo}>
-                <div style={styles.spellName}>
+              <div>
+                <div style={{ fontWeight: "600", marginBottom: "0.25rem" }}>
                   {spellName}
-                  {isMastered && (
-                    <Crown
-                      size={14}
-                      style={{ marginLeft: "0.5rem", color: theme.success }}
-                    />
-                  )}
-                  {hasFailedAttempt && (
-                    <Eye
-                      size={14}
-                      style={{ marginLeft: "0.5rem", color: theme.success }}
-                    />
-                  )}
                 </div>
-                <div style={styles.spellDetails}>
+                <div style={{ fontSize: "12px", color: theme.textSecondary }}>
                   {spellData.subject} • {spellData.level} • Year{" "}
                   {spellData.year}
                 </div>
               </div>
               {canEdit && (
                 <button
-                  style={styles.clearButton}
+                  style={styles.removeButton}
                   onClick={(e) => handleClearSpell(spellSlot, e)}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.border;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = "transparent";
-                  }}
                 >
                   <X size={16} />
                 </button>
@@ -643,22 +378,21 @@ const SpellSelector = ({
           )}
         </div>
 
-        {/* Dice Assignment */}
-        <div style={styles.inputGroup}>
+        <div>
           <label style={styles.label}>Assigned Die</label>
-          {assignedDiceIndex !== null ? (
-            <div style={styles.assignedDice}>
-              <div style={styles.diceValue}>d{dicePool[assignedDiceIndex]}</div>
+          {assignedDiceIndex !== null && assignedDiceIndex !== undefined ? (
+            <div style={styles.assignedDiceContainer}>
+              <div style={styles.assignedDiceTile}>
+                <div style={styles.diceDisplay}>
+                  <div style={styles.diceValue}>
+                    {dicePool[assignedDiceIndex]}
+                  </div>
+                </div>
+              </div>
               {canEdit && (
                 <button
-                  style={styles.removeButton}
+                  style={styles.removeDiceButton}
                   onClick={() => handleDiceAssign(spellSlot, null)}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.border;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = "transparent";
-                  }}
                 >
                   Remove
                 </button>
@@ -674,210 +408,233 @@ const SpellSelector = ({
               disabled={!canEdit}
             >
               <option value="">Select die...</option>
-              {availableDiceOptions.map(({ value, index }) => (
-                <option key={index} value={index}>
-                  d{value}
-                </option>
-              ))}
+              {availableDiceOptions
+                ?.sort((a, b) => b.value - a.value)
+                ?.map(({ value, index }) => (
+                  <option key={index} value={index}>
+                    {value}
+                  </option>
+                ))}
             </select>
           )}
         </div>
 
-        {/* Attempt Button */}
-        {(isResearchActivity || isAttemptActivity) && (
-          <div>
-            <button
-              onClick={() => handleAttempt(spellSlot)}
-              disabled={!canAttemptSpell(spellSlot)}
+        {diceResult && spellName && (
+          <div style={styles.calculationDisplay}>
+            <div style={styles.calculationText}>Roll Calculation:</div>
+            <div>
+              {diceResult.diceValue} + {diceResult.modifier} ={" "}
+              {diceResult.total}
+            </div>
+            <div
               style={{
-                ...styles.attemptButton,
-                ...(canAttemptSpell(spellSlot)
-                  ? {}
-                  : styles.attemptButtonDisabled),
-              }}
-              onMouseEnter={(e) => {
-                if (canAttemptSpell(spellSlot)) {
-                  e.target.style.backgroundColor =
-                    theme.primaryDark || theme.primary;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (canAttemptSpell(spellSlot)) {
-                  e.target.style.backgroundColor = theme.primary;
-                }
+                fontSize: "12px",
+                color: theme.textSecondary,
+                marginTop: "0.25rem",
               }}
             >
-              {isResearchActivity ? (
-                <BookOpen size={16} />
-              ) : (
-                <Wand2 size={16} />
-              )}
-              {isResearchActivity ? "Research" : "Attempt"}
-            </button>
-
-            {/* Validation/Mastery messages */}
-            {selectedSpells[spellSlot] && blockReason && (
-              <div
-                style={
-                  isMastered ? styles.masteredMessage : styles.validationMessage
-                }
-              >
-                {blockReason}
-              </div>
-            )}
+              DC {diceResult.dc} • {diceResult.modifierInfo.source}
+            </div>
+            <div style={diceResult.passes ? styles.passText : styles.failText}>
+              {diceResult.passes ? "✓ PASS" : "✗ FAIL"}
+            </div>
           </div>
         )}
       </div>
     );
   };
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const availableSpells = useMemo(() => {
+    const spells = [];
+    Object.entries(spellsData).forEach(([subject, subjectData]) => {
+      if (subjectData.levels) {
+        Object.entries(subjectData.levels).forEach(([level, levelSpells]) => {
+          levelSpells.forEach((spell) => {
+            spells.push({
+              ...spell,
+              subject: subject,
+            });
+          });
+        });
+      }
+    });
+
+    const filteredSpells = spells.filter((spell) => {
+      const attempts = spellAttempts?.[spell.name] || 0;
+      const isMastered = attempts >= 2;
+      if (isMastered) {
+        return false;
+      }
+
+      if (isResearch) {
+        const hasBeenResearched = researchedSpells?.[spell.name] || false;
+        const hasSuccessfulAttempts = attempts > 0;
+        const hasFailedAttempts = (failedAttempts?.[spell.name] || 0) > 0;
+
+        return !(
+          hasBeenResearched ||
+          hasSuccessfulAttempts ||
+          hasFailedAttempts
+        );
+      } else if (isAttempt) {
+        const hasBeenResearched = researchedSpells?.[spell.name] || false;
+        const hasSuccessfulAttempts = attempts > 0;
+        const hasFailedAttempts = (failedAttempts?.[spell.name] || 0) > 0;
+
+        return hasBeenResearched || hasSuccessfulAttempts || hasFailedAttempts;
+      }
+
+      return true;
+    });
+
+    const searchFiltered = searchTerm
+      ? filteredSpells.filter(
+          (spell) =>
+            spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            spell.subject?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : filteredSpells;
+
+    return searchFiltered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [
+    searchTerm,
+    failedAttempts,
+    researchedSpells,
+    spellAttempts,
+    isResearch,
+    isAttempt,
+  ]);
+
   return (
     <div>
-      {/* Activity Information */}
-      <div style={styles.activityInfo}>
-        <div style={styles.activityTitle}>
-          {isResearchActivity ? <BookOpen size={16} /> : <Wand2 size={16} />}
-          {isResearchActivity ? "Spell Research" : "Spell Attempt"}
-        </div>
-        <div style={styles.activityDescription}>
-          {isResearchActivity
-            ? "Select up to 2 spells to research using History of Magic checks. DC varies based on spell year and character year. Adds an extra die to your dice pool."
-            : "Select up to 2 spells to attempt casting (must be researched or previously attempted). Uses appropriate spell casting mechanics. Adds an extra die to your dice pool."}
-        </div>
-      </div>
-
-      {/* Spell Selection Grid */}
       <div style={styles.container}>
         {renderSpellSelector("first", "First Spell")}
-        {renderSpellSelector("second", "Second Spell (Optional)")}
+        {renderSpellSelector("second", "Second Spell")}
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
-        <div style={styles.modalOverlay} onClick={handleModalBackdropClick}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
-                Select Spell for{" "}
-                {activeSpellSlot === "first" ? "First" : "Second"} Slot
-              </h3>
-              <button
-                style={styles.closeButton}
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setActiveSpellSlot(null);
-                  setSearchTerm("");
+        <div
+          style={styles.modalOverlay}
+          onClick={() => {
+            setIsModalOpen(false);
+            setSearchTerm("");
+          }}
+        >
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3>Select Spell</h3>
+
+            <div style={{ marginBottom: "1rem", position: "relative" }}>
+              <Search
+                size={16}
+                style={{
+                  position: "absolute",
+                  left: "0.75rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: theme.textSecondary,
                 }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = theme.border;
+              />
+              <input
+                type="text"
+                placeholder="Search spells..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.5rem 0.5rem 0.5rem 2.5rem",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "4px",
+                  backgroundColor: theme.surface,
+                  color: theme.text,
                 }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "transparent";
-                }}
-              >
-                <X size={20} />
-              </button>
+              />
             </div>
 
-            <div style={styles.modalContent}>
-              <div style={styles.searchContainer}>
-                <input
-                  type="text"
-                  placeholder="Search spells by name or subject..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={styles.searchInput}
-                  autoFocus
-                />
-                <Search size={16} style={styles.searchIcon} />
-              </div>
-
-              <div style={styles.spellList}>
-                {availableSpells.map((spell) => {
-                  const canAttempt = canSpellBeAttempted(spell.name);
-                  const isMastered = isSpellMastered(spell.name);
-                  const status = getSpellStatus(spell.name);
-                  const blockReason = getSpellBlockReason(spell.name);
-                  const failedAttempted = failedAttempts?.[spell.name];
+            <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+              {availableSpells.length > 0 ? (
+                availableSpells.map((spell) => {
+                  const attempts = spellAttempts?.[spell.name] || 0;
+                  const isResearched = researchedSpells?.[spell.name] || false;
+                  const hasFailed = failedAttempts?.[spell.name] || false;
+                  const isMastered = attempts >= 2;
 
                   return (
                     <div
                       key={spell.name}
                       style={{
-                        ...styles.spellItem,
-                        ...(isMastered
-                          ? styles.spellItemMastered
-                          : canAttempt
-                          ? {}
-                          : styles.spellItemDisabled),
+                        padding: "0.75rem",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "6px",
+                        marginBottom: "0.5rem",
+                        cursor: "pointer",
+                        backgroundColor: theme.surface,
                       }}
-                      onClick={() => {
-                        if (canAttempt && !isMastered) {
-                          handleSpellSelect(spell.name);
-                        }
-                      }}
+                      onClick={() => handleSpellSelection(spell.name)}
                     >
-                      <div style={styles.spellItemInfo}>
-                        <div style={styles.spellItemName}>
-                          {spell.name}
-                          {isMastered && (
-                            <Crown
-                              size={14}
-                              style={{
-                                marginLeft: "0.5rem",
-                                color: theme.success,
-                              }}
-                            />
-                          )}
-                        </div>
-                        <div style={styles.spellItemDetails}>
-                          {spell.subject} • {spell.level} • Year {spell.year}
-                        </div>
-                        {blockReason && (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div>
                           <div
                             style={{
-                              fontSize: "0.75rem",
-                              color: isMastered ? theme.success : theme.error,
-                              marginTop: "0.25rem",
-                              fontStyle: "italic",
+                              fontWeight: "600",
+                              display: "flex",
+                              alignItems: "center",
                             }}
                           >
-                            {blockReason}
+                            {spell.name}
                           </div>
-                        )}
-                      </div>
-
-                      <div style={styles.spellItemStatus}>
-                        {isMastered ? (
-                          <Crown size={14} style={styles.masteredIcon} />
-                        ) : failedAttempted ? (
-                          <CircleEqual
-                            size={14}
-                            style={styles.failedAttemptsIcon}
-                          />
-                        ) : !canAttempt && isAttemptActivity ? (
-                          <Lock size={14} style={styles.lockIcon} />
-                        ) : null}
-                        <span>{status}</span>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: theme.textSecondary,
+                            }}
+                          >
+                            {spell.subject} • {spell.level} • Year {spell.year}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
-                })}
-
-                {availableSpells.length === 0 && (
-                  <div
-                    style={{
-                      ...styles.spellItem,
-                      textAlign: "center",
-                      color: theme.textSecondary,
-                      cursor: "default",
-                    }}
-                  >
-                    No spells found
-                  </div>
-                )}
-              </div>
+                })
+              ) : (
+                <div
+                  style={{
+                    padding: "2rem",
+                    textAlign: "center",
+                    color: theme.textSecondary,
+                  }}
+                >
+                  {searchTerm
+                    ? "No spells found matching your search."
+                    : "No spells available. You need to have researched, attempted, or failed a spell for it to appear here."}
+                </div>
+              )}
             </div>
+
+            <button
+              style={{
+                marginTop: "1rem",
+                padding: "0.5rem 1rem",
+                backgroundColor: theme.primary,
+                color: theme.text,
+                border: `1px solid ${theme.border}`,
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setIsModalOpen(false);
+                setSearchTerm("");
+              }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}

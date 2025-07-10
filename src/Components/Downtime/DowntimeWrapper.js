@@ -358,6 +358,11 @@ const DowntimeWrapper = ({
           { npcName: "", notes: "" },
         ],
         selectedMagicSchool: draft.selected_magic_school || "",
+        selectedSpells: draft.selected_spells || {
+          activity1: { first: "", second: "" },
+          activity2: { first: "", second: "" },
+          activity3: { first: "", second: "" },
+        },
       });
 
       setDicePool(draft.dice_pool || []);

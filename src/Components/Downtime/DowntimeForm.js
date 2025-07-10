@@ -45,6 +45,7 @@ const DowntimeForm = ({
   loadDrafts,
   setActiveTab,
 }) => {
+  console.log({ initialFormData });
   const { theme } = useTheme();
   const styles = useMemo(
     () => ({
@@ -134,15 +135,16 @@ const DowntimeForm = ({
       },
       assignedDice: {
         padding: "1rem",
-        backgroundColor: theme.primary + "15",
+        backgroundColor: theme.success + "15",
         borderRadius: "8px",
-        border: `2px solid ${theme.primary}`,
+        border: `2px solid ${theme.success}`,
         textAlign: "center",
+        color: theme.success,
       },
       diceValue: {
         fontSize: "1.5rem",
         fontWeight: "bold",
-        color: theme.primary,
+        color: theme.success,
         marginBottom: "0.5rem",
       },
       total: {
@@ -159,6 +161,7 @@ const DowntimeForm = ({
         borderRadius: "4px",
         fontSize: "0.75rem",
         cursor: "pointer",
+        marginTop: "0.5rem",
       },
       button: {
         padding: "0.75rem 1.5rem",
@@ -285,15 +288,10 @@ const DowntimeForm = ({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [extraDiceAssignments, setExtraDiceAssignments] = useState({});
 
-  const [selectedSpells, setSelectedSpells] = useState(() => {
-    if (initialFormData?.selected_spells) {
-      return initialFormData.selected_spells;
-    }
-    return {
-      activity1: { first: "", second: "" },
-      activity2: { first: "", second: "" },
-      activity3: { first: "", second: "" },
-    };
+  const [selectedSpells, setSelectedSpells] = useState({
+    activity1: { first: "", second: "" },
+    activity2: { first: "", second: "" },
+    activity3: { first: "", second: "" },
   });
 
   const [spellAttempts, setSpellAttempts] = useState({});
@@ -303,41 +301,70 @@ const DowntimeForm = ({
   const { attemptSpell, rollResearch } = useRollFunctions();
 
   useEffect(() => {
-    if (initialFormData?.selected_spells && !hasInitialized) {
-      setSelectedSpells(initialFormData.selected_spells);
-    }
-  }, [initialFormData?.selected_spells, hasInitialized]);
+    if (initialFormData && !hasInitialized) {
+      if (initialFormData.activities) {
+        setFormData({
+          ...initialFormData,
+          relationships: initialFormData.relationships || [
+            { npcName: "", notes: "" },
+            { npcName: "", notes: "" },
+            { npcName: "", notes: "" },
+          ],
+        });
+      }
 
-  useEffect(() => {
-    console.log("Spell selections updated:", selectedSpells);
-  }, [selectedSpells]);
+      if (initialFormData.selectedSpells) {
+        const spellsToLoad = initialFormData.selectedSpells;
 
-  useEffect(() => {
-    console.log("=== DOWNTIME FORM STATE DEBUG ===");
-    console.log("selectedSpells:", selectedSpells);
-    console.log("spellAttempts:", spellAttempts);
-    console.log("researchedSpells:", researchedSpells);
-    console.log("failedAttempts:", failedAttempts);
-    console.log(
-      "rollAssignments spell dice:",
-      Object.fromEntries(
-        Object.entries(rollAssignments).map(([key, assignment]) => [
-          key,
-          {
-            firstSpellDice: assignment.firstSpellDice,
-            secondSpellDice: assignment.secondSpellDice,
+        const validatedSpells = {
+          activity1: {
+            first: spellsToLoad.activity1?.first || "",
+            second: spellsToLoad.activity1?.second || "",
           },
-        ])
-      )
-    );
-    console.log("===================================");
-  }, [
-    selectedSpells,
-    spellAttempts,
-    researchedSpells,
-    failedAttempts,
-    rollAssignments,
-  ]);
+          activity2: {
+            first: spellsToLoad.activity2?.first || "",
+            second: spellsToLoad.activity2?.second || "",
+          },
+          activity3: {
+            first: spellsToLoad.activity3?.first || "",
+            second: spellsToLoad.activity3?.second || "",
+          },
+        };
+
+        setSelectedSpells(validatedSpells);
+      }
+
+      setHasInitialized(true);
+    }
+  }, [initialFormData, hasInitialized]);
+
+  useEffect(() => {
+    if (currentSheet?.selected_spells && hasInitialized) {
+      const currentSheetSpells = currentSheet.selected_spells;
+
+      const currentState = JSON.stringify(selectedSpells);
+      const newState = JSON.stringify(currentSheetSpells);
+
+      if (currentState !== newState) {
+        const updatedSpells = {
+          activity1: {
+            first: currentSheetSpells.activity1?.first || "",
+            second: currentSheetSpells.activity1?.second || "",
+          },
+          activity2: {
+            first: currentSheetSpells.activity2?.first || "",
+            second: currentSheetSpells.activity2?.second || "",
+          },
+          activity3: {
+            first: currentSheetSpells.activity3?.first || "",
+            second: currentSheetSpells.activity3?.second || "",
+          },
+        };
+
+        setSelectedSpells(updatedSpells);
+      }
+    }
+  }, [currentSheet?.selected_spells, hasInitialized, selectedSpells]);
 
   const canEdit = useCallback(() => {
     if (isUserAdmin) return true;
@@ -361,17 +388,7 @@ const DowntimeForm = ({
   });
 
   const loadSpellProgress = useCallback(async () => {
-    if (!selectedCharacter?.id || !user?.user_metadata?.provider_id) {
-      console.log("Missing character or user data for spell progress");
-      return;
-    }
-
     try {
-      console.log(
-        "Loading spell progress for character:",
-        selectedCharacter.id
-      );
-
       const { data, error } = await supabase
         .from("spell_progress_summary")
         .select(
@@ -380,7 +397,6 @@ const DowntimeForm = ({
         .eq("character_id", selectedCharacter.id)
         .eq("discord_user_id", user.user_metadata.provider_id);
 
-      console.log("Loaded spell progress data:", data);
       if (error) {
         console.error("Error loading spell progress:", error);
         return;
@@ -389,16 +405,11 @@ const DowntimeForm = ({
       const attempts = {};
       const researched = {};
       const failed = {};
-      console.log({ data });
       data.forEach((progress) => {
         attempts[progress.spell_name] = progress.successful_attempts || 0;
         researched[progress.spell_name] = progress.researched || false;
         failed[progress.spell_name] = progress.has_failed_attempt || 0;
       });
-
-      console.log("Processed spell attempts:", attempts);
-      console.log("Processed researched spells:", researched);
-      console.log("Processed failed attempts:", failed);
 
       setSpellAttempts(attempts);
       setResearchedSpells(researched);
@@ -410,15 +421,18 @@ const DowntimeForm = ({
 
   useEffect(() => {
     loadSpellProgress();
-  }, []);
+  }, [loadSpellProgress]);
 
   useEffect(() => {
     if (initialDicePool && initialDicePool.length > 0 && !hasInitialized) {
       setDicePool(initialDicePool);
-      setHasInitialized(true);
     }
   }, [initialDicePool, hasInitialized]);
-
+  useEffect(() => {}, [
+    selectedSpells,
+    initialFormData?.selected_spells,
+    hasInitialized,
+  ]);
   useEffect(() => {
     if (
       initialRollAssignments &&
@@ -430,33 +444,25 @@ const DowntimeForm = ({
   }, [initialRollAssignments, hasInitialized]);
 
   useEffect(() => {
-    if (initialFormData && initialFormData.activities && !hasInitialized) {
-      setFormData({
-        ...initialFormData,
-        relationships: initialFormData.relationships || [
-          { npcName: "", notes: "" },
-          { npcName: "", notes: "" },
-          { npcName: "", notes: "" },
-        ],
-      });
-    }
-  }, [initialFormData, hasInitialized]);
-
-  useEffect(() => {
     setHasInitialized(false);
   }, [currentSheet?.id]);
 
   const handleSpellSelect = useCallback(
     (activityIndex, spellSlot, spellName) => {
       if (!canEdit()) return;
+
       const activityKey = `activity${activityIndex + 1}`;
-      setSelectedSpells((prev) => ({
-        ...prev,
-        [activityKey]: {
-          ...prev[activityKey],
-          [spellSlot]: spellName,
-        },
-      }));
+
+      setSelectedSpells((prev) => {
+        const newState = {
+          ...prev,
+          [activityKey]: {
+            ...prev[activityKey],
+            [spellSlot]: spellName,
+          },
+        };
+        return newState;
+      });
     },
     [canEdit]
   );
@@ -464,17 +470,21 @@ const DowntimeForm = ({
   const handleSpellDiceAssign = useCallback(
     (activityIndex, spellSlot, diceIndex) => {
       if (!canEdit()) return;
+
       const activityKey = `activity${activityIndex + 1}`;
       const diceField =
         spellSlot === "first" ? "firstSpellDice" : "secondSpellDice";
 
-      setRollAssignments((prev) => ({
-        ...prev,
-        [activityKey]: {
-          ...prev[activityKey],
-          [diceField]: diceIndex,
-        },
-      }));
+      setRollAssignments((prev) => {
+        const newState = {
+          ...prev,
+          [activityKey]: {
+            ...prev[activityKey],
+            [diceField]: diceIndex,
+          },
+        };
+        return newState;
+      });
     },
     [canEdit]
   );
@@ -562,6 +572,16 @@ const DowntimeForm = ({
               return (
                 hasBeenResearched || hasSuccessfulAttempts || hasFailedAttempts
               );
+            } else if (isResearchActivity) {
+              const hasBeenResearched = researchedSpells?.[spellName] || false;
+              const hasSuccessfulAttempts = successfulAttempts > 0;
+              const hasFailedAttempts = (failedAttempts?.[spellName] || 0) > 0;
+
+              return !(
+                hasBeenResearched ||
+                hasSuccessfulAttempts ||
+                hasFailedAttempts
+              );
             }
 
             return true;
@@ -570,6 +590,7 @@ const DowntimeForm = ({
           if (spellSelections.first && !validateSpell(spellSelections.first)) {
             const successfulAttempts =
               spellAttempts?.[spellSelections.first] || 0;
+
             if (successfulAttempts >= 2) {
               alert(
                 `Activity ${i + 1}: "${
@@ -578,11 +599,17 @@ const DowntimeForm = ({
                   isResearchActivity ? "researched" : "attempted"
                 } again`
               );
-            } else {
+            } else if (isAttemptActivity) {
               alert(
                 `Activity ${i + 1}: "${
                   spellSelections.first
                 }" must be researched or previously attempted (successful or failed) before you can attempt it`
+              );
+            } else if (isResearchActivity) {
+              alert(
+                `Activity ${i + 1}: "${
+                  spellSelections.first
+                }" has already been researched, attempted, or failed and cannot be researched again`
               );
             }
             return false;
@@ -594,6 +621,7 @@ const DowntimeForm = ({
           ) {
             const successfulAttempts =
               spellAttempts?.[spellSelections.second] || 0;
+
             if (successfulAttempts >= 2) {
               alert(
                 `Activity ${i + 1}: "${
@@ -602,11 +630,17 @@ const DowntimeForm = ({
                   isResearchActivity ? "researched" : "attempted"
                 } again`
               );
-            } else {
+            } else if (isAttemptActivity) {
               alert(
                 `Activity ${i + 1}: "${
                   spellSelections.second
                 }" must be researched or previously attempted (successful or failed) before you can attempt it`
+              );
+            } else if (isResearchActivity) {
+              alert(
+                `Activity ${i + 1}: "${
+                  spellSelections.second
+                }" has already been researched, attempted, or failed and cannot be researched again`
               );
             }
             return false;
@@ -624,115 +658,179 @@ const DowntimeForm = ({
     failedAttempts,
   ]);
 
-  const handleSpellAttempt = useCallback(
-    async (activityIndex, spellSlot, spellName, diceIndex) => {
-      const activityKey = `activity${activityIndex + 1}`;
-      const activity = formData.activities[activityIndex];
+  const updateSpellProgressSummary = useCallback(
+    async (
+      spellName,
+      isSuccess,
+      isNaturalTwenty = false,
+      isResearch = false
+    ) => {
+      if (!selectedCharacter || !user?.user_metadata?.provider_id) return;
 
-      if (!selectedCharacter || !user || diceIndex === null) {
-        alert("Missing required data for spell attempt");
-        return;
-      }
-
-      const discordUserId = user?.user_metadata?.provider_id;
-      const isResearchActivity = activity.activity
-        ?.toLowerCase()
-        .includes("research spells");
+      const characterOwnerDiscordId = user.user_metadata.provider_id;
 
       try {
-        const spellData = getSpellData(spellName);
-        if (!spellData) {
-          alert("Could not find spell data!");
+        const { data: existingProgress, error: fetchError } = await supabase
+          .from("spell_progress_summary")
+          .select("*")
+          .eq("character_id", selectedCharacter.id)
+          .eq("discord_user_id", characterOwnerDiscordId)
+          .eq("spell_name", spellName)
+          .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+          console.error("Error fetching spell progress:", fetchError);
           return;
         }
 
-        const diceValue = dicePool[diceIndex];
-        if (diceValue === undefined) {
-          alert("Invalid die assignment!");
-          return;
+        if (existingProgress) {
+          const currentAttempts = existingProgress.successful_attempts || 0;
+          const newAttempts = isNaturalTwenty
+            ? 2
+            : Math.min(currentAttempts + (isSuccess ? 1 : 0), 2);
+
+          const updateData = {
+            successful_attempts: newAttempts,
+            has_natural_twenty:
+              existingProgress.has_natural_twenty || isNaturalTwenty,
+            has_failed_attempt:
+              existingProgress.has_failed_attempt || !isSuccess,
+            researched:
+              existingProgress.researched || (isResearch && isSuccess),
+          };
+
+          const { error: updateError } = await supabase
+            .from("spell_progress_summary")
+            .update(updateData)
+            .eq("id", existingProgress.id);
+
+          if (updateError) {
+            console.error("Error updating spell progress:", updateError);
+          }
+        } else {
+          const insertData = {
+            character_id: selectedCharacter.id,
+            discord_user_id: characterOwnerDiscordId,
+            spell_name: spellName,
+            successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
+            has_natural_twenty: isNaturalTwenty,
+            has_failed_attempt: !isSuccess,
+            researched: isResearch && isSuccess,
+          };
+
+          const { error: insertError } = await supabase
+            .from("spell_progress_summary")
+            .insert([insertData]);
+
+          if (insertError) {
+            console.error("Error inserting spell progress:", insertError);
+          }
+        }
+      } catch (error) {
+        console.error("Error updating spell progress summary:", error);
+      }
+    },
+    [selectedCharacter, user, supabase]
+  );
+
+  const updateSpellProgressOnSubmission = useCallback(async () => {
+    try {
+      const characterOwnerDiscordId = user.user_metadata.provider_id;
+
+      for (let i = 0; i < formData.activities.length; i++) {
+        const activity = formData.activities[i];
+        const activityKey = `activity${i + 1}`;
+        const assignment = rollAssignments[activityKey];
+        const spellSelections = selectedSpells[activityKey];
+
+        if (
+          !spellSelections ||
+          (!spellSelections.first && !spellSelections.second)
+        ) {
+          continue;
         }
 
-        let rollResult;
+        const isAttemptActivity = activity.activity
+          ?.toLowerCase()
+          .includes("attempt a spell");
+        const isResearchActivity = activity.activity
+          ?.toLowerCase()
+          .includes("research spells");
 
-        if (isResearchActivity) {
-          const playerYear = selectedCharacter.year || 1;
-          const spellYear = spellData.year || 1;
-          const dc = calculateResearchDC(
-            playerYear,
-            spellYear,
-            spellName,
-            selectedCharacter
-          );
+        if (!isAttemptActivity && !isResearchActivity) {
+          continue;
+        }
 
-          let modifier = getSpellModifier(
+        for (const spellSlot of ["first", "second"]) {
+          const spellName = spellSelections[spellSlot];
+          if (!spellName) continue;
+
+          const diceField =
+            spellSlot === "first" ? "firstSpellDice" : "secondSpellDice";
+          const diceIndex = assignment[diceField];
+
+          if (diceIndex === null || diceIndex === undefined) continue;
+
+          const diceValue = dicePool[diceIndex];
+          if (!diceValue) continue;
+
+          const spellData = getSpellData(spellName);
+          if (!spellData) continue;
+
+          const modifier = getSpellModifier(
             spellName,
             spellData.subject,
             selectedCharacter
           );
+          const total = diceValue + modifier;
 
-          rollResult = await rollResearch({
-            spellName,
-            subject: spellData.subject,
-            selectedCharacter,
-            dc,
-            playerYear,
-            spellYear,
-            getSpellModifier: () => modifier,
-            getModifierInfo,
-            customRoll: diceValue,
-          });
-        } else {
-          rollResult = await attemptSpell({
-            spellName,
-            subject: spellData.subject,
-            selectedCharacter,
-            getSpellModifier,
-            setSpellAttempts: () => {},
-            discordUserId,
-            setAttemptingSpells: () => {},
-            setCriticalSuccesses: () => {},
-            setFailedAttempts: () => {},
-            updateSpellProgressSummary: () => {},
-            customRoll: diceValue,
-          });
-        }
+          let dc, isSuccess;
+          if (isResearchActivity) {
+            const playerYear = selectedCharacter.year || 1;
+            const spellYear = spellData.year || 1;
+            dc = calculateResearchDC(
+              playerYear,
+              spellYear,
+              spellName,
+              selectedCharacter
+            );
+            isSuccess = total >= dc;
+          } else {
+            const playerYear = selectedCharacter.year || 1;
+            const spellYear = spellData.year || 1;
+            dc = 8 + 2 * spellYear;
+            if (spellYear > playerYear) {
+              dc += (spellYear - playerYear) * 2;
+            }
+            dc = Math.max(5, dc);
+            isSuccess = total >= dc;
+          }
 
-        if (rollResult.isSuccess) {
-          setFormData((prev) => ({
-            ...prev,
-            activities: prev.activities.map((act, i) => {
-              if (i === activityIndex) {
-                const newSuccesses = [...act.successes];
-                const firstEmptyIndex = newSuccesses.findIndex((s) => !s);
-                if (firstEmptyIndex !== -1) {
-                  newSuccesses[firstEmptyIndex] = true;
-                }
-                return { ...act, successes: newSuccesses };
-              }
-              return act;
-            }),
-          }));
+          const isNaturalTwenty = diceValue === 20;
+
+          await updateSpellProgressSummary(
+            spellName,
+            isSuccess,
+            isNaturalTwenty,
+            isResearchActivity
+          );
         }
-      } catch (error) {
-        console.error("Error performing spell action:", error);
-        alert(
-          "An error occurred while performing the spell action. Please try again."
-        );
       }
-    },
-    [
-      selectedCharacter,
-      user,
-      dicePool,
-      formData.activities,
-      setFormData,
-      calculateResearchDC,
-      getSpellData,
-      getSpellModifier,
-      attemptSpell,
-      rollResearch,
-    ]
-  );
+    } catch (error) {
+      console.error("Error updating spell progress on submission:", error);
+    }
+  }, [
+    selectedCharacter,
+    user,
+    formData.activities,
+    rollAssignments,
+    selectedSpells,
+    dicePool,
+    getSpellData,
+    calculateResearchDC,
+    getSpellModifier,
+    updateSpellProgressSummary,
+  ]);
 
   const updateRollAssignment = useCallback(
     (activityIndex, field, value) => {
@@ -1268,42 +1366,7 @@ const DowntimeForm = ({
           second: "",
         };
 
-        return (
-          <div style={{ marginTop: "1rem", textAlign: "center" }}>
-            <div
-              style={{
-                padding: "1rem",
-                backgroundColor: theme.primary + "15",
-                border: `1px solid ${theme.primary}`,
-                borderRadius: "6px",
-                fontSize: "14px",
-                color: theme.primary,
-              }}
-            >
-              🎲 Spell Activity - Use the spell selector above to choose spells
-              and assign dice
-              <br />
-              <small>
-                {spellSelections.first &&
-                  `First: ${spellSelections.first}${
-                    assignment.firstSpellDice !== null
-                      ? ` (d${dicePool[assignment.firstSpellDice]})`
-                      : " (no die)"
-                  }`}
-                {spellSelections.first && spellSelections.second && " | "}
-                {spellSelections.second &&
-                  `Second: ${spellSelections.second}${
-                    assignment.secondSpellDice !== null
-                      ? ` (d${dicePool[assignment.secondSpellDice]})`
-                      : " (no die)"
-                  }`}
-                {!spellSelections.first &&
-                  !spellSelections.second &&
-                  "No spells selected"}
-              </small>
-            </div>
-          </div>
-        );
+        return <div style={{ marginTop: "1rem", textAlign: "center" }}></div>;
       }
 
       if (shouldUseCustomDiceForActivity(activityText)) {
@@ -1389,7 +1452,7 @@ const DowntimeForm = ({
                   assignment.diceIndex !== undefined &&
                   editable && (
                     <button
-                      style={{ ...styles.removeButton, marginTop: "0.5rem" }}
+                      style={styles.removeButton}
                       onClick={() =>
                         diceManager.functions.unassignDice(index, false)
                       }
@@ -1475,10 +1538,7 @@ const DowntimeForm = ({
                       assignment.secondDiceIndex !== undefined &&
                       editable && (
                         <button
-                          style={{
-                            ...styles.removeButton,
-                            marginTop: "0.5rem",
-                          }}
+                          style={styles.removeButton}
                           onClick={() =>
                             diceManager.functions.unassignDice(index, true)
                           }
@@ -1527,7 +1587,7 @@ const DowntimeForm = ({
                 assignment.diceIndex !== undefined &&
                 editable && (
                   <button
-                    style={{ ...styles.removeButton, marginTop: "0.5rem" }}
+                    style={styles.removeButton}
                     onClick={() =>
                       diceManager.functions.unassignDice(index, false)
                     }
@@ -1565,6 +1625,8 @@ const DowntimeForm = ({
       return;
     }
 
+    console.lg("🔍 SAVING DRAFT - selectedSpells state:", selectedSpells);
+
     setIsSavingDraft(true);
     try {
       const draftData = {
@@ -1600,10 +1662,11 @@ const DowntimeForm = ({
         if (error) throw error;
         setCurrentSheet(data);
       }
+
       alert("Draft saved successfully!");
       if (loadDrafts) loadDrafts();
     } catch (err) {
-      console.error("Error saving draft:", err);
+      console.error("❌ Error saving draft:", err);
     } finally {
       setIsSavingDraft(false);
     }
@@ -1693,7 +1756,10 @@ const DowntimeForm = ({
         if (error) throw error;
       }
 
+      await updateSpellProgressOnSubmission();
+
       alert("Downtime sheet submitted successfully!");
+
       if (loadSubmittedSheets) loadSubmittedSheets();
       if (loadDrafts) loadDrafts();
       if (setActiveTab) setActiveTab("overview");
@@ -1715,6 +1781,7 @@ const DowntimeForm = ({
     validateSpellActivities,
     currentSheet,
     supabase,
+    updateSpellProgressOnSubmission,
     loadSubmittedSheets,
     loadDrafts,
     setActiveTab,
@@ -1876,70 +1943,6 @@ const DowntimeForm = ({
                     </select>
                   </div>
 
-                  {isSpellActivity && (
-                    <div style={{ gridColumn: "1 / -1" }}>
-                      <SpellSelector
-                        activityText={activity.activity}
-                        selectedSpells={
-                          selectedSpells[assignmentKey] || {
-                            first: "",
-                            second: "",
-                          }
-                        }
-                        onSpellSelect={(spellSlot, spellName) =>
-                          handleSpellSelect(index, spellSlot, spellName)
-                        }
-                        canEdit={editable}
-                        selectedCharacter={selectedCharacter}
-                        spellAttempts={spellAttempts}
-                        researchedSpells={researchedSpells}
-                        failedAttempts={failedAttempts}
-                        spellDiceAssignments={{
-                          first: assignment.firstSpellDice,
-                          second: assignment.secondSpellDice,
-                        }}
-                        onDiceAssign={(spellSlot, diceIndex) => {
-                          const diceField =
-                            spellSlot === "first"
-                              ? "firstSpellDice"
-                              : "secondSpellDice";
-                          updateRollAssignment(index, diceField, diceIndex);
-                        }}
-                        availableDiceOptions={diceManager.functions.getSortedDiceOptions.filter(
-                          ({ index: diceIndex }) => {
-                            const isAssignedElsewhere = Object.entries(
-                              rollAssignments
-                            ).some(([key, rollAssignment]) => {
-                              if (key === assignmentKey) return false;
-                              return (
-                                rollAssignment.diceIndex === diceIndex ||
-                                rollAssignment.secondDiceIndex === diceIndex ||
-                                rollAssignment.firstSpellDice === diceIndex ||
-                                rollAssignment.secondSpellDice === diceIndex
-                              );
-                            });
-
-                            return (
-                              !isAssignedElsewhere ||
-                              assignment.firstSpellDice === diceIndex ||
-                              assignment.secondSpellDice === diceIndex
-                            );
-                          }
-                        )}
-                        dicePool={dicePool}
-                        onAttemptSpell={(spellSlot, spellName, diceIndex) =>
-                          handleSpellAttempt(
-                            index,
-                            spellSlot,
-                            spellName,
-                            diceIndex
-                          )
-                        }
-                        containerStyle={{ marginTop: "1rem" }}
-                      />
-                    </div>
-                  )}
-
                   {!activityRequiresDualChecks(activity.activity) &&
                     !isSpellActivity &&
                     activity.activity &&
@@ -1963,11 +1966,11 @@ const DowntimeForm = ({
                       <div
                         style={{
                           padding: "10px",
-                          backgroundColor: theme.primary + "20",
-                          border: `1px solid ${theme.primary}`,
+                          backgroundColor: theme.warning + "20",
+                          border: `1px solid ${theme.warning}`,
                           borderRadius: "6px",
                           fontSize: "14px",
-                          color: theme.primary,
+                          color: theme.warning,
                           fontWeight: "600",
                           textAlign: "center",
                         }}
@@ -1986,38 +1989,6 @@ const DowntimeForm = ({
                   </div>
                 )}
 
-                {skillInfo.type === "spell" &&
-                  selectedSpells[assignmentKey] && (
-                    <div
-                      style={{
-                        marginTop: "0.75rem",
-                        padding: "8px 12px",
-                        backgroundColor: theme.primary + "10",
-                        border: `1px solid ${theme.primary}`,
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                        color: theme.primary,
-                        fontWeight: "500",
-                      }}
-                    >
-                      {(() => {
-                        const spells = selectedSpells[assignmentKey];
-                        const selectedSpellsList = [];
-                        if (spells?.first)
-                          selectedSpellsList.push(`First: ${spells.first}`);
-                        if (spells?.second)
-                          selectedSpellsList.push(`Second: ${spells.second}`);
-
-                        if (selectedSpellsList.length > 0) {
-                          return `Selected Spells: ${selectedSpellsList.join(
-                            ", "
-                          )}`;
-                        }
-                        return "No spells selected";
-                      })()}
-                    </div>
-                  )}
-
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Notes</label>
                   <textarea
@@ -2030,7 +2001,62 @@ const DowntimeForm = ({
                     disabled={!editable}
                   />
                 </div>
+                {isSpellActivity && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <SpellSelector
+                      activityIndex={index}
+                      selectedSpells={(() => {
+                        const spells = selectedSpells[assignmentKey] || {
+                          first: "",
+                          second: "",
+                        };
 
+                        return spells;
+                      })()}
+                      onSpellSelect={handleSpellSelect}
+                      onDiceAssign={handleSpellDiceAssign}
+                      availableDiceOptions={diceManager.functions.getSortedDiceOptions.filter(
+                        ({ index: diceIndex }) => {
+                          const isAssignedToSpells = Object.values(
+                            rollAssignments
+                          ).some(
+                            (assignment) =>
+                              assignment.firstSpellDice === diceIndex ||
+                              assignment.secondSpellDice === diceIndex
+                          );
+                          const isAssignedToActivities = Object.values(
+                            rollAssignments
+                          ).some(
+                            (assignment) =>
+                              assignment.diceIndex === diceIndex ||
+                              assignment.secondDiceIndex === diceIndex
+                          );
+                          const isThisActivitySpell =
+                            assignment.firstSpellDice === diceIndex ||
+                            assignment.secondSpellDice === diceIndex;
+
+                          return (
+                            (!isAssignedToSpells && !isAssignedToActivities) ||
+                            isThisActivitySpell
+                          );
+                        }
+                      )}
+                      rollAssignments={rollAssignments}
+                      dicePool={dicePool}
+                      canEdit={editable}
+                      selectedCharacter={selectedCharacter}
+                      spellAttempts={spellAttempts}
+                      researchedSpells={researchedSpells}
+                      failedAttempts={failedAttempts}
+                      isResearchActivity={activity.activity
+                        ?.toLowerCase()
+                        .includes("research spells")}
+                      isAttemptActivity={activity.activity
+                        ?.toLowerCase()
+                        .includes("attempt a spell")}
+                    />
+                  </div>
+                )}
                 {activity.activity &&
                   renderSpecialActivityInfo(activity.activity)}
 

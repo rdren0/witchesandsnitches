@@ -416,21 +416,5 @@ export const getSpecialActivityInfo = (activityText) => {
     };
   }
 
-  if (text.includes("research spells")) {
-    return {
-      type: "spell_research",
-      description:
-        "Select up to 2 spells to research using History of Magic checks. DC varies based on spell year and character year. Adds an extra die to your dice pool.",
-    };
-  }
-
-  if (text.includes("attempt a spell")) {
-    return {
-      type: "spell_attempt",
-      description:
-        "Select up to 2 spells to attempt casting (must be researched or previously attempted). Uses appropriate spell casting mechanics. Adds an extra die to your dice pool.",
-    };
-  }
-
   return null;
 };
