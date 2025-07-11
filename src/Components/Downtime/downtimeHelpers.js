@@ -57,6 +57,13 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
+  if (text.includes("brew a potion")) {
+    return {
+      type: "locked",
+      skills: ["potionMaking"],
+    };
+  }
+
   if (text.includes("research a topic")) {
     return {
       type: "locked",
@@ -264,20 +271,49 @@ export const getCustomDiceTypeForActivity = (activityText) => {
 
   if (text.includes("allowance")) {
     return {
-      diceType: "2d12",
-      description: "Roll 2d12 instead of d20 for allowance determination",
-      rollFunction: () => {
+      diceType: "Family Allowance",
+      description:
+        "Roll based on family economic status. Admin will determine family type and any bonuses.",
+      rollFunction: (familyType = "middle") => {
         try {
+          let diceNotation;
+
+          switch (familyType.toLowerCase()) {
+            case "poor":
+              diceNotation = "2d4";
+              break;
+            case "rich":
+              diceNotation = "2d8";
+              break;
+            case "middle":
+            default:
+              diceNotation = "2d6";
+              break;
+          }
+
           const roller = new DiceRoller();
-          const result = roller.roll("2d12");
+          const result = roller.roll(diceNotation);
 
           const individualDice = result.rolls[0].rolls.map((die) => die.value);
           return individualDice;
         } catch (error) {
-          console.error("Error rolling allowance dice:", error);
+          console.error("Error rolling family allowance dice:", error);
+
+          let sides;
+          switch (familyType.toLowerCase()) {
+            case "poor":
+              sides = 4;
+              break;
+            case "rich":
+              sides = 8;
+              break;
+            default:
+              sides = 6;
+              break;
+          }
           return [
-            Math.floor(Math.random() * 12) + 1,
-            Math.floor(Math.random() * 12) + 1,
+            Math.floor(Math.random() * sides) + 1,
+            Math.floor(Math.random() * sides) + 1,
           ];
         }
       },

@@ -246,8 +246,8 @@ const SkillSelector = memo(
             <div
               style={{
                 position: "absolute",
-                top: "-8px",
-                right: "8px",
+                top: "12px",
+                right: "20px",
                 ...styles.badge,
                 backgroundColor: `${theme.info || "#3b82f6"}20`,
                 color: theme.info || "#3b82f6",
@@ -261,8 +261,8 @@ const SkillSelector = memo(
             <div
               style={{
                 position: "absolute",
-                top: "-8px",
-                right: "8px",
+                top: "12px",
+                right: "20px",
                 ...styles.badge,
                 backgroundColor: `${theme.warning || "#f59e0b"}20`,
                 color: theme.warning || "#f59e0b",

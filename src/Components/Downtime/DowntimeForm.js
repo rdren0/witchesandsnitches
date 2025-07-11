@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getAllActivities, downtime } from "../../SharedData/downtime";
+import { getAllActivities, downtime, classes } from "../../SharedData/downtime";
 import { formatModifier } from "../CharacterSheet/utils";
 
 import {
@@ -140,6 +140,7 @@ const DowntimeForm = ({
         border: `2px solid ${theme.success}`,
         textAlign: "center",
         color: theme.success,
+        maxWidth: "450px",
       },
       diceValue: {
         fontSize: "1.5rem",
@@ -203,6 +204,7 @@ const DowntimeForm = ({
         secondWandModifier: "",
         customDice: null,
         jobType: null,
+        familyType: null,
         firstSpellDice: null,
         secondSpellDice: null,
       },
@@ -216,6 +218,7 @@ const DowntimeForm = ({
         secondWandModifier: "",
         customDice: null,
         jobType: null,
+        familyType: null,
         firstSpellDice: null,
         secondSpellDice: null,
       },
@@ -229,6 +232,7 @@ const DowntimeForm = ({
         secondWandModifier: "",
         customDice: null,
         jobType: null,
+        familyType: null,
         firstSpellDice: null,
         secondSpellDice: null,
       },
@@ -261,17 +265,17 @@ const DowntimeForm = ({
       activities: [
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
           successes: [false, false, false, false, false],
         },
       ],
@@ -546,6 +550,23 @@ const DowntimeForm = ({
     }
     return null;
   }, []);
+
+  const isStudyActivity = (activityName) => {
+    return activityName && activityName.toLowerCase().includes("study");
+  };
+
+  const validateStudyActivities = useCallback(() => {
+    for (let i = 0; i < formData.activities.length; i++) {
+      const activity = formData.activities[i];
+      if (isStudyActivity(activity.activity) && !activity.selectedClass) {
+        alert(
+          `Activity ${i + 1}: Please select a class for the Study activity.`
+        );
+        return false;
+      }
+    }
+    return true;
+  }, [formData.activities]);
 
   const validateSpellActivities = useCallback(() => {
     for (let i = 0; i < formData.activities.length; i++) {
@@ -917,6 +938,7 @@ const DowntimeForm = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
               firstSpellDice: null,
               secondSpellDice: null,
             },
@@ -934,6 +956,7 @@ const DowntimeForm = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
               firstSpellDice: null,
               secondSpellDice: null,
             },
@@ -955,6 +978,7 @@ const DowntimeForm = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
               firstSpellDice: null,
               secondSpellDice: null,
             },
@@ -1004,6 +1028,7 @@ const DowntimeForm = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
             firstSpellDice: null,
             secondSpellDice: null,
           },
@@ -1104,9 +1129,11 @@ const DowntimeForm = ({
     (assignment, dicePool, isSecond = false) => {
       const diceIndexKey = isSecond ? "secondDiceIndex" : "diceIndex";
       const skillKey = isSecond ? "secondSkill" : "skill";
+      const wandKey = isSecond ? "secondWandModifier" : "wandModifier";
 
       if (assignment.customDice && !isSecond) {
         const isWorkJob = assignment.jobType !== undefined;
+        const isAllowance = assignment.familyType !== undefined;
         const diceSum = assignment.customDice[0] + assignment.customDice[1];
 
         return (
@@ -1119,17 +1146,32 @@ const DowntimeForm = ({
                   {assignment.jobType === "hard" && "2D12: "}
                   {assignment.customDice[0]} + {assignment.customDice[1]} ={" "}
                   {diceSum}
-                  {isWorkJob && (
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: theme.textSecondary,
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      Earnings: {diceSum} × 2 = {diceSum * 2} Galleons
-                    </div>
-                  )}
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: theme.textSecondary,
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    Earnings: {diceSum} × 2 = {diceSum * 2} Galleons
+                  </div>
+                </>
+              ) : isAllowance ? (
+                <>
+                  {assignment.familyType === "poor" && "2d4: "}
+                  {assignment.familyType === "middle" && "2d6: "}
+                  {assignment.familyType === "rich" && "2d8: "}
+                  {assignment.customDice[0]} + {assignment.customDice[1]} ={" "}
+                  {diceSum}
+                  <div
+                    style={{
+                      fontSize: "0.875rem",
+                      color: theme.textSecondary,
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    Allowance: {diceSum} × 2 = {diceSum * 2} Galleons
+                  </div>
                 </>
               ) : (
                 <>
@@ -1138,7 +1180,7 @@ const DowntimeForm = ({
                 </>
               )}
             </div>
-            {assignment[skillKey] && !isWorkJob && (
+            {assignment[skillKey] && !isWorkJob && !isAllowance && (
               <div style={styles.total}>
                 Total: {diceSum}{" "}
                 {formatModifier(getModifierValue(assignment[skillKey]))} ={" "}
@@ -1155,16 +1197,27 @@ const DowntimeForm = ({
       ) {
         const diceValue = dicePool[assignment[diceIndexKey]];
         const skillName = assignment[skillKey];
+        const wandModifier = assignment[wandKey];
+
         const hasSkill = skillName && skillName !== "";
-        const modifierValue = hasSkill ? getModifierValue(skillName) : 0;
+        const hasWandModifier = wandModifier && wandModifier !== "";
+        const hasAnyModifier = hasSkill || hasWandModifier;
+
+        let modifierValue = 0;
+        if (hasSkill) {
+          modifierValue = getModifierValue(skillName);
+        } else if (hasWandModifier) {
+          modifierValue = getModifierValue(wandModifier);
+        }
+
         const totalValue = diceValue + modifierValue;
 
         return (
           <div style={styles.assignedDice}>
             <div style={styles.diceValue}>
-              {hasSkill ? totalValue : diceValue}
+              {hasAnyModifier ? totalValue : diceValue}
             </div>
-            {hasSkill && (
+            {hasAnyModifier && (
               <div style={styles.total}>
                 Total: {diceValue} {formatModifier(modifierValue)} ={" "}
                 {totalValue}
@@ -1250,6 +1303,7 @@ const DowntimeForm = ({
       if (shouldUseCustomDiceForActivity(activityText)) {
         const customDiceInfo = getCustomDiceTypeForActivity(activityText);
         const isWorkJob = activityText.toLowerCase().includes("work job");
+        const isAllowance = activityText.toLowerCase().includes("allowance");
 
         return (
           <div
@@ -1299,6 +1353,40 @@ const DowntimeForm = ({
               </div>
             )}
 
+            {isAllowance && (
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color: theme.text,
+                  }}
+                >
+                  Family Economic Status:
+                </label>
+                <select
+                  style={{
+                    width: "100%",
+                    padding: "0.5rem",
+                    borderRadius: "4px",
+                    border: `1px solid ${theme.border}`,
+                    backgroundColor: theme.surface,
+                    color: theme.text,
+                    fontSize: "0.875rem",
+                    marginTop: "0.25rem",
+                  }}
+                  defaultValue="middle"
+                  id={`family-status-${activityText}`}
+                >
+                  <option value="poor">Poor Family (2d4×2 Galleons)</option>
+                  <option value="middle">
+                    Middle Class Family (2d6×2 Galleons)
+                  </option>
+                  <option value="rich">Rich Family (2d8×2 Galleons)</option>
+                </select>
+              </div>
+            )}
+
             <div>
               <button
                 onClick={() => {
@@ -1306,12 +1394,16 @@ const DowntimeForm = ({
                     ? document.getElementById(`job-difficulty-${activityText}`)
                         ?.value || "medium"
                     : undefined;
+                  const familyType = isAllowance
+                    ? document.getElementById(`family-status-${activityText}`)
+                        ?.value || "middle"
+                    : undefined;
                   const activityIndex = formData.activities.findIndex(
                     (activity) => activity.activity === activityText
                   );
                   diceManager.functions.handleCustomDiceRoll(
                     activityText,
-                    jobType,
+                    jobType || familyType,
                     activityIndex
                   );
                 }}
@@ -1338,23 +1430,23 @@ const DowntimeForm = ({
 
         switch (specialInfo.type) {
           case "job_application":
-            iconAndTitle = "💼 Job Application";
+            iconAndTitle = "Job Application";
             bgColor = theme.success;
             break;
           case "promotion":
-            iconAndTitle = "📈 Promotion Attempt";
+            iconAndTitle = "Promotion Attempt";
             bgColor = theme.success;
             break;
           case "spell_research":
-            iconAndTitle = "🔬 Spell Research";
+            iconAndTitle = "Spell Research";
             bgColor = theme.primary;
             break;
           case "spell_attempt":
-            iconAndTitle = "✨ Spell Attempt";
+            iconAndTitle = "Spell Attempt";
             bgColor = theme.primary;
             break;
           default:
-            iconAndTitle = "ℹ️ Special Activity";
+            iconAndTitle = "Special Activity";
         }
 
         return (
@@ -1736,6 +1828,11 @@ const DowntimeForm = ({
       return;
     }
 
+    if (!validateStudyActivities()) {
+      setIsSubmitting(false);
+      return;
+    }
+
     if (!validateSpellActivities()) {
       setIsSubmitting(false);
       return;
@@ -1805,6 +1902,7 @@ const DowntimeForm = ({
     dicePool,
     rollAssignments,
     selectedSpells,
+    validateStudyActivities,
     validateSpellActivities,
     currentSheet,
     supabase,
@@ -1987,7 +2085,8 @@ const DowntimeForm = ({
                       />
                     )}
 
-                  {activityRequiresDualChecks(activity.activity) && (
+                  {(activityRequiresDualChecks(activity.activity) ||
+                    isSpellActivity) && (
                     <div style={styles.inputGroup}>
                       <label style={styles.label}>Dual Check Activity</label>
                       <div
@@ -2002,11 +2101,33 @@ const DowntimeForm = ({
                           textAlign: "center",
                         }}
                       >
-                        Requires Two Skill Checks
+                        Requires Two Dice Rolls
                       </div>
                     </div>
                   )}
                 </div>
+
+                {/* Class Selection for Study Activities */}
+                {isStudyActivity(activity.activity) && (
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Select Class</label>
+                    <select
+                      style={styles.select}
+                      value={activity.selectedClass || ""}
+                      onChange={(e) =>
+                        updateActivity(index, "selectedClass", e.target.value)
+                      }
+                      disabled={!editable}
+                    >
+                      <option value="">Choose a class...</option>
+                      {classes.map((className) => (
+                        <option key={className} value={className}>
+                          {className}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {activityDescription && (
                   <div style={styles.activityDescription}>
@@ -2237,33 +2358,6 @@ const DowntimeForm = ({
                       rows={2}
                     />
                   </div>
-                )}
-
-                {assignment.result && (
-                  <div
-                    style={{
-                      padding: "12px",
-                      marginTop: "12px",
-                      backgroundColor:
-                        assignment.result === "success"
-                          ? `${theme.success}15`
-                          : `${theme.error}15`,
-                      border: `1px solid ${
-                        assignment.result === "success"
-                          ? theme.success
-                          : theme.error
-                      }`,
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      color:
-                        assignment.result === "success"
-                          ? theme.success
-                          : theme.error,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  ></div>
                 )}
               </div>
             );
