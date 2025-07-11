@@ -24,6 +24,18 @@ export const activityRequiresSpellSelection = (activityText) => {
   return text.includes("research spells") || text.includes("attempt spells");
 };
 
+export const activityRequiresWandSelection = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+  return text.includes("increase wand stat");
+};
+
+export const activityRequiresClassSelection = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+  return text.includes("studying");
+};
+
 export const getActivitySkillInfo = (activityText) => {
   if (!activityText) return { type: "free", skills: null };
 
@@ -33,6 +45,23 @@ export const getActivitySkillInfo = (activityText) => {
     return {
       type: "spell",
       requiresSpell: true,
+    };
+  }
+
+  if (text.includes("increase wand stat")) {
+    return {
+      type: "wand_increase",
+      requiresWandSelection: true,
+      requiresNoDiceRoll: false,
+      skills: [],
+    };
+  }
+
+  if (text.includes("studying")) {
+    return {
+      type: "class_selection",
+      requiresClassSelection: true,
+      skills: [],
     };
   }
 
@@ -178,6 +207,73 @@ export const getActivitySkillInfo = (activityText) => {
     type: "free",
     skills: null,
   };
+};
+
+export const getAvailableWandModifiersForIncrease = (selectedCharacter) => {
+  if (!selectedCharacter?.magicModifiers) return [];
+
+  const wandModifiers = [
+    { name: "charms", displayName: "Charms" },
+    { name: "transfiguration", displayName: "Transfiguration" },
+    { name: "jinxesHexesCurses", displayName: "Jinxes, Hexes & Curses" },
+    { name: "healing", displayName: "Healing" },
+    { name: "divinations", displayName: "Divinations" },
+  ];
+
+  return wandModifiers.filter((wand) => {
+    const currentValue = selectedCharacter.magicModifiers[wand.name] || 0;
+    return currentValue < 5;
+  });
+};
+
+export const calculateWandStatIncreaseDC = (
+  selectedCharacter,
+  wandModifierName
+) => {
+  if (!selectedCharacter?.magicModifiers || !wandModifierName) return 11;
+
+  const currentModifier =
+    selectedCharacter.magicModifiers[wandModifierName] || 0;
+  return 11 + currentModifier;
+};
+
+export const validateWandStatIncreaseActivity = (
+  activity,
+  selectedCharacter
+) => {
+  if (!activityRequiresWandSelection(activity.activity)) return { valid: true };
+
+  if (!activity.selectedWandModifier) {
+    return {
+      valid: false,
+      message: "Please select a wand modifier to increase.",
+    };
+  }
+
+  const currentValue =
+    selectedCharacter?.magicModifiers?.[activity.selectedWandModifier] || 0;
+  if (currentValue >= 5) {
+    return {
+      valid: false,
+      message: "This wand modifier is already at maximum (+5).",
+    };
+  }
+
+  return { valid: true };
+};
+
+export const validateStudyActivity = (activity) => {
+  if (!activityRequiresClassSelection(activity.activity))
+    return { valid: true };
+
+  if (!activity.selectedClass) {
+    return {
+      valid: false,
+      message: "Please select a class for the Study activity.",
+    };
+  }
+
+  return { valid: true };
 };
 
 export const calculateModifier = (skillOrWandName, selectedCharacter) => {
@@ -387,7 +483,9 @@ export const activityRequiresSpecialRules = (activityText) => {
     activityRequiresNoDiceRoll(activityText) ||
     isMultiSessionActivity(activityText) ||
     shouldUseCustomDiceForActivity(activityText) ||
-    activityRequiresExtraDie(activityText)
+    activityRequiresExtraDie(activityText) ||
+    activityRequiresWandSelection(activityText) ||
+    activityRequiresClassSelection(activityText)
   );
 };
 
@@ -411,6 +509,38 @@ export const getMultiSessionInfo = (activityText) => {
 export const getSpecialActivityInfo = (activityText) => {
   if (!activityText) return null;
   const text = activityText.toLowerCase();
+
+  // if (text.includes("increase wand stat")) {
+  //   return {
+  //     type: "wand_increase",
+  //     description:
+  //       "Select a wand modifier to increase. Roll d20 + current modifier value vs DC (11 + current modifier). Success increases the modifier by +1 (maximum +5).",
+  //   };
+  // }
+
+  if (text.includes("studying")) {
+    return {
+      type: "class_study",
+      description:
+        "Select a class to focus your studies on. This improves your performance in that specific class through dedicated study time.",
+    };
+  }
+
+  if (text.includes("research spells")) {
+    return {
+      type: "spell_research",
+      description:
+        "Research spells to learn their theory and prepare for casting attempts. Successful research allows future spell attempts.",
+    };
+  }
+
+  if (text.includes("attempt spells")) {
+    return {
+      type: "spell_attempt",
+      description:
+        "Practice casting spells you have previously researched or attempted. Two successful attempts master the spell permanently.",
+    };
+  }
 
   if (text.includes("gain a job")) {
     return {

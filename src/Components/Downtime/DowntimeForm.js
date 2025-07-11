@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllActivities, downtime, classes } from "../../SharedData/downtime";
 import { formatModifier } from "../CharacterSheet/utils";
@@ -14,6 +14,10 @@ import {
   getSpecialActivityInfo,
   activityRequiresSpellSelection,
   activityRequiresExtraDie,
+  activityRequiresWandSelection,
+  getAvailableWandModifiersForIncrease,
+  calculateWandStatIncreaseDC,
+  validateWandStatIncreaseActivity,
 } from "./downtimeHelpers";
 import SkillSelector from "./SkillSelector";
 import SpellSelector from "./SpellSelector";
@@ -21,6 +25,139 @@ import DicePoolManager from "./DicePoolManager";
 
 import { spellsData } from "../SpellBook/spells";
 import { getSpellModifier } from "../SpellBook/utils";
+
+// WandModifierSelector Component
+const WandModifierSelector = ({
+  selectedCharacter,
+  selectedWandModifier,
+  onWandModifierChange,
+  canEdit,
+}) => {
+  const { theme } = useTheme();
+  const allWandModifiers = [
+    { name: "charms", displayName: "Charms" },
+    { name: "transfiguration", displayName: "Transfiguration" },
+    { name: "jinxesHexesCurses", displayName: "JHC" },
+    { name: "healing", displayName: "Healing" },
+    { name: "divinations", displayName: "Divinations" },
+  ];
+
+  const formatModifier = useCallback((modifier) => {
+    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  }, []);
+
+  const allAtMaximum = allWandModifiers.every(
+    (wand) => (selectedCharacter.magicModifiers[wand.name] || 0) >= 5
+  );
+
+  if (allAtMaximum) {
+    return (
+      <div
+        style={{
+          padding: "1rem",
+          backgroundColor: theme.surface,
+          border: `1px solid ${theme.border}`,
+          borderRadius: "6px",
+          color: theme.textSecondary,
+          textAlign: "center",
+        }}
+      >
+        All wand modifiers are already at maximum (+5). You cannot use this
+        activity.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: "1rem" }}>
+      <label
+        style={{
+          display: "block",
+          fontSize: "0.875rem",
+          fontWeight: "600",
+          color: theme.text,
+          marginBottom: "0.5rem",
+        }}
+      >
+        Wand Modifier to Increase:
+      </label>
+      <select
+        value={selectedWandModifier || ""}
+        onChange={(e) => onWandModifierChange(e.target.value)}
+        disabled={!canEdit()}
+        style={{
+          width: "100%",
+          padding: "0.75rem",
+          border: `1px solid ${theme.border}`,
+          borderRadius: "6px",
+          backgroundColor: theme.surface,
+          color: theme.text,
+          fontSize: "14px",
+        }}
+      >
+        <option value="">Select a wand modifier...</option>
+        {allWandModifiers.map((wand) => {
+          const currentValue = selectedCharacter.magicModifiers[wand.name] || 0;
+          const isAtMaximum = currentValue >= 5;
+          const dc = calculateWandStatIncreaseDC(selectedCharacter, wand.name);
+
+          return (
+            <option
+              key={wand.name}
+              value={wand.name}
+              disabled={isAtMaximum}
+              style={{
+                color: isAtMaximum ? theme.textSecondary : theme.text,
+                backgroundColor: isAtMaximum ? theme.surface : theme.background,
+              }}
+            >
+              {wand.displayName} ({formatModifier(currentValue)}) - DC {dc}
+              {isAtMaximum ? " (MAX)" : ""}
+            </option>
+          );
+        })}
+      </select>
+
+      {selectedWandModifier && (
+        <div
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.75rem",
+            backgroundColor: theme.primary + "10",
+            border: `1px solid ${theme.primary}`,
+            borderRadius: "6px",
+            fontSize: "14px",
+            color: theme.text,
+          }}
+        >
+          <strong>DC Required:</strong>{" "}
+          {calculateWandStatIncreaseDC(selectedCharacter, selectedWandModifier)}
+          <br />
+          <strong>Current:</strong>{" "}
+          {formatModifier(
+            selectedCharacter.magicModifiers[selectedWandModifier] || 0
+          )}{" "}
+          →<strong> After Success:</strong>{" "}
+          {formatModifier(
+            (selectedCharacter.magicModifiers[selectedWandModifier] || 0) + 1
+          )}
+          <br />
+          <small style={{ color: theme.textSecondary }}>
+            Roll: d20 +{" "}
+            {formatModifier(
+              selectedCharacter.magicModifiers[selectedWandModifier] || 0
+            )}{" "}
+            vs DC{" "}
+            {calculateWandStatIncreaseDC(
+              selectedCharacter,
+              selectedWandModifier
+            )}
+          </small>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const DowntimeForm = ({
   user,
@@ -263,16 +400,19 @@ const DowntimeForm = ({
         {
           activity: "",
           selectedClass: "",
+          selectedWandModifier: "", // For Increase Wand Stat activities
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
           selectedClass: "",
+          selectedWandModifier: "", // For Increase Wand Stat activities
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
           selectedClass: "",
+          selectedWandModifier: "", // For Increase Wand Stat activities
           successes: [false, false, false, false, false],
         },
       ],
@@ -560,6 +700,24 @@ const DowntimeForm = ({
     }
     return true;
   }, [formData.activities]);
+
+  const validateWandStatIncreaseActivities = useCallback(() => {
+    for (let i = 0; i < formData.activities.length; i++) {
+      const activity = formData.activities[i];
+
+      if (activityRequiresWandSelection(activity.activity)) {
+        const validation = validateWandStatIncreaseActivity(
+          activity,
+          selectedCharacter
+        );
+        if (!validation.valid) {
+          alert(`Activity ${i + 1}: ${validation.message}`);
+          return false;
+        }
+      }
+    }
+    return true;
+  }, [formData.activities, selectedCharacter]);
 
   const validateSpellActivities = useCallback(() => {
     for (let i = 0; i < formData.activities.length; i++) {
@@ -903,6 +1061,12 @@ const DowntimeForm = ({
           ? shouldUseCustomDiceForActivity(value)
           : wasCustomDice;
 
+      const wasWandIncrease = activityRequiresWandSelection(previousActivity);
+      const willBeWandIncrease =
+        field === "activity"
+          ? activityRequiresWandSelection(value)
+          : wasWandIncrease;
+
       setFormData((prev) => ({
         ...prev,
         activities: prev.activities.map((activity, i) =>
@@ -914,6 +1078,16 @@ const DowntimeForm = ({
       const assignment = rollAssignments[activityKey];
 
       if (field === "activity") {
+        // If changing from wand increase activity, reset wand modifier selection
+        if (wasWandIncrease && !willBeWandIncrease) {
+          setFormData((prev) => ({
+            ...prev,
+            activities: prev.activities.map((activity, i) =>
+              i === index ? { ...activity, selectedWandModifier: "" } : activity
+            ),
+          }));
+        }
+
         if (wasCustomDice && !willBeCustomDice) {
           setRollAssignments((prev) => ({
             ...prev,
@@ -1115,7 +1289,7 @@ const DowntimeForm = ({
   const editable = canEdit();
 
   const renderDiceValue = useCallback(
-    (assignment, dicePool, isSecond = false) => {
+    (assignment, dicePool, isSecond = false, activity = null) => {
       const diceIndexKey = isSecond ? "secondDiceIndex" : "diceIndex";
       const skillKey = isSecond ? "secondSkill" : "skill";
       const wandKey = isSecond ? "secondWandModifier" : "wandModifier";
@@ -1185,6 +1359,76 @@ const DowntimeForm = ({
         assignment[diceIndexKey] !== undefined
       ) {
         const diceValue = dicePool[assignment[diceIndexKey]];
+
+        // Special handling for wand increase activities
+        if (activity && activityRequiresWandSelection(activity.activity)) {
+          const selectedWandModifier = activity.selectedWandModifier;
+
+          if (!selectedWandModifier) {
+            return (
+              <div style={styles.assignedDice}>
+                <div style={styles.diceValue}>{diceValue}</div>
+                <div style={styles.total}>
+                  Select a wand modifier to see total
+                </div>
+              </div>
+            );
+          }
+
+          const currentWandValue =
+            selectedCharacter.magicModifiers?.[selectedWandModifier] || 0;
+          const totalRoll = diceValue + currentWandValue;
+          const dc = calculateWandStatIncreaseDC(
+            selectedCharacter,
+            selectedWandModifier
+          );
+          const success = totalRoll >= dc;
+
+          const wandDisplayNames = {
+            charms: "Charms",
+            transfiguration: "Transfiguration",
+            jinxesHexesCurses: "JHC",
+            healing: "Healing",
+            divinations: "Divinations",
+          };
+
+          return (
+            <div style={styles.assignedDice}>
+              <div style={styles.diceValue}>
+                {totalRoll} {success ? "✅" : "❌"}
+              </div>
+              <div style={styles.total}>
+                Roll: {diceValue} + {formatModifier(currentWandValue)} ={" "}
+                {totalRoll}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.875rem",
+                  marginTop: "0.25rem",
+                  color: theme.textSecondary,
+                }}
+              >
+                DC {dc}: {success ? "SUCCESS!" : "Failed"}
+              </div>
+              {success && (
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    marginTop: "0.25rem",
+                    color: "#10b981",
+                    fontWeight: "600",
+                  }}
+                >
+                  {wandDisplayNames[selectedWandModifier] ||
+                    selectedWandModifier}{" "}
+                  → {formatModifier(currentWandValue + 1)}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Regular skill/wand modifier handling
         const skillName = assignment[skillKey];
         const wandModifier = assignment[wandKey];
 
@@ -1218,7 +1462,15 @@ const DowntimeForm = ({
 
       return null;
     },
-    [getModifierValue, theme.textSecondary, styles]
+    [
+      getModifierValue,
+      theme.textSecondary,
+      styles,
+      selectedCharacter,
+      activityRequiresWandSelection,
+      calculateWandStatIncreaseDC,
+      formatModifier,
+    ]
   );
 
   const renderSpecialActivityInfo = useCallback(
@@ -1434,6 +1686,7 @@ const DowntimeForm = ({
             iconAndTitle = "Spell Attempt";
             bgColor = theme.primary;
             break;
+
           default:
             iconAndTitle = "Special Activity";
         }
@@ -1488,6 +1741,55 @@ const DowntimeForm = ({
         return null;
       }
 
+      // For wand increase activities, we need dice assignment but no skill selector
+      if (activityRequiresWandSelection(activityText)) {
+        return (
+          <div style={styles.diceAssignment}>
+            <div>
+              <label style={styles.label}>Assigned Die</label>
+              {renderDiceValue(assignment, dicePool, false) || (
+                <select
+                  style={styles.select}
+                  value=""
+                  onChange={(e) =>
+                    diceManager.functions.assignDice(
+                      index,
+                      parseInt(e.target.value),
+                      false
+                    )
+                  }
+                  disabled={!editable}
+                >
+                  <option value="">Select die...</option>
+                  {diceManager.functions.getSortedDiceOptions
+                    .filter(
+                      ({ index: diceIndex }) =>
+                        !diceManager.functions.isDiceAssigned(diceIndex)
+                    )
+                    .map(({ value, index: diceIndex }) => (
+                      <option key={diceIndex} value={diceIndex}>
+                        {value}
+                      </option>
+                    ))}
+                </select>
+              )}
+              {assignment.diceIndex !== null &&
+                assignment.diceIndex !== undefined &&
+                editable && (
+                  <button
+                    style={styles.removeButton}
+                    onClick={() =>
+                      diceManager.functions.unassignDice(index, false)
+                    }
+                  >
+                    Remove
+                  </button>
+                )}
+            </div>
+          </div>
+        );
+      }
+
       if (activityRequiresDualChecks(activityText)) {
         const hasSecondDieAssigned =
           assignment.secondDiceIndex !== null &&
@@ -1527,7 +1829,7 @@ const DowntimeForm = ({
 
               <div style={{ marginTop: "0.5rem" }}>
                 <label style={styles.label}>Primary Die</label>
-                {renderDiceValue(assignment, dicePool, false) || (
+                {renderDiceValue(assignment, dicePool, false, activity) || (
                   <select
                     style={styles.select}
                     value=""
@@ -1814,6 +2116,11 @@ const DowntimeForm = ({
       return;
     }
 
+    if (!validateWandStatIncreaseActivities()) {
+      setIsSubmitting(false);
+      return;
+    }
+
     if (!validateSpellActivities()) {
       setIsSubmitting(false);
       return;
@@ -1884,6 +2191,7 @@ const DowntimeForm = ({
     rollAssignments,
     selectedSpells,
     validateStudyActivities,
+    validateWandStatIncreaseActivities,
     validateSpellActivities,
     currentSheet,
     supabase,
@@ -1997,6 +2305,9 @@ const DowntimeForm = ({
             const isSpellActivity = activityRequiresSpellSelection(
               activity.activity
             );
+            const isWandIncreaseActivity = activityRequiresWandSelection(
+              activity.activity
+            );
 
             return (
               <div key={index} style={styles.activityCard}>
@@ -2050,6 +2361,7 @@ const DowntimeForm = ({
 
                   {!activityRequiresDualChecks(activity.activity) &&
                     !isSpellActivity &&
+                    !isWandIncreaseActivity &&
                     activity.activity &&
                     !activityRequiresNoDiceRoll(activity.activity) &&
                     !shouldUseCustomDiceForActivity(activity.activity) && (
@@ -2064,6 +2376,17 @@ const DowntimeForm = ({
                         selectedCharacter={selectedCharacter}
                       />
                     )}
+
+                  {isWandIncreaseActivity && (
+                    <WandModifierSelector
+                      selectedCharacter={selectedCharacter}
+                      selectedWandModifier={activity.selectedWandModifier}
+                      onWandModifierChange={(value) =>
+                        updateActivity(index, "selectedWandModifier", value)
+                      }
+                      canEdit={canEdit}
+                    />
+                  )}
 
                   {(activityRequiresDualChecks(activity.activity) ||
                     isSpellActivity) && (

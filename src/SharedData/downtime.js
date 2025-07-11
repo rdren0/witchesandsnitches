@@ -54,7 +54,7 @@ export const downtime = {
     activities: [
       "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots",
       "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots",
-      "Increase Wand Stat - Roll against a DC based on the current Wand Stat",
+      "Increase Wand Stat - Roll d20 + current modifier vs DC (11 + current modifier) to increase a wand modifier by +1 (max +5)",
     ],
   },
 
@@ -184,7 +184,7 @@ export const classes = [
   "Ghoul Studies",
   "Herbology",
   "History of Magic",
-  "Magical Creatures	",
+  "Magical Creatures",
   "Magical Theory",
   "Muggle Studies",
   "Potions",
