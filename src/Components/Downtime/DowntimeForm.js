@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllActivities, downtime, classes } from "../../SharedData/downtime";
 import { formatModifier } from "../CharacterSheet/utils";
@@ -6,14 +6,12 @@ import { formatModifier } from "../CharacterSheet/utils";
 import {
   calculateModifier,
   activityRequiresDualChecks,
-  getActivitySkillInfo,
   activityRequiresNoDiceRoll,
   isMultiSessionActivity,
   shouldUseCustomDiceForActivity,
   getCustomDiceTypeForActivity,
   getMultiSessionInfo,
   getSpecialActivityInfo,
-  validateSkillName,
   activityRequiresSpellSelection,
   activityRequiresExtraDie,
 } from "./downtimeHelpers";
@@ -22,8 +20,7 @@ import SpellSelector from "./SpellSelector";
 import DicePoolManager from "./DicePoolManager";
 
 import { spellsData } from "../SpellBook/spells";
-import { useRollFunctions } from "../utils/diceRoller";
-import { getModifierInfo, getSpellModifier } from "../SpellBook/utils";
+import { getSpellModifier } from "../SpellBook/utils";
 
 const DowntimeForm = ({
   user,
@@ -302,8 +299,6 @@ const DowntimeForm = ({
   const [researchedSpells, setResearchedSpells] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
 
-  const { attemptSpell, rollResearch } = useRollFunctions();
-
   useEffect(() => {
     if (initialFormData && !hasInitialized) {
       if (initialFormData.activities) {
@@ -493,51 +488,49 @@ const DowntimeForm = ({
     [canEdit]
   );
 
-  const calculateResearchDC = (
-    playerYear,
-    spellYear,
-    spellName,
-    selectedCharacter
-  ) => {
-    let baseDC = 8 + 2 * playerYear;
+  const calculateResearchDC = useCallback(
+    (playerYear, spellYear, spellName, selectedCharacter) => {
+      let baseDC = 8 + 2 * playerYear;
 
-    const yearDifference = spellYear - playerYear;
-    if (yearDifference > 0) {
-      baseDC += 2 * playerYear;
-    } else if (yearDifference < 0) {
-      baseDC += yearDifference * 2;
-    }
+      const yearDifference = spellYear - playerYear;
+      if (yearDifference > 0) {
+        baseDC += 2 * playerYear;
+      } else if (yearDifference < 0) {
+        baseDC += yearDifference * 2;
+      }
 
-    const difficultSpells = [
-      "Abscondi",
-      "Pellucidi Pellis",
-      "Sagittario",
-      "Confringo",
-      "Devieto",
-      "Stupefy",
-      "Petrificus Totalus",
-      "Protego",
-      "Protego Maxima",
-      "Finite Incantatem",
-      "Bombarda",
-      "Episkey",
-      "Expelliarmus",
-      "Incarcerous",
-    ];
+      const difficultSpells = [
+        "Abscondi",
+        "Pellucidi Pellis",
+        "Sagittario",
+        "Confringo",
+        "Devieto",
+        "Stupefy",
+        "Petrificus Totalus",
+        "Protego",
+        "Protego Maxima",
+        "Finite Incantatem",
+        "Bombarda",
+        "Episkey",
+        "Expelliarmus",
+        "Incarcerous",
+      ];
 
-    if (difficultSpells.includes(spellName)) {
-      baseDC += 3;
-    }
+      if (difficultSpells.includes(spellName)) {
+        baseDC += 3;
+      }
 
-    return Math.max(5, baseDC);
-  };
+      return Math.max(5, baseDC);
+    },
+    []
+  );
 
   const getSpellData = useCallback((spellName) => {
     if (!spellName) return null;
 
     for (const [subject, subjectData] of Object.entries(spellsData)) {
       if (subjectData.levels) {
-        for (const [level, levelSpells] of Object.entries(subjectData.levels)) {
+        for (const [, levelSpells] of Object.entries(subjectData.levels)) {
           const spell = levelSpells.find((s) => s.name === spellName);
           if (spell) {
             return {
@@ -786,8 +779,6 @@ const DowntimeForm = ({
 
   const updateSpellProgressOnSubmission = useCallback(async () => {
     try {
-      const characterOwnerDiscordId = user.user_metadata.provider_id;
-
       for (let i = 0; i < formData.activities.length; i++) {
         const activity = formData.activities[i];
         const activityKey = `activity${i + 1}`;
@@ -872,14 +863,12 @@ const DowntimeForm = ({
     }
   }, [
     selectedCharacter,
-    user,
     formData.activities,
     rollAssignments,
     selectedSpells,
     dicePool,
     getSpellData,
     calculateResearchDC,
-    getSpellModifier,
     updateSpellProgressSummary,
   ]);
 
@@ -1482,12 +1471,6 @@ const DowntimeForm = ({
       }
 
       if (activityRequiresExtraDie(activityText)) {
-        const assignmentKey = `activity${index + 1}`;
-        const spellSelections = selectedSpells[assignmentKey] || {
-          first: "",
-          second: "",
-        };
-
         return <div style={{ marginTop: "1rem", textAlign: "center" }}></div>;
       }
 
@@ -1730,8 +1713,6 @@ const DowntimeForm = ({
       diceManager.data.dualCheckActivities.length,
       dicePool,
       styles,
-      theme.primary,
-      selectedSpells,
     ]
   );
 
@@ -2013,7 +1994,6 @@ const DowntimeForm = ({
             const activityDescription = getActivityDescription(
               activity.activity
             );
-            const skillInfo = getActivitySkillInfo(activity.activity);
             const isSpellActivity = activityRequiresSpellSelection(
               activity.activity
             );

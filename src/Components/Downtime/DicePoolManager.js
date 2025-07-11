@@ -6,7 +6,6 @@ import {
   activityRequiresExtraDie,
 } from "./downtimeHelpers";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { getDiscordWebhook } from "../../App/const";
 
 const DicePoolManager = ({
   dicePool,
@@ -101,60 +100,7 @@ const DicePoolManager = ({
     setExtraDiceAssignments,
   ]);
 
-  const sendDiscordMessage = async (diceResults) => {
-    if (!selectedCharacter?.gameSession) {
-      console.log("No game session found for Discord message");
-      return;
-    }
-
-    const discordWebhookUrl = getDiscordWebhook(selectedCharacter.gameSession);
-
-    if (!discordWebhookUrl) {
-      console.log("No Discord webhook configured for this game session");
-      return;
-    }
-
-    try {
-      const mainDice = diceResults.slice(0, 6);
-      const sortedDice = [...mainDice].sort((a, b) => b - a);
-
-      const embed = {
-        title: `${selectedCharacter.name} - Downtime Dice Pool`,
-        description: "🎲 **Dice rolled for downtime activities**",
-        color: 0x3b82f6,
-        fields: [
-          {
-            name: "Dice Pool Results",
-            value: `[${sortedDice.join(", ")}]`,
-            inline: false,
-          },
-        ],
-        footer: {
-          text: `Witches and Snitches - Downtime • Today at ${new Date().toLocaleTimeString(
-            [],
-            {
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          )}`,
-        },
-      };
-
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ embeds: [embed] }),
-      });
-
-      console.log("Discord message sent successfully");
-    } catch (error) {
-      console.error("Error sending Discord message:", error);
-    }
-  };
-
-  const rollDice = useCallback(async () => {
+  const rollDice = useCallback(() => {
     if (!canEdit()) return;
 
     const requiredDiceCount = getRequiredDiceCount();
@@ -180,22 +126,60 @@ const DicePoolManager = ({
       });
       return resetAssignments;
     });
-
-    await sendDiscordMessage(newPool);
   }, [
     canEdit,
-    getRequiredDiceCount,
     setDicePool,
     setExtraDiceAssignments,
     setRollAssignments,
-    selectedCharacter,
+    getRequiredDiceCount,
   ]);
+
+  const addExtraDieForActivity = useCallback(
+    (activityKey) => {
+      if (!canEdit()) return;
+
+      const extraDie = Math.floor(Math.random() * 20) + 1;
+      const newExtraDiceIndex = dicePool.length;
+
+      setDicePool((prev) => [...prev, extraDie]);
+      setExtraDiceAssignments((prev) => ({
+        ...prev,
+        [activityKey]: newExtraDiceIndex,
+      }));
+    },
+    [canEdit, dicePool.length, setDicePool, setExtraDiceAssignments]
+  );
+
+  const isDiceAssigned = (diceIndex) => {
+    const isAssignedToActivities = Object.values(rollAssignments).some(
+      (assignment) =>
+        assignment.diceIndex === diceIndex ||
+        assignment.secondDiceIndex === diceIndex ||
+        assignment.firstSpellDice === diceIndex ||
+        assignment.secondSpellDice === diceIndex
+    );
+
+    const isAssignedToRelationships = [
+      "relationship1",
+      "relationship2",
+      "relationship3",
+    ].some((key) => rollAssignments[key]?.diceIndex === diceIndex);
+
+    return isAssignedToActivities || isAssignedToRelationships;
+  };
 
   const assignDice = useCallback(
     (activityIndex, diceIndex, isSecondDie = false) => {
       if (!canEdit()) return;
 
       const assignmentKey = `activity${activityIndex + 1}`;
+
+      if (isSecondDie && diceIndex >= 6) {
+        setExtraDiceAssignments((prev) => ({
+          ...prev,
+          [assignmentKey]: diceIndex,
+        }));
+      }
 
       setRollAssignments((prev) => ({
         ...prev,
@@ -205,12 +189,22 @@ const DicePoolManager = ({
         },
       }));
     },
-    [canEdit, setRollAssignments]
+    [canEdit, setExtraDiceAssignments, setRollAssignments]
   );
 
   const unassignDice = useCallback(
-    (assignmentKey, isSecondDie = false) => {
+    (activityIndex, isSecondDie = false) => {
       if (!canEdit()) return;
+
+      const assignmentKey = `activity${activityIndex + 1}`;
+
+      if (isSecondDie) {
+        setExtraDiceAssignments((prev) => {
+          const updated = { ...prev };
+          delete updated[assignmentKey];
+          return updated;
+        });
+      }
 
       setRollAssignments((prev) => ({
         ...prev,
@@ -220,69 +214,8 @@ const DicePoolManager = ({
         },
       }));
     },
-    [canEdit, setRollAssignments]
+    [canEdit, setExtraDiceAssignments, setRollAssignments]
   );
-
-  const isDiceAssigned = useCallback(
-    (diceIndex) => {
-      for (const assignment of Object.values(rollAssignments)) {
-        if (
-          assignment.diceIndex === diceIndex ||
-          assignment.secondDiceIndex === diceIndex
-        ) {
-          return true;
-        }
-      }
-
-      return Object.values(extraDiceAssignments).includes(diceIndex);
-    },
-    [rollAssignments, extraDiceAssignments]
-  );
-
-  const getDiceUsage = useCallback(
-    (diceIndex) => {
-      for (const [key, assignment] of Object.entries(rollAssignments)) {
-        if (assignment.diceIndex === diceIndex) {
-          return { key, type: "primary" };
-        }
-        if (assignment.secondDiceIndex === diceIndex) {
-          return { key, type: "secondary" };
-        }
-      }
-
-      for (const [key, assignedIndex] of Object.entries(extraDiceAssignments)) {
-        if (assignedIndex === diceIndex) {
-          return { key, type: "extra" };
-        }
-      }
-
-      return null;
-    },
-    [rollAssignments, extraDiceAssignments]
-  );
-
-  const addExtraDice = useCallback(() => {
-    if (!canEdit() || shouldDisableExtraDie) return;
-
-    const roller = new DiceRoller();
-    const newDie = roller.roll("1d20").total;
-
-    setDicePool((prev) => [...prev, newDie]);
-
-    setRollAssignments((prev) => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach((key) => {
-        updated[key] = {
-          ...updated[key],
-          [updated[key].secondDiceIndex !== undefined &&
-          updated[key].secondDiceIndex !== null
-            ? "secondDiceIndex"
-            : "diceIndex"]: null,
-        };
-      });
-      return updated;
-    });
-  }, [canEdit, setDicePool, shouldDisableExtraDie, setRollAssignments]);
 
   const assignRelationshipDice = useCallback(
     (relationshipIndex, diceIndex) => {
@@ -384,13 +317,32 @@ const DicePoolManager = ({
             return updated;
           });
 
-          setRollAssignments((prev) => ({
-            ...prev,
-            [activityKey]: {
-              ...prev[activityKey],
-              secondDiceIndex: null,
-            },
-          }));
+          setRollAssignments((prev) => {
+            const updated = { ...prev };
+            Object.keys(updated).forEach((key) => {
+              const assignment = updated[key];
+              if (assignment.diceIndex > extraDiceIndex) {
+                updated[key] = {
+                  ...assignment,
+                  diceIndex: assignment.diceIndex - 1,
+                };
+              }
+              if (assignment.secondDiceIndex > extraDiceIndex) {
+                updated[key] = {
+                  ...assignment,
+                  secondDiceIndex: assignment.secondDiceIndex - 1,
+                };
+              }
+            });
+            return updated;
+          });
+        } else {
+          setDicePool((prev) => {
+            if (prev.length > 6) {
+              return prev.slice(0, -1);
+            }
+            return prev;
+          });
         }
       }
     },
@@ -406,18 +358,17 @@ const DicePoolManager = ({
     section: {
       marginBottom: "2rem",
       padding: "1.5rem",
-      backgroundColor: theme.cardBackground,
+      backgroundColor: theme.surface,
       borderRadius: "12px",
       border: `1px solid ${theme.border}`,
     },
     sectionTitle: {
       fontSize: "1.5rem",
-      fontWeight: "700",
+      fontWeight: "600",
       color: theme.text,
       marginBottom: "1rem",
-      display: "flex",
-      alignItems: "center",
-      gap: "0.5rem",
+      borderBottom: `2px solid ${theme.primary}`,
+      paddingBottom: "0.5rem",
     },
     diceGrid: {
       display: "grid",
@@ -426,13 +377,18 @@ const DicePoolManager = ({
       marginBottom: "1rem",
     },
     dice: {
-      padding: "1rem",
+      padding: "1rem 0.5rem",
       textAlign: "center",
       borderRadius: "8px",
       fontSize: "1.25rem",
       fontWeight: "bold",
       border: "2px solid",
       transition: "all 0.2s ease",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "80px",
     },
     diceAvailable: {
       backgroundColor: theme.success + "20",
@@ -444,6 +400,23 @@ const DicePoolManager = ({
       borderColor: theme.error,
       color: theme.error,
       opacity: 0.7,
+    },
+    diceExtra: {
+      backgroundColor: theme.warning + "20",
+      borderColor: theme.warning,
+      color: theme.warning,
+    },
+    diceSpell: {
+      backgroundColor: theme.primary + "20",
+      borderColor: theme.primary,
+      color: theme.primary,
+    },
+    extraDiceLabel: {
+      fontSize: "0.7rem",
+      fontWeight: "normal",
+      marginTop: "4px",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
     },
     buttonGroup: {
       display: "flex",
@@ -494,20 +467,25 @@ const DicePoolManager = ({
                 const isAssigned = isDiceAssigned(index);
                 const isExtra = index >= 6;
                 const isSpellDie = isExtra && index >= 6 + dualCheckCount;
+                const isDualCheckDie = isExtra && !isSpellDie;
+
+                // Determine dice styling
+                let diceStyle = { ...styles.dice };
+                if (isAssigned) {
+                  diceStyle = { ...diceStyle, ...styles.diceAssigned };
+                } else if (isSpellDie) {
+                  diceStyle = { ...diceStyle, ...styles.diceSpell };
+                } else if (isDualCheckDie) {
+                  diceStyle = { ...diceStyle, ...styles.diceExtra };
+                } else {
+                  diceStyle = { ...diceStyle, ...styles.diceAvailable };
+                }
 
                 return (
-                  <div
-                    key={index}
-                    style={{
-                      ...styles.dice,
-                      ...(isAssigned
-                        ? styles.diceAssigned
-                        : styles.diceAvailable),
-                    }}
-                  >
-                    {value}
+                  <div key={index} style={diceStyle}>
+                    <div>{value}</div>
                     {isExtra && (
-                      <div style={{ fontSize: "0.7rem", fontWeight: "normal" }}>
+                      <div style={styles.extraDiceLabel}>
                         {isSpellDie ? "Spell" : "Dual"}
                       </div>
                     )}
@@ -516,63 +494,144 @@ const DicePoolManager = ({
               })}
             </div>
 
-            <div style={{ fontSize: "0.9rem", color: theme.textSecondary }}>
-              Required: {requiredDiceCount} dice (6 base + {dualCheckCount}{" "}
-              dual-check + {spellActivityCount} spell)
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                color: theme.textSecondary,
+                fontSize: "0.875rem",
+                marginTop: "1rem",
+                flexWrap: "wrap",
+                gap: "1rem",
+              }}
+            >
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <span>Total: {dicePool.length} dice</span>
+                <span>
+                  Available:{" "}
+                  {dicePool.filter((_, index) => !isDiceAssigned(index)).length}
+                </span>
+                <span>
+                  Assigned:{" "}
+                  {dicePool.filter((_, index) => isDiceAssigned(index)).length}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                {dualCheckCount > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: theme.warning + "15",
+                      borderRadius: "4px",
+                      border: `1px solid ${theme.warning}30`,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.75rem", color: theme.warning }}>
+                      ★
+                    </span>
+                    <span style={{ color: theme.warning }}>
+                      +{dualCheckCount} Dual Check
+                    </span>
+                  </div>
+                )}
+
+                {spellActivityCount > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: theme.primary + "15",
+                      borderRadius: "4px",
+                      border: `1px solid ${theme.primary}30`,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.75rem", color: theme.primary }}>
+                      ✨
+                    </span>
+                    <span style={{ color: theme.primary }}>
+                      +{spellActivityCount} Spell Activity
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                fontSize: "0.9rem",
+                color: theme.textSecondary,
+                marginTop: "1rem",
+                padding: "0.75rem",
+                backgroundColor: theme.background,
+                borderRadius: "6px",
+                border: `1px solid ${theme.border}`,
+              }}
+            >
+              Required: {requiredDiceCount} dice (6 base
+              {dualCheckCount > 0 && ` + ${dualCheckCount} dual-check`}
+              {spellActivityCount > 0 && ` + ${spellActivityCount} spell`})
             </div>
           </>
         ) : (
-          <div style={{ color: theme.textSecondary, fontStyle: "italic" }}>
-            No dice rolled yet. Click "Roll Dice Pool" to begin.
+          <div
+            style={{
+              textAlign: "center",
+              padding: "2rem",
+              color: theme.textSecondary,
+              backgroundColor: theme.background,
+              borderRadius: "8px",
+              border: `1px solid ${theme.border}`,
+            }}
+          >
+            Click "Roll Dice Pool" to generate your dice for this downtime
+            session
+            <br />
+            <small style={{ marginTop: "0.5rem", display: "block" }}>
+              {requiredDiceCount > 6 && (
+                <>
+                  Will generate {requiredDiceCount} dice ({6} base
+                  {dualCheckCount > 0 && <> + {dualCheckCount} dual-check</>}
+                  {spellActivityCount > 0 && (
+                    <> + {spellActivityCount} spell activity</>
+                  )}
+                  )
+                </>
+              )}
+              {requiredDiceCount === 6 && "Will generate 6 base dice"}
+            </small>
           </div>
         )}
       </div>
     ),
+
     functions: {
       rollDice,
+      addExtraDieForActivity,
+      isDiceAssigned,
       assignDice,
       unassignDice,
-      isDiceAssigned,
-      getDiceUsage,
-      addExtraDice,
       assignRelationshipDice,
       handleCustomDiceRoll,
-      getSortedDiceOptions,
       removeExtraDiceForActivity,
-      addExtraDieForActivity: useCallback(
-        (activityKey) => {
-          if (!canEdit() || shouldDisableExtraDie) return;
-
-          const roller = new DiceRoller();
-          const newDie = roller.roll("1d20").total;
-          const newDiceIndex = dicePool.length;
-
-          setDicePool((prev) => [...prev, newDie]);
-          setExtraDiceAssignments((prev) => ({
-            ...prev,
-            [activityKey]: newDiceIndex,
-          }));
-
-          setRollAssignments((prev) => ({
-            ...prev,
-            [activityKey]: {
-              ...prev[activityKey],
-              secondDiceIndex: newDiceIndex,
-            },
-          }));
-        },
-        [
-          canEdit,
-          shouldDisableExtraDie,
-          dicePool.length,
-          setDicePool,
-          setExtraDiceAssignments,
-          setRollAssignments,
-        ]
-      ),
+      getSortedDiceOptions,
+      rollCustomDice,
     },
+
     data: {
       dualCheckActivities,
+      extraDiceCount,
+      shouldDisableExtraDie,
+      requiredDiceCount,
+      spellActivitiesCount: spellActivityCount,
     },
   };
 };
