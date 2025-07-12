@@ -52,9 +52,9 @@ export const downtime = {
     description:
       "Activities focused on improving character abilities and skills",
     activities: [
-      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots",
-      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots",
-      "Increase Wand Stat - Roll d20 + current modifier vs DC (11 + current modifier) to increase a wand modifier by +1 (max +5)",
+      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots. DC equals current ability score",
+      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots. Nat 20 gives two successes; if nat 20 on third attempt, gain one success towards expertise. Proficiency DC equals associated ability score. Expertise DC equals associated ability score + prof bonus",
+      "Increase Wand Stat - Roll against a DC based on the current Wand Stat",
     ],
   },
 
@@ -64,7 +64,7 @@ export const downtime = {
     activities: [
       "Research Spells - Roll History of Magic to research a spell",
       "Attempt Spells - Practice casting any spell previously researched or attempted",
-      "Create a Spell - Must succeed on three separate checks using separate downtime slots",
+      "Create a Spell - Must succeed on three separate checks using separate downtime slots per attempt: Magical Theory Check, Wand Modifier Check, and Spellcasting Ability Check",
       "Studying - Improve performance in classes through focused study",
     ],
   },
@@ -94,6 +94,7 @@ export const downtime = {
       "Create a New Recipe - Must succeed on three separate checks using separate downtime slots",
     ],
   },
+
   herbology_advanced: {
     name: "Advanced Herbology",
     description: "Advanced plant manipulation and engineering",
@@ -115,15 +116,7 @@ export const downtime = {
     name: "Special Magical Arts",
     description: "Advanced and specialized magical practices",
     activities: [
-      "Animagus Form (RP) - Engage in roleplay to explore an Animagus transformation",
-    ],
-  },
-
-  custom: {
-    name: "Custom Activities",
-    description: "Player-proposed activities subject to GM approval",
-    activities: [
-      "Custom Activity - Propose your own activity (GM approval required)",
+      "Animagus Form - Advanced magical transformation requiring extensive training and multiple attempts",
     ],
   },
 };

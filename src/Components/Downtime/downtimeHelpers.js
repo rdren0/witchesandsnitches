@@ -86,6 +86,13 @@ export const getActivitySkillInfo = (activityText) => {
     };
   }
 
+  if (text.includes("create a spell")) {
+    return {
+      type: "locked",
+      skills: ["magicalTheory"],
+    };
+  }
+
   if (text.includes("brew a potion")) {
     return {
       type: "locked",
@@ -333,6 +340,282 @@ export const calculateModifier = (skillOrWandName, selectedCharacter) => {
   return abilityMod;
 };
 
+export const activityRequiresAbilitySelection = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+  return text.includes("increase an ability score");
+};
+
+export const getAvailableAbilityScoresForIncrease = (selectedCharacter) => {
+  const abilities = [
+    { name: "strength", displayName: "Strength" },
+    { name: "dexterity", displayName: "Dexterity" },
+    { name: "constitution", displayName: "Constitution" },
+    { name: "intelligence", displayName: "Intelligence" },
+    { name: "wisdom", displayName: "Wisdom" },
+    { name: "charisma", displayName: "Charisma" },
+  ];
+
+  return abilities.filter((ability) => {
+    const currentValue =
+      selectedCharacter?.abilityScores?.[ability.name] ||
+      selectedCharacter?.[ability.name] ||
+      10;
+
+    return currentValue < 20;
+  });
+};
+
+export const calculateAbilityScoreIncreaseDC = (
+  selectedCharacter,
+  abilityName
+) => {
+  if (!selectedCharacter || !abilityName) return 10;
+
+  const currentScore =
+    selectedCharacter.abilityScores?.[abilityName] ||
+    selectedCharacter[abilityName] ||
+    10;
+
+  return currentScore;
+};
+
+export const getAbilityScoreModifier = (selectedCharacter, abilityName) => {
+  if (!selectedCharacter || !abilityName) return 0;
+
+  const currentScore =
+    selectedCharacter.abilityScores?.[abilityName] ||
+    selectedCharacter[abilityName] ||
+    10;
+
+  return Math.floor((currentScore - 10) / 2);
+};
+
+export const validateAbilityScoreIncreaseActivity = (
+  activity,
+  selectedCharacter
+) => {
+  if (!activityRequiresAbilitySelection(activity.activity))
+    return { valid: true };
+
+  if (!activity.selectedAbilityScore) {
+    return {
+      valid: false,
+      message: "Please select an ability score to increase.",
+    };
+  }
+
+  const currentValue =
+    selectedCharacter?.abilityScores?.[activity.selectedAbilityScore] ||
+    selectedCharacter?.[activity.selectedAbilityScore] ||
+    10;
+
+  if (currentValue >= 20) {
+    return {
+      valid: false,
+      message: "This ability score is already at maximum (20).",
+    };
+  }
+
+  return { valid: true };
+};
+
+export const MULTI_SUCCESS_ACTIVITIES = {
+  "increase an ability score": {
+    requiredSuccesses: 3,
+    getKey: (activity) => `ability_${activity.selectedAbilityScore}`,
+    getDC: (character, activity) => {
+      const currentScore =
+        character?.abilityScores?.[activity.selectedAbilityScore] || 10;
+      return currentScore;
+    },
+  },
+  "gain proficiency or expertise": {
+    requiredSuccesses: 3,
+    getKey: (activity) =>
+      `skill_${activity.selectedSkill}_${
+        activity.targetLevel || "proficiency"
+      }`,
+    getDC: (character, activity) => {
+      const skillName = activity.selectedSkill;
+      const targetLevel = activity.targetLevel || "proficiency";
+
+      if (!skillName || !character?.abilityScores) return 10;
+
+      const skill = allSkills.find((s) => s.name === skillName);
+      if (!skill) return 10;
+
+      const abilityScore = character.abilityScores[skill.ability] || 10;
+
+      if (targetLevel === "expertise") {
+        const profBonus = Math.ceil(character.level / 4) + 1;
+        return abilityScore + profBonus;
+      }
+
+      return abilityScore;
+    },
+    handleNat20: (currentSuccesses, isThirdAttempt) => {
+      if (isThirdAttempt) {
+        return { successes: currentSuccesses + 1, bonusExpertiseSuccess: 1 };
+      }
+
+      return { successes: currentSuccesses + 2, bonusExpertiseSuccess: 0 };
+    },
+  },
+  "create a spell": {
+    requiredSuccesses: 3,
+    getKey: (activity) => `spell_creation_${activity.spellName || "unnamed"}`,
+    getDC: (character, activity) => {
+      const spellLevel = activity.spellLevel || 1;
+      const currentYear = character.year || 1;
+      return 17 + spellLevel - currentYear;
+    },
+    getCheckTypes: () => [
+      "Magical Theory Check",
+      "Wand Modifier Check",
+      "Spellcasting Ability Check",
+    ],
+    handleNat20: (currentSuccesses, isThirdAttempt) => {
+      return { successes: currentSuccesses + 1, bonusExpertiseSuccess: 0 };
+    },
+    requiresSeparateSlots: true,
+    description:
+      "Create a new spell through theoretical research, wand experimentation, and practical spellcasting tests",
+  },
+  "invent a potion": {
+    requiredSuccesses: 3,
+    getKey: (activity) =>
+      `potion_invention_${activity.potionName || "unnamed"}`,
+    getDC: () => 15,
+  },
+  "create a new recipe": {
+    requiredSuccesses: 3,
+    getKey: (activity) => `recipe_creation_${activity.recipeName || "unnamed"}`,
+    getDC: () => 12,
+  },
+  "engineer plants": {
+    requiredSuccesses: 3,
+    getKey: (activity) =>
+      `plant_engineering_${activity.plantName || "unnamed"}`,
+    getDC: () => 16,
+  },
+};
+
+export const getMultiSuccessActivityInfo = (activityText) => {
+  if (!activityText) return null;
+
+  const text = activityText.toLowerCase();
+
+  for (const [key, config] of Object.entries(MULTI_SUCCESS_ACTIVITIES)) {
+    if (text.includes(key)) {
+      return {
+        type: key,
+        config: config,
+        description: `Requires ${config.requiredSuccesses} successful checks across separate downtime sessions`,
+      };
+    }
+  }
+
+  return null;
+};
+
+export const calculateSuccessProgress = (
+  character,
+  activity,
+  currentSuccesses = 0
+) => {
+  const info = getMultiSuccessActivityInfo(activity.activity);
+  if (!info) return null;
+
+  const dc = info.config.getDC(character, activity);
+  const key = info.config.getKey(activity);
+
+  return {
+    key,
+    currentSuccesses,
+    requiredSuccesses: info.config.requiredSuccesses,
+    dc,
+    isComplete: currentSuccesses >= info.config.requiredSuccesses,
+  };
+};
+
+export const activityRequiresSkillSelection = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+  return text.includes("gain proficiency or expertise");
+};
+
+export const activityRequiresNameInput = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+  return (
+    text.includes("invent a potion") ||
+    text.includes("create a new recipe") ||
+    text.includes("engineer plants")
+  );
+};
+
+export const getAvailableSkillsForProficiency = (character) => {
+  if (!character) return [];
+
+  return allSkills.filter((skill) => {
+    const currentLevel =
+      character.skillProficiencies?.[skill.name] ||
+      character.skill_proficiencies?.[skill.name] ||
+      0;
+    return currentLevel < 2;
+  });
+};
+
+export const getTargetProficiencyLevel = (character, skillName) => {
+  if (!character || !skillName) return "proficiency";
+
+  const currentLevel =
+    character.skillProficiencies?.[skillName] ||
+    character.skill_proficiencies?.[skillName] ||
+    0;
+  return currentLevel === 0 ? "proficiency" : "expertise";
+};
+
+export const processSuccessResult = (
+  character,
+  activity,
+  diceResult,
+  currentSuccesses = 0
+) => {
+  const info = getMultiSuccessActivityInfo(activity.activity);
+  if (!info) return null;
+
+  const dc = info.config.getDC(character, activity);
+  const isSuccess = diceResult.total >= dc;
+  const isNat20 = diceResult.rollValue === 20;
+
+  let newSuccesses = currentSuccesses;
+  let bonusExpertiseSuccess = 0;
+
+  if (isSuccess) {
+    if (isNat20 && info.config.handleNat20) {
+      const isThirdAttempt = currentSuccesses === 2;
+      const result = info.config.handleNat20(currentSuccesses, isThirdAttempt);
+      newSuccesses = result.successes;
+      bonusExpertiseSuccess = result.bonusExpertiseSuccess || 0;
+    } else {
+      newSuccesses = currentSuccesses + 1;
+    }
+  }
+
+  const isComplete = newSuccesses >= info.config.requiredSuccesses;
+
+  return {
+    success: isSuccess,
+    newSuccesses,
+    bonusExpertiseSuccess,
+    isComplete,
+    dc,
+    key: info.config.getKey(activity),
+  };
+};
+
 export const validateSkillName = (skillName) => {
   if (!skillName) return false;
   return allSkills.some((skill) => skill.name === skillName);
@@ -485,7 +768,8 @@ export const activityRequiresSpecialRules = (activityText) => {
     shouldUseCustomDiceForActivity(activityText) ||
     activityRequiresExtraDie(activityText) ||
     activityRequiresWandSelection(activityText) ||
-    activityRequiresClassSelection(activityText)
+    activityRequiresClassSelection(activityText) ||
+    activityRequiresAbilitySelection(activityText)
   );
 };
 
@@ -510,14 +794,6 @@ export const getSpecialActivityInfo = (activityText) => {
   if (!activityText) return null;
   const text = activityText.toLowerCase();
 
-  // if (text.includes("increase wand stat")) {
-  //   return {
-  //     type: "wand_increase",
-  //     description:
-  //       "Select a wand modifier to increase. Roll d20 + current modifier value vs DC (11 + current modifier). Success increases the modifier by +1 (maximum +5).",
-  //   };
-  // }
-
   if (text.includes("studying")) {
     return {
       type: "class_study",
@@ -531,6 +807,14 @@ export const getSpecialActivityInfo = (activityText) => {
       type: "spell_research",
       description:
         "Research spells to learn their theory and prepare for casting attempts. Successful research allows future spell attempts.",
+    };
+  }
+
+  if (text.includes("increase an ability score")) {
+    return {
+      type: "ability_increase",
+      description:
+        "Select an ability score to increase. Roll d20 + current ability modifier vs DC (current ability score). Success increases the ability score by +1 (maximum 20).",
     };
   }
 

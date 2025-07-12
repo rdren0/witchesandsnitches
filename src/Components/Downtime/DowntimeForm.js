@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllActivities, downtime, classes } from "../../SharedData/downtime";
 import { formatModifier } from "../CharacterSheet/utils";
@@ -25,8 +31,9 @@ import DicePoolManager from "./DicePoolManager";
 
 import { spellsData } from "../SpellBook/spells";
 import { getSpellModifier } from "../SpellBook/utils";
+import { getActivitySkillInfo } from "./downtimeHelpers";
+import { allSkills } from "../../SharedData/data";
 
-// WandModifierSelector Component
 const WandModifierSelector = ({
   selectedCharacter,
   selectedWandModifier,
@@ -320,6 +327,120 @@ const DowntimeForm = ({
         justifyContent: "center",
         paddingTop: "1rem",
       },
+      makeSpellContainer: {
+        backgroundColor: theme.surface,
+        border: `1px solid ${theme.border}`,
+        borderRadius: "8px",
+        padding: "1rem",
+        marginTop: "0.5rem",
+      },
+      progressContainer: {
+        marginTop: "1rem",
+        padding: "1rem",
+        backgroundColor: theme.background,
+        borderRadius: "6px",
+        border: `1px solid ${theme.border}`,
+      },
+      progressHeader: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "1rem",
+      },
+      progressTitle: {
+        margin: 0,
+        fontSize: "1.1rem",
+        fontWeight: "600",
+        color: theme.text,
+      },
+      progressBadge: {
+        backgroundColor: theme.primary,
+        color: "white",
+        padding: "0.25rem 0.75rem",
+        borderRadius: "12px",
+        fontSize: "0.875rem",
+        fontWeight: "600",
+      },
+      checksList: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.75rem",
+        marginBottom: "1rem",
+      },
+      checkItem: {
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "0.75rem",
+        padding: "0.75rem",
+        borderRadius: "6px",
+        border: `1px solid ${theme.border}`,
+        backgroundColor: theme.surface,
+      },
+      checkItemCompleted: {
+        backgroundColor: theme.primary + "10",
+        borderColor: theme.primary,
+      },
+      checkItemCurrent: {
+        backgroundColor: theme.secondary + "10",
+        borderColor: theme.secondary,
+      },
+      checkIcon: {
+        width: "24px",
+        height: "24px",
+        borderRadius: "50%",
+        backgroundColor: theme.primary,
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "14px",
+        fontWeight: "bold",
+        flexShrink: 0,
+      },
+      checkContent: {
+        flex: 1,
+      },
+      checkName: {
+        fontSize: "0.95rem",
+        fontWeight: "600",
+        color: theme.text,
+        marginBottom: "0.25rem",
+      },
+      checkDescription: {
+        fontSize: "0.85rem",
+        color: theme.textSecondary,
+        lineHeight: 1.4,
+      },
+      currentCheckInfo: {
+        padding: "1rem",
+        backgroundColor: theme.secondary + "10",
+        border: `1px solid ${theme.secondary}`,
+        borderRadius: "6px",
+      },
+      currentCheckTitle: {
+        fontSize: "1rem",
+        fontWeight: "600",
+        color: theme.text,
+        marginBottom: "0.5rem",
+      },
+      dcInfo: {
+        fontSize: "0.95rem",
+        color: theme.text,
+        marginBottom: "0.5rem",
+      },
+      checkNote: {
+        fontSize: "0.85rem",
+        color: theme.textSecondary,
+        fontStyle: "italic",
+      },
+      completionMessage: {
+        padding: "1rem",
+        backgroundColor: theme.primary + "10",
+        border: `1px solid ${theme.primary}`,
+        borderRadius: "6px",
+        textAlign: "center",
+        color: theme.text,
+      },
     }),
     [theme]
   );
@@ -400,19 +521,19 @@ const DowntimeForm = ({
         {
           activity: "",
           selectedClass: "",
-          selectedWandModifier: "", // For Increase Wand Stat activities
+          selectedWandModifier: "",
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
           selectedClass: "",
-          selectedWandModifier: "", // For Increase Wand Stat activities
+          selectedWandModifier: "",
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
           selectedClass: "",
-          selectedWandModifier: "", // For Increase Wand Stat activities
+          selectedWandModifier: "",
           successes: [false, false, false, false, false],
         },
       ],
@@ -513,7 +634,26 @@ const DowntimeForm = ({
       return currentSheet.user_id === user?.id;
     return false;
   }, [isUserAdmin, currentSheet, user?.id]);
+  const activityRequiresMakeSpellInterface = (activityText) => {
+    if (!activityText) return false;
+    return activityText.toLowerCase().includes("make a spell");
+  };
 
+  const validateMakeSpellActivity = (activity) => {
+    if (!activity.spellName || activity.spellName.trim() === "") {
+      return { isValid: false, message: "Please enter a spell name" };
+    }
+
+    if (
+      !activity.spellLevel ||
+      activity.spellLevel < 1 ||
+      activity.spellLevel > 9
+    ) {
+      return { isValid: false, message: "Please select a valid spell level" };
+    }
+
+    return { isValid: true };
+  };
   const diceManager = DicePoolManager({
     dicePool,
     setDicePool,
@@ -1030,6 +1170,58 @@ const DowntimeForm = ({
     updateSpellProgressSummary,
   ]);
 
+  const updateMakeSpellProgress = async (
+    activity,
+    isSuccess,
+    isNaturalTwenty = false
+  ) => {
+    if (!selectedCharacter || !user?.user_metadata?.provider_id) return;
+
+    const currentProgress = activity.currentSuccesses || 0;
+
+    if (isSuccess) {
+      const newProgress = Math.min(currentProgress + 1, 3);
+
+      const updatedActivity = {
+        ...activity,
+        currentSuccesses: newProgress,
+        lastCheckType: [
+          "Magical Theory",
+          "Wand Modifier",
+          "Spellcasting Ability",
+        ][currentProgress],
+        lastCheckResult: {
+          success: true,
+          isNaturalTwenty,
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      if (newProgress >= 3) {
+        updatedActivity.completed = true;
+        updatedActivity.completedAt = new Date().toISOString();
+      }
+
+      return updatedActivity;
+    } else {
+      const updatedActivity = {
+        ...activity,
+        lastCheckType: [
+          "Magical Theory",
+          "Wand Modifier",
+          "Spellcasting Ability",
+        ][currentProgress],
+        lastCheckResult: {
+          success: false,
+          isNaturalTwenty,
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      return updatedActivity;
+    }
+  };
+
   const updateRollAssignment = useCallback(
     (activityIndex, field, value) => {
       if (!canEdit()) return;
@@ -1078,7 +1270,6 @@ const DowntimeForm = ({
       const assignment = rollAssignments[activityKey];
 
       if (field === "activity") {
-        // If changing from wand increase activity, reset wand modifier selection
         if (wasWandIncrease && !willBeWandIncrease) {
           setFormData((prev) => ({
             ...prev,
@@ -1360,7 +1551,6 @@ const DowntimeForm = ({
       ) {
         const diceValue = dicePool[assignment[diceIndexKey]];
 
-        // Special handling for wand increase activities
         if (activity && activityRequiresWandSelection(activity.activity)) {
           const selectedWandModifier = activity.selectedWandModifier;
 
@@ -1394,9 +1584,7 @@ const DowntimeForm = ({
 
           return (
             <div style={styles.assignedDice}>
-              <div style={styles.diceValue}>
-                {totalRoll} {success ? "✅" : "❌"}
-              </div>
+              <div style={styles.diceValue}>{totalRoll}</div>
               <div style={styles.total}>
                 Roll: {diceValue} + {formatModifier(currentWandValue)} ={" "}
                 {totalRoll}
@@ -1428,19 +1616,34 @@ const DowntimeForm = ({
           );
         }
 
-        // Regular skill/wand modifier handling
         const skillName = assignment[skillKey];
         const wandModifier = assignment[wandKey];
 
+        const activitySkillInfo = getActivitySkillInfo(activity?.activity);
+        let autoSelectedSkill = null;
+        if (activitySkillInfo?.type === "locked" && activitySkillInfo?.skills) {
+          autoSelectedSkill = isSecond
+            ? activitySkillInfo.skills[1]
+            : activitySkillInfo.skills[0];
+        }
+
         const hasSkill = skillName && skillName !== "";
         const hasWandModifier = wandModifier && wandModifier !== "";
-        const hasAnyModifier = hasSkill || hasWandModifier;
+        const hasAutoSkill = autoSelectedSkill && !hasSkill && !hasWandModifier;
+        const hasAnyModifier = hasSkill || hasWandModifier || hasAutoSkill;
 
         let modifierValue = 0;
+        let modifierSource = "";
+
         if (hasSkill) {
           modifierValue = getModifierValue(skillName);
+          modifierSource = skillName;
         } else if (hasWandModifier) {
           modifierValue = getModifierValue(wandModifier);
+          modifierSource = wandModifier;
+        } else if (hasAutoSkill) {
+          modifierValue = getModifierValue(autoSelectedSkill);
+          modifierSource = autoSelectedSkill;
         }
 
         const totalValue = diceValue + modifierValue;
@@ -1448,12 +1651,43 @@ const DowntimeForm = ({
         return (
           <div style={styles.assignedDice}>
             <div style={styles.diceValue}>
-              {hasAnyModifier ? totalValue : diceValue}
+              {/* Always show just the dice value in the main display */}
+              {diceValue}
             </div>
-            {hasAnyModifier && (
+            {/* Always show the breakdown if there's a modifier, or a message if no modifier */}
+            {hasAnyModifier ? (
               <div style={styles.total}>
-                Total: {diceValue} {formatModifier(modifierValue)} ={" "}
-                {totalValue}
+                {diceValue} {formatModifier(modifierValue)} = {totalValue}
+              </div>
+            ) : (
+              <div
+                style={{
+                  ...styles.total,
+                  color: theme.textSecondary,
+                  fontSize: "0.875rem",
+                }}
+              >
+                {isSecond
+                  ? "Select second skill/modifier"
+                  : "Select skill/modifier for total"}
+              </div>
+            )}
+            {/* Show modifier source if available */}
+            {hasAnyModifier && (
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: theme.textSecondary,
+                  marginTop: "0.25rem",
+                }}
+              >
+                Using:{" "}
+                {hasAutoSkill
+                  ? `${
+                      allSkills.find((s) => s.name === autoSelectedSkill)
+                        ?.displayName || autoSelectedSkill
+                    } (Auto)`
+                  : modifierSource}
               </div>
             )}
           </div>
@@ -1470,9 +1704,10 @@ const DowntimeForm = ({
       activityRequiresWandSelection,
       calculateWandStatIncreaseDC,
       formatModifier,
+      getActivitySkillInfo,
+      allSkills,
     ]
   );
-
   const renderSpecialActivityInfo = useCallback(
     (activityText) => {
       if (!activityText) return null;
@@ -1713,6 +1948,131 @@ const DowntimeForm = ({
     [theme, editable, diceManager.functions, formData.activities, styles]
   );
 
+  const getCheckDescription = (checkType) => {
+    switch (checkType) {
+      case "Magical Theory":
+        return "Roll History of Magic + Intelligence modifier to research the theoretical foundations";
+      case "Wand Modifier":
+        return "Roll with your appropriate Wand Modifier based on the spell's school";
+      case "Spellcasting Ability":
+        return "Roll with your Spellcasting Ability modifier to test practical application";
+      default:
+        return "";
+    }
+  };
+
+  const renderMakeSpellActivity = (activity, index) => {
+    const spellName = activity.spellName || "";
+    const spellLevel = activity.spellLevel || 1;
+    const currentProgress = activity.currentSuccesses || 0;
+    const checkTypes = [
+      "Magical Theory",
+      "Wand Modifier",
+      "Spellcasting Ability",
+    ];
+    const currentCheckType = checkTypes[currentProgress] || checkTypes[0];
+
+    const dc = 17 + spellLevel - (selectedCharacter?.year || 1);
+
+    return (
+      <div style={styles.makeSpellContainer}>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Spell Name</label>
+          <input
+            type="text"
+            value={spellName}
+            onChange={(e) => updateActivity(index, "spellName", e.target.value)}
+            placeholder="Enter the name of your new spell..."
+            style={styles.input}
+            disabled={!editable}
+          />
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Spell Level</label>
+          <select
+            value={spellLevel}
+            onChange={(e) =>
+              updateActivity(index, "spellLevel", parseInt(e.target.value))
+            }
+            style={styles.select}
+            disabled={!editable}
+          >
+            <option value={1}>1st Level</option>
+            <option value={2}>2nd Level</option>
+            <option value={3}>3rd Level</option>
+            <option value={4}>4th Level</option>
+            <option value={5}>5th Level</option>
+            <option value={6}>6th Level</option>
+            <option value={7}>7th Level</option>
+            <option value={8}>8th Level</option>
+            <option value={9}>9th Level</option>
+          </select>
+        </div>
+
+        <div style={styles.progressContainer}>
+          <div style={styles.progressHeader}>
+            <h4 style={styles.progressTitle}>Creation Progress</h4>
+            <div style={styles.progressBadge}>
+              {currentProgress}/3 Checks Complete
+            </div>
+          </div>
+
+          <div style={styles.checksList}>
+            {checkTypes.map((checkType, checkIndex) => {
+              const isCompleted = checkIndex < currentProgress;
+              const isCurrent = checkIndex === currentProgress;
+
+              return (
+                <div
+                  key={checkType}
+                  style={{
+                    ...styles.checkItem,
+                    ...(isCompleted ? styles.checkItemCompleted : {}),
+                    ...(isCurrent ? styles.checkItemCurrent : {}),
+                  }}
+                >
+                  <div style={styles.checkIcon}>
+                    {isCompleted ? "✓" : isCurrent ? "○" : "○"}
+                  </div>
+                  <div style={styles.checkContent}>
+                    <div style={styles.checkName}>{checkType}</div>
+                    <div style={styles.checkDescription}>
+                      {getCheckDescription(checkType)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {currentProgress < 3 && (
+            <div style={styles.currentCheckInfo}>
+              <div style={styles.currentCheckTitle}>
+                Next Check: {currentCheckType}
+              </div>
+              <div style={styles.dcInfo}>
+                <strong>DC {dc}</strong> (17 + {spellLevel} spell level -{" "}
+                {selectedCharacter?.year || 1} current year)
+              </div>
+              <div style={styles.checkNote}>
+                Natural 20 automatically succeeds but provides no additional
+                benefit
+              </div>
+            </div>
+          )}
+
+          {currentProgress >= 3 && (
+            <div style={styles.completionMessage}>
+              <strong>🎉 Spell Creation Complete!</strong>
+              <div>Your spell "{spellName}" has been successfully created.</div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderDiceAssignment = useCallback(
     (activity, index, assignment) => {
       const activityText = activity.activity;
@@ -1733,7 +2093,7 @@ const DowntimeForm = ({
             <div style={styles.diceAssignment}>
               <div>
                 <label style={styles.label}>Roll Result</label>
-                {renderDiceValue(assignment, dicePool, false)}
+                {renderDiceValue(assignment, dicePool, false, activity)}
               </div>
             </div>
           );
@@ -1741,13 +2101,12 @@ const DowntimeForm = ({
         return null;
       }
 
-      // For wand increase activities, we need dice assignment but no skill selector
       if (activityRequiresWandSelection(activityText)) {
         return (
           <div style={styles.diceAssignment}>
             <div>
               <label style={styles.label}>Assigned Die</label>
-              {renderDiceValue(assignment, dicePool, false) || (
+              {renderDiceValue(assignment, dicePool, false, activity) || (
                 <select
                   style={styles.select}
                   value=""
@@ -1885,6 +2244,7 @@ const DowntimeForm = ({
               <div style={{ marginTop: "0.5rem" }}>
                 <label style={styles.label}>Second Die</label>
 
+                {/* FIXED: Always show dice selection for second die, regardless of needsExtraDie status */}
                 {needsExtraDie && editable ? (
                   <button
                     onClick={() =>
@@ -1913,8 +2273,8 @@ const DowntimeForm = ({
                     {totalDualCheckActivities})
                   </button>
                 ) : (
-                  <>
-                    {renderDiceValue(assignment, dicePool, true) || (
+                  <div>
+                    {renderDiceValue(assignment, dicePool, true, activity) || (
                       <select
                         style={styles.select}
                         value=""
@@ -1927,7 +2287,14 @@ const DowntimeForm = ({
                         }
                         disabled={!editable}
                       >
-                        <option value="">Select die...</option>
+                        <option value="">
+                          {diceManager.functions.getSortedDiceOptions.filter(
+                            ({ index: diceIndex }) =>
+                              !diceManager.functions.isDiceAssigned(diceIndex)
+                          ).length === 0
+                            ? "No dice available - add extra die above"
+                            : "Select die..."}
+                        </option>
                         {diceManager.functions.getSortedDiceOptions
                           .filter(
                             ({ index: diceIndex }) =>
@@ -1952,7 +2319,7 @@ const DowntimeForm = ({
                           Remove
                         </button>
                       )}
-                  </>
+                  </div>
                 )}
               </div>
             </div>
@@ -1963,7 +2330,7 @@ const DowntimeForm = ({
           <div style={styles.diceAssignment}>
             <div>
               <label style={styles.label}>Primary Die</label>
-              {renderDiceValue(assignment, dicePool, false) || (
+              {renderDiceValue(assignment, dicePool, false, activity) || (
                 <select
                   style={styles.select}
                   value=""
@@ -2201,6 +2568,23 @@ const DowntimeForm = ({
     setActiveTab,
   ]);
 
+  const selectRef = useRef(null);
+
+  const scrollToSelectedOption = () => {
+    const selectElement = selectRef.current;
+    if (!selectElement) return;
+
+    const selectedIndex = selectElement.selectedIndex;
+    const selectedOption = selectElement.options[selectedIndex];
+
+    if (selectedOption) {
+      selectedOption.scrollIntoView({
+        block: "start",
+        inline: "nearest",
+      });
+    }
+  };
+
   return (
     <div style={styles.container}>
       {diceManager.component}
@@ -2331,9 +2715,18 @@ const DowntimeForm = ({
                     gap: "1rem",
                   }}
                 >
-                  <div style={styles.inputGroup}>
+                  <div
+                    style={{
+                      marginBottom: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
                     <label style={styles.label}>Activity Type</label>
+
                     <select
+                      ref={selectRef}
+                      onFocus={scrollToSelectedOption}
                       style={styles.select}
                       value={activity.activity || ""}
                       onChange={(e) =>
@@ -2343,18 +2736,24 @@ const DowntimeForm = ({
                     >
                       <option value="">Select Activity</option>
                       {Object.entries(downtime).map(
-                        ([categoryKey, categoryInfo]) => {
-                          return categoryInfo.activities.map(
-                            (activityName, actIndex) => (
-                              <option
-                                key={`${categoryKey}-${actIndex}`}
-                                value={activityName}
-                              >
-                                {activityName.split(" - ")[0]}
-                              </option>
-                            )
-                          );
-                        }
+                        ([categoryKey, categoryInfo]) => (
+                          <optgroup
+                            key={categoryKey}
+                            label={categoryInfo.name}
+                            title={categoryInfo.description}
+                          >
+                            {categoryInfo.activities.map(
+                              (activityName, actIndex) => (
+                                <option
+                                  key={`${categoryKey}-${actIndex}`}
+                                  value={activityName}
+                                >
+                                  {activityName.split(" - ")[0]}
+                                </option>
+                              )
+                            )}
+                          </optgroup>
+                        )
                       )}
                     </select>
                   </div>
@@ -2376,6 +2775,9 @@ const DowntimeForm = ({
                         selectedCharacter={selectedCharacter}
                       />
                     )}
+
+                  {activityRequiresMakeSpellInterface(activity.activity) &&
+                    renderMakeSpellActivity(activity, index)}
 
                   {isWandIncreaseActivity && (
                     <WandModifierSelector
@@ -2622,7 +3024,7 @@ const DowntimeForm = ({
                     </select>
                   </div>
                 </div>
-
+                {console.log({ assignment })}
                 {assignment.diceIndex !== null && assignment.skill && (
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Roll Result</label>
