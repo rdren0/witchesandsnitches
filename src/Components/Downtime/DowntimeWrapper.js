@@ -61,17 +61,17 @@ const DowntimeWrapper = ({
     activities: [
       {
         activity: "",
-        npc: "",
+        selectedClass: "",
         successes: [false, false, false, false, false],
       },
       {
         activity: "",
-        npc: "",
+        selectedClass: "",
         successes: [false, false, false, false, false],
       },
       {
         activity: "",
-        npc: "",
+        selectedClass: "",
         successes: [false, false, false, false, false],
       },
     ],
@@ -282,17 +282,17 @@ const DowntimeWrapper = ({
       activities: [
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
           successes: [false, false, false, false, false],
         },
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
           successes: [false, false, false, false, false],
         },
       ],
@@ -358,6 +358,11 @@ const DowntimeWrapper = ({
           { npcName: "", notes: "" },
         ],
         selectedMagicSchool: draft.selected_magic_school || "",
+        selectedSpells: draft.selected_spells || {
+          activity1: { first: "", second: "" },
+          activity2: { first: "", second: "" },
+          activity3: { first: "", second: "" },
+        },
       });
 
       setDicePool(draft.dice_pool || []);
@@ -374,6 +379,7 @@ const DowntimeWrapper = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
           },
           activity2: {
             diceIndex: null,
@@ -385,6 +391,7 @@ const DowntimeWrapper = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
           },
           activity3: {
             diceIndex: null,
@@ -396,6 +403,7 @@ const DowntimeWrapper = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
           },
           relationship1: {
             diceIndex: null,
@@ -468,6 +476,7 @@ const DowntimeWrapper = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
             },
             activity2: {
               diceIndex: null,
@@ -479,6 +488,7 @@ const DowntimeWrapper = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
             },
             activity3: {
               diceIndex: null,
@@ -490,6 +500,7 @@ const DowntimeWrapper = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
             },
             relationship1: {
               diceIndex: null,
@@ -517,17 +528,17 @@ const DowntimeWrapper = ({
             activities: [
               {
                 activity: "",
-                npc: "",
+                selectedClass: "",
                 successes: [false, false, false, false, false],
               },
               {
                 activity: "",
-                npc: "",
+                selectedClass: "",
                 successes: [false, false, false, false, false],
               },
               {
                 activity: "",
-                npc: "",
+                selectedClass: "",
                 successes: [false, false, false, false, false],
               },
             ],
@@ -1107,6 +1118,7 @@ const DowntimeWrapper = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
           },
           activity2: {
             diceIndex: null,
@@ -1118,6 +1130,7 @@ const DowntimeWrapper = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
           },
           activity3: {
             diceIndex: null,
@@ -1129,6 +1142,7 @@ const DowntimeWrapper = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
           },
           relationship1: {
             diceIndex: null,

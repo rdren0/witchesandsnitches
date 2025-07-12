@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ArrowLeft, CheckCircle, CircleAlert, XCircle } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { allSkills } from "../SharedData/data";
+import { allSkills } from "../../SharedData/data";
 import {
   calculateModifier,
   activityRequiresDualChecks,
@@ -15,7 +15,6 @@ const ViewingSheetForm = ({
   onBack,
   onEditRejected,
   onUpdateAssignment,
-  supabase,
   user,
 }) => {
   const { theme } = useTheme();

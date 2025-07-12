@@ -1,5 +1,5 @@
 import { RefreshCw } from "lucide-react";
-import { castingStyles } from "../../SharedData/data";
+import { castingStyles } from "../../../SharedData/data";
 import StepIndicator from "../Shared/StepIndicator";
 import { gameSessionOptions } from "../../../App/const";
 

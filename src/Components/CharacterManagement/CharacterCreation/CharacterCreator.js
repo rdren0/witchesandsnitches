@@ -8,8 +8,8 @@ import { rollAbilityStat } from "../../utils/diceRoller";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { calculateTotalModifiers } from "../utils";
 
-import { hpData } from "../../SharedData/data";
-import { standardFeats } from "../../SharedData/standardFeatData";
+import { hpData } from "../../../SharedData/data";
+import { standardFeats } from "../../../SharedData/standardFeatData";
 
 import { InnateHeritage } from "./InnateHeritage";
 import BasicInfo from "./BasicInfo";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Circle, Star } from "lucide-react";
 import { formatModifier, modifiers } from "./utils";
-import { skillMap, allSkills } from "../SharedData/data";
+import { skillMap, allSkills } from "../../SharedData/data";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
 import { useRollFunctions } from "../utils/diceRoller";

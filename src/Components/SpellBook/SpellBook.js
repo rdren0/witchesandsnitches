@@ -49,9 +49,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
             years.add(spell.year);
 
             if (spell.name === "Cantis" || spell.name === "Aguamenti") {
-              console.log(
-                `Debug: Found ${spell.name} in ${subjectName}-${levelName} with year: ${spell.year}`
-              );
             }
           }
         });
@@ -59,7 +56,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     });
 
     const yearArray = Array.from(years).sort((a, b) => a - b);
-    console.log("Debug: Available years found:", yearArray);
     return yearArray;
   }, [getAvailableSpellsData]);
 
@@ -172,9 +168,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     if (yearFilter !== "all") {
       const yearFilteredData = {};
       const targetYear = parseInt(yearFilter);
-      console.log(
-        `Debug: Filtering for year ${targetYear} (from filter value: "${yearFilter}")`
-      );
 
       Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
         const filteredLevels = {};
@@ -189,25 +182,12 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
               typeof spellYear === "string" ? parseInt(spellYear) : spellYear;
             const matches = normalizedSpellYear === targetYear;
 
-            if (
-              spell.name === "Cantis" ||
-              spell.name === "Aguamenti" ||
-              spell.name === "Crinus Muto"
-            ) {
-              console.log(
-                `Debug: ${spell.name} has year ${spellYear} (normalized: ${normalizedSpellYear}), matches target ${targetYear}: ${matches}`
-              );
-            }
-
             return matches;
           });
 
           if (filteredSpells.length > 0) {
             filteredLevels[level] = filteredSpells;
             hasMatchingSpells = true;
-            console.log(
-              `Debug: Found ${filteredSpells.length} matching spells in ${subjectName}-${level}`
-            );
           }
         });
 
@@ -219,11 +199,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
         }
       });
 
-      console.log(
-        `Debug: Year filter result has ${
-          Object.keys(yearFilteredData).length
-        } subjects`
-      );
       filteredData = yearFilteredData;
     }
 

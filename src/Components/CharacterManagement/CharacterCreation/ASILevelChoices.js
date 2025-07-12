@@ -1,4 +1,4 @@
-import { standardFeats } from "../../SharedData/standardFeatData";
+import { standardFeats } from "../../../SharedData/standardFeatData";
 import {
   AbilityScoreIncrements,
   FeatRequirementsInfo,

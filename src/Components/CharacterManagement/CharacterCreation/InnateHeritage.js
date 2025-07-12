@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   innateHeritages,
   heritageDescriptions,
-} from "../../SharedData/heritageData";
+} from "../../../SharedData/heritageData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 

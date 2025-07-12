@@ -1,7 +1,7 @@
-import { standardFeats } from "../../SharedData/standardFeatData";
+import { standardFeats } from "../../../SharedData/standardFeatData";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { allSkills } from "../../SharedData/data";
+import { allSkills } from "../../../SharedData/data";
 import { useMemo, useEffect } from "react";
 
 const getSpellcastingAbility = (character) => {
