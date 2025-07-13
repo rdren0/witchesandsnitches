@@ -18,5 +18,10 @@ module.exports = {
     "no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
     "unused-imports/no-unused-vars": "warn",
+
+    "no-prototype-builtins": "warn",
+    "no-empty": "warn",
+    "no-case-declarations": "warn",
+    "no-useless-catch": "warn",
   },
 };
