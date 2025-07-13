@@ -300,6 +300,17 @@ const DowntimeWrapper = ({
     });
   }, []);
 
+  useEffect(() => {
+    if (selectedCharacter?.id) {
+      resetFormState();
+      setSelectedYear("");
+      setSelectedSemester("");
+      setActiveTab("create");
+      setViewMode("list");
+      setViewingSheet(null);
+    }
+  }, [selectedCharacter?.id, resetFormState]);
+
   const handleYearChange = useCallback(
     (e) => {
       const newYear = parseInt(e.target.value) || "";

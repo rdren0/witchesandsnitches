@@ -91,7 +91,7 @@ export const downtime = {
     activities: [
       "Cooking - Roll Survival to prepare meals",
       "Learn a Recipe - Roll Survival to memorize a recipe",
-      "Create a New Recipe - Must succeed on three separate checks using separate downtime slots",
+      "Create a New Recipe - Must complete three distinct checks across separate downtime slots: Survival Check, Cultural Research Check (Muggle Studies OR History of Magic), and Spellcasting Ability Check",
     ],
   },
 

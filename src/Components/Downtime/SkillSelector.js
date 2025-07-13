@@ -3,6 +3,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getActivitySkillInfo, calculateModifier } from "./downtimeHelpers";
 import { allSkills } from "../../SharedData/data";
 import { wandModifiers } from "../../SharedData/downtime";
+import { formatModifier } from "./utils/modifierUtils";
 
 const SkillSelector = memo(
   ({
@@ -67,10 +68,6 @@ const SkillSelector = memo(
       }),
       [theme, canEdit]
     );
-
-    const formatModifier = (value) => {
-      return value >= 0 ? `+${value}` : `${value}`;
-    };
 
     if (choiceInfo.type === "locked" && choiceInfo.skills) {
       const autoSkill = isSecondSkill

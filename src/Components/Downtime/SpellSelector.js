@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { X, Crown, Eye, Search, Star, Check } from "lucide-react";
+import { X, Search, Star, Check } from "lucide-react";
 import { spellsData } from "../SpellBook/spells";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -34,9 +34,9 @@ const SpellSelector = ({
   const useNewInterface = activityIndex !== undefined;
 
   const activityKey = useNewInterface ? `activity${activityIndex + 1}` : null;
-  const assignment = useNewInterface
-    ? rollAssignments?.[activityKey] || {}
-    : {};
+  const assignment = useMemo(() => {
+    return useNewInterface ? rollAssignments?.[activityKey] || {} : {};
+  }, [useNewInterface, rollAssignments, activityKey]);
 
   const isResearch =
     isResearchActivity ??
@@ -69,7 +69,7 @@ const SpellSelector = ({
     if (!spellName) return null;
     for (const [subject, subjectData] of Object.entries(spellsData)) {
       if (subjectData.levels) {
-        for (const [level, levelSpells] of Object.entries(subjectData.levels)) {
+        for (const [, levelSpells] of Object.entries(subjectData.levels)) {
           const spell = levelSpells.find((s) => s.name === spellName);
           if (spell) {
             return { ...spell, subject: subject };
@@ -418,10 +418,6 @@ const SpellSelector = ({
     }
 
     const diceResult = calculateDiceResult(spellSlot, spellName);
-
-    const successfulAttempts = spellAttempts?.[spellName] || 0;
-    const isMastered = successfulAttempts >= 2;
-    const hasFailedAttempt = failedAttempts?.[spellName] || false;
 
     return (
       <div style={styles.spellSlot}>

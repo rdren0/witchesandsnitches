@@ -20,7 +20,9 @@ import {
   User,
   Scroll,
 } from "lucide-react";
-import { allSkills } from "../SharedData/data";
+import { allSkills, skillMap } from "../SharedData/data";
+
+export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
 
 const AdminDowntimeReviewForm = React.memo(
   ({ supabase, sheetId, onClose, onReviewComplete }) => {
@@ -365,7 +367,6 @@ const AdminDowntimeReviewForm = React.memo(
           padding: "1rem",
           borderRadius: "6px",
           marginBottom: "0.5rem",
-          border: "1px solid",
         },
         successBox: {
           backgroundColor: "#10b98120",
@@ -428,10 +429,6 @@ const AdminDowntimeReviewForm = React.memo(
       }),
       [styles.reviewButton, reviewStatus, theme]
     );
-
-    const formatModifier = useCallback((modifier) => {
-      return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-    }, []);
 
     const getSpellData = useCallback((spellName) => {
       if (!spellName) return null;
@@ -577,35 +574,8 @@ const AdminDowntimeReviewForm = React.memo(
             <div>Current Value: {formatModifier(currentWandValue)}</div>
             <div>DC Required: {dc}</div>
             <div>
-              Roll: d20({diceValue}) + {currentWandValue} = {totalRoll}
+              Roll: ({diceValue}) {currentWandValue} = {totalRoll}
             </div>
-            <div>
-              <strong>Result: {success ? "SUCCESS" : "FAILED"}</strong>
-            </div>
-            {success && (
-              <div
-                style={{
-                  color: "#10b981",
-                  fontWeight: "600",
-                  marginTop: "0.5rem",
-                }}
-              >
-                ✅ {wandDisplayNames[wandModifier] || wandModifier} increases to{" "}
-                {formatModifier(currentWandValue + 1)}
-              </div>
-            )}
-            {!success && (
-              <div
-                style={{
-                  color: "#ef4444",
-                  fontWeight: "600",
-                  marginTop: "0.5rem",
-                }}
-              >
-                ❌ Failed to increase{" "}
-                {wandDisplayNames[wandModifier] || wandModifier}
-              </div>
-            )}
           </div>
         );
       },
@@ -614,15 +584,20 @@ const AdminDowntimeReviewForm = React.memo(
         styles.warningBox,
         styles.successBox,
         styles.failureBox,
-        formatModifier,
       ]
     );
 
     const renderSpellActivityReview = useCallback(
-      (activity, assignment, character, dicePool, selectedSpells) => {
+      (
+        activity,
+        assignment,
+        character,
+        dicePool,
+        selectedSpells,
+        activityIndex
+      ) => {
         if (!activityRequiresSpellSelection(activity.activity)) return null;
 
-        const activityIndex = downtimeSheet.activities.indexOf(activity);
         const activityKey = `activity${activityIndex + 1}`;
         const spellSelections = selectedSpells?.[activityKey];
 
@@ -643,9 +618,6 @@ const AdminDowntimeReviewForm = React.memo(
         const isResearchActivity = activity.activity
           .toLowerCase()
           .includes("research spells");
-        const isAttemptActivity = activity.activity
-          .toLowerCase()
-          .includes("attempt spells");
 
         const renderSpellResult = (spellName, diceField, spellSlot) => {
           if (!spellName) return null;
@@ -704,8 +676,6 @@ const AdminDowntimeReviewForm = React.memo(
             success = totalRoll >= dc;
           }
 
-          const isNaturalTwenty = diceValue === 20;
-
           return (
             <div
               style={{
@@ -725,33 +695,15 @@ const AdminDowntimeReviewForm = React.memo(
                 Subject: {spellData.subject} | Year: {spellData.year}
               </div>
               <div>
-                DC: {dc} | Roll: d20({diceValue}) + {formatModifier(modifier)} ={" "}
+                DC: {dc} | Roll: ({diceValue}) {formatModifier(modifier)} ={" "}
                 {totalRoll}
               </div>
-              <div>
-                <strong>Result: {success ? "SUCCESS" : "FAILED"}</strong>
-              </div>
-              {isNaturalTwenty && (
-                <div style={{ color: "#10b981", fontWeight: "600" }}>
-                  🎯 Natural 20! {isAttemptActivity ? "Spell mastered!" : ""}
-                </div>
-              )}
-              {success && isAttemptActivity && (
-                <div style={{ color: "#10b981" }}>
-                  ✅ Successful spell attempt
-                </div>
-              )}
-              {success && isResearchActivity && (
-                <div style={{ color: "#10b981" }}>
-                  ✅ Spell successfully researched
-                </div>
-              )}
             </div>
           );
         };
 
         return (
-          <div style={{ ...styles.specialActivityBox, ...styles.infoBox }}>
+          <div style={{ ...styles.specialActivityBox }}>
             <div>
               <strong>
                 📚 {isResearchActivity ? "Spell Research" : "Spell Attempt"}{" "}
@@ -774,10 +726,8 @@ const AdminDowntimeReviewForm = React.memo(
       [
         styles.specialActivityBox,
         styles.warningBox,
-        styles.infoBox,
         getSpellData,
         calculateResearchDC,
-        formatModifier,
       ]
     );
 
@@ -786,17 +736,6 @@ const AdminDowntimeReviewForm = React.memo(
         if (!activityRequiresClassSelection(activity.activity)) return null;
 
         const selectedClass = activity.selectedClass;
-
-        if (!selectedClass) {
-          return (
-            <div style={{ ...styles.specialActivityBox, ...styles.warningBox }}>
-              <div>
-                <strong>⚠️ No Class Selected</strong>
-              </div>
-              <div>Student did not select a class to study.</div>
-            </div>
-          );
-        }
 
         if (
           assignment.diceIndex === null ||
@@ -822,12 +761,6 @@ const AdminDowntimeReviewForm = React.memo(
           : 0;
         const totalRoll = diceValue + modifier;
 
-        const suggestedDCs = {
-          Easy: 10,
-          Medium: 15,
-          Hard: 20,
-        };
-
         return (
           <div style={{ ...styles.specialActivityBox, ...styles.infoBox }}>
             <div>
@@ -839,35 +772,37 @@ const AdminDowntimeReviewForm = React.memo(
             {skillName && (
               <>
                 <div>
-                  Skill Used: {skillName} ({formatModifier(modifier)})
+                  Skill Used: {skillMap[skillName]} ({formatModifier(modifier)})
                 </div>
                 <div>
-                  Roll: d20({diceValue}) + {formatModifier(modifier)} ={" "}
-                  {totalRoll}
-                </div>
-                <div
-                  style={{
-                    marginTop: "0.5rem",
-                    fontSize: "0.875rem",
-                    color: theme.textSecondary,
-                  }}
-                >
-                  Suggested DCs: Easy (10), Medium (15), Hard (20)
+                  Roll: ({diceValue}) {formatModifier(modifier)} = {totalRoll}
                 </div>
               </>
             )}
           </div>
         );
       },
-      [
-        styles.specialActivityBox,
-        styles.warningBox,
-        styles.infoBox,
-        calculateModifierValue,
-        formatModifier,
-        theme.textSecondary,
-      ]
+      [styles.specialActivityBox, styles.infoBox, calculateModifierValue]
     );
+
+    const inferSkillsFromActivity = useCallback((activityName) => {
+      const activityLower = activityName.toLowerCase();
+
+      if (activityLower.includes("restricted section")) {
+        return { firstSkill: "stealth", secondSkill: "investigation" };
+      }
+      if (activityLower.includes("library research")) {
+        return { firstSkill: "investigation", secondSkill: "history" };
+      }
+      if (
+        activityLower.includes("sneak") &&
+        activityLower.includes("persuade")
+      ) {
+        return { firstSkill: "stealth", secondSkill: "persuasion" };
+      }
+
+      return { firstSkill: "", secondSkill: "" };
+    }, []);
 
     const renderRollInfo = useCallback(
       (assignment, dicePool, character, skillField, diceField, label) => {
@@ -899,7 +834,7 @@ const AdminDowntimeReviewForm = React.memo(
           </div>
         );
       },
-      [calculateModifierValue, formatModifier, styles]
+      [calculateModifierValue, styles]
     );
 
     const loadDowntimeSheet = useCallback(async () => {
@@ -1233,7 +1168,8 @@ const AdminDowntimeReviewForm = React.memo(
               activityAssignment,
               character,
               downtimeSheet.dice_pool,
-              downtimeSheet.selected_spells
+              downtimeSheet.selected_spells,
+              index
             )}
             {renderStudyActivityReview(
               activity,
@@ -1248,23 +1184,129 @@ const AdminDowntimeReviewForm = React.memo(
               !activityRequiresClassSelection(activity.activity) && (
                 <>
                   {isDualCheck ? (
-                    <div style={styles.dualRollContainer}>
-                      {renderRollInfo(
-                        activityAssignment,
-                        downtimeSheet.dice_pool,
-                        character,
-                        "skill",
-                        "diceIndex",
-                        "First Roll"
-                      )}
-                      {renderRollInfo(
-                        activityAssignment,
-                        downtimeSheet.dice_pool,
-                        character,
-                        "secondSkill",
-                        "secondDiceIndex",
-                        "Second Roll"
-                      )}
+                    <div style={styles.rollResultSection}>
+                      <div style={styles.rollResultHeader}>
+                        <strong>Dual Check Results:</strong>
+                      </div>
+                      <div style={styles.dualRollContainer}>
+                        {(() => {
+                          const firstSkill =
+                            activityAssignment.skill ||
+                            inferSkillsFromActivity(activity.activity)
+                              .firstSkill;
+                          const secondSkill =
+                            activityAssignment.secondSkill ||
+                            inferSkillsFromActivity(activity.activity)
+                              .secondSkill;
+
+                          const firstDice =
+                            downtimeSheet.dice_pool?.[
+                              activityAssignment.diceIndex
+                            ];
+                          const secondDice =
+                            downtimeSheet.dice_pool?.[
+                              activityAssignment.secondDiceIndex
+                            ];
+
+                          const firstModifier = firstSkill
+                            ? calculateModifierValue(firstSkill, character)
+                            : 0;
+                          const secondModifier = secondSkill
+                            ? calculateModifierValue(secondSkill, character)
+                            : 0;
+
+                          return (
+                            <>
+                              <div style={styles.rollContainer}>
+                                <div style={styles.rollLabel}>
+                                  <strong>
+                                    First Roll:{" "}
+                                    {allSkills.find(
+                                      (skillObj) => skillObj.name === firstSkill
+                                    )?.displayName ||
+                                      firstSkill ||
+                                      "Unknown Skill"}
+                                  </strong>
+                                </div>
+                                {firstDice !== undefined &&
+                                firstDice !== null ? (
+                                  <>
+                                    <div style={styles.rollBreakdown}>
+                                      <span style={styles.rollValue}>
+                                        d20({firstDice})
+                                      </span>
+                                      <span style={styles.modifier}>
+                                        {" "}
+                                        {formatModifier(firstModifier)}
+                                      </span>
+                                      <span style={styles.equals}> = </span>
+                                      <span style={styles.total}>
+                                        {firstDice + firstModifier}
+                                      </span>
+                                    </div>
+                                    <div style={styles.skillUsed}>
+                                      Using{" "}
+                                      {allSkills.find(
+                                        (skillObj) =>
+                                          skillObj.name === firstSkill
+                                      )?.displayName || firstSkill}{" "}
+                                      {formatModifier(firstModifier)}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div style={{ color: "#f59e0b" }}>
+                                    ⚠️ No die assigned
+                                  </div>
+                                )}
+                              </div>
+
+                              <div style={styles.rollContainer}>
+                                <div style={styles.rollLabel}>
+                                  <strong>
+                                    Second Roll:{" "}
+                                    {allSkills.find(
+                                      (skillObj) =>
+                                        skillObj.name === secondSkill
+                                    )?.displayName ||
+                                      secondSkill ||
+                                      "Unknown Skill"}
+                                  </strong>
+                                </div>
+                                {secondDice !== undefined &&
+                                secondDice !== null ? (
+                                  <>
+                                    <div style={styles.rollBreakdown}>
+                                      <span style={styles.rollValue}>
+                                        d20({secondDice})
+                                      </span>
+                                      <span style={styles.modifier}>
+                                        {" "}
+                                        {formatModifier(secondModifier)}
+                                      </span>
+                                      <span style={styles.equals}> = </span>
+                                      <span style={styles.total}>
+                                        {secondDice + secondModifier}
+                                      </span>
+                                    </div>
+                                    <div style={styles.skillUsed}>
+                                      Using{" "}
+                                      {allSkills.find(
+                                        (skillObj) =>
+                                          skillObj.name === secondSkill
+                                      )?.displayName || secondSkill}{" "}
+                                      {formatModifier(secondModifier)}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div style={{ color: "#f59e0b" }}>
+                                    ⚠️ No die assigned
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
                   ) : (
                     activityAssignment.skill && (
@@ -1339,6 +1381,8 @@ const AdminDowntimeReviewForm = React.memo(
       renderWandIncreaseReview,
       renderSpellActivityReview,
       renderStudyActivityReview,
+      calculateModifierValue,
+      inferSkillsFromActivity,
       theme,
     ]);
 
@@ -1446,10 +1490,17 @@ const AdminDowntimeReviewForm = React.memo(
       );
     }
 
-    if (!downtimeSheet) {
-      return null;
+    if (loading || !downtimeSheet) {
+      return (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <div style={styles.content}>
+              <div>Loading downtime sheet...</div>
+            </div>
+          </div>
+        </div>
+      );
     }
-
     return (
       <div style={styles.overlay}>
         <div style={styles.modal}>
