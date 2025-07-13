@@ -129,30 +129,8 @@ export const renderDiceValue = ({
         <div style={styles.assignedDice}>
           <div style={styles.diceValue}>{totalRoll}</div>
           <div style={styles.total}>
-            Roll: {diceValue} + {formatModifier(currentWandValue)} = {totalRoll}
+            Roll: {diceValue} {formatModifier(currentWandValue)} = {totalRoll}
           </div>
-          <div
-            style={{
-              fontSize: "0.875rem",
-              marginTop: "0.25rem",
-              color: theme.textSecondary,
-            }}
-          >
-            DC {dc}: {success ? "SUCCESS!" : "Failed"}
-          </div>
-          {success && (
-            <div
-              style={{
-                fontSize: "0.875rem",
-                marginTop: "0.25rem",
-                color: "#10b981",
-                fontWeight: "600",
-              }}
-            >
-              {wandDisplayNames[selectedWandModifier] || selectedWandModifier} →{" "}
-              {formatModifier(currentWandValue + 1)}
-            </div>
-          )}
         </div>
       );
     }

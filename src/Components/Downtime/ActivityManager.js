@@ -172,6 +172,7 @@ const ActivityManager = ({
         }
 
         let requiredSkill = activity.selectedCheckSkill;
+
         if (requiredSkill === "spellcastingAbility") {
           requiredSkill =
             selectedCharacter?.spellcastingAbility || "intelligence";

@@ -423,15 +423,6 @@ const ViewingSheetForm = ({
       else if (notes.includes("divin")) selectedWandModifier = "divinations";
     }
 
-    console.log("Wand stat render debug:", {
-      activitySelectedWandModifier: activity.selectedWandModifier,
-      assignmentWandModifier: assignment.wandModifier,
-      extractedFromNotes: selectedWandModifier,
-      diceIndex: assignment.diceIndex,
-      diceValue: dicePool?.[assignment.diceIndex],
-      notes: assignment.notes,
-    });
-
     if (!selectedWandModifier) {
       return (
         <div style={styles.rollContainer}>
@@ -1060,21 +1051,6 @@ const ViewingSheetForm = ({
               adminNotes: activity.admin_notes,
             };
 
-            if (
-              activity.activity &&
-              activity.activity.toLowerCase().includes("wand stat")
-            ) {
-              console.log(`Wand Stat Debug - Activity ${index + 1}:`, {
-                activityText: activity.activity,
-                selectedWandModifier: activity.selectedWandModifier,
-                assignment,
-                isWandActivity: activityRequiresWandSelection(
-                  activity.activity
-                ),
-                dicePool: viewingSheet.dice_pool,
-              });
-            }
-
             const isDualCheck = activityRequiresDualChecks(activity.activity);
             const requiresExtraDie = activityRequiresExtraDie(
               activity.activity
@@ -1203,11 +1179,6 @@ const ViewingSheetForm = ({
                             viewingSheet
                           ) || "First Spell";
 
-                        console.log(
-                          "First spell name from selected_spells:",
-                          firstSpellName
-                        );
-
                         return renderSpellRollInfo(
                           assignment,
                           viewingSheet.dice_pool,
@@ -1226,11 +1197,6 @@ const ViewingSheetForm = ({
                             "second",
                             viewingSheet
                           ) || "Second Spell";
-
-                        console.log(
-                          "Second spell name from selected_spells:",
-                          secondSpellName
-                        );
 
                         return renderSpellRollInfo(
                           assignment,
@@ -1270,16 +1236,6 @@ const ViewingSheetForm = ({
                   renderCustomDiceInfo(assignment, "Job Earnings")
                 ) : activityRequiresWandSelection(activity.activity) ? (
                   (() => {
-                    console.log(
-                      `Rendering wand stat for activity ${index + 1}:`,
-                      {
-                        activity: activity.activity,
-                        isWandActivity: activityRequiresWandSelection(
-                          activity.activity
-                        ),
-                        assignment,
-                      }
-                    );
                     return renderWandStatIncreaseInfo(
                       activity,
                       assignment,

@@ -4,6 +4,8 @@ import {
   activityRequiresSpellSelection,
   activityRequiresCheckTypeSelection,
   validateDistinctCheckActivity,
+  activityRequiresAbilitySelection,
+  validateAbilityScoreIncreaseActivity,
 } from "../downtimeHelpers";
 
 export const isStudyActivity = (activityName) => {
@@ -16,6 +18,27 @@ export const validateStudyActivities = (activities) => {
     if (isStudyActivity(activity.activity) && !activity.selectedClass) {
       alert(`Activity ${i + 1}: Please select a class for the Study activity.`);
       return false;
+    }
+  }
+  return true;
+};
+
+export const validateAbilityScoreIncreaseActivities = (
+  activities,
+  selectedCharacter
+) => {
+  for (let i = 0; i < activities.length; i++) {
+    const activity = activities[i];
+
+    if (activityRequiresAbilitySelection(activity.activity)) {
+      const validation = validateAbilityScoreIncreaseActivity(
+        activity,
+        selectedCharacter
+      );
+      if (!validation.valid) {
+        alert(`Activity ${i + 1}: ${validation.message}`);
+        return false;
+      }
     }
   }
   return true;
@@ -276,6 +299,9 @@ export const validateSingleActivity = (activity, selectedCharacter) => {
 export const isActivityComplete = (activity) => {
   if (!activity.activity) {
     return false;
+  }
+  if (activityRequiresAbilitySelection(activity.activity)) {
+    return !!activity.selectedAbilityScore;
   }
 
   if (activityRequiresCheckTypeSelection(activity.activity)) {

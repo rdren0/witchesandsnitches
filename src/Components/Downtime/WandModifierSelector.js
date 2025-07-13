@@ -89,44 +89,6 @@ export const WandModifierSelector = ({
           );
         })}
       </select>
-
-      {selectedWandModifier && (
-        <div
-          style={{
-            marginTop: "0.5rem",
-            padding: "0.75rem",
-            backgroundColor: theme.primary + "10",
-            border: `1px solid ${theme.primary}`,
-            borderRadius: "6px",
-            fontSize: "14px",
-            color: theme.text,
-          }}
-        >
-          <strong>DC Required:</strong>{" "}
-          {calculateWandStatIncreaseDC(selectedCharacter, selectedWandModifier)}
-          <br />
-          <strong>Current:</strong>{" "}
-          {formatModifier(
-            selectedCharacter.magicModifiers[selectedWandModifier] || 0
-          )}{" "}
-          →<strong> After Success:</strong>{" "}
-          {formatModifier(
-            (selectedCharacter.magicModifiers[selectedWandModifier] || 0) + 1
-          )}
-          <br />
-          <small style={{ color: theme.textSecondary }}>
-            Roll: d20 +{" "}
-            {formatModifier(
-              selectedCharacter.magicModifiers[selectedWandModifier] || 0
-            )}{" "}
-            vs DC{" "}
-            {calculateWandStatIncreaseDC(
-              selectedCharacter,
-              selectedWandModifier
-            )}
-          </small>
-        </div>
-      )}
     </div>
   );
 };

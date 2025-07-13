@@ -4,13 +4,13 @@ import { useAdmin } from "../../contexts/AdminContext";
 import DiceSelection from "./DiceSelection";
 import SkillSelector from "./SkillSelector";
 import {
-  getActivitySkillInfo,
   activityRequiresDualChecks,
   activityRequiresCheckTypeSelection,
   getDistinctCheckActivityInfo,
   calculateDistinctCheckProgress,
   getAvailableCheckTypes,
   getSkillOptionsForCheck,
+  calculateModifier,
 } from "./downtimeHelpers";
 
 const ActivityItem = memo(
@@ -364,13 +364,30 @@ const ActivityItem = memo(
                         fontStyle: "italic",
                       }}
                     >
-                      {skillOptions[0] === "spellcastingAbility"
-                        ? `${
+                      {(() => {
+                        const skill = skillOptions[0];
+                        const modifier = calculateModifier(
+                          skill,
+                          selectedCharacter
+                        );
+                        const modStr =
+                          modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                        if (skill === "spellcastingAbility") {
+                          const spellAbility =
                             selectedCharacter?.spellcastingAbility ||
-                            "Intelligence"
-                          } (Spellcasting Ability)`
-                        : skillOptions[0].charAt(0).toUpperCase() +
-                          skillOptions[0].slice(1)}{" "}
+                            "Intelligence";
+                          return `${spellAbility} (Spellcasting Ability) (${modStr})`;
+                        } else if (skill === "muggleStudies") {
+                          return `Muggle Studies (${modStr})`;
+                        } else if (skill === "historyOfMagic") {
+                          return `History of Magic (${modStr})`;
+                        } else {
+                          return `${
+                            skill.charAt(0).toUpperCase() + skill.slice(1)
+                          } (${modStr})`;
+                        }
+                      })()}{" "}
                       - Auto-selected
                     </div>
                   ) : (
@@ -381,15 +398,38 @@ const ActivityItem = memo(
                       disabled={!canEdit()}
                     >
                       <option value="">Choose a skill...</option>
-                      {skillOptions.map((skill) => (
-                        <option key={skill} value={skill}>
-                          {skill === "muggleStudies"
-                            ? "Muggle Studies"
-                            : skill === "historyOfMagic"
-                            ? "History of Magic"
-                            : skill.charAt(0).toUpperCase() + skill.slice(1)}
-                        </option>
-                      ))}
+                      {skillOptions.map((skill) => {
+                        const modifier = calculateModifier(
+                          skill,
+                          selectedCharacter
+                        );
+                        const modStr =
+                          modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                        let displayName;
+                        if (skill === "muggleStudies") {
+                          displayName = "Muggle Studies";
+                        } else if (skill === "historyOfMagic") {
+                          displayName = "History of Magic";
+                        } else if (skill === "spellcastingAbility") {
+                          const spellAbility =
+                            selectedCharacter?.spellcastingAbility ||
+                            "intelligence";
+                          displayName = `${
+                            spellAbility.charAt(0).toUpperCase() +
+                            spellAbility.slice(1)
+                          } (Spellcasting Ability)`;
+                        } else {
+                          displayName =
+                            skill.charAt(0).toUpperCase() + skill.slice(1);
+                        }
+
+                        return (
+                          <option key={skill} value={skill}>
+                            {displayName} ({modStr})
+                          </option>
+                        );
+                      })}
                     </select>
                   )}
                 </div>

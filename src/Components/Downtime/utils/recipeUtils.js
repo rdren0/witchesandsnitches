@@ -33,24 +33,6 @@ export const handleRecipeRollResult = (
 
   if (result) {
     updateActivity(activityIndex, "completedChecks", result.completedChecks);
-
-    if (result.alreadyCompleted) {
-      console.log(
-        `You have already completed the ${result.checkName} for this recipe!`
-      );
-    } else if (result.success) {
-      console.log(`${result.checkName} completed successfully!`);
-      if (result.isComplete) {
-        console.log(
-          `🎉 Recipe "${activity.recipeName}" creation complete! You have successfully created your new recipe.`
-        );
-      }
-    } else {
-      console.log(
-        `${result.checkName} failed. You can try again in a future downtime session.`
-      );
-    }
-
     updateActivity(activityIndex, "selectedCheckType", "");
     updateActivity(activityIndex, "selectedCheckSkill", "");
   }
@@ -79,12 +61,15 @@ export const getCurrentRecipeCheckInfo = (activity) => {
 };
 
 export const getRequiredRecipeSkill = (activity, character) => {
-  if (!activity.selectedCheckType) return null;
+  if (!activity.selectedCheckType) {
+    return null;
+  }
 
   const skillOptions = getSkillOptionsForCheck(
     activity,
     activity.selectedCheckType
   );
+
   if (skillOptions.length === 1) {
     const skillOption = skillOptions[0];
     if (skillOption === "spellcastingAbility") {

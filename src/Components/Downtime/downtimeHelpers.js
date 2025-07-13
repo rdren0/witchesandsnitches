@@ -1,5 +1,4 @@
 import { allSkills } from "../../SharedData/data";
-import { wandModifiers } from "../../SharedData/downtime";
 
 export const MULTI_SUCCESS_ACTIVITIES = {
   "increase an ability score": {
@@ -85,14 +84,14 @@ export const DISTINCT_CHECK_ACTIVITIES = {
         name: "Survival Check",
         description:
           "Roll Survival + Wisdom modifier to test practical cooking techniques and ingredient knowledge",
-        dc: 12,
+
         skillOptions: ["survival"],
       },
       {
         id: "cultural",
         name: "Cultural Research Check",
         description: "Research cultural food traditions and historical recipes",
-        dc: 12,
+
         skillOptions: ["muggleStudies", "historyOfMagic"],
       },
       {
@@ -100,7 +99,7 @@ export const DISTINCT_CHECK_ACTIVITIES = {
         name: "Spellcasting Ability Check",
         description:
           "Roll with your Spellcasting Ability modifier to infuse magical properties into the recipe",
-        dc: 12,
+
         skillOptions: ["spellcastingAbility"],
       },
     ],
@@ -259,12 +258,15 @@ export const getAvailableCheckTypes = (activity) => {
 
 export const getSkillOptionsForCheck = (activity, checkId) => {
   const info = getDistinctCheckActivityInfo(activity.activity);
+
   if (!info) return [];
 
   const checkConfig = info.config.requiredChecks.find(
     (check) => check.id === checkId
   );
-  return checkConfig ? checkConfig.skillOptions : [];
+
+  const result = checkConfig ? checkConfig.skillOptions : [];
+  return result;
 };
 
 export const getRecipeCheckDescription = (checkType) => {
@@ -494,19 +496,64 @@ export const calculateModifier = (skillName, character) => {
     return Math.floor((abilityValue - 10) / 2);
   }
 
+  const wandModifiers = [
+    "charms",
+    "transfiguration",
+    "jinxesHexesCurses",
+    "healing",
+    "divinations",
+  ];
+  if (wandModifiers.includes(skillName)) {
+    return (
+      character.magicModifiers?.[skillName] ||
+      character.magic_modifiers?.[skillName] ||
+      0
+    );
+  }
+
   const skill = allSkills.find((s) => s.name === skillName);
-  if (!skill) return 0;
+  if (!skill) {
+    console.warn(`Skill "${skillName}" not found in allSkills array`);
+    return 0;
+  }
 
   const abilityScore =
     character.abilityScores?.[skill.ability] || character[skill.ability] || 10;
   const abilityModifier = Math.floor((abilityScore - 10) / 2);
 
-  const proficiencyLevel =
-    character.skillProficiencies?.[skillName] ||
-    character.skill_proficiencies?.[skillName] ||
-    0;
+  let proficiencyLevel = 0;
+
+  if (character.skillProficiencies?.[skillName] !== undefined) {
+    proficiencyLevel = character.skillProficiencies[skillName];
+  } else if (character.skill_proficiencies?.[skillName] !== undefined) {
+    proficiencyLevel = character.skill_proficiencies[skillName];
+  } else if (character.skillProficiencies?.[skill.displayName] !== undefined) {
+    proficiencyLevel = character.skillProficiencies[skill.displayName];
+  } else if (character.skill_proficiencies?.[skill.displayName] !== undefined) {
+    proficiencyLevel = character.skill_proficiencies[skill.displayName];
+  } else {
+    const skillProficiencies =
+      character.skillProficiencies || character.skill_proficiencies || [];
+    const skillExpertise =
+      character.skillExpertise || character.skill_expertise || [];
+
+    if (
+      Array.isArray(skillProficiencies) &&
+      skillProficiencies.includes(skill.displayName)
+    ) {
+      proficiencyLevel = 1;
+    }
+    if (
+      Array.isArray(skillExpertise) &&
+      skillExpertise.includes(skill.displayName)
+    ) {
+      proficiencyLevel = 2;
+    }
+  }
+
   const proficiencyBonus =
-    character.proficiencyBonus || Math.ceil(character.level / 4) + 1 || 2;
+    character.proficiencyBonus ||
+    (character.level ? Math.ceil(character.level / 4) + 1 : 2);
 
   let skillModifier = abilityModifier;
   if (proficiencyLevel >= 1) {
