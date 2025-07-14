@@ -2,7 +2,7 @@ import { standardFeats } from "../../SharedData/standardFeatData";
 import {
   AbilityScoreIncrements,
   FeatRequirementsInfo,
-} from "../Create/ASIComponents";
+} from "../CharacterCreation/ASIComponents";
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { useMemo } from "react";

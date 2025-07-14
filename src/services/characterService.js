@@ -500,6 +500,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
+        school_year: characterData.school_year,
         skill_proficiencies: characterData.skill_proficiencies,
         skill_expertise: characterData.skill_expertise,
         standard_feats: characterData.standard_feats,
@@ -682,6 +683,83 @@ const getArchivedCharacters = async (discordUserId = null) => {
   return data || [];
 };
 
+const advanceSchoolYear = async (
+  characterId,
+  discordUserId,
+  newYear,
+  levelIncrease = 1
+) => {
+  try {
+    if (newYear < 1 || newYear > 7) {
+      throw new Error("School year must be between 1 and 7");
+    }
+
+    const { data: currentCharacter, error: fetchError } = await supabase
+      .from("characters")
+      .select("*")
+      .eq("id", characterId)
+      .eq("discord_user_id", discordUserId)
+      .eq("active", true)
+      .single();
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch character: ${fetchError.message}`);
+    }
+
+    const newLevel = (currentCharacter.level || 1) + levelIncrease;
+
+    const { data: updatedCharacter, error: updateError } = await supabase
+      .from("characters")
+      .update({
+        school_year: newYear,
+        level: newLevel,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", characterId)
+      .eq("discord_user_id", discordUserId)
+      .eq("active", true)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new Error(`Failed to advance school year: ${updateError.message}`);
+    }
+
+    return updatedCharacter;
+  } catch (error) {
+    console.error("Error in advanceSchoolYear:", error);
+    throw error;
+  }
+};
+
+const getRecommendedLevelRange = (schoolYear) => {
+  const ranges = {
+    1: { min: 1, max: 2 },
+    2: { min: 2, max: 4 },
+    3: { min: 3, max: 6 },
+    4: { min: 4, max: 8 },
+    5: { min: 5, max: 10 },
+    6: { min: 6, max: 14 },
+    7: { min: 7, max: 20 },
+  };
+  return ranges[schoolYear] || { min: 1, max: 20 };
+};
+
+const getRecommendedSchoolYear = (level) => {
+  if (level <= 2) return 1;
+  if (level <= 4) return 2;
+  if (level <= 6) return 3;
+  if (level <= 8) return 4;
+  if (level <= 10) return 5;
+  if (level <= 14) return 6;
+  return 7;
+};
+
+const isProgressionNormal = (schoolYear, level) => {
+  const recommended = getRecommendedSchoolYear(level);
+  return Math.abs(schoolYear - recommended) <= 1;
+};
+
 export const characterService = {
   getCharacters,
   getAllCharacters,
@@ -699,4 +777,8 @@ export const characterService = {
   deleteCharacter,
   restoreCharacter,
   getArchivedCharacters,
+  advanceSchoolYear,
+  getRecommendedLevelRange,
+  getRecommendedSchoolYear,
+  isProgressionNormal,
 };

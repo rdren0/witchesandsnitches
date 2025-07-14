@@ -299,16 +299,7 @@ const OverviewTab = ({ stats, styles, onTabChange }) => {
       label: "Total Characters",
       description: "Characters in active sessions",
       color: "#06b6d4",
-      clickAction: () => onTabChange("sessions"),
-    },
-
-    {
-      icon: FileText,
-      number: stats.activeUsers,
-      label: "Active Users",
-      description: "Unique players across sessions",
-      color: "#10b981",
-      clickAction: () => onTabChange("sessions"),
+      clickAction: () => onTabChange("inspiration"),
     },
     {
       icon: Database,

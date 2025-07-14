@@ -6,7 +6,7 @@ import {
   AbilityScoreIncrements,
   ASIFeatSelector,
   FeatRequirementsInfo,
-} from "../../Create/ASIComponents";
+} from "../../CharacterCreation/ASIComponents";
 
 const Level1AndProgressionSection = ({
   character,
