@@ -505,7 +505,6 @@ const rollCorruption = async ({
   pointsTotal,
   pointsRemaining,
   type = "gained",
-  saveResult = null,
 }) => {
   try {
     const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
@@ -1942,6 +1941,7 @@ const getSpellLevel = (spellName, subject) => {
 const getSpellCastingDC = (spellLevel) => {
   return 10 + spellLevel;
 };
+
 export const attemptSpell = async ({
   spellName,
   subject,
@@ -1954,6 +1954,7 @@ export const attemptSpell = async ({
   setCriticalSuccesses,
   setFailedAttempts,
   updateSpellProgressSummary,
+  customRoll = null,
 }) => {
   const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
 
@@ -1965,8 +1966,15 @@ export const attemptSpell = async ({
   setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
 
   try {
-    const diceResult = rollDice();
-    const d20Roll = diceResult.total;
+    let d20Roll, diceResult;
+    if (customRoll !== null) {
+      d20Roll = customRoll;
+      diceResult = { total: customRoll, originalRoll: customRoll };
+    } else {
+      diceResult = rollDice();
+      d20Roll = diceResult.total;
+    }
+
     const totalModifier = getSpellModifier(
       spellName,
       subject,
@@ -1991,7 +1999,9 @@ export const attemptSpell = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "spell",
-        description: `Attempting to cast ${spellName} (Level ${spellLevel}, DC ${goal}) for ${selectedCharacter.name}`,
+        description: `Attempting to cast ${spellName} (Level ${spellLevel}, DC ${goal}) for ${
+          selectedCharacter.name
+        }${customRoll !== null ? " using assigned die" : ""}`,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -2060,6 +2070,9 @@ export const attemptSpell = async ({
     }
 
     let rollDescription = `**Roll:** ${d20Roll}`;
+    if (customRoll !== null) {
+      rollDescription = `**Assigned Die:** ${d20Roll}`;
+    }
     const modifierText =
       totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
     rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
@@ -2130,6 +2143,15 @@ export const attemptSpell = async ({
     }
 
     await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
+
+    return {
+      isSuccess,
+      isCriticalSuccess,
+      isNaturalTwenty: isCriticalSuccess,
+      d20Roll,
+      total,
+      goal,
+    };
   } catch (error) {
     console.error("Error attempting spell:", error);
     alert("Error processing spell attempt. Please try again.");
@@ -2993,6 +3015,7 @@ export const rollResearch = async ({
   getSpellModifier,
   getModifierInfo,
   showRollResult,
+  customRoll = null,
 }) => {
   const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
 
@@ -3001,8 +3024,15 @@ export const rollResearch = async ({
 
     let researcherBonus = 0;
 
-    const diceResult = rollDice();
-    const d20Roll = diceResult.total;
+    let d20Roll, diceResult;
+    if (customRoll !== null) {
+      d20Roll = customRoll;
+      diceResult = { total: customRoll, originalRoll: customRoll };
+    } else {
+      diceResult = rollDice();
+      d20Roll = diceResult.total;
+    }
+
     const totalRoll = d20Roll + modifier;
     const isNaturalTwenty = d20Roll === 20;
     const isSuccess = totalRoll >= dc;
@@ -3019,7 +3049,9 @@ export const rollResearch = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "research",
-        description: `History of Magic check (DC ${dc}) for ${selectedCharacter.name}`,
+        description: `History of Magic check (DC ${dc}) for ${
+          selectedCharacter.name
+        }${customRoll !== null ? " using assigned die" : ""}`,
       });
     }
 
@@ -3042,6 +3074,14 @@ export const rollResearch = async ({
         resultText = "❌ **Research Failed**";
       }
 
+      let rollDescription = `**${d20Roll}**`;
+      if (customRoll !== null) {
+        rollDescription = `**Assigned Die:** ${d20Roll}`;
+      }
+      rollDescription += ` ${
+        modifier >= 0 ? "+" : ""
+      }${modifier} = **${totalRoll}** vs DC ${dc}`;
+
       const fields = [
         {
           name: "Result",
@@ -3050,9 +3090,7 @@ export const rollResearch = async ({
         },
         {
           name: "Roll Details",
-          value: `**${d20Roll}** ${
-            modifier >= 0 ? "+" : ""
-          }${modifier} = **${totalRoll}** vs DC ${dc}`,
+          value: rollDescription,
           inline: true,
         },
         {
@@ -3203,7 +3241,7 @@ export const rollFlexibleDie = (
   };
 };
 
-const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
+const extractIndividualDiceResults = (roll, rollType) => {
   try {
     if (roll.rolls && roll.rolls.length > 0) {
       const diceRoll = roll.rolls[0];
@@ -3420,7 +3458,13 @@ export const useRollFunctions = () => {
     rollAbility: (params) => rollAbility({ ...params, showRollResult }),
     rollInitiative: (params) => rollInitiative({ ...params, showRollResult }),
     rollSkill: (params) => rollSkill({ ...params, showRollResult }),
-    attemptSpell: (params) => attemptSpell({ ...params, showRollResult }),
+    attemptSpell: (params) =>
+      attemptSpell({
+        ...params,
+        showRollResult,
+        // Ensure customRoll is passed through
+        customRoll: params.customRoll || null,
+      }),
     attemptArithmancySpell: (params) =>
       attemptArithmancySpell({ ...params, showRollResult }),
     attemptRunesSpell: (params) =>
@@ -3428,7 +3472,13 @@ export const useRollFunctions = () => {
     rollBrewPotion: (params) => rollBrewPotion({ ...params, showRollResult }),
     rollGenericD20: (params) => rollGenericD20({ ...params, showRollResult }),
     rollSavingThrow: (params) => rollSavingThrow({ ...params, showRollResult }),
-    rollResearch: (params) => rollResearch({ ...params, showRollResult }),
+    rollResearch: (params) =>
+      rollResearch({
+        ...params,
+        showRollResult,
+        // Ensure customRoll is passed through
+        customRoll: params.customRoll || null,
+      }),
     rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),
     rollCookRecipe: (params) => rollCookRecipe({ ...params, showRollResult }),
     rollMagicCasting: (params) =>

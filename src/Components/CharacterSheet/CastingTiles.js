@@ -3,6 +3,7 @@ import { Wand2, Sparkles } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "../../styles/masterStyles";
 import { useRollModal, rollMagicCasting } from "../utils/diceRoller";
+import { formatModifier } from "./utils";
 
 const CastingTiles = ({ character }) => {
   const { theme } = useTheme();
@@ -12,10 +13,6 @@ const CastingTiles = ({ character }) => {
   const [isRolling, setIsRolling] = useState(false);
 
   const getAbilityModifier = (score) => Math.floor((score - 10) / 2);
-
-  const formatModifier = (modifier) => {
-    return modifier >= 0 ? `+${modifier}` : `${modifier}`;
-  };
 
   const handleRoll = async (modifier, type, school) => {
     if (isRolling) return;

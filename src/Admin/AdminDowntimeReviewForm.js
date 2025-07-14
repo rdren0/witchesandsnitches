@@ -3,7 +3,13 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
   calculateModifier,
   activityRequiresDualChecks,
+  activityRequiresWandSelection,
+  activityRequiresSpellSelection,
+  activityRequiresClassSelection,
+  calculateWandStatIncreaseDC,
 } from "../Components/Downtime/downtimeHelpers";
+import { getSpellModifier } from "../Components/SpellBook/utils";
+import { spellsData } from "../Components/SpellBook/spells";
 import {
   Check,
   X,
@@ -14,7 +20,9 @@ import {
   User,
   Scroll,
 } from "lucide-react";
-import { allSkills } from "../Components/SharedData/data";
+import { allSkills, skillMap } from "../SharedData/data";
+
+export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
 
 const AdminDowntimeReviewForm = React.memo(
   ({ supabase, sheetId, onClose, onReviewComplete }) => {
@@ -327,7 +335,7 @@ const AdminDowntimeReviewForm = React.memo(
           borderRadius: "8px",
           marginBottom: "20px",
         },
-        // New styles for dual roll display
+
         dualRollContainer: {
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -354,6 +362,27 @@ const AdminDowntimeReviewForm = React.memo(
           fontWeight: "600",
           color: theme.textSecondary,
           marginBottom: "8px",
+        },
+        specialActivityBox: {
+          padding: "1rem",
+          borderRadius: "6px",
+          marginBottom: "0.5rem",
+        },
+        successBox: {
+          backgroundColor: "#10b98120",
+          borderColor: "#10b981",
+        },
+        failureBox: {
+          backgroundColor: "#ef444420",
+          borderColor: "#ef4444",
+        },
+        warningBox: {
+          backgroundColor: "#f59e0b20",
+          borderColor: "#f59e0b",
+        },
+        infoBox: {
+          backgroundColor: theme.primary + "20",
+          borderColor: theme.primary,
         },
       }),
       [theme]
@@ -401,6 +430,62 @@ const AdminDowntimeReviewForm = React.memo(
       [styles.reviewButton, reviewStatus, theme]
     );
 
+    const getSpellData = useCallback((spellName) => {
+      if (!spellName) return null;
+
+      for (const [subject, subjectData] of Object.entries(spellsData)) {
+        if (subjectData.levels) {
+          for (const [, levelSpells] of Object.entries(subjectData.levels)) {
+            const spell = levelSpells.find((s) => s.name === spellName);
+            if (spell) {
+              return {
+                ...spell,
+                subject: subject,
+              };
+            }
+          }
+        }
+      }
+      return null;
+    }, []);
+
+    const calculateResearchDC = useCallback(
+      (playerYear, spellYear, spellName) => {
+        let baseDC = 8 + 2 * playerYear;
+
+        const yearDifference = spellYear - playerYear;
+        if (yearDifference > 0) {
+          baseDC += 2 * playerYear;
+        } else if (yearDifference < 0) {
+          baseDC += yearDifference * 2;
+        }
+
+        const difficultSpells = [
+          "Abscondi",
+          "Pellucidi Pellis",
+          "Sagittario",
+          "Confringo",
+          "Devieto",
+          "Stupefy",
+          "Petrificus Totalus",
+          "Protego",
+          "Protego Maxima",
+          "Finite Incantatem",
+          "Bombarda",
+          "Episkey",
+          "Expelliarmus",
+          "Incarcerous",
+        ];
+
+        if (difficultSpells.includes(spellName)) {
+          baseDC += 3;
+        }
+
+        return Math.max(5, baseDC);
+      },
+      []
+    );
+
     const calculateModifierValue = useCallback((modifierName, character) => {
       if (!modifierName || !character) return 0;
 
@@ -427,8 +512,296 @@ const AdminDowntimeReviewForm = React.memo(
       }
     }, []);
 
-    const formatModifier = useCallback((modifier) => {
-      return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+    const renderWandIncreaseReview = useCallback(
+      (activity, assignment, character, dicePool) => {
+        if (!activityRequiresWandSelection(activity.activity)) return null;
+
+        const wandModifier = activity.selectedWandModifier;
+
+        if (!wandModifier) {
+          return (
+            <div style={{ ...styles.specialActivityBox, ...styles.warningBox }}>
+              <div>
+                <strong>⚠️ No Wand Modifier Selected</strong>
+              </div>
+              <div>Student did not select a wand modifier to increase.</div>
+            </div>
+          );
+        }
+
+        if (
+          assignment.diceIndex === null ||
+          assignment.diceIndex === undefined
+        ) {
+          return (
+            <div style={{ ...styles.specialActivityBox, ...styles.warningBox }}>
+              <div>
+                <strong>⚠️ No Die Assigned</strong>
+              </div>
+              <div>Wand Modifier: {wandModifier}</div>
+              <div>No die was assigned to this activity.</div>
+            </div>
+          );
+        }
+
+        const diceValue = dicePool[assignment.diceIndex];
+        const currentWandValue = character.magic_modifiers?.[wandModifier] || 0;
+        const totalRoll = diceValue + currentWandValue;
+        const dc = calculateWandStatIncreaseDC(character, wandModifier);
+        const success = totalRoll >= dc;
+
+        const wandDisplayNames = {
+          charms: "Charms",
+          transfiguration: "Transfiguration",
+          jinxesHexesCurses: "Jinxes, Hexes & Curses",
+          healing: "Healing",
+          divinations: "Divinations",
+        };
+
+        return (
+          <div
+            style={{
+              ...styles.specialActivityBox,
+              ...(success ? styles.successBox : styles.failureBox),
+            }}
+          >
+            <div>
+              <strong>
+                🪄 Wand Stat Increase:{" "}
+                {wandDisplayNames[wandModifier] || wandModifier}
+              </strong>
+            </div>
+            <div>Current Value: {formatModifier(currentWandValue)}</div>
+            <div>DC Required: {dc}</div>
+            <div>
+              Roll: ({diceValue}) {currentWandValue} = {totalRoll}
+            </div>
+          </div>
+        );
+      },
+      [
+        styles.specialActivityBox,
+        styles.warningBox,
+        styles.successBox,
+        styles.failureBox,
+      ]
+    );
+
+    const renderSpellActivityReview = useCallback(
+      (
+        activity,
+        assignment,
+        character,
+        dicePool,
+        selectedSpells,
+        activityIndex
+      ) => {
+        if (!activityRequiresSpellSelection(activity.activity)) return null;
+
+        const activityKey = `activity${activityIndex + 1}`;
+        const spellSelections = selectedSpells?.[activityKey];
+
+        if (
+          !spellSelections ||
+          (!spellSelections.first && !spellSelections.second)
+        ) {
+          return (
+            <div style={{ ...styles.specialActivityBox, ...styles.warningBox }}>
+              <div>
+                <strong>⚠️ No Spells Selected</strong>
+              </div>
+              <div>This spell activity has no spells selected.</div>
+            </div>
+          );
+        }
+
+        const isResearchActivity = activity.activity
+          .toLowerCase()
+          .includes("research spells");
+
+        const renderSpellResult = (spellName, diceField, spellSlot) => {
+          if (!spellName) return null;
+
+          const diceIndex = assignment[diceField];
+          if (diceIndex === null || diceIndex === undefined) {
+            return (
+              <div style={{ marginBottom: "1rem" }}>
+                <div>
+                  <strong>
+                    {spellSlot} Spell: {spellName}
+                  </strong>
+                </div>
+                <div style={{ color: "#f59e0b" }}>⚠️ No die assigned</div>
+              </div>
+            );
+          }
+
+          const diceValue = dicePool[diceIndex];
+          const spellData = getSpellData(spellName);
+
+          if (!spellData) {
+            return (
+              <div style={{ marginBottom: "1rem" }}>
+                <div>
+                  <strong>
+                    {spellSlot} Spell: {spellName}
+                  </strong>
+                </div>
+                <div style={{ color: "#ef4444" }}>❌ Spell data not found</div>
+              </div>
+            );
+          }
+
+          const modifier = getSpellModifier(
+            spellName,
+            spellData.subject,
+            character
+          );
+          const totalRoll = diceValue + modifier;
+
+          let dc, success;
+          if (isResearchActivity) {
+            const playerYear = character.level || 1;
+            const spellYear = spellData.year || 1;
+            dc = calculateResearchDC(playerYear, spellYear, spellName);
+            success = totalRoll >= dc;
+          } else {
+            const playerYear = character.level || 1;
+            const spellYear = spellData.year || 1;
+            dc = 8 + 2 * spellYear;
+            if (spellYear > playerYear) {
+              dc += (spellYear - playerYear) * 2;
+            }
+            dc = Math.max(5, dc);
+            success = totalRoll >= dc;
+          }
+
+          return (
+            <div
+              style={{
+                marginBottom: "1rem",
+                padding: "0.75rem",
+                backgroundColor: success ? "#10b98110" : "#ef444410",
+                border: `1px solid ${success ? "#10b981" : "#ef4444"}`,
+                borderRadius: "4px",
+              }}
+            >
+              <div>
+                <strong>
+                  {spellSlot} Spell: {spellName}
+                </strong>
+              </div>
+              <div>
+                Subject: {spellData.subject} | Year: {spellData.year}
+              </div>
+              <div>
+                DC: {dc} | Roll: ({diceValue}) {formatModifier(modifier)} ={" "}
+                {totalRoll}
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div style={{ ...styles.specialActivityBox }}>
+            <div>
+              <strong>
+                📚 {isResearchActivity ? "Spell Research" : "Spell Attempt"}{" "}
+                Activity
+              </strong>
+            </div>
+            {renderSpellResult(
+              spellSelections.first,
+              "firstSpellDice",
+              "First"
+            )}
+            {renderSpellResult(
+              spellSelections.second,
+              "secondSpellDice",
+              "Second"
+            )}
+          </div>
+        );
+      },
+      [
+        styles.specialActivityBox,
+        styles.warningBox,
+        getSpellData,
+        calculateResearchDC,
+      ]
+    );
+
+    const renderStudyActivityReview = useCallback(
+      (activity, assignment, character, dicePool) => {
+        if (!activityRequiresClassSelection(activity.activity)) return null;
+
+        const selectedClass = activity.selectedClass;
+
+        if (
+          assignment.diceIndex === null ||
+          assignment.diceIndex === undefined
+        ) {
+          return (
+            <div style={{ ...styles.specialActivityBox, ...styles.infoBox }}>
+              <div>
+                <strong>📚 Study Activity</strong>
+              </div>
+              <div>
+                Selected Class: <strong>{selectedClass}</strong>
+              </div>
+              <div style={{ color: "#f59e0b" }}>⚠️ No die assigned</div>
+            </div>
+          );
+        }
+
+        const diceValue = dicePool[assignment.diceIndex];
+        const skillName = assignment.skill;
+        const modifier = skillName
+          ? calculateModifierValue(skillName, character)
+          : 0;
+        const totalRoll = diceValue + modifier;
+
+        return (
+          <div style={{ ...styles.specialActivityBox, ...styles.infoBox }}>
+            <div>
+              <strong>📚 Study Activity</strong>
+            </div>
+            <div>
+              Selected Class: <strong>{selectedClass}</strong>
+            </div>
+            {skillName && (
+              <>
+                <div>
+                  Skill Used: {skillMap[skillName]} ({formatModifier(modifier)})
+                </div>
+                <div>
+                  Roll: ({diceValue}) {formatModifier(modifier)} = {totalRoll}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      },
+      [styles.specialActivityBox, styles.infoBox, calculateModifierValue]
+    );
+
+    const inferSkillsFromActivity = useCallback((activityName) => {
+      const activityLower = activityName.toLowerCase();
+
+      if (activityLower.includes("restricted section")) {
+        return { firstSkill: "stealth", secondSkill: "investigation" };
+      }
+      if (activityLower.includes("library research")) {
+        return { firstSkill: "investigation", secondSkill: "history" };
+      }
+      if (
+        activityLower.includes("sneak") &&
+        activityLower.includes("persuade")
+      ) {
+        return { firstSkill: "stealth", secondSkill: "persuasion" };
+      }
+
+      return { firstSkill: "", secondSkill: "" };
     }, []);
 
     const renderRollInfo = useCallback(
@@ -461,7 +834,7 @@ const AdminDowntimeReviewForm = React.memo(
           </div>
         );
       },
-      [calculateModifierValue, formatModifier, styles]
+      [calculateModifierValue, styles]
     );
 
     const loadDowntimeSheet = useCallback(async () => {
@@ -661,12 +1034,22 @@ const AdminDowntimeReviewForm = React.memo(
                   }
                   style={styles.textarea}
                 />
+
+                <textarea
+                  placeholder="Rewards/Consequences (XP, items, story effects)..."
+                  value={activityReviews[index]?.rewards || ""}
+                  onChange={(e) =>
+                    updateActivityReview(index, "rewards", e.target.value)
+                  }
+                  style={styles.textarea}
+                />
               </div>
             </div>
           );
         }
 
         const isDualCheck = activityRequiresDualChecks(activity.activity);
+        const character = downtimeSheet.characters;
 
         if (activityAssignment.customDice) {
           const diceSum =
@@ -730,12 +1113,19 @@ const AdminDowntimeReviewForm = React.memo(
                   }
                   style={styles.textarea}
                 />
+
+                <textarea
+                  placeholder="Rewards/Consequences..."
+                  value={activityReviews[index]?.rewards || ""}
+                  onChange={(e) =>
+                    updateActivityReview(index, "rewards", e.target.value)
+                  }
+                  style={styles.textarea}
+                />
               </div>
             </div>
           );
         }
-
-        const character = downtimeSheet.characters;
 
         return (
           <div key={index} style={styles.activity}>
@@ -766,42 +1156,177 @@ const AdminDowntimeReviewForm = React.memo(
               </div>
             )}
 
-            {isDualCheck ? (
-              <div style={styles.dualRollContainer}>
-                {renderRollInfo(
-                  activityAssignment,
-                  downtimeSheet.dice_pool,
-                  character,
-                  "skill",
-                  "diceIndex",
-                  "First Roll"
-                )}
-                {renderRollInfo(
-                  activityAssignment,
-                  downtimeSheet.dice_pool,
-                  character,
-                  "secondSkill",
-                  "secondDiceIndex",
-                  "Second Roll"
-                )}
-              </div>
-            ) : (
-              activityAssignment.skill && (
-                <div style={styles.rollResultSection}>
-                  <div style={styles.rollResultHeader}>
-                    <strong>Roll Result:</strong>
-                  </div>
-                  {renderRollInfo(
-                    activityAssignment,
-                    downtimeSheet.dice_pool,
-                    character,
-                    "skill",
-                    "diceIndex",
-                    "Roll"
-                  )}
-                </div>
-              )
+            {/* Render special activity displays */}
+            {renderWandIncreaseReview(
+              activity,
+              activityAssignment,
+              character,
+              downtimeSheet.dice_pool
             )}
+            {renderSpellActivityReview(
+              activity,
+              activityAssignment,
+              character,
+              downtimeSheet.dice_pool,
+              downtimeSheet.selected_spells,
+              index
+            )}
+            {renderStudyActivityReview(
+              activity,
+              activityAssignment,
+              character,
+              downtimeSheet.dice_pool
+            )}
+
+            {/* Standard roll displays for non-special activities */}
+            {!activityRequiresWandSelection(activity.activity) &&
+              !activityRequiresSpellSelection(activity.activity) &&
+              !activityRequiresClassSelection(activity.activity) && (
+                <>
+                  {isDualCheck ? (
+                    <div style={styles.rollResultSection}>
+                      <div style={styles.rollResultHeader}>
+                        <strong>Dual Check Results:</strong>
+                      </div>
+                      <div style={styles.dualRollContainer}>
+                        {(() => {
+                          const firstSkill =
+                            activityAssignment.skill ||
+                            inferSkillsFromActivity(activity.activity)
+                              .firstSkill;
+                          const secondSkill =
+                            activityAssignment.secondSkill ||
+                            inferSkillsFromActivity(activity.activity)
+                              .secondSkill;
+
+                          const firstDice =
+                            downtimeSheet.dice_pool?.[
+                              activityAssignment.diceIndex
+                            ];
+                          const secondDice =
+                            downtimeSheet.dice_pool?.[
+                              activityAssignment.secondDiceIndex
+                            ];
+
+                          const firstModifier = firstSkill
+                            ? calculateModifierValue(firstSkill, character)
+                            : 0;
+                          const secondModifier = secondSkill
+                            ? calculateModifierValue(secondSkill, character)
+                            : 0;
+
+                          return (
+                            <>
+                              <div style={styles.rollContainer}>
+                                <div style={styles.rollLabel}>
+                                  <strong>
+                                    First Roll:{" "}
+                                    {allSkills.find(
+                                      (skillObj) => skillObj.name === firstSkill
+                                    )?.displayName ||
+                                      firstSkill ||
+                                      "Unknown Skill"}
+                                  </strong>
+                                </div>
+                                {firstDice !== undefined &&
+                                firstDice !== null ? (
+                                  <>
+                                    <div style={styles.rollBreakdown}>
+                                      <span style={styles.rollValue}>
+                                        d20({firstDice})
+                                      </span>
+                                      <span style={styles.modifier}>
+                                        {" "}
+                                        {formatModifier(firstModifier)}
+                                      </span>
+                                      <span style={styles.equals}> = </span>
+                                      <span style={styles.total}>
+                                        {firstDice + firstModifier}
+                                      </span>
+                                    </div>
+                                    <div style={styles.skillUsed}>
+                                      Using{" "}
+                                      {allSkills.find(
+                                        (skillObj) =>
+                                          skillObj.name === firstSkill
+                                      )?.displayName || firstSkill}{" "}
+                                      {formatModifier(firstModifier)}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div style={{ color: "#f59e0b" }}>
+                                    ⚠️ No die assigned
+                                  </div>
+                                )}
+                              </div>
+
+                              <div style={styles.rollContainer}>
+                                <div style={styles.rollLabel}>
+                                  <strong>
+                                    Second Roll:{" "}
+                                    {allSkills.find(
+                                      (skillObj) =>
+                                        skillObj.name === secondSkill
+                                    )?.displayName ||
+                                      secondSkill ||
+                                      "Unknown Skill"}
+                                  </strong>
+                                </div>
+                                {secondDice !== undefined &&
+                                secondDice !== null ? (
+                                  <>
+                                    <div style={styles.rollBreakdown}>
+                                      <span style={styles.rollValue}>
+                                        d20({secondDice})
+                                      </span>
+                                      <span style={styles.modifier}>
+                                        {" "}
+                                        {formatModifier(secondModifier)}
+                                      </span>
+                                      <span style={styles.equals}> = </span>
+                                      <span style={styles.total}>
+                                        {secondDice + secondModifier}
+                                      </span>
+                                    </div>
+                                    <div style={styles.skillUsed}>
+                                      Using{" "}
+                                      {allSkills.find(
+                                        (skillObj) =>
+                                          skillObj.name === secondSkill
+                                      )?.displayName || secondSkill}{" "}
+                                      {formatModifier(secondModifier)}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div style={{ color: "#f59e0b" }}>
+                                    ⚠️ No die assigned
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  ) : (
+                    activityAssignment.skill && (
+                      <div style={styles.rollResultSection}>
+                        <div style={styles.rollResultHeader}>
+                          <strong>Roll Result:</strong>
+                        </div>
+                        {renderRollInfo(
+                          activityAssignment,
+                          downtimeSheet.dice_pool,
+                          character,
+                          "skill",
+                          "diceIndex",
+                          "Roll"
+                        )}
+                      </div>
+                    )
+                  )}
+                </>
+              )}
 
             {activityAssignment.notes && (
               <div style={styles.playerNotes}>
@@ -834,6 +1359,15 @@ const AdminDowntimeReviewForm = React.memo(
                 }
                 style={styles.textarea}
               />
+
+              <textarea
+                placeholder="Rewards/Consequences (XP, items, story effects)..."
+                value={activityReviews[index]?.rewards || ""}
+                onChange={(e) =>
+                  updateActivityReview(index, "rewards", e.target.value)
+                }
+                style={styles.textarea}
+              />
             </div>
           </div>
         );
@@ -844,6 +1378,11 @@ const AdminDowntimeReviewForm = React.memo(
       styles,
       updateActivityReview,
       renderRollInfo,
+      renderWandIncreaseReview,
+      renderSpellActivityReview,
+      renderStudyActivityReview,
+      calculateModifierValue,
+      inferSkillsFromActivity,
       theme,
     ]);
 
@@ -951,10 +1490,17 @@ const AdminDowntimeReviewForm = React.memo(
       );
     }
 
-    if (!downtimeSheet) {
-      return null;
+    if (loading || !downtimeSheet) {
+      return (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <div style={styles.content}>
+              <div>Loading downtime sheet...</div>
+            </div>
+          </div>
+        </div>
+      );
     }
-
     return (
       <div style={styles.overlay}>
         <div style={styles.modal}>
@@ -1063,7 +1609,49 @@ const AdminDowntimeReviewForm = React.memo(
                 </div>
               </div>
             </div>
-
+            {downtimeSheet.dice_pool && downtimeSheet.dice_pool.length > 0 && (
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>🎲 Dice Pool Reference</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
+                  {downtimeSheet.dice_pool.map((dice, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "0.75rem 1rem",
+                        backgroundColor: theme.primary + "20",
+                        border: `2px solid ${theme.primary}`,
+                        borderRadius: "8px",
+                        fontWeight: "700",
+                        fontSize: "1rem",
+                        color: theme.primary,
+                        minWidth: "50px",
+                        textAlign: "center",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {dice}
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      marginLeft: "1rem",
+                      fontSize: "0.875rem",
+                      color: theme.textSecondary,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Total: {downtimeSheet.dice_pool.length} dice
+                  </div>
+                </div>
+              </div>
+            )}
             <div style={styles.mainGrid}>
               <div style={styles.leftPanel}>
                 <div style={styles.section}>

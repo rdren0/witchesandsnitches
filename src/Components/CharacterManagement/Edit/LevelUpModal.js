@@ -11,8 +11,8 @@ import {
   Search,
 } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
-import { standardFeats } from "../../SharedData/standardFeatData";
-import { hpData } from "../../SharedData/data";
+import { standardFeats } from "../../../SharedData/standardFeatData";
+import { hpData } from "../../../SharedData/data";
 import { checkFeatPrerequisites } from "../../CharacterSheet/utils";
 import { getAllSelectedFeats } from "../utils";
 import { useTheme } from "../../../contexts/ThemeContext";
