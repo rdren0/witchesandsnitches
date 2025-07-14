@@ -717,7 +717,7 @@ export const AbilityScorePicker = ({
             </h4>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {Object.entries(totalModifiers)
-                .filter(([_, bonus]) => bonus > 0)
+                .filter(([, bonus]) => bonus > 0)
                 .map(([ability, bonus]) => {
                   const featTotal = featModifiers[ability] || 0;
                   const backgroundTotal = backgroundModifiers[ability] || 0;

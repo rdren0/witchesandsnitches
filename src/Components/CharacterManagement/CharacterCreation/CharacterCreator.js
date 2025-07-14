@@ -33,7 +33,7 @@ import {
 } from "../utils";
 import { gameSessionOptions } from "../../../App/const";
 
-export const FeatRequirementsInfo = ({ character }) => {
+export const FeatRequirementsInfo = () => {
   return (
     <div
       style={{

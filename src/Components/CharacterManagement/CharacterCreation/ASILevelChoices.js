@@ -214,7 +214,7 @@ const ASIFeatBenefitPills = ({
       <div style={styles.pillsLabel}>Feat Benefits:</div>
       <div style={styles.pillsRow}>
         {Object.entries(benefits.abilityModifiers)
-          .filter(([_, value]) => value > 0)
+          .filter(([, value]) => value > 0)
           .map(([ability, totalBonus]) => {
             const details = benefits.featDetails[ability] || [];
             const tooltipText = details
@@ -355,7 +355,6 @@ const ASIFeatBenefitPills = ({
   );
 };
 
-// Adapter component to make EnhancedFeatureSelector work with ASI choices
 const ASIFeatAdapter = ({
   level,
   character,
@@ -365,17 +364,15 @@ const ASIFeatAdapter = ({
   setExpandedFeats,
   featFilter,
   setFeatFilter,
-  theme,
+
   styles,
 }) => {
-  // Create a mock character object for the EnhancedFeatureSelector
   const mockCharacter = {
     ...character,
     standardFeats: choice.selectedFeat ? [choice.selectedFeat] : [],
     featChoices: choice.featChoices || {},
   };
 
-  // Handle updates from the EnhancedFeatureSelector
   const handleMockCharacterUpdate = (updater) => {
     if (typeof updater === "function") {
       const updated = updater(mockCharacter);
@@ -383,14 +380,11 @@ const ASIFeatAdapter = ({
       const featChoices = updated.featChoices || {};
 
       if (selectedFeats.length > 0) {
-        // Feat selected
         handleASIFeatChange(level, selectedFeats[0], featChoices);
       } else {
-        // Feat deselected
         handleASIFeatChange(level, null, {});
       }
     } else {
-      // Direct object update
       const selectedFeats = updater.standardFeats || [];
       const featChoices = updater.featChoices || {};
 
@@ -420,7 +414,7 @@ const ASIFeatAdapter = ({
         setExpandedFeats={setExpandedFeats}
         featFilter={featFilter}
         setFeatFilter={setFeatFilter}
-        maxFeats={1} // Only allow one feat for ASI levels
+        maxFeats={1}
         isLevel1Choice={false}
         characterLevel={character.level}
         headerText={`Level ${level} Feat Selection`}
@@ -730,7 +724,7 @@ const ASILevelChoices = ({
                   name={`level${level}Choice`}
                   value="asi"
                   checked={choice.type === "asi"}
-                  onChange={(e) => handleASIChoiceChange(level, "asi")}
+                  onChange={() => handleASIChoiceChange(level, "asi")}
                   style={styles.level1ChoiceRadio}
                 />
                 <span
@@ -756,7 +750,7 @@ const ASILevelChoices = ({
                   name={`level${level}Choice`}
                   value="feat"
                   checked={choice.type === "feat"}
-                  onChange={(e) => handleASIChoiceChange(level, "feat")}
+                  onChange={() => handleASIChoiceChange(level, "feat")}
                   style={styles.level1ChoiceRadio}
                 />
                 <span
