@@ -3,7 +3,6 @@ import {
   validateWandStatIncreaseActivity,
   activityRequiresSpellSelection,
   activityRequiresCheckTypeSelection,
-  validateDistinctCheckActivity,
   activityRequiresAbilitySelection,
   validateAbilityScoreIncreaseActivity,
 } from "../downtimeHelpers";
@@ -53,27 +52,6 @@ export const validateWandStatIncreaseActivities = (
 
     if (activityRequiresWandSelection(activity.activity)) {
       const validation = validateWandStatIncreaseActivity(
-        activity,
-        selectedCharacter
-      );
-      if (!validation.valid) {
-        alert(`Activity ${i + 1}: ${validation.message}`);
-        return false;
-      }
-    }
-  }
-  return true;
-};
-
-export const validateDistinctCheckActivities = (
-  activities,
-  selectedCharacter
-) => {
-  for (let i = 0; i < activities.length; i++) {
-    const activity = activities[i];
-
-    if (activityRequiresCheckTypeSelection(activity.activity)) {
-      const validation = validateDistinctCheckActivity(
         activity,
         selectedCharacter
       );
@@ -245,10 +223,6 @@ export const validateAllActivities = (
     return false;
   }
 
-  if (!validateDistinctCheckActivities(activities, selectedCharacter)) {
-    return false;
-  }
-
   if (
     !validateSpellActivities(
       activities,
@@ -275,16 +249,6 @@ export const validateSingleActivity = (activity, selectedCharacter) => {
 
   if (activityRequiresWandSelection(activity.activity)) {
     const validation = validateWandStatIncreaseActivity(
-      activity,
-      selectedCharacter
-    );
-    if (!validation.valid) {
-      return validation;
-    }
-  }
-
-  if (activityRequiresCheckTypeSelection(activity.activity)) {
-    const validation = validateDistinctCheckActivity(
       activity,
       selectedCharacter
     );

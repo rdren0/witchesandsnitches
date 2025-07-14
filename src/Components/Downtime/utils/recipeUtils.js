@@ -103,12 +103,13 @@ export const handleRecipeDiceAssignment = (
       return;
     }
 
-    if (!activity.selectedCheckSkill) {
+    const requiredSkill = getRequiredRecipeSkill(activity, selectedCharacter);
+
+    if (!requiredSkill) {
       alert("Please select a skill before assigning a die.");
       return;
     }
 
-    const requiredSkill = getRequiredRecipeSkill(activity, selectedCharacter);
     const modifier = calculateModifier(requiredSkill, selectedCharacter);
     const totalRoll = dice.value + modifier;
 

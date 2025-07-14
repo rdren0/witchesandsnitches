@@ -17,7 +17,6 @@ import {
   validateStudyActivities,
   validateWandStatIncreaseActivities,
   validateSpellActivities,
-  validateDistinctCheckActivities,
   isStudyActivity,
   validateAbilityScoreIncreaseActivities,
 } from "./utils/validationUtils";
@@ -675,12 +674,6 @@ const DowntimeForm = ({
         formData.activities,
         selectedCharacter
       )
-    ) {
-      return;
-    }
-
-    if (
-      !validateDistinctCheckActivities(formData.activities, selectedCharacter)
     ) {
       return;
     }

@@ -505,7 +505,6 @@ const rollCorruption = async ({
   pointsTotal,
   pointsRemaining,
   type = "gained",
-  saveResult = null,
 }) => {
   try {
     const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
@@ -3242,7 +3241,7 @@ export const rollFlexibleDie = (
   };
 };
 
-const extractIndividualDiceResults = (roll, rollType, diceQuantity) => {
+const extractIndividualDiceResults = (roll, rollType) => {
   try {
     if (roll.rolls && roll.rolls.length > 0) {
       const diceRoll = roll.rolls[0];

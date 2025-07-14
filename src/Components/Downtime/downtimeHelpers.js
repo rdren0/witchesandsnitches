@@ -202,48 +202,6 @@ export const processDistinctCheckResult = (
   };
 };
 
-export const validateDistinctCheckActivity = (activity, selectedCharacter) => {
-  if (!isDistinctCheckActivity(activity.activity)) {
-    return { valid: true };
-  }
-
-  if (!activity.recipeName) {
-    return {
-      valid: false,
-      message: "Please enter a recipe name.",
-    };
-  }
-
-  if (!activity.selectedCheckType) {
-    return {
-      valid: false,
-      message: "Please select which type of check you want to attempt.",
-    };
-  }
-
-  if (!activity.selectedCheckSkill) {
-    return {
-      valid: false,
-      message: "Please select which skill to use for this check.",
-    };
-  }
-
-  const completedChecks = activity.completedChecks || [];
-  const alreadyCompleted = completedChecks.some(
-    (completed) => completed.checkId === activity.selectedCheckType
-  );
-
-  if (alreadyCompleted) {
-    return {
-      valid: false,
-      message:
-        "You have already successfully completed this type of check for this recipe.",
-    };
-  }
-
-  return { valid: true };
-};
-
 export const getAvailableCheckTypes = (activity) => {
   const info = getDistinctCheckActivityInfo(activity.activity);
   if (!info) return [];

@@ -42,8 +42,8 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     const availableSpells = getAvailableSpellsData();
     const years = new Set();
 
-    Object.entries(availableSpells).forEach(([subjectName, subject]) => {
-      Object.entries(subject.levels).forEach(([levelName, spells]) => {
+    Object.entries(availableSpells).forEach(([, subject]) => {
+      Object.entries(subject.levels).forEach(([, spells]) => {
         spells.forEach((spell) => {
           if (spell.year !== null && spell.year !== undefined) {
             years.add(spell.year);

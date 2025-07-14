@@ -115,15 +115,6 @@ export const renderDiceValue = ({
         selectedCharacter,
         selectedWandModifier
       );
-      const success = totalRoll >= dc;
-
-      const wandDisplayNames = {
-        charms: "Charms",
-        transfiguration: "Transfiguration",
-        jinxesHexesCurses: "JHC",
-        healing: "Healing",
-        divinations: "Divinations",
-      };
 
       return (
         <div style={styles.assignedDice}>
@@ -582,7 +573,6 @@ export const renderDiceAssignment = ({
   index,
   assignment,
   styles,
-  theme,
   renderDiceValue,
   dicePool,
   diceManager,
