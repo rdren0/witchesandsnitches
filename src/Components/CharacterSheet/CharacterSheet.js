@@ -579,7 +579,6 @@ const CharacterSheet = ({
           inspiration: resources.inspiration ?? 0,
           intelligence: effectiveAbilityScores.intelligence || 10,
           level: data.level || 1,
-          level: data.level,
           magicModifiers: data.magic_modifiers || {},
           maxHitDice: data.level,
           maxHitPoints: data.hit_points || 1,
