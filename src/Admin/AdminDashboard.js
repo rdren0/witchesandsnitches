@@ -239,6 +239,7 @@ const AdminDashboard = ({ supabase }) => {
       label: "Downtime",
       icon: Calendar,
       component: <AdminDowntimeManager supabase={supabase} />,
+      badge: dashboardStats.downtimeSheets,
     },
     {
       id: "archive",
@@ -267,6 +268,7 @@ const AdminDashboard = ({ supabase }) => {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
+          const hasBadge = tab.badge && tab.badge > 0;
 
           return (
             <button
@@ -279,6 +281,23 @@ const AdminDashboard = ({ supabase }) => {
             >
               <Icon size={16} />
               {tab.label}
+              {hasBadge && (
+                <span
+                  style={{
+                    marginLeft: "8px",
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    backgroundColor: "#f59e0b",
+                    color: "white",
+                    minWidth: "18px",
+                    textAlign: "center",
+                  }}
+                >
+                  {tab.badge}
+                </span>
+              )}
             </button>
           );
         })}

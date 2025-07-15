@@ -1,21 +1,66 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getAllActivities, downtime } from "../SharedData/downtime";
-import { formatModifier } from "../CharacterSheet/utils";
-import {
-  calculateModifier,
-  activityRequiresDualChecks,
-  getActivitySkillInfo,
-  activityRequiresNoDiceRoll,
-  isMultiSessionActivity,
-  shouldUseCustomDiceForActivity,
-  getCustomDiceTypeForActivity,
-  getMultiSessionInfo,
-  getSpecialActivityInfo,
-  validateSkillName,
-} from "./downtimeHelpers";
-import SkillSelector from "./SkillSelector";
+import { downtime, classes } from "../../SharedData/downtime";
+import { downtimeStyles } from "./styles";
 import DicePoolManager from "./DicePoolManager";
+import SkillSelector from "./SkillSelector";
+import SpellSelector from "./SpellSelector";
+import WandModifierSelector from "./WandModifierSelector";
+
+import {
+  validateStudyActivities,
+  validateWandStatIncreaseActivities,
+  validateSpellActivities,
+  isStudyActivity,
+  validateAbilityScoreIncreaseActivities,
+} from "./utils/validationUtils";
+
+import {
+  loadSpellProgress,
+  updateSpellProgressOnSubmission,
+} from "./utils/spellUtils";
+
+import {
+  activityRequiresMakeSpellInterface,
+  getActivityDescription,
+  getCheckDescription,
+  getAvailableActivities,
+} from "./utils/activityUtils";
+
+import { getModifierValue, formatModifier } from "./utils/modifierUtils";
+
+import {
+  renderDiceValue,
+  renderSpecialActivityInfo,
+  renderMakeSpellActivity,
+  renderDiceAssignment,
+} from "./utils/renderUtils";
+
+import { saveAsDraft, submitDowntimeSheet } from "./utils/databaseUtils";
+
+import {
+  activityRequiresDualChecks,
+  activityRequiresWandSelection,
+  activityRequiresSpellSelection,
+  activityRequiresNoDiceRoll,
+  shouldUseCustomDiceForActivity,
+  isDistinctCheckActivity,
+  getDistinctCheckActivityInfo,
+  calculateDistinctCheckProgress,
+  getAvailableCheckTypes,
+  getSkillOptionsForCheck,
+  calculateModifier,
+  activityRequiresAbilitySelection,
+  getAvailableAbilityScores,
+  getAbilityScoreModifier,
+  calculateAbilityScoreIncreaseDC,
+} from "./downtimeHelpers";
 
 const DowntimeForm = ({
   user,
@@ -23,162 +68,20 @@ const DowntimeForm = ({
   supabase,
   adminMode,
   isUserAdmin,
-
   selectedYear,
   selectedSemester,
   currentSheet,
   setCurrentSheet,
-
   dicePool: initialDicePool,
   rollAssignments: initialRollAssignments,
   formData: initialFormData,
-
   loadSubmittedSheets,
   loadDrafts,
   setActiveTab,
 }) => {
   const { theme } = useTheme();
-  const styles = useMemo(
-    () => ({
-      container: {
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "1.5rem",
-        backgroundColor: theme.background,
-      },
-      section: {
-        marginBottom: "2rem",
-        padding: "1.5rem",
-        backgroundColor: theme.surface,
-        borderRadius: "12px",
-        border: `1px solid ${theme.border}`,
-      },
-      sectionTitle: {
-        fontSize: "1.5rem",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "1rem",
-        borderBottom: `2px solid ${theme.primary}`,
-        paddingBottom: "0.5rem",
-      },
-      activityCard: {
-        padding: "1.5rem",
-        backgroundColor: theme.background,
-        borderRadius: "8px",
-        border: `1px solid ${theme.border}`,
-        marginBottom: "1rem",
-      },
-      inputGroup: {
-        marginBottom: "1rem",
-      },
-      label: {
-        display: "block",
-        fontSize: "0.875rem",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "0.5rem",
-      },
-      input: {
-        width: "100%",
-        padding: "0.75rem",
-        borderRadius: "6px",
-        border: `1px solid ${theme.border}`,
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "0.875rem",
-      },
-      select: {
-        width: "100%",
-        padding: "0.75rem",
-        borderRadius: "6px",
-        border: `1px solid ${theme.border}`,
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "0.875rem",
-      },
-      textarea: {
-        width: "100%",
-        padding: "0.75rem",
-        borderRadius: "6px",
-        border: `1px solid ${theme.border}`,
-        backgroundColor: theme.surface,
-        color: theme.text,
-        fontSize: "0.875rem",
-        resize: "none",
-        height: "80px",
-      },
-      activityDescription: {
-        padding: "1rem",
-        backgroundColor: theme.primary + "10",
-        border: `1px solid ${theme.primary + "30"}`,
-        borderRadius: "6px",
-        fontSize: "0.875rem",
-        color: theme.text,
-        lineHeight: "1.5",
-        marginTop: "0.5rem",
-        marginBottom: "0.5rem",
-      },
-      diceAssignment: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "1rem",
-        marginTop: "1rem",
-      },
-      assignedDice: {
-        padding: "1rem",
-        backgroundColor: theme.primary + "15",
-        borderRadius: "8px",
-        border: `2px solid ${theme.primary}`,
-        textAlign: "center",
-      },
-      diceValue: {
-        fontSize: "1.5rem",
-        fontWeight: "bold",
-        color: theme.primary,
-        marginBottom: "0.5rem",
-      },
-      total: {
-        fontSize: "1rem",
-        fontWeight: "600",
-        color: theme.text,
-        marginBottom: "0.5rem",
-      },
-      removeButton: {
-        padding: "0.25rem 0.75rem",
-        backgroundColor: theme.error + "15",
-        color: theme.error,
-        border: `1px solid ${theme.error}`,
-        borderRadius: "4px",
-        fontSize: "0.75rem",
-        cursor: "pointer",
-      },
-      button: {
-        padding: "0.75rem 1.5rem",
-        borderRadius: "8px",
-        border: "none",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-      },
-      secondaryButton: {
-        backgroundColor: theme.warning,
-        color: "white",
-      },
-      successButton: {
-        backgroundColor: theme.success,
-        color: "white",
-      },
-      actionButtons: {
-        display: "flex",
-        gap: "1rem",
-        justifyContent: "center",
-        paddingTop: "1rem",
-      },
-    }),
-    [theme]
-  );
+  const styles = useMemo(() => downtimeStyles(theme), [theme]);
   const [hasInitialized, setHasInitialized] = useState(false);
-
   const [dicePool, setDicePool] = useState(initialDicePool || []);
   const [rollAssignments, setRollAssignments] = useState(
     initialRollAssignments || {
@@ -192,6 +95,9 @@ const DowntimeForm = ({
         secondWandModifier: "",
         customDice: null,
         jobType: null,
+        familyType: null,
+        firstSpellDice: null,
+        secondSpellDice: null,
       },
       activity2: {
         diceIndex: null,
@@ -203,6 +109,9 @@ const DowntimeForm = ({
         secondWandModifier: "",
         customDice: null,
         jobType: null,
+        familyType: null,
+        firstSpellDice: null,
+        secondSpellDice: null,
       },
       activity3: {
         diceIndex: null,
@@ -214,8 +123,10 @@ const DowntimeForm = ({
         secondWandModifier: "",
         customDice: null,
         jobType: null,
+        familyType: null,
+        firstSpellDice: null,
+        secondSpellDice: null,
       },
-
       relationship1: {
         diceIndex: null,
         skill: "",
@@ -239,23 +150,42 @@ const DowntimeForm = ({
       },
     }
   );
+
   const [formData, setFormData] = useState(
     initialFormData || {
       activities: [
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
+          selectedWandModifier: "",
           successes: [false, false, false, false, false],
+          selectedAbilityScore: "",
+          recipeName: "",
+          selectedCheckType: "",
+          selectedCheckSkill: "",
+          completedChecks: [],
         },
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
+          selectedWandModifier: "",
           successes: [false, false, false, false, false],
+          selectedAbilityScore: "",
+          recipeName: "",
+          selectedCheckType: "",
+          selectedCheckSkill: "",
+          completedChecks: [],
         },
         {
           activity: "",
-          npc: "",
+          selectedClass: "",
+          selectedWandModifier: "",
           successes: [false, false, false, false, false],
+          selectedAbilityScore: "",
+          recipeName: "",
+          selectedCheckType: "",
+          selectedCheckSkill: "",
+          completedChecks: [],
         },
       ],
       relationships: [
@@ -269,8 +199,112 @@ const DowntimeForm = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-
   const [extraDiceAssignments, setExtraDiceAssignments] = useState({});
+  const [selectedSpells, setSelectedSpells] = useState({
+    activity1: { first: "", second: "" },
+    activity2: { first: "", second: "" },
+    activity3: { first: "", second: "" },
+  });
+  const [spellAttempts, setSpellAttempts] = useState({});
+  const [researchedSpells, setResearchedSpells] = useState({});
+  const [failedAttempts, setFailedAttempts] = useState({});
+
+  const availableActivities = useMemo(() => getAvailableActivities(), []);
+  const selectRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedCharacter && user) {
+      loadSpellProgress(selectedCharacter, user, supabase).then(
+        ({ attempts, researched, failed }) => {
+          setSpellAttempts(attempts);
+          setResearchedSpells(researched);
+          setFailedAttempts(failed);
+        }
+      );
+    }
+  }, [selectedCharacter, user, supabase]);
+
+  useEffect(() => {
+    if (initialFormData && !hasInitialized) {
+      if (initialFormData.activities) {
+        setFormData({
+          ...initialFormData,
+          relationships: initialFormData.relationships || [
+            { npcName: "", notes: "" },
+            { npcName: "", notes: "" },
+            { npcName: "", notes: "" },
+          ],
+        });
+      }
+
+      if (initialFormData.selectedSpells) {
+        const spellsToLoad = initialFormData.selectedSpells;
+        const validatedSpells = {
+          activity1: {
+            first: spellsToLoad.activity1?.first || "",
+            second: spellsToLoad.activity1?.second || "",
+          },
+          activity2: {
+            first: spellsToLoad.activity2?.first || "",
+            second: spellsToLoad.activity2?.second || "",
+          },
+          activity3: {
+            first: spellsToLoad.activity3?.first || "",
+            second: spellsToLoad.activity3?.second || "",
+          },
+        };
+        setSelectedSpells(validatedSpells);
+      }
+
+      setHasInitialized(true);
+    }
+  }, [initialFormData, hasInitialized]);
+
+  useEffect(() => {
+    if (currentSheet?.selected_spells && hasInitialized) {
+      const currentSheetSpells = currentSheet.selected_spells;
+      const currentState = JSON.stringify(selectedSpells);
+      const newState = JSON.stringify(currentSheetSpells);
+
+      if (currentState !== newState) {
+        const updatedSpells = {
+          activity1: {
+            first: currentSheetSpells.activity1?.first || "",
+            second: currentSheetSpells.activity1?.second || "",
+          },
+          activity2: {
+            first: currentSheetSpells.activity2?.first || "",
+            second: currentSheetSpells.activity2?.second || "",
+          },
+          activity3: {
+            first: currentSheetSpells.activity3?.first || "",
+            second: currentSheetSpells.activity3?.second || "",
+          },
+        };
+        setSelectedSpells(updatedSpells);
+      }
+    }
+  }, [currentSheet?.selected_spells, hasInitialized, selectedSpells]);
+
+  useEffect(() => {
+    if (initialDicePool && initialDicePool.length > 0 && !hasInitialized) {
+      setDicePool(initialDicePool);
+    }
+  }, [initialDicePool, hasInitialized]);
+
+  useEffect(() => {
+    if (
+      initialRollAssignments &&
+      Object.keys(initialRollAssignments).length > 0 &&
+      !hasInitialized
+    ) {
+      setRollAssignments(initialRollAssignments);
+    }
+  }, [initialRollAssignments, hasInitialized]);
+
+  useEffect(() => {
+    setHasInitialized(false);
+  }, [currentSheet?.id]);
 
   const canEdit = useCallback(() => {
     if (isUserAdmin) return true;
@@ -293,35 +327,46 @@ const DowntimeForm = ({
     selectedCharacter,
   });
 
-  useEffect(() => {
-    if (initialDicePool && initialDicePool.length > 0 && !hasInitialized) {
-      setDicePool(initialDicePool);
-      setHasInitialized(true);
-    }
-  }, [initialDicePool, hasInitialized]);
+  const handleSpellSelect = useCallback(
+    (activityIndex, spellSlot, spellName) => {
+      if (!canEdit()) return;
 
-  useEffect(() => {
-    if (
-      initialRollAssignments &&
-      Object.keys(initialRollAssignments).length > 0 &&
-      !hasInitialized
-    ) {
-      setRollAssignments(initialRollAssignments);
-    }
-  }, [initialRollAssignments, hasInitialized]);
-
-  useEffect(() => {
-    if (initialFormData && initialFormData.activities && !hasInitialized) {
-      setFormData({
-        ...initialFormData,
-        relationships: initialFormData.relationships || [
-          { npcName: "", notes: "" },
-          { npcName: "", notes: "" },
-          { npcName: "", notes: "" },
-        ],
+      const activityKey = `activity${activityIndex + 1}`;
+      setSelectedSpells((prev) => {
+        const newState = {
+          ...prev,
+          [activityKey]: {
+            ...prev[activityKey],
+            [spellSlot]: spellName,
+          },
+        };
+        return newState;
       });
-    }
-  }, [initialFormData, hasInitialized]);
+    },
+    [canEdit]
+  );
+
+  const handleSpellDiceAssign = useCallback(
+    (activityIndex, spellSlot, diceIndex) => {
+      if (!canEdit()) return;
+
+      const activityKey = `activity${activityIndex + 1}`;
+      const diceField =
+        spellSlot === "first" ? "firstSpellDice" : "secondSpellDice";
+
+      setRollAssignments((prev) => {
+        const newState = {
+          ...prev,
+          [activityKey]: {
+            ...prev[activityKey],
+            [diceField]: diceIndex,
+          },
+        };
+        return newState;
+      });
+    },
+    [canEdit]
+  );
 
   const updateRollAssignment = useCallback(
     (activityIndex, field, value) => {
@@ -339,116 +384,6 @@ const DowntimeForm = ({
     [canEdit]
   );
 
-  useEffect(() => {
-    formData.activities.forEach((activity, index) => {
-      if (activity.activity) {
-        const skillInfo = getActivitySkillInfo(activity.activity);
-        const assignmentKey = `activity${index + 1}`;
-        const currentAssignment = rollAssignments[assignmentKey];
-
-        if (skillInfo.type === "locked" && skillInfo.skills) {
-          if (
-            skillInfo.skills[0] &&
-            (!currentAssignment?.skill || currentAssignment.skill === "")
-          ) {
-            updateRollAssignment(index, "skill", skillInfo.skills[0]);
-          }
-
-          if (
-            skillInfo.skills[1] &&
-            (!currentAssignment?.secondSkill ||
-              currentAssignment.secondSkill === "")
-          ) {
-            updateRollAssignment(index, "secondSkill", skillInfo.skills[1]);
-          }
-        } else if (skillInfo.type === "limited" && skillInfo.skills) {
-          if (
-            currentAssignment?.skill &&
-            !skillInfo.skills.includes(currentAssignment.skill)
-          ) {
-            console.warn(
-              `Invalid skill "${currentAssignment.skill}" for activity "${activity.activity}". Clearing.`
-            );
-            updateRollAssignment(index, "skill", "");
-          }
-
-          if (
-            currentAssignment?.secondSkill &&
-            !skillInfo.skills.includes(currentAssignment.secondSkill)
-          ) {
-            console.warn(
-              `Invalid second skill "${currentAssignment.secondSkill}" for activity "${activity.activity}". Clearing.`
-            );
-            updateRollAssignment(index, "secondSkill", "");
-          }
-        }
-
-        if (
-          currentAssignment?.skill &&
-          !validateSkillName(currentAssignment.skill)
-        ) {
-          console.error(
-            `Skill "${currentAssignment.skill}" not found in allSkills. This may cause modifier calculation issues.`
-          );
-        }
-
-        if (
-          currentAssignment?.secondSkill &&
-          !validateSkillName(currentAssignment.secondSkill)
-        ) {
-          console.error(
-            `Second skill "${currentAssignment.secondSkill}" not found in allSkills. This may cause modifier calculation issues.`
-          );
-        }
-      }
-    });
-  }, [formData.activities, rollAssignments, updateRollAssignment]);
-
-  useEffect(() => {
-    setHasInitialized(false);
-  }, [currentSheet?.id]);
-
-  const availableActivities = useMemo(() => {
-    const activities = getAllActivities();
-    return [
-      { value: "", label: "Select Activity", description: "" },
-      ...activities.map((activity) => ({
-        value: activity,
-        label: activity ? activity.split(" - ")[0] : "Select Activity",
-        description: activity,
-      })),
-    ];
-  }, []);
-
-  const getActivityDescription = useCallback(
-    (activityValue) => {
-      if (!activityValue) return "";
-      const activity = availableActivities.find(
-        (a) => a.value === activityValue
-      );
-      return activity ? activity.description : "";
-    },
-    [availableActivities]
-  );
-
-  const getModifierValue = useCallback(
-    (modifierName) => {
-      if (!modifierName) {
-        console.warn("getModifierValue called with empty modifierName");
-        return 0;
-      }
-
-      const result = calculateModifier(modifierName, selectedCharacter);
-      return result;
-    },
-    [selectedCharacter]
-  );
-
-  const formatModifierValue = useCallback((value) => {
-    if (value === 0) return "+0";
-    return value > 0 ? `+${value}` : `${value}`;
-  }, []);
-
   const updateActivity = useCallback(
     (index, field, value) => {
       if (!canEdit()) return;
@@ -464,6 +399,18 @@ const DowntimeForm = ({
           ? shouldUseCustomDiceForActivity(value)
           : wasCustomDice;
 
+      const wasWandIncrease = activityRequiresWandSelection(previousActivity);
+      const willBeWandIncrease =
+        field === "activity"
+          ? activityRequiresWandSelection(value)
+          : wasWandIncrease;
+
+      const wasDistinctCheck = isDistinctCheckActivity(previousActivity);
+      const willBeDistinctCheck =
+        field === "activity"
+          ? isDistinctCheckActivity(value)
+          : wasDistinctCheck;
+
       setFormData((prev) => ({
         ...prev,
         activities: prev.activities.map((activity, i) =>
@@ -475,6 +422,49 @@ const DowntimeForm = ({
       const assignment = rollAssignments[activityKey];
 
       if (field === "activity") {
+        if (wasWandIncrease && !willBeWandIncrease) {
+          setFormData((prev) => ({
+            ...prev,
+            activities: prev.activities.map((activity, i) =>
+              i === index ? { ...activity, selectedWandModifier: "" } : activity
+            ),
+          }));
+        }
+
+        if (wasDistinctCheck && !willBeDistinctCheck) {
+          setFormData((prev) => ({
+            ...prev,
+            activities: prev.activities.map((activity, i) =>
+              i === index
+                ? {
+                    ...activity,
+                    recipeName: "",
+                    selectedCheckType: "",
+                    selectedCheckSkill: "",
+                    completedChecks: [],
+                  }
+                : activity
+            ),
+          }));
+        }
+
+        if (!wasDistinctCheck && willBeDistinctCheck) {
+          setFormData((prev) => ({
+            ...prev,
+            activities: prev.activities.map((activity, i) =>
+              i === index
+                ? {
+                    ...activity,
+                    recipeName: "",
+                    selectedCheckType: "",
+                    selectedCheckSkill: "",
+                    completedChecks: [],
+                  }
+                : activity
+            ),
+          }));
+        }
+
         if (wasCustomDice && !willBeCustomDice) {
           setRollAssignments((prev) => ({
             ...prev,
@@ -488,6 +478,9 @@ const DowntimeForm = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
+              firstSpellDice: null,
+              secondSpellDice: null,
             },
           }));
         } else if (!wasCustomDice && willBeCustomDice) {
@@ -503,6 +496,9 @@ const DowntimeForm = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
+              firstSpellDice: null,
+              secondSpellDice: null,
             },
           }));
         } else if (
@@ -522,6 +518,9 @@ const DowntimeForm = ({
               secondWandModifier: "",
               customDice: null,
               jobType: null,
+              familyType: null,
+              firstSpellDice: null,
+              secondSpellDice: null,
             },
           }));
         } else if (
@@ -569,8 +568,20 @@ const DowntimeForm = ({
             secondWandModifier: "",
             customDice: null,
             jobType: null,
+            familyType: null,
+            firstSpellDice: null,
+            secondSpellDice: null,
           },
         }));
+
+        const wasSpellActivity =
+          activityRequiresSpellSelection(previousActivity);
+        if (wasSpellActivity) {
+          setSelectedSpells((prev) => ({
+            ...prev,
+            [activityKey]: { first: "", second: "" },
+          }));
+        }
       }
     },
     [
@@ -612,566 +623,23 @@ const DowntimeForm = ({
     [canEdit]
   );
 
-  const renderDiceValue = useCallback(
-    (assignment, dicePool, isSecond = false) => {
-      const diceIndexKey = isSecond ? "secondDiceIndex" : "diceIndex";
-      const skillKey = isSecond ? "secondSkill" : "skill";
-
-      if (assignment.customDice && !isSecond) {
-        const isWorkJob = assignment.jobType !== undefined;
-        const diceSum = assignment.customDice[0] + assignment.customDice[1];
-
-        return (
-          <div style={styles.assignedDice}>
-            <div style={styles.diceValue}>
-              {isWorkJob ? (
-                <>
-                  {assignment.jobType === "easy" && "2D8: "}
-                  {assignment.jobType === "medium" && "2D10: "}
-                  {assignment.jobType === "hard" && "2D12: "}
-                  {assignment.customDice[0]} + {assignment.customDice[1]} ={" "}
-                  {diceSum}
-                  {isWorkJob && (
-                    <div
-                      style={{
-                        fontSize: "0.875rem",
-                        color: theme.textSecondary,
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      Earnings: {diceSum} × 2 = {diceSum * 2} Galleons
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  2d12: {assignment.customDice[0]} + {assignment.customDice[1]}{" "}
-                  = {diceSum}
-                </>
-              )}
-            </div>
-            {assignment[skillKey] && !isWorkJob && (
-              <div style={styles.total}>
-                Total: {diceSum}{" "}
-                {formatModifier(getModifierValue(assignment[skillKey]))} ={" "}
-                {diceSum + getModifierValue(assignment[skillKey])}
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      if (
-        assignment[diceIndexKey] !== null &&
-        assignment[diceIndexKey] !== undefined
-      ) {
-        const diceValue = dicePool[assignment[diceIndexKey]];
-        const skillName = assignment[skillKey];
-        const hasSkill = skillName && skillName !== "";
-        const modifierValue = hasSkill ? getModifierValue(skillName) : 0;
-        const totalValue = diceValue + modifierValue;
-
-        return (
-          <div style={styles.assignedDice}>
-            <div style={styles.diceValue}>
-              {hasSkill ? totalValue : diceValue}
-            </div>
-            {hasSkill && (
-              <div style={styles.total}>
-                Total: {diceValue} {formatModifier(modifierValue)} ={" "}
-                {totalValue}
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      return null;
-    },
-    [getModifierValue, theme.textSecondary, styles]
-  );
-
-  const editable = canEdit();
-
-  const renderSpecialActivityInfo = useCallback(
-    (activityText) => {
-      if (!activityText) return null;
-
-      if (activityRequiresNoDiceRoll(activityText)) {
-        const specialInfo = getSpecialActivityInfo(activityText);
-        return (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: theme.info + "20",
-              border: `1px solid ${theme.info}`,
-              borderRadius: "6px",
-              marginTop: "1rem",
-              textAlign: "center",
-            }}
-          >
-            <strong>📋 No Dice Roll Required</strong>
-            <br />
-            <small>
-              {specialInfo?.description ||
-                "This activity doesn't require a dice roll to complete."}
-            </small>
-          </div>
-        );
-      }
-
-      if (isMultiSessionActivity(activityText)) {
-        const multiSessionInfo = getMultiSessionInfo(activityText);
-        return (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: theme.warning + "20",
-              border: `1px solid ${theme.warning}`,
-              borderRadius: "6px",
-              marginTop: "1rem",
-            }}
-          >
-            <strong>⏳ Multi-Session Activity</strong>
-            <br />
-            <small>{multiSessionInfo.description}</small>
-          </div>
-        );
-      }
-
-      if (shouldUseCustomDiceForActivity(activityText)) {
-        const customDiceInfo = getCustomDiceTypeForActivity(activityText);
-        const isWorkJob = activityText.toLowerCase().includes("work job");
-
-        return (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: theme.warning + "20",
-              border: `1px solid ${theme.warning}`,
-              borderRadius: "6px",
-              marginTop: "1rem",
-            }}
-          >
-            <div style={{ marginBottom: "0.5rem" }}>
-              <strong>🎲 Special Dice Rules</strong>
-              <br />
-              <small>{customDiceInfo.description}</small>
-            </div>
-
-            {isWorkJob && (
-              <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    fontSize: "0.875rem",
-                    fontWeight: "600",
-                    color: theme.text,
-                  }}
-                >
-                  Job Difficulty:
-                </label>
-                <select
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    borderRadius: "4px",
-                    border: `1px solid ${theme.border}`,
-                    backgroundColor: theme.surface,
-                    color: theme.text,
-                    fontSize: "0.875rem",
-                    marginTop: "0.25rem",
-                  }}
-                  defaultValue="medium"
-                  id={`job-difficulty-${activityText}`}
-                >
-                  <option value="easy">Easy Job (2D8 + promotions)</option>
-                  <option value="medium">Medium Job (2D10 + promotions)</option>
-                  <option value="hard">Hard Job (2D12 + promotions)</option>
-                </select>
-              </div>
-            )}
-
-            <div>
-              <button
-                onClick={() => {
-                  const jobType = isWorkJob
-                    ? document.getElementById(`job-difficulty-${activityText}`)
-                        ?.value || "medium"
-                    : undefined;
-                  const activityIndex = formData.activities.findIndex(
-                    (activity) => activity.activity === activityText
-                  );
-                  diceManager.functions.handleCustomDiceRoll(
-                    activityText,
-                    jobType,
-                    activityIndex
-                  );
-                }}
-                disabled={!editable}
-                style={{
-                  ...styles.button,
-                  ...styles.secondaryButton,
-                  fontSize: "0.875rem",
-                  padding: "0.5rem 1rem",
-                  ...(!editable ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-                }}
-              >
-                Roll {customDiceInfo.diceType}
-              </button>
-            </div>
-          </div>
-        );
-      }
-
-      const specialInfo = getSpecialActivityInfo(activityText);
-      if (specialInfo) {
-        let iconAndTitle = "";
-        let bgColor = theme.info;
-
-        switch (specialInfo.type) {
-          case "job_application":
-            iconAndTitle = "💼 Job Application";
-            bgColor = theme.success;
-            break;
-          case "promotion":
-            iconAndTitle = "📈 Promotion Attempt";
-            bgColor = theme.success;
-            break;
-          default:
-            iconAndTitle = "ℹ️ Special Activity";
-        }
-
-        return (
-          <div
-            style={{
-              padding: "1rem",
-              backgroundColor: bgColor + "20",
-              border: `1px solid ${bgColor}`,
-              borderRadius: "6px",
-              marginTop: "1rem",
-            }}
-          >
-            <strong>{iconAndTitle}</strong>
-            <br />
-            <small>{specialInfo.description}</small>
-          </div>
-        );
-      }
-
-      return null;
-    },
-    [theme, editable, diceManager.functions, formData.activities, styles]
-  );
-
-  const renderDiceAssignment = useCallback(
-    (activity, index, assignment) => {
-      const activityText = activity.activity;
-
-      if (!activityText) return null;
-
-      if (activityRequiresNoDiceRoll(activityText)) {
-        return null;
-      }
-
-      if (shouldUseCustomDiceForActivity(activityText)) {
-        if (assignment.customDice) {
-          return (
-            <div style={styles.diceAssignment}>
-              <div>
-                <label style={styles.label}>Roll Result</label>
-                {renderDiceValue(assignment, dicePool, false)}
-              </div>
-            </div>
-          );
-        }
-
-        return null;
-      }
-
-      if (activityRequiresDualChecks(activityText)) {
-        const hasSecondDieAssigned =
-          assignment.secondDiceIndex !== null &&
-          assignment.secondDiceIndex !== undefined;
-
-        const totalDualCheckActivities =
-          diceManager.data.dualCheckActivities.length;
-        const currentExtraDice = Math.max(0, dicePool.length - 6);
-        const canAddMoreDice = currentExtraDice < totalDualCheckActivities;
-
-        const totalDiceNeeded = 6 + totalDualCheckActivities;
-        const needsExtraDie =
-          !hasSecondDieAssigned &&
-          canAddMoreDice &&
-          dicePool.length < totalDiceNeeded;
-
-        return (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-              marginTop: "1rem",
-            }}
-          >
-            <div>
-              <SkillSelector
-                activityText={activityText}
-                assignment={assignment}
-                isSecondSkill={false}
-                onChange={(value) =>
-                  updateRollAssignment(index, "skill", value)
-                }
-                canEdit={() => editable}
-                selectedCharacter={selectedCharacter}
-              />
-
-              <div style={{ marginTop: "0.5rem" }}>
-                <label style={styles.label}>Primary Die</label>
-                {renderDiceValue(assignment, dicePool, false) || (
-                  <select
-                    style={styles.select}
-                    value=""
-                    onChange={(e) =>
-                      diceManager.functions.assignDice(
-                        index,
-                        parseInt(e.target.value),
-                        false
-                      )
-                    }
-                    disabled={!editable}
-                  >
-                    <option value="">Select die...</option>
-                    {diceManager.functions.getSortedDiceOptions
-                      .filter(
-                        ({ index: diceIndex }) =>
-                          !diceManager.functions.isDiceAssigned(diceIndex)
-                      )
-                      .map(({ value, index: diceIndex }) => (
-                        <option key={diceIndex} value={diceIndex}>
-                          {value}
-                        </option>
-                      ))}
-                  </select>
-                )}
-                {assignment.diceIndex !== null &&
-                  assignment.diceIndex !== undefined &&
-                  editable && (
-                    <button
-                      style={{ ...styles.removeButton, marginTop: "0.5rem" }}
-                      onClick={() =>
-                        diceManager.functions.unassignDice(index, false)
-                      }
-                    >
-                      Remove
-                    </button>
-                  )}
-              </div>
-            </div>
-
-            <div>
-              <SkillSelector
-                activityText={activityText}
-                assignment={assignment}
-                isSecondSkill={true}
-                onChange={(value) =>
-                  updateRollAssignment(index, "secondSkill", value)
-                }
-                canEdit={() => editable}
-                selectedCharacter={selectedCharacter}
-              />
-
-              <div style={{ marginTop: "0.5rem" }}>
-                <label style={styles.label}>Second Die</label>
-
-                {needsExtraDie && editable ? (
-                  <button
-                    onClick={() =>
-                      diceManager.functions.addExtraDieForActivity(
-                        `activity${index + 1}`
-                      )
-                    }
-                    disabled={!canAddMoreDice}
-                    style={{
-                      ...styles.button,
-                      ...styles.secondaryButton,
-                      width: "100%",
-                      fontSize: "0.875rem",
-                      padding: "0.75rem",
-                      marginTop: "0.5rem",
-                      ...(!canAddMoreDice
-                        ? { opacity: 0.6, cursor: "not-allowed" }
-                        : {}),
-                    }}
-                    title={
-                      canAddMoreDice
-                        ? "Add an extra die for this dual check activity"
-                        : `Maximum extra dice reached (${currentExtraDice}/${totalDualCheckActivities})`
-                    }
-                  >
-                    + Add Extra Die ({currentExtraDice}/
-                    {totalDualCheckActivities})
-                  </button>
-                ) : (
-                  <>
-                    {renderDiceValue(assignment, dicePool, true) || (
-                      <select
-                        style={styles.select}
-                        value=""
-                        onChange={(e) =>
-                          diceManager.functions.assignDice(
-                            index,
-                            parseInt(e.target.value),
-                            true
-                          )
-                        }
-                        disabled={!editable}
-                      >
-                        <option value="">Select die...</option>
-                        {diceManager.functions.getSortedDiceOptions
-                          .filter(
-                            ({ index: diceIndex }) =>
-                              !diceManager.functions.isDiceAssigned(diceIndex)
-                          )
-                          .map(({ value, index: diceIndex }) => (
-                            <option key={diceIndex} value={diceIndex}>
-                              {value}
-                            </option>
-                          ))}
-                      </select>
-                    )}
-                    {assignment.secondDiceIndex !== null &&
-                      assignment.secondDiceIndex !== undefined &&
-                      editable && (
-                        <button
-                          style={{
-                            ...styles.removeButton,
-                            marginTop: "0.5rem",
-                          }}
-                          onClick={() =>
-                            diceManager.functions.unassignDice(index, true)
-                          }
-                        >
-                          Remove
-                        </button>
-                      )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      } else {
-        return (
-          <div style={styles.diceAssignment}>
-            <div>
-              <label style={styles.label}>Primary Die</label>
-              {renderDiceValue(assignment, dicePool, false) || (
-                <select
-                  style={styles.select}
-                  value=""
-                  onChange={(e) =>
-                    diceManager.functions.assignDice(
-                      index,
-                      parseInt(e.target.value),
-                      false
-                    )
-                  }
-                  disabled={!editable}
-                >
-                  <option value="">Select die...</option>
-                  {diceManager.functions.getSortedDiceOptions
-                    .filter(
-                      ({ index: diceIndex }) =>
-                        !diceManager.functions.isDiceAssigned(diceIndex)
-                    )
-                    .map(({ value, index: diceIndex }) => (
-                      <option key={diceIndex} value={diceIndex}>
-                        {value}
-                      </option>
-                    ))}
-                </select>
-              )}
-              {assignment.diceIndex !== null &&
-                assignment.diceIndex !== undefined &&
-                editable && (
-                  <button
-                    style={{ ...styles.removeButton, marginTop: "0.5rem" }}
-                    onClick={() =>
-                      diceManager.functions.unassignDice(index, false)
-                    }
-                  >
-                    Remove
-                  </button>
-                )}
-            </div>
-          </div>
-        );
-      }
-    },
-    [
-      renderDiceValue,
-      updateRollAssignment,
-      editable,
-      selectedCharacter,
-      diceManager.functions,
-      diceManager.data.dualCheckActivities.length,
-      dicePool,
-      styles,
-    ]
-  );
-
-  const saveAsDraft = useCallback(async () => {
-    if (
-      !selectedCharacter?.id ||
-      !user?.id ||
-      !selectedYear ||
-      !selectedSemester
-    ) {
-      alert("Missing required information to save draft.");
-      return;
-    }
-
+  const handleSaveAsDraft = useCallback(async () => {
     setIsSavingDraft(true);
-    try {
-      const draftData = {
-        character_id: selectedCharacter.id,
-        user_id: user.id,
-        character_name: selectedCharacter.name,
-        year: selectedYear,
-        semester: selectedSemester,
-        activities: formData.activities,
-        relationships: formData.relationships,
-        dice_pool: dicePool,
-        roll_assignments: rollAssignments,
-        selected_magic_school: formData.selectedMagicSchool || null,
-        is_draft: true,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (currentSheet?.id) {
-        const { error } = await supabase
-          .from("character_downtime")
-          .update(draftData)
-          .eq("id", currentSheet.id);
-
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("character_downtime")
-          .insert([draftData])
-          .select()
-          .single();
-
-        if (error) throw error;
-        setCurrentSheet(data);
-      }
-      alert("Draft saved successfully!");
-      if (loadDrafts) loadDrafts();
-    } catch (err) {
-      console.error("Error saving draft:", err);
-    } finally {
-      setIsSavingDraft(false);
-    }
+    await saveAsDraft({
+      selectedCharacter,
+      user,
+      selectedYear,
+      selectedSemester,
+      formData,
+      dicePool,
+      rollAssignments,
+      selectedSpells,
+      currentSheet,
+      supabase,
+      setCurrentSheet,
+      loadDrafts,
+    });
+    setIsSavingDraft(false);
   }, [
     selectedCharacter,
     user,
@@ -1180,96 +648,92 @@ const DowntimeForm = ({
     formData,
     dicePool,
     rollAssignments,
+    selectedSpells,
     currentSheet,
     supabase,
     setCurrentSheet,
     loadDrafts,
   ]);
 
-  const submitDowntimeSheet = useCallback(async () => {
+  const handleSubmitDowntimeSheet = useCallback(async () => {
+    if (!validateStudyActivities(formData.activities)) {
+      return;
+    }
+
     if (
-      !selectedCharacter?.id ||
-      !user?.id ||
-      !selectedYear ||
-      !selectedSemester
+      !validateAbilityScoreIncreaseActivities(
+        formData.activities,
+        selectedCharacter
+      )
     ) {
-      alert("Missing required information to submit.");
       return;
     }
 
-    if (dicePool.length === 0) {
-      alert("Please roll dice before submitting.");
+    if (
+      !validateWandStatIncreaseActivities(
+        formData.activities,
+        selectedCharacter
+      )
+    ) {
       return;
     }
 
-    const hasActivities = formData.activities.some(
-      (activity) => activity.activity
-    );
-    if (!hasActivities) {
-      alert("Please select at least one activity.");
+    if (
+      !validateSpellActivities(
+        formData.activities,
+        rollAssignments,
+        selectedSpells,
+        spellAttempts,
+        researchedSpells,
+        failedAttempts
+      )
+    ) {
       return;
     }
 
     setIsSubmitting(true);
-    const isResubmission =
-      currentSheet && currentSheet.review_status === "failure";
 
-    try {
-      const submissionData = {
-        character_id: selectedCharacter.id,
-        user_id: user.id,
-        character_name: selectedCharacter.name,
-        year: selectedYear,
-        semester: selectedSemester,
-        activities: formData.activities,
-        relationships: formData.relationships,
-        dice_pool: dicePool,
-        roll_assignments: rollAssignments,
-        selected_magic_school: formData.selectedMagicSchool || null,
-        is_draft: false,
+    const updateSpellProgress = () =>
+      updateSpellProgressOnSubmission(
+        formData,
+        rollAssignments,
+        selectedSpells,
+        dicePool,
+        selectedCharacter,
+        user,
+        supabase
+      );
 
-        submitted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        ...(isResubmission
-          ? {
-              review_status: "pending",
-            }
-          : {}),
-      };
+    await submitDowntimeSheet({
+      selectedCharacter,
+      user,
+      selectedYear,
+      selectedSemester,
+      formData,
+      dicePool,
+      rollAssignments,
+      selectedSpells,
+      currentSheet,
+      supabase,
+      updateSpellProgressOnSubmission: updateSpellProgress,
+      loadSubmittedSheets,
+      loadDrafts,
+      setActiveTab,
+    });
 
-      if (currentSheet?.id) {
-        const { error } = await supabase
-          .from("character_downtime")
-          .update(submissionData)
-          .eq("id", currentSheet.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("character_downtime")
-          .insert([submissionData]);
-
-        if (error) throw error;
-      }
-
-      alert("Downtime sheet submitted successfully!");
-      if (loadSubmittedSheets) loadSubmittedSheets();
-      if (loadDrafts) loadDrafts();
-      if (setActiveTab) setActiveTab("overview");
-    } catch (err) {
-      console.error("Error submitting downtime sheet:", err);
-      alert("Failed to submit downtime sheet. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitting(false);
   }, [
+    formData,
+    rollAssignments,
+    selectedSpells,
+    spellAttempts,
+    researchedSpells,
+    failedAttempts,
     selectedCharacter,
     user,
     selectedYear,
     selectedSemester,
-    formData,
     dicePool,
-    rollAssignments,
     currentSheet,
     supabase,
     loadSubmittedSheets,
@@ -1277,35 +741,510 @@ const DowntimeForm = ({
     setActiveTab,
   ]);
 
+  const validateMagicSchoolSelection = (
+    selectedMagicSchool,
+    selectedCharacter
+  ) => {
+    if (!selectedMagicSchool) return { valid: true };
+
+    const currentValue =
+      selectedCharacter?.magicModifiers?.[selectedMagicSchool] ||
+      selectedCharacter?.magic_modifiers?.[selectedMagicSchool] ||
+      0;
+
+    if (currentValue >= 5) {
+      return {
+        valid: false,
+        message: "This school of magic is already at maximum (+5).",
+      };
+    }
+    return true;
+  };
+
+  const getMagicSchoolOptions = (selectedCharacter) => {
+    const schools = [
+      { value: "divinations", name: "Divinations", ability: "Wisdom" },
+      { value: "charms", name: "Charms", ability: "Dexterity" },
+      {
+        value: "transfiguration",
+        name: "Transfiguration",
+        ability: "Strength",
+      },
+      { value: "healing", name: "Healing", ability: "Intelligence" },
+      {
+        value: "jinxesHexesCurses",
+        name: "Jinxes, Hexes, and Curses",
+        ability: "Charisma",
+      },
+    ];
+
+    return schools.map((school) => {
+      const currentValue =
+        selectedCharacter?.magicModifiers?.[school.value] ||
+        selectedCharacter?.magic_modifiers?.[school.value] ||
+        0;
+      const isAtMaximum = currentValue >= 5;
+
+      return {
+        ...school,
+        currentValue,
+        isAtMaximum,
+        displayText: `${school.name} - (Current: ${formatModifier(
+          currentValue
+        )}${isAtMaximum ? " (MAX)" : ""})`,
+      };
+    });
+  };
+
+  const scrollToSelectedOption = () => {
+    const selectElement = selectRef.current;
+    if (!selectElement) return;
+
+    const selectedIndex = selectElement.selectedIndex;
+    const selectedOption = selectElement.options[selectedIndex];
+
+    if (selectedOption) {
+      selectedOption.scrollIntoView({
+        block: "start",
+        inline: "nearest",
+      });
+    }
+  };
+
+  const renderMakeRecipeActivity = (activity, index) => {
+    const info = getDistinctCheckActivityInfo(activity.activity);
+    if (!info) return null;
+
+    const progress = calculateDistinctCheckProgress(null, activity);
+    const availableChecks = getAvailableCheckTypes(activity);
+    const skillOptions = activity.selectedCheckType
+      ? getSkillOptionsForCheck(activity, activity.selectedCheckType)
+      : [];
+
+    return (
+      <div style={styles.makeRecipeContainer}>
+        {/* Recipe Name Input */}
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Recipe Name</label>
+          <input
+            type="text"
+            value={activity.recipeName || ""}
+            onChange={(e) =>
+              updateActivity(index, "recipeName", e.target.value)
+            }
+            placeholder="Enter the name of your new recipe..."
+            style={styles.input}
+            disabled={!canEdit()}
+          />
+        </div>
+
+        {/* Progress Display */}
+        <div style={styles.progressContainer}>
+          <div style={styles.progressHeader}>
+            <span style={styles.progressLabel}>Recipe Progress:</span>
+            <span style={styles.progressText}>
+              {progress?.progress || "0/3"}
+            </span>
+          </div>
+
+          {/* Completed Checks */}
+          {progress?.completedChecks?.length > 0 && (
+            <div style={styles.completedChecks}>
+              <div style={styles.completedLabel}>✅ Completed Checks:</div>
+              {progress.completedChecks.map((completed, idx) => (
+                <div key={idx} style={styles.completedCheck}>
+                  <strong>{completed.checkName}</strong> using{" "}
+                  {completed.skillUsed}
+                  (Rolled {completed.rollResult} vs DC {completed.dc})
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Check Selection (only show if not complete) */}
+        {!progress?.isComplete && (
+          <div style={styles.checkSelection}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Select Check Type to Attempt:</label>
+              <select
+                value={activity.selectedCheckType || ""}
+                onChange={(e) => {
+                  updateActivity(index, "selectedCheckType", e.target.value);
+                  updateActivity(index, "selectedCheckSkill", "");
+                }}
+                style={styles.select}
+                disabled={!canEdit()}
+              >
+                <option value="">Choose a check type...</option>
+                {availableChecks.map((check) => (
+                  <option key={check.id} value={check.id}>
+                    {check.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Skill Selection */}
+            {activity.selectedCheckType && skillOptions.length > 0 && (
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Select Skill:</label>
+                {skillOptions.length === 1 ? (
+                  <div
+                    style={{
+                      ...styles.input,
+                      backgroundColor: theme.background,
+                      color: theme.textSecondary,
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {(() => {
+                      const skill = skillOptions[0];
+                      const modifier = calculateModifier(
+                        skill,
+                        selectedCharacter
+                      );
+                      const modStr =
+                        modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                      if (skill === "spellcastingAbility") {
+                        const spellAbility =
+                          selectedCharacter?.spellcastingAbility ||
+                          "Intelligence";
+                        return `${spellAbility} (Spellcasting Ability) (${modStr})`;
+                      } else if (skill === "muggleStudies") {
+                        return `Muggle Studies (${modStr})`;
+                      } else if (skill === "historyOfMagic") {
+                        return `History of Magic (${modStr})`;
+                      } else {
+                        return `${
+                          skill.charAt(0).toUpperCase() + skill.slice(1)
+                        } (${modStr})`;
+                      }
+                    })()}{" "}
+                    - Auto-selected
+                  </div>
+                ) : (
+                  <select
+                    value={activity.selectedCheckSkill || ""}
+                    onChange={(e) =>
+                      updateActivity(
+                        index,
+                        "selectedCheckSkill",
+                        e.target.value
+                      )
+                    }
+                    style={styles.select}
+                    disabled={!canEdit()}
+                  >
+                    <option value="">Choose a skill...</option>
+                    {skillOptions.map((skill) => {
+                      const modifier = calculateModifier(
+                        skill,
+                        selectedCharacter
+                      );
+                      const modStr =
+                        modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                      let displayName;
+                      if (skill === "muggleStudies") {
+                        displayName = "Muggle Studies";
+                      } else if (skill === "historyOfMagic") {
+                        displayName = "History of Magic";
+                      } else if (skill === "spellcastingAbility") {
+                        const spellAbility =
+                          selectedCharacter?.spellcastingAbility ||
+                          "intelligence";
+                        displayName = `${
+                          spellAbility.charAt(0).toUpperCase() +
+                          spellAbility.slice(1)
+                        } (Spellcasting Ability)`;
+                      } else {
+                        displayName =
+                          skill.charAt(0).toUpperCase() + skill.slice(1);
+                      }
+
+                      return (
+                        <option key={skill} value={skill}>
+                          {displayName} ({modStr})
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+              </div>
+            )}
+
+            {/* Check Description */}
+            {activity.selectedCheckType && (
+              <div style={styles.checkDescription}>
+                {
+                  info.config.requiredChecks.find(
+                    (c) => c.id === activity.selectedCheckType
+                  )?.description
+                }
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dice Assignment Section */}
+        {activity.selectedCheckType &&
+          (activity.selectedCheckSkill || skillOptions.length === 1) &&
+          !progress?.isComplete && (
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Assign Die for Check:</label>
+
+              {(() => {
+                const assignmentKey = `activity${index + 1}`;
+                const assignment = rollAssignments[assignmentKey] || {};
+
+                const effectiveSkill =
+                  activity.selectedCheckSkill ||
+                  (skillOptions.length === 1 ? skillOptions[0] : null);
+
+                if (!effectiveSkill) return null;
+
+                if (
+                  assignment.diceIndex !== null &&
+                  assignment.diceIndex !== undefined
+                ) {
+                  const diceValue =
+                    Array.isArray(dicePool) &&
+                    typeof dicePool[assignment.diceIndex] === "number"
+                      ? dicePool[assignment.diceIndex]
+                      : typeof dicePool[assignment.diceIndex] === "object"
+                      ? dicePool[assignment.diceIndex].value
+                      : dicePool[assignment.diceIndex];
+
+                  const skill =
+                    effectiveSkill === "spellcastingAbility"
+                      ? selectedCharacter?.spellcastingAbility || "intelligence"
+                      : effectiveSkill;
+                  const modifier = calculateModifier(skill, selectedCharacter);
+                  const total = diceValue + modifier;
+
+                  return (
+                    <div
+                      style={{
+                        padding: "12px",
+                        backgroundColor: theme.surface,
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "6px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: theme.text,
+                          }}
+                        >
+                          Roll: {diceValue} {modifier >= 0 ? "+" : ""}
+                          {modifier} = {total}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: theme.textSecondary,
+                          }}
+                        >
+                          Die: {diceValue} | Modifier:{" "}
+                          {modifier >= 0 ? "+" : ""}
+                          {modifier} | Total: {total}
+                        </div>
+                      </div>
+                      {canEdit() && (
+                        <button
+                          onClick={() => {
+                            updateRollAssignment(index, "diceIndex", null);
+                            updateRollAssignment(index, "skill", "");
+                          }}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: theme.error || "#ef4444",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                          }}
+                        >
+                          Remove Die
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const diceIndex = parseInt(e.target.value);
+
+                      if (!activity.selectedCheckType || !effectiveSkill) {
+                        alert(
+                          "Please select a check type and skill before assigning a die."
+                        );
+                        return;
+                      }
+
+                      let requiredSkill = effectiveSkill;
+                      if (requiredSkill === "spellcastingAbility") {
+                        requiredSkill =
+                          selectedCharacter?.spellcastingAbility ||
+                          "intelligence";
+                      }
+
+                      const modifier = calculateModifier(
+                        requiredSkill,
+                        selectedCharacter
+                      );
+                      const diceValue =
+                        Array.isArray(dicePool) &&
+                        typeof dicePool[diceIndex] === "number"
+                          ? dicePool[diceIndex]
+                          : typeof dicePool[diceIndex] === "object"
+                          ? dicePool[diceIndex].value
+                          : dicePool[diceIndex];
+                      const totalRoll = diceValue + modifier;
+
+                      setRollAssignments((prev) => ({
+                        ...prev,
+                        [`activity${index + 1}`]: {
+                          diceIndex: diceIndex,
+                          skill: requiredSkill,
+                          wandModifier: "",
+                          notes: prev[`activity${index + 1}`]?.notes || "",
+                          secondDiceIndex: null,
+                          secondSkill: "",
+                          secondWandModifier: "",
+                          customDice: null,
+                          jobType: null,
+                          familyType: null,
+                          firstSpellDice: null,
+                          secondSpellDice: null,
+                          modifier: modifier,
+                          total: totalRoll,
+                          checkType: activity.selectedCheckType,
+                        },
+                      }));
+                    }}
+                    style={styles.select}
+                    disabled={!canEdit()}
+                  >
+                    <option value="">Select a die...</option>
+                    {/* Use diceManager if available, otherwise fallback to simple mapping */}
+                    {(diceManager?.functions?.getSortedDiceOptions
+                      ? diceManager.functions.getSortedDiceOptions.filter(
+                          ({ index: diceIndex }) =>
+                            !diceManager.functions.isDiceAssigned(diceIndex) ||
+                            diceIndex === assignment.diceIndex
+                        )
+                      : dicePool.map((die, diceIndex) => ({
+                          value:
+                            typeof die === "number" ? die : die.value || die,
+                          index: diceIndex,
+                        }))
+                    ).map(({ value, index: diceIndex }) => {
+                      const skill =
+                        effectiveSkill === "spellcastingAbility"
+                          ? selectedCharacter?.spellcastingAbility ||
+                            "intelligence"
+                          : effectiveSkill;
+                      const modifier = calculateModifier(
+                        skill,
+                        selectedCharacter
+                      );
+                      const total = value + modifier;
+
+                      return (
+                        <option key={diceIndex} value={diceIndex}>
+                          {value} (Total: {total})
+                        </option>
+                      );
+                    })}
+                  </select>
+                );
+              })()}
+            </div>
+          )}
+
+        {/* Completion Message */}
+        {progress?.isComplete && (
+          <div style={styles.completionMessage}>
+            🎉 Recipe "{activity.recipeName}" has been successfully created! All
+            required checks have been completed.
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const editable = canEdit();
+
   return (
     <div style={styles.container}>
       {diceManager.component}
+
       {dicePool.length > 0 && (
         <div style={styles.section}>
-          {dicePool.length > 0 && (
-            <div style={styles.section}>
-              <h2 style={styles.sectionTitle}>
-                🎓 School of Magic Advancement
-              </h2>
-              <div style={styles.activityCard}>
-                <div style={{ marginBottom: "1rem" }}>
-                  <p
-                    style={{
-                      color: theme.text,
-                      fontSize: "0.875rem",
-                      lineHeight: "1.5",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    Choose one school of magic to improve by +1 during this
-                    downtime period. This represents focused study and practice
-                    in that magical discipline.
-                  </p>
+          <h2 style={styles.sectionTitle}>🎓 School of Magic Advancement</h2>
+          <div style={styles.activityCard}>
+            <div style={{ marginBottom: "1rem" }}>
+              <p
+                style={{
+                  color: theme.text,
+                  fontSize: "0.875rem",
+                  lineHeight: "1.5",
+                  marginBottom: "1rem",
+                }}
+              >
+                Choose one school of magic to improve by +1 during this downtime
+                period. This represents focused study and practice in that
+                magical discipline.
+              </p>
 
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Select School of Magic</label>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Select School of Magic</label>
+
+                {(() => {
+                  const schoolOptions =
+                    getMagicSchoolOptions(selectedCharacter);
+                  const allAtMaximum = schoolOptions.every(
+                    (school) => school.isAtMaximum
+                  );
+
+                  if (allAtMaximum) {
+                    return (
+                      <div
+                        style={{
+                          padding: "1rem",
+                          backgroundColor: theme.surface,
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: "6px",
+                          color: theme.textSecondary,
+                          textAlign: "center",
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        🎯 All schools of magic are already at maximum (+5). You
+                        cannot advance any further this semester.
+                      </div>
+                    );
+                  }
+
+                  return (
                     <select
-                      style={styles.select}
+                      style={{
+                        ...styles.select,
+                        color: theme.text,
+                      }}
                       value={formData.selectedMagicSchool || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -1316,72 +1255,46 @@ const DowntimeForm = ({
                       disabled={!editable}
                     >
                       <option value="">Choose a school of magic...</option>
-                      <option value="divinations">
-                        Divinations (Wisdom-based)
-                      </option>
-                      <option value="charms">Charms (Dexterity-based)</option>
-                      <option value="transfiguration">
-                        Transfiguration (Strength-based)
-                      </option>
-                      <option value="healing">
-                        Healing (Intelligence-based)
-                      </option>
-                      <option value="jinxesHexesCurses">
-                        Jinxes, Hexes, and Curses (Charisma-based)
-                      </option>
+                      {schoolOptions.map((school) => (
+                        <option
+                          key={school.value}
+                          value={school.value}
+                          disabled={school.isAtMaximum}
+                          style={{
+                            color: school.isAtMaximum ? "#888" : "inherit",
+                            fontStyle: school.isAtMaximum ? "italic" : "normal",
+                          }}
+                        >
+                          {school.displayText}
+                        </option>
+                      ))}
                     </select>
-                  </div>
-
-                  {formData.selectedMagicSchool && (
-                    <div
-                      style={{
-                        padding: "1rem",
-                        backgroundColor: theme.primary + "15",
-                        border: `1px solid ${theme.primary}`,
-                        borderRadius: "6px",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "0.875rem",
-                          color: theme.text,
-                          fontWeight: "600",
-                        }}
-                      >
-                        ✨ Selected:{" "}
-                        {formData.selectedMagicSchool === "jinxesHexesCurses"
-                          ? "JHC"
-                          : formData.selectedMagicSchool
-                              .charAt(0)
-                              .toUpperCase() +
-                            formData.selectedMagicSchool.slice(1)}{" "}
-                        +1
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: theme.textSecondary,
-                          marginTop: "0.25rem",
-                        }}
-                      >
-                        Once your downtime is approved you will need to modify
-                        your wand value manually.
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+      {dicePool.length > 0 && (
+        <div style={styles.section}>
           <h2 style={styles.sectionTitle}>⚡ Activities</h2>
 
           {formData.activities.map((activity, index) => {
             const assignmentKey = `activity${index + 1}`;
             const assignment = rollAssignments[assignmentKey] || {};
             const activityDescription = getActivityDescription(
+              activity.activity,
+              availableActivities
+            );
+            const isSpellActivity = activityRequiresSpellSelection(
               activity.activity
             );
+            const isWandIncreaseActivity = activityRequiresWandSelection(
+              activity.activity
+            );
+            const isDistinctCheck = isDistinctCheckActivity(activity.activity);
 
             return (
               <div key={index} style={styles.activityCard}>
@@ -1405,9 +1318,18 @@ const DowntimeForm = ({
                     gap: "1rem",
                   }}
                 >
-                  <div style={styles.inputGroup}>
+                  <div
+                    style={{
+                      marginBottom: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
                     <label style={styles.label}>Activity Type</label>
+
                     <select
+                      ref={selectRef}
+                      onFocus={scrollToSelectedOption}
                       style={styles.select}
                       value={activity.activity || ""}
                       onChange={(e) =>
@@ -1417,23 +1339,33 @@ const DowntimeForm = ({
                     >
                       <option value="">Select Activity</option>
                       {Object.entries(downtime).map(
-                        ([categoryKey, categoryInfo]) => {
-                          return categoryInfo.activities.map(
-                            (activityName, actIndex) => (
-                              <option
-                                key={`${categoryKey}-${actIndex}`}
-                                value={activityName}
-                              >
-                                {activityName.split(" - ")[0]}
-                              </option>
-                            )
-                          );
-                        }
+                        ([categoryKey, categoryInfo]) => (
+                          <optgroup
+                            key={categoryKey}
+                            label={categoryInfo.name}
+                            title={categoryInfo.description}
+                          >
+                            {categoryInfo.activities.map(
+                              (activityName, actIndex) => (
+                                <option
+                                  key={`${categoryKey}-${actIndex}`}
+                                  value={activityName}
+                                >
+                                  {activityName.split(" - ")[0]}
+                                </option>
+                              )
+                            )}
+                          </optgroup>
+                        )
                       )}
                     </select>
                   </div>
 
                   {!activityRequiresDualChecks(activity.activity) &&
+                    !isSpellActivity &&
+                    !isWandIncreaseActivity &&
+                    !isDistinctCheck &&
+                    !activityRequiresAbilitySelection(activity.activity) &&
                     activity.activity &&
                     !activityRequiresNoDiceRoll(activity.activity) &&
                     !shouldUseCustomDiceForActivity(activity.activity) && (
@@ -1449,27 +1381,201 @@ const DowntimeForm = ({
                       />
                     )}
 
-                  {activityRequiresDualChecks(activity.activity) && (
+                  {activityRequiresAbilitySelection(activity.activity) && (
+                    <div style={styles.inputGroup}>
+                      <label style={styles.label}>
+                        Select Ability Score to Increase
+                      </label>
+                      <select
+                        style={styles.select}
+                        value={activity.selectedAbilityScore || ""}
+                        onChange={(e) =>
+                          updateActivity(
+                            index,
+                            "selectedAbilityScore",
+                            e.target.value
+                          )
+                        }
+                        disabled={!editable}
+                      >
+                        <option value="">Choose an ability score...</option>
+                        {getAvailableAbilityScores(selectedCharacter).map(
+                          (ability) => {
+                            const currentScore =
+                              selectedCharacter?.abilityScores?.[
+                                ability.name
+                              ] ||
+                              selectedCharacter?.[ability.name] ||
+                              10;
+                            const modifier = getAbilityScoreModifier(
+                              selectedCharacter,
+                              ability.name
+                            );
+                            const dc = calculateAbilityScoreIncreaseDC(
+                              selectedCharacter,
+                              ability.name
+                            );
+                            const modifierStr =
+                              modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                            return (
+                              <option key={ability.name} value={ability.name}>
+                                {ability.displayName}: {currentScore} (
+                                {modifierStr}) - DC {dc}
+                              </option>
+                            );
+                          }
+                        )}
+                      </select>
+
+                      {activity.selectedAbilityScore && (
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            padding: "8px",
+                            backgroundColor: theme.background,
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: "4px",
+                            fontSize: "14px",
+                          }}
+                        >
+                          <div>
+                            <strong>Selected:</strong>{" "}
+                            {
+                              getAvailableAbilityScores(selectedCharacter).find(
+                                (a) => a.name === activity.selectedAbilityScore
+                              )?.displayName
+                            }
+                          </div>
+                          <div>
+                            <strong>Current Score:</strong>{" "}
+                            {selectedCharacter?.abilityScores?.[
+                              activity.selectedAbilityScore
+                            ] ||
+                              selectedCharacter?.[
+                                activity.selectedAbilityScore
+                              ] ||
+                              10}
+                          </div>
+                          <div>
+                            <strong>Current Modifier:</strong>{" "}
+                            {(() => {
+                              const mod = getAbilityScoreModifier(
+                                selectedCharacter,
+                                activity.selectedAbilityScore
+                              );
+                              return mod >= 0 ? `+${mod}` : `${mod}`;
+                            })()}
+                          </div>
+                          <div>
+                            <strong>Target DC:</strong>{" "}
+                            {calculateAbilityScoreIncreaseDC(
+                              selectedCharacter,
+                              activity.selectedAbilityScore
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: "4px",
+                              fontSize: "12px",
+                              color: theme.textSecondary,
+                            }}
+                          >
+                            Roll d20 + current ability modifier vs DC (current
+                            ability score). Requires 3 successes across separate
+                            downtime sessions.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activityRequiresMakeSpellInterface(activity.activity) &&
+                    renderMakeSpellActivity({
+                      activity,
+                      index,
+                      styles,
+                      updateActivity,
+                      editable,
+                      selectedCharacter,
+                      getCheckDescription,
+                    })}
+
+                  {isWandIncreaseActivity && (
+                    <WandModifierSelector
+                      selectedCharacter={selectedCharacter}
+                      selectedWandModifier={activity.selectedWandModifier}
+                      onWandModifierChange={(value) =>
+                        updateActivity(index, "selectedWandModifier", value)
+                      }
+                      canEdit={canEdit}
+                    />
+                  )}
+
+                  {(activityRequiresDualChecks(activity.activity) ||
+                    isSpellActivity) && (
                     <div style={styles.inputGroup}>
                       <label style={styles.label}>Dual Check Activity</label>
                       <div
                         style={{
-                          paddingTop: "10px",
+                          padding: "10px",
+                          backgroundColor: theme.warning + "20",
+                          border: `1px solid ${theme.warning}`,
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          color: theme.warning,
+                          fontWeight: "600",
+                          textAlign: "center",
+                        }}
+                      >
+                        Requires Two Dice Rolls
+                      </div>
+                    </div>
+                  )}
+
+                  {isDistinctCheck && (
+                    <div style={styles.inputGroup}>
+                      <label style={styles.label}>Multi-Check Activity</label>
+                      <div
+                        style={{
+                          padding: "10px",
                           backgroundColor: theme.primary + "20",
                           border: `1px solid ${theme.primary}`,
                           borderRadius: "6px",
                           fontSize: "14px",
                           color: theme.primary,
                           fontWeight: "600",
-                          height: "42px",
                           textAlign: "center",
                         }}
                       >
-                        Requires Two Skill Checks
+                        Requires 3 Distinct Checks
                       </div>
                     </div>
                   )}
                 </div>
+
+                {isDistinctCheck && renderMakeRecipeActivity(activity, index)}
+
+                {isStudyActivity(activity.activity) && (
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Select Class</label>
+                    <select
+                      style={styles.select}
+                      value={activity.selectedClass || ""}
+                      onChange={(e) =>
+                        updateActivity(index, "selectedClass", e.target.value)
+                      }
+                      disabled={!editable}
+                    >
+                      <option value="">Choose a class...</option>
+                      {classes.map((className) => (
+                        <option key={className} value={className}>
+                          {className}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {activityDescription && (
                   <div style={styles.activityDescription}>
@@ -1492,11 +1598,103 @@ const DowntimeForm = ({
                   />
                 </div>
 
-                {activity.activity &&
-                  renderSpecialActivityInfo(activity.activity)}
+                {isSpellActivity && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <SpellSelector
+                      activityIndex={index}
+                      selectedSpells={(() => {
+                        const spells = selectedSpells[assignmentKey] || {
+                          first: "",
+                          second: "",
+                        };
+                        return spells;
+                      })()}
+                      onSpellSelect={handleSpellSelect}
+                      onDiceAssign={handleSpellDiceAssign}
+                      availableDiceOptions={diceManager.functions.getSortedDiceOptions.filter(
+                        ({ index: diceIndex }) => {
+                          const isAssignedToSpells = Object.values(
+                            rollAssignments
+                          ).some(
+                            (assignment) =>
+                              assignment.firstSpellDice === diceIndex ||
+                              assignment.secondSpellDice === diceIndex
+                          );
+                          const isAssignedToActivities = Object.values(
+                            rollAssignments
+                          ).some(
+                            (assignment) =>
+                              assignment.diceIndex === diceIndex ||
+                              assignment.secondDiceIndex === diceIndex
+                          );
+                          const isThisActivitySpell =
+                            assignment.firstSpellDice === diceIndex ||
+                            assignment.secondSpellDice === diceIndex;
+
+                          return (
+                            (!isAssignedToSpells && !isAssignedToActivities) ||
+                            isThisActivitySpell
+                          );
+                        }
+                      )}
+                      rollAssignments={rollAssignments}
+                      dicePool={dicePool}
+                      canEdit={editable}
+                      selectedCharacter={selectedCharacter}
+                      spellAttempts={spellAttempts}
+                      researchedSpells={researchedSpells}
+                      failedAttempts={failedAttempts}
+                      isResearchActivity={activity.activity
+                        ?.toLowerCase()
+                        .includes("research spells")}
+                      isAttemptActivity={activity.activity
+                        ?.toLowerCase()
+                        .includes("attempt spells")}
+                    />
+                  </div>
+                )}
 
                 {activity.activity &&
-                  renderDiceAssignment(activity, index, assignment)}
+                  renderSpecialActivityInfo({
+                    activityText: activity.activity,
+                    theme,
+                    styles,
+                    formData,
+                    editable,
+                    diceManager,
+                  })}
+
+                {activity.activity &&
+                  !isDistinctCheck &&
+                  renderDiceAssignment({
+                    activity,
+                    index,
+                    assignment,
+                    styles,
+                    theme,
+                    renderDiceValue: (
+                      assignment,
+                      dicePool,
+                      isSecond,
+                      activity
+                    ) =>
+                      renderDiceValue({
+                        assignment,
+                        dicePool,
+                        isSecond,
+                        activity,
+                        styles,
+                        theme,
+                        selectedCharacter,
+                        getModifierValue: (modifierName) =>
+                          getModifierValue(modifierName, selectedCharacter),
+                      }),
+                    dicePool,
+                    diceManager,
+                    editable,
+                    updateRollAssignment,
+                    selectedCharacter,
+                  })}
               </div>
             );
           })}
@@ -1565,11 +1763,17 @@ const DowntimeForm = ({
                       <option value="">Select Skill</option>
                       <option value="insight">
                         Insight (
-                        {formatModifierValue(getModifierValue("insight"))})
+                        {formatModifier(
+                          getModifierValue("insight", selectedCharacter)
+                        )}
+                        )
                       </option>
                       <option value="persuasion">
                         Persuasion (
-                        {formatModifierValue(getModifierValue("persuasion"))})
+                        {formatModifier(
+                          getModifierValue("persuasion", selectedCharacter)
+                        )}
+                        )
                       </option>
                     </select>
                   </div>
@@ -1613,34 +1817,20 @@ const DowntimeForm = ({
                     <div style={styles.assignedDice}>
                       <div style={styles.diceValue}>
                         {dicePool[assignment.diceIndex] +
-                          getModifierValue(assignment.skill)}
+                          getModifierValue(assignment.skill, selectedCharacter)}
                       </div>
                       <div style={styles.total}>
                         Total: {dicePool[assignment.diceIndex]}{" "}
-                        {formatModifierValue(
-                          getModifierValue(assignment.skill)
+                        {formatModifier(
+                          getModifierValue(assignment.skill, selectedCharacter)
                         )}{" "}
                         ={" "}
                         {dicePool[assignment.diceIndex] +
-                          getModifierValue(assignment.skill)}
+                          getModifierValue(assignment.skill, selectedCharacter)}
                       </div>
                     </div>
                   </div>
                 )}
-
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Your Approach</label>
-                  <textarea
-                    style={styles.textarea}
-                    value={relationship.notes || ""}
-                    onChange={(e) =>
-                      updateRelationship(index, "notes", e.target.value)
-                    }
-                    placeholder="Describe how you want to interact with this NPC and what you hope to achieve..."
-                    disabled={!canEdit()}
-                    rows={3}
-                  />
-                </div>
 
                 {isUserAdmin && adminMode && (
                   <div style={styles.inputGroup}>
@@ -1660,33 +1850,6 @@ const DowntimeForm = ({
                     />
                   </div>
                 )}
-
-                {assignment.result && (
-                  <div
-                    style={{
-                      padding: "12px",
-                      marginTop: "12px",
-                      backgroundColor:
-                        assignment.result === "success"
-                          ? `${theme.success}15`
-                          : `${theme.error}15`,
-                      border: `1px solid ${
-                        assignment.result === "success"
-                          ? theme.success
-                          : theme.error
-                      }`,
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      color:
-                        assignment.result === "success"
-                          ? theme.success
-                          : theme.error,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  ></div>
-                )}
               </div>
             );
           })}
@@ -1696,7 +1859,7 @@ const DowntimeForm = ({
       {dicePool.length > 0 && editable && (
         <div style={styles.actionButtons}>
           <button
-            onClick={saveAsDraft}
+            onClick={handleSaveAsDraft}
             disabled={isSavingDraft}
             style={{
               ...styles.button,
@@ -1708,7 +1871,7 @@ const DowntimeForm = ({
           </button>
 
           <button
-            onClick={submitDowntimeSheet}
+            onClick={handleSubmitDowntimeSheet}
             disabled={isSubmitting}
             style={{
               ...styles.button,

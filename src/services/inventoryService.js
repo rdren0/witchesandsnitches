@@ -1,4 +1,4 @@
-import { backgroundsData } from "../Components/SharedData/backgroundsData";
+import { backgroundsData } from "../SharedData/backgroundsData";
 import { parseEquipmentString } from "../Components/utils/equipmentParser";
 
 export const addStartingEquipment = async (

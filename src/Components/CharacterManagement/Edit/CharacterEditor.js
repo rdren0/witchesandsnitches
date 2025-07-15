@@ -10,12 +10,12 @@ import {
   Unlock,
 } from "lucide-react";
 import { skillsByCastingStyle } from "../utils";
-import { hpData } from "../../SharedData/data";
-import { standardFeats as importedStandardFeats } from "../../SharedData/standardFeatData";
+import { hpData } from "../../../SharedData/data";
+import { standardFeats as importedStandardFeats } from "../../../SharedData/standardFeatData";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { characterService } from "../../../services/characterService";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { backgroundsData } from "../../SharedData/backgroundsData";
+import { backgroundsData } from "../../../SharedData/backgroundsData";
 
 // Import the new section components
 import BasicInformationSection from "../Edit/BasicInformationSection";

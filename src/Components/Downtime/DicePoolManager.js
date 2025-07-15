@@ -3,6 +3,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import {
   activityRequiresDualChecks,
   getCustomDiceTypeForActivity,
+  activityRequiresExtraDie,
 } from "./downtimeHelpers";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
@@ -19,6 +20,26 @@ const DicePoolManager = ({
 }) => {
   const { theme } = useTheme();
 
+  const getDualCheckActivitiesCount = () => {
+    return formData.activities.filter((activity) =>
+      activityRequiresDualChecks(activity.activity)
+    ).length;
+  };
+
+  const getSpellActivitiesCount = () => {
+    return formData.activities.filter((activity) =>
+      activityRequiresExtraDie(activity.activity)
+    ).length;
+  };
+
+  const getRequiredDiceCount = () => {
+    const baseDice = 6;
+    const dualCheckActivities = getDualCheckActivitiesCount();
+    const spellActivities = getSpellActivitiesCount();
+
+    return baseDice + dualCheckActivities + spellActivities;
+  };
+
   const dualCheckActivities = useMemo(() => {
     return formData.activities.filter((activity) =>
       activityRequiresDualChecks(activity.activity)
@@ -30,33 +51,50 @@ const DicePoolManager = ({
   }, [dicePool.length]);
 
   const shouldDisableExtraDie = useMemo(() => {
-    return extraDiceCount >= dualCheckActivities.length;
-  }, [extraDiceCount, dualCheckActivities.length]);
+    const totalRequired =
+      getDualCheckActivitiesCount() + getSpellActivitiesCount();
+    return extraDiceCount >= totalRequired;
+  }, [extraDiceCount, getDualCheckActivitiesCount, getSpellActivitiesCount]);
 
   useEffect(() => {
-    const currentDualCheckCount = dualCheckActivities.length;
-    const currentExtraDiceCount = Math.max(0, dicePool.length - 6);
+    const requiredDiceCount = getRequiredDiceCount();
+    const currentDiceCount = dicePool.length;
 
-    if (currentExtraDiceCount > currentDualCheckCount) {
-      const excessDice = currentExtraDiceCount - currentDualCheckCount;
+    if (currentDiceCount > 0 && currentDiceCount < requiredDiceCount) {
+      const dicesToAdd = requiredDiceCount - currentDiceCount;
+      const roller = new DiceRoller();
+      const newDice = Array.from(
+        { length: dicesToAdd },
+        () => roller.roll("1d20").total
+      );
 
-      setDicePool((prev) => prev.slice(0, prev.length - excessDice));
+      setDicePool((prev) => [...prev, ...newDice]);
+    } else if (currentDiceCount > requiredDiceCount) {
+      const currentDualCheckCount = getDualCheckActivitiesCount();
+      const currentSpellActivities = getSpellActivitiesCount();
+      const maxExtraDice = currentDualCheckCount + currentSpellActivities;
+      const currentExtraDiceCount = Math.max(0, dicePool.length - 6);
 
-      setExtraDiceAssignments((prev) => {
-        const updated = { ...prev };
-        const removedStartIndex = dicePool.length - excessDice;
+      if (currentExtraDiceCount > maxExtraDice) {
+        const excessDice = currentExtraDiceCount - maxExtraDice;
+        setDicePool((prev) => prev.slice(0, prev.length - excessDice));
 
-        Object.keys(updated).forEach((key) => {
-          if (updated[key] >= removedStartIndex) {
-            delete updated[key];
-          }
+        setExtraDiceAssignments((prev) => {
+          const updated = { ...prev };
+          const removedStartIndex = dicePool.length - excessDice;
+
+          Object.keys(updated).forEach((key) => {
+            if (updated[key] >= removedStartIndex) {
+              delete updated[key];
+            }
+          });
+
+          return updated;
         });
-
-        return updated;
-      });
+      }
     }
   }, [
-    dualCheckActivities.length,
+    formData.activities,
     dicePool.length,
     setDicePool,
     setExtraDiceAssignments,
@@ -65,11 +103,14 @@ const DicePoolManager = ({
   const rollDice = useCallback(() => {
     if (!canEdit()) return;
 
+    const requiredDiceCount = getRequiredDiceCount();
     const roller = new DiceRoller();
-    const newPool = Array.from({ length: 6 }, () => roller.roll("1d20").total);
+    const newPool = Array.from(
+      { length: requiredDiceCount },
+      () => roller.roll("1d20").total
+    );
 
     setDicePool(newPool);
-
     setExtraDiceAssignments({});
 
     setRollAssignments((prev) => {
@@ -85,7 +126,13 @@ const DicePoolManager = ({
       });
       return resetAssignments;
     });
-  }, [canEdit, setDicePool, setExtraDiceAssignments, setRollAssignments]);
+  }, [
+    canEdit,
+    setDicePool,
+    setExtraDiceAssignments,
+    setRollAssignments,
+    getRequiredDiceCount,
+  ]);
 
   const addExtraDieForActivity = useCallback(
     (activityKey) => {
@@ -103,20 +150,23 @@ const DicePoolManager = ({
     [canEdit, dicePool.length, setDicePool, setExtraDiceAssignments]
   );
 
-  const isDiceAssigned = useCallback(
-    (diceIndex) => {
-      for (const assignment of Object.values(rollAssignments)) {
-        if (
-          assignment.diceIndex === diceIndex ||
-          assignment.secondDiceIndex === diceIndex
-        ) {
-          return true;
-        }
-      }
-      return false;
-    },
-    [rollAssignments]
-  );
+  const isDiceAssigned = (diceIndex) => {
+    const isAssignedToActivities = Object.values(rollAssignments).some(
+      (assignment) =>
+        assignment.diceIndex === diceIndex ||
+        assignment.secondDiceIndex === diceIndex ||
+        assignment.firstSpellDice === diceIndex ||
+        assignment.secondSpellDice === diceIndex
+    );
+
+    const isAssignedToRelationships = [
+      "relationship1",
+      "relationship2",
+      "relationship3",
+    ].some((key) => rollAssignments[key]?.diceIndex === diceIndex);
+
+    return isAssignedToActivities || isAssignedToRelationships;
+  };
 
   const assignDice = useCallback(
     (activityIndex, diceIndex, isSecondDie = false) => {
@@ -327,13 +377,18 @@ const DicePoolManager = ({
       marginBottom: "1rem",
     },
     dice: {
-      padding: "1rem",
+      padding: "1rem 0.5rem",
       textAlign: "center",
       borderRadius: "8px",
       fontSize: "1.25rem",
       fontWeight: "bold",
       border: "2px solid",
       transition: "all 0.2s ease",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "80px",
     },
     diceAvailable: {
       backgroundColor: theme.success + "20",
@@ -346,7 +401,23 @@ const DicePoolManager = ({
       color: theme.error,
       opacity: 0.7,
     },
-
+    diceExtra: {
+      backgroundColor: theme.warning + "20",
+      borderColor: theme.warning,
+      color: theme.warning,
+    },
+    diceSpell: {
+      backgroundColor: theme.primary + "20",
+      borderColor: theme.primary,
+      color: theme.primary,
+    },
+    extraDiceLabel: {
+      fontSize: "0.7rem",
+      fontWeight: "normal",
+      marginTop: "4px",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+    },
     buttonGroup: {
       display: "flex",
       gap: "1rem",
@@ -365,6 +436,10 @@ const DicePoolManager = ({
       color: "white",
     },
   };
+
+  const requiredDiceCount = getRequiredDiceCount();
+  const dualCheckCount = getDualCheckActivitiesCount();
+  const spellActivityCount = getSpellActivitiesCount();
 
   return {
     component: (
@@ -391,22 +466,29 @@ const DicePoolManager = ({
               {getSortedDiceOptions.map(({ value, index }) => {
                 const isAssigned = isDiceAssigned(index);
                 const isExtra = index >= 6;
+                const isSpellDie = isExtra && index >= 6 + dualCheckCount;
+                const isDualCheckDie = isExtra && !isSpellDie;
+
+                // Determine dice styling
+                let diceStyle = { ...styles.dice };
+                if (isAssigned) {
+                  diceStyle = { ...diceStyle, ...styles.diceAssigned };
+                } else if (isSpellDie) {
+                  diceStyle = { ...diceStyle, ...styles.diceSpell };
+                } else if (isDualCheckDie) {
+                  diceStyle = { ...diceStyle, ...styles.diceExtra };
+                } else {
+                  diceStyle = { ...diceStyle, ...styles.diceAvailable };
+                }
 
                 return (
-                  <div
-                    key={index}
-                    style={{
-                      ...styles.dice,
-                      ...(isAssigned
-                        ? styles.diceAssigned
-                        : styles.diceAvailable),
-                      ...(isExtra && {
-                        color: theme.warning,
-                      }),
-                    }}
-                  >
-                    {value}
-                    {isExtra && <span style={{ fontSize: "0.75rem" }}>★</span>}
+                  <div key={index} style={diceStyle}>
+                    <div>{value}</div>
+                    {isExtra && (
+                      <div style={styles.extraDiceLabel}>
+                        {isSpellDie ? "Spell" : "Dual"}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -420,9 +502,11 @@ const DicePoolManager = ({
                 color: theme.textSecondary,
                 fontSize: "0.875rem",
                 marginTop: "1rem",
+                flexWrap: "wrap",
+                gap: "1rem",
               }}
             >
-              <div style={{ display: "flex", gap: "1rem" }}>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <span>Total: {dicePool.length} dice</span>
                 <span>
                   Available:{" "}
@@ -434,32 +518,67 @@ const DicePoolManager = ({
                 </span>
               </div>
 
-              {dicePool.length > 6 && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                    padding: "0.25rem 0.5rem",
-                    backgroundColor: theme.warning + "15",
-                    borderRadius: "4px",
-                    border: `1px solid ${theme.warning}30`,
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  <span
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                {dualCheckCount > 0 && (
+                  <div
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: theme.warning + "15",
+                      borderRadius: "4px",
+                      border: `1px solid ${theme.warning}30`,
                       fontSize: "0.75rem",
-                      color: theme.warning || "#f59e0b",
                     }}
                   >
-                    ★
-                  </span>
-                  <span style={{ color: theme.warning || "#f59e0b" }}>
-                    Extra Dice From Activity
-                  </span>
-                </div>
-              )}
+                    <span style={{ fontSize: "0.75rem", color: theme.warning }}>
+                      ★
+                    </span>
+                    <span style={{ color: theme.warning }}>
+                      +{dualCheckCount} Dual Check
+                    </span>
+                  </div>
+                )}
+
+                {spellActivityCount > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.25rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: theme.primary + "15",
+                      borderRadius: "4px",
+                      border: `1px solid ${theme.primary}30`,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.75rem", color: theme.primary }}>
+                      ✨
+                    </span>
+                    <span style={{ color: theme.primary }}>
+                      +{spellActivityCount} Spell Activity
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                fontSize: "0.9rem",
+                color: theme.textSecondary,
+                marginTop: "1rem",
+                padding: "0.75rem",
+                backgroundColor: theme.background,
+                borderRadius: "6px",
+                border: `1px solid ${theme.border}`,
+              }}
+            >
+              Required: {requiredDiceCount} dice (6 base
+              {dualCheckCount > 0 && ` + ${dualCheckCount} dual-check`}
+              {spellActivityCount > 0 && ` + ${spellActivityCount} spell`})
             </div>
           </>
         ) : (
@@ -473,8 +592,22 @@ const DicePoolManager = ({
               border: `1px solid ${theme.border}`,
             }}
           >
-            Click "Roll Dice Pool" to generate your 6 dice for this downtime
+            Click "Roll Dice Pool" to generate your dice for this downtime
             session
+            <br />
+            <small style={{ marginTop: "0.5rem", display: "block" }}>
+              {requiredDiceCount > 6 && (
+                <>
+                  Will generate {requiredDiceCount} dice ({6} base
+                  {dualCheckCount > 0 && <> + {dualCheckCount} dual-check</>}
+                  {spellActivityCount > 0 && (
+                    <> + {spellActivityCount} spell activity</>
+                  )}
+                  )
+                </>
+              )}
+              {requiredDiceCount === 6 && "Will generate 6 base dice"}
+            </small>
           </div>
         )}
       </div>
@@ -497,6 +630,8 @@ const DicePoolManager = ({
       dualCheckActivities,
       extraDiceCount,
       shouldDisableExtraDie,
+      requiredDiceCount,
+      spellActivitiesCount: spellActivityCount,
     },
   };
 };

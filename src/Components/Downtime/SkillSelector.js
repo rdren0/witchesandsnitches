@@ -1,8 +1,9 @@
 import React, { memo, useMemo } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getActivitySkillInfo, calculateModifier } from "./downtimeHelpers";
-import { allSkills } from "../SharedData/data";
-import { wandModifiers } from "../SharedData/downtime";
+import { allSkills } from "../../SharedData/data";
+import { wandModifiers } from "../../SharedData/downtime";
+import { formatModifier } from "./utils/modifierUtils";
 
 const SkillSelector = memo(
   ({
@@ -67,10 +68,6 @@ const SkillSelector = memo(
       }),
       [theme, canEdit]
     );
-
-    const formatModifier = (value) => {
-      return value >= 0 ? `+${value}` : `${value}`;
-    };
 
     if (choiceInfo.type === "locked" && choiceInfo.skills) {
       const autoSkill = isSecondSkill
@@ -246,8 +243,8 @@ const SkillSelector = memo(
             <div
               style={{
                 position: "absolute",
-                top: "-8px",
-                right: "8px",
+                top: "12px",
+                right: "20px",
                 ...styles.badge,
                 backgroundColor: `${theme.info || "#3b82f6"}20`,
                 color: theme.info || "#3b82f6",
@@ -261,8 +258,8 @@ const SkillSelector = memo(
             <div
               style={{
                 position: "absolute",
-                top: "-8px",
-                right: "8px",
+                top: "12px",
+                right: "20px",
                 ...styles.badge,
                 backgroundColor: `${theme.warning || "#f59e0b"}20`,
                 color: theme.warning || "#f59e0b",

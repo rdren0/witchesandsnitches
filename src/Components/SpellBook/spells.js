@@ -1,4 +1,4 @@
-import { SUBJECT_TO_MODIFIER_MAP } from "../SharedData/data";
+import { SUBJECT_TO_MODIFIER_MAP } from "../../SharedData/data";
 
 export const cardTitles = {
   "Charms-Cantrips": true,
@@ -434,7 +434,7 @@ export const spellsData = {
           range: "Self",
           duration: "Dedication, up to 10 minutes",
           year: 3,
-          tags: ["Defensive"],
+
           description:
             "An invisible barrier of magical force appears in front of you and protects you. For the duration, you have a +5 bonus to AC, including against the triggering attack. If you are targeted by a spell that requires an attack roll and the spell's level is equal to or lower than half your proficiency bonus, the spell has no effect on you. You can use a bonus action to change which direction the shield is facing. If you are attacked from either of your sides or from behind while casting this spell, you must use your reaction to redirect the shield to point towards the threat. Otherwise, this spell doesn't protect you.",
         },
@@ -533,7 +533,7 @@ export const spellsData = {
           range: "30 feet",
           duration: "instantaneous",
           year: 3,
-          tags: ["Defensive"],
+
           description:
             "Choose any creature, object, or magical effect within range. One non-Transfiguration spell of 2nd level or lower on the target ends. If you are aware of at least one spell affecting the target, you can specify that spell in your mind. If you are unaware of what spells are affecting the target, one randomly selected spell ends. For a spell of a higher level on the target, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level.",
           higherLevels:
@@ -620,7 +620,7 @@ export const spellsData = {
           range: "Self",
           duration: "Dedication, up to 10 minutes",
           year: 4,
-          tags: ["Defensive"],
+
           description:
             "You cast a fully encompassing protego around yourself, sacrificing durability for coverage. For the duration, you have a +3 bonus to AC, including against the triggering attack. If you are subjected to an effect that allows you to make a Strength or Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail.",
         },
@@ -694,7 +694,7 @@ export const spellsData = {
           range: "Self (30-foot-radius hemisphere)",
           duration: "8 hours",
           year: 5,
-          tags: ["Defensive"],
+
           description:
             "You set an alarm to emit a piercing shriek when an unauthorized person enters the area. Until the spell ends, an alarm sounds whenever a Tiny or larger creature touches or enters the warded area. When you cast the spell, you can designate creatures or areas within the hemisphere that won't set off the alarm. The alarm produces an unpleasant screaming sound for as long as the intruding creature is in the area of the spell, audible from as far away as 300 feet.",
         },
@@ -705,7 +705,7 @@ export const spellsData = {
           range: "10 Feet",
           duration: "Concentration, up to 1 minute",
           year: 5,
-          tags: ["Defensive", "R"],
+          tags: ["R"],
           description:
             "A Patronus Charm is a special bit of magic that requires a wizard to envision one of their happiest memories while casting the spell. The feeling of happiness must be genuine or strong enough to produce a radiant, ethereal beast, the embodiment of that wizard's positive emotions that serves as their protector. When you cast this spell, you can choose to conjure an incorporeal or corporeal patronus. If you attempt to cast this spell while frightened or within 60 feet of a dementor, you must make an ability check using your spellcasting ability. The DC equals 10 + the number of dementors within 60 feet of you. A roll of 19-20 on the die automatically succeeds. On a success, you cast the spell. On a failure, you can only conjure an incorporeal patronus, but if you fail the check by 5 or more, the spell fails entirely. At the end of your turn, if you are frightened or there are one or more dementors within 60 feet of you while concentrating on this spell, you must repeat the ability check. On a failure, your patronus vanishes and the spell ends. A patronus sheds light in a radius around it. You and friendly creatures can't be frightened while in your patronus's light. A dementor that starts its turn within this light or enters the light for the first time on a turn must succeed on a Wisdom saving throw or become frightened of the patronus until the start of its next turn. Incorporeal Patronus: Your patronus takes the form of a 5-foot burst of glowing mist in an unoccupied space adjacent to you, shedding bright light in its space and dim light in a 5-foot radius. Corporeal Patronus: Your patronus takes the form of a wispy silver animal in an unoccupied space that you can see within range, shedding bright light in a 10-foot radius and dim light for an additional 10 feet. When you cast the spell and as a bonus action on subsequent turns, you can move the patronus up to 60 feet (Medium or smaller), 45 feet (Large), or 30 feet (Huge). At any time during the patronus's movement, you can direct it to charge into a dementor within 5 feet of it. Make a melee spell attack for the patronus. On a hit, the target takes 5d10 radiant damage and the patronus pushes the target up to 5 feet plus a number of feet equal to five times your spellcasting ability modifier.",
           higherLevels:
@@ -718,7 +718,7 @@ export const spellsData = {
           range: "90 feet",
           duration: "Instantaneous",
           year: 5,
-          tags: ["Defensive"],
+
           description:
             "Whenever you cast this spell on an active defensive spell within range that improves a creature's AC or grants it temporary hit points, each creature affected by the targeted spell gains temporary hit points equal to twice your caster level + your spellcasting ability modifier. When the targeted spell ends or an affected creature is no longer affected by it, the creature loses any remaining temporary hit points from this spell.",
         },
@@ -773,7 +773,7 @@ export const spellsData = {
           range: "Self (20-foot-radius hemisphere)",
           duration: "1 hour",
           year: 5,
-          tags: ["Defensive"],
+
           description:
             "You create a 20-foot-radius hemisphere of magical energy to protect you from one or more of the following: Dark wizards, other Dark beings, or Dark beasts. The circle affects creatures of the chosen type(s) in the following ways: The affected creatures can't willingly enter the hemisphere by nonmagical means. The affected creatures have disadvantage on attack rolls against targets within the hemisphere. Targets within the hemisphere can't be charmed or frightened by affected creatures.",
           higherLevels:
@@ -812,7 +812,7 @@ export const spellsData = {
           range: "Self (60-foot-radius hemisphere)",
           duration: "8 hours",
           year: 7,
-          tags: ["Defensive", "R"],
+          tags: ["R"],
           description:
             "Frequently used around wizarding areas, this charm keeps Muggles away from dangerous situations or overtly magical locations. You enchant an area to suggest a course of activity and magically influence a non-magical human. Upon entering the warded area, the subject must make a Wisdom saving throw at disadvantage. On a failed save, it pursues a course of action that takes it away from the area of the spell.",
         },
@@ -825,7 +825,7 @@ export const spellsData = {
           range: "Self (10-foot-radius hemisphere)",
           duration: "1 hour",
           year: 7,
-          tags: ["Defensive"],
+
           description:
             "A forcefield-like dome forms a perimeter around the caster that filters vision of anything or anyone designated by the caster, rendering those objects infallibly invisible. The dome is undetectable from the outside, but slightly visible from the inside, like a wavering glass barrier. Anyone can move through the field freely to see the hidden contents.",
           higherLevels:
@@ -838,7 +838,7 @@ export const spellsData = {
           range: "Touch",
           duration: "Concentration, up to 1 hour",
           year: 6,
-          tags: ["Defensive"],
+
           description:
             "For the duration, the creature you touch or yourself has immunity to fire damage, excluding dragon fire and the azreth spell (Fiendfyre).",
           higherLevels:
@@ -877,7 +877,7 @@ export const spellsData = {
           range: "Self (10-foot-radius sphere)",
           duration: "Concentration, up to 1 minute",
           year: 7,
-          tags: ["Defensive"],
+
           description:
             "Each creature within the spell's area gains temporary hit points equal to your spellcasting modifier at the beginning of its turn and advantage on all saving throws against spells.",
         },
@@ -891,7 +891,7 @@ export const spellsData = {
           duration: "Concentration, up to 1 minute",
           year: 7,
           restriction: true,
-          tags: ["Defensive"],
+
           description:
             "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
           higherLevels:
@@ -1082,7 +1082,7 @@ export const spellsData = {
         {
           name: "Conjunctivia",
           level: "3rd Level",
-          year: null,
+          year: 5,
           description: "Conjunctivitis curse",
         },
         {
@@ -1136,7 +1136,7 @@ export const spellsData = {
         {
           name: "Imperio",
           level: "5th Level",
-          year: null,
+          year: 6,
           description: "Imperius curse",
         },
         {
@@ -1570,7 +1570,7 @@ export const spellsData = {
         {
           name: "Incendio Ruptis",
           level: "Cantrip",
-          year: null,
+          year: 1,
           restriction: true,
           description: "Enhanced fire spell with explosive properties",
         },
@@ -1579,7 +1579,7 @@ export const spellsData = {
         {
           name: "Diffindo Glacia",
           level: "1st Level",
-          year: null,
+          year: 2,
           restriction: true,
           description:
             "Ice-cutting spell that combines slicing and freezing effects",
@@ -1587,7 +1587,7 @@ export const spellsData = {
         {
           name: "Intonuit Fluctus",
           level: "1st Level",
-          year: null,
+          year: 3,
           restriction: true,
           description: "Thunder wave spell",
         },
@@ -1596,14 +1596,14 @@ export const spellsData = {
         {
           name: "Fulgur",
           level: "3rd Level",
-          year: null,
+          year: 5,
           restriction: true,
           description: "Lightning spell",
         },
         {
           name: "Respersio",
           level: "3rd Level",
-          year: null,
+          year: 4,
           restriction: true,
           description: "Elemental spray or splash spell",
         },
@@ -1612,7 +1612,7 @@ export const spellsData = {
         {
           name: "Glacius Maxima",
           level: "4th Level",
-          year: null,
+          year: 6,
           restriction: true,
           description:
             "Enhanced version of Glacius with greater freezing power",
@@ -1622,7 +1622,7 @@ export const spellsData = {
         {
           name: "Tempestus",
           level: "8th Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Storm conjuration spell",
         },
@@ -1648,7 +1648,7 @@ export const spellsData = {
         {
           name: "Magno",
           level: "Cantrip",
-          year: null,
+          year: 1,
           restriction: true,
           description: "Magnification or enhancement spell",
         },
@@ -1657,35 +1657,35 @@ export const spellsData = {
         {
           name: "Clario",
           level: "1st Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Clarity or illumination spell for combat",
         },
         {
           name: "Ignis Ictus",
           level: "1st Level",
-          year: null,
+          year: 2,
           restriction: true,
           description: "Fire strike spell",
         },
         {
           name: "Irus Ictus",
           level: "1st Level",
-          year: null,
+          year: 2,
           restriction: true,
           description: "Anger strike spell",
         },
         {
           name: "Pererro",
           level: "1st Level",
-          year: null,
+          year: 1,
           restriction: true,
           description: "Wandering or erratic movement spell",
         },
         {
           name: "Tonitrus Ictus",
           level: "1st Level",
-          year: null,
+          year: 3,
           restriction: true,
           description: "Thunder strike spell",
         },
@@ -1694,7 +1694,7 @@ export const spellsData = {
         {
           name: "Notam Ictus",
           level: "2nd Level",
-          year: null,
+          year: 4,
           restriction: true,
           description: "Mark strike spell",
         },
@@ -1703,7 +1703,7 @@ export const spellsData = {
         {
           name: "Inanus Ictus",
           level: "3rd Level",
-          year: null,
+          year: 5,
           restriction: true,
           description: "Void or empty strike spell",
         },
@@ -1712,7 +1712,7 @@ export const spellsData = {
         {
           name: "Titubo Ictus",
           level: "4th Level",
-          year: null,
+          year: 6,
           restriction: true,
           description: "Staggering strike spell",
         },
@@ -1721,7 +1721,7 @@ export const spellsData = {
         {
           name: "Clario Maxima",
           level: "5th Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Maximum clarity spell for combat enhancement",
         },
@@ -1842,7 +1842,7 @@ export const spellsData = {
         {
           name: "Insectum",
           level: "Cantrip",
-          year: null,
+          year: 6,
           restriction: true,
           description: "Insect control or summoning spell",
         },
@@ -1867,7 +1867,7 @@ export const spellsData = {
         {
           name: "Beastia Nuntium",
           level: "2nd Level (ritual)",
-          year: null,
+          year: 3,
           restriction: true,
           tags: ["R"],
           description: "Allows communication with beasts",
@@ -1875,7 +1875,7 @@ export const spellsData = {
         {
           name: "Beastia Sensibus",
           level: "2nd Level (ritual)",
-          year: null,
+          year: 4,
           restriction: true,
           tags: ["R"],
           description: "Shares senses with beasts",
@@ -1885,7 +1885,7 @@ export const spellsData = {
         {
           name: "Obtestor",
           level: "3rd Level",
-          year: null,
+          year: 4,
           restriction: true,
           description: "Implores or commands creatures",
         },
@@ -1901,7 +1901,7 @@ export const spellsData = {
         {
           name: "Engorgio Insectum",
           level: "4th Level",
-          year: null,
+          year: 6,
           restriction: true,
           description: "Enlarges insects to massive size",
         },
@@ -1910,7 +1910,7 @@ export const spellsData = {
         {
           name: "Insectum Maxima",
           level: "5th Level",
-          year: null,
+          year: 6,
           restriction: true,
           description: "Maximum insect control or summoning",
         },
@@ -1919,7 +1919,7 @@ export const spellsData = {
         {
           name: "Natura Incantatem",
           level: "6th Level (ritual)",
-          year: null,
+          year: 7,
           restriction: true,
           tags: ["R"],
           description: "Enchants nature itself",
@@ -1929,7 +1929,7 @@ export const spellsData = {
         {
           name: "Draconiverto",
           level: "7th Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Dragon transformation or control",
         },
@@ -1938,7 +1938,7 @@ export const spellsData = {
         {
           name: "Animato Maxima",
           level: "8th Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Maximum animation of creatures",
         },
@@ -1955,14 +1955,14 @@ export const spellsData = {
         {
           name: "Ignis Lunalis",
           level: "Cantrip",
-          year: null,
+          year: 3,
           restriction: true,
           description: "Moonfire or eerie flame spell",
         },
         {
           name: "Fraudemo",
           level: "Cantrip",
-          year: null,
+          year: 5,
           restriction: true,
           description: "Deception or illusion spell",
         },
@@ -1971,7 +1971,7 @@ export const spellsData = {
         {
           name: "Formidulosus",
           level: "1st Level",
-          year: null,
+          year: 3,
           restriction: true,
           description: "Induces fear and dread",
         },
@@ -1980,7 +1980,7 @@ export const spellsData = {
         {
           name: "Exspiravit",
           level: "2nd Level",
-          year: null,
+          year: 4,
           restriction: true,
           description: "Expiration or breath-stealing spell",
         },
@@ -1989,14 +1989,14 @@ export const spellsData = {
         {
           name: "Fraudemo Maxima",
           level: "3rd Level",
-          year: null,
+          year: 5,
           restriction: true,
           description: "Enhanced deception spell",
         },
         {
           name: "Timor",
           level: "3rd Level",
-          year: null,
+          year: 4,
           description: "Fear spell",
         },
       ],
@@ -2004,7 +2004,7 @@ export const spellsData = {
         {
           name: "Relicuum",
           level: "4th Level (ritual)",
-          year: null,
+          year: 6,
           restriction: true,
           tags: ["R"],
           description: "Relic or remnant spell",
@@ -2014,7 +2014,7 @@ export const spellsData = {
         {
           name: "Oculus Malus",
           level: "6th Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Evil eye curse",
         },
@@ -2215,7 +2215,7 @@ export const spellsData = {
         {
           name: "Ignis Lunalis",
           level: "Cantrip",
-          year: null,
+          year: 3,
           restriction: true,
           description: "Moonfire spell",
         },
@@ -2224,7 +2224,7 @@ export const spellsData = {
         {
           name: "Lux Maxima",
           level: "1st Level",
-          year: null,
+          year: 3,
           restriction: true,
           description: "Maximum celestial light",
         },
@@ -2233,7 +2233,7 @@ export const spellsData = {
         {
           name: "Trabem",
           level: "2nd Level",
-          year: null,
+          year: 4,
           restriction: true,
           description: "Beam or ray spell",
         },
@@ -2242,7 +2242,7 @@ export const spellsData = {
         {
           name: "Stellaro",
           level: "3rd Level",
-          year: null,
+          year: 5,
           restriction: true,
           description: "Star-based spell",
         },
@@ -2251,7 +2251,7 @@ export const spellsData = {
         {
           name: "Lunativia",
           level: "5th Level",
-          year: null,
+          year: 6,
           restriction: true,
           description: "Lunar path or moon magic",
         },
@@ -2260,7 +2260,7 @@ export const spellsData = {
         {
           name: "Solativia",
           level: "8th Level",
-          year: null,
+          year: 7,
           restriction: true,
           description: "Solar path or sun magic",
         },
@@ -2277,7 +2277,7 @@ export const spellsData = {
         {
           name: "Diffindo",
           level: "1st Level (ritual)",
-          year: null,
+          year: 2,
           restriction: true,
           tags: ["R"],
           description: "Professional version of the cutting spell",
@@ -2287,7 +2287,7 @@ export const spellsData = {
         {
           name: "Immobulus",
           level: "2nd Level",
-          year: null,
+          year: 2,
           restriction: true,
           description: "Professional version of the freezing spell",
         },
@@ -2296,7 +2296,7 @@ export const spellsData = {
         {
           name: "Deprimo",
           level: "3rd Level (ritual)",
-          year: null,
+          year: 5,
           restriction: true,
           tags: ["R"],
           description: "Depression or lowering spell",
@@ -2306,7 +2306,7 @@ export const spellsData = {
         {
           name: "Confundo",
           level: "4th Level (ritual)",
-          year: null,
+          year: 6,
           restriction: true,
           tags: ["R"],
           description: "Professional version of the confusion charm",
@@ -2325,7 +2325,7 @@ export const spellsData = {
         {
           name: "Manus",
           level: "Cantrip",
-          year: null,
+          year: 1,
           restriction: false,
           description:
             "Create a spectral floating hand that can manipulate objects, open doors, and carry up to 10 pounds within 30 feet for 1 minute",
@@ -2336,7 +2336,7 @@ export const spellsData = {
         {
           name: "Tranquillitatem",
           level: "2nd Level",
-          year: null,
+          year: 3,
           restriction: false,
           description:
             "Suppress strong emotions in a 20-foot radius. Remove charm/fear effects or make hostile creatures indifferent toward chosen targets. Concentration, up to 1 minute",
@@ -2346,7 +2346,7 @@ export const spellsData = {
         {
           name: "Fictus",
           level: "3rd Level",
-          year: null,
+          year: 4,
           restriction: false,
           description:
             "Create a realistic illusion up to 20-foot cube with sounds, smells, and temperature. Lasts 10 minutes with concentration. Physical interaction reveals it's fake. At 6th level+, becomes permanent without concentration",
@@ -2354,7 +2354,7 @@ export const spellsData = {
         {
           name: "Roboratum",
           level: "3rd Level",
-          year: null,
+          year: 5,
           restriction: false,
           description:
             "Grant up to 5 creatures 5 temporary HP, advantage on Wisdom saves, and advantage on next attack after being hit. Lasts 1 hour. Higher levels add +5 temp HP per slot level",
@@ -2366,7 +2366,7 @@ export const spellsData = {
         {
           name: "Incarcerebra",
           level: "6th Level",
-          year: null,
+          year: 7,
           restriction: false,
           description:
             "Bind a creature in an illusory cell only it perceives. Target takes 5d10 psychic damage and is restrained, unable to see/hear beyond the illusion. Moving through it deals 10d10 damage and ends the spell",
@@ -2377,7 +2377,7 @@ export const spellsData = {
         {
           name: "Dubium/Fiducium",
           level: "8th Level",
-          year: null,
+          year: 7,
           restriction: false,
           description:
             "Enchant an object/area with an aura that repels (Dubium) or attracts (Fiducium) specified intelligent creatures. Lasts 10 days. Targets must save or be frightened away or compelled to approach within 60 feet",

@@ -52,8 +52,8 @@ export const downtime = {
     description:
       "Activities focused on improving character abilities and skills",
     activities: [
-      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots",
-      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots",
+      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots. DC equals current ability score",
+      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots. Nat 20 gives two successes; if nat 20 on third attempt, gain one success towards expertise. Proficiency DC equals associated ability score. Expertise DC equals associated ability score + prof bonus",
       "Increase Wand Stat - Roll against a DC based on the current Wand Stat",
     ],
   },
@@ -63,8 +63,8 @@ export const downtime = {
     description: "Activities related to learning and practicing magic",
     activities: [
       "Research Spells - Roll History of Magic to research a spell",
-      "Attempt a Spell - Practice casting any spell previously researched or attempted",
-      "Create a Spell - Must succeed on three separate checks using separate downtime slots",
+      "Attempt Spells - Practice casting any spell previously researched or attempted",
+      "Create a Spell - Must succeed on three separate checks using separate downtime slots per attempt: Magical Theory Check, Wand Modifier Check, and Spellcasting Ability Check",
       "Studying - Improve performance in classes through focused study",
     ],
   },
@@ -91,9 +91,10 @@ export const downtime = {
     activities: [
       "Cooking - Roll Survival to prepare meals",
       "Learn a Recipe - Roll Survival to memorize a recipe",
-      "Create a New Recipe - Must succeed on three separate checks using separate downtime slots",
+      "Create a New Recipe - Must complete three distinct checks across separate downtime slots: Survival Check, Cultural Research Check (Muggle Studies OR History of Magic), and Spellcasting Ability Check",
     ],
   },
+
   herbology_advanced: {
     name: "Advanced Herbology",
     description: "Advanced plant manipulation and engineering",
@@ -115,15 +116,7 @@ export const downtime = {
     name: "Special Magical Arts",
     description: "Advanced and specialized magical practices",
     activities: [
-      "Animagus Form (RP) - Engage in roleplay to explore an Animagus transformation",
-    ],
-  },
-
-  custom: {
-    name: "Custom Activities",
-    description: "Player-proposed activities subject to GM approval",
-    activities: [
-      "Custom Activity - Propose your own activity (GM approval required)",
+      "Animagus Form - Advanced magical transformation requiring extensive training and multiple attempts",
     ],
   },
 };
@@ -169,4 +162,25 @@ export const wandModifiers = [
     displayName: "Jinxes/Hexes/Curses",
     ability: "charisma",
   },
+];
+
+export const classes = [
+  "Alchemy",
+  "Ancient Runes",
+  "Ancient Studies",
+  "Arithmancy",
+  "Astronomy",
+  "Charms",
+  "DADA",
+  "Divinations",
+  "Field Studies",
+  "Ghoul Studies",
+  "Herbology",
+  "History of Magic",
+  "Magical Creatures",
+  "Magical Theory",
+  "Muggle Studies",
+  "Potions",
+  "Transfiguration",
+  "Xylomancy",
 ];

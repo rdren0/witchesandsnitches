@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Filter } from "lucide-react";
 import { SubjectCard } from "./SubjectCard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedSpellBookStyles } from "../../styles/masterStyles";
@@ -22,8 +22,52 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const [arithmancticTags, setArithmancticTags] = useState({});
   const [runicTags, setRunicTags] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [attemptFilter, setAttemptFilter] = useState("all");
+  const [yearFilter, setYearFilter] = useState("all");
 
   const discordUserId = user?.user_metadata?.provider_id;
+
+  const attemptFilterOptions = [
+    { value: "all", label: "All Spells" },
+    { value: "unattempted", label: "Unattempted" },
+    { value: "attempted", label: "Attempted" },
+    { value: "mastered", label: "Mastered (2+ successes)" },
+    { value: "failed", label: "Failed" },
+    { value: "researched", label: "Researched" },
+  ];
+
+  const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
+
+  const getAvailableYears = useCallback(() => {
+    const availableSpells = getAvailableSpellsData();
+    const years = new Set();
+
+    Object.entries(availableSpells).forEach(([, subject]) => {
+      Object.entries(subject.levels).forEach(([, spells]) => {
+        spells.forEach((spell) => {
+          if (spell.year !== null && spell.year !== undefined) {
+            years.add(spell.year);
+
+            if (spell.name === "Cantis" || spell.name === "Aguamenti") {
+            }
+          }
+        });
+      });
+    });
+
+    const yearArray = Array.from(years).sort((a, b) => a - b);
+    return yearArray;
+  }, [getAvailableSpellsData]);
+
+  const yearFilterOptions = [
+    { value: "all", label: "All Years" },
+    ...getAvailableYears().map((year) => ({
+      value: year.toString(),
+      label: `${year}${
+        year === 1 ? "st" : year === 2 ? "nd" : year === 3 ? "rd" : "th"
+      } Year`,
+    })),
+  ];
 
   useEffect(() => {
     setSpellAttempts({});
@@ -32,87 +76,187 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     setResearchedSpells({});
     setArithmancticTags({});
     setRunicTags({});
+    setYearFilter("all");
   }, [selectedCharacter?.id]);
 
-  const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
+  const getSpellAttemptStatus = useCallback(
+    (spellName) => {
+      const attempts = spellAttempts[spellName] || {};
+      const successfulAttempts = Object.values(attempts).filter(Boolean).length;
+      const hasFailed = failedAttempts[spellName];
+      const isResearched = researchedSpells[spellName];
+      const hasAnyAttempt = successfulAttempts > 0 || hasFailed;
+
+      return {
+        isUnattempted: !hasAnyAttempt && !isResearched,
+        isAttempted: hasAnyAttempt,
+        isMastered: successfulAttempts >= 2,
+        hasFailed: hasFailed,
+        isResearched: isResearched,
+        successfulAttempts,
+      };
+    },
+    [spellAttempts, failedAttempts, researchedSpells]
+  );
 
   const getFilteredSpellsData = useCallback(() => {
     const availableSpells = getAvailableSpellsData();
+    let filteredData = {};
 
-    if (!searchTerm.trim()) {
-      return availableSpells;
-    }
+    if (searchTerm.trim()) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
 
-    const filteredData = {};
-    const lowerSearchTerm = searchTerm.toLowerCase();
+      Object.entries(availableSpells).forEach(([subjectName, subjectData]) => {
+        const filteredLevels = {};
+        let hasMatchingSpells = false;
 
-    Object.entries(availableSpells).forEach(([subjectName, subjectData]) => {
-      const filteredLevels = {};
-      let hasMatchingSpells = false;
+        Object.entries(subjectData.levels).forEach(([level, spells]) => {
+          const filteredSpells = spells.filter((spell) => {
+            const hasInherentTag = spell.tags?.some((tag) =>
+              tag.toLowerCase().includes(lowerSearchTerm)
+            );
 
-      Object.entries(subjectData.levels).forEach(([level, spells]) => {
-        const filteredSpells = spells.filter((spell) => {
-          // Check inherent tags
-          const hasInherentTag = spell.tags?.some((tag) =>
-            tag.toLowerCase().includes(lowerSearchTerm)
-          );
+            const hasManualArithmancticTag =
+              arithmancticTags[spell.name] &&
+              "arithmantic".includes(lowerSearchTerm);
+            const hasManualRunicTag =
+              runicTags[spell.name] && "runic".includes(lowerSearchTerm);
 
-          // Check manually assigned tags
-          const hasManualArithmancticTag =
-            arithmancticTags[spell.name] &&
-            "arithmantic".includes(lowerSearchTerm);
-          const hasManualRunicTag =
-            runicTags[spell.name] && "runic".includes(lowerSearchTerm);
+            const isResearchedWithResearcher =
+              researchedSpells[spell.name] &&
+              hasSubclassFeature(selectedCharacter, "Researcher");
+            const hasResearcherArithmancticTag =
+              isResearchedWithResearcher &&
+              "arithmantic".includes(lowerSearchTerm);
+            const hasResearcherRunicTag =
+              isResearchedWithResearcher && "runic".includes(lowerSearchTerm);
 
-          // Check if it's a researched spell with Researcher bonus (auto-tags)
-          const isResearchedWithResearcher =
-            researchedSpells[spell.name] &&
-            hasSubclassFeature(selectedCharacter, "Researcher");
-          const hasResearcherArithmancticTag =
-            isResearchedWithResearcher &&
-            "arithmantic".includes(lowerSearchTerm);
-          const hasResearcherRunicTag =
-            isResearchedWithResearcher && "runic".includes(lowerSearchTerm);
+            return (
+              spell.name.toLowerCase().includes(lowerSearchTerm) ||
+              spell.description?.toLowerCase().includes(lowerSearchTerm) ||
+              spell.level?.toLowerCase().includes(lowerSearchTerm) ||
+              level.toLowerCase().includes(lowerSearchTerm) ||
+              subjectName.toLowerCase().includes(lowerSearchTerm) ||
+              spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
+              spell.range?.toLowerCase().includes(lowerSearchTerm) ||
+              spell.duration?.toLowerCase().includes(lowerSearchTerm) ||
+              hasInherentTag ||
+              hasManualArithmancticTag ||
+              hasManualRunicTag ||
+              hasResearcherArithmancticTag ||
+              hasResearcherRunicTag
+            );
+          });
 
-          return (
-            spell.name.toLowerCase().includes(lowerSearchTerm) ||
-            spell.description?.toLowerCase().includes(lowerSearchTerm) ||
-            spell.level?.toLowerCase().includes(lowerSearchTerm) ||
-            level.toLowerCase().includes(lowerSearchTerm) ||
-            subjectName.toLowerCase().includes(lowerSearchTerm) ||
-            spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
-            spell.range?.toLowerCase().includes(lowerSearchTerm) ||
-            spell.duration?.toLowerCase().includes(lowerSearchTerm) ||
-            hasInherentTag ||
-            hasManualArithmancticTag ||
-            hasManualRunicTag ||
-            hasResearcherArithmancticTag ||
-            hasResearcherRunicTag
-          );
+          if (filteredSpells.length > 0) {
+            filteredLevels[level] = filteredSpells;
+            hasMatchingSpells = true;
+          }
         });
 
-        if (filteredSpells.length > 0) {
-          filteredLevels[level] = filteredSpells;
-          hasMatchingSpells = true;
+        if (hasMatchingSpells) {
+          filteredData[subjectName] = {
+            ...subjectData,
+            levels: filteredLevels,
+          };
+        }
+      });
+    } else {
+      filteredData = { ...availableSpells };
+    }
+
+    if (yearFilter !== "all") {
+      const yearFilteredData = {};
+      const targetYear = parseInt(yearFilter);
+
+      Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
+        const filteredLevels = {};
+        let hasMatchingSpells = false;
+
+        Object.entries(subjectData.levels).forEach(([level, spells]) => {
+          const filteredSpells = spells.filter((spell) => {
+            const spellYear = spell.year;
+            if (spellYear === null || spellYear === undefined) return false;
+
+            const normalizedSpellYear =
+              typeof spellYear === "string" ? parseInt(spellYear) : spellYear;
+            const matches = normalizedSpellYear === targetYear;
+
+            return matches;
+          });
+
+          if (filteredSpells.length > 0) {
+            filteredLevels[level] = filteredSpells;
+            hasMatchingSpells = true;
+          }
+        });
+
+        if (hasMatchingSpells) {
+          yearFilteredData[subjectName] = {
+            ...subjectData,
+            levels: filteredLevels,
+          };
         }
       });
 
-      if (hasMatchingSpells) {
-        filteredData[subjectName] = {
-          ...subjectData,
-          levels: filteredLevels,
-        };
-      }
-    });
+      filteredData = yearFilteredData;
+    }
+
+    if (attemptFilter !== "all") {
+      const finalFilteredData = {};
+
+      Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
+        const filteredLevels = {};
+        let hasMatchingSpells = false;
+
+        Object.entries(subjectData.levels).forEach(([level, spells]) => {
+          const filteredSpells = spells.filter((spell) => {
+            const status = getSpellAttemptStatus(spell.name);
+
+            switch (attemptFilter) {
+              case "unattempted":
+                return status.isUnattempted;
+              case "attempted":
+                return status.isAttempted;
+              case "mastered":
+                return status.isMastered;
+              case "failed":
+                return status.hasFailed;
+              case "researched":
+                return status.isResearched;
+              default:
+                return true;
+            }
+          });
+
+          if (filteredSpells.length > 0) {
+            filteredLevels[level] = filteredSpells;
+            hasMatchingSpells = true;
+          }
+        });
+
+        if (hasMatchingSpells) {
+          finalFilteredData[subjectName] = {
+            ...subjectData,
+            levels: filteredLevels,
+          };
+        }
+      });
+
+      return finalFilteredData;
+    }
 
     return filteredData;
   }, [
     searchTerm,
+    attemptFilter,
+    yearFilter,
     getAvailableSpellsData,
     arithmancticTags,
     runicTags,
     researchedSpells,
     selectedCharacter,
+    getSpellAttemptStatus,
   ]);
 
   const getTotalSpells = (dataSource = null) => {
@@ -182,6 +326,12 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
 
   const clearSearch = () => {
     setSearchTerm("");
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setAttemptFilter("all");
+    setYearFilter("all");
   };
 
   useEffect(() => {
@@ -280,13 +430,135 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
             </button>
           )}
         </div>
-        {searchTerm && (
+
+        {/* Filter Controls */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            marginTop: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Filter size={16} color={theme.textSecondary} />
+            <select
+              value={attemptFilter}
+              onChange={(e) => setAttemptFilter(e.target.value)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.background,
+                color: theme.text,
+                fontSize: "14px",
+                minWidth: "150px",
+              }}
+            >
+              {attemptFilterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "14px",
+                color: theme.textSecondary,
+                fontWeight: "500",
+              }}
+            >
+              Year:
+            </span>
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.background,
+                color: theme.text,
+                fontSize: "14px",
+                minWidth: "120px",
+              }}
+            >
+              {yearFilterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(searchTerm || attemptFilter !== "all" || yearFilter !== "all") && (
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.background,
+                color: theme.textSecondary,
+                fontSize: "12px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+              title="Clear all filters"
+            >
+              <X size={14} />
+              Clear Filters
+            </button>
+          )}
+        </div>
+
+        {(searchTerm || attemptFilter !== "all" || yearFilter !== "all") && (
           <div style={styles.searchResults}>
             Showing {totalFilteredSpells} of {totalSpells} spells
+            {searchTerm && <span> • Search: "{searchTerm}"</span>}
+            {attemptFilter !== "all" && (
+              <span>
+                {" "}
+                • Filter:{" "}
+                {
+                  attemptFilterOptions.find(
+                    (opt) => opt.value === attemptFilter
+                  )?.label
+                }
+              </span>
+            )}
+            {yearFilter !== "all" && (
+              <span>
+                {" "}
+                • Year:{" "}
+                {
+                  yearFilterOptions.find((opt) => opt.value === yearFilter)
+                    ?.label
+                }
+              </span>
+            )}
             {totalFilteredSpells < totalSpells && (
               <span style={styles.searchResultsHint}>
                 {" "}
-                • Try different keywords to find more spells
+                • Try different keywords or filters to find more spells
               </span>
             )}
           </div>
@@ -298,8 +570,13 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
           <span
             style={{ ...styles.statDot, backgroundColor: "#60a5fa" }}
           ></span>
-          {searchTerm ? totalFilteredSpells : totalSpells}{" "}
-          {searchTerm ? "Found" : "Total"} Spells
+          {searchTerm || attemptFilter !== "all" || yearFilter !== "all"
+            ? totalFilteredSpells
+            : totalSpells}{" "}
+          {searchTerm || attemptFilter !== "all" || yearFilter !== "all"
+            ? "Found"
+            : "Total"}{" "}
+          Spells
         </span>
         <span style={styles.statItem}>
           <span
@@ -344,30 +621,58 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
         </span>
       </div>
 
-      {searchTerm && Object.keys(filteredSpellsData).length === 0 && (
-        <div style={styles.noResultsContainer}>
-          <div style={styles.noResultsIcon}>🔍</div>
-          <h3 style={styles.noResultsTitle}>No spells found</h3>
-          <p style={styles.noResultsMessage}>
-            No spells match your search for "<strong>{searchTerm}</strong>".
-            <br />
-            Try searching for:
-          </p>
-          <ul style={styles.searchSuggestions}>
-            <li>Spell names (e.g., "Alohomora", "Expelliarmus")</li>
-            <li>Spell descriptions or effects</li>
-            <li>Subjects (e.g., "Charms", "Transfiguration")</li>
-            <li>Spell levels (e.g., "Cantrip", "1st Level")</li>
-            <li>Casting properties (e.g., "Touch", "Concentration")</li>
-            {hasSubclassFeature(selectedCharacter, "Researcher") && (
-              <li>Tags (e.g., "Arithmantic", "Runic")</li>
-            )}
-          </ul>
-          <button onClick={clearSearch} style={styles.clearSearchButton}>
-            Clear Search
-          </button>
-        </div>
-      )}
+      {(searchTerm || attemptFilter !== "all" || yearFilter !== "all") &&
+        Object.keys(filteredSpellsData).length === 0 && (
+          <div style={styles.noResultsContainer}>
+            <div style={styles.noResultsIcon}>🔍</div>
+            <h3 style={styles.noResultsTitle}>No spells found</h3>
+            <p style={styles.noResultsMessage}>
+              No spells match your current filters.
+              {searchTerm && (
+                <>
+                  <br />
+                  Search term: "<strong>{searchTerm}</strong>"
+                </>
+              )}
+              {attemptFilter !== "all" && (
+                <>
+                  <br />
+                  Attempt filter:{" "}
+                  <strong>
+                    {
+                      attemptFilterOptions.find(
+                        (opt) => opt.value === attemptFilter
+                      )?.label
+                    }
+                  </strong>
+                </>
+              )}
+              {yearFilter !== "all" && (
+                <>
+                  <br />
+                  Year filter:{" "}
+                  <strong>
+                    {
+                      yearFilterOptions.find((opt) => opt.value === yearFilter)
+                        ?.label
+                    }
+                  </strong>
+                </>
+              )}
+              <br />
+              Try:
+            </p>
+            <ul style={styles.searchSuggestions}>
+              <li>Different search keywords</li>
+              <li>Different attempt status filters</li>
+              <li>Different year filters</li>
+              <li>Clearing filters to see all spells</li>
+            </ul>
+            <button onClick={clearFilters} style={styles.clearSearchButton}>
+              Clear All Filters
+            </button>
+          </div>
+        )}
 
       <div style={styles.subjectsGrid}>
         {Object.entries(filteredSpellsData).map(

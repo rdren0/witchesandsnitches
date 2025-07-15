@@ -1,9 +1,13 @@
-// Updated ActivityManager.js - Remove DowntimeProvider and create stable functions
 import React, { memo, useCallback } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import ActivityItem from "./ActivityItem";
 import NPCEncounterItem from "./NPCEncounterItem";
 import { getDowntimeStyles } from "../../styles/masterStyles";
+import {
+  activityRequiresCheckTypeSelection,
+  getSkillOptionsForCheck,
+  calculateModifier,
+} from "./downtimeHelpers";
 
 const ActivityManager = ({
   formData,
@@ -23,17 +27,43 @@ const ActivityManager = ({
   const { theme } = useTheme();
   const styles = getDowntimeStyles(theme);
 
-  // Create stable update functions at this level
   const updateActivity = useCallback(
     (index, field, value) => {
-      setFormData((prev) => ({
-        ...prev,
-        activities: prev.activities.map((activity, i) =>
-          i === index ? { ...activity, [field]: value } : activity
-        ),
-      }));
+      setFormData((prev) => {
+        const newActivities = prev.activities.map((activity, i) => {
+          if (i === index) {
+            const updatedActivity = { ...activity, [field]: value };
+
+            if (
+              field === "selectedCheckType" &&
+              activityRequiresCheckTypeSelection(activity.activity)
+            ) {
+              const skillOptions = getSkillOptionsForCheck(
+                updatedActivity,
+                value
+              );
+              if (skillOptions.length === 1) {
+                let autoSkill = skillOptions[0];
+                if (autoSkill === "spellcastingAbility") {
+                  autoSkill =
+                    selectedCharacter?.spellcastingAbility || "intelligence";
+                }
+                updatedActivity.selectedCheckSkill = autoSkill;
+              }
+            }
+
+            return updatedActivity;
+          }
+          return activity;
+        });
+
+        return {
+          ...prev,
+          activities: newActivities,
+        };
+      });
     },
-    [setFormData]
+    [setFormData, selectedCharacter]
   );
 
   const updateActivitySuccess = useCallback(
@@ -118,104 +148,154 @@ const ActivityManager = ({
     [setFormData]
   );
 
-  return (
-    <div
-      style={
-        styles.activitiesContainer || {
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
+  const enhancedAssignDice = useCallback(
+    (activityKey, diceIndex, isSecondDie = false) => {
+      const activityIndex = parseInt(activityKey.replace("activity", "")) - 1;
+      const activity = formData.activities[activityIndex];
+
+      if (activityRequiresCheckTypeSelection(activity?.activity)) {
+        if (!activity.selectedCheckType || !activity.selectedCheckSkill) {
+          alert("Please select a check type and skill before assigning a die.");
+          return;
         }
+
+        const completedChecks = activity.completedChecks || [];
+        const alreadyCompleted = completedChecks.some(
+          (completed) => completed.checkId === activity.selectedCheckType
+        );
+
+        if (alreadyCompleted) {
+          alert(
+            "You have already completed this type of check for this recipe!"
+          );
+          return;
+        }
+
+        let requiredSkill = activity.selectedCheckSkill;
+
+        if (requiredSkill === "spellcastingAbility") {
+          requiredSkill =
+            selectedCharacter?.spellcastingAbility || "intelligence";
+        }
+
+        const modifier = calculateModifier(requiredSkill, selectedCharacter);
+        const diceValue = dicePool[diceIndex]?.value || 0;
+        const totalRoll = diceValue + modifier;
+
+        updateRollAssignment(activityKey, "diceIndex", diceIndex);
+        updateRollAssignment(activityKey, "skill", requiredSkill);
+        updateRollAssignment(activityKey, "modifier", modifier);
+        updateRollAssignment(activityKey, "total", totalRoll);
+        updateRollAssignment(
+          activityKey,
+          "checkType",
+          activity.selectedCheckType
+        );
+
+        setDicePool((prev) =>
+          prev.map((die, idx) =>
+            idx === diceIndex ? { ...die, used: true } : die
+          )
+        );
+
+        return;
       }
-    >
-      <div style={styles.sectionHeader || { marginBottom: "16px" }}>
-        <h3
-          style={
-            styles.sectionTitle || {
-              fontSize: "24px",
-              fontWeight: "600",
-              color: theme.text,
-              marginBottom: "8px",
-            }
-          }
-        >
-          Activities
-        </h3>
-        <p
-          style={
-            styles.subtitle || { fontSize: "14px", color: theme.textSecondary }
-          }
-        >
-          Choose your activities and assign dice rolls to each
-        </p>
+
+      assignDice(activityKey, diceIndex, isSecondDie);
+    },
+    [
+      formData,
+      selectedCharacter,
+      updateRollAssignment,
+      setDicePool,
+      assignDice,
+      dicePool,
+    ]
+  );
+
+  const enhancedUnassignDice = useCallback(
+    (activityKey, isSecondDie = false) => {
+      const activityIndex = parseInt(activityKey.replace("activity", "")) - 1;
+      const activity = formData.activities[activityIndex];
+
+      if (activityRequiresCheckTypeSelection(activity?.activity)) {
+        const assignment = rollAssignments[activityKey];
+        if (
+          assignment?.diceIndex !== null &&
+          assignment?.diceIndex !== undefined
+        ) {
+          setDicePool((prev) =>
+            prev.map((die, idx) =>
+              idx === assignment.diceIndex ? { ...die, used: false } : die
+            )
+          );
+
+          updateRollAssignment(activityKey, "diceIndex", null);
+          updateRollAssignment(activityKey, "skill", "");
+          updateRollAssignment(activityKey, "modifier", 0);
+          updateRollAssignment(activityKey, "total", 0);
+          updateRollAssignment(activityKey, "checkType", "");
+        }
+        return;
+      }
+
+      unassignDice(activityKey, isSecondDie);
+    },
+    [formData, rollAssignments, setDicePool, updateRollAssignment, unassignDice]
+  );
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.activitiesSection}>
+        <h3 style={styles.sectionTitle}>Activities</h3>
+        <div style={styles.activitiesList}>
+          {formData.activities.map((activity, index) => (
+            <ActivityItem
+              key={index}
+              index={index}
+              availableActivities={availableActivities}
+              activity={activity}
+              assignment={rollAssignments[`activity${index + 1}`] || {}}
+              updateActivity={updateActivity}
+              updateActivitySuccess={updateActivitySuccess}
+              updateRollAssignment={updateRollAssignment}
+              canEdit={canEdit}
+              selectedCharacter={selectedCharacter}
+              dicePool={dicePool}
+              assignDice={enhancedAssignDice}
+              unassignDice={enhancedUnassignDice}
+              getDiceUsage={getDiceUsage}
+              getSortedDiceOptions={getSortedDiceOptions}
+            />
+          ))}
+        </div>
       </div>
 
-      {[0, 1, 2].map((index) => (
-        <ActivityItem
-          key={index}
-          index={index}
-          availableActivities={availableActivities}
-          activity={formData.activities[index]}
-          assignment={rollAssignments[`activity${index + 1}`]}
-          updateActivity={updateActivity}
-          updateActivitySuccess={updateActivitySuccess}
-          updateRollAssignment={updateRollAssignment}
-          canEdit={canEdit}
-          selectedCharacter={selectedCharacter}
-          dicePool={dicePool}
-          assignDice={assignDice}
-          unassignDice={unassignDice}
-          getDiceUsage={getDiceUsage}
-          getSortedDiceOptions={getSortedDiceOptions}
-        />
-      ))}
-
-      <div style={styles.sectionHeader || { marginBottom: "16px" }}>
-        <h3
-          style={
-            styles.sectionTitle || {
-              fontSize: "24px",
-              fontWeight: "600",
-              color: theme.text,
-              marginBottom: "8px",
-            }
-          }
-        >
-          NPC Encounters
-        </h3>
-        <p
-          style={
-            styles.subtitle || { fontSize: "14px", color: theme.textSecondary }
-          }
-        >
-          Social interactions and relationship building with NPCs
-        </p>
+      <div style={styles.npcSection}>
+        <h3 style={styles.sectionTitle}>NPC Encounters</h3>
+        <div style={styles.npcList}>
+          {(
+            formData.npcEncounters || [
+              { name: "", successes: [false, false, false, false, false] },
+              { name: "", successes: [false, false, false, false, false] },
+              { name: "", successes: [false, false, false, false, false] },
+            ]
+          ).map((npc, index) => (
+            <NPCEncounterItem
+              key={index}
+              index={index}
+              npc={npc}
+              updateNPCEncounter={updateNPCEncounter}
+              updateNPCSuccess={updateNPCSuccess}
+              canEdit={canEdit}
+            />
+          ))}
+        </div>
       </div>
-
-      {[0, 1, 2].map((index) => (
-        <NPCEncounterItem
-          key={index}
-          index={index}
-          npc={formData.npcEncounters?.[index]}
-          assignment={rollAssignments[`npc${index + 1}`]}
-          updateNPCEncounter={(field, value) =>
-            updateNPCEncounter(index, field, value)
-          }
-          updateNPCSuccess={(successIndex) =>
-            updateNPCSuccess(index, successIndex)
-          }
-          updateRollAssignment={updateRollAssignment}
-          canEdit={canEdit}
-          selectedCharacter={selectedCharacter}
-          dicePool={dicePool}
-          assignDice={assignDice}
-          unassignDice={unassignDice}
-          getDiceUsage={getDiceUsage}
-          getSortedDiceOptions={getSortedDiceOptions}
-        />
-      ))}
     </div>
   );
 };
+
+ActivityManager.displayName = "ActivityManager";
 
 export default memo(ActivityManager);

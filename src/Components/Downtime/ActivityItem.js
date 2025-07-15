@@ -1,12 +1,16 @@
-// Updated ActivityItem.js - Receive props instead of using context
 import React, { memo, useMemo, useCallback } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import DiceSelection from "./DiceSelection";
 import SkillSelector from "./SkillSelector";
 import {
-  getActivitySkillInfo,
   activityRequiresDualChecks,
+  activityRequiresCheckTypeSelection,
+  getDistinctCheckActivityInfo,
+  calculateDistinctCheckProgress,
+  getAvailableCheckTypes,
+  getSkillOptionsForCheck,
+  calculateModifier,
 } from "./downtimeHelpers";
 
 const ActivityItem = memo(
@@ -33,6 +37,11 @@ const ActivityItem = memo(
 
     const isDualCheck = useMemo(
       () => activityRequiresDualChecks(activity?.activity),
+      [activity?.activity]
+    );
+
+    const isDistinctCheckActivity = useMemo(
+      () => activityRequiresCheckTypeSelection(activity?.activity),
       [activity?.activity]
     );
 
@@ -149,11 +158,73 @@ const ActivityItem = memo(
           fontSize: "14px",
           color: theme.text,
         },
+        distinctCheckContainer: {
+          backgroundColor: theme.background,
+          borderRadius: "8px",
+          padding: "16px",
+          marginTop: "16px",
+          border: `1px solid ${theme.border}`,
+        },
+        progressContainer: {
+          marginBottom: "16px",
+        },
+        progressHeader: {
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "8px",
+        },
+        progressLabel: {
+          fontSize: "14px",
+          fontWeight: "600",
+          color: theme.text,
+        },
+        progressText: {
+          fontSize: "14px",
+          color: theme.textSecondary,
+        },
+        completedChecks: {
+          marginTop: "12px",
+        },
+        completedLabel: {
+          fontSize: "12px",
+          fontWeight: "600",
+          color: theme.success || "#10b981",
+          marginBottom: "4px",
+        },
+        completedCheck: {
+          fontSize: "12px",
+          color: theme.textSecondary,
+          marginBottom: "2px",
+          paddingLeft: "8px",
+        },
+        checkSelection: {
+          display: "grid",
+          gap: "12px",
+        },
+        checkDescription: {
+          fontSize: "12px",
+          color: theme.textSecondary,
+          fontStyle: "italic",
+          marginTop: "4px",
+          padding: "8px",
+          backgroundColor: `${theme.info || "#3b82f6"}10`,
+          borderRadius: "4px",
+        },
+        completionMessage: {
+          backgroundColor: `${theme.success || "#10b981"}15`,
+          border: `1px solid ${theme.success || "#10b981"}30`,
+          borderRadius: "8px",
+          padding: "12px",
+          fontSize: "14px",
+          color: theme.text,
+          textAlign: "center",
+          fontWeight: "600",
+        },
       }),
       [theme, canEdit]
     );
 
-    // Handlers using passed-in functions
     const handleActivityChange = useCallback(
       (e) => updateActivity(index, "activity", e.target.value),
       [index, updateActivity]
@@ -174,33 +245,220 @@ const ActivityItem = memo(
         const skillField = isSecondSkill ? "secondSkill" : "skill";
         const wandField = isSecondSkill ? "secondWandModifier" : "wandModifier";
 
-        const isWand = [
-          "divinations",
-          "transfiguration",
-          "charms",
-          "healing",
-          "jinxesHexesCurses",
-        ].includes(value);
-
-        if (isWand) {
-          updateRollAssignment(activityKey, wandField, value);
-          updateRollAssignment(activityKey, skillField, "");
-        } else {
-          updateRollAssignment(activityKey, skillField, value);
-          updateRollAssignment(activityKey, wandField, "");
-        }
+        updateRollAssignment(activityKey, skillField, value);
+        updateRollAssignment(activityKey, wandField, "");
       },
       [activityKey, updateRollAssignment]
     );
 
     const handleSuccessClick = useCallback(
       (successIndex) => {
-        if (adminMode) updateActivitySuccess(index, successIndex);
+        if (adminMode) {
+          updateActivitySuccess(index, successIndex);
+        }
       },
       [adminMode, index, updateActivitySuccess]
     );
 
-    // Handle missing activity data
+    const handleRecipeNameChange = useCallback(
+      (e) => updateActivity(index, "recipeName", e.target.value),
+      [index, updateActivity]
+    );
+
+    const handleCheckTypeChange = useCallback(
+      (e) => {
+        updateActivity(index, "selectedCheckType", e.target.value);
+        updateActivity(index, "selectedCheckSkill", "");
+      },
+      [index, updateActivity]
+    );
+
+    const handleCheckSkillChange = useCallback(
+      (e) => updateActivity(index, "selectedCheckSkill", e.target.value),
+      [index, updateActivity]
+    );
+
+    const renderDistinctCheckInterface = () => {
+      if (!isDistinctCheckActivity) return null;
+
+      const info = getDistinctCheckActivityInfo(activity.activity);
+      if (!info) return null;
+
+      const progress = calculateDistinctCheckProgress(null, activity);
+      const availableChecks = getAvailableCheckTypes(activity);
+      const skillOptions = activity.selectedCheckType
+        ? getSkillOptionsForCheck(activity, activity.selectedCheckType)
+        : [];
+
+      return (
+        <div style={styles.distinctCheckContainer}>
+          {/* Recipe Name Input */}
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Recipe Name</label>
+            <input
+              type="text"
+              value={activity.recipeName || ""}
+              onChange={handleRecipeNameChange}
+              placeholder="Enter the name of your new recipe..."
+              style={styles.input}
+              disabled={!canEdit()}
+            />
+          </div>
+
+          {/* Progress Display */}
+          <div style={styles.progressContainer}>
+            <div style={styles.progressHeader}>
+              <span style={styles.progressLabel}>Recipe Progress:</span>
+              <span style={styles.progressText}>
+                {progress?.progress || "0/3"}
+              </span>
+            </div>
+
+            {/* Completed Checks */}
+            {progress?.completedChecks?.length > 0 && (
+              <div style={styles.completedChecks}>
+                <div style={styles.completedLabel}>✅ Completed Checks:</div>
+                {progress.completedChecks.map((completed, idx) => (
+                  <div key={idx} style={styles.completedCheck}>
+                    <strong>{completed.checkName}</strong> using{" "}
+                    {completed.skillUsed}
+                    (Rolled {completed.rollResult} vs DC {completed.dc})
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Check Selection (only show if not complete) */}
+          {!progress?.isComplete && (
+            <div style={styles.checkSelection}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>
+                  Select Check Type to Attempt:
+                </label>
+                <select
+                  value={activity.selectedCheckType || ""}
+                  onChange={handleCheckTypeChange}
+                  style={styles.select}
+                  disabled={!canEdit()}
+                >
+                  <option value="">Choose a check type...</option>
+                  {availableChecks.map((check) => (
+                    <option key={check.id} value={check.id}>
+                      {check.name} (DC {check.dc})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Skill Selection */}
+              {activity.selectedCheckType && skillOptions.length > 0 && (
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Select Skill:</label>
+                  {skillOptions.length === 1 ? (
+                    <div
+                      style={{
+                        ...styles.input,
+                        backgroundColor: theme.background,
+                        color: theme.textSecondary,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {(() => {
+                        const skill = skillOptions[0];
+                        const modifier = calculateModifier(
+                          skill,
+                          selectedCharacter
+                        );
+                        const modStr =
+                          modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                        if (skill === "spellcastingAbility") {
+                          const spellAbility =
+                            selectedCharacter?.spellcastingAbility ||
+                            "Intelligence";
+                          return `${spellAbility} (Spellcasting Ability) (${modStr})`;
+                        } else if (skill === "muggleStudies") {
+                          return `Muggle Studies (${modStr})`;
+                        } else if (skill === "historyOfMagic") {
+                          return `History of Magic (${modStr})`;
+                        } else {
+                          return `${
+                            skill.charAt(0).toUpperCase() + skill.slice(1)
+                          } (${modStr})`;
+                        }
+                      })()}{" "}
+                      - Auto-selected
+                    </div>
+                  ) : (
+                    <select
+                      value={activity.selectedCheckSkill || ""}
+                      onChange={handleCheckSkillChange}
+                      style={styles.select}
+                      disabled={!canEdit()}
+                    >
+                      <option value="">Choose a skill...</option>
+                      {skillOptions.map((skill) => {
+                        const modifier = calculateModifier(
+                          skill,
+                          selectedCharacter
+                        );
+                        const modStr =
+                          modifier >= 0 ? `+${modifier}` : `${modifier}`;
+
+                        let displayName;
+                        if (skill === "muggleStudies") {
+                          displayName = "Muggle Studies";
+                        } else if (skill === "historyOfMagic") {
+                          displayName = "History of Magic";
+                        } else if (skill === "spellcastingAbility") {
+                          const spellAbility =
+                            selectedCharacter?.spellcastingAbility ||
+                            "intelligence";
+                          displayName = `${
+                            spellAbility.charAt(0).toUpperCase() +
+                            spellAbility.slice(1)
+                          } (Spellcasting Ability)`;
+                        } else {
+                          displayName =
+                            skill.charAt(0).toUpperCase() + skill.slice(1);
+                        }
+
+                        return (
+                          <option key={skill} value={skill}>
+                            {displayName} ({modStr})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* Check Description */}
+              {activity.selectedCheckType && (
+                <div style={styles.checkDescription}>
+                  {
+                    info.config.requiredChecks.find(
+                      (c) => c.id === activity.selectedCheckType
+                    )?.description
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Completion Message */}
+          {progress?.isComplete && (
+            <div style={styles.completionMessage}>
+              🎉 Recipe "{activity.recipeName}" has been successfully created!
+              All required checks have been completed.
+            </div>
+          )}
+        </div>
+      );
+    };
+
     if (!activity) {
       return null;
     }
@@ -212,24 +470,6 @@ const ActivityItem = memo(
         </div>
 
         <div style={styles.content}>
-          {isDualCheck && (
-            <div style={styles.dualCheckNotice}>
-              <div
-                style={{
-                  fontWeight: "600",
-                  marginBottom: "4px",
-                  color: theme.info || "#3b82f6",
-                }}
-              >
-                📋 Dual Check Activity
-              </div>
-              <div>
-                This activity requires <strong>two separate dice rolls</strong>.
-                You'll need to assign dice and select skills for both rolls.
-              </div>
-            </div>
-          )}
-
           <div style={styles.section}>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Activity:</label>
@@ -239,76 +479,69 @@ const ActivityItem = memo(
                 style={styles.select}
                 disabled={!canEdit()}
               >
-                {availableActivities.map((act, i) => (
-                  <option key={i} value={act}>
-                    {act || "Select an activity..."}
+                <option value="">Select Activity</option>
+                {availableActivities.map((activityOption, optionIndex) => (
+                  <option key={optionIndex} value={activityOption}>
+                    {activityOption
+                      ? activityOption.split(" - ")[0]
+                      : "Select Activity"}
                   </option>
                 ))}
               </select>
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Notes:</label>
-              <input
-                type="text"
+              <label style={styles.label}>Activity Notes:</label>
+              <textarea
                 value={activity.notes || ""}
                 onChange={handleActivityNotesChange}
-                placeholder="Optional"
-                style={styles.input}
+                placeholder="Optional notes about this activity..."
+                style={styles.textarea}
                 disabled={!canEdit()}
+                rows={2}
               />
             </div>
           </div>
 
-          <div style={styles.rollSection}>
-            <h5 style={{ ...styles.label, marginBottom: "12px" }}>
-              Roll Assignment {isDualCheck ? "(First Roll)" : ""}
-            </h5>
+          {/* Render distinct check interface for recipe creation */}
+          {renderDistinctCheckInterface()}
 
-            <div style={styles.rollGrid}>
-              <DiceSelection
-                assignment={activityKey}
-                label={isDualCheck ? "First Die" : "Die"}
-                isSecondDie={false}
-                // Pass dice-related props directly to DiceSelection
-                rollAssignments={{ [activityKey]: assignment }}
-                canEdit={canEdit}
-                assignDice={assignDice}
-                getSortedDiceOptions={getSortedDiceOptions}
-                getDiceUsage={getDiceUsage}
-                unassignDice={unassignDice}
-                dicePool={dicePool}
-                selectedCharacter={selectedCharacter}
-              />
+          {/* Standard roll section for non-distinct-check activities */}
+          {!isDistinctCheckActivity && (
+            <div style={styles.rollSection}>
+              <h5 style={{ ...styles.label, marginBottom: "12px" }}>
+                Roll Assignment{isDualCheck ? " (First Roll)" : ""}
+              </h5>
 
-              <SkillSelector
-                activityText={activity.activity}
-                assignment={assignment}
-                isSecondSkill={false}
-                onChange={(value) => handleSkillChange(value, false)}
-                canEdit={canEdit}
-                selectedCharacter={selectedCharacter}
-              />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Result:</label>
-              {adminMode ? (
-                <textarea
-                  value={assignment?.notes || ""}
-                  onChange={handleNotesChange}
-                  placeholder="Admin will fill out this section"
-                  style={styles.textarea}
-                  disabled={!adminMode}
-                  rows={2}
+              <div style={styles.rollGrid}>
+                <DiceSelection
+                  assignment={activityKey}
+                  label={isDualCheck ? "First Die" : "Die"}
+                  isSecondDie={false}
+                  rollAssignments={{ [activityKey]: assignment }}
+                  canEdit={canEdit}
+                  assignDice={assignDice}
+                  getSortedDiceOptions={getSortedDiceOptions}
+                  getDiceUsage={getDiceUsage}
+                  unassignDice={unassignDice}
+                  dicePool={dicePool}
+                  selectedCharacter={selectedCharacter}
                 />
-              ) : (
-                assignment?.notes || "TBD - Has not been reviewed by Admin yet"
-              )}
-            </div>
-          </div>
 
-          {isDualCheck && (
+                <SkillSelector
+                  activityText={activity.activity}
+                  assignment={assignment}
+                  isSecondSkill={false}
+                  onChange={(value) => handleSkillChange(value, false)}
+                  canEdit={canEdit}
+                  selectedCharacter={selectedCharacter}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Dual check second roll section */}
+          {isDualCheck && !isDistinctCheckActivity && (
             <div style={styles.rollSection}>
               <h5 style={{ ...styles.label, marginBottom: "12px" }}>
                 Second Roll Assignment
@@ -339,6 +572,90 @@ const ActivityItem = memo(
               </div>
             </div>
           )}
+
+          {/* Roll assignment section for distinct check activities */}
+          {isDistinctCheckActivity &&
+            activity.selectedCheckType &&
+            activity.selectedCheckSkill && (
+              <div style={styles.rollSection}>
+                <h5 style={{ ...styles.label, marginBottom: "12px" }}>
+                  Roll Assignment
+                </h5>
+
+                <div style={styles.rollGrid}>
+                  <DiceSelection
+                    assignment={activityKey}
+                    label="Die"
+                    isSecondDie={false}
+                    rollAssignments={{ [activityKey]: assignment }}
+                    canEdit={canEdit}
+                    assignDice={assignDice}
+                    getSortedDiceOptions={getSortedDiceOptions}
+                    getDiceUsage={getDiceUsage}
+                    unassignDice={unassignDice}
+                    dicePool={dicePool}
+                    selectedCharacter={selectedCharacter}
+                  />
+
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Skill/Modifier:</label>
+                    <div
+                      style={{
+                        ...styles.input,
+                        backgroundColor: theme.background,
+                        color: theme.textSecondary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>
+                        {activity.selectedCheckSkill === "spellcastingAbility"
+                          ? `${
+                              selectedCharacter?.spellcastingAbility ||
+                              "Intelligence"
+                            } (Spellcasting)`
+                          : activity.selectedCheckSkill === "muggleStudies"
+                          ? "Muggle Studies"
+                          : activity.selectedCheckSkill === "historyOfMagic"
+                          ? "History of Magic"
+                          : activity.selectedCheckSkill}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          backgroundColor: `${theme.primary}20`,
+                          color: theme.primary,
+                          fontWeight: "500",
+                        }}
+                      >
+                        Selected
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          <div style={styles.rollSection}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Admin Notes:</label>
+              {adminMode ? (
+                <textarea
+                  value={assignment?.notes || ""}
+                  onChange={handleNotesChange}
+                  placeholder="Admin will fill out this section"
+                  style={styles.textarea}
+                  disabled={!adminMode}
+                  rows={2}
+                />
+              ) : (
+                assignment?.notes || "TBD - Has not been reviewed by Admin yet"
+              )}
+            </div>
+          </div>
 
           <div style={styles.successSection}>
             <div
