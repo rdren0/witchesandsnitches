@@ -1,6 +1,6 @@
 import React from "react";
 
-const BetaBanner = ({ onReportBug }) => {
+const BetaBanner = () => {
   return (
     <div
       style={{

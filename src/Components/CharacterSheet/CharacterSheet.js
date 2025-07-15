@@ -248,7 +248,7 @@ const CharacterSheet = ({
             ? 0x00ff00
             : isCriticalFailure
             ? 0xff0000
-            : 0x10b981,
+            : 0xff6c3a,
           fields: [
             {
               name: "Roll",
@@ -545,13 +545,11 @@ const CharacterSheet = ({
         const resources = data.character_resources?.[0] || {};
 
         const transformedCharacter = {
-          id: data.id,
           abilityScores: data.ability_scores,
           allFeats: allFeats,
           armorClass:
             getBaseArmorClass(data.casting_style) +
             getArmorClassModifier(effectiveAbilityScores),
-
           asiChoices: asiChoices,
           background: data.background || "Unknown",
           baseAbilityScores: baseAbilityScores,
@@ -559,46 +557,32 @@ const CharacterSheet = ({
           castingStyle: data.casting_style,
           charisma: effectiveAbilityScores.charisma || 10,
           constitution: effectiveAbilityScores.constitution || 10,
+          corruptionPoints: resources.corruption_points || 0,
           currentHitDice: data.current_hit_dice || data.level,
           currentHitPoints: data.current_hit_points ?? (data.hit_points || 1),
           dexterity: effectiveAbilityScores.dexterity || 10,
+          discord_user_id: data.discord_user_id,
           gameSession: data.game_session || "",
           hitDie: getHitDie(data.casting_style),
           hitPoints: data.hit_points || 1,
           house: data.house,
           houseChoices: data.house_choices || {},
+          id: data.id,
           imageUrl: data.image_url || "",
+          initiative: 8,
           initiativeAbility: data.initiative_ability,
           initiativeModifier: getInitiativeModifier(
             data.initiative_ability,
             effectiveAbilityScores
           ),
-          initiative: 8,
           innateHeritage: data.innate_heritage,
+          inspiration: resources.inspiration ?? 0,
           intelligence: effectiveAbilityScores.intelligence || 10,
-          level: data.level,
+          level: data.level || 1,
           magicModifiers: data.magic_modifiers || {},
           maxHitDice: data.level,
           maxHitPoints: data.hit_points || 1,
-          name: data.name,
-          proficiencyBonus: Math.ceil(data.level / 4) + 1,
-          skillExpertise: data.skill_expertise || [],
-          skillProficiencies: data.skill_proficiencies || [],
-          skills: transformSkillData(
-            data.skill_proficiencies || [],
-            data.skill_expertise || []
-          ),
-          inspiration: resources.inspiration ?? 0,
-          spellSlots1: resources.spell_slots_1 || 0,
-          spellSlots2: resources.spell_slots_2 || 0,
-          spellSlots3: resources.spell_slots_3 || 0,
-          spellSlots4: resources.spell_slots_4 || 0,
-          spellSlots5: resources.spell_slots_5 || 0,
-          spellSlots6: resources.spell_slots_6 || 0,
-          spellSlots7: resources.spell_slots_7 || 0,
-          spellSlots8: resources.spell_slots_8 || 0,
-          spellSlots9: resources.spell_slots_9 || 0,
-
+          maxSorceryPoints: resources.max_sorcery_points || 0,
           maxSpellSlots1: resources.max_spell_slots_1 || 0,
           maxSpellSlots2: resources.max_spell_slots_2 || 0,
           maxSpellSlots3: resources.max_spell_slots_3 || 0,
@@ -608,12 +592,27 @@ const CharacterSheet = ({
           maxSpellSlots7: resources.max_spell_slots_7 || 0,
           maxSpellSlots8: resources.max_spell_slots_8 || 0,
           maxSpellSlots9: resources.max_spell_slots_9 || 0,
-
-          corruptionPoints: resources.corruption_points || 0,
+          name: data.name,
+          ownerId: data.discord_user_id,
+          proficiencyBonus: Math.ceil(data.level / 4) + 1,
+          schoolYear: data.school_year || 1,
+          skillExpertise: data.skill_expertise || [],
+          skillProficiencies: data.skill_proficiencies || [],
+          skills: transformSkillData(
+            data.skill_proficiencies || [],
+            data.skill_expertise || []
+          ),
           sorceryPoints: resources.sorcery_points || 0,
-          maxSorceryPoints: resources.max_sorcery_points || 0,
-
           speed: 30,
+          spellSlots1: resources.spell_slots_1 || 0,
+          spellSlots2: resources.spell_slots_2 || 0,
+          spellSlots3: resources.spell_slots_3 || 0,
+          spellSlots4: resources.spell_slots_4 || 0,
+          spellSlots5: resources.spell_slots_5 || 0,
+          spellSlots6: resources.spell_slots_6 || 0,
+          spellSlots7: resources.spell_slots_7 || 0,
+          spellSlots8: resources.spell_slots_8 || 0,
+          spellSlots9: resources.spell_slots_9 || 0,
           standardFeats: data.standard_feats || [],
           strength: effectiveAbilityScores.strength || 10,
           subclass: data.subclass,
@@ -621,11 +620,7 @@ const CharacterSheet = ({
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,
-          year: `Level ${data.level}`,
-
-          // Admin mode: store the original owner info
-          discord_user_id: data.discord_user_id,
-          ownerId: data.discord_user_id,
+          year: data.school_year ? `Year ${data.school_year}` : "Year 1",
         };
 
         setCharacter(transformedCharacter);
@@ -1164,7 +1159,10 @@ const CharacterSheet = ({
                       <span style={styles.label}>House:</span> {character.house}
                     </div>
                     <div style={styles.infoItem}>
-                      <span style={styles.label}>Level:</span> {character.year}
+                      <span style={styles.label}>Level:</span> {character.level}
+                    </div>
+                    <div style={styles.infoItem}>
+                      <span style={styles.label}>Year:</span> {character.level}
                     </div>
                     <div style={styles.infoItem}>
                       <span style={styles.label}>Class:</span>{" "}

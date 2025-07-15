@@ -23,7 +23,7 @@ import EnhancedSkillsSection from "./EnhancedSkillsSection";
 
 import { AbilityScorePicker } from "./AbilityScorePicker";
 import { StepIndicator } from "../Shared/StepIndicator";
-import { getInitialCharacterState } from "../Create/const";
+import { getInitialCharacterState } from "../CharacterCreation/const";
 import {
   calculateHitPoints,
   collectAllFeatsFromChoices,
@@ -33,7 +33,7 @@ import {
 } from "../utils";
 import { gameSessionOptions } from "../../../App/const";
 
-export const FeatRequirementsInfo = ({ character }) => {
+export const FeatRequirementsInfo = () => {
   return (
     <div
       style={{
@@ -687,26 +687,27 @@ const CharacterCreator = ({
 
       const characterToSave = {
         ability_scores: finalAbilityScores,
-        base_ability_scores: character.abilityScores,
         asi_choices: character.asiChoices || {},
-        background: character.background,
         background_skills: character.backgroundSkills || [],
-        innate_heritage_skills: character.innateHeritageSkills || [],
-        heritage_choices: heritageChoices,
+        background: character.background,
+        base_ability_scores: character.abilityScores,
         casting_style: character.castingStyle,
         feat_choices: character.featChoices || {},
         game_session: character.gameSession,
+        heritage_choices: heritageChoices,
         hit_points: getCurrentHp(),
         house_choices: houseChoices,
         house: character.house,
         initiative_ability: character.initiativeAbility || "dexterity",
+        innate_heritage_skills: character.innateHeritageSkills || [],
         innate_heritage: character.innateHeritage,
-        level: character.level,
+        level: character.level || 1,
         level1_choice_type: character.level1ChoiceType,
         magic_modifiers: character.magicModifiers,
         name: character.name.trim(),
-        skill_proficiencies: skill_proficiencies,
+        school_year: character.school_year || 1,
         skill_expertise: skill_expertise,
+        skill_proficiencies: skill_proficiencies,
         standard_feats: allFeats,
         subclass_choices: character.subclassChoices || {},
         subclass: character.subclass,

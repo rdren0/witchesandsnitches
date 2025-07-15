@@ -23,7 +23,7 @@ const AbilityScores = ({ character }) => {
     return proficiencyMap[castingStyle] || [];
   };
 
-  const getClickableAbilityStyle = (ability) => ({
+  const getClickableAbilityStyle = () => ({
     ...styles.abilityItem,
     cursor: isRolling ? "not-allowed" : "pointer",
     opacity: isRolling ? 0.5 : 1,
