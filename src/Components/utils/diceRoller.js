@@ -380,7 +380,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               textShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
-            {rollValue}
+            {total}
           </div>
           <div
             style={{
@@ -390,8 +390,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
               marginBottom: "4px",
             }}
           >
-            {modifier >= 0 ? "+" : ""}
-            {modifier} = {total}
+            {rollValue} +{modifier} = {total}
           </div>
           {(isCriticalSuccess || isCriticalFailure) && (
             <div
@@ -945,7 +944,7 @@ export const rollMagicCasting = async ({
 
     const wandEmojis = {
       Divinations: "🔮",
-      Transfig: "✨",
+      Transfig: "🐁",
       Charms: "💫",
       Healing: "❤️",
       JHC: "⚡",
