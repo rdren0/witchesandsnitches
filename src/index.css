@@ -8,6 +8,13 @@ body {
   color: #2c1810;
 }
 
+#root {
+  /* allow users to view more content on smaller screens */
+  @media (max-width: 960px) {
+    width: 250vw;
+  }
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
