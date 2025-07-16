@@ -18,7 +18,7 @@ import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { backgroundsData } from "../../../SharedData/backgroundsData";
 
 // Import the new section components
-import BasicInformationSection from "../Edit/BasicInformationSection";
+import BasicInformationSection from "./components/BasicInformationSection";
 import HouseAndSubclassSection from "./components/HouseAndSubclassSection";
 import Level1AndProgressionSection from "./components/Level1AndProgressionSection";
 import AbilityScoresSection from "./components/AbilityScoresSection";
@@ -180,7 +180,6 @@ const CharacterEditor = ({
     setHouseChoices,
     safeOriginalCharacter,
   } = useCharacterSetup(originalCharacter);
-
   const {
     asiLevelFilters,
     setASILevelFilter,
@@ -354,12 +353,12 @@ const CharacterEditor = ({
   };
 
   const handleInputChange = (field, value) => {
-    // Check section locks based on field
     const fieldSectionMap = {
       name: "basicInformation",
       level: "basicInformation",
       castingStyle: "basicInformation",
       hitPoints: "basicInformation",
+      schoolYear: "basicInformation",
       house: "houseAndSubclass",
       subclass: "houseAndSubclass",
       background: "houseAndSubclass",
@@ -613,7 +612,6 @@ const CharacterEditor = ({
       subclass: character.subclass,
       wand_type: character.wandType,
     };
-
     try {
       const effectiveUserId = character.discordUserId || discordUserId;
 
@@ -640,6 +638,7 @@ const CharacterEditor = ({
         level: updatedCharacter.level,
         level1ChoiceType: updatedCharacter.level1_choice_type || "",
         name: updatedCharacter.name,
+        schoolYear: updatedCharacter.school_year || 1,
         skillExpertise: updatedCharacter.skill_expertise || [],
         skillProficiencies: updatedCharacter.skill_proficiencies || [],
         standardFeats: updatedCharacter.standard_feats || [],

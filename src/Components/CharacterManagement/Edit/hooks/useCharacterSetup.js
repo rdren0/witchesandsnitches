@@ -67,6 +67,7 @@ export const useCharacterSetup = (originalCharacter) => {
       background: "",
       gameSession: "",
       wandType: "",
+      schoolYear: null,
       magicModifiers: {
         divinations: 0,
         charms: 0,

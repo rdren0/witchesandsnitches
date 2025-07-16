@@ -1,7 +1,8 @@
 import { RefreshCw } from "lucide-react";
-import { castingStyles } from "../../../data";
+import { castingStyles } from "../../../../SharedData/data";
 import StepIndicator from "../../Shared/StepIndicator";
 import { gameSessionOptions } from "../../../../App/const";
+import SchoolYearSelector from "../../Shared/SchoolYearSelector";
 
 const BasicInformationSection = ({
   character,
@@ -224,96 +225,97 @@ const BasicInformationSection = ({
         </div>
       )}
 
-      <div style={styles.levelHpGrid}>
-        <div style={styles.levelContainer}>
-          <label style={styles.label}>Level</label>
-          <input
-            type="number"
-            min="1"
-            max="20"
-            value={character.level || 1}
-            onChange={(e) =>
-              handleInputChange("level", parseInt(e.target.value) || 1)
-            }
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.hpFieldContainer}>
-          <label style={styles.label}>Hit Points</label>
-          {!character.castingStyle ? (
-            <div style={styles.skillsPlaceholder}>
-              Select a Casting Style first
-            </div>
-          ) : (
-            <div style={styles.hpValueContainer}>
-              {isHpManualMode ? (
-                <input
-                  type="number"
-                  min="1"
-                  value={character.hitPoints || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "hitPoints",
-                      parseInt(e.target.value) || 1
-                    )
-                  }
-                  placeholder="--"
-                  style={styles.hpManualInput}
-                />
-              ) : rolledHp !== null ? (
-                <div style={styles.hpRollDisplay}>{rolledHp}</div>
-              ) : (
-                <div style={styles.hpDisplay}>
-                  {calculateHitPoints({ character })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        {character.castingStyle && (
-          <div style={styles.hpControlsContainer}>
-            <div style={styles.hpControlsInline}>
-              {!isHpManualMode && (
-                <button
-                  onClick={rollHp}
-                  style={{
-                    ...styles.button,
-                    backgroundColor: "#EF4444",
-                    fontSize: "12px",
-                  }}
-                >
-                  <RefreshCw size={14} />
-                  Roll
-                </button>
-              )}
-              <div
-                onClick={() => {
-                  setIsHpManualMode(!isHpManualMode);
-                  setRolledHp(null);
-                }}
-                style={{
-                  ...styles.hpToggle,
-                  backgroundColor: isHpManualMode
-                    ? theme.success
-                    : theme.border,
-                  borderColor: isHpManualMode
-                    ? theme.success
-                    : theme.textSecondary,
-                }}
-                title={
-                  isHpManualMode
-                    ? "Switch to Auto/Roll mode"
-                    : "Switch to Manual mode"
-                }
-              >
-                <div
-                  style={{
-                    ...styles.hpToggleKnob,
-                    left: isHpManualMode ? "22px" : "2px",
-                  }}
-                />
+      <SchoolYearSelector
+        schoolYear={character.school_year || character.schoolYear}
+        onSchoolYearChange={(value) => handleInputChange("schoolYear", value)}
+        level={character.level}
+        onLevelChange={(value) => handleInputChange("level", value)}
+        styles={styles}
+      />
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Hit Points</label>
+        {!character.castingStyle ? (
+          <div style={styles.skillsPlaceholder}>
+            Select a Casting Style first
+          </div>
+        ) : !character.level ? (
+          <div style={styles.skillsPlaceholder}>
+            Select a Character Level first
+          </div>
+        ) : (
+          <div style={styles.levelHpGrid}>
+            <div style={styles.hpFieldContainer}>
+              <div style={styles.hpValueContainer}>
+                {isHpManualMode ? (
+                  <input
+                    type="number"
+                    min="1"
+                    value={character.hitPoints || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "hitPoints",
+                        parseInt(e.target.value) || 1
+                      )
+                    }
+                    placeholder="--"
+                    style={styles.hpManualInput}
+                  />
+                ) : rolledHp !== null ? (
+                  <div style={styles.hpRollDisplay}>{rolledHp}</div>
+                ) : (
+                  <div style={styles.hpDisplay}>
+                    {calculateHitPoints({ character })}
+                  </div>
+                )}
               </div>
             </div>
+            {character.castingStyle && (
+              <div style={styles.hpControlsContainer}>
+                <div style={styles.hpControlsInline}>
+                  {!isHpManualMode && (
+                    <button
+                      onClick={rollHp}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: "#EF4444",
+                        fontSize: "12px",
+                      }}
+                    >
+                      <RefreshCw size={14} />
+                      Roll
+                    </button>
+                  )}
+                  <div
+                    onClick={() => {
+                      setIsHpManualMode(!isHpManualMode);
+                      setRolledHp(null);
+                    }}
+                    style={{
+                      ...styles.hpToggle,
+                      backgroundColor: isHpManualMode
+                        ? theme.success
+                        : theme.border,
+                      borderColor: isHpManualMode
+                        ? theme.success
+                        : theme.textSecondary,
+                    }}
+                    title={
+                      isHpManualMode
+                        ? "Switch to Auto/Roll mode"
+                        : "Switch to Manual mode"
+                    }
+                  >
+                    <div
+                      style={{
+                        ...styles.hpToggleKnob,
+                        left: isHpManualMode ? "22px" : "2px",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -711,7 +711,7 @@ const CharacterCreator = ({
         level1_choice_type: character.level1ChoiceType,
         magic_modifiers: character.magicModifiers,
         name: character.name.trim(),
-        school_year: character.school_year || 1,
+        school_year: character.schoolYear || 1,
         skill_expertise: skill_expertise,
         skill_proficiencies: skill_proficiencies,
         standard_feats: allFeats,
@@ -759,7 +759,7 @@ const CharacterCreator = ({
         subclass: savedCharacter.subclass,
         subclassChoices: savedCharacter.subclass_choices || {},
         wandType: savedCharacter.wand_type || "",
-        schoolYear: savedCharacter.year || 1,
+        school_year: savedCharacter.schoolYear || 1,
       };
 
       if (onCharacterSaved) {

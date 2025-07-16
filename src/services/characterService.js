@@ -41,7 +41,6 @@ const getCharacters = async (discordUserId) => {
 
   const transformedData = characters.map((character) => {
     const resources = resourcesMap[character.id] || {};
-
     return {
       ...character,
       inspiration: resources.inspiration ?? false,
@@ -432,6 +431,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
+        school_year: characterData.schoolYear,
         skill_proficiencies: characterData.skill_proficiencies,
         skill_expertise: characterData.skill_expertise,
         standard_feats: characterData.standard_feats,
@@ -479,15 +479,21 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
       .select("background")
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
+      .eq("active", true)
       .single();
 
-    const { data: updatedCharacter, error: updateError } = await supabase
+    if (!currentCharacter) {
+      throw new Error("Character not found");
+    }
+    const { data: updatedCharacter, error } = await supabase
       .from("characters")
       .update({
         ability_scores: characterData.ability_scores,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
+        current_hit_dice: characterData.level,
+        current_hit_points: characterData.hit_points,
         game_session: characterData.game_session,
         heritage_choices: characterData.heritage_choices || {},
         hit_points: characterData.hit_points,
@@ -506,31 +512,32 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         standard_feats: characterData.standard_feats,
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
-        updated_at: new Date().toISOString(),
         wand_type: characterData.wand_type,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
+      .eq("active", true)
       .select()
       .single();
 
-    if (updateError) {
-      throw updateError;
+    if (error) {
+      throw new Error(`Failed to update character: ${error.message}`);
     }
 
-    const backgroundChanged =
-      currentCharacter?.background !== characterData.background;
-
-    if (backgroundChanged && characterData.background) {
+    if (
+      characterData.background &&
+      characterData.background !== currentCharacter.background &&
+      updatedCharacter.id
+    ) {
       try {
         const startingEquipment = getStartingEquipment(
           characterData.background
         );
-
         if (startingEquipment.length > 0) {
           await addStartingEquipment(
             discordUserId,
-            characterId,
+            updatedCharacter.id,
             startingEquipment,
             supabase
           );

@@ -14,7 +14,7 @@ module.exports = {
     },
   },
   rules: {
-    "no-console": ["error", { allow: ["warn", "error"] }],
+    "no-console": "warn",
     "no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
     "unused-imports/no-unused-vars": "warn",

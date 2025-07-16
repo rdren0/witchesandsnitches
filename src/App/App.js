@@ -896,6 +896,7 @@ function AppContent() {
         level: char.level,
         level1ChoiceType: char.level1_choice_type || "",
         name: char.name,
+        schoolYear: char.school_year || null,
         skillProficiencies: char.skill_proficiencies || [],
         skillExpertise: char.skill_expertise || [],
         standardFeats: char.standard_feats || [],

@@ -595,7 +595,7 @@ const CharacterSheet = ({
           name: data.name,
           ownerId: data.discord_user_id,
           proficiencyBonus: Math.ceil(data.level / 4) + 1,
-          schoolYear: data.school_year ? `Year ${data.school_year}` : "Year 1",
+          schoolYear: data.school_year || null,
           skillExpertise: data.skill_expertise || [],
           skillProficiencies: data.skill_proficiencies || [],
           skills: transformSkillData(
