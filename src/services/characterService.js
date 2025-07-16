@@ -736,28 +736,29 @@ const getRecommendedLevelRange = (schoolYear) => {
   const ranges = {
     1: { min: 1, max: 2 },
     2: { min: 2, max: 4 },
-    3: { min: 3, max: 6 },
-    4: { min: 4, max: 8 },
-    5: { min: 5, max: 10 },
-    6: { min: 6, max: 14 },
-    7: { min: 7, max: 20 },
+    3: { min: 4, max: 6 },
+    4: { min: 6, max: 9 },
+    5: { min: 9, max: 12 },
+    6: { min: 12, max: 14 },
+    7: { min: 14, max: 16 },
   };
   return ranges[schoolYear] || { min: 1, max: 20 };
 };
 
 const getRecommendedSchoolYear = (level) => {
-  if (level <= 2) return 1;
-  if (level <= 4) return 2;
-  if (level <= 6) return 3;
-  if (level <= 8) return 4;
-  if (level <= 10) return 5;
-  if (level <= 14) return 6;
+  if (level >= 1 && level <= 2) return 1;
+  if (level >= 2 && level <= 4) return 2;
+  if (level >= 4 && level <= 6) return 3;
+  if (level >= 6 && level <= 9) return 4;
+  if (level >= 9 && level <= 12) return 5;
+  if (level >= 12 && level <= 14) return 6;
+  if (level >= 14 && level <= 16) return 7;
   return 7;
 };
 
 const isProgressionNormal = (schoolYear, level) => {
-  const recommended = getRecommendedSchoolYear(level);
-  return Math.abs(schoolYear - recommended) <= 1;
+  const range = getRecommendedLevelRange(schoolYear);
+  return level >= range.min && level <= range.max;
 };
 
 export const characterService = {

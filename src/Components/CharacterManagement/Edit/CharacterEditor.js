@@ -399,6 +399,12 @@ const CharacterEditor = ({
         return newCharacter;
       });
     } else {
+      if (field === "schoolYear") {
+        setCharacter((prev) => ({
+          ...prev,
+          schoolYear: value,
+        }));
+      }
       if (field === "castingStyle") {
         setCharacter((prev) => {
           const newCharacter = {
@@ -600,6 +606,7 @@ const CharacterEditor = ({
       level1_choice_type: character.level1ChoiceType,
       magic_modifiers: character.magicModifiers,
       name: character.name.trim(),
+      school_year: character.schoolYear,
       skill_proficiencies: character.skillProficiencies || [],
       standard_feats: allFeats,
       subclass_choices: character.subclassChoices || {},

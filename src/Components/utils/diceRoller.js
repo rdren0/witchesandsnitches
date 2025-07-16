@@ -2677,13 +2677,7 @@ export const rollCookRecipe = async ({
     };
 
     let inventoryAdded = false;
-    if (
-      achievedQuality !== "ruined" &&
-      addRecipeToInventory &&
-      supabase &&
-      currentCharacter &&
-      user
-    ) {
+    if (addRecipeToInventory && supabase && currentCharacter && user) {
       try {
         const getRecipeValue = (quality) => {
           const baseValues = {

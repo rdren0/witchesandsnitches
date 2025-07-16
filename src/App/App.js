@@ -506,6 +506,7 @@ const CharacterSubNavigation = () => {
     { path: "/character/sheet", label: "Character Sheet", key: "sheet" },
     { path: "/character/spellbook", label: "Spellbook", key: "spellbook" },
     { path: "/character/potions", label: "Potions", key: "potions" },
+    { path: "/character/recipes", label: "Recipes", key: "recipes" },
     { path: "/character/inventory", label: "Inventory", key: "inventory" },
     { path: "/character/gallery", label: "NPC Gallery", key: "gallery" },
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
@@ -1260,6 +1261,19 @@ function AppContent() {
             }
           />
           <Route
+            path="/character/recipes"
+            element={
+              <ProtectedRoute user={user}>
+                {characterSelector}
+                <RecipeCookingSystem
+                  user={user}
+                  selectedCharacter={selectedCharacter}
+                  supabase={supabase}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/character/inventory"
             element={
               <ProtectedRoute user={user}>
@@ -1296,19 +1310,6 @@ function AppContent() {
                   supabase={supabase}
                   adminMode={adminMode}
                   isUserAdmin={isUserAdmin}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/recipes"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <RecipeCookingSystem
-                  user={user}
-                  character={selectedCharacter}
-                  supabase={supabase}
                 />
               </ProtectedRoute>
             }

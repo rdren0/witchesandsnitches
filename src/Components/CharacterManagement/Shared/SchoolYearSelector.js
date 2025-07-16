@@ -1,5 +1,5 @@
 import React from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const SchoolYearSelector = ({
   schoolYear,
@@ -10,29 +10,45 @@ const SchoolYearSelector = ({
 }) => {
   const { theme } = useTheme();
 
-  // Helper to get suggested level range for a school year
   const getSuggestedLevelRange = (year) => {
     const ranges = {
       1: "1-2",
       2: "2-4",
-      3: "3-6",
-      4: "4-8",
-      5: "5-10",
-      6: "6-14",
-      7: "7-20",
+      3: "4-6",
+      4: "6-9",
+      5: "9-12",
+      6: "12-14",
+      7: "14-16",
     };
     return ranges[year] || "1-20";
   };
 
-  // Helper to get suggested school year for a level
   const getSuggestedSchoolYear = (level) => {
-    if (level <= 2) return 1;
-    if (level <= 4) return 2;
-    if (level <= 6) return 3;
-    if (level <= 8) return 4;
-    if (level <= 10) return 5;
-    if (level <= 14) return 6;
+    if (level >= 1 && level <= 2) return 1;
+    if (level >= 2 && level <= 4) return 2;
+    if (level >= 4 && level <= 6) return 3;
+    if (level >= 6 && level <= 9) return 4;
+    if (level >= 9 && level <= 12) return 5;
+    if (level >= 12 && level <= 14) return 6;
+    if (level >= 14 && level <= 16) return 7;
     return 7;
+  };
+
+  const isLevelTypicalForYear = (year, level) => {
+    const ranges = {
+      1: { min: 1, max: 2 },
+      2: { min: 2, max: 4 },
+      3: { min: 4, max: 6 },
+      4: { min: 6, max: 9 },
+      5: { min: 9, max: 12 },
+      6: { min: 12, max: 14 },
+      7: { min: 14, max: 16 },
+    };
+
+    const range = ranges[year];
+    if (!range) return false;
+
+    return level >= range.min && level <= range.max;
   };
 
   return (
@@ -130,26 +146,22 @@ const SchoolYearSelector = ({
         </div>
 
         {/* Mismatch Warning */}
-        {schoolYear &&
-          level &&
-          getSuggestedSchoolYear(level) !== schoolYear && (
-            <div
-              style={{
-                marginTop: "12px",
-                padding: "12px",
-                background: theme.warning + "20",
-                border: `1px solid ${theme.warning}`,
-                borderRadius: "6px",
-                fontSize: "14px",
-              }}
-            >
-              <strong>Notice:</strong> Level {level} is unusual for a Year{" "}
-              {schoolYear} student. Consider: Year{" "}
-              {getSuggestedSchoolYear(level)} students typically have Level{" "}
-              {level} power, or Year {schoolYear} students typically have Levels{" "}
-              {getSuggestedLevelRange(schoolYear)}.
-            </div>
-          )}
+        {schoolYear && level && !isLevelTypicalForYear(schoolYear, level) && (
+          <div
+            style={{
+              marginTop: "12px",
+              padding: "12px",
+              background: theme.warning + "20",
+              border: `1px solid ${theme.warning}`,
+              borderRadius: "6px",
+              fontSize: "14px",
+            }}
+          >
+            <strong>Notice:</strong> Level {level} is unusual for a Year{" "}
+            {schoolYear} student. Year {schoolYear} students typically have
+            Levels {getSuggestedLevelRange(schoolYear)}.
+          </div>
+        )}
 
         {/* Examples */}
         <div
@@ -160,9 +172,9 @@ const SchoolYearSelector = ({
             lineHeight: "1.4",
           }}
         >
-          <strong>Examples:</strong> A Year 3 Level 2 student is academically
-          advanced but magically average. A Year 2 Level 5 student is a young
-          prodigy with exceptional magical power.
+          <strong>Examples:</strong> A Year 3 Level 5 student is academically on
+          track with slightly above-average magical power. A Year 2 Level 8
+          student is a young prodigy with exceptional magical abilities.
         </div>
       </div>
     </div>
