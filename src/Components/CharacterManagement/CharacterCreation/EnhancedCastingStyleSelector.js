@@ -88,7 +88,6 @@ const CastingStyleCard = ({
         </button>
       </div>
 
-      {/* Quick Stats Row */}
       <div
         style={{
           display: "flex",
@@ -108,7 +107,6 @@ const CastingStyleCard = ({
         </div>
       </div>
 
-      {/* Expanded Details */}
       {isExpanded && (
         <div
           style={{
@@ -124,7 +122,6 @@ const CastingStyleCard = ({
               gap: "16px",
             }}
           >
-            {/* Hit Points */}
             <div>
               <h4
                 style={{
@@ -152,7 +149,6 @@ const CastingStyleCard = ({
               </div>
             </div>
 
-            {/* Proficiencies */}
             <div>
               <h4
                 style={{
@@ -181,7 +177,6 @@ const CastingStyleCard = ({
               </div>
             </div>
 
-            {/* Key Features */}
             <div style={{ gridColumn: "1 / -1" }}>
               <h4
                 style={{
@@ -210,7 +205,6 @@ const CastingStyleCard = ({
               </ul>
             </div>
 
-            {/* Available Skills */}
             <div style={{ gridColumn: "1 / -1" }}>
               <h4
                 style={{

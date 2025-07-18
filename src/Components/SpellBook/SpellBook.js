@@ -428,7 +428,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
           )}
         </div>
 
-        {/* Filter Controls */}
         <div
           style={{
             display: "flex",

@@ -823,7 +823,6 @@ const DowntimeForm = ({
 
     return (
       <div style={styles.makeRecipeContainer}>
-        {/* Recipe Name Input */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Recipe Name</label>
           <input
@@ -838,7 +837,6 @@ const DowntimeForm = ({
           />
         </div>
 
-        {/* Progress Display */}
         <div style={styles.progressContainer}>
           <div style={styles.progressHeader}>
             <span style={styles.progressLabel}>Recipe Progress:</span>
@@ -847,7 +845,6 @@ const DowntimeForm = ({
             </span>
           </div>
 
-          {/* Completed Checks */}
           {progress?.completedChecks?.length > 0 && (
             <div style={styles.completedChecks}>
               <div style={styles.completedLabel}>✅ Completed Checks:</div>
@@ -862,7 +859,6 @@ const DowntimeForm = ({
           )}
         </div>
 
-        {/* Check Selection (only show if not complete) */}
         {!progress?.isComplete && (
           <div style={styles.checkSelection}>
             <div style={styles.inputGroup}>
@@ -885,7 +881,6 @@ const DowntimeForm = ({
               </select>
             </div>
 
-            {/* Skill Selection */}
             {activity.selectedCheckType && skillOptions.length > 0 && (
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Select Skill:</label>
@@ -975,7 +970,6 @@ const DowntimeForm = ({
               </div>
             )}
 
-            {/* Check Description */}
             {activity.selectedCheckType && (
               <div style={styles.checkDescription}>
                 {
@@ -988,7 +982,6 @@ const DowntimeForm = ({
           </div>
         )}
 
-        {/* Dice Assignment Section */}
         {activity.selectedCheckType &&
           (activity.selectedCheckSkill || skillOptions.length === 1) &&
           !progress?.isComplete && (
@@ -1139,7 +1132,6 @@ const DowntimeForm = ({
                     disabled={!canEdit()}
                   >
                     <option value="">Select a die...</option>
-                    {/* Use diceManager if available, otherwise fallback to simple mapping */}
                     {(diceManager?.functions?.getSortedDiceOptions
                       ? diceManager.functions.getSortedDiceOptions.filter(
                           ({ index: diceIndex }) =>
@@ -1175,7 +1167,6 @@ const DowntimeForm = ({
             </div>
           )}
 
-        {/* Completion Message */}
         {progress?.isComplete && (
           <div style={styles.completionMessage}>
             🎉 Recipe "{activity.recipeName}" has been successfully created! All

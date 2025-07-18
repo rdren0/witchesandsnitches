@@ -262,7 +262,6 @@ const EnhancedBackgroundSelector = ({
 
   return (
     <div style={styles.container}>
-      {/* Scrollable container wrapper */}
       <div
         style={{
           maxHeight: "800px",
@@ -278,7 +277,6 @@ const EnhancedBackgroundSelector = ({
               Selected: {selectedBackground}
             </span>
           )}
-          {/* Debug info - remove this once working */}
           {character.backgroundSkills &&
             character.backgroundSkills.length > 0 && (
               <div
@@ -295,7 +293,6 @@ const EnhancedBackgroundSelector = ({
             )}
         </div>
 
-        {/* SELECTED BACKGROUND SECTION - NO SCROLL CONSTRAINTS */}
         {selectedBackgroundData && (
           <div style={styles.selectedElementsSection}>
             <div style={styles.selectedElementsHeader}>
@@ -310,7 +307,6 @@ const EnhancedBackgroundSelector = ({
             />
 
             <div style={styles.selectedElementCard}>
-              {/* Full background content without height restrictions */}
               <div style={styles.featHeader}>
                 <label style={styles.featLabelClickable}>
                   <input
@@ -349,7 +345,6 @@ const EnhancedBackgroundSelector = ({
                   selectedBackgroundData.description}
               </div>
 
-              {/* Full description and features - no height limits */}
               <div style={styles.featDescriptionSelected}>
                 <div style={{ marginBottom: "16px" }}>
                   <p
@@ -363,7 +358,6 @@ const EnhancedBackgroundSelector = ({
                   </p>
                 </div>
 
-                {/* Show background skills */}
                 {selectedBackgroundData.skillProficiencies && (
                   <div style={{ marginBottom: "16px" }}>
                     <h5
@@ -405,7 +399,6 @@ const EnhancedBackgroundSelector = ({
                   </div>
                 )}
 
-                {/* Show all background features */}
                 <BackgroundFeatures
                   background={selectedBackgroundData}
                   character={character}
@@ -416,7 +409,6 @@ const EnhancedBackgroundSelector = ({
           </div>
         )}
 
-        {/* AVAILABLE BACKGROUNDS SECTION - SCROLLABLE */}
         {!selectedBackground && (
           <div style={styles.availableElementsSection}>
             <div style={styles.availableElementsHeader}>
@@ -512,7 +504,6 @@ const EnhancedBackgroundSelector = ({
                           </p>
                         </div>
 
-                        {/* Show skill proficiencies in expanded view */}
                         {data.skillProficiencies && (
                           <div style={{ marginBottom: "12px" }}>
                             <strong
@@ -528,7 +519,6 @@ const EnhancedBackgroundSelector = ({
                           </div>
                         )}
 
-                        {/* Show modifiers in expanded view */}
                         {hasModifiers && (
                           <div style={{ marginBottom: "12px" }}>
                             <strong
@@ -557,7 +547,6 @@ const EnhancedBackgroundSelector = ({
                           </div>
                         )}
 
-                        {/* Show features in expanded view */}
                         {data.features && data.features.length > 0 && (
                           <div>
                             <strong
@@ -613,7 +602,6 @@ const EnhancedBackgroundSelector = ({
           </div>
         )}
 
-        {/* Show help text */}
         <div style={styles.helpText}>
           {selectedBackground
             ? "Your background provides skill proficiencies and special features that reflect your character's life before adventuring."

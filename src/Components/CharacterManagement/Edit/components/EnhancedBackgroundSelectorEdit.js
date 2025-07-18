@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { createFeatStyles } from "../../../../styles/masterStyles";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { backgroundsData } from "../../../../SharedData/backgroundsData";
+import { createBackgroundStyles } from "../../../../styles/masterStyles";
 
 const calculateBackgroundModifiers = (selectedBackground, character) => {
   const defaultInitiativeChanges = {
@@ -72,133 +72,112 @@ const calculateBackgroundModifiers = (selectedBackground, character) => {
 };
 
 const applyBackgroundProficiencies = (character, backgroundName) => {
-  if (!backgroundName || !backgroundsData[backgroundName]) {
-    return {
-      ...character,
-      background: "",
-      skillProficiencies: removeBackgroundProficiencies(
-        character.skillProficiencies || [],
-        character.background
-      ),
-      backgroundSkills: [],
-      toolProficiencies: removeBackgroundToolProficiencies(
-        character.toolProficiencies || [],
-        character.background
-      ),
-    };
-  }
+  const updatedCharacter = { ...character };
 
-  const background = backgroundsData[backgroundName];
+  const oldBackgroundSkills = character.backgroundSkills || [];
   const currentSkillProficiencies = character.skillProficiencies || [];
-  const currentToolProficiencies = character.toolProficiencies || [];
 
-  const cleanedSkillProficiencies = removeBackgroundProficiencies(
-    currentSkillProficiencies,
-    character.background
-  );
-  const cleanedToolProficiencies = removeBackgroundToolProficiencies(
-    currentToolProficiencies,
-    character.background
+  const skillsWithoutOldBackground = currentSkillProficiencies.filter(
+    (skill) => !oldBackgroundSkills.includes(skill)
   );
 
-  const newBackgroundSkills = background.skillProficiencies || [];
-  const newSkillProficiencies = [
-    ...cleanedSkillProficiencies,
-    ...newBackgroundSkills,
-  ];
+  updatedCharacter.background = backgroundName;
+  updatedCharacter.backgroundSkills = [];
 
-  const newToolProficiencies = background.toolProficiencies
-    ? [...cleanedToolProficiencies, ...background.toolProficiencies]
-    : cleanedToolProficiencies;
+  if (backgroundName && backgroundsData[backgroundName]) {
+    const background = backgroundsData[backgroundName];
 
-  return {
-    ...character,
-    background: backgroundName,
-    skillProficiencies: [...new Set(newSkillProficiencies)],
-    backgroundSkills: newBackgroundSkills,
-    toolProficiencies: [...new Set(newToolProficiencies)],
-  };
-};
+    if (background.skillProficiencies) {
+      updatedCharacter.backgroundSkills = [...background.skillProficiencies];
 
-const removeBackgroundProficiencies = (
-  currentProficiencies,
-  backgroundName
-) => {
-  if (!backgroundName || !backgroundsData[backgroundName]) {
-    return currentProficiencies;
+      updatedCharacter.skillProficiencies = [
+        ...new Set([
+          ...skillsWithoutOldBackground,
+          ...background.skillProficiencies,
+        ]),
+      ];
+    } else {
+      updatedCharacter.skillProficiencies = skillsWithoutOldBackground;
+    }
+
+    if (background.toolProficiencies) {
+      const currentToolProficiencies = character.toolProficiencies || [];
+      const oldBackgroundTools = character.backgroundTools || [];
+
+      const toolsWithoutOldBackground = currentToolProficiencies.filter(
+        (tool) => !oldBackgroundTools.includes(tool)
+      );
+
+      updatedCharacter.backgroundTools = [...background.toolProficiencies];
+      updatedCharacter.toolProficiencies = [
+        ...new Set([
+          ...toolsWithoutOldBackground,
+          ...background.toolProficiencies,
+        ]),
+      ];
+    }
+  } else {
+    updatedCharacter.skillProficiencies = skillsWithoutOldBackground;
   }
 
-  const background = backgroundsData[backgroundName];
-  const backgroundSkills = background.skillProficiencies || [];
-
-  return currentProficiencies.filter(
-    (skill) => !backgroundSkills.includes(skill)
-  );
-};
-
-const removeBackgroundToolProficiencies = (
-  currentProficiencies,
-  backgroundName
-) => {
-  if (!backgroundName || !backgroundsData[backgroundName]) {
-    return currentProficiencies;
-  }
-
-  const background = backgroundsData[backgroundName];
-  const backgroundTools = background.toolProficiencies || [];
-
-  return currentProficiencies.filter((tool) => !backgroundTools.includes(tool));
+  return updatedCharacter;
 };
 
 const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
-  const { abilityModifiers, initiativeChanges } = calculateBackgroundModifiers(
-    selectedBackground,
-    character
-  );
+  if (!selectedBackground || !backgroundsData[selectedBackground]) return null;
 
-  const hasAbilityModifiers = Object.values(abilityModifiers).some(
-    (mod) => mod > 0
-  );
-  const hasInitiativeChanges =
-    initiativeChanges.bonus > 0 || initiativeChanges.abilityChange;
+  const background = backgroundsData[selectedBackground];
+  const modifiers = background.modifiers;
 
-  if (!hasAbilityModifiers && !hasInitiativeChanges) return null;
+  if (
+    !modifiers ||
+    (!modifiers.abilityIncreases?.length &&
+      !modifiers.other?.initiativeBonus &&
+      !modifiers.other?.initiativeAbility)
+  ) {
+    return null;
+  }
 
   return (
     <div style={styles.modifierPillsContainer}>
-      <div style={styles.pillsLabel}>Background Bonuses:</div>
+      <div style={styles.pillsLabel}>📋 Background Modifiers:</div>
       <div style={styles.pillsRow}>
-        {Object.entries(abilityModifiers)
-          .filter(([_, value]) => value > 0)
-          .map(([ability, bonus]) => (
-            <div
-              key={ability}
-              style={styles.modifierPill}
-              title={`+${bonus} ${
-                ability.charAt(0).toUpperCase() + ability.slice(1)
-              } from background`}
-            >
-              <span style={styles.pillAbility}>
-                {ability.slice(0, 3).toUpperCase()}
-              </span>
-              <span style={styles.pillModifier}>+{bonus}</span>
-            </div>
-          ))}
+        {modifiers.abilityIncreases?.map((increase, index) => (
+          <div
+            key={`ability-${index}`}
+            style={styles.modifierPill}
+            title={`${
+              increase.ability.charAt(0).toUpperCase() +
+              increase.ability.slice(1)
+            } +${increase.amount}`}
+          >
+            <span style={styles.pillAbility}>
+              {increase.ability.slice(0, 3).toUpperCase()}
+            </span>
+            <span style={styles.pillModifier}>+{increase.amount}</span>
+          </div>
+        ))}
 
-        {hasInitiativeChanges && (
+        {modifiers.other?.initiativeBonus && (
           <div
             style={styles.initiativePill}
-            title={initiativeChanges.description}
+            title={`Initiative +${modifiers.other.initiativeBonus}`}
           >
             <span style={styles.pillAbility}>INIT</span>
             <span style={styles.pillModifier}>
-              {initiativeChanges.bonus > 0 && `+${initiativeChanges.bonus}`}
-              {initiativeChanges.abilityChange && (
-                <span style={styles.abilityChange}>
-                  {initiativeChanges.bonus > 0 ? ", " : ""}
-                  {initiativeChanges.abilityChange.slice(0, 3).toUpperCase()}
-                </span>
-              )}
+              +{modifiers.other.initiativeBonus}
+            </span>
+          </div>
+        )}
+
+        {modifiers.other?.initiativeAbility && (
+          <div
+            style={styles.initiativePill}
+            title={`Initiative ability: ${modifiers.other.initiativeAbility}`}
+          >
+            <span style={styles.pillAbility}>INIT</span>
+            <span style={styles.pillModifier}>
+              {modifiers.other.initiativeAbility.slice(0, 3).toUpperCase()}
             </span>
           </div>
         )}
@@ -207,7 +186,61 @@ const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
   );
 };
 
-const EnhancedBackgroundSelector = ({
+const BackgroundFeatures = ({ background, character, styles }) => {
+  if (!background.features || background.features.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ marginTop: "16px" }}>
+      <h5
+        style={{
+          fontSize: "14px",
+          fontWeight: "600",
+          color: "#374151",
+          marginBottom: "12px",
+          margin: "0 0 12px 0",
+        }}
+      >
+        Background Features:
+      </h5>
+      {background.features.map((feature, index) => (
+        <div
+          key={index}
+          style={{
+            marginBottom: "12px",
+            padding: "12px",
+            backgroundColor: "rgba(249, 250, 251, 1)",
+            borderRadius: "6px",
+            border: "1px solid rgba(229, 231, 235, 1)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "#374151",
+              marginBottom: "6px",
+            }}
+          >
+            {feature.name}
+          </div>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#6b7280",
+              lineHeight: "1.4",
+            }}
+          >
+            {feature.description}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const EnhancedBackgroundSelectorEdit = ({
   value,
   onChange,
   onCharacterUpdate,
@@ -216,15 +249,53 @@ const EnhancedBackgroundSelector = ({
   character = {},
 }) => {
   const { theme } = useTheme();
-  const styles = createFeatStyles(theme);
+  const styles = createBackgroundStyles(theme);
   const [expandedBackgrounds, setExpandedBackgrounds] = useState(new Set());
   const backgroundRefs = useRef({});
   const [hasInitialized, setHasInitialized] = useState(false);
 
   const selectedBackground = value || "";
 
+  const selectedBackgroundData = useMemo(() => {
+    return selectedBackground ? backgroundsData[selectedBackground] : null;
+  }, [selectedBackground]);
+
+  const availableBackgrounds = useMemo(() => {
+    if (selectedBackground) {
+      return [];
+    }
+
+    const getAvailableBackgrounds = () => {
+      if (backgroundsList.length > 0) {
+        return backgroundsList.map((bg) => ({
+          name: bg,
+          data: backgroundsData[bg] || {
+            name: bg,
+            description: `A ${bg.toLowerCase()} student with their own unique story and perspective.`,
+            preview: `${bg} background`,
+            features: [
+              {
+                name: "Background Feature",
+                description:
+                  "Your background provides unique experiences and perspectives that shape your character.",
+              },
+            ],
+          },
+        }));
+      }
+      return Object.values(backgroundsData).map((bg) => ({
+        name: bg.name,
+        data: bg,
+      }));
+    };
+
+    const allBackgrounds = getAvailableBackgrounds();
+    return allBackgrounds
+      .filter((bg) => bg.name !== selectedBackground)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [selectedBackground, backgroundsList]);
+
   useEffect(() => {
-    // Only expand the selected background on initial load
     if (
       selectedBackground &&
       selectedBackground.trim() !== "" &&
@@ -237,69 +308,10 @@ const EnhancedBackgroundSelector = ({
     }
   }, [selectedBackground, expandedBackgrounds.size, hasInitialized]);
 
-  const enhancedStyles = {
-    ...styles,
-    modifierPillsContainer: {
-      backgroundColor: "rgba(59, 130, 246, 0.1)",
-      border: "1px solid rgba(59, 130, 246, 0.3)",
-      borderRadius: "8px",
-      padding: "12px",
-      marginBottom: "16px",
-    },
-    pillsLabel: {
-      fontSize: "12px",
-      fontWeight: "600",
-      color: "#3b82f6",
-      marginBottom: "8px",
-    },
-    pillsRow: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: "8px",
-    },
-    modifierPill: {
-      display: "flex",
-      alignItems: "center",
-      gap: "4px",
-      backgroundColor: "#3b82f6",
-      color: "white",
-      padding: "4px 8px",
-      borderRadius: "12px",
-      fontSize: "11px",
-      fontWeight: "600",
-      cursor: "help",
-    },
-    initiativePill: {
-      display: "flex",
-      alignItems: "center",
-      gap: "4px",
-      backgroundColor: "#f59e0b",
-      color: "white",
-      padding: "4px 8px",
-      borderRadius: "12px",
-      fontSize: "11px",
-      fontWeight: "600",
-      cursor: "help",
-    },
-    pillAbility: {
-      opacity: 0.9,
-    },
-    pillModifier: {
-      fontWeight: "bold",
-    },
-    abilityChange: {
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      padding: "1px 4px",
-      borderRadius: "4px",
-      fontSize: "9px",
-    },
-  };
-
   const handleBackgroundToggle = (backgroundName) => {
     let updatedCharacter;
 
     if (selectedBackground === backgroundName) {
-      // Deselect the background
       updatedCharacter = applyBackgroundProficiencies(character, "");
       setExpandedBackgrounds((prev) => {
         const newSet = new Set(prev);
@@ -307,7 +319,6 @@ const EnhancedBackgroundSelector = ({
         return newSet;
       });
     } else {
-      // Select the background and auto-expand it
       updatedCharacter = applyBackgroundProficiencies(
         character,
         backgroundName
@@ -316,6 +327,7 @@ const EnhancedBackgroundSelector = ({
     }
 
     onChange(updatedCharacter.background);
+
     if (onCharacterUpdate) {
       onCharacterUpdate(updatedCharacter);
     }
@@ -333,423 +345,490 @@ const EnhancedBackgroundSelector = ({
     });
   };
 
-  const getAvailableBackgrounds = () => {
-    if (backgroundsList.length > 0) {
-      return backgroundsList.map((bg) => ({
-        name: bg,
-        data: backgroundsData[bg] || {
-          name: bg,
-          description: `A ${bg.toLowerCase()} student with their own unique story and perspective.`,
-          preview: `${bg} background`,
-          features: [
-            {
-              name: "Background Feature",
-              description:
-                "Your background provides unique experiences and perspectives that shape your character.",
-            },
-          ],
-        },
-      }));
-    }
-    return Object.values(backgroundsData).map((bg) => ({
-      name: bg.name,
-      data: bg,
-    }));
-  };
-
-  // Modified to show only selected background if one is selected, otherwise show all
-  const visibleBackgrounds = () => {
-    const allBackgrounds = getAvailableBackgrounds();
-
-    if (!selectedBackground) {
-      return allBackgrounds.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    // Only show the selected background
-    const selectedBg = allBackgrounds.find(
-      (bg) => bg.name === selectedBackground
-    );
-    return selectedBg ? [selectedBg] : allBackgrounds;
-  };
-
-  const availableBackgrounds = visibleBackgrounds();
-
   return (
-    <div style={enhancedStyles.container}>
-      <div style={enhancedStyles.sectionHeader}>
-        <h3 style={enhancedStyles.skillsHeader}>Background</h3>
-        {selectedBackground && (
-          <span style={enhancedStyles.selectionStatus}>
-            Selected: {selectedBackground}
-          </span>
-        )}
-      </div>
+    <div style={styles.container}>
+      <div
+        style={{
+          maxHeight: "800px",
+          overflowY: "auto",
+          overflowX: "hidden",
+          paddingRight: "4px",
+        }}
+      >
+        <div style={styles.sectionHeader}>
+          <h3 style={styles.skillsHeader}>Background</h3>
+          {selectedBackground && (
+            <span style={styles.selectionStatus}>
+              Selected: {selectedBackground}
+            </span>
+          )}
+          {character.backgroundSkills &&
+            character.backgroundSkills.length > 0 && (
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#666",
+                  marginTop: "4px",
+                  fontStyle: "italic",
+                }}
+              >
+                Debug: Background skills set on character:{" "}
+                {character.backgroundSkills.join(", ")}
+              </div>
+            )}
+        </div>
 
-      {selectedBackground && (
-        <BackgroundModifierPills
-          selectedBackground={selectedBackground}
-          character={character}
-          styles={enhancedStyles}
-        />
-      )}
+        {selectedBackgroundData && (
+          <div style={styles.selectedElementsSection}>
+            <div style={styles.selectedElementsHeader}>
+              <h4 style={styles.selectedElementsTitle}>Selected Background</h4>
+              <span style={styles.selectedElementsBadge}>Selected</span>
+            </div>
 
-      <div style={enhancedStyles.featsContainer}>
-        {availableBackgrounds.map(({ name, data }) => {
-          const isSelected = selectedBackground === name;
-          const isExpanded = expandedBackgrounds.has(name);
-          const hasModifiers =
-            data.modifiers &&
-            (data.modifiers.abilityIncreases?.length > 0 ||
-              data.modifiers.other?.initiativeBonus ||
-              data.modifiers.other?.initiativeAbility);
+            <BackgroundModifierPills
+              selectedBackground={selectedBackground}
+              character={character}
+              styles={styles}
+            />
 
-          return (
-            <div
-              key={name}
-              ref={(el) => (backgroundRefs.current[name] = el)}
-              style={
-                isSelected
-                  ? enhancedStyles.featCardSelected
-                  : enhancedStyles.featCard
-              }
-            >
-              <div style={enhancedStyles.featHeader}>
-                <label style={enhancedStyles.featLabelClickable}>
+            <div style={styles.selectedElementCard}>
+              <div style={styles.featHeader}>
+                <label style={styles.featLabelClickable}>
                   <input
                     type="checkbox"
                     name="background"
-                    checked={isSelected}
-                    onChange={() => handleBackgroundToggle(name)}
+                    checked={true}
+                    onChange={() => handleBackgroundToggle(selectedBackground)}
                     disabled={disabled}
                     style={{
                       width: "18px",
                       height: "18px",
                       marginRight: "8px",
                       cursor: disabled ? "not-allowed" : "pointer",
-                      accentColor: theme.primary,
+                      accentColor: theme.success,
                       transform: "scale(1.2)",
                     }}
                   />
-                  <span
-                    style={
-                      isSelected
-                        ? enhancedStyles.featNameSelected
-                        : enhancedStyles.featName
-                    }
-                  >
-                    {data.name}
-                    {data.skillProficiencies && (
-                      <span style={enhancedStyles.availableChoicesIndicator}>
-                        ({data.skillProficiencies.length} skill
-                        {data.skillProficiencies.length > 1 ? "s" : ""})
-                      </span>
-                    )}
-                    {hasModifiers && (
-                      <span
-                        style={{
-                          fontSize: "10px",
-                          color: "#3b82f6",
-                          marginLeft: "4px",
-                        }}
-                      >
-                        (+MOD)
+                  <span style={styles.featNameSelected}>
+                    {selectedBackgroundData.name}
+                    {selectedBackgroundData.skillProficiencies && (
+                      <span style={styles.availableChoicesIndicator}>
+                        ({selectedBackgroundData.skillProficiencies.length}{" "}
+                        skill
+                        {selectedBackgroundData.skillProficiencies.length > 1
+                          ? "s"
+                          : ""}
+                        )
                       </span>
                     )}
                   </span>
                 </label>
-                {!isSelected && (
-                  <button
-                    onClick={() => toggleBackgroundExpansion(name)}
-                    style={enhancedStyles.expandButton}
-                    type="button"
-                    disabled={disabled}
+              </div>
+
+              <div style={styles.featPreviewSelected}>
+                {selectedBackgroundData.preview ||
+                  selectedBackgroundData.description}
+              </div>
+
+              <div style={styles.featDescriptionSelected}>
+                <div style={{ marginBottom: "16px" }}>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: "1.5",
+                      margin: "0 0 16px 0",
+                    }}
                   >
-                    {isExpanded ? "▲" : "▼"}
-                  </button>
-                )}
-              </div>
+                    {selectedBackgroundData.description}
+                  </p>
+                </div>
 
-              <div
-                style={
-                  isSelected
-                    ? enhancedStyles.featPreviewSelected
-                    : enhancedStyles.featPreview
-                }
-              >
-                {data.preview || data.description}
-              </div>
-
-              {(isExpanded || isSelected) && (
-                <div
-                  style={
-                    isSelected
-                      ? enhancedStyles.featDescriptionSelected
-                      : enhancedStyles.featDescription
-                  }
-                >
+                {selectedBackgroundData.skillProficiencies && (
                   <div style={{ marginBottom: "16px" }}>
-                    <p
+                    <h5
                       style={{
                         fontSize: "14px",
-                        lineHeight: "1.5",
-                        color: isSelected ? "#374151" : theme.textSecondary,
-                        margin: "0 0 12px 0",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "8px",
+                        margin: "0 0 8px 0",
                       }}
                     >
-                      {data.description}
-                    </p>
-                  </div>
-
-                  {hasModifiers && (
+                      Skill Proficiencies:
+                    </h5>
                     <div
                       style={{
-                        marginTop: "8px",
-                        marginBottom: "16px",
-                        padding: "8px",
-                        backgroundColor: "rgba(59, 130, 246, 0.1)",
-                        borderRadius: "4px",
-                        border: "1px solid rgba(59, 130, 246, 0.3)",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "6px",
                       }}
                     >
-                      <strong style={{ color: "#3b82f6" }}>
-                        Background Modifiers:
-                      </strong>
-                      <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px" }}>
-                        {data.modifiers.abilityIncreases?.map(
-                          (increase, index) => (
-                            <li
-                              key={index}
-                              style={{ fontSize: "12px", color: "#3b82f6" }}
-                            >
-                              +{increase.amount}{" "}
-                              {increase.ability.charAt(0).toUpperCase() +
-                                increase.ability.slice(1)}
-                            </li>
-                          )
-                        )}
-                        {data.modifiers.other?.initiativeBonus && (
-                          <li style={{ fontSize: "12px", color: "#f59e0b" }}>
-                            +{data.modifiers.other.initiativeBonus} Initiative
-                          </li>
-                        )}
-                        {data.modifiers.other?.initiativeAbility && (
-                          <li style={{ fontSize: "12px", color: "#f59e0b" }}>
-                            Use{" "}
-                            {data.modifiers.other.initiativeAbility
-                              .charAt(0)
-                              .toUpperCase() +
-                              data.modifiers.other.initiativeAbility.slice(
-                                1
-                              )}{" "}
-                            for Initiative
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                  {data.skillProficiencies && (
-                    <div style={{ marginBottom: "16px" }}>
-                      <h5
-                        style={{
-                          margin: "0 0 8px 0",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: isSelected ? "#047857" : theme.text,
-                        }}
-                      >
-                        Skill Proficiencies:
-                      </h5>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "6px",
-                        }}
-                      >
-                        {data.skillProficiencies.map((skill, index) => (
+                      {selectedBackgroundData.skillProficiencies.map(
+                        (skill, index) => (
                           <span
                             key={index}
                             style={{
-                              fontSize: "12px",
                               padding: "4px 8px",
-                              backgroundColor: isSelected
-                                ? "#10B98120"
-                                : theme.primary + "20",
-                              color: isSelected ? "#047857" : theme.primary,
+                              backgroundColor: "#10b981",
+                              color: "white",
                               borderRadius: "12px",
-                              border: `1px solid ${
-                                isSelected ? "#10B981" : theme.primary
-                              }`,
+                              fontSize: "11px",
+                              fontWeight: "600",
                             }}
                           >
                             {skill}
                           </span>
-                        ))}
-                      </div>
+                        )
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {data.toolProficiencies && (
-                    <div style={{ marginBottom: "16px" }}>
-                      <h5
-                        style={{
-                          margin: "0 0 8px 0",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: isSelected ? "#047857" : theme.text,
-                        }}
-                      >
-                        Tool Proficiencies:
-                      </h5>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "6px",
-                        }}
-                      >
-                        {data.toolProficiencies.map((tool, index) => (
+                {selectedBackgroundData.toolProficiencies && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <h5
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "8px",
+                        margin: "0 0 8px 0",
+                      }}
+                    >
+                      Tool Proficiencies:
+                    </h5>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "6px",
+                      }}
+                    >
+                      {selectedBackgroundData.toolProficiencies.map(
+                        (tool, index) => (
                           <span
                             key={index}
                             style={{
-                              fontSize: "12px",
                               padding: "4px 8px",
-                              backgroundColor: isSelected
-                                ? "#F59E0B20"
-                                : theme.warning + "20",
-                              color: isSelected ? "#D97706" : theme.warning,
+                              backgroundColor: "#f59e0b",
+                              color: "white",
                               borderRadius: "12px",
-                              border: `1px solid ${
-                                isSelected ? "#F59E0B" : theme.warning
-                              }`,
+                              fontSize: "11px",
+                              fontWeight: "600",
                             }}
                           >
                             {tool}
                           </span>
-                        ))}
-                      </div>
+                        )
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {data.features && (
-                    <div style={{ marginBottom: "16px" }}>
-                      <h5
-                        style={{
-                          margin: "0 0 8px 0",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: isSelected ? "#047857" : theme.text,
-                        }}
-                      >
-                        Background Features:
-                      </h5>
-                      {data.features.map((feature, index) => (
-                        <div key={index} style={{ marginBottom: "8px" }}>
-                          <strong
-                            style={{
-                              fontSize: "13px",
-                              color: isSelected ? "#10B981" : theme.primary,
-                            }}
-                          >
-                            {feature.name}:
-                          </strong>
-                          <span
-                            style={{
-                              fontSize: "13px",
-                              color: isSelected
-                                ? "#374151"
-                                : theme.textSecondary,
-                              marginLeft: "4px",
-                              lineHeight: "1.4",
-                            }}
-                          >
-                            {feature.description}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <BackgroundFeatures
+                  background={selectedBackgroundData}
+                  character={character}
+                  styles={styles}
+                />
 
-                  {data.backgroundBonus && (
-                    <div style={{ marginBottom: "16px" }}>
-                      <h5
-                        style={{
-                          margin: "0 0 8px 0",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: isSelected ? "#047857" : theme.text,
-                        }}
-                      >
-                        Background Bonus:
-                      </h5>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: isSelected ? "#374151" : theme.textSecondary,
-                          margin: "0",
-                          lineHeight: "1.4",
-                          fontStyle: "italic",
-                        }}
-                      >
-                        {data.backgroundBonus}
-                      </p>
-                    </div>
-                  )}
+                {selectedBackgroundData.backgroundBonus && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <h5
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "8px",
+                        margin: "0 0 8px 0",
+                      }}
+                    >
+                      Background Bonus:
+                    </h5>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "#374151",
+                        margin: "0",
+                        lineHeight: "1.4",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {selectedBackgroundData.backgroundBonus}
+                    </p>
+                  </div>
+                )}
 
-                  {data.typicalEquipment && (
-                    <div style={{ marginBottom: "8px" }}>
-                      <h5
-                        style={{
-                          margin: "0 0 8px 0",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: isSelected ? "#047857" : theme.text,
-                        }}
-                      >
-                        Typical Equipment:
-                      </h5>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: isSelected ? "#374151" : theme.textSecondary,
-                          margin: "0",
-                          lineHeight: "1.4",
-                        }}
-                      >
-                        {data.typicalEquipment}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                {selectedBackgroundData.typicalEquipment && (
+                  <div style={{ marginBottom: "8px" }}>
+                    <h5
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "8px",
+                        margin: "0 0 8px 0",
+                      }}
+                    >
+                      Typical Equipment:
+                    </h5>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "#374151",
+                        margin: "0",
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      {selectedBackgroundData.typicalEquipment}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          );
-        })}
-      </div>
-
-      <div style={enhancedStyles.helpText}>
-        Your background represents your character's life before attending magic
-        school. It provides skill proficiencies, special features, and roleplay
-        opportunities that help define who your character is beyond their
-        magical abilities.
-        {selectedBackground &&
-          " Mechanical bonuses from your background are shown above and automatically applied."}
-        {selectedBackground && (
-          <span
-            style={{
-              display: "block",
-              marginTop: "4px",
-              fontStyle: "italic",
-              color: theme.success,
-            }}
-          >
-            Uncheck the selected background to see all available options again.
-          </span>
+          </div>
         )}
+
+        {!selectedBackground && (
+          <div style={styles.availableElementsSection}>
+            <div style={styles.availableElementsHeader}>
+              <span style={styles.availableElementsTitle}>
+                Choose Background
+              </span>
+              <span style={styles.availableElementsCount}>
+                {availableBackgrounds.length} available
+              </span>
+            </div>
+
+            <div style={styles.availableElementsContainer}>
+              {availableBackgrounds.map(({ name, data }) => {
+                const isExpanded = expandedBackgrounds.has(name);
+                const hasModifiers =
+                  data.modifiers &&
+                  (data.modifiers.abilityIncreases?.length > 0 ||
+                    data.modifiers.other?.initiativeBonus ||
+                    data.modifiers.other?.initiativeAbility);
+
+                return (
+                  <div
+                    key={name}
+                    ref={(el) => (backgroundRefs.current[name] = el)}
+                    style={styles.featCard}
+                  >
+                    <div style={styles.featHeader}>
+                      <label style={styles.featLabelClickable}>
+                        <input
+                          type="checkbox"
+                          name="background"
+                          checked={false}
+                          onChange={() => handleBackgroundToggle(name)}
+                          disabled={disabled}
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            marginRight: "8px",
+                            cursor: disabled ? "not-allowed" : "pointer",
+                            accentColor: theme.primary,
+                            transform: "scale(1.2)",
+                          }}
+                        />
+                        <span style={styles.featName}>
+                          {data.name}
+                          {data.skillProficiencies && (
+                            <span style={styles.availableChoicesIndicator}>
+                              ({data.skillProficiencies.length} skill
+                              {data.skillProficiencies.length > 1 ? "s" : ""})
+                            </span>
+                          )}
+                          {hasModifiers && (
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#3b82f6",
+                                marginLeft: "4px",
+                              }}
+                            >
+                              (+MOD)
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                      {!selectedBackground && (
+                        <button
+                          onClick={() => toggleBackgroundExpansion(name)}
+                          style={styles.expandButton}
+                          type="button"
+                          disabled={disabled}
+                        >
+                          {isExpanded ? "▲" : "▼"}
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={styles.featPreview}>
+                      {data.preview || data.description}
+                    </div>
+
+                    {isExpanded && (
+                      <div style={styles.featDescription}>
+                        <div style={{ marginBottom: "16px" }}>
+                          <p
+                            style={{
+                              fontSize: "14px",
+                              lineHeight: "1.5",
+                              color: theme.text,
+                              margin: "0 0 12px 0",
+                            }}
+                          >
+                            {data.description}
+                          </p>
+                        </div>
+
+                        {data.skillProficiencies && (
+                          <div style={{ marginBottom: "12px" }}>
+                            <strong
+                              style={{ fontSize: "12px", color: theme.primary }}
+                            >
+                              Skills:
+                            </strong>
+                            <span
+                              style={{ fontSize: "12px", marginLeft: "6px" }}
+                            >
+                              {data.skillProficiencies.join(", ")}
+                            </span>
+                          </div>
+                        )}
+
+                        {data.toolProficiencies && (
+                          <div style={{ marginBottom: "12px" }}>
+                            <strong
+                              style={{ fontSize: "12px", color: theme.primary }}
+                            >
+                              Tools:
+                            </strong>
+                            <span
+                              style={{ fontSize: "12px", marginLeft: "6px" }}
+                            >
+                              {data.toolProficiencies.join(", ")}
+                            </span>
+                          </div>
+                        )}
+
+                        {hasModifiers && (
+                          <div style={{ marginBottom: "12px" }}>
+                            <strong
+                              style={{ fontSize: "12px", color: theme.primary }}
+                            >
+                              Modifiers:
+                            </strong>
+                            <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                              {data.modifiers.abilityIncreases?.map(
+                                (inc, idx) => (
+                                  <div key={idx}>
+                                    •{" "}
+                                    {inc.ability.charAt(0).toUpperCase() +
+                                      inc.ability.slice(1)}{" "}
+                                    +{inc.amount}
+                                  </div>
+                                )
+                              )}
+                              {data.modifiers.other?.initiativeBonus && (
+                                <div>
+                                  • Initiative +
+                                  {data.modifiers.other.initiativeBonus}
+                                </div>
+                              )}
+                              {data.modifiers.other?.initiativeAbility && (
+                                <div>
+                                  • Use{" "}
+                                  {data.modifiers.other.initiativeAbility
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    data.modifiers.other.initiativeAbility.slice(
+                                      1
+                                    )}{" "}
+                                  for Initiative
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {data.features && data.features.length > 0 && (
+                          <div>
+                            <strong
+                              style={{ fontSize: "12px", color: theme.primary }}
+                            >
+                              Features:
+                            </strong>
+                            {data.features.slice(0, 2).map((feature, idx) => (
+                              <div key={idx} style={{ marginTop: "6px" }}>
+                                <div
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  {feature.name}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "11px",
+                                    color: theme.textSecondary,
+                                    lineHeight: "1.3",
+                                  }}
+                                >
+                                  {feature.description.substring(0, 100)}
+                                  {feature.description.length > 100
+                                    ? "..."
+                                    : ""}
+                                </div>
+                              </div>
+                            ))}
+                            {data.features.length > 2 && (
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  color: theme.textSecondary,
+                                  fontStyle: "italic",
+                                  marginTop: "4px",
+                                }}
+                              >
+                                +{data.features.length - 2} more feature
+                                {data.features.length > 3 ? "s" : ""}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div style={styles.helpText}>
+          {selectedBackground
+            ? "Your background provides skill proficiencies and special features that reflect your character's life before adventuring. Mechanical bonuses are shown above and automatically applied."
+            : "Choose a background that represents your character's life before adventuring. Each background provides skill proficiencies and special features."}
+          {selectedBackground && (
+            <span
+              style={{
+                display: "block",
+                marginTop: "4px",
+                fontStyle: "italic",
+                color: theme.success,
+              }}
+            >
+              Uncheck the selected background to see all available options
+              again.
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default EnhancedBackgroundSelector;
+export default EnhancedBackgroundSelectorEdit;

@@ -84,7 +84,6 @@ const SchoolYearSelector = ({
             gap: "16px",
           }}
         >
-          {/* School Year Selection */}
           <div>
             <label style={styles.label}>
               School Year
@@ -114,7 +113,6 @@ const SchoolYearSelector = ({
             </div>
           </div>
 
-          {/* Character Level Selection */}
           <div>
             <label style={styles.label}>
               Character Level
@@ -145,7 +143,6 @@ const SchoolYearSelector = ({
           </div>
         </div>
 
-        {/* Mismatch Warning */}
         {schoolYear && level && !isLevelTypicalForYear(schoolYear, level) && (
           <div
             style={{
@@ -163,7 +160,6 @@ const SchoolYearSelector = ({
           </div>
         )}
 
-        {/* Examples */}
         <div
           style={{
             marginTop: "12px",

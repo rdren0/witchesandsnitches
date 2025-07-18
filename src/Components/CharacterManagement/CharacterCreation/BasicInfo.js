@@ -63,7 +63,6 @@ function BasicInfo({
         </div>
       </div>
 
-      {/* Add the School Year Selector */}
       <SchoolYearSelector
         schoolYear={character.schoolYear}
         onSchoolYearChange={handleSchoolYearChange}
@@ -72,7 +71,6 @@ function BasicInfo({
         styles={styles}
       />
 
-      {/* Enhanced Casting Style Selector */}
       <div style={styles.fieldContainer}>
         <EnhancedCastingStyleSelector
           selectedStyle={character.castingStyle || ""}
