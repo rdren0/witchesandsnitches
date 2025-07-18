@@ -132,12 +132,13 @@ export const Skills = ({
           aValue = a.displayName;
           bValue = b.displayName;
           break;
-        case "bonus":
+        case "bonus": {
           const aAbilityMod = modifiers(character)[a.ability];
           const bAbilityMod = modifiers(character)[b.ability];
           aValue = calculateSkillBonus(a.name, aAbilityMod);
           bValue = calculateSkillBonus(b.name, bAbilityMod);
           break;
+        }
         default:
           aValue = a.displayName;
           bValue = b.displayName;

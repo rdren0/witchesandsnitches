@@ -310,47 +310,43 @@ const isUserAdmin = async (discordUserId) => {
 };
 
 const verifyAdminPassword = async (discordUserId, password) => {
-  try {
-    const forbidden = await isUserForbidden(discordUserId);
+  const forbidden = await isUserForbidden(discordUserId);
 
-    if (forbidden) {
-      throw new Error(
-        "The ancient magic recognizes you as forbidden. Access permanently denied."
-      );
-    }
-
-    const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
-
-    if (!ADMIN_PASSWORD) {
-      throw new Error("The magical registry is not properly configured");
-    }
-
-    if (password !== ADMIN_PASSWORD) {
-      throw new Error("The unlocking charm failed");
-    }
-
-    const insertData = {
-      discord_user_id: discordUserId,
-      role: "admin",
-      granted_by: "website",
-      granted_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase
-      .from("user_roles")
-      .insert(insertData)
-      .select();
-
-    if (error && error.code !== "23505") {
-      console.error("❌ Database error (not a duplicate key):", error);
-      console.error("This is the actual error causing the failure!");
-      throw new Error(`Database error: ${error.message}`);
-    }
-
-    return true;
-  } catch (error) {
-    throw error;
+  if (forbidden) {
+    throw new Error(
+      "The ancient magic recognizes you as forbidden. Access permanently denied."
+    );
   }
+
+  const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
+
+  if (!ADMIN_PASSWORD) {
+    throw new Error("The magical registry is not properly configured");
+  }
+
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error("The unlocking charm failed");
+  }
+
+  const insertData = {
+    discord_user_id: discordUserId,
+    role: "admin",
+    granted_by: "website",
+    granted_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("user_roles")
+    .insert(insertData)
+    .select();
+
+  if (error && error.code !== "23505") {
+    console.error("❌ Database error (not a duplicate key):", error);
+    console.error("This is the actual error causing the failure!");
+    throw new Error(`Database error: ${error.message}`);
+  }
+
+  return true;
 };
 
 const getUserRoleStatus = async (discordUserId) => {

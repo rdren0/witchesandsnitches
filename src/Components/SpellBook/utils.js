@@ -233,7 +233,7 @@ const validateSubclassFeatures = (character) => {
   );
 };
 
-const getCharacterBonuses = (character) => {
+const getCharacterBonuses = () => {
   const bonuses = {
     research: 0,
     spellTags: [],

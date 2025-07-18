@@ -42,9 +42,10 @@ const checkSingleRequirement = (requirement, character) => {
     case "subclass":
       return character.subclass === value;
 
-    case "feat":
+    case "feat": {
       const allFeats = getAllCharacterFeats(character);
       return allFeats.includes(value);
+    }
 
     default:
       console.warn(`Unknown prerequisite type: ${type}`);

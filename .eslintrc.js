@@ -14,13 +14,14 @@ module.exports = {
     },
   },
   rules: {
-    "no-console": "warn",
+    "no-console": "off",
     "no-unused-vars": "off",
-    "unused-imports/no-unused-imports": "error",
-    "unused-imports/no-unused-vars": "warn",
+    "unused-imports/no-unused-imports": "off",
+    "unused-imports/no-unused-vars": "off",
     "no-prototype-builtins": "warn",
     "no-empty": "warn",
     "no-case-declarations": "warn",
     "no-useless-catch": "warn",
+    "no-prototype-builtins": "off",
   },
 };

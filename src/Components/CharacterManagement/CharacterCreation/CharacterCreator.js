@@ -551,9 +551,6 @@ const CharacterCreator = ({
             }
           }
         }
-      } else if (typeof choice === "string") {
-        if (choice === "Practice Makes Perfect") {
-        }
       }
     });
 

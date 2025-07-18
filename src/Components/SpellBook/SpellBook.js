@@ -47,9 +47,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
         spells.forEach((spell) => {
           if (spell.year !== null && spell.year !== undefined) {
             years.add(spell.year);
-
-            if (spell.name === "Cantis" || spell.name === "Aguamenti") {
-            }
           }
         });
       });
