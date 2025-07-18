@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { castingStyleData } from "../../../SharedData/data";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const CastingStyleCard = ({
   styleName,
@@ -10,14 +11,15 @@ const CastingStyleCard = ({
   isExpanded,
   onToggleExpand,
 }) => {
+  const { theme } = useTheme();
   return (
     <div
       style={{
-        border: `2px solid ${isSelected ? data.color : "#e5e7eb"}`,
+        border: `2px solid ${isSelected ? data.color : theme.border}`,
         borderRadius: "12px",
         padding: "16px",
         marginBottom: "12px",
-        backgroundColor: isSelected ? `${data.color}10` : "#ffffff",
+        backgroundColor: isSelected ? `${data.color}10` : theme.background,
         cursor: "pointer",
         transition: "all 0.2s ease",
         boxShadow: isSelected
@@ -43,7 +45,7 @@ const CastingStyleCard = ({
             style={{
               width: "18px",
               height: "18px",
-              accentColor: data.color,
+              accentColor: theme.primary,
               cursor: "pointer",
             }}
           />
@@ -53,7 +55,7 @@ const CastingStyleCard = ({
                 margin: 0,
                 fontSize: "18px",
                 fontWeight: "600",
-                color: "#1f2937",
+                color: theme.text,
               }}
             >
               {styleName}
@@ -62,7 +64,7 @@ const CastingStyleCard = ({
               style={{
                 margin: "4px 0 0 0",
                 fontSize: "14px",
-                color: "#6b7280",
+                color: theme.textSecondary,
                 lineHeight: "1.4",
               }}
             >
@@ -96,13 +98,13 @@ const CastingStyleCard = ({
           flexWrap: "wrap",
         }}
       >
-        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+        <div style={{ fontSize: "12px", color: theme.text }}>
           <strong>Hit Die:</strong> {data.hitDie}
         </div>
-        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+        <div style={{ fontSize: "12px", color: theme.text }}>
           <strong>Spellcasting:</strong> {data.spellcastingAbility}
         </div>
-        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+        <div style={{ fontSize: "12px", color: theme.text }}>
           <strong>Base AC:</strong> {data.baseAC}
         </div>
       </div>
@@ -111,7 +113,7 @@ const CastingStyleCard = ({
         <div
           style={{
             marginTop: "16px",
-            borderTop: "1px solid #e5e7eb",
+            borderTop: `1px solid ${theme.border}`,
             paddingTop: "16px",
           }}
         >
@@ -136,7 +138,7 @@ const CastingStyleCard = ({
               <div
                 style={{
                   fontSize: "12px",
-                  color: "#4b5563",
+                  color: theme.text,
                   lineHeight: "1.5",
                 }}
               >
@@ -163,7 +165,7 @@ const CastingStyleCard = ({
               <div
                 style={{
                   fontSize: "12px",
-                  color: "#4b5563",
+                  color: theme.textSecondary,
                   lineHeight: "1.5",
                 }}
               >
@@ -193,7 +195,7 @@ const CastingStyleCard = ({
                   margin: 0,
                   paddingLeft: "16px",
                   fontSize: "12px",
-                  color: "#4b5563",
+                  color: theme.textSecondary,
                   lineHeight: "1.5",
                 }}
               >
@@ -252,6 +254,7 @@ export const EnhancedCastingStyleSelector = ({
   onStyleChange = () => {},
   required = false,
 }) => {
+  const { theme } = useTheme();
   const [expandedCard, setExpandedCard] = useState(null);
 
   const handleCardSelect = (styleName) => {
@@ -270,7 +273,7 @@ export const EnhancedCastingStyleSelector = ({
             display: "block",
             fontSize: "16px",
             fontWeight: "600",
-            color: "#1f2937",
+            color: theme.text,
             marginBottom: "8px",
           }}
         >
@@ -279,7 +282,7 @@ export const EnhancedCastingStyleSelector = ({
         <p
           style={{
             fontSize: "14px",
-            color: "#6b7280",
+            color: theme.textSecondary,
             margin: "0 0 16px 0",
             lineHeight: "1.5",
           }}
@@ -309,17 +312,24 @@ export const EnhancedCastingStyleSelector = ({
           style={{
             marginTop: "16px",
             padding: "12px",
-            backgroundColor: "#f0fdf4",
-            border: "1px solid #bbf7d0",
+            backgroundColor: theme.background,
+            border: `1px solid ${theme.primary}`,
             borderRadius: "8px",
+            color: theme.primary,
           }}
         >
           <div
-            style={{ fontSize: "14px", color: "#166534", fontWeight: "500" }}
+            style={{
+              fontSize: "14px",
+              color: theme.primary,
+              fontWeight: "500",
+            }}
           >
             ✓ Selected: {selectedStyle}
           </div>
-          <div style={{ fontSize: "12px", color: "#166534", marginTop: "4px" }}>
+          <div
+            style={{ fontSize: "12px", color: theme.text, marginTop: "4px" }}
+          >
             You can change this selection at any time during character creation.
           </div>
         </div>
