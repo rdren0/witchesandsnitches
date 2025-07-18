@@ -807,6 +807,32 @@ export const applyRavenclawBonus = (
   return diceRoll;
 };
 
+export const applyHornedSerpentBonus = (
+  modifier,
+  character,
+  abilityType,
+  hasProficiency
+) => {
+  if (character?.house !== "Horned Serpent") {
+    return { modifier, bonusApplied: false };
+  }
+
+  const isIntOrChaCheck =
+    abilityType === "intelligence" || abilityType === "charisma";
+
+  if (isIntOrChaCheck && !hasProficiency) {
+    const profBonus = character.proficiencyBonus || 0;
+    const scholarBonus = Math.floor(profBonus / 2);
+    return {
+      modifier: modifier + scholarBonus,
+      bonusApplied: true,
+      bonusAmount: scholarBonus,
+    };
+  }
+
+  return { modifier, bonusApplied: false };
+};
+
 export const rollDice = (
   character = null,
   abilityType = null,
@@ -849,7 +875,15 @@ export const rollAbilityCheckWithProficiency = async ({
     const diceResult = rollDice(character, abilityType, hasProficiency);
     const d20Roll = diceResult.originalRoll;
     const adjustedRoll = diceResult.total;
-    const total = adjustedRoll + modifier;
+
+    const hornedSerpentResult = applyHornedSerpentBonus(
+      modifier,
+      character,
+      abilityType,
+      hasProficiency
+    );
+    const finalModifier = hornedSerpentResult.modifier;
+    const total = adjustedRoll + finalModifier;
 
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
@@ -859,15 +893,35 @@ export const rollAbilityCheckWithProficiency = async ({
         title: title,
         rollValue: adjustedRoll,
         originalRoll: d20Roll,
-        modifier: modifier,
+        modifier: finalModifier,
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
         type: "ability",
         description: `Rolling ${title} for ${character.name}`,
         ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
+        hornedSerpentBonusApplied: hornedSerpentResult.bonusApplied,
+        hornedSerpentBonusAmount: hornedSerpentResult.bonusAmount || 0,
         abilityType: abilityType,
       });
+    } else {
+      const criticalText = isCriticalSuccess
+        ? " - CRITICAL SUCCESS!"
+        : isCriticalFailure
+        ? " - CRITICAL FAILURE!"
+        : "";
+
+      const ravenclawText = diceResult.ravenclawBonusApplied
+        ? ` (Ravenclaw: ${d20Roll}→${adjustedRoll})`
+        : "";
+
+      const hornedSerpentText = hornedSerpentResult.bonusApplied
+        ? ` (Scholar's Mind: +${hornedSerpentResult.bonusAmount})`
+        : "";
+
+      alert(
+        `${title}: d20(${adjustedRoll})${ravenclawText}${hornedSerpentText} + ${finalModifier} = ${total}${criticalText}`
+      );
     }
   } catch (error) {
     console.error("Error with ability check:", error);
@@ -2677,13 +2731,7 @@ export const rollCookRecipe = async ({
     };
 
     let inventoryAdded = false;
-    if (
-      achievedQuality !== "ruined" &&
-      addRecipeToInventory &&
-      supabase &&
-      currentCharacter &&
-      user
-    ) {
+    if (addRecipeToInventory && supabase && currentCharacter && user) {
       try {
         const getRecipeValue = (quality) => {
           const baseValues = {
@@ -3461,7 +3509,7 @@ export const useRollFunctions = () => {
       attemptSpell({
         ...params,
         showRollResult,
-        // Ensure customRoll is passed through
+
         customRoll: params.customRoll || null,
       }),
     attemptArithmancySpell: (params) =>
@@ -3475,7 +3523,7 @@ export const useRollFunctions = () => {
       rollResearch({
         ...params,
         showRollResult,
-        // Ensure customRoll is passed through
+
         customRoll: params.customRoll || null,
       }),
     rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),

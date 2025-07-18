@@ -1156,7 +1156,6 @@ const AdminDowntimeReviewForm = React.memo(
               </div>
             )}
 
-            {/* Render special activity displays */}
             {renderWandIncreaseReview(
               activity,
               activityAssignment,
@@ -1178,7 +1177,6 @@ const AdminDowntimeReviewForm = React.memo(
               downtimeSheet.dice_pool
             )}
 
-            {/* Standard roll displays for non-special activities */}
             {!activityRequiresWandSelection(activity.activity) &&
               !activityRequiresSpellSelection(activity.activity) &&
               !activityRequiresClassSelection(activity.activity) && (

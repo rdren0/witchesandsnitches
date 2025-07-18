@@ -561,7 +561,6 @@ const AdminDowntimeManager = ({ supabase }) => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
       <div style={tabStyles.tabContainer}>
         <button
           style={{
@@ -589,7 +588,6 @@ const AdminDowntimeManager = ({ supabase }) => {
         </button>
       </div>
 
-      {/* Filters - Removed Review Status filter since it's handled by tabs */}
       <div style={styles.filtersContainer}>
         <div style={styles.filtersGrid}>
           <div style={styles.filterGroup}>
@@ -654,7 +652,6 @@ const AdminDowntimeManager = ({ supabase }) => {
         </button>
       </div>
 
-      {/* Sheets Container */}
       <div style={styles.sheetsContainer}>
         <div style={styles.sheetsHeader}>
           <h2>

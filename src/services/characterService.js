@@ -41,7 +41,6 @@ const getCharacters = async (discordUserId) => {
 
   const transformedData = characters.map((character) => {
     const resources = resourcesMap[character.id] || {};
-
     return {
       ...character,
       inspiration: resources.inspiration ?? false,
@@ -311,47 +310,43 @@ const isUserAdmin = async (discordUserId) => {
 };
 
 const verifyAdminPassword = async (discordUserId, password) => {
-  try {
-    const forbidden = await isUserForbidden(discordUserId);
+  const forbidden = await isUserForbidden(discordUserId);
 
-    if (forbidden) {
-      throw new Error(
-        "The ancient magic recognizes you as forbidden. Access permanently denied."
-      );
-    }
-
-    const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
-
-    if (!ADMIN_PASSWORD) {
-      throw new Error("The magical registry is not properly configured");
-    }
-
-    if (password !== ADMIN_PASSWORD) {
-      throw new Error("The unlocking charm failed");
-    }
-
-    const insertData = {
-      discord_user_id: discordUserId,
-      role: "admin",
-      granted_by: "website",
-      granted_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase
-      .from("user_roles")
-      .insert(insertData)
-      .select();
-
-    if (error && error.code !== "23505") {
-      console.error("❌ Database error (not a duplicate key):", error);
-      console.error("This is the actual error causing the failure!");
-      throw new Error(`Database error: ${error.message}`);
-    }
-
-    return true;
-  } catch (error) {
-    throw error;
+  if (forbidden) {
+    throw new Error(
+      "The ancient magic recognizes you as forbidden. Access permanently denied."
+    );
   }
+
+  const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
+
+  if (!ADMIN_PASSWORD) {
+    throw new Error("The magical registry is not properly configured");
+  }
+
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error("The unlocking charm failed");
+  }
+
+  const insertData = {
+    discord_user_id: discordUserId,
+    role: "admin",
+    granted_by: "website",
+    granted_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("user_roles")
+    .insert(insertData)
+    .select();
+
+  if (error && error.code !== "23505") {
+    console.error("❌ Database error (not a duplicate key):", error);
+    console.error("This is the actual error causing the failure!");
+    throw new Error(`Database error: ${error.message}`);
+  }
+
+  return true;
 };
 
 const getUserRoleStatus = async (discordUserId) => {
@@ -432,6 +427,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
+        school_year: characterData.schoolYear,
         skill_proficiencies: characterData.skill_proficiencies,
         skill_expertise: characterData.skill_expertise,
         standard_feats: characterData.standard_feats,
@@ -479,15 +475,21 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
       .select("background")
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
+      .eq("active", true)
       .single();
 
-    const { data: updatedCharacter, error: updateError } = await supabase
+    if (!currentCharacter) {
+      throw new Error("Character not found");
+    }
+    const { data: updatedCharacter, error } = await supabase
       .from("characters")
       .update({
         ability_scores: characterData.ability_scores,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
+        current_hit_dice: characterData.level,
+        current_hit_points: characterData.hit_points,
         game_session: characterData.game_session,
         heritage_choices: characterData.heritage_choices || {},
         hit_points: characterData.hit_points,
@@ -506,31 +508,32 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         standard_feats: characterData.standard_feats,
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
-        updated_at: new Date().toISOString(),
         wand_type: characterData.wand_type,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
+      .eq("active", true)
       .select()
       .single();
 
-    if (updateError) {
-      throw updateError;
+    if (error) {
+      throw new Error(`Failed to update character: ${error.message}`);
     }
 
-    const backgroundChanged =
-      currentCharacter?.background !== characterData.background;
-
-    if (backgroundChanged && characterData.background) {
+    if (
+      characterData.background &&
+      characterData.background !== currentCharacter.background &&
+      updatedCharacter.id
+    ) {
       try {
         const startingEquipment = getStartingEquipment(
           characterData.background
         );
-
         if (startingEquipment.length > 0) {
           await addStartingEquipment(
             discordUserId,
-            characterId,
+            updatedCharacter.id,
             startingEquipment,
             supabase
           );
@@ -736,28 +739,29 @@ const getRecommendedLevelRange = (schoolYear) => {
   const ranges = {
     1: { min: 1, max: 2 },
     2: { min: 2, max: 4 },
-    3: { min: 3, max: 6 },
-    4: { min: 4, max: 8 },
-    5: { min: 5, max: 10 },
-    6: { min: 6, max: 14 },
-    7: { min: 7, max: 20 },
+    3: { min: 4, max: 6 },
+    4: { min: 6, max: 9 },
+    5: { min: 9, max: 12 },
+    6: { min: 12, max: 14 },
+    7: { min: 14, max: 16 },
   };
   return ranges[schoolYear] || { min: 1, max: 20 };
 };
 
 const getRecommendedSchoolYear = (level) => {
-  if (level <= 2) return 1;
-  if (level <= 4) return 2;
-  if (level <= 6) return 3;
-  if (level <= 8) return 4;
-  if (level <= 10) return 5;
-  if (level <= 14) return 6;
+  if (level >= 1 && level <= 2) return 1;
+  if (level >= 2 && level <= 4) return 2;
+  if (level >= 4 && level <= 6) return 3;
+  if (level >= 6 && level <= 9) return 4;
+  if (level >= 9 && level <= 12) return 5;
+  if (level >= 12 && level <= 14) return 6;
+  if (level >= 14 && level <= 16) return 7;
   return 7;
 };
 
 const isProgressionNormal = (schoolYear, level) => {
-  const recommended = getRecommendedSchoolYear(level);
-  return Math.abs(schoolYear - recommended) <= 1;
+  const range = getRecommendedLevelRange(schoolYear);
+  return level >= range.min && level <= range.max;
 };
 
 export const characterService = {

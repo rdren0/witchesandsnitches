@@ -1279,41 +1279,6 @@ export const standardFeats = [
     },
   },
   {
-    name: "Wandless Magic",
-    preview: "Cast basic spells without a wand.",
-    description: [
-      "Cast these spells wandlessly if known: accio, alohomora, colovaria, illegibilus, incendio glacia, pereo, wingardium leviosa.",
-      "Cannot use higher level spell slots.",
-    ],
-    benefits: {
-      abilityScoreIncrease: null,
-      skillProficiencies: [],
-      expertise: [],
-      savingThrowProficiencies: [],
-      resistances: [],
-      immunities: [],
-      speeds: {},
-      combatBonuses: {},
-      spellcasting: {
-        wandlessCasting: {
-          spells: [
-            "accio",
-            "alohomora",
-            "colovaria",
-            "illegibilus",
-            "incendio glacia",
-            "pereo",
-            "wingardium leviosa",
-          ],
-          restriction: "no_higher_slots",
-        },
-      },
-      specialAbilities: [],
-    },
-  },
-
-  // Heritage-specific feats
-  {
     name: "Mature Harpy",
     preview: "Fully grown harpy wings and powers. Flying speed 50 feet.",
     description: [

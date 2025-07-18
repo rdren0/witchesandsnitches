@@ -234,7 +234,6 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
     </div>
   );
 };
-
 const CharacterCard = ({
   character,
   theme,

@@ -46,9 +46,34 @@ const SchoolYearAdvancementModal = ({
     return "Irregular Advancement";
   };
 
+  const getYearLevelRange = (year) => {
+    const ranges = {
+      1: { min: 1, max: 2 },
+      2: { min: 2, max: 4 },
+      3: { min: 4, max: 6 },
+      4: { min: 6, max: 9 },
+      5: { min: 9, max: 12 },
+      6: { min: 12, max: 14 },
+      7: { min: 14, max: 16 },
+    };
+    return ranges[year] || { min: 1, max: 20 };
+  };
+
   const getRecommendedLevelIncrease = () => {
-    const yearDifference = advancementData.newSchoolYear - currentYear;
-    return Math.max(1, yearDifference);
+    const currentRange = getYearLevelRange(currentYear);
+    const newRange = getYearLevelRange(advancementData.newSchoolYear);
+
+    if (currentLevel <= currentRange.min + 1) {
+      return Math.max(
+        1,
+        Math.floor((newRange.min + newRange.max) / 2) - currentLevel
+      );
+    }
+
+    const minIncrease = Math.max(1, newRange.min - currentLevel);
+    const maxIncrease = Math.max(1, newRange.max - currentLevel);
+
+    return Math.max(1, minIncrease);
   };
 
   const handleAdvance = async () => {

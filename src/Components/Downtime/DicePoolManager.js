@@ -19,26 +19,25 @@ const DicePoolManager = ({
   selectedCharacter,
 }) => {
   const { theme } = useTheme();
-
-  const getDualCheckActivitiesCount = () => {
+  const getDualCheckActivitiesCount = useCallback(() => {
     return formData.activities.filter((activity) =>
       activityRequiresDualChecks(activity.activity)
     ).length;
-  };
+  }, [formData.activities]);
 
-  const getSpellActivitiesCount = () => {
+  const getSpellActivitiesCount = useCallback(() => {
     return formData.activities.filter((activity) =>
       activityRequiresExtraDie(activity.activity)
     ).length;
-  };
+  }, [formData.activities]);
 
-  const getRequiredDiceCount = () => {
+  const getRequiredDiceCount = useCallback(() => {
     const baseDice = 6;
     const dualCheckActivities = getDualCheckActivitiesCount();
     const spellActivities = getSpellActivitiesCount();
 
     return baseDice + dualCheckActivities + spellActivities;
-  };
+  }, [getDualCheckActivitiesCount, getSpellActivitiesCount]);
 
   const dualCheckActivities = useMemo(() => {
     return formData.activities.filter((activity) =>
@@ -98,6 +97,9 @@ const DicePoolManager = ({
     dicePool.length,
     setDicePool,
     setExtraDiceAssignments,
+    getDualCheckActivitiesCount,
+    getRequiredDiceCount,
+    getSpellActivitiesCount,
   ]);
 
   const rollDice = useCallback(() => {

@@ -31,7 +31,6 @@ import {
   getFeatProgressionInfo,
   validateFeatSelections,
 } from "../utils";
-import { gameSessionOptions } from "../../../App/const";
 
 export const FeatRequirementsInfo = () => {
   return (
@@ -326,6 +325,12 @@ const CharacterCreator = ({
         },
       }));
     } else {
+      if (field === "schoolYear") {
+        setCharacter((prev) => ({
+          ...prev,
+          schoolYear: value,
+        }));
+      }
       if (field === "castingStyle") {
         setCharacter((prev) => ({
           ...prev,
@@ -546,9 +551,6 @@ const CharacterCreator = ({
             }
           }
         }
-      } else if (typeof choice === "string") {
-        if (choice === "Practice Makes Perfect") {
-        }
       }
     });
 
@@ -705,7 +707,7 @@ const CharacterCreator = ({
         level1_choice_type: character.level1ChoiceType,
         magic_modifiers: character.magicModifiers,
         name: character.name.trim(),
-        school_year: character.school_year || 1,
+        school_year: character.schoolYear || 1,
         skill_expertise: skill_expertise,
         skill_proficiencies: skill_proficiencies,
         standard_feats: allFeats,
@@ -720,32 +722,25 @@ const CharacterCreator = ({
       );
 
       const transformedCharacter = {
-        id: savedCharacter.id,
         abilityScores: savedCharacter.ability_scores,
-        baseAbilityScores:
-          savedCharacter.base_ability_scores || character.abilityScores,
         asiChoices: savedCharacter.asi_choices || {},
         background: savedCharacter.background,
         backgroundSkills: savedCharacter.background_skills || [],
-        innateHeritageSkills: savedCharacter.innate_heritage_skills || [],
-        heritageChoices: savedCharacter.heritage_choices || {},
+        baseAbilityScores:
+          savedCharacter.base_ability_scores || character.abilityScores,
         castingStyle: savedCharacter.casting_style,
         gameSession: savedCharacter.game_session || "",
+        heritageChoices: savedCharacter.heritage_choices || {},
         hitPoints: savedCharacter.hit_points,
         house: savedCharacter.house,
         houseChoices:
           Object.keys(houseChoices).length > 0
             ? houseChoices
             : character.houseChoices || {},
+        id: savedCharacter.id,
         innateHeritage: savedCharacter.innate_heritage,
+        innateHeritageSkills: savedCharacter.innate_heritage_skills || [],
         level: savedCharacter.level,
-        name: savedCharacter.name,
-        skillExpertise: savedCharacter.skill_expertise || [],
-        skillProficiencies: savedCharacter.skill_proficiencies || [],
-        standardFeats: savedCharacter.standard_feats || [],
-        subclass: savedCharacter.subclass,
-        subclassChoices: savedCharacter.subclass_choices || {},
-        wandType: savedCharacter.wand_type || "",
         magicModifiers: savedCharacter.magic_modifiers || {
           divinations: 0,
           charms: 0,
@@ -753,6 +748,14 @@ const CharacterCreator = ({
           healing: 0,
           jinxesHexesCurses: 0,
         },
+        name: savedCharacter.name,
+        skillExpertise: savedCharacter.skill_expertise || [],
+        skillProficiencies: savedCharacter.skill_proficiencies || [],
+        standardFeats: savedCharacter.standard_feats || [],
+        subclass: savedCharacter.subclass,
+        subclassChoices: savedCharacter.subclass_choices || {},
+        wandType: savedCharacter.wand_type || "",
+        school_year: savedCharacter.schoolYear || 1,
       };
 
       if (onCharacterSaved) {
@@ -780,6 +783,7 @@ const CharacterCreator = ({
   const isSaveEnabled =
     character.name.trim() &&
     character.house &&
+    character.schoolYear &&
     character.castingStyle &&
     character.level1ChoiceType &&
     allStatsAssigned() &&
@@ -841,11 +845,10 @@ const CharacterCreator = ({
         setRolledHp={setRolledHp}
         rollHp={rollHp}
         handleInputChange={handleInputChange}
-        gameSessionOptions={gameSessionOptions}
         calculateHitPoints={calculateHitPoints}
       />
-      <StepIndicator step={2} totalSteps={5} label="House Selection" />
 
+      <StepIndicator step={2} totalSteps={5} label="House Selection" />
       <div style={styles.fieldContainer}>
         <label style={styles.label}>House *</label>
         <EnhancedHouseSelector

@@ -292,7 +292,6 @@ const ActivityItem = memo(
 
       return (
         <div style={styles.distinctCheckContainer}>
-          {/* Recipe Name Input */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Recipe Name</label>
             <input
@@ -305,7 +304,6 @@ const ActivityItem = memo(
             />
           </div>
 
-          {/* Progress Display */}
           <div style={styles.progressContainer}>
             <div style={styles.progressHeader}>
               <span style={styles.progressLabel}>Recipe Progress:</span>
@@ -314,7 +312,6 @@ const ActivityItem = memo(
               </span>
             </div>
 
-            {/* Completed Checks */}
             {progress?.completedChecks?.length > 0 && (
               <div style={styles.completedChecks}>
                 <div style={styles.completedLabel}>✅ Completed Checks:</div>
@@ -329,7 +326,6 @@ const ActivityItem = memo(
             )}
           </div>
 
-          {/* Check Selection (only show if not complete) */}
           {!progress?.isComplete && (
             <div style={styles.checkSelection}>
               <div style={styles.inputGroup}>
@@ -351,7 +347,6 @@ const ActivityItem = memo(
                 </select>
               </div>
 
-              {/* Skill Selection */}
               {activity.selectedCheckType && skillOptions.length > 0 && (
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Select Skill:</label>
@@ -435,7 +430,6 @@ const ActivityItem = memo(
                 </div>
               )}
 
-              {/* Check Description */}
               {activity.selectedCheckType && (
                 <div style={styles.checkDescription}>
                   {
@@ -448,7 +442,6 @@ const ActivityItem = memo(
             </div>
           )}
 
-          {/* Completion Message */}
           {progress?.isComplete && (
             <div style={styles.completionMessage}>
               🎉 Recipe "{activity.recipeName}" has been successfully created!
@@ -503,10 +496,8 @@ const ActivityItem = memo(
             </div>
           </div>
 
-          {/* Render distinct check interface for recipe creation */}
           {renderDistinctCheckInterface()}
 
-          {/* Standard roll section for non-distinct-check activities */}
           {!isDistinctCheckActivity && (
             <div style={styles.rollSection}>
               <h5 style={{ ...styles.label, marginBottom: "12px" }}>
@@ -540,7 +531,6 @@ const ActivityItem = memo(
             </div>
           )}
 
-          {/* Dual check second roll section */}
           {isDualCheck && !isDistinctCheckActivity && (
             <div style={styles.rollSection}>
               <h5 style={{ ...styles.label, marginBottom: "12px" }}>
@@ -573,7 +563,6 @@ const ActivityItem = memo(
             </div>
           )}
 
-          {/* Roll assignment section for distinct check activities */}
           {isDistinctCheckActivity &&
             activity.selectedCheckType &&
             activity.selectedCheckSkill && (

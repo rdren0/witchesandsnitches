@@ -134,7 +134,6 @@ const SpellSelector = ({
     ]
   );
 
-  // Get spell status and determine if it should be disabled
   const getSpellStatus = useCallback(
     (spell) => {
       const attempts = spellAttempts?.[spell.name] || 0;
@@ -147,7 +146,6 @@ const SpellSelector = ({
       let disabledReason = "";
 
       if (isResearch) {
-        // For research: disable if already researched, attempted, or failed
         if (isMastered) {
           isDisabled = true;
           disabledReason = "Mastered";
@@ -162,7 +160,6 @@ const SpellSelector = ({
           disabledReason = "Previously attempted (unsuccessfully)";
         }
       } else if (isAttempt) {
-        // For attempt: disable if mastered, but allow if researched/attempted/failed
         if (isMastered) {
           isDisabled = true;
           disabledReason = "Already mastered";
@@ -171,7 +168,6 @@ const SpellSelector = ({
           !hasSuccessfulAttempts &&
           !hasFailedAttempts
         ) {
-          // This spell hasn't been touched at all, don't show it for attempts
           return { shouldShow: false };
         }
       }
@@ -340,7 +336,7 @@ const SpellSelector = ({
       cursor: "pointer",
       marginTop: "0.5rem",
     },
-    // New styles for disabled spells
+
     spellOptionDisabled: {
       padding: "0.75rem",
       border: `1px solid ${theme.border}`,
@@ -369,7 +365,6 @@ const SpellSelector = ({
   const handleSpellSelection = (spell) => {
     const status = getSpellStatus(spell);
 
-    // Don't allow selection if disabled
     if (status.isDisabled) {
       return;
     }
@@ -538,16 +533,13 @@ const SpellSelector = ({
       }
     });
 
-    // Filter spells based on research/attempt mode and search term
     const eligibleSpells = spells.filter((spell) => {
       const status = getSpellStatus(spell);
 
-      // Don't show spells that shouldn't be shown at all
       if (!status.shouldShow) {
         return false;
       }
 
-      // Apply search filter
       if (searchTerm && searchTerm.trim()) {
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
         const spellName = (spell.name || "").toLowerCase();
@@ -611,13 +603,11 @@ const SpellSelector = ({
               />
             </div>
 
-            {/* Force complete re-render with key based on search term and spell count */}
             <div
               key={`spell-list-${searchTerm}-${availableSpells.length}`}
               style={{ maxHeight: "400px", overflowY: "auto" }}
             >
               {availableSpells.length > 0 ? (
-                // Create a completely new array to force React to rebuild everything
                 [...availableSpells].map((spell, index) => {
                   const status = getSpellStatus(spell);
                   const isDisabled = status.isDisabled;
@@ -626,7 +616,6 @@ const SpellSelector = ({
 
                   return (
                     <div
-                      // Use a completely unique key that includes search term
                       key={`spell-${spell.name}-${spell.subject}-${searchTerm}-${index}`}
                       style={
                         isDisabled
@@ -674,7 +663,6 @@ const SpellSelector = ({
                             }}
                           >
                             {spell.name}
-                            {/* Show golden star for mastered spells */}
                             {status.isMastered && (
                               <Star
                                 size={14}
@@ -683,7 +671,6 @@ const SpellSelector = ({
                                 title="Mastered"
                               />
                             )}
-                            {/* Show checkmarks for attempted spells in research mode */}
                             {isResearch && !status.isMastered && (
                               <>
                                 {status.hasSuccessfulAttempts && (
