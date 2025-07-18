@@ -31,7 +31,6 @@ import {
   getFeatProgressionInfo,
   validateFeatSelections,
 } from "../utils";
-import { gameSessionOptions } from "../../../App/const";
 
 export const FeatRequirementsInfo = () => {
   return (
@@ -849,11 +848,10 @@ const CharacterCreator = ({
         setRolledHp={setRolledHp}
         rollHp={rollHp}
         handleInputChange={handleInputChange}
-        gameSessionOptions={gameSessionOptions}
         calculateHitPoints={calculateHitPoints}
       />
-      <StepIndicator step={2} totalSteps={5} label="House Selection" />
 
+      <StepIndicator step={2} totalSteps={5} label="House Selection" />
       <div style={styles.fieldContainer}>
         <label style={styles.label}>House *</label>
         <EnhancedHouseSelector

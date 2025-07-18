@@ -1,9 +1,9 @@
 import { gameSessionOptions } from "../../../App/const";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { castingStyles } from "../../../SharedData/data";
 import { RefreshCw } from "lucide-react";
 import SchoolYearSelector from "../Shared/SchoolYearSelector";
+import EnhancedCastingStyleSelector from "./EnhancedCastingStyleSelector";
 
 function BasicInfo({
   character,
@@ -24,6 +24,10 @@ function BasicInfo({
 
   const handleLevelChange = (level) => {
     handleInputChange("level", level);
+  };
+
+  const handleCastingStyleChange = (castingStyle) => {
+    handleInputChange("castingStyle", castingStyle);
   };
 
   return (
@@ -68,23 +72,13 @@ function BasicInfo({
         styles={styles}
       />
 
+      {/* Enhanced Casting Style Selector */}
       <div style={styles.fieldContainer}>
-        <label style={styles.label}>Casting Style *</label>
-        <select
-          value={character.castingStyle || ""}
-          onChange={(e) => handleInputChange("castingStyle", e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select Casting Style...</option>
-          {castingStyles.map((style) => (
-            <option key={style} value={style}>
-              {style}
-            </option>
-          ))}
-        </select>
-        <div style={styles.helpText}>
-          Your casting style determines your available skills and hit points.
-        </div>
+        <EnhancedCastingStyleSelector
+          selectedStyle={character.castingStyle || ""}
+          onStyleChange={handleCastingStyleChange}
+          required={true}
+        />
       </div>
 
       {character.castingStyle === "Intellect Caster" && (
@@ -155,74 +149,94 @@ function BasicInfo({
 
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Hit Points</label>
-        <div style={styles.hpContainer}>
-          <div style={styles.hpModeSelector}>
-            <label style={styles.hpModeLabel}>
-              <input
-                type="radio"
-                name="hpMode"
-                checked={!isHpManualMode}
-                onChange={() => setIsHpManualMode(false)}
-                style={styles.hpModeRadio}
-              />
-              Calculated ({calculateHitPoints({ character })})
-            </label>
-            <label style={styles.hpModeLabel}>
-              <input
-                type="radio"
-                name="hpMode"
-                checked={isHpManualMode}
-                onChange={() => setIsHpManualMode(true)}
-                style={styles.hpModeRadio}
-              />
-              Manual Entry
-            </label>
+        {!character.castingStyle ? (
+          <div style={styles.skillsPlaceholder}>
+            Select a Casting Style first
           </div>
-
-          {!isHpManualMode ? (
-            <div style={styles.hpCalculated}>
-              <div style={styles.hpRollContainer}>
-                <button
-                  type="button"
-                  onClick={rollHp}
-                  style={styles.rollButton}
-                  disabled={!character.castingStyle || !character.level}
-                >
-                  <RefreshCw size={16} />
-                  Roll HP
-                </button>
-                {rolledHp !== null && (
-                  <span style={styles.rolledHpValue}>
-                    Rolled: {rolledHp} HP
-                  </span>
+        ) : (
+          <div style={styles.levelHpGrid}>
+            <div style={styles.hpFieldContainer}>
+              <div style={styles.hpValueContainer}>
+                {isHpManualMode ? (
+                  <input
+                    type="number"
+                    min="1"
+                    value={character.hitPoints || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "hitPoints",
+                        parseInt(e.target.value) || 1
+                      )
+                    }
+                    placeholder="--"
+                    style={styles.hpManualInput}
+                  />
+                ) : rolledHp !== null ? (
+                  <div style={styles.hpRollDisplay}>{rolledHp}</div>
+                ) : (
+                  <div style={styles.hpDisplay}>
+                    {calculateHitPoints({ character })}
+                  </div>
                 )}
               </div>
-              <div style={styles.helpText}>
-                HP is calculated based on your casting style, level, and
-                constitution.
-                {rolledHp !== null
-                  ? " Click 'Roll HP' to reroll, or use the calculated value."
-                  : " Click 'Roll HP' for a random roll, or use the calculated average."}
-              </div>
             </div>
-          ) : (
-            <div style={styles.hpManual}>
-              <input
-                type="number"
-                value={character.hitPoints || ""}
-                onChange={(e) =>
-                  handleInputChange("hitPoints", parseInt(e.target.value))
-                }
-                placeholder="Enter hit points..."
-                style={styles.input}
-                min="1"
-                max="500"
-              />
-              <div style={styles.helpText}>
-                Manually enter your character's hit points.
+
+            {character.castingStyle && (
+              <div style={styles.hpControlsContainer}>
+                <div style={styles.hpControlsInline}>
+                  {!isHpManualMode && (
+                    <button
+                      onClick={rollHp}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: "#EF4444",
+                        fontSize: "12px",
+                      }}
+                      disabled={!character.castingStyle || !character.level}
+                    >
+                      <RefreshCw size={14} />
+                      Roll
+                    </button>
+                  )}
+
+                  <div
+                    onClick={() => {
+                      setIsHpManualMode(!isHpManualMode);
+                      setRolledHp(null);
+                    }}
+                    style={{
+                      ...styles.hpToggle,
+                      backgroundColor: isHpManualMode
+                        ? theme.success
+                        : theme.border,
+                      borderColor: isHpManualMode
+                        ? theme.success
+                        : theme.textSecondary,
+                    }}
+                    title={
+                      isHpManualMode
+                        ? "Switch to Auto/Roll mode"
+                        : "Switch to Manual mode"
+                    }
+                  >
+                    <div
+                      style={{
+                        ...styles.hpToggleKnob,
+                        left: isHpManualMode ? "22px" : "2px",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
+        <div style={styles.helpText}>
+          {isHpManualMode
+            ? "Manually enter your character's hit points."
+            : rolledHp !== null
+            ? "Click 'Roll' to reroll, or use the calculated value."
+            : "Click 'Roll' for a random roll, or use the calculated average."}
         </div>
       </div>
     </>

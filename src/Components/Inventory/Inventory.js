@@ -395,22 +395,9 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
           {items.length > 0 && !isLoading && (
             <div style={styles.statsCard}>
-              <div style={styles.statsRow}>
-                <span>
-                  Total Items: <strong>{stats.totalItems}</strong>
-                </span>
-                <span>
-                  Total Quantity: <strong>{stats.totalQuantity}</strong>
-                </span>
-              </div>
-              <div style={{ ...styles.statsRow, ...styles.statsRowLast }}>
-                <span>
-                  Categories: <strong>{stats.categories}</strong>
-                </span>
-                <span>
-                  Attunement Required: <strong>{stats.attunementItems}</strong>
-                </span>
-              </div>
+              <span>
+                Attunement Required: <strong>{stats.attunementItems}</strong>
+              </span>
             </div>
           )}
 

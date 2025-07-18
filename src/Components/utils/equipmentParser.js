@@ -36,27 +36,27 @@ export const parseEquipmentString = (equipmentString) => {
       lowerText.includes("sword") ||
       lowerText.includes("bat")
     ) {
-      category = "Weapon";
+      category = "Weapons";
     } else if (lowerText.includes("armor") || lowerText.includes("robe")) {
       category = "Armor";
     } else if (lowerText.includes("potion") || lowerText.includes("kit")) {
-      category = "Tool";
+      category = "Tools";
     } else if (
       lowerText.includes("instrument") ||
       lowerText.includes("musical")
     ) {
-      category = "Instrument";
+      category = "General";
     } else if (
       lowerText.includes("book") ||
       lowerText.includes("scroll") ||
       lowerText.includes("letter")
     ) {
-      category = "Literature";
+      category = "Books";
     } else if (
       lowerText.includes("component") ||
       lowerText.includes("magical")
     ) {
-      category = "Magical";
+      category = "Magical Items";
     }
 
     items.push({
