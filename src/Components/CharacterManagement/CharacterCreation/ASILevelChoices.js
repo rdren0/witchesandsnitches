@@ -364,13 +364,24 @@ const ASIFeatAdapter = ({
   setExpandedFeats,
   featFilter,
   setFeatFilter,
-
   styles,
 }) => {
   const mockCharacter = {
     ...character,
+
     standardFeats: choice.selectedFeat ? [choice.selectedFeat] : [],
+
+    asiChoices: (() => {
+      const otherChoices = { ...character.asiChoices };
+      delete otherChoices[level];
+      return otherChoices;
+    })(),
+
     featChoices: choice.featChoices || {},
+
+    _editingASILevel: level,
+
+    _originalStandardFeats: character.standardFeats || [],
   };
 
   const handleMockCharacterUpdate = (updater) => {
@@ -418,7 +429,7 @@ const ASIFeatAdapter = ({
         isLevel1Choice={false}
         characterLevel={character.level}
         headerText={`Level ${level} Feat Selection`}
-        helperText={`Select a feat for your Level ${level} ASI/Feat choice. This feat will be automatically applied to your character.`}
+        helperText={`Select a feat for your Level ${level} ASI/Feat choice. Previously selected feats are not available.`}
       />
     </div>
   );

@@ -15,7 +15,6 @@ const getSpellcastingAbility = (character) => {
   return abilityMap[castingStyle] || "intelligence";
 };
 
-// Comprehensive feat benefits calculation
 const calculateAllFeatBenefits = (
   selectedFeats,
   character,
@@ -48,7 +47,6 @@ const calculateAllFeatBenefits = (
 
     const featBenefits = feat.benefits;
 
-    // Handle ability score increases
     if (featBenefits.abilityScoreIncrease) {
       const increase = featBenefits.abilityScoreIncrease;
       let abilityToIncrease;
@@ -78,11 +76,9 @@ const calculateAllFeatBenefits = (
       }
     }
 
-    // Handle skill proficiencies
     if (featBenefits.skillProficiencies?.length > 0) {
       featBenefits.skillProficiencies.forEach((skillProf) => {
         if (skillProf.type === "choice") {
-          // Handle skill choice - this will need UI handling
           benefits.skillProficiencies.push({
             source: featName,
             type: "choice",
@@ -90,7 +86,6 @@ const calculateAllFeatBenefits = (
             options: skillProf.skills || "any",
           });
         } else if (skillProf.skills) {
-          // Fixed skills
           skillProf.skills.forEach((skill) => {
             benefits.skillProficiencies.push({
               source: featName,
@@ -101,7 +96,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle expertise
     if (featBenefits.expertise?.length > 0) {
       featBenefits.expertise.forEach((exp) => {
         benefits.expertise.push({
@@ -112,7 +106,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle saving throw proficiencies
     if (featBenefits.savingThrowProficiencies?.length > 0) {
       featBenefits.savingThrowProficiencies.forEach((save) => {
         benefits.savingThrowProficiencies.push({
@@ -123,7 +116,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle resistances
     if (featBenefits.resistances?.length > 0) {
       featBenefits.resistances.forEach((resistance) => {
         benefits.resistances.push({
@@ -133,7 +125,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle immunities
     if (featBenefits.immunities?.length > 0) {
       featBenefits.immunities.forEach((immunity) => {
         benefits.immunities.push({
@@ -143,7 +134,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle speeds
     if (Object.keys(featBenefits.speeds || {}).length > 0) {
       Object.entries(featBenefits.speeds).forEach(([speedType, value]) => {
         if (!benefits.speeds[speedType]) benefits.speeds[speedType] = [];
@@ -154,7 +144,6 @@ const calculateAllFeatBenefits = (
       });
     }
 
-    // Handle combat bonuses
     if (Object.keys(featBenefits.combatBonuses || {}).length > 0) {
       Object.entries(featBenefits.combatBonuses).forEach(
         ([bonusType, value]) => {
@@ -168,7 +157,6 @@ const calculateAllFeatBenefits = (
       );
     }
 
-    // Handle spellcasting benefits
     if (Object.keys(featBenefits.spellcasting || {}).length > 0) {
       Object.entries(featBenefits.spellcasting).forEach(
         ([benefitType, value]) => {
@@ -182,7 +170,6 @@ const calculateAllFeatBenefits = (
       );
     }
 
-    // Handle special abilities
     if (featBenefits.specialAbilities?.length > 0) {
       featBenefits.specialAbilities.forEach((ability) => {
         benefits.specialAbilities.push({
@@ -196,7 +183,6 @@ const calculateAllFeatBenefits = (
   return benefits;
 };
 
-// Enhanced modifier pills component
 const ComprehensiveFeatBenefitPills = ({
   selectedFeats,
   character,
@@ -247,7 +233,7 @@ const ComprehensiveFeatBenefitPills = ({
           })}
 
         {benefits.skillProficiencies
-          .filter((sp) => sp.skill) // Only show fixed skills, not choices
+          .filter((sp) => sp.skill)
           .map((skillProf, index) => (
             <div
               key={`skill-${index}`}
@@ -336,23 +322,18 @@ const ComprehensiveFeatBenefitPills = ({
           ))
         )}
 
-        {benefits.specialAbilities.slice(0, 3).map(
-          (
-            ability,
-            index // Limit to prevent overflow
-          ) => (
-            <div
-              key={`ability-${index}`}
-              style={styles.abilityPill}
-              title={`${ability.name} from ${ability.source}`}
-            >
-              <span style={styles.pillAbility}>SPEC</span>
-              <span style={styles.pillModifier}>
-                {ability.name.slice(0, 4).toUpperCase()}
-              </span>
-            </div>
-          )
-        )}
+        {benefits.specialAbilities.slice(0, 3).map((ability, index) => (
+          <div
+            key={`ability-${index}`}
+            style={styles.abilityPill}
+            title={`${ability.name} from ${ability.source}`}
+          >
+            <span style={styles.pillAbility}>SPEC</span>
+            <span style={styles.pillModifier}>
+              {ability.name.slice(0, 4).toUpperCase()}
+            </span>
+          </div>
+        ))}
 
         {benefits.specialAbilities.length > 3 && (
           <div
@@ -448,10 +429,9 @@ const FeatChoicesSection = ({
       {feat.benefits.skillProficiencies
         ?.filter((sp) => sp.type === "choice")
         .map((skillChoice, index) => {
-          // Fixed: Get the available skills properly
           const availableSkills =
             skillChoice?.skills === "any"
-              ? allSkills?.map((s) => s.displayName) || [] // Use displayName for consistency
+              ? allSkills?.map((s) => s.displayName) || []
               : skillChoice?.skills || [];
 
           return (
@@ -490,16 +470,18 @@ const FeatChoicesSection = ({
   );
 };
 
-// Helper function to get all selected feats from all sources
 const getAllSelectedFeats = (character) => {
   const selectedFeats = new Set();
 
-  // Add standard feats
-  if (character.standardFeats) {
-    character.standardFeats.forEach((feat) => selectedFeats.add(feat));
+  const standardFeatsToCheck =
+    character._editingASILevel && character._originalStandardFeats
+      ? character._originalStandardFeats
+      : character.standardFeats || [];
+
+  if (character.level1ChoiceType === "feat") {
+    standardFeatsToCheck.forEach((feat) => selectedFeats.add(feat));
   }
 
-  // Add ASI level feats
   if (character.asiChoices) {
     Object.values(character.asiChoices).forEach((choice) => {
       if (choice.type === "feat" && choice.selectedFeat) {
@@ -810,7 +792,6 @@ export const EnhancedFeatureSelector = ({
           setFeatChoices((prev) => {
             const newChoices = { ...prev };
 
-            // Set default choices for ability scores
             if (
               feat.benefits.abilityScoreIncrease?.type === "choice" ||
               feat.benefits.abilityScoreIncrease?.type === "choice_any"
@@ -856,30 +837,24 @@ export const EnhancedFeatureSelector = ({
     });
   };
 
-  // FIXED: Enhanced filtering logic that considers all selected feats
   const filteredFeats = useMemo(() => {
-    // Get all currently selected feats from all sources
     const allSelectedFeats = getAllSelectedFeats(character);
     const currentStandardFeats = character.standardFeats || [];
 
-    // If we've reached the maximum for this specific context, show only currently selected standard feats for editing
     if (currentStandardFeats.length >= maxFeats) {
       return standardFeats.filter((feat) =>
         currentStandardFeats.includes(feat.name)
       );
     }
 
-    // Start with all feats, then filter out already selected ones (from any source)
     let availableFeats = standardFeats.filter(
       (feat) => !allSelectedFeats.includes(feat.name)
     );
 
-    // If no search filter, return available feats
     if (!featFilter.trim()) {
       return availableFeats;
     }
 
-    // Apply search filtering to available feats
     const searchTerm = featFilter.toLowerCase();
     const matchingSkills = allSkills.filter(
       (skill) =>
