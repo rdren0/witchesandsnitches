@@ -1,5 +1,6 @@
 export const recipes = {
   "Blazing Braised Fire-Breathing Chicken": {
+    id: 1,
     name: "Blazing Braised Fire-Breathing Chicken",
     eatingTime: "1 bonus action",
     duration: "1 minute",
@@ -17,6 +18,7 @@ export const recipes = {
     },
   },
   "Bull's Eye Soup": {
+    id: 2,
     name: "Bull's Eye Soup",
     eatingTime: "1 bonus action",
     duration: "1 round",
@@ -34,6 +36,7 @@ export const recipes = {
     },
   },
   "Broiled Scorpion-on-a-Stick": {
+    id: 3,
     name: "Broiled Scorpion-on-a-Stick",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -51,6 +54,7 @@ export const recipes = {
     },
   },
   "Chocolate Frog": {
+    id: 4,
     name: "Chocolate Frog",
     eatingTime: "1 bonus action",
     duration: "Instantaneous",
@@ -68,6 +72,7 @@ export const recipes = {
     },
   },
   "Creamy Milk Risotto": {
+    id: 5,
     name: "Creamy Milk Risotto",
     eatingTime: "1 bonus action",
     duration: "1 minute",
@@ -82,6 +87,7 @@ export const recipes = {
     },
   },
   "Croque Madame": {
+    id: 6,
     name: "Croque Madame",
     eatingTime: "1 bonus action",
     duration: "8 hours",
@@ -96,6 +102,7 @@ export const recipes = {
     },
   },
   "Devilled Sausage": {
+    id: 7,
     name: "Devilled Sausage",
     eatingTime: "1 bonus action",
     duration: "Instantaneous",
@@ -113,6 +120,7 @@ export const recipes = {
     },
   },
   "Deluxe Pepper Imp": {
+    id: 8,
     name: "Deluxe Pepper Imp",
     eatingTime: "1 bonus action",
     duration: "1 minute",
@@ -130,6 +138,7 @@ export const recipes = {
     },
   },
   "Diricawl Jerky": {
+    id: 9,
     name: "Diricawl Jerky",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -144,6 +153,7 @@ export const recipes = {
     },
   },
   "Edible Dark Marks": {
+    id: 10,
     name: "Edible Dark Marks",
     eatingTime: "1 bonus action",
     duration: "1 round",
@@ -160,6 +170,7 @@ export const recipes = {
     },
   },
   "Greenhouse Slider": {
+    id: 11,
     name: "Greenhouse Slider",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -177,6 +188,7 @@ export const recipes = {
     },
   },
   "King Sized Acid Pop": {
+    id: 12,
     name: "King Sized Acid Pop",
     eatingTime: "1 bonus action",
     duration: "1 round",
@@ -193,6 +205,7 @@ export const recipes = {
     },
   },
   "Lasagne to Induce Euphoria": {
+    id: 13,
     name: "Lasagne to Induce Euphoria",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -210,6 +223,7 @@ export const recipes = {
     },
   },
   "Longbottom Stew": {
+    id: 14,
     name: "Longbottom Stew",
     eatingTime: "1 bonus action",
     duration: "1 minute",
@@ -227,6 +241,7 @@ export const recipes = {
     },
   },
   "Pensieve Pastry": {
+    id: 15,
     name: "Pensieve Pastry",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -244,6 +259,7 @@ export const recipes = {
     },
   },
   "Salazar Slytherfin": {
+    id: 16,
     name: "Salazar Slytherfin",
     eatingTime: "1 bonus action",
     duration: "1 minute",
@@ -258,6 +274,7 @@ export const recipes = {
     },
   },
   "Seasoned Sea Crab": {
+    id: 17,
     name: "Seasoned Sea Crab",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -275,6 +292,7 @@ export const recipes = {
     },
   },
   "Skewered Flobberworm": {
+    id: 18,
     name: "Skewered Flobberworm",
     eatingTime: "1 bonus action",
     duration: "1 minute",
@@ -292,6 +310,7 @@ export const recipes = {
     },
   },
   Snapeschnitzel: {
+    id: 19,
     name: "Snapeschnitzel",
     eatingTime: "1 bonus action",
     duration: "Instantaneous",
@@ -309,6 +328,7 @@ export const recipes = {
     },
   },
   "Thick 'n' Juicy Steak": {
+    id: 20,
     name: "Thick 'n' Juicy Steak",
     eatingTime: "1 bonus action",
     duration: "1 hour",
@@ -326,6 +346,7 @@ export const recipes = {
     },
   },
   "Twinkie?": {
+    id: 21,
     name: "Twinkie?",
     eatingTime: "1 bonus action",
     duration: "Instantaneous",
@@ -343,6 +364,7 @@ export const recipes = {
     },
   },
   "Unspeakable Curry": {
+    id: 22,
     name: "Unspeakable Curry",
     eatingTime: "1 bonus action",
     duration: "8 hours",
@@ -393,4 +415,26 @@ export const recipeCategories = {
   ],
   healing: ["Snapeschnitzel", "Twinkie?"],
   spellcasting: ["Devilled Sausage"],
+};
+
+export const getRecipeById = (id) => {
+  return Object.values(recipes).find((recipe) => recipe.id === id);
+};
+
+export const getRecipeIdByName = (name) => {
+  return recipes[name]?.id;
+};
+
+export const getOfficialRecipeForDB = (recipeId) => {
+  const recipe = getRecipeById(recipeId);
+  if (!recipe) return null;
+
+  return {
+    official_recipe_id: recipe.id,
+    custom_recipe_id: null,
+  };
+};
+
+export const isValidOfficialRecipeId = (id) => {
+  return id >= 1 && id <= 22 && getRecipeById(id) !== undefined;
 };
