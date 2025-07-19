@@ -1,5 +1,5 @@
 import { RefreshCw, Trash } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { createAbilityScorePickerStyles } from "../../../styles/masterStyles";
 import { calculateTotalModifiers } from "../utils";
@@ -26,6 +26,25 @@ export const AbilityScorePicker = ({
 }) => {
   const { theme } = useTheme();
   const styles = createAbilityScorePickerStyles(theme);
+
+  // State to persist manual scores and rolled assignments separately
+  const [manualScores, setManualScores] = useState({
+    strength: 8,
+    dexterity: 8,
+    constitution: 8,
+    intelligence: 8,
+    wisdom: 8,
+    charisma: 8,
+  });
+
+  const [rolledAssignments, setRolledAssignments] = useState({
+    strength: null,
+    dexterity: null,
+    constitution: null,
+    intelligence: null,
+    wisdom: null,
+    charisma: null,
+  });
 
   useEffect(() => {}, [heritageChoices, character.innateHeritage]);
 
@@ -93,40 +112,116 @@ export const AbilityScorePicker = ({
     setIsManualMode(newManualMode);
 
     if (newManualMode) {
-      setRolledStats([]);
-      setAvailableStats([]);
+      // Store current rolled assignments before switching
+      setRolledAssignments({ ...character.abilityScores });
+
+      // Restore manual scores
       setCharacter((prev) => ({
         ...prev,
-        abilityScores: {
-          strength: null,
-          dexterity: null,
-          constitution: null,
-          intelligence: null,
-          wisdom: null,
-          charisma: null,
-        },
+        abilityScores: { ...manualScores },
       }));
-      setTempInputValues({});
     } else {
-      rollAllStats();
+      // Store current manual scores before switching
+      setManualScores({ ...character.abilityScores });
+
+      // Restore rolled assignments
+      setCharacter((prev) => ({
+        ...prev,
+        abilityScores: { ...rolledAssignments },
+      }));
+
+      // If we have no rolled stats, generate new ones
+      if (rolledStats.length === 0) {
+        rollAllStats();
+      } else {
+        // Recalculate available stats based on current assignments
+        const assignedStats = Object.values(rolledAssignments).filter(
+          (score) => score !== null
+        );
+        const unassignedStats = rolledStats.filter(
+          (stat) => !assignedStats.includes(stat)
+        );
+        setAvailableStats(unassignedStats);
+      }
     }
   };
 
-  const handleManualScoreChange = (ability, value) => {
-    setTempInputValues((prev) => ({
+  const handleManualScoreIncrement = (ability) => {
+    const currentScore = character.abilityScores[ability] || 8;
+    const newScore = Math.min(currentScore + 1, 40);
+
+    // Update both character state and manual scores
+    setCharacter((prev) => ({
       ...prev,
-      [ability]: value,
+      abilityScores: {
+        ...prev.abilityScores,
+        [ability]: newScore,
+      },
     }));
 
-    if (value === "" || value === null || value === undefined) {
+    setManualScores((prev) => ({
+      ...prev,
+      [ability]: newScore,
+    }));
+  };
+
+  const handleManualScoreDecrement = (ability) => {
+    const currentScore = character.abilityScores[ability] || 8;
+    const newScore = Math.max(currentScore - 1, 1);
+
+    // Update both character state and manual scores
+    setCharacter((prev) => ({
+      ...prev,
+      abilityScores: {
+        ...prev.abilityScores,
+        [ability]: newScore,
+      },
+    }));
+
+    setManualScores((prev) => ({
+      ...prev,
+      [ability]: newScore,
+    }));
+  };
+
+  // Enhanced clear stat function to update appropriate storage
+  const enhancedClearStat = (ability) => {
+    if (isManualMode) {
+      // Reset to default value for manual mode
+      const defaultScore = 8;
       setCharacter((prev) => ({
         ...prev,
         abilityScores: {
           ...prev.abilityScores,
-          [ability]: null,
+          [ability]: defaultScore,
         },
       }));
+
+      setManualScores((prev) => ({
+        ...prev,
+        [ability]: defaultScore,
+      }));
+    } else {
+      // Use the original clearStat function for rolled mode
+      clearStat(ability);
+
+      // Also update our rolled assignments tracking
+      setRolledAssignments((prev) => ({
+        ...prev,
+        [ability]: null,
+      }));
     }
+  };
+
+  // Enhanced assign stat function to update rolled assignments tracking
+  const enhancedAssignStat = (ability, value) => {
+    assignStat(ability, value);
+
+    // Update our rolled assignments tracking
+    setRolledAssignments((prev) => ({
+      ...prev,
+      [ability]: value,
+    }));
   };
 
   const getAbilityModifier = (score) => {
@@ -149,7 +244,6 @@ export const AbilityScorePicker = ({
     const details = allDetails[ability] || [];
     if (details.length === 0) return null;
 
-    // Group sources by type for cleaner display
     const sourceGroups = {
       feat: [],
       background: [],
@@ -207,13 +301,22 @@ export const AbilityScorePicker = ({
     if (tempValue && tempValue !== "") {
       const numericValue = parseInt(tempValue, 10);
       if (!isNaN(numericValue) && numericValue >= 1 && numericValue <= 30) {
+        const newScore = numericValue;
         setCharacter((prev) => ({
           ...prev,
           abilityScores: {
             ...prev.abilityScores,
-            [ability]: numericValue,
+            [ability]: newScore,
           },
         }));
+
+        // Also update manual scores if in manual mode
+        if (isManualMode) {
+          setManualScores((prev) => ({
+            ...prev,
+            [ability]: newScore,
+          }));
+        }
       } else {
         setCharacter((prev) => ({
           ...prev,
@@ -399,7 +502,7 @@ export const AbilityScorePicker = ({
 
       <div style={enhancedStyles.helpText}>
         {isManualMode
-          ? "Manual input mode - enter base ability scores directly (1-30)"
+          ? "Manual input mode - use + and - buttons to set base ability scores (1-40)"
           : "Roll mode - assign generated stats to abilities"}
         <span
           style={{
@@ -422,6 +525,16 @@ export const AbilityScorePicker = ({
               📈 All bonuses included in final scores
             </span>
           )}
+        <span
+          style={{
+            marginLeft: "8px",
+            fontSize: "11px",
+            color: "#059669",
+            fontWeight: "500",
+          }}
+        >
+          💾 Settings persist when switching modes
+        </span>
       </div>
 
       {!isManualMode && (
@@ -463,14 +576,17 @@ export const AbilityScorePicker = ({
           const backgroundBonus = backgroundModifiers[ability] || 0;
           const houseBonus = houseModifiers[ability] || 0;
           const heritageBonus = heritageModifiers[ability] || 0;
-          const effectiveScore = score !== null ? score + totalBonus : null;
+          const actualScore = isManualMode ? score || 8 : score;
+          const effectiveScore =
+            actualScore !== null ? actualScore + totalBonus : null;
           const hasModifier = totalBonus > 0;
           const hasFeatModifier = featBonus > 0;
           const hasBackgroundModifier = backgroundBonus > 0;
           const hasHouseModifier = houseBonus > 0;
           const hasHeritageModifier = heritageBonus > 0;
-          const baseModifier = getAbilityModifier(score);
-          const effectiveModifier = getEffectiveModifier(ability);
+          const baseModifier = getAbilityModifier(actualScore);
+          const effectiveModifier =
+            effectiveScore !== null ? getAbilityModifier(effectiveScore) : 0;
           const tooltipText = getTooltipText(ability);
 
           let cardStyle = enhancedStyles.abilityCard;
@@ -499,13 +615,13 @@ export const AbilityScorePicker = ({
               style={{
                 ...cardStyle,
                 backgroundColor:
-                  score !== null
+                  actualScore !== null
                     ? hasModifier
                       ? cardStyle.backgroundColor
                       : `${theme.success || "#10B981"}20`
                     : theme.surface,
                 borderColor:
-                  score !== null
+                  actualScore !== null
                     ? hasModifier
                       ? cardStyle.borderColor
                       : theme.success || "#10B981"
@@ -562,43 +678,95 @@ export const AbilityScorePicker = ({
               <div style={enhancedStyles.abilityScoreContainer}>
                 {isManualMode ? (
                   <>
-                    <input
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={
-                        tempInputValues[ability] !== undefined
-                          ? tempInputValues[ability]
-                          : score || ""
-                      }
-                      onChange={(e) =>
-                        handleManualScoreChange(ability, e.target.value)
-                      }
-                      onKeyDown={(e) => handleManualScoreKeyDown(e, ability)}
+                    <div
                       style={{
-                        ...enhancedStyles.input,
-                        textAlign: "center",
-                        fontSize: score !== null ? "18px" : "16px",
-                        fontWeight: score !== null ? "bold" : "normal",
-                        width: "100px",
-                        padding: "8px 4px",
-                        backgroundColor: theme.surface,
-                        border: `2px solid ${theme.border}`,
-                        borderRadius: "4px",
-                        color: theme.text,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        justifyContent: "center",
+                        flexDirection: "column",
                       }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = theme.primary;
-                      }}
-                      onBlur={(e) => {
-                        handleManualScoreBlur(ability);
-                        e.target.style.borderColor = theme.border;
-                      }}
-                      placeholder="Enter..."
-                    />
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <button
+                          onClick={() => handleManualScoreDecrement(ability)}
+                          disabled={actualScore <= 1}
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            backgroundColor:
+                              actualScore <= 1 ? theme.border : "#EF4444",
+                            color:
+                              actualScore <= 1 ? theme.textSecondary : "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor:
+                              actualScore <= 1 ? "not-allowed" : "pointer",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.2s ease",
+                          }}
+                          title="Decrease ability score"
+                        >
+                          -
+                        </button>
+
+                        <div
+                          style={{
+                            fontSize: "20px",
+                            fontWeight: "bold",
+                            minWidth: "40px",
+                            textAlign: "center",
+                            padding: "8px 12px",
+                            backgroundColor: theme.surface,
+                            border: `2px solid ${theme.border}`,
+                            borderRadius: "6px",
+                            color: theme.text,
+                          }}
+                        >
+                          {actualScore}
+                        </div>
+
+                        <button
+                          onClick={() => handleManualScoreIncrement(ability)}
+                          disabled={actualScore >= 40}
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            backgroundColor:
+                              actualScore >= 40 ? theme.border : "#10B981",
+                            color:
+                              actualScore >= 40 ? theme.textSecondary : "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor:
+                              actualScore >= 40 ? "not-allowed" : "pointer",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.2s ease",
+                          }}
+                          title="Increase ability score"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
                     {score !== null && hasModifier && (
                       <div style={enhancedStyles.scoreBreakdown}>
-                        Base: {score}
+                        Base: {actualScore}
                         {featBonus > 0 && ` + Feat: ${featBonus}`}
                         {backgroundBonus > 0 && ` + Bg: ${backgroundBonus}`}
                         {houseBonus > 0 && ` + House: ${houseBonus}`}
@@ -606,19 +774,24 @@ export const AbilityScorePicker = ({
                         {` = ${effectiveScore}`}
                       </div>
                     )}
-                    {score !== null && (
-                      <button
-                        onClick={() => clearStat(ability)}
-                        style={enhancedStyles.trashButton}
-                        title="Clear this ability score"
-                      >
-                        <Trash size={16} />
-                      </button>
-                    )}
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      {score !== null && (
+                        <button
+                          onClick={() => enhancedClearStat(ability)}
+                          style={{
+                            ...enhancedStyles.trashButton,
+                            marginTop: "8px",
+                          }}
+                          title="Reset ability score"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <>
-                    {score !== null ? (
+                    {actualScore !== null ? (
                       <>
                         <div style={enhancedStyles.abilityScore}>
                           {hasModifier ? (
@@ -629,7 +802,7 @@ export const AbilityScorePicker = ({
                                   color: theme.textSecondary,
                                 }}
                               >
-                                {score}
+                                {actualScore}
                                 {featBonus > 0 && ` + ${featBonus}`}
                                 {backgroundBonus > 0 && ` + ${backgroundBonus}`}
                                 {houseBonus > 0 && ` + ${houseBonus}`}
@@ -640,11 +813,11 @@ export const AbilityScorePicker = ({
                               </div>
                             </div>
                           ) : (
-                            score
+                            actualScore
                           )}
                         </div>
                         <button
-                          onClick={() => clearStat(ability)}
+                          onClick={() => enhancedClearStat(ability)}
                           style={enhancedStyles.trashButton}
                           title="Clear this ability score"
                         >
@@ -655,7 +828,7 @@ export const AbilityScorePicker = ({
                       <select
                         value=""
                         onChange={(e) =>
-                          assignStat(ability, parseInt(e.target.value))
+                          enhancedAssignStat(ability, parseInt(e.target.value))
                         }
                         style={{
                           ...enhancedStyles.assignSelect,
@@ -770,8 +943,7 @@ export const AbilityScorePicker = ({
             textAlign: "center",
           }}
         >
-          💡 Tip: Press Enter to confirm a value, Escape to cancel. Valid range:
-          1-30
+          💡 Tip: Use + and - buttons to adjust ability scores (1-40)
           {showModifiers &&
             " • House, feat, background, and heritage bonuses are automatically added to your base scores"}
         </div>
