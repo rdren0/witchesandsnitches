@@ -525,16 +525,6 @@ export const AbilityScorePicker = ({
               📈 All bonuses included in final scores
             </span>
           )}
-        <span
-          style={{
-            marginLeft: "8px",
-            fontSize: "11px",
-            color: "#059669",
-            fontWeight: "500",
-          }}
-        >
-          💾 Settings persist when switching modes
-        </span>
       </div>
 
       {!isManualMode && (
@@ -685,6 +675,7 @@ export const AbilityScorePicker = ({
                         gap: "8px",
                         justifyContent: "center",
                         flexDirection: "column",
+                        minHeight: "70px",
                       }}
                     >
                       <div
@@ -731,6 +722,7 @@ export const AbilityScorePicker = ({
                             border: `2px solid ${theme.border}`,
                             borderRadius: "6px",
                             color: theme.text,
+                            cursor: "default",
                           }}
                         >
                           {actualScore}
