@@ -585,6 +585,49 @@ export const standardFeats = [
     },
   },
   {
+    name: "Keen Mind",
+    preview:
+      "Enhanced mental acuity. +1 Int, perfect direction sense, time awareness, and month-long memory.",
+    description: [
+      "Increase Intelligence by 1 (maximum 20).",
+      "Always know which way is north.",
+      "Always know hours until next sunrise or sunset.",
+      "Perfectly recall anything seen or heard in past month.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        abilities: ["intelligence"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Direction Sense",
+          type: "passive",
+          effect: "always_know_north",
+        },
+        {
+          name: "Time Awareness",
+          type: "passive",
+          effect: "always_know_sunrise_sunset_timing",
+        },
+        {
+          name: "Perfect Recall",
+          type: "passive",
+          effect: "recall_anything_past_month",
+        },
+      ],
+    },
+    prerequisites: {},
+  },
+  {
     name: "Lucky",
     preview: "Luck points for advantage/disadvantage manipulation.",
     description: [

@@ -1,9 +1,9 @@
 {
   "short_name": "W&S",
-  "name": "Wtiches and Snitches",
+  "name": "Witches and Snitches",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "W&W.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
