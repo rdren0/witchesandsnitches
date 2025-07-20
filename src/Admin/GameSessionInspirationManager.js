@@ -92,7 +92,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     },
     sessionHeader: {
       padding: "20px",
-      backgroundColor: theme.text,
+      backgroundColor: theme.background,
       color: theme.secondary,
       display: "flex",
       justifyContent: "space-between",

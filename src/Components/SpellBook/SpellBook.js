@@ -24,6 +24,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [attemptFilter, setAttemptFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
 
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -37,6 +38,24 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   ];
 
   const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
+
+  const getAvailableClasses = useCallback(() => {
+    const availableSpells = getAvailableSpellsData();
+    const classes = new Set();
+
+    Object.entries(availableSpells).forEach(([, subject]) => {
+      Object.entries(subject.levels).forEach(([, spells]) => {
+        spells.forEach((spell) => {
+          if (spell.class) {
+            classes.add(spell.class);
+          }
+        });
+      });
+    });
+
+    const classArray = Array.from(classes).sort();
+    return classArray;
+  }, [getAvailableSpellsData]);
 
   const getAvailableYears = useCallback(() => {
     const availableSpells = getAvailableSpellsData();
@@ -56,6 +75,14 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     return yearArray;
   }, [getAvailableSpellsData]);
 
+  const classFilterOptions = [
+    { value: "all", label: "All Classes" },
+    ...getAvailableClasses().map((className) => ({
+      value: className,
+      label: className,
+    })),
+  ];
+
   const yearFilterOptions = [
     { value: "all", label: "All Years" },
     ...getAvailableYears().map((year) => ({
@@ -74,6 +101,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     setArithmancticTags({});
     setRunicTags({});
     setYearFilter("all");
+    setClassFilter("all");
   }, [selectedCharacter?.id]);
 
   const getSpellAttemptStatus = useCallback(
@@ -132,6 +160,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
               spell.name.toLowerCase().includes(lowerSearchTerm) ||
               spell.description?.toLowerCase().includes(lowerSearchTerm) ||
               spell.level?.toLowerCase().includes(lowerSearchTerm) ||
+              spell.class?.toLowerCase().includes(lowerSearchTerm) ||
               level.toLowerCase().includes(lowerSearchTerm) ||
               subjectName.toLowerCase().includes(lowerSearchTerm) ||
               spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
@@ -160,6 +189,35 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
       });
     } else {
       filteredData = { ...availableSpells };
+    }
+
+    if (classFilter !== "all") {
+      const classFilteredData = {};
+
+      Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
+        const filteredLevels = {};
+        let hasMatchingSpells = false;
+
+        Object.entries(subjectData.levels).forEach(([level, spells]) => {
+          const filteredSpells = spells.filter((spell) => {
+            return spell.class === classFilter;
+          });
+
+          if (filteredSpells.length > 0) {
+            filteredLevels[level] = filteredSpells;
+            hasMatchingSpells = true;
+          }
+        });
+
+        if (hasMatchingSpells) {
+          classFilteredData[subjectName] = {
+            ...subjectData,
+            levels: filteredLevels,
+          };
+        }
+      });
+
+      filteredData = classFilteredData;
     }
 
     if (yearFilter !== "all") {
@@ -248,6 +306,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     searchTerm,
     attemptFilter,
     yearFilter,
+    classFilter,
     getAvailableSpellsData,
     arithmancticTags,
     runicTags,
@@ -329,6 +388,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     setSearchTerm("");
     setAttemptFilter("all");
     setYearFilter("all");
+    setClassFilter("all");
   };
 
   useEffect(() => {
@@ -412,7 +472,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
           />
           <input
             type="text"
-            placeholder="Search spells by name, description, level, subject..."
+            placeholder="Search spells by name, description, level, subject, class..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -466,6 +526,44 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
             </select>
           </div>
 
+          {/* New Class Filter */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "14px",
+                color: theme.textSecondary,
+                fontWeight: "500",
+              }}
+            >
+              Class:
+            </span>
+            <select
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.background,
+                color: theme.text,
+                fontSize: "14px",
+                minWidth: "130px",
+              }}
+            >
+              {classFilterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div
             style={{
               display: "flex",
@@ -503,7 +601,10 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
             </select>
           </div>
 
-          {(searchTerm || attemptFilter !== "all" || yearFilter !== "all") && (
+          {(searchTerm ||
+            attemptFilter !== "all" ||
+            yearFilter !== "all" ||
+            classFilter !== "all") && (
             <button
               onClick={clearFilters}
               style={{
@@ -526,7 +627,10 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
           )}
         </div>
 
-        {(searchTerm || attemptFilter !== "all" || yearFilter !== "all") && (
+        {(searchTerm ||
+          attemptFilter !== "all" ||
+          yearFilter !== "all" ||
+          classFilter !== "all") && (
           <div style={styles.searchResults}>
             Showing {totalFilteredSpells} of {totalSpells} spells
             {searchTerm && <span> • Search: "{searchTerm}"</span>}
@@ -538,6 +642,16 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
                   attemptFilterOptions.find(
                     (opt) => opt.value === attemptFilter
                   )?.label
+                }
+              </span>
+            )}
+            {classFilter !== "all" && (
+              <span>
+                {" "}
+                • Class:{" "}
+                {
+                  classFilterOptions.find((opt) => opt.value === classFilter)
+                    ?.label
                 }
               </span>
             )}
@@ -566,10 +680,16 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
           <span
             style={{ ...styles.statDot, backgroundColor: "#60a5fa" }}
           ></span>
-          {searchTerm || attemptFilter !== "all" || yearFilter !== "all"
+          {searchTerm ||
+          attemptFilter !== "all" ||
+          yearFilter !== "all" ||
+          classFilter !== "all"
             ? totalFilteredSpells
             : totalSpells}{" "}
-          {searchTerm || attemptFilter !== "all" || yearFilter !== "all"
+          {searchTerm ||
+          attemptFilter !== "all" ||
+          yearFilter !== "all" ||
+          classFilter !== "all"
             ? "Found"
             : "Total"}{" "}
           Spells
@@ -617,7 +737,10 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
         </span>
       </div>
 
-      {(searchTerm || attemptFilter !== "all" || yearFilter !== "all") &&
+      {(searchTerm ||
+        attemptFilter !== "all" ||
+        yearFilter !== "all" ||
+        classFilter !== "all") &&
         Object.keys(filteredSpellsData).length === 0 && (
           <div style={styles.noResultsContainer}>
             <div style={styles.noResultsIcon}>🔍</div>
@@ -643,6 +766,19 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
                   </strong>
                 </>
               )}
+              {classFilter !== "all" && (
+                <>
+                  <br />
+                  Class filter:{" "}
+                  <strong>
+                    {
+                      classFilterOptions.find(
+                        (opt) => opt.value === classFilter
+                      )?.label
+                    }
+                  </strong>
+                </>
+              )}
               {yearFilter !== "all" && (
                 <>
                   <br />
@@ -661,6 +797,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
             <ul style={styles.searchSuggestions}>
               <li>Different search keywords</li>
               <li>Different attempt status filters</li>
+              <li>Different class filters</li>
               <li>Different year filters</li>
               <li>Clearing filters to see all spells</li>
             </ul>

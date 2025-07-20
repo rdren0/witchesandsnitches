@@ -21,6 +21,7 @@ const CastingStyleCard = ({
         marginBottom: "12px",
         backgroundColor: isSelected ? `${data.color}10` : theme.background,
         cursor: "pointer",
+        width: "84vw",
         transition: "all 0.2s ease",
         boxShadow: isSelected
           ? `0 4px 12px ${data.color}20`
@@ -316,6 +317,7 @@ export const EnhancedCastingStyleSelector = ({
             border: `1px solid ${theme.primary}`,
             borderRadius: "8px",
             color: theme.primary,
+            width: "84vw",
           }}
         >
           <div
@@ -328,7 +330,11 @@ export const EnhancedCastingStyleSelector = ({
             ✓ Selected: {selectedStyle}
           </div>
           <div
-            style={{ fontSize: "12px", color: theme.text, marginTop: "4px" }}
+            style={{
+              fontSize: "12px",
+              color: theme.text,
+              marginTop: "4px",
+            }}
           >
             You can change this selection at any time during character creation.
           </div>
