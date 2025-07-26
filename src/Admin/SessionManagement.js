@@ -643,7 +643,7 @@ const SessionManagement = ({ supabase }) => {
                     <span
                       style={{
                         ...styles.characterHouse,
-                        backgroundColor: getHouseColor(character.house),
+                        border: `1px solid ${getHouseColor(character.house)}`,
                       }}
                     >
                       {character.house === "No House" ? "—" : character.house}

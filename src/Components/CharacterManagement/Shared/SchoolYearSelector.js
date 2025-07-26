@@ -62,6 +62,7 @@ const SchoolYearSelector = ({
           borderRadius: "8px",
           padding: "16px",
           marginBottom: "16px",
+          backgroundColor: theme.background,
         }}
       >
         <div
@@ -72,9 +73,9 @@ const SchoolYearSelector = ({
             lineHeight: "1.5",
           }}
         >
-          <strong>School Year</strong> represents academic progress (like
-          Harry's "First Year"), while <strong>Character Level</strong>{" "}
-          represents magical power gained through adventures.
+          <strong>School Year</strong> represents academic progress, while{" "}
+          <strong>Character Level</strong> represents magical power gained
+          through adventures.
         </div>
 
         <div
