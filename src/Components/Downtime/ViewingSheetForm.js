@@ -934,18 +934,17 @@ const ViewingSheetForm = ({
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          {viewingSheet.review_status === "failure" &&
-            viewingSheet.user_id === user?.id && (
-              <button
-                onClick={() => onEditRejected(viewingSheet)}
-                style={{
-                  ...styles.backButton,
-                  backgroundColor: theme.warning,
-                }}
-              >
-                ✏️ Edit & Resubmit
-              </button>
-            )}
+          {viewingSheet.review_status === "failure" && (
+            <button
+              onClick={() => onEditRejected(viewingSheet)}
+              style={{
+                ...styles.backButton,
+                backgroundColor: theme.warning,
+              }}
+            >
+              ✏️ Edit & Resubmit
+            </button>
+          )}
 
           <button onClick={onBack} style={styles.backButton}>
             <ArrowLeft size={16} />

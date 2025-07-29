@@ -307,14 +307,16 @@ const DowntimeForm = ({
   }, [currentSheet?.id]);
 
   const canEdit = useCallback(() => {
-    if (isUserAdmin) return true;
-    if (!currentSheet) return true;
+    // Admins in admin mode can edit anything (create new or edit any sheet)
+    if (isUserAdmin && adminMode) return true;
+
+    // Regular editing rules (applies to non-admins and admins not in admin mode)
+    if (!currentSheet) return true; // New sheet creation
     if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
     if (currentSheet.review_status === "failure")
       return currentSheet.user_id === user?.id;
     return false;
-  }, [isUserAdmin, currentSheet, user?.id]);
-
+  }, [isUserAdmin, adminMode, currentSheet, user?.id]);
   const diceManager = DicePoolManager({
     dicePool,
     setDicePool,

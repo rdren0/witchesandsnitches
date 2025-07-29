@@ -1,3 +1,5 @@
+import { getActivitySkillInfo } from "../downtimeHelpers";
+
 export const saveAsDraft = async ({
   selectedCharacter,
   user,
@@ -23,6 +25,18 @@ export const saveAsDraft = async ({
   }
 
   try {
+    const processedRollAssignments = { ...rollAssignments };
+
+    formData.activities.forEach((activity, index) => {
+      const activityKey = `activity${index + 1}`;
+      if (activity.activity && processedRollAssignments[activityKey]) {
+        processedRollAssignments[activityKey] = assignAutoSkillsForActivity(
+          activity,
+          processedRollAssignments[activityKey]
+        );
+      }
+    });
+
     const draftData = {
       character_id: selectedCharacter.id,
       user_id: user.id,
@@ -32,7 +46,7 @@ export const saveAsDraft = async ({
       activities: formData.activities,
       relationships: formData.relationships,
       dice_pool: dicePool,
-      roll_assignments: rollAssignments,
+      roll_assignments: processedRollAssignments,
       selected_spells: selectedSpells,
       selected_magic_school: formData.selectedMagicSchool || null,
       is_draft: true,
@@ -64,6 +78,28 @@ export const saveAsDraft = async ({
     console.error("❌ Error saving draft:", err);
     return false;
   }
+};
+
+const assignAutoSkillsForActivity = (activity, rollAssignment) => {
+  if (!activity.activity) return rollAssignment;
+
+  const skillInfo = getActivitySkillInfo(activity.activity);
+
+  if (skillInfo.type !== "locked" || !skillInfo.skills) {
+    return rollAssignment;
+  }
+
+  const updatedAssignment = { ...rollAssignment };
+
+  if (!updatedAssignment.skill && skillInfo.skills[0]) {
+    updatedAssignment.skill = skillInfo.skills[0];
+  }
+
+  if (!updatedAssignment.secondSkill && skillInfo.skills[1]) {
+    updatedAssignment.secondSkill = skillInfo.skills[1];
+  }
+
+  return updatedAssignment;
 };
 
 export const submitDowntimeSheet = async ({
@@ -109,6 +145,18 @@ export const submitDowntimeSheet = async ({
     currentSheet && currentSheet.review_status === "failure";
 
   try {
+    const processedRollAssignments = { ...rollAssignments };
+
+    formData.activities.forEach((activity, index) => {
+      const activityKey = `activity${index + 1}`;
+      if (activity.activity && processedRollAssignments[activityKey]) {
+        processedRollAssignments[activityKey] = assignAutoSkillsForActivity(
+          activity,
+          processedRollAssignments[activityKey]
+        );
+      }
+    });
+
     const submissionData = {
       character_id: selectedCharacter.id,
       user_id: user.id,
@@ -118,7 +166,7 @@ export const submitDowntimeSheet = async ({
       activities: formData.activities,
       relationships: formData.relationships,
       dice_pool: dicePool,
-      roll_assignments: rollAssignments,
+      roll_assignments: processedRollAssignments,
       selected_spells: selectedSpells,
       selected_magic_school: formData.selectedMagicSchool || null,
       is_draft: false,

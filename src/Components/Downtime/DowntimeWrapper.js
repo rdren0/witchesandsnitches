@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Calendar, Edit3, Plus, FileText, Eye, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  Edit3,
+  Plus,
+  FileText,
+  Eye,
+  Trash2,
+  Shield,
+} from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import DowntimeForm from "./DowntimeForm";
 import ViewingSheetForm from "./ViewingSheetForm";
@@ -101,53 +109,86 @@ const DowntimeWrapper = ({
 
     return normalized;
   };
-  const loadSubmittedSheets = useCallback(async () => {
-    if (!selectedCharacter?.id || !user?.id) return;
 
-    setLoading(true);
-    try {
-      const { data: sheets, error } = await supabase
-        .from("character_downtime")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("user_id", user.id)
-        .eq("is_draft", false)
-        .order("year", { ascending: true })
-        .order("semester", { ascending: true });
+  const loadSubmittedSheets = useCallback(
+    async (isUserAdminOverride = false, characterIdFilter = null) => {
+      if (!selectedCharacter?.id || !user?.id) return;
 
-      if (error) throw error;
-      setSubmittedSheets(sheets || []);
-    } catch (err) {
-      console.error("Error loading submitted sheets:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCharacter?.id, user?.id, supabase]);
+      setLoading(true);
+      try {
+        let query = supabase.from("character_downtime").select("*");
 
-  const loadDrafts = useCallback(async () => {
-    if (!selectedCharacter?.id || !user?.id) return;
+        const useAdminAccess =
+          isUserAdminOverride || (isUserAdmin && adminMode);
 
-    setLoading(true);
-    try {
-      const { data: draftSheets, error } = await supabase
-        .from("character_downtime")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("user_id", user.id)
-        .eq("is_draft", true)
-        .order("updated_at", { ascending: false });
+        if (useAdminAccess && characterIdFilter) {
+          // Admin viewing specific character's sheets
+          query = query.eq("character_id", characterIdFilter);
+        } else if (useAdminAccess) {
+          // Admin viewing all sheets - no character filter
+        } else {
+          // Regular user viewing only their own character's sheets
+          query = query
+            .eq("character_id", selectedCharacter.id)
+            .eq("user_id", user.id);
+        }
 
-      if (error) throw error;
-      setDrafts(draftSheets || []);
-    } catch (err) {
-      console.error("Error loading drafts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCharacter?.id, user?.id, supabase]);
+        const { data: sheets, error } = await query
+          .eq("is_draft", false)
+          .order("year", { ascending: true })
+          .order("semester", { ascending: true });
+
+        if (error) throw error;
+        setSubmittedSheets(sheets || []);
+      } catch (err) {
+        console.error("Error loading submitted sheets:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedCharacter?.id, user?.id, supabase, isUserAdmin, adminMode]
+  );
+
+  const loadDrafts = useCallback(
+    async (isUserAdminOverride = false, characterIdFilter = null) => {
+      if (!selectedCharacter?.id || !user?.id) return;
+
+      setLoading(true);
+      try {
+        let query = supabase.from("character_downtime").select("*");
+
+        const useAdminAccess =
+          isUserAdminOverride || (isUserAdmin && adminMode);
+
+        if (useAdminAccess && characterIdFilter) {
+          // Admin viewing specific character's drafts
+          query = query.eq("character_id", characterIdFilter);
+        } else if (useAdminAccess) {
+          // Admin viewing all drafts - no character filter
+        } else {
+          // Regular user viewing only their own character's drafts
+          query = query
+            .eq("character_id", selectedCharacter.id)
+            .eq("user_id", user.id);
+        }
+
+        const { data: draftSheets, error } = await query
+          .eq("is_draft", true)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        setDrafts(draftSheets || []);
+      } catch (err) {
+        console.error("Error loading drafts:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedCharacter?.id, user?.id, supabase, isUserAdmin, adminMode]
+  );
 
   const loadSheetForViewing = useCallback(
-    async (sheetId) => {
+    async (sheetId, isUserAdminOverride = false) => {
       if (!sheetId || !user?.id) {
         alert("Invalid sheet ID or user not authenticated");
         return;
@@ -155,12 +196,21 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        const { data: sheet, error } = await supabase
+        // Build the query - admins can view any sheet, regular users only their own
+        let query = supabase
           .from("character_downtime")
           .select("*")
-          .eq("id", sheetId)
-          .eq("user_id", user.id)
-          .single();
+          .eq("id", sheetId);
+
+        const useAdminAccess =
+          isUserAdminOverride || (isUserAdmin && adminMode);
+
+        // Only add user_id filter for non-admin users
+        if (!useAdminAccess) {
+          query = query.eq("user_id", user.id);
+        }
+
+        const { data: sheet, error } = await query.single();
 
         if (error) throw error;
 
@@ -178,7 +228,7 @@ const DowntimeWrapper = ({
         setLoading(false);
       }
     },
-    [supabase, user?.id]
+    [supabase, user?.id, isUserAdmin, adminMode]
   );
 
   const isYearSemesterSubmitted = useCallback(
@@ -236,12 +286,24 @@ const DowntimeWrapper = ({
     [getSemesterAvailability]
   );
 
+  // Updated useEffect to pass admin parameters
   useEffect(() => {
     if (selectedCharacter?.id && user?.id) {
-      loadSubmittedSheets();
-      loadDrafts();
+      const useAdminAccess = isUserAdmin && adminMode;
+      loadSubmittedSheets(
+        useAdminAccess,
+        useAdminAccess ? selectedCharacter.id : null
+      );
+      loadDrafts(useAdminAccess, useAdminAccess ? selectedCharacter.id : null);
     }
-  }, [selectedCharacter?.id, user?.id, loadSubmittedSheets, loadDrafts]);
+  }, [
+    selectedCharacter?.id,
+    user?.id,
+    isUserAdmin,
+    adminMode,
+    loadSubmittedSheets,
+    loadDrafts,
+  ]);
 
   const resetFormState = useCallback(() => {
     setCurrentSheet(null);
@@ -468,7 +530,11 @@ const DowntimeWrapper = ({
 
         if (error) throw error;
 
-        loadDrafts();
+        const useAdminAccess = isUserAdmin && adminMode;
+        loadDrafts(
+          useAdminAccess,
+          useAdminAccess ? selectedCharacter.id : null
+        );
 
         if (currentSheet?.id === draftId) {
           setCurrentSheet(null);
@@ -571,6 +637,9 @@ const DowntimeWrapper = ({
       setDicePool,
       setRollAssignments,
       setFormData,
+      isUserAdmin,
+      adminMode,
+      selectedCharacter.id,
     ]
   );
 
@@ -627,6 +696,29 @@ const DowntimeWrapper = ({
     subtitle: {
       color: theme.textSecondary,
       fontSize: "1rem",
+    },
+    adminBreadcrumb: {
+      backgroundColor: theme.primary + "20",
+      border: `1px solid ${theme.primary}`,
+      borderRadius: "8px",
+      padding: "12px 16px",
+      marginBottom: "1rem",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      fontSize: "14px",
+      color: theme.primary,
+      fontWeight: "500",
+    },
+    backToAdminButton: {
+      marginLeft: "auto",
+      padding: "6px 12px",
+      backgroundColor: theme.primary,
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      fontSize: "12px",
+      cursor: "pointer",
     },
     tabContainer: {
       display: "flex",
@@ -854,7 +946,16 @@ const DowntimeWrapper = ({
       <div>
         <div style={styles.viewingHeader}>
           <h3 style={styles.listItemTitle}>Draft Downtime Sheets</h3>
-          <button onClick={loadDrafts} style={styles.backButton}>
+          <button
+            onClick={() => {
+              const useAdminAccess = isUserAdmin && adminMode;
+              loadDrafts(
+                useAdminAccess,
+                useAdminAccess ? selectedCharacter.id : null
+              );
+            }}
+            style={styles.backButton}
+          >
             Refresh
           </button>
         </div>
@@ -872,16 +973,19 @@ const DowntimeWrapper = ({
             />
             <h4 style={styles.emptyStateTitle}>No Draft Sheets</h4>
             <p style={styles.emptyStateText}>
-              You don't have any saved drafts yet. Start creating a new downtime
-              sheet to save as a draft.
+              {adminMode
+                ? `No draft sheets found for ${selectedCharacter?.name}.`
+                : "You don't have any saved drafts yet. Start creating a new downtime sheet to save as a draft."}
             </p>
-            <button
-              onClick={() => setActiveTab("create")}
-              style={styles.button}
-            >
-              <Plus size={16} />
-              Create New Sheet
-            </button>
+            {!adminMode && (
+              <button
+                onClick={() => setActiveTab("create")}
+                style={styles.button}
+              >
+                <Plus size={16} />
+                Create New Sheet
+              </button>
+            )}
           </div>
         ) : (
           <div style={styles.listContainer}>
@@ -909,20 +1013,33 @@ const DowntimeWrapper = ({
                   )}
                 </div>
                 <div style={styles.listItemActions}>
+                  {(!adminMode || draft.user_id === user.id) && (
+                    <button
+                      onClick={() => handleEditDraft(draft)}
+                      style={styles.button}
+                    >
+                      <Edit3 size={14} />
+                      Edit
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleEditDraft(draft)}
+                    onClick={() =>
+                      loadSheetForViewing(draft.id, isUserAdmin && adminMode)
+                    }
                     style={styles.button}
                   >
-                    <Edit3 size={14} />
-                    Edit
+                    <Eye size={14} />
+                    View
                   </button>
-                  <button
-                    onClick={() => handleDeleteDraft(draft.id)}
-                    style={{ ...styles.button, ...styles.dangerButton }}
-                  >
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
+                  {(!adminMode || draft.user_id === user.id) && (
+                    <button
+                      onClick={() => handleDeleteDraft(draft.id)}
+                      style={{ ...styles.button, ...styles.dangerButton }}
+                    >
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -1005,7 +1122,16 @@ const DowntimeWrapper = ({
       <div>
         <div style={styles.viewingHeader}>
           <h3 style={styles.listItemTitle}>Submitted Downtime Sheets</h3>
-          <button onClick={loadSubmittedSheets} style={styles.backButton}>
+          <button
+            onClick={() => {
+              const useAdminAccess = isUserAdmin && adminMode;
+              loadSubmittedSheets(
+                useAdminAccess,
+                useAdminAccess ? selectedCharacter.id : null
+              );
+            }}
+            style={styles.backButton}
+          >
             Refresh
           </button>
         </div>
@@ -1023,15 +1149,19 @@ const DowntimeWrapper = ({
             />
             <h4 style={styles.emptyStateTitle}>No Submitted Sheets</h4>
             <p style={styles.emptyStateText}>
-              You haven't submitted any downtime sheets yet.
+              {adminMode
+                ? `No submitted sheets found for ${selectedCharacter?.name}.`
+                : "You haven't submitted any downtime sheets yet."}
             </p>
-            <button
-              onClick={() => setActiveTab("create")}
-              style={styles.button}
-            >
-              <Plus size={16} />
-              Create New Sheet
-            </button>
+            {!adminMode && (
+              <button
+                onClick={() => setActiveTab("create")}
+                style={styles.button}
+              >
+                <Plus size={16} />
+                Create New Sheet
+              </button>
+            )}
           </div>
         ) : (
           <div style={styles.listContainer}>
@@ -1050,7 +1180,9 @@ const DowntimeWrapper = ({
                 </div>
                 <div style={styles.listItemActions}>
                   <button
-                    onClick={() => loadSheetForViewing(sheet.id)}
+                    onClick={() =>
+                      loadSheetForViewing(sheet.id, isUserAdmin && adminMode)
+                    }
                     style={styles.button}
                     disabled={loading}
                   >
@@ -1085,7 +1217,7 @@ const DowntimeWrapper = ({
     const handleEditRejected = (sheet) => {
       setCurrentSheet(sheet);
 
-      setSelectedYear(sheet.year);
+      setSelectedYear(parseInt(sheet.school_year) || "");
       setSelectedSemester(sheet.semester);
 
       setFormData({
@@ -1203,11 +1335,28 @@ const DowntimeWrapper = ({
 
   return (
     <div style={styles.container}>
+      {/* Admin Mode Breadcrumb */}
+      {adminMode && selectedCharacter && (
+        <div style={styles.adminBreadcrumb}>
+          <Shield size={16} />
+          <span>Admin Mode</span>
+          <span>•</span>
+          <span>Viewing: {selectedCharacter.name}</span>
+          <button
+            onClick={() => window.close()}
+            style={styles.backToAdminButton}
+          >
+            ← Back to Admin Panel
+          </button>
+        </div>
+      )}
+
       <div style={styles.header}>
         <h1 style={styles.title}>Downtime Management</h1>
         <p style={styles.subtitle}>
-          Manage your character's downtime activities for{" "}
-          {selectedCharacter?.name}
+          {adminMode
+            ? `Viewing ${selectedCharacter?.name}'s downtime activities`
+            : `Manage your character's downtime activities for ${selectedCharacter?.name}`}
         </p>
       </div>
 
@@ -1309,19 +1458,21 @@ const DowntimeWrapper = ({
                 <select
                   value={selectedYear}
                   onChange={handleYearChange}
-                  disabled={currentSheet}
+                  disabled={currentSheet || adminMode}
                   style={{
                     width: "100%",
                     padding: "0.75rem",
                     border: `1px solid ${theme.border}`,
                     borderRadius: "8px",
-                    backgroundColor: currentSheet
-                      ? theme.background + "80"
-                      : theme.background,
+                    backgroundColor:
+                      currentSheet || adminMode
+                        ? theme.background + "80"
+                        : theme.background,
                     color: theme.text,
                     fontSize: "1rem",
-                    opacity: currentSheet ? 0.7 : 1,
-                    cursor: currentSheet ? "not-allowed" : "pointer",
+                    opacity: currentSheet || adminMode ? 0.7 : 1,
+                    cursor:
+                      currentSheet || adminMode ? "not-allowed" : "pointer",
                   }}
                 >
                   <option value="">Select Year</option>
@@ -1343,21 +1494,24 @@ const DowntimeWrapper = ({
                 <select
                   value={selectedSemester}
                   onChange={handleSemesterChange}
-                  disabled={!selectedYear || currentSheet}
+                  disabled={!selectedYear || currentSheet || adminMode}
                   style={{
                     width: "100%",
                     padding: "0.75rem",
                     border: `1px solid ${theme.border}`,
                     borderRadius: "8px",
                     backgroundColor:
-                      !selectedYear || currentSheet
+                      !selectedYear || currentSheet || adminMode
                         ? theme.background + "80"
                         : theme.background,
                     color: theme.text,
                     fontSize: "1rem",
-                    opacity: !selectedYear || currentSheet ? 0.6 : 1,
+                    opacity:
+                      !selectedYear || currentSheet || adminMode ? 0.6 : 1,
                     cursor:
-                      !selectedYear || currentSheet ? "not-allowed" : "pointer",
+                      !selectedYear || currentSheet || adminMode
+                        ? "not-allowed"
+                        : "pointer",
                   }}
                 >
                   <option value="">Select Semester</option>
@@ -1375,7 +1529,8 @@ const DowntimeWrapper = ({
               </div>
             </div>
 
-            {selectedYear &&
+            {!adminMode &&
+              selectedYear &&
               selectedSemester &&
               isYearSemesterSubmitted(selectedYear, selectedSemester) && (
                 <div
@@ -1404,7 +1559,8 @@ const DowntimeWrapper = ({
 
             {selectedYear &&
               selectedSemester &&
-              !isYearSemesterSubmitted(selectedYear, selectedSemester) && (
+              (!isYearSemesterSubmitted(selectedYear, selectedSemester) ||
+                adminMode) && (
                 <DowntimeForm
                   user={user}
                   selectedCharacter={selectedCharacter}
