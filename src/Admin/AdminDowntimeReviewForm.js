@@ -1524,15 +1524,25 @@ const AdminDowntimeReviewForm = React.memo(
     ]);
 
     const renderedRelationships = useMemo(() => {
-      if (!downtimeSheet?.roll_assignments) return null;
+      if (!downtimeSheet?.relationships) return null;
 
       const relationships = ["relationship1", "relationship2", "relationship3"]
         .map((key, index) => {
+          const rollAssignment = downtimeSheet.roll_assignments?.[key] || {};
+          const relationship = downtimeSheet.relationships[index] || {};
+
           const assignment = {
-            ...downtimeSheet.roll_assignments[key],
-            ...downtimeSheet.relationships[index],
+            ...rollAssignment,
+            ...relationship,
           };
-          if (!assignment || assignment.diceIndex === null) return null;
+
+          if (
+            !assignment ||
+            !assignment.npcName ||
+            assignment.npcName.trim() === ""
+          ) {
+            return null;
+          }
 
           const character = downtimeSheet.characters;
 
@@ -1542,13 +1552,36 @@ const AdminDowntimeReviewForm = React.memo(
                 {assignment.npcName && <h4>NPC: {assignment.npcName}</h4>}
               </div>
 
-              {renderRollInfo(
-                assignment,
-                downtimeSheet.dice_pool,
-                character,
-                "skill",
-                "diceIndex",
-                "Roll Result"
+              {/* Only show roll info if there's actually a dice assignment */}
+              {assignment.diceIndex !== null &&
+                assignment.diceIndex !== undefined && (
+                  <>
+                    {renderRollInfo(
+                      assignment,
+                      downtimeSheet.dice_pool,
+                      character,
+                      "skill",
+                      "diceIndex",
+                      "Roll Result"
+                    )}
+                  </>
+                )}
+
+              {/* Show if no dice assigned */}
+              {(assignment.diceIndex === null ||
+                assignment.diceIndex === undefined) && (
+                <div style={styles.playerNotes}>
+                  <div style={styles.label}>Status:</div>
+                  <div
+                    style={{
+                      color: theme.textSecondary,
+                      fontStyle: "italic",
+                      fontSize: "14px",
+                    }}
+                  >
+                    No dice assigned for this relationship interaction
+                  </div>
+                </div>
               )}
 
               {assignment.notes && (
