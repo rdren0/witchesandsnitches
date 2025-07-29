@@ -307,14 +307,14 @@ const DowntimeForm = ({
   }, [currentSheet?.id]);
 
   const canEdit = useCallback(() => {
-    if (isUserAdmin) return true;
+    if (isUserAdmin && adminMode) return true;
+
     if (!currentSheet) return true;
     if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
     if (currentSheet.review_status === "failure")
       return currentSheet.user_id === user?.id;
     return false;
-  }, [isUserAdmin, currentSheet, user?.id]);
-
+  }, [isUserAdmin, adminMode, currentSheet, user?.id]);
   const diceManager = DicePoolManager({
     dicePool,
     setDicePool,

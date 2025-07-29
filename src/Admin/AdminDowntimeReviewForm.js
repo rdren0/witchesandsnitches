@@ -871,7 +871,6 @@ const AdminDowntimeReviewForm = React.memo(
         setReviewStatus(sheet.review_status || "pending");
         setAdminFeedback(sheet.admin_feedback || "");
         setAdminNotes(sheet.admin_notes || "");
-
         const activityReviewsInit = {};
         if (sheet.activities) {
           sheet.activities.forEach((activity, index) => {
