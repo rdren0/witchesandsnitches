@@ -81,7 +81,6 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
     } finally {
       setIsLoading(false);
     }
-    // eslint-disable-next-line
   }, [selectedCharacter?.id, user?.id, supabase]);
 
   useEffect(() => {

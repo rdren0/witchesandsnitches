@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown, User } from "lucide-react";
-import { ALL_CHARACTERS } from "../../SharedData/charactersData"; // Use your actual import path
+import { ALL_CHARACTERS } from "../../SharedData/charactersData";
 
 const NPCAutocompleteInput = ({
   value,
@@ -16,10 +16,8 @@ const NPCAutocompleteInput = ({
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Use the imported characters data directly
   const charactersData = ALL_CHARACTERS;
 
-  // Default styles if not provided
   const defaultStyles = {
     inputContainer: {
       position: "relative",
@@ -80,7 +78,7 @@ const NPCAutocompleteInput = ({
       alignItems: "center",
       gap: "12px",
       transition: "background-color 0.15s ease",
-      minHeight: "56px", // Ensure adequate height for images
+      minHeight: "56px",
     },
     optionHighlighted: {
       backgroundColor: theme.primary ? `${theme.primary}10` : "#f3f4f6",
@@ -98,19 +96,13 @@ const NPCAutocompleteInput = ({
     },
   };
 
-  // Merge provided styles with defaults
   const mergedStyles = {
     ...defaultStyles,
     ...styles,
   };
 
-  // Extract character names and filter out duplicates
   const characterOptions = React.useMemo(() => {
     if (!Array.isArray(charactersData) || charactersData.length === 0) {
-      console.log(
-        "NPCAutocompleteInput: charactersData is empty or not an array:",
-        charactersData
-      );
       return [];
     }
 
@@ -121,15 +113,9 @@ const NPCAutocompleteInput = ({
         type: char.type || "Character",
         school: char.school || "Unknown School",
         house: char.house || null,
-        image: char.src || null, // Add image source
+        image: char.src || null,
       }));
 
-    console.log(
-      "NPCAutocompleteInput: processed characters:",
-      characters.length
-    );
-
-    // Remove duplicates based on name (case-insensitive)
     const uniqueCharacters = characters.filter(
       (char, index, self) =>
         index ===
@@ -139,35 +125,24 @@ const NPCAutocompleteInput = ({
     return uniqueCharacters.sort((a, b) => a.name.localeCompare(b.name));
   }, [charactersData]);
 
-  // Filter options based on input value
   useEffect(() => {
-    console.log(
-      "NPCAutocompleteInput: filtering with value:",
-      value,
-      "characterOptions:",
-      characterOptions.length
-    );
-
     if (!value || value.trim() === "") {
       setFilteredOptions(characterOptions);
     } else {
       const filtered = characterOptions.filter((char) =>
         char.name.toLowerCase().includes(value.toLowerCase())
       );
-      console.log("NPCAutocompleteInput: filtered results:", filtered.length);
       setFilteredOptions(filtered);
     }
     setHighlightedIndex(-1);
   }, [value, characterOptions]);
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     onChange(newValue);
     if (!isOpen) setIsOpen(true);
   };
 
-  // Handle option selection
   const handleOptionSelect = (optionName) => {
     onChange(optionName);
     setIsOpen(false);
@@ -175,7 +150,6 @@ const NPCAutocompleteInput = ({
     inputRef.current?.focus();
   };
 
-  // Handle keyboard navigation
   const handleKeyDown = (e) => {
     if (disabled) return;
 
@@ -226,7 +200,6 @@ const NPCAutocompleteInput = ({
     }
   };
 
-  // Handle clicking outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -243,13 +216,11 @@ const NPCAutocompleteInput = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle input blur - automatically close dropdown
   const handleInputBlur = () => {
     setIsOpen(false);
     setHighlightedIndex(-1);
   };
 
-  // Handle dropdown toggle
   const toggleDropdown = () => {
     if (disabled) return;
     setIsOpen(!isOpen);
@@ -311,7 +282,7 @@ const NPCAutocompleteInput = ({
                   <div
                     key={`${char.name}-${char.school}-${char.type}`}
                     onMouseDown={(e) => {
-                      e.preventDefault(); // Prevent input blur
+                      e.preventDefault();
                       handleOptionSelect(char.name);
                     }}
                     style={{
@@ -335,7 +306,6 @@ const NPCAutocompleteInput = ({
                           flexShrink: 0,
                         }}
                         onError={(e) => {
-                          // Fallback to User icon if image fails to load
                           e.target.style.display = "none";
                           e.target.nextSibling.style.display = "flex";
                         }}
@@ -358,7 +328,6 @@ const NPCAutocompleteInput = ({
                         <User size={16} />
                       </div>
                     )}
-                    {/* Fallback icon (hidden by default, shown if image fails) */}
                     {char.image && (
                       <div
                         style={{

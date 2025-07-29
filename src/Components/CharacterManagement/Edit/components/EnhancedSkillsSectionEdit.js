@@ -5,58 +5,49 @@ const EnhancedSkillsSection = ({
   styles,
   theme,
 }) => {
-  // Helper function to check if skill has expertise
   const hasExpertise = (skill) => {
     const expertiseSkills =
       character.skill_expertise || character.skillExpertise || [];
     return expertiseSkills.includes(skill);
   };
 
-  // Helper function to check if skill has proficiency (any level)
   const hasProficiency = (skill) => {
     const skillProficiencies =
       character.skillProficiencies || character.skill_proficiencies || [];
     return skillProficiencies.includes(skill);
   };
-  // Extract subclass skills and track expertise patterns
+
   const getSubclassSkills = () => {
     const subclassSkills = [];
-    const expertiseSkills = []; // Skills that grant expertise (due to already having proficiency)
-    const studyBuddySkills = []; // All skills selected via Study Buddy (always expertise-eligible)
-    const hasExpertiseGranter = []; // Features that can grant expertise to ANY existing skill
+    const expertiseSkills = [];
+    const studyBuddySkills = [];
+    const hasExpertiseGranter = [];
     const subclassChoices = character.subclassChoices || {};
 
-    // Get skills from other sources
     const backgroundSkills = character.backgroundSkills || [];
     const innateHeritageSkills = character.innateHeritageSkills || [];
 
     Object.values(subclassChoices).forEach((choice) => {
       if (typeof choice === "object" && choice.mainChoice && choice.subChoice) {
-        // Handle nested choices like Study Buddy
         if (choice.mainChoice === "Study Buddy") {
           const selectedSkill = choice.subChoice;
-          studyBuddySkills.push(selectedSkill); // Always track Study Buddy skills as expertise-eligible
+          studyBuddySkills.push(selectedSkill);
 
-          // Check if character already has this skill from background or heritage
           const hasFromOtherSource =
             backgroundSkills.includes(selectedSkill) ||
             innateHeritageSkills.includes(selectedSkill);
 
           if (hasFromOtherSource) {
-            // Already have proficiency → Study Buddy grants expertise
             expertiseSkills.push(selectedSkill);
           } else {
-            // Don't have proficiency → Study Buddy grants proficiency
             subclassSkills.push(selectedSkill);
           }
         }
       } else if (typeof choice === "string") {
-        // Handle direct choices
         if (choice === "Practice Makes Perfect") {
-          hasExpertiseGranter.push("Practice Makes Perfect"); // Can grant expertise to any existing skill
+          hasExpertiseGranter.push("Practice Makes Perfect");
         }
 
-        // Handle direct skill selections that might be from subclass
         const skillNames = [
           "Herbology",
           "History of Magic",
@@ -79,7 +70,6 @@ const EnhancedSkillsSection = ({
   };
 
   const getSkillsBySource = () => {
-    // Use existing structure
     const allSkills =
       character.skillProficiencies || character.skill_proficiencies || [];
     const castingStyleSkills = getAvailableSkills({ character }) || [];
@@ -92,28 +82,21 @@ const EnhancedSkillsSection = ({
       hasExpertiseGranter,
     } = getSubclassSkills();
 
-    // Casting style skills: available to casting style AND either no conflicts OR expertise-eligible
     const selectedCastingStyleSkills = allSkills.filter((skill) => {
-      // Must be available to this casting style
       if (!castingStyleSkills.includes(skill)) return false;
 
-      // If skill is from background/heritage/subclass, only include if it's expertise-eligible
       if (
         backgroundSkills.includes(skill) ||
         innateHeritageSkills.includes(skill) ||
         subclassSkills.includes(skill)
       ) {
-        // Allow Study Buddy skills to be selected for expertise
         if (studyBuddySkills.includes(skill)) return true;
 
-        // Allow Practice Makes Perfect to work on any existing skill
         if (hasExpertiseGranter.length > 0) return true;
 
-        // Otherwise exclude (no expertise possible)
         return false;
       }
 
-      // Regular casting style skills (no conflicts)
       return true;
     });
 
@@ -130,8 +113,8 @@ const EnhancedSkillsSection = ({
       backgroundSkills: selectedBackgroundSkills,
       innateHeritageSkills: selectedInnaateHeritageSkills,
       subclassSkills: subclassSkills,
-      expertiseSkills: expertiseSkills, // Skills that grant expertise from subclass
-      studyBuddySkills: studyBuddySkills, // All Study Buddy skills (expertise-eligible)
+      expertiseSkills: expertiseSkills,
+      studyBuddySkills: studyBuddySkills,
       hasExpertiseGranter: hasExpertiseGranter,
       totalSelected: allSkills.length,
     };
@@ -149,27 +132,21 @@ const EnhancedSkillsSection = ({
   } = getSkillsBySource();
   const availableCastingSkills = getAvailableSkills({ character });
 
-  // Function to check if a skill should grant expertise
   const shouldGrantExpertise = (skill) => {
-    // Check if already has expertise in database
     return hasExpertise(skill);
   };
 
-  // Function to check if a skill can be selected for expertise
   const canSelectForExpertise = (skill) => {
-    // First, check if character has proficiency in this skill from ANY source
     if (!hasProficiency(skill)) {
-      return false; // Can't have expertise without proficiency first
+      return false;
     }
 
-    // Study Buddy pattern: any Study Buddy skill can be selected for expertise (if they have proficiency)
     if (studyBuddySkills.includes(skill)) {
       return true;
     }
 
-    // Practice Makes Perfect pattern: can grant expertise to any pre-existing skill
     if (hasExpertiseGranter.length > 0) {
-      return true; // Already checked they have proficiency above
+      return true;
     }
 
     return false;
@@ -506,7 +483,6 @@ const EnhancedSkillsSection = ({
                 const isFromSubclass = subclassSkills.includes(skill);
                 const canSelect = isSelected || castingStyleSkills.length < 2;
 
-                // Check if this skill is from another source
                 if (isFromBackground || isFromHeritage || isFromSubclass) {
                   let sourceLabel, sourceColor, sourceName;
 
@@ -524,11 +500,9 @@ const EnhancedSkillsSection = ({
                     sourceName = "subclass";
                   }
 
-                  // Check if this skill can be selected for expertise
                   const canGetExpertise = canSelectForExpertise(skill);
 
                   if (!canGetExpertise) {
-                    // Skill doesn't allow expertise - cross out and disable
                     return (
                       <div
                         key={`cs-${skill}`}
@@ -575,7 +549,6 @@ const EnhancedSkillsSection = ({
                     );
                   }
 
-                  // Skill allows expertise - make it selectable
                   return (
                     <label
                       key={`cs-${skill}`}

@@ -13,7 +13,6 @@ const AdminPasswordModal = ({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setPassword("");
@@ -22,7 +21,6 @@ const AdminPasswordModal = ({
     }
   }, [isOpen]);
 
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape" && isOpen) {

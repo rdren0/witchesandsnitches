@@ -613,16 +613,6 @@ const SpellSlotTracker = ({
       </div>
     </div>
   ));
-  // spellAndSorceryTiles.push(
-  //   <SorceryPointTracker
-  //     key="sorcery-points"
-  //     character={character}
-  //     supabase={supabase}
-  //     discordUserId={discordUserId}
-  //     setCharacter={setCharacter}
-  //     selectedCharacterId={selectedCharacterId}
-  //   />
-  // );
 
   return (
     <div style={styles.resourcesContainer}>

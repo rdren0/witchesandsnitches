@@ -818,7 +818,6 @@ const ViewingSheetForm = ({
       components.push(
         <div key="ability" style={styles.skillInfo}>
           {" "}
-          {/* Reuse existing skillInfo style */}
           <div style={styles.label}>Selected Ability Score:</div>
           <div style={styles.value}>
             {selectedAbility?.displayName ||

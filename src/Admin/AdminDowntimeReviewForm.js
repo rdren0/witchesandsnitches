@@ -992,7 +992,6 @@ const AdminDowntimeReviewForm = React.memo(
           .single();
 
         if (error) throw error;
-        console.log({ sheetfromAdminForm: sheet });
         setDowntimeSheet(sheet);
         setReviewStatus(sheet.review_status || "pending");
         setAdminFeedback(sheet.admin_feedback || "");
@@ -1552,7 +1551,6 @@ const AdminDowntimeReviewForm = React.memo(
                 {assignment.npcName && <h4>NPC: {assignment.npcName}</h4>}
               </div>
 
-              {/* Only show roll info if there's actually a dice assignment */}
               {assignment.diceIndex !== null &&
                 assignment.diceIndex !== undefined && (
                   <>
@@ -1567,7 +1565,6 @@ const AdminDowntimeReviewForm = React.memo(
                   </>
                 )}
 
-              {/* Show if no dice assigned */}
               {(assignment.diceIndex === null ||
                 assignment.diceIndex === undefined) && (
                 <div style={styles.playerNotes}>

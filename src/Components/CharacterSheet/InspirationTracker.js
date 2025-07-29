@@ -15,7 +15,6 @@ const InspirationTracker = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // Inspiration is now a boolean in the database
   const hasInspiration = Boolean(character?.inspiration);
 
   const handleInspirationToggle = async (newState) => {
@@ -25,7 +24,6 @@ const InspirationTracker = ({
     const effectiveUserId = isAdmin ? character.ownerId : discordUserId;
 
     try {
-      // Store boolean directly in database
       const updateData = {
         character_id: selectedCharacterId,
         discord_user_id: effectiveUserId,
@@ -46,13 +44,11 @@ const InspirationTracker = ({
         return;
       }
 
-      // Update local state with boolean
       setCharacter((prev) => ({
         ...prev,
         inspiration: newState,
       }));
 
-      // Discord webhook notification
       const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
 
       if (discordWebhookUrl) {
@@ -100,10 +96,8 @@ const InspirationTracker = ({
     if (isUpdating) return;
 
     if (hasInspiration) {
-      // Show confirmation modal for using inspiration
       setShowModal(true);
     } else if (isAdmin) {
-      // Admin can grant inspiration directly
       handleInspirationToggle(true);
     }
   };

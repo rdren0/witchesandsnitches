@@ -154,18 +154,15 @@ const CharacterSheetModals = ({
       let changeType;
 
       if (type === "damage") {
-        // Ensure we don't go below 0 HP
         newCurrentHP = Math.max(0, currentHP - amount);
-        changeAmount = currentHP - newCurrentHP; // Actual damage dealt
+        changeAmount = currentHP - newCurrentHP;
         changeType = "damage";
       } else {
-        // Ensure we don't go above max HP
         newCurrentHP = Math.min(maxHP, currentHP + amount);
-        changeAmount = newCurrentHP - currentHP; // Actual healing done
+        changeAmount = newCurrentHP - currentHP;
         changeType = "healing";
       }
 
-      // Validate the result
       if (newCurrentHP < 0) newCurrentHP = 0;
       if (newCurrentHP > maxHP) newCurrentHP = maxHP;
 
@@ -287,10 +284,10 @@ const CharacterSheetModals = ({
     const maxHP = character.maxHitPoints ?? character.hitPoints;
     const percentage = currentHP / maxHP;
 
-    if (percentage <= 0.25) return "#EF4444"; // Red
-    if (percentage <= 0.5) return "#F59E0B"; // Orange
-    if (percentage <= 0.75) return "#EAB308"; // Yellow
-    return "#10B981"; // Green
+    if (percentage <= 0.25) return "#EF4444";
+    if (percentage <= 0.5) return "#F59E0B";
+    if (percentage <= 0.75) return "#EAB308";
+    return "#10B981";
   };
 
   return (

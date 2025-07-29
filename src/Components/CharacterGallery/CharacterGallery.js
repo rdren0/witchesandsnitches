@@ -275,7 +275,6 @@ const CharacterCard = ({
         updated_at: new Date().toISOString(),
       };
 
-      // Use UPSERT to handle both INSERT and UPDATE cases
       const { data, error } = await supabase
         .from("character_npc_notes")
         .upsert(noteData, {
@@ -821,7 +820,6 @@ export const CharacterGallery = ({
     if (selectedCharacter && discordUserId && supabase) {
       loadNpcNotes();
     }
-    // eslint-disable-next-line
   }, [selectedCharacter?.id, discordUserId]);
 
   const loadNpcNotes = async () => {

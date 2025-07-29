@@ -17,7 +17,6 @@ import { characterService } from "../../../services/characterService";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { backgroundsData } from "../../../SharedData/backgroundsData";
 
-// Import the new section components
 import BasicInformationSection from "./components/BasicInformationSection";
 import HouseAndSubclassSection from "./components/HouseAndSubclassSection";
 import Level1AndProgressionSection from "./components/Level1AndProgressionSection";
@@ -37,7 +36,6 @@ if (!importedStandardFeats) {
   );
 }
 
-// Section Lock Management Hook
 const useSectionLocks = () => {
   const [sectionLocks, setSectionLocks] = useState({
     basicInformation: true,
@@ -82,7 +80,6 @@ const useSectionLocks = () => {
   };
 };
 
-// Section Header Component
 const SectionHeader = ({
   title,
   subtitle,
@@ -190,7 +187,6 @@ const CharacterEditor = ({
     getFeatProgressionInfo,
   } = useASIHandlers(character, setCharacter);
 
-  // Section locking
   const {
     sectionLocks,
     toggleSectionLock,
@@ -198,7 +194,6 @@ const CharacterEditor = ({
     lockAllSections,
   } = useSectionLocks();
 
-  // UI state
   const [expandedFeats, setExpandedFeats] = useState(new Set());
   const [featFilter, setFeatFilter] = useState("");
   const [tempInputValues, setTempInputValues] = useState({});
@@ -221,7 +216,6 @@ const CharacterEditor = ({
     standardFeats,
   });
 
-  // Enhanced styles for locked sections
   const enhancedStyles = {
     ...styles,
     lockedSection: {
@@ -370,7 +364,6 @@ const CharacterEditor = ({
       initiativeAbility: "basicInformation",
     };
 
-    // Check if field starts with abilityScores
     if (field.startsWith("abilityScores.")) {
       if (sectionLocks.abilityScores) return;
     } else if (field.startsWith("magicModifiers.")) {
@@ -677,7 +670,6 @@ const CharacterEditor = ({
     onCancel();
   };
 
-  // Effects
   useEffect(() => {
     const initialHouseChoices =
       originalCharacter?.houseChoices || originalCharacter?.house_choices || {};
@@ -697,7 +689,6 @@ const CharacterEditor = ({
         subclassChoices: initialSubclassChoices,
       }));
     }
-    // eslint-disable-next-line
   }, [
     originalCharacter?.id,
     originalCharacter?.houseChoices,
@@ -710,7 +701,6 @@ const CharacterEditor = ({
     if (character?.house && character.house !== selectedHouse) {
       setSelectedHouse(character.house);
     }
-    // eslint-disable-next-line
   }, [character?.house, selectedHouse]);
 
   useEffect(() => {
@@ -726,7 +716,6 @@ const CharacterEditor = ({
         }));
       }
     }
-    // eslint-disable-next-line
   }, [character.background]);
 
   useEffect(() => {
@@ -739,7 +728,6 @@ const CharacterEditor = ({
     if (character) {
       validateFeatSelections();
     }
-    // eslint-disable-next-line
   }, [
     character.level,
     character.castingStyle,

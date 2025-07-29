@@ -29,7 +29,7 @@ const Level1AndProgressionSection = ({
   standardFeats,
   styles,
   theme,
-  // ADD THESE MISSING PROPS:
+
   heritageChoices,
   onHeritageChoicesChange,
 }) => {
@@ -218,11 +218,9 @@ const Level1AndProgressionSection = ({
             character={character}
             setCharacter={(updater) => {
               if (typeof updater === "function") {
-                // Handle function updater
                 const updated = updater(character);
                 handleInputChange("standardFeats", updated.standardFeats || []);
               } else {
-                // Handle direct object
                 handleInputChange("standardFeats", updater.standardFeats || []);
               }
             }}

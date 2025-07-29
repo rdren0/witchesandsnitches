@@ -448,7 +448,6 @@ const CharacterSheet = ({
       let data, error;
 
       if (adminMode && isUserAdmin) {
-        // Admin can access any character
         const response = await supabase
           .from("characters")
           .select(
@@ -702,7 +701,6 @@ const CharacterSheet = ({
       const hpRestored = maxHP - currentHP;
       const hitDiceRestored = maxHitDice - currentHitDice;
 
-      // Use the character's original owner ID for database operations
       const characterOwnerId = character.discord_user_id || character.ownerId;
 
       const { error: characterError } = await supabase
@@ -1335,8 +1333,7 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#e30716",
                       backgroundColor: isRolling
-                        ? // eslint-disable-next-line
-                          "#e30716" + "20"
+                        ? "#e30716" + "20"
                         : "transparent",
                       transition: "all 0.2s ease",
                     }}
@@ -1372,8 +1369,7 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#8b5cf6",
                       backgroundColor: isRolling
-                        ? // eslint-disable-next-line
-                          "#8b5cf6" + "20"
+                        ? "#8b5cf6" + "20"
                         : "transparent",
                       transition: "all 0.2s ease",
                     }}
