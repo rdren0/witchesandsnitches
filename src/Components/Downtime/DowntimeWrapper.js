@@ -988,7 +988,8 @@ const DowntimeWrapper = ({
               <div key={draft.id} style={styles.listItem}>
                 <div style={styles.listItemInfo}>
                   <div style={styles.listItemTitle}>
-                    Year {draft.year}, Semester {draft.semester}
+                    {console.log({ draft })}
+                    Year {draft.school_year}, Semester {draft.semester}
                   </div>
                   <div style={styles.listItemSubtitle}>
                     Last updated: {new Date(draft.updated_at).toLocaleString()}
