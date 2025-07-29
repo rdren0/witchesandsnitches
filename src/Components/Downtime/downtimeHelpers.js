@@ -411,6 +411,27 @@ export const getCustomDiceTypeForActivity = (activityText) => {
       diceType: "Family Allowance",
       description:
         "Roll based on family economic status. Admin will determine family type and any bonuses.",
+      rollFunction: (familyType = "middle") => {
+        let dice1, dice2;
+
+        switch (familyType) {
+          case "poor":
+            dice1 = Math.floor(Math.random() * 4) + 1;
+            dice2 = Math.floor(Math.random() * 4) + 1;
+            break;
+          case "rich":
+            dice1 = Math.floor(Math.random() * 8) + 1;
+            dice2 = Math.floor(Math.random() * 8) + 1;
+            break;
+          case "middle":
+          default:
+            dice1 = Math.floor(Math.random() * 6) + 1;
+            dice2 = Math.floor(Math.random() * 6) + 1;
+            break;
+        }
+
+        return [dice1, dice2];
+      },
     };
   }
 
@@ -419,6 +440,27 @@ export const getCustomDiceTypeForActivity = (activityText) => {
       diceType: "Job Earnings",
       description:
         "Roll based on job difficulty. Admin will determine job type and bonuses.",
+      rollFunction: (jobType = "medium") => {
+        let dice1, dice2;
+
+        switch (jobType) {
+          case "easy":
+            dice1 = Math.floor(Math.random() * 8) + 1;
+            dice2 = Math.floor(Math.random() * 8) + 1;
+            break;
+          case "hard":
+            dice1 = Math.floor(Math.random() * 12) + 1;
+            dice2 = Math.floor(Math.random() * 12) + 1;
+            break;
+          case "medium":
+          default:
+            dice1 = Math.floor(Math.random() * 10) + 1;
+            dice2 = Math.floor(Math.random() * 10) + 1;
+            break;
+        }
+
+        return [dice1, dice2];
+      },
     };
   }
 

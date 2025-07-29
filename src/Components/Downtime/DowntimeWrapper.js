@@ -340,7 +340,6 @@ const DowntimeWrapper = ({
 
   const handleEditDraft = useCallback(
     (draft) => {
-      console.log({ draft });
       setCurrentSheet(draft);
 
       setSelectedYear(draft.school_year);

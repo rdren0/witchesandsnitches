@@ -245,16 +245,20 @@ const DicePoolManager = ({
   }, []);
 
   const handleCustomDiceRoll = useCallback(
-    (activityText, jobType, activityIndex) => {
+    (activityText, typeValue, activityIndex) => {
       if (!canEdit()) {
         return;
       }
 
       try {
-        const customDice = rollCustomDice(activityText, jobType);
+        const customDice = rollCustomDice(activityText, typeValue);
 
         if (customDice) {
           const assignmentKey = `activity${activityIndex + 1}`;
+          const isJobActivity = activityText.toLowerCase().includes("work job");
+          const isAllowanceActivity = activityText
+            .toLowerCase()
+            .includes("allowance");
 
           setRollAssignments((prev) => {
             const updated = {
@@ -262,7 +266,8 @@ const DicePoolManager = ({
               [assignmentKey]: {
                 ...prev[assignmentKey],
                 customDice: customDice,
-                jobType: jobType,
+                ...(isJobActivity ? { jobType: typeValue } : {}),
+                ...(isAllowanceActivity ? { familyType: typeValue } : {}),
                 diceIndex: null,
                 secondDiceIndex: null,
               },
@@ -471,7 +476,6 @@ const DicePoolManager = ({
                 const isSpellDie = isExtra && index >= 6 + dualCheckCount;
                 const isDualCheckDie = isExtra && !isSpellDie;
 
-                // Determine dice styling
                 let diceStyle = { ...styles.dice };
                 if (isAssigned) {
                   diceStyle = { ...diceStyle, ...styles.diceAssigned };
