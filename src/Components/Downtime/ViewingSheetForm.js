@@ -13,6 +13,8 @@ import {
   activityRequiresNameInput,
   activityRequiresExtraDie,
   getMultiSuccessActivityInfo,
+  activityRequiresAbilitySelection,
+  getAvailableAbilityScores,
 } from "./downtimeHelpers";
 import { formatModifier } from "./utils/modifierUtils";
 
@@ -733,6 +735,29 @@ const ViewingSheetForm = ({
           <div style={styles.label}>Selected Skill:</div>
           <div style={styles.value}>
             {getSkillDisplayName(activity.selectedSkill)}
+          </div>
+        </div>
+      );
+    }
+
+    if (
+      activityRequiresAbilitySelection(activity.activity) &&
+      activity.selectedAbilityScore
+    ) {
+      const abilities = getAvailableAbilityScores(selectedCharacter);
+      const selectedAbility = abilities.find(
+        (a) => a.name === activity.selectedAbilityScore
+      );
+
+      components.push(
+        <div key="ability" style={styles.skillInfo}>
+          {" "}
+          {/* Reuse existing skillInfo style */}
+          <div style={styles.label}>Selected Ability Score:</div>
+          <div style={styles.value}>
+            {selectedAbility?.displayName ||
+              activity.selectedAbilityScore.charAt(0).toUpperCase() +
+                activity.selectedAbilityScore.slice(1)}
           </div>
         </div>
       );

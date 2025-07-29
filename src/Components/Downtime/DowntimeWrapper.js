@@ -1205,6 +1205,7 @@ const DowntimeWrapper = ({
     };
 
     const handleEditRejected = (sheet) => {
+      console.log("from character view:", { sheet });
       setCurrentSheet(sheet);
 
       setSelectedYear(parseInt(sheet.school_year) || "");
