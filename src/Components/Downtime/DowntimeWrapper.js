@@ -122,12 +122,9 @@ const DowntimeWrapper = ({
           isUserAdminOverride || (isUserAdmin && adminMode);
 
         if (useAdminAccess && characterIdFilter) {
-          // Admin viewing specific character's sheets
           query = query.eq("character_id", characterIdFilter);
         } else if (useAdminAccess) {
-          // Admin viewing all sheets - no character filter
         } else {
-          // Regular user viewing only their own character's sheets
           query = query
             .eq("character_id", selectedCharacter.id)
             .eq("user_id", user.id);
@@ -161,12 +158,9 @@ const DowntimeWrapper = ({
           isUserAdminOverride || (isUserAdmin && adminMode);
 
         if (useAdminAccess && characterIdFilter) {
-          // Admin viewing specific character's drafts
           query = query.eq("character_id", characterIdFilter);
         } else if (useAdminAccess) {
-          // Admin viewing all drafts - no character filter
         } else {
-          // Regular user viewing only their own character's drafts
           query = query
             .eq("character_id", selectedCharacter.id)
             .eq("user_id", user.id);
@@ -196,7 +190,6 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        // Build the query - admins can view any sheet, regular users only their own
         let query = supabase
           .from("character_downtime")
           .select("*")
@@ -205,7 +198,6 @@ const DowntimeWrapper = ({
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);
 
-        // Only add user_id filter for non-admin users
         if (!useAdminAccess) {
           query = query.eq("user_id", user.id);
         }
@@ -272,7 +264,7 @@ const DowntimeWrapper = ({
       return {
         semester,
         isSubmitted,
-        isAvailable: !isSubmitted,
+        isAvailable: !isSubmitted || adminMode,
       };
     });
   }, [selectedYear, isYearSemesterSubmitted]);
@@ -286,7 +278,6 @@ const DowntimeWrapper = ({
     [getSemesterAvailability]
   );
 
-  // Updated useEffect to pass admin parameters
   useEffect(() => {
     if (selectedCharacter?.id && user?.id) {
       const useAdminAccess = isUserAdmin && adminMode;
@@ -522,11 +513,16 @@ const DowntimeWrapper = ({
       }
 
       try {
-        const { error } = await supabase
+        let deleteQuery = supabase
           .from("character_downtime")
           .delete()
-          .eq("id", draftId)
-          .eq("user_id", user.id);
+          .eq("id", draftId);
+
+        if (!adminMode) {
+          deleteQuery = deleteQuery.eq("user_id", user.id);
+        }
+
+        const { error } = await deleteQuery;
 
         if (error) throw error;
 
@@ -640,6 +636,7 @@ const DowntimeWrapper = ({
       isUserAdmin,
       adminMode,
       selectedCharacter.id,
+      adminMode,
     ]
   );
 
@@ -977,15 +974,13 @@ const DowntimeWrapper = ({
                 ? `No draft sheets found for ${selectedCharacter?.name}.`
                 : "You don't have any saved drafts yet. Start creating a new downtime sheet to save as a draft."}
             </p>
-            {!adminMode && (
-              <button
-                onClick={() => setActiveTab("create")}
-                style={styles.button}
-              >
-                <Plus size={16} />
-                Create New Sheet
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab("create")}
+              style={styles.button}
+            >
+              <Plus size={16} />
+              Create New Sheet
+            </button>
           </div>
         ) : (
           <div style={styles.listContainer}>
@@ -1013,15 +1008,13 @@ const DowntimeWrapper = ({
                   )}
                 </div>
                 <div style={styles.listItemActions}>
-                  {(!adminMode || draft.user_id === user.id) && (
-                    <button
-                      onClick={() => handleEditDraft(draft)}
-                      style={styles.button}
-                    >
-                      <Edit3 size={14} />
-                      Edit
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleEditDraft(draft)}
+                    style={styles.button}
+                  >
+                    <Edit3 size={14} />
+                    Edit
+                  </button>
                   <button
                     onClick={() =>
                       loadSheetForViewing(draft.id, isUserAdmin && adminMode)
@@ -1031,15 +1024,13 @@ const DowntimeWrapper = ({
                     <Eye size={14} />
                     View
                   </button>
-                  {(!adminMode || draft.user_id === user.id) && (
-                    <button
-                      onClick={() => handleDeleteDraft(draft.id)}
-                      style={{ ...styles.button, ...styles.dangerButton }}
-                    >
-                      <Trash2 size={14} />
-                      Delete
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDeleteDraft(draft.id)}
+                    style={{ ...styles.button, ...styles.dangerButton }}
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
@@ -1153,15 +1144,14 @@ const DowntimeWrapper = ({
                 ? `No submitted sheets found for ${selectedCharacter?.name}.`
                 : "You haven't submitted any downtime sheets yet."}
             </p>
-            {!adminMode && (
-              <button
-                onClick={() => setActiveTab("create")}
-                style={styles.button}
-              >
-                <Plus size={16} />
-                Create New Sheet
-              </button>
-            )}
+
+            <button
+              onClick={() => setActiveTab("create")}
+              style={styles.button}
+            >
+              <Plus size={16} />
+              Create New Sheet
+            </button>
           </div>
         ) : (
           <div style={styles.listContainer}>
@@ -1458,21 +1448,20 @@ const DowntimeWrapper = ({
                 <select
                   value={selectedYear}
                   onChange={handleYearChange}
-                  disabled={currentSheet || adminMode}
+                  disabled={currentSheet && !adminMode}
                   style={{
                     width: "100%",
                     padding: "0.75rem",
                     border: `1px solid ${theme.border}`,
                     borderRadius: "8px",
                     backgroundColor:
-                      currentSheet || adminMode
+                      currentSheet && !adminMode
                         ? theme.background + "80"
                         : theme.background,
                     color: theme.text,
                     fontSize: "1rem",
-                    opacity: currentSheet || adminMode ? 0.7 : 1,
-                    cursor:
-                      currentSheet || adminMode ? "not-allowed" : "pointer",
+                    opacity: currentSheet ? 0.7 : 1,
+                    cursor: currentSheet ? "not-allowed" : "pointer",
                   }}
                 >
                   <option value="">Select Year</option>
@@ -1494,24 +1483,22 @@ const DowntimeWrapper = ({
                 <select
                   value={selectedSemester}
                   onChange={handleSemesterChange}
-                  disabled={!selectedYear || currentSheet || adminMode}
+                  disabled={!selectedYear || (currentSheet && !adminMode)}
                   style={{
                     width: "100%",
                     padding: "0.75rem",
                     border: `1px solid ${theme.border}`,
                     borderRadius: "8px",
                     backgroundColor:
-                      !selectedYear || currentSheet || adminMode
+                      !selectedYear || (currentSheet && !adminMode)
                         ? theme.background + "80"
                         : theme.background,
                     color: theme.text,
                     fontSize: "1rem",
                     opacity:
-                      !selectedYear || currentSheet || adminMode ? 0.6 : 1,
+                      !selectedYear || (currentSheet && !adminMode) ? 0.6 : 1,
                     cursor:
-                      !selectedYear || currentSheet || adminMode
-                        ? "not-allowed"
-                        : "pointer",
+                      !selectedYear || currentSheet ? "not-allowed" : "pointer",
                   }}
                 >
                   <option value="">Select Semester</option>
@@ -1519,33 +1506,44 @@ const DowntimeWrapper = ({
                     <option
                       key={semesterInfo.semester}
                       value={semesterInfo.semester}
-                      disabled={!semesterInfo.isAvailable}
+                      disabled={!semesterInfo.isAvailable && !adminMode}
                     >
                       Semester {semesterInfo.semester}
-                      {semesterInfo.isSubmitted ? " (Already Submitted)" : ""}
+                      {semesterInfo.isSubmitted && !adminMode
+                        ? " (Already Submitted)"
+                        : ""}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {!adminMode &&
-              selectedYear &&
+            {selectedYear &&
               selectedSemester &&
               isYearSemesterSubmitted(selectedYear, selectedSemester) && (
                 <div
                   style={{
                     padding: "1rem",
-                    backgroundColor: theme.warning + "20",
-                    border: `1px solid ${theme.warning}`,
+                    backgroundColor: adminMode
+                      ? theme.primary + "20"
+                      : theme.warning + "20",
+                    border: `1px solid ${
+                      adminMode ? theme.primary : theme.warning
+                    }`,
                     borderRadius: "8px",
                     marginBottom: "2rem",
                     textAlign: "center",
                   }}
                 >
-                  <p style={{ color: theme.warning, margin: 0 }}>
-                    You have already submitted a downtime sheet for Year{" "}
-                    {selectedYear}, Semester {selectedSemester}.
+                  <p
+                    style={{
+                      color: adminMode ? theme.primary : theme.warning,
+                      margin: 0,
+                    }}
+                  >
+                    {adminMode
+                      ? `🔧 Admin Mode: A downtime sheet already exists for Year ${selectedYear}, Semester ${selectedSemester}. You can create another one or edit the existing one.`
+                      : `You have already submitted a downtime sheet for Year ${selectedYear}, Semester ${selectedSemester}.`}
                   </p>
                   <button
                     onClick={() => setActiveTab("submitted")}
