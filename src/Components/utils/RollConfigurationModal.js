@@ -12,7 +12,6 @@ import {
 
 const RollModalContext = createContext();
 
-// 1. ADD: Roll Configuration Modal Component
 const RollConfigurationModal = ({
   isOpen,
   onClose,
@@ -36,7 +35,7 @@ const RollConfigurationModal = ({
     };
     onExecuteRoll(config);
     onClose();
-    // Reset for next time
+
     setPrivacy("public");
     setRollType("normal");
     setModifierAdjustment(0);
@@ -97,7 +96,7 @@ const RollConfigurationModal = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1001, // Higher than roll result modal
+        zIndex: 1001,
         padding: "20px",
       }}
       onClick={onClose}
@@ -479,7 +478,6 @@ const RollConfigurationModal = ({
   );
 };
 
-// 2. UPDATE: Enhanced RollResultModal with private indicator
 export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   if (!isOpen || !rollResult) return null;
 
@@ -493,7 +491,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     description,
     type = "ability",
     rollType = "normal",
-    isPrivate = false, // NEW: Add private indicator
+    isPrivate = false,
     inventoryAdded,
     potionQuality,
     recipeQuality,
@@ -501,8 +499,6 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     diceType = 20,
     individualDiceResults,
   } = rollResult;
-
-  // ... (keep all your existing modal code, just add private indicator)
 
   return (
     <div
@@ -635,12 +631,10 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   );
 };
 
-// 3. UPDATE: Enhanced RollModalProvider with configuration modal
 export const RollModalProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [rollResult, setRollResult] = useState(null);
 
-  // NEW: Configuration modal state
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [pendingRoll, setPendingRoll] = useState(null);
 
@@ -654,13 +648,11 @@ export const RollModalProvider = ({ children }) => {
     setRollResult(null);
   };
 
-  // NEW: Request roll with configuration
   const requestRoll = (rollFunction, rollTitle, options = {}) => {
     setPendingRoll({ rollFunction, rollTitle, options });
     setIsConfigModalOpen(true);
   };
 
-  // NEW: Execute roll with configuration
   const executeRoll = (config) => {
     if (pendingRoll) {
       pendingRoll.rollFunction({

@@ -26,7 +26,7 @@ const RecipeCookingSystem = ({ character, user, supabase }) => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  // eslint-disable-next-line
+
   const [proficiencies, setProficiencies] = useState({
     cooking: 0,
     culinaryKit: true,

@@ -27,7 +27,6 @@ export const AbilityScorePicker = ({
   const { theme } = useTheme();
   const styles = createAbilityScorePickerStyles(theme);
 
-  // State to persist manual scores and rolled assignments separately
   const [manualScores, setManualScores] = useState({
     strength: 8,
     dexterity: 8,
@@ -112,29 +111,23 @@ export const AbilityScorePicker = ({
     setIsManualMode(newManualMode);
 
     if (newManualMode) {
-      // Store current rolled assignments before switching
       setRolledAssignments({ ...character.abilityScores });
 
-      // Restore manual scores
       setCharacter((prev) => ({
         ...prev,
         abilityScores: { ...manualScores },
       }));
     } else {
-      // Store current manual scores before switching
       setManualScores({ ...character.abilityScores });
 
-      // Restore rolled assignments
       setCharacter((prev) => ({
         ...prev,
         abilityScores: { ...rolledAssignments },
       }));
 
-      // If we have no rolled stats, generate new ones
       if (rolledStats.length === 0) {
         rollAllStats();
       } else {
-        // Recalculate available stats based on current assignments
         const assignedStats = Object.values(rolledAssignments).filter(
           (score) => score !== null
         );
@@ -150,7 +143,6 @@ export const AbilityScorePicker = ({
     const currentScore = character.abilityScores[ability] || 8;
     const newScore = Math.min(currentScore + 1, 40);
 
-    // Update both character state and manual scores
     setCharacter((prev) => ({
       ...prev,
       abilityScores: {
@@ -169,7 +161,6 @@ export const AbilityScorePicker = ({
     const currentScore = character.abilityScores[ability] || 8;
     const newScore = Math.max(currentScore - 1, 1);
 
-    // Update both character state and manual scores
     setCharacter((prev) => ({
       ...prev,
       abilityScores: {
@@ -184,10 +175,8 @@ export const AbilityScorePicker = ({
     }));
   };
 
-  // Enhanced clear stat function to update appropriate storage
   const enhancedClearStat = (ability) => {
     if (isManualMode) {
-      // Reset to default value for manual mode
       const defaultScore = 8;
       setCharacter((prev) => ({
         ...prev,
@@ -202,10 +191,8 @@ export const AbilityScorePicker = ({
         [ability]: defaultScore,
       }));
     } else {
-      // Use the original clearStat function for rolled mode
       clearStat(ability);
 
-      // Also update our rolled assignments tracking
       setRolledAssignments((prev) => ({
         ...prev,
         [ability]: null,
@@ -213,11 +200,9 @@ export const AbilityScorePicker = ({
     }
   };
 
-  // Enhanced assign stat function to update rolled assignments tracking
   const enhancedAssignStat = (ability, value) => {
     assignStat(ability, value);
 
-    // Update our rolled assignments tracking
     setRolledAssignments((prev) => ({
       ...prev,
       [ability]: value,
@@ -310,7 +295,6 @@ export const AbilityScorePicker = ({
           },
         }));
 
-        // Also update manual scores if in manual mode
         if (isManualMode) {
           setManualScores((prev) => ({
             ...prev,

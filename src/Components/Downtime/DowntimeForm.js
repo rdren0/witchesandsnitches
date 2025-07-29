@@ -61,6 +61,7 @@ import {
   getAbilityScoreModifier,
   calculateAbilityScoreIncreaseDC,
 } from "./downtimeHelpers";
+import NPCAutocompleteInput from "./NPCAutocompleteInput";
 
 const DowntimeForm = ({
   user,
@@ -1725,15 +1726,15 @@ const DowntimeForm = ({
                 >
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>NPC Name</label>
-                    <input
-                      style={styles.input}
-                      type="text"
+                    <NPCAutocompleteInput
                       value={relationship.npcName || ""}
-                      onChange={(e) =>
-                        updateRelationship(index, "npcName", e.target.value)
+                      onChange={(value) =>
+                        updateRelationship(index, "npcName", value)
                       }
                       placeholder="Enter NPC name..."
                       disabled={!canEdit()}
+                      theme={theme}
+                      styles={{ input: styles.input }}
                     />
                   </div>
 

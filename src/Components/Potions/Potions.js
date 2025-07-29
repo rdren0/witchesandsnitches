@@ -163,7 +163,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     return <IconComponent size={24} />;
   };
 
-  // NEW: Helper function to determine potion value based on quality and rarity
   const getPotionValue = (quality, rarity) => {
     const baseValues = {
       common: {
@@ -201,7 +200,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     return baseValues[rarity]?.[quality] || "Unknown";
   };
 
-  // NEW: Function to add potion to inventory
   const addPotionToInventory = async (brewingResult) => {
     if (!supabase || !currentCharacter?.id || !user) {
       console.error("Missing required data for inventory addition");
@@ -248,7 +246,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     }
   };
 
-  // UPDATED: brewPotion function with inventory integration
   const brewPotion = async () => {
     if (!selectedPotion) return;
 
@@ -277,7 +274,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         qualityDCs,
         ingredientModifiers,
         characterModifier,
-        // NEW: Pass inventory function to rollBrewPotion
+
         addPotionToInventory,
         currentCharacter,
         supabase,

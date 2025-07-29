@@ -988,7 +988,8 @@ const DowntimeWrapper = ({
               <div key={draft.id} style={styles.listItem}>
                 <div style={styles.listItemInfo}>
                   <div style={styles.listItemTitle}>
-                    Year {draft.year}, Semester {draft.semester}
+                    Year {draft.school_year || draft?.year}, Semester{" "}
+                    {draft.semester}
                   </div>
                   <div style={styles.listItemSubtitle}>
                     Last updated: {new Date(draft.updated_at).toLocaleString()}
@@ -1205,7 +1206,6 @@ const DowntimeWrapper = ({
     };
 
     const handleEditRejected = (sheet) => {
-      console.log("from character view:", { sheet });
       setCurrentSheet(sheet);
 
       setSelectedYear(parseInt(sheet.school_year) || "");
@@ -1326,7 +1326,6 @@ const DowntimeWrapper = ({
 
   return (
     <div style={styles.container}>
-      {/* Admin Mode Breadcrumb */}
       {adminMode && selectedCharacter && (
         <div style={styles.adminBreadcrumb}>
           <Shield size={16} />
