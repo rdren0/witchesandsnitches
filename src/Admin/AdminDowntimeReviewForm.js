@@ -855,6 +855,81 @@ const AdminDowntimeReviewForm = React.memo(
       return { firstSkill: "", secondSkill: "" };
     }, []);
 
+    const renderAbilityScoreRollInfo = (
+      activity,
+      assignment,
+      dicePool,
+      character
+    ) => {
+      const diceValue = dicePool?.[assignment.diceIndex];
+
+      if (diceValue === undefined || diceValue === null) {
+        return (
+          <div style={styles.rollContainer}>
+            <div style={styles.rollLabel}>No dice assigned</div>
+          </div>
+        );
+      }
+
+      const abilityName = activity.selectedAbilityScore;
+      const currentScore =
+        character?.ability_scores?.[abilityName] ||
+        character?.[abilityName] ||
+        10;
+      const modifier = Math.floor((currentScore - 10) / 2);
+      const total = diceValue + modifier;
+      const dc = currentScore;
+
+      const isSuccess = total >= dc;
+      const isNat20 = diceValue === 20;
+
+      const abilities = [
+        { name: "strength", displayName: "Strength" },
+        { name: "dexterity", displayName: "Dexterity" },
+        { name: "constitution", displayName: "Constitution" },
+        { name: "intelligence", displayName: "Intelligence" },
+        { name: "wisdom", displayName: "Wisdom" },
+        { name: "charisma", displayName: "Charisma" },
+      ];
+
+      const selectedAbility = abilities.find((a) => a.name === abilityName);
+      const abilityDisplayName =
+        selectedAbility?.displayName ||
+        abilityName?.charAt(0).toUpperCase() + abilityName?.slice(1) ||
+        "Unknown";
+
+      const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
+
+      return (
+        <div style={styles.rollContainer}>
+          <div style={styles.rollLabel}>
+            Ability Score Check: {abilityDisplayName}
+          </div>
+          <div style={styles.rollBreakdown}>
+            <span style={styles.rollValue}>({diceValue})</span>
+            <span style={styles.modifier}>{formatModifier(modifier)}</span>
+            <span style={styles.equals}> = </span>
+            <span style={styles.total}>{total}</span>
+          </div>
+          <div style={styles.skillUsed}>
+            Using {abilityDisplayName} {formatModifier(modifier)} vs DC {dc}
+          </div>
+          <div
+            style={{
+              marginTop: "4px",
+              fontSize: "12px",
+              fontWeight: "600",
+              color: isSuccess ? "#10b981" : "#ef4444",
+            }}
+          >
+            {isNat20 ? "🎯 Natural 20! " : ""}
+            {isSuccess ? "✅ SUCCESS" : "❌ FAILURE"}
+            {isNat20 && " (Counts as 2 successes!)"}
+          </div>
+        </div>
+      );
+    };
+
     const renderRollInfo = useCallback(
       (assignment, dicePool, character, skillField, diceField, label) => {
         const skill = assignment[skillField];
@@ -1363,19 +1438,27 @@ const AdminDowntimeReviewForm = React.memo(
                       </div>
                     </div>
                   ) : (
-                    activityAssignment.skill && (
+                    (activityAssignment.skill ||
+                      activityRequiresAbilitySelection(activity.activity)) && (
                       <div style={styles.rollResultSection}>
                         <div style={styles.rollResultHeader}>
                           <strong>Roll Result:</strong>
                         </div>
-                        {renderRollInfo(
-                          activityAssignment,
-                          downtimeSheet.dice_pool,
-                          character,
-                          "skill",
-                          "diceIndex",
-                          "Roll"
-                        )}
+                        {activityRequiresAbilitySelection(activity.activity)
+                          ? renderAbilityScoreRollInfo(
+                              activity,
+                              activityAssignment,
+                              downtimeSheet.dice_pool,
+                              character
+                            )
+                          : renderRollInfo(
+                              activityAssignment,
+                              downtimeSheet.dice_pool,
+                              character,
+                              "skill",
+                              "diceIndex",
+                              "Roll"
+                            )}
                       </div>
                     )
                   )}
