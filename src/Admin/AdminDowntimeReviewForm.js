@@ -7,6 +7,7 @@ import {
   activityRequiresSpellSelection,
   activityRequiresClassSelection,
   calculateWandStatIncreaseDC,
+  activityRequiresAbilitySelection,
 } from "../Components/Downtime/downtimeHelpers";
 import { getSpellModifier } from "../Components/SpellBook/utils";
 import { spellsData } from "../Components/SpellBook/spells";
@@ -587,6 +588,56 @@ const AdminDowntimeReviewForm = React.memo(
       ]
     );
 
+    const renderAbilityScoreIncreaseReview = (
+      activity,
+      activityAssignment,
+      character,
+      dicePool
+    ) => {
+      if (!activityRequiresAbilitySelection(activity.activity)) {
+        return null;
+      }
+
+      const abilities = [
+        { name: "strength", displayName: "Strength" },
+        { name: "dexterity", displayName: "Dexterity" },
+        { name: "constitution", displayName: "Constitution" },
+        { name: "intelligence", displayName: "Intelligence" },
+        { name: "wisdom", displayName: "Wisdom" },
+        { name: "charisma", displayName: "Charisma" },
+      ];
+
+      const selectedAbility = abilities.find(
+        (a) => a.name === activity.selectedAbilityScore
+      );
+      const abilityDisplayName =
+        selectedAbility?.displayName ||
+        activity.selectedAbilityScore?.charAt(0).toUpperCase() +
+          activity.selectedAbilityScore?.slice(1) ||
+        "Unknown";
+
+      const currentScore =
+        character?.ability_scores?.[activity.selectedAbilityScore] ||
+        character?.[activity.selectedAbilityScore] ||
+        10;
+      const dc = currentScore;
+
+      return (
+        <div style={styles.activityDetails}>
+          <div style={{ marginBottom: "8px" }}>
+            <strong>Selected Ability Score:</strong> {abilityDisplayName}
+          </div>
+          <div style={{ marginBottom: "8px" }}>
+            <strong>Current Score:</strong> {currentScore} (DC: {dc})
+          </div>
+          <div style={{ fontSize: "12px", color: theme.textSecondary }}>
+            Must succeed on 3 separate checks to increase this ability score by
+            1.
+          </div>
+        </div>
+      );
+    };
+
     const renderSpellActivityReview = useCallback(
       (
         activity,
@@ -866,7 +917,7 @@ const AdminDowntimeReviewForm = React.memo(
           .single();
 
         if (error) throw error;
-
+        console.log({ sheetfromAdminForm: sheet });
         setDowntimeSheet(sheet);
         setReviewStatus(sheet.review_status || "pending");
         setAdminFeedback(sheet.admin_feedback || "");
@@ -1156,6 +1207,12 @@ const AdminDowntimeReviewForm = React.memo(
             )}
 
             {renderWandIncreaseReview(
+              activity,
+              activityAssignment,
+              character,
+              downtimeSheet.dice_pool
+            )}
+            {renderAbilityScoreIncreaseReview(
               activity,
               activityAssignment,
               character,
