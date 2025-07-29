@@ -307,11 +307,9 @@ const DowntimeForm = ({
   }, [currentSheet?.id]);
 
   const canEdit = useCallback(() => {
-    // Admins in admin mode can edit anything (create new or edit any sheet)
     if (isUserAdmin && adminMode) return true;
 
-    // Regular editing rules (applies to non-admins and admins not in admin mode)
-    if (!currentSheet) return true; // New sheet creation
+    if (!currentSheet) return true;
     if (currentSheet.is_draft) return currentSheet.user_id === user?.id;
     if (currentSheet.review_status === "failure")
       return currentSheet.user_id === user?.id;
