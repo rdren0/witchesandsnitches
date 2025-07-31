@@ -347,7 +347,7 @@ export const Skills = ({
                 letterSpacing: "0.05em",
               }}
             >
-              DECEPTION
+              Deception
             </div>
             <div
               style={{
@@ -381,7 +381,7 @@ export const Skills = ({
                 letterSpacing: "0.05em",
               }}
             >
-              INVESTIGATION
+              Investigation
             </div>
             <div
               style={{
