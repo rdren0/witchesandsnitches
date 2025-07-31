@@ -439,12 +439,7 @@ export const Skills = ({
                             color: "#f59e0b",
                           }
                         : {}),
-                      ...(isPassiveSkill
-                        ? {
-                            fontWeight: "600",
-                            color: "#f59e0b",
-                          }
-                        : {}),
+
                       ...(isRolling
                         ? { opacity: 0.5, cursor: "not-allowed" }
                         : {}),
@@ -463,7 +458,7 @@ export const Skills = ({
                         size={12}
                         style={{
                           marginLeft: "4px",
-                          color: theme.warning || "#f59e0b",
+                          color: theme.success || "#f59e0b",
                         }}
                       />
                     )}
@@ -472,7 +467,7 @@ export const Skills = ({
                         style={{
                           marginLeft: "0.5rem",
                           fontSize: "0.75rem",
-                          color: theme.textSecondary,
+                          color: theme.success,
                           fontWeight: "normal",
                         }}
                       >
@@ -488,7 +483,7 @@ export const Skills = ({
                       ...(skillLevel === 2
                         ? {
                             fontWeight: "bold",
-                            color: theme.warning || "#f59e0b",
+                            color: theme.success || "#f59e0b",
                           }
                         : skillLevel === 1
                         ? {
