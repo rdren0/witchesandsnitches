@@ -31,7 +31,7 @@ import { AdminProvider, useAdmin } from "../contexts/AdminContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
-import { LOCAL_HOST, WEBSITE } from "./const";
+import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 
 const supabase = createClient(
@@ -610,7 +610,7 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
 
         <div style={styles.featureGrid}>
           <a
-            href="https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde"
+            href={RULE_BOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
             style={{ textDecoration: "none" }} // Optional: remove underline
