@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Circle, Star } from "lucide-react";
-import { formatModifier, modifiers } from "./utils";
+import {
+  calculatePassivePerception,
+  calculatePassiveInvestigation,
+  calculatePassiveDeception,
+  calculateModifier,
+  formatModifier,
+  modifiers,
+  getPassiveSkillBreakdown,
+} from "./utils";
 import { skillMap, allSkills } from "../../SharedData/data";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
@@ -19,6 +27,10 @@ export const Skills = ({
   const [sortColumn, setSortColumn] = useState("skill");
   const [sortDirection, setSortDirection] = useState("asc");
   const [isRolling, setIsRolling] = useState(false);
+
+  const passivePerception = calculatePassivePerception(character);
+  const passiveInvestigation = calculatePassiveInvestigation(character);
+  const passiveDeception = calculatePassiveDeception(character);
 
   const calculateSkillBonus = (skillName, abilityMod) => {
     if (!character) return 0;
@@ -246,9 +258,178 @@ export const Skills = ({
     }
   };
 
+  const renderPassiveSkillBreakdown = (skillName, passiveValue) => {
+    const breakdown = getPassiveSkillBreakdown(skillName, character);
+    const skillModifier = calculateModifier(skillName, character);
+    const baseValue = 10 + skillModifier;
+    const featBonus = passiveValue - baseValue;
+
+    return (
+      <div
+        style={{
+          fontSize: "0.75rem",
+          color: theme.textSecondary,
+          fontWeight: "normal",
+          lineHeight: "1.3",
+          marginTop: "0.25rem",
+        }}
+      >
+        <div>
+          10 +(
+          {formatModifier(skillModifier)}) = {baseValue}
+        </div>
+        {featBonus > 0 && (
+          <div
+            style={{
+              color: theme.success || theme.primary,
+              fontWeight: "500",
+              marginTop: "0.125rem",
+            }}
+          >
+            + Feat Bonuses (+{featBonus})
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={styles.skillsCard}>
       <h2 style={styles.skillsTitle}>SKILLS</h2>
+
+      {/* Passive Skills Display */}
+      <div
+        style={{
+          backgroundColor: theme.background,
+          borderRadius: "0.5rem",
+          border: `2px solid ${theme.primary}40`,
+          padding: "1rem",
+          marginBottom: "1rem",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "0.875rem",
+            fontWeight: "bold",
+            color: theme.text,
+            marginBottom: "1rem",
+            letterSpacing: "0.1em",
+            textAlign: "center",
+            marginTop: "-8px",
+          }}
+        >
+          PASSIVE
+        </h3>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+            gap: "0.75rem",
+          }}
+        >
+          {/* Passive Deception */}
+          <div
+            style={{
+              textAlign: "center",
+              padding: "0.5rem",
+              backgroundColor: `${theme.warning || "#f59e0b"}08`,
+              borderRadius: "0.375rem",
+              border: `1px solid ${theme.warning || "#f59e0b"}20`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                color: theme.text,
+                marginBottom: "0.25rem",
+                letterSpacing: "0.05em",
+              }}
+            >
+              DECEPTION
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "bold",
+                color: theme.warning || "#f59e0b",
+                marginBottom: "0.25rem",
+              }}
+            >
+              {passiveDeception}
+            </div>
+            {renderPassiveSkillBreakdown("deception", passiveDeception)}
+          </div>
+
+          {/* Passive Investigation */}
+          <div
+            style={{
+              textAlign: "center",
+              padding: "0.5rem",
+              backgroundColor: `${theme.secondary || theme.primary}08`,
+              borderRadius: "0.375rem",
+              border: `1px solid ${theme.secondary || theme.primary}20`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                color: theme.text,
+                marginBottom: "0.25rem",
+                letterSpacing: "0.05em",
+              }}
+            >
+              INVESTIGATION
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "bold",
+                color: theme.secondary || theme.primary,
+                marginBottom: "0.25rem",
+              }}
+            >
+              {passiveInvestigation}
+            </div>
+            {renderPassiveSkillBreakdown("investigation", passiveInvestigation)}
+          </div>
+          {/* Passive Perception */}
+          <div
+            style={{
+              textAlign: "center",
+              padding: "0.5rem",
+              backgroundColor: `${theme.primary}08`,
+              borderRadius: "0.375rem",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                color: theme.text,
+                marginBottom: "0.25rem",
+                letterSpacing: "0.05em",
+              }}
+            >
+              Perception
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "bold",
+                color: theme.primary,
+                marginBottom: "0.25rem",
+              }}
+            >
+              {passivePerception}
+            </div>
+            {renderPassiveSkillBreakdown("perception", passivePerception)}
+          </div>
+        </div>
+      </div>
+
       <div
         style={{
           marginBottom: "12px",
@@ -260,6 +441,7 @@ export const Skills = ({
       >
         Click icons to cycle: None → Proficient → Expertise
       </div>
+
       <table style={styles.skillsTable}>
         <thead>
           <tr style={styles.skillsHeaderRow}>
@@ -318,12 +500,39 @@ export const Skills = ({
             const abilityMod = modifiers(character)[skill.ability];
             const skillBonus = calculateSkillBonus(skill.name, abilityMod);
             const skillLevel = character.skills?.[skill.name] || 0;
+            const isPerception = skill.name === "perception";
+            const isInvestigation = skill.name === "investigation";
+            const isDeception = skill.name === "deception";
+            const isPassiveSkill =
+              isPerception || isInvestigation || isDeception;
+
+            let passiveValue = null;
+            if (isPerception) passiveValue = passivePerception;
+            else if (isInvestigation) passiveValue = passiveInvestigation;
+            else if (isDeception) passiveValue = passiveDeception;
 
             return (
               <tr
                 key={skill.name}
                 style={{
                   ...styles.skillRow,
+
+                  ...(isPassiveSkill
+                    ? {
+                        backgroundColor: isPerception
+                          ? `${theme.primary}08`
+                          : isInvestigation
+                          ? `${theme.secondary || theme.primary}08`
+                          : `${theme.warning || "#f59e0b"}08`,
+                        borderLeft: `3px solid ${
+                          isPerception
+                            ? theme.primary
+                            : isInvestigation
+                            ? theme.secondary || theme.primary
+                            : theme.warning || "#f59e0b"
+                        }`,
+                      }
+                    : {}),
                 }}
               >
                 <td style={styles.skillCell}>
@@ -373,6 +582,16 @@ export const Skills = ({
                             borderColor: theme.warning || "#f59e0b",
                           }
                         : {}),
+                      ...(isPassiveSkill
+                        ? {
+                            fontWeight: "600",
+                            color: isPerception
+                              ? theme.primary
+                              : isInvestigation
+                              ? theme.secondary || theme.primary
+                              : theme.warning || "#f59e0b",
+                          }
+                        : {}),
                       ...(isRolling
                         ? { opacity: 0.5, cursor: "not-allowed" }
                         : {}),
@@ -383,7 +602,7 @@ export const Skills = ({
                         : skillLevel === 2
                         ? " (Expertise)"
                         : ""
-                    }`}
+                    }${passiveValue ? ` - Passive: ${passiveValue}` : ""}`}
                   >
                     {skill.displayName}
                     {skillLevel === 2 && (
@@ -394,6 +613,18 @@ export const Skills = ({
                           color: theme.warning || "#f59e0b",
                         }}
                       />
+                    )}
+                    {passiveValue && (
+                      <span
+                        style={{
+                          marginLeft: "0.5rem",
+                          fontSize: "0.75rem",
+                          color: theme.textSecondary,
+                          fontWeight: "normal",
+                        }}
+                      >
+                        (Passive: {passiveValue})
+                      </span>
                     )}
                   </button>
                 </td>

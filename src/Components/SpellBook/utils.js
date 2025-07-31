@@ -2,7 +2,7 @@ import {
   INDIVIDUAL_SPELL_MODIFIERS,
   TRADITIONAL_SCHOOL_MAPPINGS,
   CATEGORY_DEFAULT_MAPPINGS,
-} from "./spells";
+} from "../../SharedData/spells";
 
 export const getAbilityModifier = (score) => {
   if (score === null || score === undefined) return 0;

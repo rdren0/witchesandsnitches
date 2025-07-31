@@ -1,4 +1,4 @@
-import { SUBJECT_TO_MODIFIER_MAP } from "../../SharedData/data";
+import { SUBJECT_TO_MODIFIER_MAP } from "./data";
 
 export const cardTitles = {
   "Charms-Cantrips": true,
@@ -1729,255 +1729,77 @@ export const spellsData = {
           description:
             "This universal incantation is taught to Hogwarts students in their first Transfiguration class. You transfigure one nonmagical object that you can see within range and that fits within a 1-foot cube into another nonmagical object of similar size and mass and of equal or lesser value.",
           higherLevels:
-            "When you cast this spell using a spell slot of 1st level or higher, you may select or stack one of the following effects for each slot level above 0.",
+            "When you cast this spell using a spell slot of 1st level or higher, you may select or stack one of the following effects for each slot level above 0: Increase the cube's size by 1 foot, Affect a magical object, Affect a living creature (3rd level+), Create an object of greater value.",
         },
       ],
       "1st Level": [
         {
-          name: "Diffindo Glacia",
+          name: "Diffindo",
           class: "Transfiguration",
-          restricted: true,
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
           duration: "Instantaneous",
           year: 2,
           description:
-            "You create a shard of ice and fling it at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 piercing damage. Hit or miss, the shard then explodes. The target and each creature within 5 feet of the point where the ice exploded must succeed on a Dexterity saving throw or take 2d6 cold damage.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, the cold damage increases by 1d6 for each slot level above 1st.",
-        },
-        {
-          name: "Ignis Ictus",
-          class: "Transfiguration",
-          restricted: true,
-          level: "1st Level",
-          castingTime: "Bonus Action",
-          range: "Self",
-          duration: "Dedication, up to 1 minute",
-          year: 2,
-          description:
-            "The next time you hit a creature with your Transfigured Armament during the spell's duration, your weapon flares with white-hot intensity, and the attack deals an extra 1d6 fire damage to the target and causes the target to ignite in flames. If you dedicate on this spell, the target must make a Constitution saving throw at the start of each of its turns until the spell ends. On a failed save, it takes 1d6 fire damage. On a successful save, the spell ends. If the target or a creature within 5 feet of it uses an action to put out the flames, or if some other effect douses the flames (such as the target being submerged in water), the spell ends.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, the initial extra damage dealt by the attack increases by 1d6 for each slot above 1st.",
-        },
-        {
-          name: "Inanimatus Conjurus",
-          class: "Transfiguration",
-          level: "1st Level",
-          castingTime: "Action",
-          range: "10 Feet",
-          duration: "1 Hour",
-          year: 2,
-          tags: ["R"],
-          description:
-            "You conjure up an inanimate object in your hand or in an unoccupied space within range that you can see. This object can be no larger than 2 feet on a side and weigh no more than 10 pounds, and its form must be that of a nonmagical object that you have seen. The object disappears at the end of the spell's duration or if it takes any damage.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, you may select or stack one of the following effects for each slot level above 1st: Increase the side length by 2 feet, Increase the weight limit by 10 pounds.",
-        },
-        {
-          name: "Incendio",
-          class: "Transfiguration",
-          level: "1st Level",
-          castingTime: "Action",
-          range: "90 Feet",
-          duration: "Concentration, up to 1 minute",
-          year: 2,
-          tags: ["R"],
-          description:
-            "You create a bonfire on ground that you can see within range. Until the spell ends, the bonfire fills a 5-foot cube. Any creature in the bonfire's space when you cast the spell must succeed on a Dexterity saving throw. It takes 3d6 fire damage on a failed save, or half as much damage on a successful one. A creature must also make the saving throw when it moves into the bonfire's space for the first time on a turn or ends its turn there. The bonfire ignites flammable objects in its area that aren't being worn or carried. If there is adequate fuel for the bonfire to burn, it will continue burning after the spell ends.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 2d6 for each slot level above 2nd.",
-        },
-        {
-          name: "Intonuit Fluctus",
-          class: "Transfiguration",
-          restricted: true,
-          level: "1st Level",
-          castingTime: "Action",
-          range: "Self",
-          duration: "Instantaneous",
-          year: 3,
-          description:
-            "A wave of thunderous force sweeps out from you. Each creature in a 15-foot cube originating from you must make a Constitution saving throw. On a failed save, a creature takes 2d8 thunder damage and is pushed 10 feet away from you. On a successful save, the creature takes half as much damage and isn't pushed. In addition, unsecured objects that are completely within the area of effect are automatically pushed 10 feet away from you by the spell's effect, and the spell emits a thunderous boom audible out to 300 feet.",
+            "A thin, purple beam shoots from the tip of your wand, slicing through whatever it touches. Choose one creature, object, or magical effect within range. A creature must make a Dexterity saving throw. On a failed save, a creature takes 2d8 slashing damage. On a successful save, it takes half damage. This spell can slice through rope, clothing, or thin materials automatically.",
           higherLevels:
             "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.",
         },
         {
-          name: "Irus Ictus",
-          class: "Transfiguration",
-          restricted: true,
-          level: "1st Level",
-          castingTime: "Bonus Action",
-          range: "Self",
-          duration: "Concentration, up to 1 minute",
-          year: 2,
-          description:
-            "The next time you hit with your Transfigured Armament during this spell's duration, your attack deals an extra 1d6 psychic damage. Additionally, if the target is a creature, it must make a Wisdom saving throw or be frightened of you until the spell ends. As an action, the creature can make a Wisdom check against your spell save DC to steel its resolve and end this spell.",
-        },
-        {
-          name: "Nebulus",
-          class: "Transfiguration",
-          level: "1st Level",
-          castingTime: "1 action",
-          range: "120 feet",
-          duration: "Concentration, up to 1 hour",
-          year: 3,
-          description:
-            "You create a 20-foot-radius sphere of fog centered on a point within range. The sphere spreads around corners, and its area is heavily obscured. It lasts for the duration or until a wind of moderate or greater speed (at least 10 miles per hour) disperses it.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, the radius of the fog increases by 20 feet for each slot level above 1st.",
-        },
-        {
-          name: "Obscuro",
+          name: "Engorgio",
           class: "Transfiguration",
           level: "1st Level",
           castingTime: "Action",
-          range: "60 Feet",
-          duration: "Until Dispelled",
-          year: 2,
-          tags: ["R"],
-          description:
-            "You can conjure a black blindfold that magically wraps itself around a foe's head. Choose one creature that you can see within range to make a Dexterity saving throw. If it fails, the target is blinded for the duration. The creature can remove the blindfold as an action.",
-        },
-        {
-          name: "Pererro",
-          class: "Transfiguration",
-          restricted: true,
-          level: "1st Level",
-          castingTime: "Bonus Action",
-          range: "Touch",
-          duration: "Dedication, up to 1 hour",
-          year: 1,
-          description:
-            "You touch your Transfigured Armament. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 4th level or higher, the bonus increases to +2. When you use a spell slot of 6th level or higher, the bonus increases to +3.",
-        },
-        {
-          name: "Sagittario",
-          class: "Transfiguration",
-          level: "1st Level",
-          castingTime: "1 action",
-          range: "150 feet",
-          duration: "Instantaneous",
-          year: 4,
-          description:
-            "A conjured arrow streaks toward a designated target. Make a ranged spell attack against a target within range. On a hit, the target takes piercing damage equal to 1d8 + your spellcasting ability modifier.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, you conjure one additional arrow for each slot level above 1st. You can direct the arrows at the same target or at different ones. Make a separate attack roll for each arrow.",
-        },
-        {
-          name: "Tonitrus Ictus",
-          class: "Transfiguration",
-          restricted: true,
-          level: "1st Level",
-          castingTime: "Bonus Action",
-          range: "Self",
-          duration: "Concentration, up to 1 minute",
+          range: "30 Feet",
+          duration: "10 Minutes",
           year: 3,
           description:
-            "The first time you hit with your Transfigured Armament during this spell's duration, your weapon rings with thunder that is audible within 300 feet of you, and the attack deals an extra 2d6 thunder damage to the target. Additionally, if the target is a creature, it must succeed on a Strength saving throw or be pushed 10 feet away from you and knocked prone.",
+            "You cause a creature or an object to grow larger. If the target is a creature, everything it is wearing and carrying changes size with it. Any item dropped by an affected creature returns to normal size at once. Choose a creature or object that you can see within range to grow to double its size in all dimensions, and its weight is multiplied by eight. This growth increases its size by one category. If there isn't enough room for the target to double its size, the creature or object attains the maximum possible size in the space available.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the target grows to triple its size for 3rd level, or quadruple for 5th level.",
+        },
+        {
+          name: "Reducio",
+          class: "Transfiguration",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "10 Minutes",
+          year: 3,
+          description:
+            "You cause a creature or an object to shrink. If the target is a creature, everything it is wearing and carrying changes size with it. Any item dropped by an affected creature returns to normal size at once. Choose a creature or object that you can see within range to shrink to half its size in all dimensions, and its weight is multiplied by one-eighth. This reduction decreases its size by one category.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the target shrinks to one-third its size for 3rd level, or one-quarter for 5th level.",
         },
       ],
       "2nd Level": [
         {
-          name: "Incarcerous",
+          name: "Animato",
           class: "Transfiguration",
-          level: "2nd Level (ritual)",
-          castingTime: "1 action",
-          range: "30 feet",
-          duration: "24 hours",
-          year: 3,
-          tags: ["R"],
-          description:
-            "Black cords and ropes are conjured and wrap themselves forcefully around a target you can see within range. If the target is an unwilling creature, it must make a Strength saving throw. On a failed save, the creature is restrained for the duration. Upon casting, you can choose to anchor the ropes to the ground, preventing the target from being moved by external forces. The restrained creature or someone else who can reach it can use an action to make a Strength check against your spell save DC. On a success, the restrained effect ends.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 4th level or higher, the creature is also incapacitated, rendering it unable make a Strength check to escape.",
-        },
-        {
-          name: "Notam Ictus",
-          class: "Transfiguration",
-          restricted: true,
           level: "2nd Level",
-          castingTime: "Bonus Action",
-          range: "Self",
+          castingTime: "Action",
+          range: "120 Feet",
           duration: "Concentration, up to 1 minute",
           year: 4,
           description:
-            "The next time you hit a creature with your Transfigured Armament before this spell ends, the weapon gleams with radiance as you strike. The attack deals an extra 2d6 radiant damage to the target, which becomes visible if it is invisible, and the target sheds dim light in a 5-foot radius and can't become invisible until the spell ends.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 3rd level or higher, the extra damage increases by 1d6 for each slot level above 2nd.",
+            "Objects come to life at your command. Choose up to ten nonmagical objects within range that are not being worn or carried. You can also choose a smaller number of larger objects; treat a Large object as four objects, a Huge object as nine objects, and a Gargantuan object as sixteen objects. Each target animates and becomes a creature under your control until the spell ends or until reduced to 0 hit points.",
         },
         {
-          name: "Orbis",
+          name: "Glacius",
           class: "Transfiguration",
-          restricted: true,
           level: "2nd Level",
-          castingTime: "1 action",
-          range: "60 feet",
-          duration: "Concentration, up to 1 minute",
-          year: 3,
-          description:
-            "You choose a space on the ground that is currently occupied by a Large or smaller creature you can see within range. The ground becomes a thick liquid and swirls out from under the creature in an orb-like shape. The material then slams back down and regains its solidity in an attempt to partially bury the creature. The target must make a Dexterity saving throw. On a failed save, the target takes 3d6 bludgeoning damage and is restrained for the spell's duration. As an action, you can cause the earth to crush the restrained target, who must make a Strength saving throw. It takes 3d6 bludgeoning damage on a failed save, or half as much damage on a successful one. To break out, the restrained target can use its action to make a Strength check against your spell save DC. On a success, the target pulls its legs free and is no longer restrained.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot level above 2nd.",
-        },
-        {
-          name: "Reparifarge",
-          class: "Transfiguration",
-          restricted: true,
-          level: "2nd Level",
-          castingTime: "1 action",
-          range: "90 feet",
+          castingTime: "Action",
+          range: "60 Feet",
           duration: "Instantaneous",
           year: 3,
           description:
-            "Choose any creature, object, or magical effect within range. One Transfiguration spell of 2nd level or lower on the target ends. If you are aware of at least one spell affecting the target, you can specify that spell in your mind. If you are unaware of what spells are affecting the target, one randomly selected spell ends. For a spell of a higher level on the target, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level. On a successful check, the spell ends.",
+            "You create a frigid blast of cold air. Each creature in a 15-foot cone must make a Constitution saving throw. A creature takes 3d8 cold damage on a failed save, or half as much damage on a successful one. A creature killed by this spell becomes a frozen statue until it thaws.",
           higherLevels:
-            "When you cast this spell using a spell slot of 3rd level or higher, you automatically end the effects of a Transfiguration spell on the target if the spell's level is equal to or less than the level of the spell slot you used.",
-        },
-        {
-          name: "Serpensortia",
-          class: "Transfiguration",
-          level: "2nd Level",
-          castingTime: "1 action",
-          range: "30 feet",
-          duration: "Instantaneous",
-          year: 4,
-          description:
-            "You conjure a venomous snake from thin air. A pit viper appears in an unoccupied space that you can see within range. Roll initiative for the summoned creature, which has its own turns. Although the pit viper won't willingly attack the caster, you cannot control the actions or targets of the pit viper. It is possible for the pit viper to be turned against you through magical means.",
-          higherLevels:
-            "When you cast this spell using a higher level spell slot, multiple pit vipers are conjured in unoccupied spaces that you can see within range. Choose from the following options: two pit vipers (4th level), three pit vipers (6th level), or four pit vipers (8th level). Initiative is rolled as a group.",
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for each slot level above 2nd.",
         },
       ],
       "3rd Level": [
-        {
-          name: "Avis",
-          class: "Transfiguration",
-          level: "3rd Level",
-          castingTime: "1 action",
-          range: "60 feet",
-          duration: "Concentration, up to 1 hour",
-          year: 5,
-          description:
-            "You conjure either a Swarm of Small Birds or two Swarms of Tiny Birds that are a species of your choice. The swarm disappears when it drops to 0 hit points or when the spell ends. The conjured birds are friendly to you and your companions. Roll initiative for the summoned swarms as a group, which has its own turns. They obey any verbal commands that you issue to them (no action required by you). If you don't issue any commands to them, they defend themselves from hostile creatures, but otherwise take no actions. The HM has the creatures' statistics.",
-          higherLevels:
-            "When you cast this spell using certain higher-level spell slots, more creatures appear - twice as many with a 5th-level slot, three times as many with a 7th-level slot, and four times as many with a 9th-level slot.",
-        },
-        {
-          name: "Evanesco",
-          class: "Transfiguration",
-          level: "3rd Level",
-          castingTime: "1 action",
-          range: "30 ft",
-          duration: "Instantaneous",
-          year: 5,
-          description:
-            "One non-magical object or magical construct of your choice that you can see within range and that fits within a 1-foot cube is vanished. Vanished objects have been described as being transfigured to go 'into non-being, which is to say, everything.' Vanishing is often seen as the magical inverse of conjuration.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 4th level or higher, the cube's size increases by 1 foot for each slot level above 3rd.",
-        },
         {
           name: "Fulgur",
           class: "Transfiguration",
@@ -1988,7 +1810,7 @@ export const spellsData = {
           duration: "Concentration, up to 10 minutes",
           year: 5,
           description:
-            "A storm cloud appears in the shape of a cylinder that is 10 feet tall with a 60-foot radius, centered on a point you can see within range directly above you. The spell fails if you can't see a point in the air where the storm cloud could appear (for example, if you are in a room that can't accommodate the cloud). When you cast the spell, choose a point you can see under the cloud. A bolt of lightning flashes down from the cloud to that point. Each creature within 5 feet of that point must make a Dexterity saving throw. A creature takes 3d10 lightning damage on a failed save, or half as much damage on a successful one. On each of your turns until the spell ends, you can use your action to call down lightning in this way again, targeting the same point or a different one. If you are outdoors in stormy conditions when you cast this spell, the spell gives you control over the existing storm instead of creating a new one. Under such conditions, the spell's damage increases by 1d10.",
+            "A storm cloud appears in the shape of a cylinder that is 10 feet tall with a 60-foot radius, centered on a point you can see within range directly above you. The spell fails if you can't see a point in the air where the storm cloud could appear. When you cast the spell, choose a point you can see under the cloud. A bolt of lightning flashes down from the cloud to that point. Each creature within 5 feet of that point must make a Dexterity saving throw. A creature takes 3d10 lightning damage on a failed save, or half as much damage on a successful one.",
           higherLevels:
             "When you cast this spell using a spell slot of 4th or higher level, the damage increases by 1d10 for each slot level above 3rd.",
         },
@@ -2002,7 +1824,7 @@ export const spellsData = {
           duration: "Dedication, up to 1 minute",
           year: 5,
           description:
-            "You create a long, snaking whip of fire from the tip of your wand, lashing out and coiling around a creature in range. Make a melee spell attack against the target. On a hit, the creature takes 4d10 fire damage and is grappled for the duration. As an action, the target can make a Strength or Dexterity saving throw to end the spell's effects. On each of your following turns spent maintaining dedication, the whip tightens and you deal 4d10 fire damage to the target automatically. If the creature is Large or smaller, you can use a bonus action to pull the creature up to 10 feet closer to you.",
+            "You create a long, snaking whip of fire from the tip of your wand, lashing out and coiling around a creature in range. Make a melee spell attack against the target. On a hit, the creature takes 4d10 fire damage and is grappled for the duration. As an action, the target can make a Strength or Dexterity saving throw to end the spell's effects. On each of your following turns spent maintaining dedication, the whip tightens and you deal 4d10 fire damage to the target automatically.",
           higherLevels:
             "When you cast this spell using a spell slot of 4th level or higher, the initial damage and subsequent turn damage increases by 1d10 for each slot level above 3rd.",
         },
@@ -2015,73 +1837,33 @@ export const spellsData = {
           duration: "1 minute",
           year: 4,
           description:
-            "You conjure a pumpkin around a target's head, blinding and deafening it. Choose one creature that you can see within range to make a Wisdom saving throw. If it fails, the target is blinded and deafened for the duration. At the end of each of its turns, the target can make a Wisdom saving throw. On a success, the spell's effect ends for that target.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd.",
+            "You conjure a pumpkin around a target's head, blinding and deafening it. Choose a creature you can see within range to make a Dexterity saving throw. On a failed save, the target is blinded and deafened for the duration. At the end of each of its turns, the target can make a Constitution saving throw. On a success, the spell ends on the target.",
         },
       ],
       "4th Level": [
         {
-          name: "Ebublio",
+          name: "Incendio",
           class: "Transfiguration",
-          level: "4th Level (ritual)",
-          castingTime: "1 action",
-          range: "90 feet",
-          duration: "Concentration, up to 1 minute",
-          year: 6,
-          tags: ["R"],
-          description:
-            "You conjure up a swirling sphere of water with a 5-foot radius at a point you can see within range. The sphere can hover but no more than 10 feet off the ground. The sphere remains for the spell's duration. Any creature in the sphere's space must make a Strength saving throw. On a successful save, a creature is ejected from that space to the nearest unoccupied space of the creature's choice outside the sphere. A Huge or larger creature succeeds on the saving throw automatically, and a Large or smaller creature can choose to fail it. On a failed save, a creature is restrained by the sphere and is engulfed by the swirling bubble of water. At the end of each of its turns, a restrained target can repeat the saving throw, ending the effect on itself on a success. The sphere can restrain as many as four Medium or smaller creatures or one Large creature. If the sphere restrains a creature that causes it to exceed this capacity, a random creature that was already restrained by the sphere falls out of it and lands prone in a space within 5 feet of it. As an action, you can move the sphere up to 30 feet in a straight line. If it moves over a pit, a cliff, or other drop-off, it safely descends until it is hovering 10 feet above the ground. Any creature restrained by the sphere moves with it. You can ram the sphere into creatures, forcing them to make the saving throw. When the spell ends, the sphere falls to the ground and extinguishes all normal flames within 30 feet of it. Any creature restrained by the sphere is knocked prone in the space where it falls. The water then vanishes.",
-        },
-        {
-          name: "Lapifors",
-          class: "Transfiguration",
-          restricted: true,
-          level: "4th Level (ritual)",
-          castingTime: "1 action",
-          range: "60 feet",
-          duration: "Concentration, up to 1 hour",
-          year: 6,
-          tags: ["R"],
-          description:
-            "This spell transforms a creature with at least 1 hit point that you can see within range into the form of a rabbit. An unwilling creature must make a Wisdom saving throw to avoid the effect. The transformation lasts for the duration, or until the target drops to 0 hit points or dies. The target's game statistics, including mental ability scores, are replaced by the statistics of a rabbit. It retains its alignment and personality. The HM has the creature's statistics. The target assumes the hit points of its new form. When it reverts to its normal form, the creature returns to the number of hit points it had before it transformed. If it reverts as a result of dropping to 0 hit points, any excess damage carries over to its normal form. As long as the excess damage doesn't reduce the creature's normal form to 0 hit points, it isn't knocked unconscious. The creature is limited in the actions it can perform by the nature of its new form, and it can't speak, cast spells, or take any other action that requires hands or speech. The target's gear melds into the new form. The creature can't activate, use, wield, or otherwise benefit from any of its equipment.",
-        },
-        {
-          name: "Titubo Ictus",
-          class: "Transfiguration",
-          restricted: true,
           level: "4th Level",
-          castingTime: "Bonus Action",
-          range: "Self",
+          castingTime: "Action",
+          range: "Self (30-foot radius)",
           duration: "Concentration, up to 1 minute",
-          year: 6,
+          year: 5,
           description:
-            "The next time you hit a creature with your Transfigured Armament during this spell's duration, your weapon pierces both body and mind, and the attack deals an extra 4d6 psychic damage to the target. The target must make a Wisdom saving throw. On a failed save, it has disadvantage on attack rolls and ability checks, and can't take reactions until the end of its next turn.",
+            "A wave of thunderous force sweeps out from you. Each creature in a 30-foot radius must make a Constitution saving throw. On a failed save, a creature takes 2d8 thunder damage and is pushed 10 feet away from you. On a successful save, the creature takes half as much damage and isn't pushed. Additionally, unsecured objects that are completely within the area of effect are automatically pushed 10 feet away from you by the spell's effect.",
         },
       ],
       "5th Level": [
         {
-          name: "Clario Maxima",
-          class: "Transfiguration",
-          restricted: true,
-          level: "5th Level",
-          castingTime: "Bonus Action",
-          range: "Touch",
-          duration: "Dedication, up to 1 hour",
-          year: 7,
-          description:
-            "You imbue a weapon you touch with power. Until the spell ends, the weapon emits bright light in a 30-foot radius and dim light for an additional 30 feet. In addition, weapon attacks made with it deal an extra 2d8 radiant damage on a hit. If the weapon isn't already a magic weapon, it becomes one for the duration. As a bonus action on your turn, you can dismiss this spell and cause the weapon to emit a burst of radiance. Each creature of your choice that you can see within 30 feet of the weapon must make a Constitution saving throw. On a failed save, a creature takes 4d8 radiant damage, and it is blinded for 1 minute. On a successful save, a creature takes half as much damage and isn't blinded. At the end of each of its turns, a blinded creature can make a Constitution saving throw, ending the effect on itself on a success.",
-        },
-        {
-          name: "Draconifors",
+          name: "Draconiverto",
           class: "Transfiguration",
           level: "5th Level",
-          castingTime: "1 action",
-          range: "30 feet",
-          duration: "Concentration, up to 10 minutes",
-          year: 7,
+          castingTime: "1 minute",
+          range: "60 feet",
+          duration: "Concentration, up to 1 hour",
+          year: 6,
           description:
-            "A particularly intimidating display of transfiguration, this spell turns a desk-sized object into a miniature version of an adult dragon. Choose either one or two inanimate, nonmagical objects you can see within range that each fill a 5-foot cube and choose one of the following options: One dragon wyrmling of challenge rating 4 or lower, Two dragon wyrmlings of challenge rating 2 or lower. The object becomes a Medium-sized dragon construct with the chosen wyrmling's statistics, which is untransfigured when it drops to 0 hit points or when the spell ends. The dragon construct is friendly to you and your companions for the duration. Roll initiative for the dragon construct, which has its own turns. It obeys any verbal commands that you issue to it (no action required by you). If you don't issue any commands to it, it defends itself from hostile creatures, but otherwise takes no actions. If your concentration is broken, the dragon construct doesn't disappear. Instead, you lose control of the construct, it becomes hostile toward you and your companions, and it might attack. An uncontrolled dragon construct can't be dismissed by you, and it untransfigures 10 minutes after you transfigured it. The HM has the creature's statistics.",
+            "You transfigure raw materials within range into a dragon construct. Choose a pile of bones, a corpse of a Large or smaller creature, or a collection of raw materials like metal, stone, or clay. Your spell imbues the target with foul mimicry of life, raising it as a dragon wyrmling of challenge rating 2 or lower. The creature is under your control for 24 hours, after which it stops obeying any command you've given it. To maintain control of the creature for another 24 hours, you must cast this spell on the creature again before the current 24-hour period ends.",
           higherLevels:
             "When you cast this spell using a spell slot of 7th level, choose one of the following options: Two dragon wyrmlings of challenge rating 3 or lower, Three dragon wyrmlings of challenge rating 2 or lower. When you cast this spell using a spell slot of 9th level, choose one of the following options: Two dragon wyrmlings of challenge rating 4 or lower, Four dragon wyrmlings of challenge rating 2 or lower.",
         },
@@ -2094,7 +1876,7 @@ export const spellsData = {
           duration: "Concentration, up to 1 hour",
           year: null,
           description:
-            "You attempt to turn one creature that you can see within range into a new form. An unwilling creature must make a Wisdom saving throw to avoid the effect. The spell has no effect on a shapechanger or a creature with 0 hit points. The transformation lasts for the duration, or until the target drops to 0 hit points or dies. The new form can be any beast whose challenge rating is equal to or less than the target's (or the target's level, if it doesn't have a challenge rating). The target's game statistics, including mental ability scores, are replaced by the statistics of the chosen beast. It retains its alignment and personality.",
+            "You attempt to turn one creature that you can see within range into a new form. An unwilling creature must make a Wisdom saving throw to avoid the effect. The spell has no effect on a shapechanger or a creature with 0 hit points. The transformation lasts for the duration, or until the target drops to 0 hit points or dies. The new form can be any beast whose challenge rating is equal to or less than the target's. The target's game statistics are replaced by the statistics of the chosen beast. It retains its alignment and personality.",
         },
       ],
       "6th Level": [
@@ -2107,49 +1889,9 @@ export const spellsData = {
           duration: "Concentration, up to 1 minute",
           year: 7,
           description:
-            "You create a ringed wall of fire within range up to 20 feet in diameter, 20 feet high, and 10 feet thick choosing whether it's touching the ground or in the air. The wall is opaque and lasts for the duration. When the wall appears, each creature within its area must make a Dexterity saving throw. On a failed save, a creature takes 4d8 fire damage, or half as much damage on a successful save. A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there. As an action, you can send a tendril of flames lashing out at any point within 60 feet of the center of the ring. Each creature within 5 feet of that point must make a Dexterity saving throw. A creature takes 4d8 fire damage on a failed save, or half as much damage on a successful one. A creature in the area of the wall and fiery burst is affected only once. The spell damages objects in the area and ignites flammable objects that aren't being worn or carried.",
+            "You create a ringed wall of fire within range up to 20 feet in diameter, 20 feet high, and 10 feet thick choosing whether it's touching the ground or in the air. The wall is opaque and lasts for the duration. When the wall appears, each creature within its area must make a Dexterity saving throw. On a failed save, a creature takes 4d8 fire damage, or half as much damage on a successful save. A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there.",
           higherLevels:
-            "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 1d8 and the ring's radius increases by 5 feet for each slot level above 6th.",
-        },
-      ],
-      "7th Level": [
-        {
-          name: "Draconiverto",
-          class: "Transfiguration",
-          restricted: true,
-          level: "7th Level",
-          castingTime: "Bonus Action",
-          range: "Self",
-          duration: "Concentration, up to 1 minute",
-          year: 7,
-          description:
-            "With a roar, you transform yourself, taking on draconic features. You gain the following benefits until the spell ends: Blindsight: You have blindsight with a range of 30 feet. Within that range, you can effectively see anything that isn't behind total cover, even if you're blinded or in darkness. Moreover, you can see an invisible creature, unless the creature successfully hides from you. Breath Weapon: When you cast this spell, and as a bonus action on subsequent turns for the duration, you can exhale shimmering energy in a 60-foot cone. Each creature in that area must make a Dexterity saving throw, taking 6d8 force damage on a failed save, or half as much damage on a successful one. Wings: Incorporeal wings sprout from your back, giving you a flying speed of 60 feet.",
-        },
-      ],
-      "8th Level": [
-        {
-          name: "Animato Maxima",
-          class: "Transfiguration",
-          restricted: true,
-          level: "8th Level",
-          castingTime: "Action",
-          range: "30 Feet",
-          duration: "Concentration, up to 24 hours",
-          year: 7,
-          description:
-            "Your magic turns others into beasts. Choose any number of willing creatures that you can see within range. You transfigure each target into the form of a large or smaller beast with a challenge rating of 4 or lower. On subsequent turns, you can use your actions to transform affected creatures into new forms. The transformation lasts for the duration for each target, or until the target drops to 0 hit points or dies. You can choose a different form for each target. A target's game statistics are replaced by the statistics of the chosen beast, though the target retains its alignment and Intelligence, Wisdom, and Charisma scores. The target assumes the hit points of its new form, and when it reverts to its normal form, it returns to the number of hit point it had before it transformed. If it reverts as a result of dropping to 0 hit points, any excess damage carries over to its normal form. As long as the excess damage doesn't reduce the creature's normal form to 0 hit points, it isn't knocked unconscious. The creature is limited in the actions it can perform by the nature of its new form, and it can't speak or cast spells. The target's gear melds into the new form. The target can't activate, wield, or otherwise benefit from any of its equipment.",
-        },
-        {
-          name: "Tempestus",
-          class: "Transfiguration",
-          restricted: true,
-          level: "8th Level",
-          castingTime: "1 Minute",
-          range: "Sight",
-          duration: "Concentration, up to 6 rounds",
-          year: 7,
-          description:
-            "A wall of water springs into existence at a point you choose within range. You can make the wall up to 300 feet long, 300 feet high, and 50 feet thick. The wall lasts for the duration. When the wall appears, each creature within its area must make a Strength saving throw. On a failed save, a creature takes 6d10 bludgeoning damage, or half as much damage on a successful save. At the start of each of your turns after the wall appears, the wall, along with any creatures in it, moves 50 feet away from you. Any Huge or smaller creature inside the wall or whose space the wall enters when it moves must succeed on a Strength saving throw or take 5d10 bludgeoning damage. A creature can take this damage only once per round. At the end of the turn, the wall's height is reduced by 50 feet, and the damage creatures take from the spell on subsequent rounds is reduced by 1d10. When the wall reaches 0 feet in height, the spell ends. A creature caught in the wall can move by swimming. Because of the force of the wave, though, the creature must make a successful Strength (Athletics) check against your spell save DC in order to move at all. If it fails the check, it can't move. A creature that moves out of the area falls to the ground.",
+            "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 1d8 for each slot level above 6th.",
         },
       ],
     },
@@ -3455,6 +3197,129 @@ export const spellsData = {
       ],
     },
   },
+  Gravetouched: {
+    description:
+      "Dark necromantic magic that blurs the line between healing and harming, accessible to Necromantic Healers who practice forbidden arts.",
+    color: "#4c1d95", // Dark purple for necromantic theme
+    levels: {
+      Cantrips: [
+        {
+          name: "Umbrus Notatem",
+          class: "Necromantic Healer",
+          level: "Cantrip",
+          castingTime: "Bonus Action",
+          range: "30 Feet",
+          duration: "1 Round",
+          year: null,
+          tags: ["Dark"],
+          description:
+            "You brand a willing creature with a mark of shadow. Until the end of its next turn, the target's movement speed increases by 5 feet, and its next attack deals an additional 2d4 necrotic damage. The effect ends early if the attack hits. If the target casts a spell that incorporates this additional damage, that spell gains the Dark tag for the purpose of effects, resistances, and synergies.",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Ictus Vitalus",
+          class: "Necromantic Healer",
+          level: "1st Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "1 Hour",
+          year: null,
+          description:
+            "Bolstering yourself with a necromantic facsimile of life, you gain 1d4 + 4 temporary hit points for the duration.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, you gain 5 additional temporary hit points for each slot level above 1st.",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Destruunt",
+          class: "Necromantic Healer",
+          level: "2nd Level",
+          castingTime:
+            "1 reaction, when you see a creature cast a Healing spell",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: null,
+          description:
+            "You lash out with a thread of dark magic that severs the connection between body and life. When a creature within range attempts to cast a Healing spell, you can use your reaction to disrupt the flow of healing energy. The spell is halted, and no hit points or other effects are restored. The target still expends the spell slot and sorcery points used. If the healing spell is of 3rd level or higher, the caster must succeed on a Intelligence saving throw (DC equals 10 + the level of the spell) or the spell fails.",
+        },
+        {
+          name: "Quo Flora",
+          class: "Necromantic Healer",
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: null,
+          tags: ["Dark"],
+          description:
+            "You invoke both death and life upon a 10-foot-radius sphere centered on a point within range. Each creature of your choice in that area must make a Constitution saving throw, taking 2d6 necrotic damage on a failed save, or half as much damage on a successful one. Nonmagical vegetation in that area withers. In addition, one creature of your choice in that area can spend and roll one of its unspent Hit Dice and regain a number of hit points equal to the roll plus your spellcasting ability modifier.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot above 2nd, and the number of Hit Dice that can be spent and added to the healing roll increases by one for each slot above 2nd.",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Gehennus Conjurus",
+          class: "Necromantic Healer",
+          level: "3rd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 hour",
+          year: null,
+          tags: ["Dark"],
+          description:
+            "You utter foul words, summoning an Inferius from the land of the dead. You choose the unoccupied spaces you can see within range where they appear. A summoned Inferi disappears when it drops to 0 hit points or when the spell ends. The Inferi are hostile to all creatures, including you. Roll initiative for the summoned Inferi which has its own turn(s). The Inferi pursue and attack the nearest non-Inferi to the best of their ability. As part of casting the spell, you can form a magical circle on the ground that is large enough to encompass your space. While the spell lasts, the summoned Inferi can't cross the circle or harm it, and they can't target anyone within it.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th or 7th level, you summon an Inferi Swarm. If you cast it using a spell slot of 8th or 9th level, you summon an Inferi Horde.",
+        },
+        {
+          name: "Mortus Oratio",
+          class: "Necromantic Healer",
+          level: "3rd Level",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "10 Minutes",
+          year: null,
+          description:
+            "You grant the semblance of life and intelligence to a corpse of your choice within range, allowing it to answer the questions you pose. The corpse must still have a mouth and can't be undead. The spell fails if the corpse was the target of this spell within the last 10 days. Until the spell ends, you can ask the corpse up to five questions. The corpse knows only what it knew in life, including the languages it knew. Answers are usually brief, cryptic, or repetitive, and the corpse is under no compulsion to offer a truthful answer if you are hostile to it or it recognizes you as an enemy. This spell doesn't return the creature's soul to its body, only its animating spirit. Thus, the corpse can't learn new information, doesn't comprehend anything that has happened since it died, and can't speculate about future events.",
+        },
+      ],
+      "4th Level": [],
+      "5th Level": [
+        {
+          name: "Morbus",
+          class: "Necromantic Healer",
+          level: "5th Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "7 Days",
+          year: null,
+          tags: ["Dark"],
+          description:
+            "Your touch inflicts disease. Make a melee spell attack against a creature within your reach. On a hit, the target is poisoned. At the end of each of the poisoned target's turns, the target must make a Constitution saving throw. If the target succeeds on three of these saves, it is no longer poisoned, and the spell ends. If the target fails three of these saves, the target is no longer poisoned, but choose one of the diseases below. The target is subjected to the chosen disease for the spell's duration. Since this spell induces a natural disease in its target, any effect that removes a disease or otherwise ameliorates a disease's effects apply to it. Blinding Sickness: Pain grips the creature's mind, and its eyes turn milky white. The creature has disadvantage on Wisdom checks and Wisdom saving throws and is blinded. Filth Fever: A raging fever sweeps through the creature's body. The creature has disadvantage on Strength checks, Strength saving throws, and attack rolls that use Strength. Flesh Rot: The creature's flesh decays. The creature has disadvantage on Charisma checks and vulnerability to all damage. Mindfire: The creature's mind becomes feverish. The creature has disadvantage on Intelligence checks and Intelligence saving throws, and the creature behaves as if under the effects of the confusion spell during combat. Seizure: The creature is overcome with shaking. The creature has disadvantage on Dexterity checks, Dexterity saving throws, and attack rolls that use Dexterity. Slimy Doom: The creature begins to bleed uncontrollably. The creature has disadvantage on Constitution checks and Constitution saving throws. In addition, whenever the creature takes damage, it is stunned until the end of its next turn.",
+        },
+      ],
+      "6th Level": [],
+      "7th Level": [],
+      "8th Level": [
+        {
+          name: "Pati",
+          class: "Necromantic Healer",
+          level: "8th Level",
+          castingTime: "Action",
+          range: "150 Feet",
+          duration: "Instantaneous",
+          year: null,
+          tags: ["Dark"],
+          description:
+            "You draw the moisture from every creature in a 30-foot cube centered on a point you choose within range. Each creature in that area must make a Constitution saving throw. Constructs and undead aren't affected, and plants and aquatic creatures make this saving throw with disadvantage. A creature takes 12d8 necrotic damage on a failed save, or half as much damage on a successful one. Nonmagical plants in the area that aren't creatures, such as trees and shrubs, wither and die instantly.",
+        },
+      ],
+      "9th Level": [],
+    },
+  },
   Forbidden: {
     hasRestriction: true,
     icon: "Ban",
@@ -3529,14 +3394,15 @@ export const spellsData = {
           class: null,
           level: "3rd Level",
           castingTime: "Action",
-          range: "90 feet",
-          duration: "Concentration, up to 1 minute",
+          range: "60 feet",
+          duration: "Concentration, up to 1 hour",
           year: null,
           restricted: true,
+          tags: ["Dark"],
           description:
-            "You summon hellish flames that burn both body and soul. A 20-foot-radius sphere of otherworldly fire appears at a point you choose within range. The area becomes difficult terrain for the duration. When a creature enters the area for the first time on a turn or starts its turn there, it must make a Dexterity saving throw. On a failed save, the creature takes 4d6 fire damage and 2d6 necrotic damage. On a successful save, it takes half as much damage. Creatures killed by this spell have their souls trapped in the flames for 24 hours, during which they cannot be resurrected by any means short of a wish spell. Using this magic tears at the fabric of reality - each casting has a 10% chance of opening a temporary portal to a lower plane for 1d4 rounds.",
+            "You utter foul words, summoning an Inferius from the land of the dead. You choose the unoccupied spaces you can see within range where they appear. A summoned Inferi disappears when it drops to 0 hit points or when the spell ends. The Inferi are hostile to all creatures, including you. Roll initiative for the summoned Inferi which has its own turn(s). The Inferi pursue and attack the nearest non-Inferi to the best of their ability. As part of casting the spell, you can form a magical circle on the ground that is large enough to encompass your space. While the spell lasts, the summoned Inferi can't cross the circle or harm it, and they can't target anyone within it.",
           higherLevels:
-            "When you cast this spell using a spell slot of 4th level or higher, the fire damage increases by 1d6 for each slot level above 3rd.",
+            "When you cast this spell using a spell slot of 6th or 7th level, you summon an Inferi Swarm. If you cast it using a spell slot of 8th or 9th level, you summon an Inferi Horde.",
         },
       ],
       "5th Level": [
@@ -4104,6 +3970,14 @@ export const INDIVIDUAL_SPELL_MODIFIERS = {
   "Glacius Maxima": SUBJECT_TO_MODIFIER_MAP.charms,
   Tempestus: SUBJECT_TO_MODIFIER_MAP.transfiguration,
   "Fulgur Maxima": SUBJECT_TO_MODIFIER_MAP.transfiguration,
+
+  "Umbrus Notatem": SUBJECT_TO_MODIFIER_MAP.jhc,
+  "Ictus Vitalus": SUBJECT_TO_MODIFIER_MAP.healing,
+  Destruunt: SUBJECT_TO_MODIFIER_MAP.healing,
+  "Quo Flora": SUBJECT_TO_MODIFIER_MAP.healing,
+  "Mortus Oratio": SUBJECT_TO_MODIFIER_MAP.charms,
+  Morbus: SUBJECT_TO_MODIFIER_MAP.healing,
+  Pati: SUBJECT_TO_MODIFIER_MAP.healing,
 };
 
 export const TRADITIONAL_SCHOOL_MAPPINGS = {

@@ -608,18 +608,26 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
           </p>
         )}
 
+        <div style={styles.featureGrid}>
+          <div
+            style={styles.featureCard}
+            href="https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde
+"
+          >
+            <h3>View Rulebook</h3>
+          </div>
+        </div>
+
         {hasCharacters && (
-          <>
-            <div style={styles.featureGrid}>
-              <div
-                style={styles.featureCard}
-                onClick={() => handleCardClick("/character/sheet")}
-              >
-                <h3>Character Sheet</h3>
-                <p>View and manage your character's stats and abilities.</p>
-              </div>
+          <div style={styles.featureGrid}>
+            <div
+              style={styles.featureCard}
+              onClick={() => handleCardClick("/character/sheet")}
+            >
+              <h3>Character Sheet</h3>
+              <p>View and manage your character's stats and abilities.</p>
             </div>
-          </>
+          </div>
         )}
         <hr
           style={{ border: `1px solid ${theme.border}`, marginBottom: "16px" }}
