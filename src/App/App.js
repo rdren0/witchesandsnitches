@@ -609,13 +609,16 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
         )}
 
         <div style={styles.featureGrid}>
-          <div
-            style={styles.featureCard}
-            href="https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde
-"
+          <a
+            href="https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none" }} // Optional: remove underline
           >
-            <h3>View Rulebook</h3>
-          </div>
+            <div style={styles.featureCard}>
+              <h3>View Rulebook</h3>
+            </div>
+          </a>
         </div>
 
         {hasCharacters && (
