@@ -613,7 +613,7 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
             href={RULE_BOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ textDecoration: "none" }} // Optional: remove underline
+            style={{ textDecoration: "none" }}
           >
             <div style={styles.featureCard}>
               <h3>View Rulebook</h3>
