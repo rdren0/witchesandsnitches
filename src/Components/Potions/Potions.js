@@ -421,14 +421,14 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                 Potion Making
               </label>
 
-              <label style={styles.checkboxLabel}>
+              {/* <label style={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={brewingSkills === "medicine"}
                   onChange={(e) => ({})}
                 />
                 Medicine
-              </label>
+              </label> */}
             </div>
 
             <div style={styles.checkboxGroup}>
