@@ -11,6 +11,7 @@ import {
   X,
   Check,
   Copy,
+  Crown,
 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
@@ -19,7 +20,13 @@ import { templates } from "./templates";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterNotesStyles } from "../../styles/masterStyles";
 
-export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
+export const CharacterNotes = ({
+  user,
+  selectedCharacter,
+  supabase,
+  adminMode = false,
+  isUserAdmin = false,
+}) => {
   const { theme } = useTheme();
   const styles = createCharacterNotesStyles(theme);
 
@@ -29,24 +36,35 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
   const [newEntryTitle, setNewEntryTitle] = useState("");
   const [showNewEntryForm, setShowNewEntryForm] = useState(false);
   const [duplicatingEntryId, setDuplicatingEntryId] = useState(null);
+  const [notesOwner, setNotesOwner] = useState(null);
 
   const loadCharacterNotes = useCallback(async () => {
     if (!selectedCharacter?.id || !user) return;
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("character_notes")
-        .select("notes, updated_at")
-        .eq("character_id", selectedCharacter.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
+        .select("notes, updated_at, user_id")
+        .eq("character_id", selectedCharacter.id);
+
+      if (!adminMode || !isUserAdmin) {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error && error.code !== "PGRST116") {
         throw error;
       }
 
       if (data?.notes) {
+        if (adminMode && isUserAdmin && data.user_id !== user.id) {
+          setNotesOwner(data.user_id);
+        } else {
+          setNotesOwner(null);
+        }
+
         try {
           const parsedEntries = JSON.parse(data.notes);
           if (Array.isArray(parsedEntries)) {
@@ -75,19 +93,21 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
         }
       } else {
         setEntries([]);
+        setNotesOwner(null);
       }
     } catch (err) {
       console.error("Error loading character notes:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCharacter?.id, user?.id, supabase]);
+  }, [selectedCharacter?.id, user?.id, supabase, adminMode, isUserAdmin]);
 
   useEffect(() => {
     if (selectedCharacter?.id) {
       loadCharacterNotes();
     } else {
       setEntries([]);
+      setNotesOwner(null);
       setIsLoading(false);
     }
   }, [selectedCharacter?.id, loadCharacterNotes]);
@@ -96,10 +116,13 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
     if (!selectedCharacter?.id || !user) return;
 
     try {
+      const targetUserId =
+        adminMode && isUserAdmin && notesOwner ? notesOwner : user.id;
+
       const { error } = await supabase.from("character_notes").upsert(
         {
           character_id: selectedCharacter.id,
-          user_id: user.id,
+          user_id: targetUserId,
           notes: JSON.stringify(newEntries),
           updated_at: new Date().toISOString(),
         },
@@ -252,6 +275,34 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
     }
   };
 
+  const renderAdminModeIndicator = () => {
+    if (!adminMode || !isUserAdmin) return null;
+
+    return (
+      <div
+        style={{
+          background: "linear-gradient(135deg, #ffd700, #ffed4e)",
+          color: "#8b4513",
+          padding: "12px 20px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          textAlign: "center",
+          fontWeight: "bold",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          border: "2px solid #ffd700",
+        }}
+      >
+        <Crown size={18} />
+        ADMIN MODE: Viewing {notesOwner ? "another user's" : "your"} character
+        notes
+        {notesOwner && " - Changes will be saved to the character's owner"}
+      </div>
+    );
+  };
+
   if (!selectedCharacter) {
     return (
       <div style={styles.noCharacterContainer}>
@@ -267,6 +318,8 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
 
   return (
     <div style={styles.container}>
+      {renderAdminModeIndicator()}
+
       <div style={styles.header}>
         <div style={styles.headerContent}>
           <h1 style={styles.title}>
@@ -276,6 +329,17 @@ export const CharacterNotes = ({ user, selectedCharacter, supabase }) => {
           <p style={styles.subtitle}>
             {entries.length} note{entries.length !== 1 ? "s" : ""} for{" "}
             {selectedCharacter.name}
+            {adminMode && isUserAdmin && notesOwner && (
+              <span
+                style={{
+                  color: theme.warning,
+                  fontSize: "14px",
+                  marginLeft: "8px",
+                }}
+              >
+                (Owner: {notesOwner})
+              </span>
+            )}
           </p>
         </div>
 

@@ -1304,6 +1304,8 @@ function AppContent() {
                   user={user}
                   selectedCharacter={selectedCharacter}
                   supabase={supabase}
+                  adminMode={adminMode}
+                  isUserAdmin={isUserAdmin}
                 />
               </ProtectedRoute>
             }
