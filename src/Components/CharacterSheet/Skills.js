@@ -386,18 +386,9 @@ export const Skills = ({
 
                   ...(isPassiveSkill
                     ? {
-                        backgroundColor: isPerception
-                          ? `${theme.primary}08`
-                          : isInvestigation
-                          ? `${theme.secondary || theme.primary}08`
-                          : `${theme.warning || "#f59e0b"}08`,
-                        borderLeft: `3px solid ${
-                          isPerception
-                            ? theme.primary
-                            : isInvestigation
-                            ? theme.secondary || theme.primary
-                            : theme.warning || "#f59e0b"
-                        }`,
+                        backgroundColor: `${
+                          theme.secondary || theme.primary
+                        }08`,
                       }
                     : {}),
                 }}
@@ -445,18 +436,13 @@ export const Skills = ({
                       ...(skillLevel === 2
                         ? {
                             fontWeight: "bold",
-                            color: theme.warning || "#f59e0b",
-                            borderColor: theme.warning || "#f59e0b",
+                            color: "#f59e0b",
                           }
                         : {}),
                       ...(isPassiveSkill
                         ? {
                             fontWeight: "600",
-                            color: isPerception
-                              ? theme.primary
-                              : isInvestigation
-                              ? theme.secondary || theme.primary
-                              : theme.warning || "#f59e0b",
+                            color: "#f59e0b",
                           }
                         : {}),
                       ...(isRolling
