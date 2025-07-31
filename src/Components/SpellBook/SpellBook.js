@@ -5,7 +5,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedSpellBookStyles } from "../../styles/masterStyles";
 import { hasSubclassFeature } from "./utils";
 
-import { spellsData } from "./spells";
+import { spellsData } from "../../SharedData/spells";
 import { useCallback } from "react";
 import CastingTiles from "../CharacterSheet/CastingTiles";
 

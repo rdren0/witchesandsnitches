@@ -1637,41 +1637,50 @@ export const subclassesData = {
         level: 1,
         name: "Mitigating Defense",
         description:
-          "At 1st level, you choose a defensive specialization that defines how you protect others in combat.",
-        choices: [],
-      },
-      {
-        level: 1,
-        name: "Level 1 Specialization",
-        description: "Choose your initial specialization approach.",
+          "At 1st level, you gain access to the Justice Spell List and choose one of the following defensive specializations.",
         choices: [
           {
             name: "Critical Deflection",
             description:
-              "As a reaction when you or an ally within 20 feet suffers a critical hit, turn it into a normal hit, canceling critical effects. Use a number of times equal to spellcasting ability modifier (minimum once) per long rest.",
+              "As a reaction when you or an ally that you can see within 30 feet of you suffers a critical hit, you can turn that attack into a normal hit. Any effects triggered by a critical hit are canceled. You can use this feature a number of times equal to your spellcasting ability modifier (minimum of once). You regain all expended uses when you finish a long rest.",
           },
           {
             name: "Shielding Presence",
             description:
-              "Allies within 10 feet gain +1 bonus to AC. At 6th level, this bonus increases to +2.",
+              "When your allies are within 10 feet of you, they gain a +1 bonus to their Armor Class. This bonus increases to +2 at 6th level, and +3 at 12th level.",
           },
         ],
       },
       {
         level: 6,
-        name: "Defensive Alliances",
+        name: "Defender's Promise",
         description:
-          "Choose a method for coordinating protection with your allies.",
+          "You gain the ability to bestow Promises upon your allies imbued with magical power. You start with two such effects of your choice. When you bestow a Promise, you choose which effect to create. You must then finish a short or long rest to bestow Promises again. Some Promises require saving throws. When you use such an effect the DC equals your spell save DC.",
         choices: [
           {
-            name: "Unbreakable Bonds",
+            name: "Shining Promise",
             description:
-              "As an action, bind yourself to a number of friendly companions within 20 feet equal to your proficiency bonus. Gain multiple bonus action and reaction abilities: grant 1d8 + spellcasting modifier temp HP, add d6 to ally's roll, make spell attack (2nd level or lower) as reaction when others are attacked, or let ally make reaction spell attack with +1d8.",
+              "As an action, you channel shimmering energy into an ally that you can see within 30 feet of you. The first time that ally is hit by an attack within the next minute, the attacker takes radiant damage equal to 2d10 + your level.",
           },
           {
-            name: "Protective Distraction",
+            name: "Promise of Valor",
             description:
-              "As a reaction when an attacker within 30 feet targets an ally, force a Charisma saving throw or the attacker has disadvantage. Use a number of times equal to proficiency bonus per short/long rest.",
+              "When a creature within 30 feet of you makes an attack roll, ability check, or saving throw using Strength, you can use your reaction to grant that creature a +10 bonus to the roll, using your Defender's Promise. You make this choice after you see the roll, but before the DM says whether the roll succeeds or fails.",
+          },
+          {
+            name: "Healing Promise",
+            description:
+              "You can use your Defender's Promise to heal the badly injured. As an action, you evoke healing energy that can restore a number of hit points equal to five times your level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct.",
+          },
+          {
+            name: "Promise of Will",
+            description:
+              "You can use your Defender's Promise to invest your presence with warding power. As an action, you can choose a number of creatures you can see within 30 feet of you, up to a number equal to your spellcasting ability modifier (minimum of one creature). For 1 minute, you and the chosen creatures have advantage on Intelligence, Wisdom, and Charisma saving throws.",
+          },
+          {
+            name: "Rebuking Promise",
+            description:
+              "You can use your Channel Divinity to castigate unworldly beings. As an action, you speak seething words and each Ghost, Ghoul, Poltergeist, Inferi, Undead or other dark creature within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
           },
         ],
       },
@@ -1679,42 +1688,70 @@ export const subclassesData = {
         level: 9,
         name: "Constant Vigilance",
         description:
-          "Emit an aura of alertness while conscious. You and creatures of your choice within 10 feet gain a bonus to initiative equal to your spellcasting ability modifier (minimum +1). At 18th level, range increases to 30 feet.",
+          "You emit an aura of alertness while you aren't incapacitated. When you and any creature of your choice within 10 feet of you rolls initiative, you each gain a bonus to initiative equal to your Spellcasting Ability modifier (minimum of +1). At 18th level, the range of this aura increases to 30 feet.",
         choices: [],
       },
       {
         level: 10,
-        name: "Influential Tactics",
+        name: "Sturdy",
         description:
-          "Choose a method for manipulating combat flow and inspiring allies.",
+          "You may bestow 2 Promises per rest. Additionally, choose one of the following defensive enhancements.",
         choices: [
           {
-            name: "Provocative Strikes",
+            name: "Damage Deflection",
             description:
-              "When you hit with an attack, choose to either give the next attack against the target (by someone other than you) advantage, OR force the target to make a Wisdom save or have disadvantage on attacks against targets other than you until end of your next turn.",
+              "When you take damage, you can use your reaction to roll a number of d12 equal to your spellcasting ability modifier. Add your Constitution modifier to the number rolled and reduce the damage by that total. You can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
           },
           {
-            name: "Bolster Confidence",
+            name: "Magical Constitution",
             description:
-              "When making Charisma (Persuasion) checks with friendly creatures, grant them advantage on their next ability check within the next hour. Once per creature per long rest.",
+              "Hit Point maximum increases by an amount equal to your spellcasting ability modifier when you gain this feature. Whenever you gain a character level thereafter, your Hit Point maximum increases by your spellcasting ability modifier.",
+          },
+          {
+            name: "Mystical Body",
+            description:
+              "Your magic wards your body from harm. Your armor class equals 12 + your Dexterity modifier + your spellcasting ability modifier. You gain no benefit from wearing cloaks, but if you are using a shield, you apply its bonus as normal.",
           },
         ],
       },
       {
         level: 14,
-        name: "Warding Sanctuary",
+        name: "Warding Promise",
         description:
-          "Choose an ultimate defensive technique to protect your allies.",
+          "You may bestow 3 Promises per rest. Additionally, you gain one additional Promise from the Defender's Promise list and one from the enhanced Promises below.",
         choices: [
           {
-            name: "Warding Aura",
+            name: "Promise of Sanctuary",
             description:
-              "Requires Unbreakable Bonds. Bound companions within 30 feet gain temporary HP equal to your level at start of their turns. When a bound companion drops to 0 HP, use reaction to protect them (attackers must make Wisdom save or choose new target). As an action, grant bound companions advantage on saves against damage/conditions for 1 hour.",
+              "As an action, you designate yourself or an ally within 30 feet. Until the start of your next turn, the chosen creature is immune to all damage and conditions except for exhaustion and unconscious. Spells and magical effects cannot force the creature to move or change shape.",
           },
           {
-            name: "Guardian's Respite",
+            name: "Brilliant Promise",
             description:
-              "As an action, create a 30-foot radius sanctuary centered on yourself once per long rest. Lasts 10 minutes or until dismissed. Friendly creatures inside gain sanctuary spell benefits: immune to damage, can't be targeted, can exit at will. Creatures inside can't cast spells out, and no apparition in/out while active.",
+              "As an action you can bless up to three creatures of your choice within 30 feet with an aura of burning light. For 1 minute, these creatures gain the following benefits: Their attacks do an additional 1d10 + your spellcasting modifier radiant damage. When a creature ends their turn within 5 feet of them they take 1d6 + your spellcasting modifier radiant damage. If they are reduced to 0 hit points, the aura bursts. Every enemy within 15 feet must make a constitution saving throw or take 3d10 radiant damage and be blinded.",
+          },
+          {
+            name: "Promise of Revival",
+            description:
+              "When an ally within 30 feet drops to 0 hit points, you can use your reaction to invoke this promise. The ally immediately stands up with hit points equal to your level. Additionally, they may immediately cast a spell of a level up to half your proficiency bonus, rounded down, targeting the creature or source that reduced them to 0 hit points.",
+          },
+        ],
+      },
+      {
+        level: 18,
+        name: "Defensive Being",
+        description:
+          "You achieve the pinnacle of defensive mastery. Choose one of the following ultimate defensive abilities.",
+        choices: [
+          {
+            name: "Bolstered Bravery",
+            description:
+              "When you are subjected to an effect that allows you to make a saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. If the spell has additional effects from failing the saving throw, those effects are automatically negated, whether you succeed or fail on the save. Additionally, you may use your reaction to transfer the benefits of this feature onto an ally within 30 feet of you. The benefits of this feature return to you at the beginning of your next turn.",
+          },
+          {
+            name: "Life Blessing",
+            description:
+              "As an action, you can touch the corpse of a creature that died within the past 24 hours and expend 15 sorcery points. The creature then returns to life, regaining a number of hit points equal to 4d10 + your spellcasting ability modifier. If the creature died while subject to any of the following conditions, it revives with them removed: blinded, deafened, paralyzed, poisoned, and stunned. Once you use this feature, you can't use it again until you finish a long rest.",
           },
         ],
       },
@@ -2467,6 +2504,148 @@ export const subclassesData = {
             name: "Yoink!",
             description:
               "When creature casts spell targeting you or including you in area, reaction to force spellcasting ability save (DC = your spell save DC). Success negates effect on you and steals spell knowledge for 8 hours if 1st+ level and you can cast it. Caster can't use spell for 8 hours. Proficiency bonus uses per long rest.",
+          },
+        ],
+      },
+    ],
+  },
+  "Necromantic Healer": {
+    name: "Necromantic Healer",
+    description:
+      "Dark healers who walk the line between life and death, using forbidden necromantic arts to both harm enemies and heal allies through unconventional means",
+    higherLevelFeatures: [
+      {
+        level: 1,
+        name: "Profane Studies",
+        description:
+          "At 1st level, you gain access to the Gravetouched Spell List and choose one of the following necromantic specializations.",
+        choices: [
+          {
+            name: "Shadowmend",
+            description:
+              "You lock in one dark spell of 2nd level or lower of your choice from any spell list. When you cast a cantrip with the dark tag that normally targets only one creature, you can choose to do one of the following: Target two creatures within range and within 10 feet of each other, OR Target one creature and one ally within 10 feet of each other. The creature takes damage as normal, and the ally regains hit points equal to the damage die of the spell.",
+          },
+          {
+            name: "Shared Agony",
+            description:
+              "You can link the life force of your enemies into a shared conduit of suffering. As an action you may force a number of creatures you can see within 60 feet equal to your Healing Modifier (minimum of 1 creature) to succeed on a Constitution saving throw against your spell save DC or become Tethered for 1 minute. A Tethered creature suffers the following effects: Whenever a tethered creature takes damage from your spells or subclass bonuses, all other tethered creatures take necrotic damage equal to your proficiency bonus. A tethered creature regains only half the normal amount of hit points from healing. You may use this feature once per long rest.",
+          },
+        ],
+      },
+      {
+        level: 4,
+        name: "Marrowbound (Optional)",
+        description:
+          "At 4th level, you can optionally take this feature in place of an Ability Score Improvement or Feat.",
+        choices: [
+          {
+            name: "Reanimate Remains",
+            description:
+              "You have mastered the forbidden art of reanimating the dead. You learn the ritual of assembling a Marrowbound, a twisted undead servant crafted from scavenged bones and other remains. The Marrowbound is friendly to you and your companions and obeys your commands. See this creature's game statistics in the Marrowbound stat block, which uses your proficiency bonus (PB) in several places. You determine the Marrowbound's appearance. In combat, the Marrowbound shares your initiative count, but it takes its turn immediately after yours. The only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the spirit can take any action of its choice, not just Dodge. If the Marrowbound is reduced to 0 hit points, it crumbles into inert bone fragments. You can restore it during a long rest by performing an hour of necromantic reconstruction using small bones, grave soil, or animal remains worth 25 Galleons.",
+          },
+        ],
+      },
+      {
+        level: 6,
+        name: "Brand of Death",
+        description:
+          "At 6th level, choose one of the following dark empowerments.",
+        choices: [
+          {
+            name: "Undead Thralls",
+            description:
+              "You lock in the Gehennus Conjurus spell. When you cast Gehennus Conjurus, you summon one more Inferius than usual. Whenever you cast Gehennus Conjurus spell, the Inferi have these additional benefits: The creature's hit point maximum is increased by an amount equal to your level. The creature adds your proficiency bonus to its weapon damage rolls.",
+          },
+          {
+            name: "Defy Death",
+            description:
+              "You can give yourself vitality when you cheat death or when you help someone else cheat it. You can regain hit points equal to 1d8 + your Healing modifier (minimum of 1 hit point) when you succeed on a death saving throw or when you stabilize a creature with a spell. Once you use this feature, you can't use it again until you finish a long rest.",
+          },
+          {
+            name: "Anguish",
+            description:
+              "When you hit a creature with a spell attack, you may deal an additional 1d8 necrotic damage and force the target to make a constitution saving throw against your spell save DC or be stunned until the end of your next turn. This damage increases to 2d8 at 14th Level. You may use this feature a number of times equal to your proficiency bonus per long rest.",
+          },
+        ],
+      },
+      {
+        level: 6,
+        name: "Curse Cleanser",
+        description:
+          "When you use a healing spell of 1st level or higher on a creature, you can end one condition or magical effect on them. The condition must be one of the following: charmed, frightened, poisoned, blinded, deafened, or cursed. The level of the curse must be equal to or lower than the level of the healing spell. You can do this a number of times equal to your spellcasting modifier per long rest.",
+        choices: [],
+      },
+      {
+        level: 10,
+        name: "Salvaged Remains",
+        description:
+          "At 10th level, choose one of the following advanced necromantic techniques.",
+        choices: [
+          {
+            name: "Curse Chain",
+            description:
+              "Shared Agony Required. When a creature Tethered by your Shared Agony feature fails a saving throw and becomes affected by a condition (such as charmed, frightened, paralyzed, stunned, blinded, deafened, poisoned, or similar), all other tethered creatures must make the same saving throw at the end of their next turn or suffer the same condition for its remaining duration.",
+          },
+          {
+            name: "Harvest the Fallen",
+            description:
+              "You gain the ability to reap life energy from creatures you kill with your spells. Once per turn when you kill one or more creatures with a spell of 1st level or higher, you regain hit points equal to twice the spell's level, or three times its level if the spell has the dark tag. When you kill a creature this way, you may regain one expended spell slot of the same level as the spell used to kill it.",
+          },
+          {
+            name: "Siphoned Vitality",
+            description:
+              "Once per turn, when you hit with a spell of 1st level or higher that deals damage, you can choose one ally within 30 feet to regain hit points equal to the spell's level + your spellcasting ability modifier. Additionally, when a creature within 15 feet of you drops to 0 hit points you can use your reaction to regain hit points equal to half of that creature's hitpoint maximum.",
+          },
+          {
+            name: "Whispers of Mending",
+            description:
+              "Shadowmend Required. Your healing magic weaves through shadow and unseen spaces, reaching those beyond the limits of sight. The range of all healing spells you cast is increased by 5 feet. If a healing spell normally requires touch, it can instead target a creature within 10 feet. You can cast healing spells on creatures even if you cannot see them. In dim light or darkness, all healing spells you cast have double their normal range.",
+          },
+        ],
+      },
+      {
+        level: 14,
+        name: "Curse of Rot",
+        description:
+          "At 14th level, choose one of the following ultimate necromantic powers.",
+        choices: [
+          {
+            name: "Touch of Blight",
+            description:
+              "Your touch can channel the energy of death into a creature. As an action, you touch one creature within 5 feet of you, and you expend 1 to 10 sorcery points. The target must make a Constitution saving throw, and it takes 2d10 necrotic damage per sorcery point spent on a failed save, or half as much damage on a successful one.",
+          },
+          {
+            name: "Command Undead",
+            description:
+              "You can use magic to bring undead under your control, even those created by other wizards. As an action, you can choose one undead that you can see within 60 feet of you. That creature must make a Charisma saving throw against your spell save DC. If it succeeds, you can't use this feature on it again. If it fails, it becomes friendly to you and obeys your commands until you use this feature again. Intelligent undead are harder to control in this way. If the target has an Intelligence of 8 or higher, it has advantage on the saving throw. If it fails the saving throw and has an Intelligence of 12 or higher, it can repeat the saving throw at the end of every hour until it succeeds and breaks free.",
+          },
+          {
+            name: "Hex Surge",
+            description:
+              "Once per turn you may add twice your Healing modifier to the damage of one target of a dark spell.",
+          },
+        ],
+      },
+      {
+        level: 18,
+        name: "Life and Death",
+        description:
+          "At 18th level, you master the ultimate balance between life and death. Choose one of the following capstone abilities.",
+        choices: [
+          {
+            name: "Continual Casting",
+            description:
+              "Whenever you reduce a creature to 0 hit points with a spell of 1st level or higher, you can immediately cast a spell of 3rd level or lower without expending a spell slot. The spell must have a casting time of 1 action or 1 bonus action. You can use this feature a number of times equal to your proficiency bonus per long rest.",
+          },
+          {
+            name: "Gravewalk",
+            description:
+              "Shared Agony Required. You become immune to necrotic damage and cannot be reduced below 1 hit point by damage from any creature that is Tethered by your Shared Agony feature. Additionally, you can cast all locked in spells that have the dark tag or restore hit points wordlessly and wandlessly.",
+          },
+          {
+            name: "Covenant of Ruin",
+            description:
+              "Your presence corrodes the boundary between life and death. At the start of each of your turns, each enemy within 10 feet of you takes necrotic damage equal to your Healing modifier (minimum of 1). If a creature affected by this damage is also under the effects of one of your spells, conditions or subclass features, it instead takes double that amount. This aura bypasses resistance to necrotic damage.",
           },
         ],
       },

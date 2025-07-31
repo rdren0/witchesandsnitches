@@ -267,7 +267,7 @@ const DowntimeWrapper = ({
         isAvailable: !isSubmitted || adminMode,
       };
     });
-  }, [selectedYear, isYearSemesterSubmitted]);
+  }, [selectedYear, isYearSemesterSubmitted, adminMode]);
 
   const yearAvailability = useMemo(
     () => getYearAvailability(),
@@ -277,24 +277,6 @@ const DowntimeWrapper = ({
     () => getSemesterAvailability(),
     [getSemesterAvailability]
   );
-
-  useEffect(() => {
-    if (selectedCharacter?.id && user?.id) {
-      const useAdminAccess = isUserAdmin && adminMode;
-      loadSubmittedSheets(
-        useAdminAccess,
-        useAdminAccess ? selectedCharacter.id : null
-      );
-      loadDrafts(useAdminAccess, useAdminAccess ? selectedCharacter.id : null);
-    }
-  }, [
-    selectedCharacter?.id,
-    user?.id,
-    isUserAdmin,
-    adminMode,
-    loadSubmittedSheets,
-    loadDrafts,
-  ]);
 
   const resetFormState = useCallback(() => {
     setCurrentSheet(null);
@@ -352,17 +334,6 @@ const DowntimeWrapper = ({
       selectedMagicSchool: "",
     });
   }, []);
-
-  useEffect(() => {
-    if (selectedCharacter?.id) {
-      resetFormState();
-      setSelectedYear("");
-      setSelectedSemester("");
-      setActiveTab("create");
-      setViewMode("list");
-      setViewingSheet(null);
-    }
-  }, [selectedCharacter?.id, resetFormState]);
 
   const handleYearChange = useCallback(
     (e) => {
@@ -526,11 +497,13 @@ const DowntimeWrapper = ({
 
         if (error) throw error;
 
-        const useAdminAccess = isUserAdmin && adminMode;
-        loadDrafts(
-          useAdminAccess,
-          useAdminAccess ? selectedCharacter.id : null
-        );
+        if (selectedCharacter?.id) {
+          const useAdminAccess = isUserAdmin && adminMode;
+          loadDrafts(
+            useAdminAccess,
+            useAdminAccess ? selectedCharacter.id : null
+          );
+        }
 
         if (currentSheet?.id === draftId) {
           setCurrentSheet(null);
@@ -635,8 +608,7 @@ const DowntimeWrapper = ({
       setFormData,
       isUserAdmin,
       adminMode,
-      selectedCharacter.id,
-      adminMode,
+      selectedCharacter?.id,
     ]
   );
 
@@ -671,6 +643,73 @@ const DowntimeWrapper = ({
     ],
     [drafts.length, submittedSheets.length]
   );
+
+  useEffect(() => {
+    if (selectedCharacter?.id && user?.id) {
+      const useAdminAccess = isUserAdmin && adminMode;
+      loadSubmittedSheets(
+        useAdminAccess,
+        useAdminAccess ? selectedCharacter.id : null
+      );
+      loadDrafts(useAdminAccess, useAdminAccess ? selectedCharacter.id : null);
+    }
+  }, [
+    selectedCharacter?.id,
+    user?.id,
+    isUserAdmin,
+    adminMode,
+    loadSubmittedSheets,
+    loadDrafts,
+  ]);
+
+  useEffect(() => {
+    if (selectedCharacter?.id) {
+      resetFormState();
+      setSelectedYear("");
+      setSelectedSemester("");
+      setActiveTab("create");
+      setViewMode("list");
+      setViewingSheet(null);
+    }
+  }, [selectedCharacter?.id, resetFormState]);
+
+  if (!selectedCharacter) {
+    return (
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "1.5rem",
+          backgroundColor: theme.background,
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            color: theme.textSecondary,
+            fontSize: "1.1rem",
+          }}
+        >
+          <div style={{ marginBottom: "1rem" }}>Loading character data...</div>
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              border: `3px solid ${theme.border}`,
+              borderTop: `3px solid ${theme.primary}`,
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto",
+            }}
+          ></div>
+        </div>
+      </div>
+    );
+  }
 
   const styles = {
     container: {
@@ -773,7 +812,6 @@ const DowntimeWrapper = ({
       borderBottom: `2px solid ${theme.primary}`,
       paddingBottom: "0.5rem",
     },
-
     viewingHeader: {
       display: "flex",
       justifyContent: "space-between",
@@ -796,7 +834,6 @@ const DowntimeWrapper = ({
       alignItems: "center",
       gap: "8px",
     },
-
     listContainer: {
       display: "grid",
       gap: "1rem",
@@ -1306,6 +1343,7 @@ const DowntimeWrapper = ({
       setViewingSheet(null);
       setViewMode("edit");
     };
+
     return (
       <ViewingSheetForm
         viewingSheet={viewingSheet}

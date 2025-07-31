@@ -1,4 +1,4 @@
-import { spellsData } from "../../SpellBook/spells";
+import { spellsData } from "../../../SharedData/spells";
 import { getSpellModifier } from "../../SpellBook/utils";
 
 export const calculateResearchDC = (

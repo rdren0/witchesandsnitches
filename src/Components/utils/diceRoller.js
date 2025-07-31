@@ -2,7 +2,7 @@ import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6 } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
-import { spellsData } from "../SpellBook/spells";
+import { spellsData } from "../../SharedData/spells";
 import { getDiscordWebhook } from "../../App/const";
 
 const RollModalContext = createContext();
