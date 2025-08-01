@@ -1205,7 +1205,8 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.combatStats,
-                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                  gridAutoFlow: "column",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
                   gap: "12px",
                 }}
               >
