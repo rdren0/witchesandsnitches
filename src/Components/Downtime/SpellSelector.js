@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { X, Search, Star, Check } from "lucide-react";
-import { spellsData } from "../SpellBook/spells";
+import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 
