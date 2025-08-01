@@ -13,7 +13,11 @@ import {
 import { useRollFunctions } from "../utils/diceRoller";
 
 import { useTheme } from "../../contexts/ThemeContext";
-import { recipes, recipeQualityDCs, recipeCategories } from "./recipesData";
+import {
+  recipes,
+  recipeQualityDCs,
+  recipeCategories,
+} from "../../SharedData/recipesData";
 import { createRecipesStyles } from "../../styles/masterStyles";
 import { getDiscordWebhook } from "../../App/const";
 

@@ -22,7 +22,7 @@ import {
   Eye as WisdomIcon,
 } from "lucide-react";
 
-import { spellsData } from "./spells";
+import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";

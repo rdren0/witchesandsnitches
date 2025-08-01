@@ -9,7 +9,7 @@ import {
   calculateWandStatIncreaseDC,
 } from "../Components/Downtime/downtimeHelpers";
 import { getSpellModifier } from "../Components/SpellBook/utils";
-import { spellsData } from "../Components/SpellBook/spells";
+import { spellsData } from "../SharedData/spells";
 import {
   Check,
   X,

@@ -2,7 +2,7 @@ import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6 } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
-import { spellsData } from "../SpellBook/spells";
+import { spellsData } from "../../SharedData/spells";
 import { getDiscordWebhook } from "../../App/const";
 
 const RollModalContext = createContext();
@@ -1414,6 +1414,10 @@ export const rollBrewPotion = async ({
   supabase,
   user,
   rawIngredientQuality,
+
+  hasHealingSubclass = false,
+  healingSkillChoice = "wisdomPotionMaking",
+  skillDisplayInfo = null,
 }) => {
   const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
 
@@ -1669,40 +1673,68 @@ export const rollBrewPotion = async ({
     const randomRuinedMessage =
       ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
 
+    const getSkillInfoText = () => {
+      if (!hasHealingSubclass || healingSkillChoice === "wisdomPotionMaking") {
+        return null;
+      }
+
+      switch (healingSkillChoice) {
+        case "intelligencePotionMaking":
+          return "Intelligence (Potion Making) *via Star Grass Salve*";
+        case "wisdomMedicine":
+          return "Wisdom (Medicine) *via Star Grass Salve*";
+        default:
+          return null;
+      }
+    };
+
+    const fields = [
+      {
+        name: "Roll Details",
+        value: `Roll: ${d20Roll} ${
+          skillModifier >= 0 ? "+" : ""
+        }${skillModifier} = **${totalRoll}**${
+          isCriticalSuccess
+            ? "\n✨ **Achieved maximum possible quality!**"
+            : isCriticalFailure
+            ? "\n💀 **Spectacular brewing failure!**"
+            : ""
+        }`,
+        inline: false,
+      },
+    ];
+
+    const skillInfo = getSkillInfoText();
+    if (skillInfo) {
+      fields.push({
+        name: "🌿 Brewing Skill Used",
+        value: skillInfo,
+        inline: true,
+      });
+    }
+
+    fields.push(
+      {
+        name: "Quality Achieved",
+        value: `${
+          achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+        }${inventoryAdded ? " (Added to Inventory)" : ""}`,
+        inline: true,
+      },
+      {
+        name: "Potion Effect",
+        value: selectedPotion.description,
+        inline: false,
+      }
+    );
+
     const message = {
       embeds: [
         {
           title: `${character.name} Brewed a Potion: ${selectedPotion.name}${resultText}`,
           description: achievedQuality === "ruined" ? randomRuinedMessage : "",
           color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                skillModifier >= 0 ? "+" : ""
-              }${skillModifier} = **${totalRoll}**${
-                isCriticalSuccess
-                  ? "\n✨ **Achieved maximum possible quality!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Spectacular brewing failure!**"
-                  : ""
-              }`,
-              inline: false,
-            },
-            {
-              name: "Quality Achieved",
-              value: `${
-                achievedQuality.charAt(0).toUpperCase() +
-                achievedQuality.slice(1)
-              }${inventoryAdded ? " (Added to Inventory)" : ""}`,
-              inline: true,
-            },
-            {
-              name: "Potion Effect",
-              value: selectedPotion.description,
-              inline: false,
-            },
-          ],
+          fields: fields,
           footer: {
             text: `Witches and Snitches - Potion Brewing • Today at ${new Date().toLocaleTimeString(
               [],
