@@ -139,7 +139,7 @@ const SorceryPointTracker = ({
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
       gap: "12px",
-      maxWidth: "240px", // Limit to about 2 tiles max
+      maxWidth: "240px",
     },
     slotItem: {
       backgroundColor: theme.surface,

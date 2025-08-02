@@ -4,6 +4,7 @@ import { X, Dice6 } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
 import { spellsData } from "../../SharedData/spells";
 import { getDiscordWebhook } from "../../App/const";
+import * as images from "../../Images";
 
 const RollModalContext = createContext();
 
@@ -1044,14 +1045,9 @@ export const rollMagicCasting = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches - Magic Casting • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches - Magic Casting`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -1177,14 +1173,9 @@ export const rollAbility = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches- Ability Check • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches- Ability Check`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -1369,14 +1360,9 @@ export const rollGenericD20 = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches - Generic Roll • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches - Generic Roll`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -1704,14 +1690,9 @@ export const rollBrewPotion = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches - Potion Brewing • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches - Potion Brewing `,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -1787,14 +1768,9 @@ export const rollInitiative = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches- Initiative • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches- Initiative`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -1923,9 +1899,11 @@ export const rollSkill = async ({
     }
 
     const message = {
+      username: character.name,
+      avatar_url: character.imageUrl ?? null,
       embeds: [
         {
-          title: `${character.name} Rolled: ${skill.displayName}${resultText}`,
+          title: `Rolled: ${skill.displayName}${resultText}`,
           color: embedColor,
           fields: [
             {
@@ -1947,14 +1925,9 @@ export const rollSkill = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches- Skill Check • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches- Skill Check`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -2902,14 +2875,9 @@ export const rollCookRecipe = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches - Recipe Cooking • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches - Recipe Cooking`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -3023,14 +2991,9 @@ export const rollSavingThrow = async ({
             },
           ],
           footer: {
-            text: `Witches and Snitches - Saving Throw • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches - Saving Throw `,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };
@@ -3470,14 +3433,9 @@ export const rollFlexibleDice = async ({
           color: embedColor,
           fields: fields,
           footer: {
-            text: `Witches and Snitches - Flexible Roll • Today at ${new Date().toLocaleTimeString(
-              [],
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              }
-            )}`,
+            text: `Witches and Snitches - Flexible Roll`,
           },
+          timestamp: new Date().toISOString(),
         },
       ],
     };

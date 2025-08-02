@@ -2411,7 +2411,6 @@ export const createAbilityScorePickerStyles = (theme) => ({
     marginBottom: "8px",
   },
   abilityScoreContainer: {
-    // display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "8px",
@@ -5724,7 +5723,6 @@ export const createDowntimeStyles = (theme) => ({
     gap: "20px",
   },
   activitySection: {
-    // display: "flex",
     backgroundColor: theme.surface,
     borderRadius: "8px",
     padding: "16px",

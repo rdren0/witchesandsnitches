@@ -2044,8 +2044,6 @@ export const subclassesData = {
           },
         ],
       },
-      //
-
       {
         level: 6,
         name: "Intellect Advantage",

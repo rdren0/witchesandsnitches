@@ -3200,7 +3200,7 @@ export const spellsData = {
   Gravetouched: {
     description:
       "Dark necromantic magic that blurs the line between healing and harming, accessible to Necromantic Healers who practice forbidden arts.",
-    color: "#4c1d95", // Dark purple for necromantic theme
+    color: "#4c1d95",
     levels: {
       Cantrips: [
         {

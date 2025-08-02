@@ -1,14 +1,17 @@
 import React from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 
 const SchoolYearSelector = ({
   schoolYear,
   onSchoolYearChange,
   level,
   onLevelChange,
-  styles,
 }) => {
   const { theme } = useTheme();
+
+  const defaultStyles = createCharacterCreationStyles(theme);
+  const componentStyles = defaultStyles;
 
   const getSuggestedLevelRange = (year) => {
     const ranges = {
@@ -52,8 +55,19 @@ const SchoolYearSelector = ({
   };
 
   return (
-    <div style={styles.fieldContainer}>
-      <h3 style={styles.sectionHeader}>Character Progression</h3>
+    <div style={componentStyles.fieldContainer}>
+      <h3
+        style={
+          componentStyles.sectionHeader || {
+            fontSize: "18px",
+            fontWeight: "600",
+            color: theme.text,
+            marginBottom: "12px",
+          }
+        }
+      >
+        Character Progression
+      </h3>
 
       <div
         style={{
@@ -86,14 +100,34 @@ const SchoolYearSelector = ({
           }}
         >
           <div>
-            <label style={styles.label}>
+            <label
+              style={
+                componentStyles.label || {
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: "500",
+                  color: theme.text,
+                }
+              }
+            >
               School Year
               <span style={{ color: theme.danger, marginLeft: "4px" }}>*</span>
             </label>
             <select
               value={schoolYear || ""}
               onChange={(e) => onSchoolYearChange(parseInt(e.target.value))}
-              style={styles.select}
+              style={
+                componentStyles.select || {
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "6px",
+                  backgroundColor: theme.surface,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }
+              }
               required
             >
               <option value="">Select Year...</option>
@@ -115,14 +149,34 @@ const SchoolYearSelector = ({
           </div>
 
           <div>
-            <label style={styles.label}>
+            <label
+              style={
+                componentStyles.label || {
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: "500",
+                  color: theme.text,
+                }
+              }
+            >
               Character Level
               <span style={{ color: theme.danger, marginLeft: "4px" }}>*</span>
             </label>
             <select
               value={level || ""}
               onChange={(e) => onLevelChange(parseInt(e.target.value))}
-              style={styles.select}
+              style={
+                componentStyles.select || {
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "6px",
+                  backgroundColor: theme.surface,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }
+              }
               required
             >
               <option value="">Select Level...</option>

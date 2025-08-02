@@ -434,6 +434,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
         wand_type: characterData.wand_type,
+        image_url: characterData.image_url || null,
       })
       .select()
       .single();
@@ -470,18 +471,7 @@ const saveCharacter = async (characterData, discordUserId) => {
 
 const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
-    const { data: currentCharacter } = await supabase
-      .from("characters")
-      .select("background")
-      .eq("id", characterId)
-      .eq("discord_user_id", discordUserId)
-      .eq("active", true)
-      .single();
-
-    if (!currentCharacter) {
-      throw new Error("Character not found");
-    }
-    const { data: updatedCharacter, error } = await supabase
+    const { data: updatedCharacter, error: characterError } = await supabase
       .from("characters")
       .update({
         ability_scores: characterData.ability_scores,
@@ -509,41 +499,20 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
         wand_type: characterData.wand_type,
+        image_url: characterData.image_url || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
-      .eq("active", true)
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Failed to update character: ${error.message}`);
-    }
-
-    if (
-      characterData.background &&
-      characterData.background !== currentCharacter.background &&
-      updatedCharacter.id
-    ) {
-      try {
-        const startingEquipment = getStartingEquipment(
-          characterData.background
-        );
-        if (startingEquipment.length > 0) {
-          await addStartingEquipment(
-            discordUserId,
-            updatedCharacter.id,
-            startingEquipment,
-            supabase
-          );
-        }
-      } catch (equipmentError) {
-        console.error(
-          "Failed to add starting equipment on background change:",
-          equipmentError
-        );
-      }
+    if (characterError) {
+      console.error(
+        "characterService.updateCharacter - database error:",
+        characterError
+      );
+      throw characterError;
     }
 
     return updatedCharacter;

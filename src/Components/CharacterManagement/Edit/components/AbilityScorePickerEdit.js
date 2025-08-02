@@ -150,7 +150,6 @@ export const AbilityScorePicker = ({
     const details = allDetails[ability] || [];
     if (details.length === 0) return null;
 
-    // Group sources by type for cleaner display
     const sourceGroups = {
       feat: [],
       background: [],
