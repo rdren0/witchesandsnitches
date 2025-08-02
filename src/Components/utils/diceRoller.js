@@ -5,10 +5,17 @@ import { getModifierInfo } from "../SpellBook/utils";
 import { spellsData } from "../../SharedData/spells";
 import { getDiscordWebhook } from "../../App/const";
 import * as images from "../../Images";
+import {
+  sendDiscordRollWebhook,
+  getRollResultColor,
+  getRollResultText,
+  buildModifierBreakdownField,
+  ROLL_COLORS,
+} from "./discordWebhook";
 
 const RollModalContext = createContext();
 
-const hasSubclassFeature = (character, featureName) => {
+export const hasSubclassFeature = (character, featureName) => {
   return character?.subclassFeatures?.includes(featureName) || false;
 };
 
@@ -497,7 +504,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   );
 };
 
-const rollCorruption = async ({
+export const rollCorruption = async ({
   character,
   pointsGained,
   pointsRedeemed,
@@ -940,8 +947,6 @@ export const rollMagicCasting = async ({
   character,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -976,9 +981,6 @@ export const rollMagicCasting = async ({
       );
     }
 
-    let embedColor = 0x9d4edd;
-    let resultText = "";
-
     const schoolColors = {
       Divinations: 0xf59e0b,
       Transfig: 0x10b981,
@@ -986,16 +988,6 @@ export const rollMagicCasting = async ({
       Healing: 0xef4444,
       JHC: 0x8330ee,
     };
-
-    embedColor = schoolColors[school] || 0x9d4edd;
-
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
 
     const wandEmojis = {
       Divinations: "🔮",
@@ -1006,60 +998,47 @@ export const rollMagicCasting = async ({
     };
 
     const schoolEmoji = wandEmojis[school] || "🪄";
-
-    const message = {
-      embeds: [
-        {
-          title: `${schoolEmoji} ${character.name} Cast: ${school} ${type}${resultText}`,
-          description: `${
-            isCriticalSuccess
-              ? "Natural 20! Exceptional magical prowess!"
-              : isCriticalFailure
-              ? "Natural 1! Magic went awry!"
-              : ""
-          }`,
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                modifier >= 0 ? "+" : ""
-              }${modifier} = **${total}**${
-                isCriticalSuccess
-                  ? "\n✨ **Masterful spellcasting!**"
-                  : isCriticalFailure
-                  ? "\n💥 **Magical mishap!**"
-                  : ""
-              }`,
-              inline: false,
-            },
-            {
-              name: "Magic School",
-              value: school,
-              inline: true,
-            },
-            {
-              name: "Cast Type",
-              value: type,
-              inline: true,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches - Magic Casting`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+    const rollResult = {
+      d20Roll,
+      modifier,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
     };
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    const additionalFields = [
+      {
+        name: "Magic School",
+        value: school,
+        inline: true,
+      },
+      {
+        name: "Cast Type",
+        value: type,
+        inline: true,
+      },
+    ];
+
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Magic Casting",
+      title: `${schoolEmoji} Cast: ${school} ${type}`,
+      description: isCriticalSuccess
+        ? "Natural 20! Exceptional magical prowess!"
+        : isCriticalFailure
+        ? "Natural 1! Magic went awry!"
+        : "",
+      embedColor: getRollResultColor(
+        rollResult,
+        schoolColors[school] || ROLL_COLORS.magic_casting
+      ),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -1077,8 +1056,6 @@ export const rollAbility = async ({
   character,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1125,69 +1102,41 @@ export const rollAbility = async ({
       );
     }
 
-    let embedColor = 0x20b7b0;
-    let resultText = "";
-
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
-
-    let rollDescription = `Roll: ${adjustedRoll}`;
-    if (diceResult.ravenclawBonusApplied) {
-      rollDescription = `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}`;
-    }
-
-    const message = {
-      embeds: [
-        {
-          title: `${character.name} Rolled: ${ability.name} Check${resultText}`,
-          description: `${
-            isCriticalSuccess
-              ? "Natural 20!"
-              : isCriticalFailure
-              ? "Natural 1!"
-              : ""
-          }`,
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `${rollDescription} ${
-                abilityMod >= 0 ? "+" : ""
-              }${abilityMod} = **${total}**${
-                isCriticalSuccess
-                  ? "\n✨ **Exceptional success regardless of DC!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Spectacular failure regardless of modifier!**"
-                  : ""
-              }${
-                diceResult.ravenclawBonusApplied
-                  ? `\n🎓 *In-Depth Knowledge bonus applied!*`
-                  : ""
-              }`,
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches- Ability Check`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+    const rollResult = {
+      d20Roll: adjustedRoll,
+      modifier: abilityMod,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
     };
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
+    let additionalFields = [];
+
+    if (diceResult.ravenclawBonusApplied) {
+      additionalFields.push({
+        name: "Special Abilities",
+        value: `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}\n🎓 *In-Depth Knowledge bonus applied!*`,
+        inline: false,
       });
+    }
+
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Ability Check",
+      title: `Rolled: ${ability.name} Check`,
+      description: isCriticalSuccess
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -1307,8 +1256,6 @@ export const rollGenericD20 = async ({
   setIsRolling,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1337,44 +1284,29 @@ export const rollGenericD20 = async ({
       alert(`${title}: d20(${d20Roll}) + ${mod} = ${total}`);
     }
 
-    let embedColor = 0xff9e3d;
-    let resultText = "";
-
-    const rollTitle = character
-      ? `${character.name}: ${title}${resultText}`
-      : `${title}${resultText}`;
-
-    const message = {
-      embeds: [
-        {
-          title: rollTitle,
-          description: "",
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                mod >= 0 ? "+" : ""
-              }${mod} = **${total}**`,
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches - Generic Roll`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+    const rollResult = {
+      d20Roll,
+      modifier: mod,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
     };
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    const rollTitle = character ? title : `${title}`;
+
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Generic Roll",
+      title: rollTitle,
+      description: "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.generic),
+      rollResult,
+      fields: [],
+      useCharacterAvatar: !!character,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -1401,8 +1333,6 @@ export const rollBrewPotion = async ({
   user,
   rawIngredientQuality,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return null;
   setIsRolling(true);
 
@@ -1592,7 +1522,6 @@ export const rollBrewPotion = async ({
         description: `Quality Achieved: ${
           achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
         }`,
-
         inventoryAdded,
         potionQuality: achievedQuality,
         potionName: selectedPotion.name,
@@ -1609,37 +1538,13 @@ export const rollBrewPotion = async ({
       );
     }
 
-    let embedColor = 0x6b46c1;
-    let resultText = "";
-
-    switch (achievedQuality) {
-      case "superior":
-        embedColor = 0x8b5cf6;
-        break;
-      case "exceptional":
-        embedColor = 0x3b82f6;
-        break;
-      case "normal":
-        embedColor = 0x10b981;
-        break;
-      case "flawed":
-        embedColor = 0xf59e0b;
-        break;
-      case "ruined":
-        embedColor = 0xef4444;
-        break;
-      default:
-        embedColor = 0x6b7280;
-        break;
-    }
-
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
+    const rollResult = {
+      d20Roll,
+      modifier: skillModifier,
+      total: totalRoll,
+      isCriticalSuccess,
+      isCriticalFailure,
+    };
 
     const ruinedMessages = [
       "You did your best!",
@@ -1655,56 +1560,34 @@ export const rollBrewPotion = async ({
     const randomRuinedMessage =
       ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
 
-    const message = {
-      embeds: [
-        {
-          title: `${character.name} Brewed a Potion: ${selectedPotion.name}${resultText}`,
-          description: achievedQuality === "ruined" ? randomRuinedMessage : "",
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                skillModifier >= 0 ? "+" : ""
-              }${skillModifier} = **${totalRoll}**${
-                isCriticalSuccess
-                  ? "\n✨ **Achieved maximum possible quality!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Spectacular brewing failure!**"
-                  : ""
-              }`,
-              inline: false,
-            },
-            {
-              name: "Quality Achieved",
-              value: `${
-                achievedQuality.charAt(0).toUpperCase() +
-                achievedQuality.slice(1)
-              }${inventoryAdded ? " (Added to Inventory)" : ""}`,
-              inline: true,
-            },
-            {
-              name: "Potion Effect",
-              value: selectedPotion.description,
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches - Potion Brewing `,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
+    const additionalFields = [
+      {
+        name: "Quality Achieved",
+        value: `${
+          achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+        }${inventoryAdded ? " (Added to Inventory)" : ""}`,
+        inline: true,
+      },
+      {
+        name: "Potion Effect",
+        value: selectedPotion.description,
+        inline: false,
+      },
+    ];
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Potion Brewing",
+      title: `Brewed a Potion: ${selectedPotion.name}`,
+      description: achievedQuality === "ruined" ? randomRuinedMessage : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.potion),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      console.error("Failed to send potion brewing result to Discord");
     }
 
     return brewingResult;
@@ -1722,8 +1605,6 @@ export const rollInitiative = async ({
   setIsRolling,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1750,39 +1631,27 @@ export const rollInitiative = async ({
       alert(`Rolled Initiative: d20(${d20Roll}) + ${mod} = ${total}`);
     }
 
-    let embedColor = 0x107319;
-
-    const message = {
-      embeds: [
-        {
-          title: `${character.name} Rolled Initiative`,
-          description: "",
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                mod >= 0 ? "+" : ""
-              }${mod} = **${total}**`,
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches- Initiative`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+    const rollResult = {
+      d20Roll,
+      modifier: mod,
+      total,
+      isCriticalSuccess: false,
+      isCriticalFailure: false,
     };
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Initiative",
+      title: `Rolled Initiative`,
+      description: "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.initiative),
+      rollResult,
+      fields: [],
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -1800,8 +1669,6 @@ export const rollSkill = async ({
   character,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -1882,64 +1749,41 @@ export const rollSkill = async ({
       );
     }
 
-    let embedColor = 0x6600cc;
-    let resultText = "";
-
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
-
-    let rollDescription = `Roll: ${adjustedRoll}`;
-    if (diceResult.ravenclawBonusApplied) {
-      rollDescription = `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}`;
-    }
-
-    const message = {
-      username: character.name,
-      avatar_url: character.imageUrl ?? null,
-      embeds: [
-        {
-          title: `Rolled: ${skill.displayName}${resultText}`,
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `${rollDescription} ${
-                skillBonus >= 0 ? "+" : ""
-              }${skillBonus} = **${total}**${
-                isCriticalSuccess
-                  ? "\n✨ **Exceptional success!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Spectacular failure regardless of modifier!**"
-                  : ""
-              }${
-                diceResult.ravenclawBonusApplied
-                  ? `\n🎓 *In-Depth Knowledge bonus applied!*`
-                  : ""
-              }`,
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches- Skill Check`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+    const rollResult = {
+      d20Roll: adjustedRoll,
+      modifier: skillBonus,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
     };
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
+    let additionalFields = [];
+
+    if (diceResult.ravenclawBonusApplied) {
+      additionalFields.push({
+        name: "Special Abilities",
+        value: `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}\n🎓 *In-Depth Knowledge bonus applied!*`,
+        inline: false,
       });
+    }
+
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Skill Check",
+      title: `Rolled: ${skill.displayName}`,
+      description: isCriticalSuccess
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.skill),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -1982,8 +1826,6 @@ export const attemptSpell = async ({
   updateSpellProgressSummary,
   customRoll = null,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
-
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
@@ -2070,48 +1912,27 @@ export const attemptSpell = async ({
       }));
     }
 
-    if (!discordWebhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
+    const rollResult = {
+      d20Roll,
+      modifier: totalModifier,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
+      isSuccess,
+      customRoll,
+    };
 
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Attempted: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
+    let title = `Attempted: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Attempted: ${spellName}`;
-      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700;
+      title = `⭐ Attempted: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Attempted: ${spellName}`;
-      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
+      title = `💥 Attempted: ${spellName}`;
     }
 
-    let rollDescription = `**Roll:** ${d20Roll}`;
-    if (customRoll !== null) {
-      rollDescription = `**Assigned Die:** ${d20Roll}`;
-    }
-    const modifierText =
-      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-    rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
-
-    const fields = [
+    const additionalFields = [
       {
         name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
+        value: getRollResultText(rollResult),
         inline: true,
       },
       {
@@ -2127,45 +1948,22 @@ export const attemptSpell = async ({
         subject,
         selectedCharacter
       );
-
-      let modifierBreakdown = `${modifierInfo.abilityName}: ${
-        modifierInfo.abilityModifier >= 0 ? "+" : ""
-      }${modifierInfo.abilityModifier}`;
-
-      modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-        modifierInfo.wandModifier >= 0 ? "+" : ""
-      }${modifierInfo.wandModifier}`;
-
-      fields.push({
-        name: "Modifier Breakdown",
-        value: modifierBreakdown,
-        inline: false,
-      });
+      additionalFields.push(buildModifierBreakdownField(modifierInfo));
     }
 
-    const embed = {
-      title: title,
+    const success = await sendDiscordRollWebhook({
+      character: selectedCharacter,
+      rollType: "Spellcasting",
+      title,
       description: "",
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Spellcasting",
-      },
-    };
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
 
-    try {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
+    if (!success) {
+      console.error("Failed to send spell attempt to Discord");
     }
 
     await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
@@ -2198,8 +1996,6 @@ export const attemptArithmancySpell = async ({
   setFailedAttempts,
   updateSpellProgressSummary,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
-
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
@@ -2280,45 +2076,26 @@ export const attemptArithmancySpell = async ({
       }));
     }
 
-    if (!discordWebhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
+    const rollResult = {
+      d20Roll,
+      modifier: totalModifier,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
+      isSuccess,
+    };
 
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Arithmancy Cast: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
+    let title = `Arithmancy Cast: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Arithmancy Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700;
+      title = `⭐ Arithmancy Cast: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Arithmancy Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
+      title = `💥 Arithmancy Cast: ${spellName}`;
     }
 
-    let rollDescription = `**Roll:** ${d20Roll}`;
-    const modifierText =
-      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-    rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
-
-    const fields = [
+    const additionalFields = [
       {
         name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
+        value: getRollResultText(rollResult),
         inline: true,
       },
       {
@@ -2326,45 +2103,27 @@ export const attemptArithmancySpell = async ({
         value: `Arithmancy Cast (Level ${spellLevel}, DC ${goal})`,
         inline: true,
       },
+      buildModifierBreakdownField({
+        abilityName: "Intelligence",
+        abilityModifier: intModifier,
+        wandType: modifierInfo.wandType,
+        wandModifier: wandModifier,
+      }),
     ];
 
-    let modifierBreakdown = `Intelligence: ${
-      intModifier >= 0 ? "+" : ""
-    }${intModifier}`;
-
-    modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-      wandModifier >= 0 ? "+" : ""
-    }${wandModifier}`;
-
-    fields.push({
-      name: "Modifier Breakdown",
-      value: modifierBreakdown,
-      inline: false,
+    const success = await sendDiscordRollWebhook({
+      character: selectedCharacter,
+      rollType: "Arithmancy Spellcasting",
+      title,
+      description: "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
     });
 
-    const embed = {
-      title: title,
-      description: "",
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Arithmancy Spellcasting",
-      },
-    };
-
-    try {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
+    if (!success) {
+      console.error("Failed to send Arithmancy spell to Discord");
     }
 
     await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
@@ -2388,8 +2147,6 @@ export const attemptRunesSpell = async ({
   setFailedAttempts,
   updateSpellProgressSummary,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
-
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
@@ -2470,45 +2227,26 @@ export const attemptRunesSpell = async ({
       }));
     }
 
-    if (!discordWebhookUrl) {
-      console.error("Discord webhook URL not configured");
-      return;
-    }
+    const rollResult = {
+      d20Roll,
+      modifier: totalModifier,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
+      isSuccess,
+    };
 
-    let title = `${
-      selectedCharacter?.name || "Unknown"
-    } Runic Cast: ${spellName}`;
-    let resultText = `${isSuccess ? "✅ SUCCESS" : "❌ FAILED"}`;
-    let embedColor = isSuccess ? 0x00ff00 : 0xff0000;
-
+    let title = `Runic Cast: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `⭐ ${
-        selectedCharacter?.name || "Unknown"
-      } Runic Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - ⭐ CRITICALLY MASTERED!`;
-      embedColor = 0xffd700;
+      title = `⭐ Runic Cast: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `💥 ${
-        selectedCharacter?.name || "Unknown"
-      } Runic Cast: ${spellName}`;
-      resultText = `**${d20Roll}** - 💥 CRITICAL FAILURE!`;
-      embedColor = 0x8b0000;
+      title = `💥 Runic Cast: ${spellName}`;
     }
 
-    let rollDescription = `**Roll:** ${d20Roll}`;
-    const modifierText =
-      totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
-    rollDescription += ` ${modifierText} = **${total}** vs DC ${goal}`;
-
-    const fields = [
+    const additionalFields = [
       {
         name: "Result",
-        value: resultText,
-        inline: true,
-      },
-      {
-        name: "Roll Details",
-        value: rollDescription,
+        value: getRollResultText(rollResult),
         inline: true,
       },
       {
@@ -2516,45 +2254,27 @@ export const attemptRunesSpell = async ({
         value: `Runic Cast (Level ${spellLevel}, DC ${goal})`,
         inline: true,
       },
+      buildModifierBreakdownField({
+        abilityName: "Wisdom",
+        abilityModifier: wisModifier,
+        wandType: modifierInfo.wandType,
+        wandModifier: wandModifier,
+      }),
     ];
 
-    let modifierBreakdown = `Wisdom: ${
-      wisModifier >= 0 ? "+" : ""
-    }${wisModifier}`;
-
-    modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-      wandModifier >= 0 ? "+" : ""
-    }${wandModifier}`;
-
-    fields.push({
-      name: "Modifier Breakdown",
-      value: modifierBreakdown,
-      inline: false,
+    const success = await sendDiscordRollWebhook({
+      character: selectedCharacter,
+      rollType: "Runic Spellcasting",
+      title,
+      description: "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
     });
 
-    const embed = {
-      title: title,
-      description: "",
-      color: embedColor,
-      fields: fields,
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Witches And Snitches - Runic Spellcasting",
-      },
-    };
-
-    try {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [embed],
-        }),
-      });
-    } catch (error) {
-      console.error("Error sending to Discord:", error);
+    if (!success) {
+      console.error("Failed to send Runic spell to Discord");
     }
 
     await updateSpellProgressSummary(spellName, isSuccess, isCriticalSuccess);
@@ -2774,37 +2494,13 @@ export const rollCookRecipe = async ({
       );
     }
 
-    let embedColor = 0x6b46c1;
-    let resultText = "";
-
-    switch (achievedQuality) {
-      case "superior":
-        embedColor = 0x8b5cf6;
-        break;
-      case "exceptional":
-        embedColor = 0x3b82f6;
-        break;
-      case "regular":
-        embedColor = 0x10b981;
-        break;
-      case "flawed":
-        embedColor = 0xf59e0b;
-        break;
-      case "ruined":
-        embedColor = 0xef4444;
-        break;
-      default:
-        embedColor = 0x6b7280;
-        break;
-    }
-
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
+    const rollResult = {
+      d20Roll,
+      modifier: skillModifier,
+      total: totalRoll,
+      isCriticalSuccess,
+      isCriticalFailure,
+    };
 
     const ruinedMessages = [
       "The kitchen survived... barely!",
@@ -2820,76 +2516,52 @@ export const rollCookRecipe = async ({
     const randomRuinedMessage =
       ruinedMessages[Math.floor(Math.random() * ruinedMessages.length)];
 
-    const message = {
-      embeds: [
-        {
-          title: `${character.name} Cooked a Recipe: ${selectedRecipe.name}${resultText}`,
-          description: achievedQuality === "ruined" ? randomRuinedMessage : "",
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                skillModifier >= 0 ? "+" : ""
-              }${skillModifier} = **${totalRoll}**${
-                isCriticalSuccess
-                  ? "\n✨ **Achieved maximum possible quality!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Spectacular cooking failure!**"
-                  : ""
-              }`,
-              inline: false,
-            },
-            {
-              name: "Quality Achieved",
-              value: `${
-                achievedQuality.charAt(0).toUpperCase() +
-                achievedQuality.slice(1)
-              }${inventoryAdded ? " (Added to Inventory)" : ""}`,
-              inline: true,
-            },
-            {
-              name: "Eating Time",
-              value: selectedRecipe.eatingTime,
-              inline: true,
-            },
-            {
-              name: "Duration",
-              value: selectedRecipe.duration,
-              inline: true,
-            },
-            {
-              name: "Recipe Effect",
-              value: selectedRecipe.description,
-              inline: false,
-            },
-            {
-              name: `${
-                achievedQuality.charAt(0).toUpperCase() +
-                achievedQuality.slice(1)
-              } Quality Effect`,
-              value:
-                selectedRecipe.qualities[achievedQuality] ||
-                "No effect available",
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches - Recipe Cooking`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
+    const additionalFields = [
+      {
+        name: "Quality Achieved",
+        value: `${
+          achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+        }${inventoryAdded ? " (Added to Inventory)" : ""}`,
+        inline: true,
+      },
+      {
+        name: "Eating Time",
+        value: selectedRecipe.eatingTime,
+        inline: true,
+      },
+      {
+        name: "Duration",
+        value: selectedRecipe.duration,
+        inline: true,
+      },
+      {
+        name: "Recipe Effect",
+        value: selectedRecipe.description,
+        inline: false,
+      },
+      {
+        name: `${
+          achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
+        } Quality Effect`,
+        value:
+          selectedRecipe.qualities[achievedQuality] || "No effect available",
+        inline: false,
+      },
+    ];
 
-    if (webhookUrl) {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Recipe Cooking",
+      title: `Cooked a Recipe: ${selectedRecipe.name}`,
+      description: achievedQuality === "ruined" ? randomRuinedMessage : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.recipe),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      console.error("Failed to send recipe cooking result to Discord");
     }
 
     return cookingResult;
@@ -2915,8 +2587,6 @@ export const rollSavingThrow = async ({
   savingThrowModifier,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -2952,60 +2622,31 @@ export const rollSavingThrow = async ({
       );
     }
 
-    let embedColor = 0x8b5cf6;
-    let resultText = "";
-
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
-
-    const message = {
-      embeds: [
-        {
-          title: `${character.name} Rolled: ${ability.name} Saving Throw${resultText}`,
-          description: `${
-            isCriticalSuccess
-              ? "Natural 20!"
-              : isCriticalFailure
-              ? "Natural 1!"
-              : ""
-          }`,
-          color: embedColor,
-          fields: [
-            {
-              name: "Roll Details",
-              value: `Roll: ${d20Roll} ${
-                modifier >= 0 ? "+" : ""
-              }${modifier} = **${total}**${
-                isCriticalSuccess
-                  ? "\n✨ **Exceptional success regardless of DC!**"
-                  : isCriticalFailure
-                  ? "\n💀 **Spectacular failure regardless of modifier!**"
-                  : ""
-              }`,
-              inline: false,
-            },
-          ],
-          footer: {
-            text: `Witches and Snitches - Saving Throw `,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+    const rollResult = {
+      d20Roll,
+      modifier,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
     };
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Saving Throw",
+      title: `Rolled: ${ability.name} Saving Throw`,
+      description: isCriticalSuccess
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.saving_throw),
+      rollResult,
+      fields: [],
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -3027,8 +2668,6 @@ export const rollResearch = async ({
   showRollResult,
   customRoll = null,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(selectedCharacter?.gameSession);
-
   try {
     let modifier = getSpellModifier(spellName, subject, selectedCharacter);
 
@@ -3065,137 +2704,94 @@ export const rollResearch = async ({
       });
     }
 
-    if (discordWebhookUrl) {
-      let embedColor = isSuccess ? 0x10b981 : 0xef4444;
-      let title = `${
-        selectedCharacter?.name || "Unknown"
-      } Researched: ${spellName}`;
-      let resultText = "";
+    const rollResult = {
+      d20Roll,
+      modifier,
+      total: totalRoll,
+      isCriticalSuccess,
+      isCriticalFailure,
+      isSuccess,
+      customRoll,
+    };
 
+    let title = `Researched: ${spellName}`;
+    let resultText = "";
+
+    if (isNaturalTwenty) {
+      title = `⭐ Researched: ${spellName}`;
+      resultText = "⭐ **EXCELLENT RESEARCH!** (Natural 20)";
+    } else if (isSuccess) {
+      resultText = "✅ **Research Successful!**";
+    } else {
+      resultText = "❌ **Research Failed**";
+    }
+
+    const additionalFields = [
+      {
+        name: "Result",
+        value: resultText,
+        inline: true,
+      },
+      {
+        name: "Research Info",
+        value: `Player Year: ${playerYear}\nSpell Year: ${spellYear}`,
+        inline: true,
+      },
+    ];
+
+    if (isSuccess) {
       if (isNaturalTwenty) {
-        embedColor = 0xffd700;
-        title = `⭐ ${
-          selectedCharacter?.name || "Unknown"
-        } Researched: ${spellName}`;
-        resultText = "⭐ **EXCELLENT RESEARCH!** (Natural 20)";
-      } else if (isSuccess) {
-        resultText = "✅ **Research Successful!**";
+        additionalFields.push({
+          name: "Special Benefit",
+          value: "Gained deep understanding + 1 successful attempt!",
+          inline: false,
+        });
       } else {
-        resultText = "❌ **Research Failed**";
-      }
-
-      let rollDescription = `**${d20Roll}**`;
-      if (customRoll !== null) {
-        rollDescription = `**Assigned Die:** ${d20Roll}`;
-      }
-      rollDescription += ` ${
-        modifier >= 0 ? "+" : ""
-      }${modifier} = **${totalRoll}** vs DC ${dc}`;
-
-      const fields = [
-        {
-          name: "Result",
-          value: resultText,
-          inline: true,
-        },
-        {
-          name: "Roll Details",
-          value: rollDescription,
-          inline: true,
-        },
-        {
-          name: "Research Info",
-          value: `Player Year: ${playerYear}\nSpell Year: ${spellYear}`,
-          inline: true,
-        },
-      ];
-
-      if (isSuccess) {
-        if (isNaturalTwenty) {
-          fields.push({
-            name: "Special Benefit",
-            value: "Gained deep understanding + 1 successful attempt!",
-            inline: false,
-          });
-        } else {
-          fields.push({
-            name: "Benefit",
-            value: "Spell marked as researched for future attempts",
-            inline: false,
-          });
-        }
-
-        if (hasSubclassFeature(selectedCharacter, "Researcher")) {
-          fields.push({
-            name: "📚 Researcher Enhancement",
-            value:
-              "This spell now gains both Arithmantic and Runic tags through extensive study!",
-            inline: false,
-          });
-        }
-      } else {
-        fields.push({
-          name: "Outcome",
-          value: `${spellName} proved too difficult to understand at this time`,
+        additionalFields.push({
+          name: "Benefit",
+          value: "Spell marked as researched for future attempts",
           inline: false,
         });
       }
 
-      if (modifier !== 0) {
-        const modifierInfo = getModifierInfo(
-          spellName,
-          subject,
-          selectedCharacter
-        );
-
-        let modifierBreakdown = `${modifierInfo.abilityName}: ${
-          modifierInfo.abilityModifier >= 0 ? "+" : ""
-        }${modifierInfo.abilityModifier}`;
-
-        if (modifierInfo.wandModifier !== 0) {
-          modifierBreakdown += `\nWand (${modifierInfo.wandType}): ${
-            modifierInfo.wandModifier >= 0 ? "+" : ""
-          }${modifierInfo.wandModifier}`;
-        }
-
-        if (
-          hasSubclassFeature(selectedCharacter, "Researcher") &&
-          researcherBonus > 0
-        ) {
-          modifierBreakdown += `\n📚 Researcher (½ Wis): +${researcherBonus}`;
-        }
-
-        fields.push({
-          name: "Modifier Breakdown",
-          value: modifierBreakdown,
+      if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+        additionalFields.push({
+          name: "📚 Researcher Enhancement",
+          value:
+            "This spell now gains both Arithmantic and Runic tags through extensive study!",
           inline: false,
         });
       }
+    } else {
+      additionalFields.push({
+        name: "Outcome",
+        value: `${spellName} proved too difficult to understand at this time`,
+        inline: false,
+      });
+    }
 
-      const embed = {
-        title: title,
-        description: "",
-        color: embedColor,
-        fields: fields,
-        timestamp: new Date().toISOString(),
-        footer: {
-          text: "Witches And Snitches - Spell Research",
-        },
-      };
+    if (modifier !== 0) {
+      const modifierInfo = getModifierInfo(
+        spellName,
+        subject,
+        selectedCharacter
+      );
+      additionalFields.push(buildModifierBreakdownField(modifierInfo));
+    }
 
-      try {
-        await fetch(discordWebhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            embeds: [embed],
-          }),
-        });
-      } catch (discordError) {
-        console.error("Error sending to Discord:", discordError);
-      }
+    const success = await sendDiscordRollWebhook({
+      character: selectedCharacter,
+      rollType: "Spell Research",
+      title,
+      description: "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.research),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    if (!success) {
+      console.error("Failed to send research to Discord");
     }
 
     return {
@@ -3313,8 +2909,6 @@ export const rollFlexibleDice = async ({
   setIsRolling,
   showRollResult,
 }) => {
-  const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
   if (isRolling) return;
 
   setIsRolling(true);
@@ -3364,20 +2958,15 @@ export const rollFlexibleDice = async ({
       );
     }
 
-    let embedColor = 0xff9e3d;
-    let resultText = "";
+    const rollResult = {
+      d20Roll: diceRoll,
+      modifier: mod,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
+    };
 
-    if (isCriticalSuccess) {
-      embedColor = 0xffd700;
-      resultText = " - **CRITICAL SUCCESS!** 🎉";
-    } else if (isCriticalFailure) {
-      embedColor = 0xff0000;
-      resultText = " - **CRITICAL FAILURE!** 💥";
-    }
-
-    const rollTitle = character
-      ? `${character.name}: ${title}${resultText}`
-      : `${title}${resultText}`;
+    const rollTitle = title;
 
     const rollTypeDescription =
       rollType !== "normal"
@@ -3391,29 +2980,7 @@ export const rollFlexibleDice = async ({
           } Roll`
         : "";
 
-    const individualDiceField =
-      diceResult.individualDiceResults.keptDice.length > 1
-        ? {
-            name: "Individual Dice",
-            value: `[${diceResult.individualDiceResults.keptDice.join(", ")}]`,
-            inline: true,
-          }
-        : null;
-
-    const fields = [
-      {
-        name: "Roll Details",
-        value: `${diceQuantity}d${diceType}${rollTypeDescription}: ${diceRoll} ${
-          mod >= 0 ? "+" : ""
-        }${mod} = **${total}**${
-          isCriticalSuccess
-            ? "\n✨ **Critical Success!**"
-            : isCriticalFailure
-            ? "\n💀 **Critical Failure!**"
-            : ""
-        }`,
-        inline: false,
-      },
+    const additionalFields = [
       {
         name: "Dice Formula",
         value: diceResult.notation,
@@ -3421,33 +2988,27 @@ export const rollFlexibleDice = async ({
       },
     ];
 
-    if (individualDiceField) {
-      fields.push(individualDiceField);
+    if (diceResult.individualDiceResults.keptDice.length > 1) {
+      additionalFields.push({
+        name: "Individual Dice",
+        value: `[${diceResult.individualDiceResults.keptDice.join(", ")}]`,
+        inline: true,
+      });
     }
 
-    const message = {
-      embeds: [
-        {
-          title: rollTitle,
-          description: advantageInfo,
-          color: embedColor,
-          fields: fields,
-          footer: {
-            text: `Witches and Snitches - Flexible Roll`,
-          },
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Flexible Roll",
+      title: rollTitle,
+      description: advantageInfo,
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.flexible),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: !!character,
+    });
 
-    if (discordWebhookUrl) {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+    if (!success) {
+      alert("Failed to send roll to Discord");
     }
   } catch (error) {
     console.error("Error sending Discord message:", error);
@@ -3467,7 +3028,6 @@ export const useRollFunctions = () => {
       attemptSpell({
         ...params,
         showRollResult,
-
         customRoll: params.customRoll || null,
       }),
     attemptArithmancySpell: (params) =>
@@ -3481,7 +3041,6 @@ export const useRollFunctions = () => {
       rollResearch({
         ...params,
         showRollResult,
-
         customRoll: params.customRoll || null,
       }),
     rollCorruption: (params) => rollCorruption({ ...params, showRollResult }),
