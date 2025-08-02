@@ -1,4 +1,4 @@
-import { SUBJECT_TO_MODIFIER_MAP } from "../SharedData/data";
+import { SUBJECT_TO_MODIFIER_MAP } from "./data";
 
 export const cardTitles = {
   "Charms-Cantrips": true,
