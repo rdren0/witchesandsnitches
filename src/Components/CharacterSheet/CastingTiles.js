@@ -17,7 +17,6 @@ const CastingTiles = ({ character }) => {
   const handleRoll = async (modifier, type, school) => {
     if (isRolling) return;
 
-    // Use the Discord-enabled rolling function
     await rollMagicCasting({
       school,
       type,

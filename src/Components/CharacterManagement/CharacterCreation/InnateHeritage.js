@@ -6,26 +6,21 @@ import {
 import { createFeatStyles } from "../../../styles/masterStyles";
 import { useTheme } from "../../../contexts/ThemeContext";
 
-// Utility functions to check for modifiers at multiple levels
 const checkForModifiers = (obj, type = "abilityIncreases") => {
   const results = [];
 
-  // Level 1: Direct modifiers
   if (obj?.modifiers?.[type]) {
     results.push(...obj.modifiers[type]);
   }
 
-  // Level 2: Data nested modifiers (common pattern)
   if (obj?.data?.modifiers?.[type]) {
     results.push(...obj.data.modifiers[type]);
   }
 
-  // Level 3: Benefits/features nested modifiers
   if (obj?.benefits?.modifiers?.[type]) {
     results.push(...obj.benefits.modifiers[type]);
   }
 
-  // Level 4: Nested in properties
   if (obj?.properties?.modifiers?.[type]) {
     results.push(...obj.properties.modifiers[type]);
   }
@@ -33,11 +28,9 @@ const checkForModifiers = (obj, type = "abilityIncreases") => {
   return results;
 };
 
-// Simple utility for ability choices
 const checkForAbilityChoices = (obj) => {
   const choices = [];
 
-  // Direct ability choice (most common pattern in your data)
   if (obj?.abilityChoice) {
     choices.push({
       ability: obj.abilityChoice,
@@ -46,7 +39,6 @@ const checkForAbilityChoices = (obj) => {
     });
   }
 
-  // Nested in data
   if (obj?.data?.abilityChoice) {
     choices.push({
       ability: obj.data.abilityChoice,
@@ -55,7 +47,6 @@ const checkForAbilityChoices = (obj) => {
     });
   }
 
-  // Nested in properties
   if (obj?.properties?.abilityChoice) {
     choices.push({
       ability: obj.properties.abilityChoice,
@@ -67,21 +58,17 @@ const checkForAbilityChoices = (obj) => {
   return choices;
 };
 
-// Simple utility for skill proficiencies at multiple levels
 const checkForSkillProficiencies = (obj) => {
   const skills = [];
 
-  // Level 1: Direct modifiers
   if (obj?.modifiers?.skillProficiencies) {
     skills.push(...obj.modifiers.skillProficiencies);
   }
 
-  // Level 2: Direct skill proficiencies
   if (obj?.skillProficiencies && Array.isArray(obj.skillProficiencies)) {
     skills.push(...obj.skillProficiencies);
   }
 
-  // Level 3: Data nested
   if (obj?.data?.modifiers?.skillProficiencies) {
     skills.push(...obj.data.modifiers.skillProficiencies);
   }
@@ -93,7 +80,6 @@ const checkForSkillProficiencies = (obj) => {
     skills.push(...obj.data.skillProficiencies);
   }
 
-  // Level 4: Properties nested
   if (obj?.properties?.modifiers?.skillProficiencies) {
     skills.push(...obj.properties.modifiers.skillProficiencies);
   }
@@ -126,7 +112,6 @@ const calculateHeritageModifiers = (selectedHeritage, heritageChoices = {}) => {
 
   const heritage = heritageDescriptions[selectedHeritage];
 
-  // Check for ability increases at multiple levels
   const abilityIncreases = checkForModifiers(heritage, "abilityIncreases");
 
   abilityIncreases.forEach((increase) => {
@@ -146,7 +131,6 @@ const calculateHeritageModifiers = (selectedHeritage, heritageChoices = {}) => {
     }
   });
 
-  // Handle feature choices with multi-level checking
   if (heritage.features && heritageChoices[selectedHeritage]) {
     heritage.features.forEach((feature) => {
       if (feature.isChoice && feature.options) {
@@ -157,7 +141,6 @@ const calculateHeritageModifiers = (selectedHeritage, heritageChoices = {}) => {
         );
 
         if (selectedChoice) {
-          // Check for ability choices at multiple levels
           const abilityChoices = checkForAbilityChoices(selectedChoice);
 
           abilityChoices.forEach(({ ability, amount }) => {
@@ -174,7 +157,6 @@ const calculateHeritageModifiers = (selectedHeritage, heritageChoices = {}) => {
             }
           });
 
-          // Also check for nested ability increases in the choice
           const choiceAbilityIncreases = checkForModifiers(
             selectedChoice,
             "abilityIncreases"
@@ -376,7 +358,6 @@ const applyHeritageProficiencies = (
     character.innateHeritage
   );
 
-  // Check for skill proficiencies at multiple levels
   const newHeritageSkills = checkForSkillProficiencies(heritage);
 
   const choiceSkills = [];
@@ -417,7 +398,6 @@ const removeHeritageProficiencies = (currentProficiencies, heritageName) => {
 
   const heritage = heritageDescriptions[heritageName];
 
-  // Check for heritage skills at multiple levels
   const heritageSkills = checkForSkillProficiencies(heritage);
 
   return currentProficiencies.filter(
@@ -502,13 +482,11 @@ export const InnateHeritage = ({
       cursor: "pointer",
     },
     choiceContent: {
-      // display: "flex",
-      // width: "60%",
       alignItems: "flex-start",
       gap: "8px",
       padding: "8px",
       borderRadius: "4px",
-      // border: `1px solid ${theme.border}`,
+
       transition: "all 0.2s ease",
     },
     choiceName: {

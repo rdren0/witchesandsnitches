@@ -93,6 +93,10 @@ const CharacterCreator = ({
   const [error, setError] = useState(null);
   const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
 
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [finalImageUrl, setFinalImageUrl] = useState("");
+
   const isFeat = character.level1ChoiceType === "feat";
   const isInnateHeritage = character.level1ChoiceType === "innate";
 
@@ -245,6 +249,13 @@ const CharacterCreator = ({
     setRolledHp(null);
     setError(null);
 
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setImageFile(null);
+    setPreviewUrl(null);
+    setFinalImageUrl("");
+
     if (isManualMode) {
       setRolledStats([]);
       setAvailableStats([]);
@@ -268,6 +279,14 @@ const CharacterCreator = ({
     character,
     isFeat,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const assignStat = (ability, statValue) => {
     const oldValue = character.abilityScores[ability];
@@ -675,6 +694,8 @@ const CharacterCreator = ({
         );
       }
 
+      setError("Preparing character data...");
+
       const allFeats = collectAllFeatsFromChoices({ character });
 
       const finalAbilityScores = calculateFinalAbilityScores(
@@ -700,6 +721,7 @@ const CharacterCreator = ({
         hit_points: getCurrentHp(),
         house_choices: houseChoices,
         house: character.house,
+        image_url: finalImageUrl || character.imageUrl || "",
         initiative_ability: character.initiativeAbility || "dexterity",
         innate_heritage_skills: character.innateHeritageSkills || [],
         innate_heritage: character.innateHeritage,
@@ -716,10 +738,26 @@ const CharacterCreator = ({
         wand_type: character.wandType,
       };
 
-      const savedCharacter = await characterService.saveCharacter(
+      setError("Saving character to database...");
+      console.log("💾 Saving character data...");
+
+      const savePromise = characterService.saveCharacter(
         characterToSave,
         effectiveUserId
       );
+      const saveTimeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Character save timed out after 30 seconds")),
+          15000
+        )
+      );
+
+      const savedCharacter = await Promise.race([
+        savePromise,
+        saveTimeoutPromise,
+      ]);
+
+      console.log("✅ Character saved successfully");
 
       const transformedCharacter = {
         abilityScores: savedCharacter.ability_scores,
@@ -738,6 +776,7 @@ const CharacterCreator = ({
             ? houseChoices
             : character.houseChoices || {},
         id: savedCharacter.id,
+        imageUrl: savedCharacter.image_url || "",
         innateHeritage: savedCharacter.innate_heritage,
         innateHeritageSkills: savedCharacter.innate_heritage_skills || [],
         level: savedCharacter.level,
@@ -769,13 +808,30 @@ const CharacterCreator = ({
           ? " for the selected user"
           : "";
 
+      const imageMessage = finalImageUrl ? " with image" : "";
       alert(
-        `Character "${character.name}" created successfully${targetUserInfo}!`
+        `Character "${character.name}" created successfully${imageMessage}${targetUserInfo}!`
       );
     } catch (err) {
       console.error("💥 Character creation failed:", err);
-      setError("Failed to save character: " + err.message);
+
+      let errorMessage = "Failed to save character: ";
+      if (err.message.includes("timed out")) {
+        errorMessage +=
+          "The operation timed out. Please try again or check your internet connection.";
+      } else if (
+        err.message.includes("network") ||
+        err.message.includes("fetch")
+      ) {
+        errorMessage +=
+          "Network error. Please check your internet connection and try again.";
+      } else {
+        errorMessage += err.message;
+      }
+
+      setError(errorMessage);
     } finally {
+      console.log("Resetting save state...");
       setIsSaving(false);
     }
   };
@@ -846,6 +902,11 @@ const CharacterCreator = ({
         rollHp={rollHp}
         handleInputChange={handleInputChange}
         calculateHitPoints={calculateHitPoints}
+        supabase={supabase}
+        imageFile={imageFile}
+        setImageFile={setImageFile}
+        previewUrl={previewUrl}
+        setPreviewUrl={setPreviewUrl}
       />
 
       <StepIndicator step={2} totalSteps={5} label="House Selection" />

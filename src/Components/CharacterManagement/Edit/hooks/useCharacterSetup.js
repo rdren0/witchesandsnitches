@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { backgroundsData } from "../../../../SharedData/backgroundsData";
 
-// Safely fills missing background skills if needed
 const migrateBackgroundSkills = (character) => {
   if (character.backgroundSkills?.length) return character;
 
@@ -75,11 +74,11 @@ export const useCharacterSetup = (originalCharacter) => {
         healing: 0,
         jinxesHexesCurses: 0,
       },
+      imageUrl: "",
     };
 
     const merged = { ...defaultCharacter, ...originalCharacter };
 
-    // Transform snake_case database fields to camelCase frontend fields
     merged.houseChoices =
       originalCharacter?.houseChoices || originalCharacter?.house_choices || {};
     merged.subclassChoices =
@@ -87,7 +86,6 @@ export const useCharacterSetup = (originalCharacter) => {
       originalCharacter?.subclass_choices ||
       {};
 
-    // ADD THESE MISSING TRANSFORMATIONS:
     merged.innateHeritage =
       originalCharacter?.innateHeritage ||
       originalCharacter?.innate_heritage ||
@@ -100,6 +98,9 @@ export const useCharacterSetup = (originalCharacter) => {
       originalCharacter?.heritageChoices ||
       originalCharacter?.heritage_choices ||
       {};
+
+    merged.imageUrl =
+      originalCharacter?.imageUrl || originalCharacter?.image_url || "";
 
     return migrateBackgroundSkills(merged);
   }, [originalCharacter]);

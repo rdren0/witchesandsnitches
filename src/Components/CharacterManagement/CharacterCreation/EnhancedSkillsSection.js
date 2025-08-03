@@ -142,22 +142,17 @@ const EnhancedSkillsSection = ({
       hasExpertiseGranter,
     } = getSubclassSkills();
 
-    // Fixed logic: Skills already granted by other sources should NOT count toward casting style selection
     const selectedCastingStyleSkills = allSkills.filter((skill) => {
-      // Must be an available casting style skill
       if (!castingStyleSkills.includes(skill)) return false;
 
-      // If skill is already granted by background, heritage, or subclass,
-      // it should NOT count toward casting style selection limit
       if (
         backgroundSkills.includes(skill) ||
         innateHeritageSkills.includes(skill) ||
         subclassSkills.includes(skill)
       ) {
-        return false; // Don't count these toward casting style selection
+        return false;
       }
 
-      // Only count truly new skills that aren't granted elsewhere
       return true;
     });
 
@@ -193,7 +188,6 @@ const EnhancedSkillsSection = ({
   } = getSkillsBySource();
   const availableCastingSkills = getAvailableSkills({ character });
 
-  // Calculate this AFTER getSkillsBySource() so all variables are available
   const hasMultiSourceSkills =
     studyBuddySkills.some(
       (skill) =>
@@ -237,7 +231,7 @@ const EnhancedSkillsSection = ({
                     key={`heritage-${skill}`}
                     style={{
                       ...styles.skillOptionBase,
-                      // eslint-disable-next-line
+
                       backgroundColor: "#8b5cf6" + "20",
                       border: `2px solid #8b5cf6`,
                       cursor: "default",
@@ -394,7 +388,7 @@ const EnhancedSkillsSection = ({
                     key={`subclass-${skill}`}
                     style={{
                       ...styles.skillOptionBase,
-                      // eslint-disable-next-line
+
                       backgroundColor: "#06b6d4" + "20",
                       border: `2px solid #06b6d4`,
                       cursor: "default",
@@ -550,7 +544,6 @@ const EnhancedSkillsSection = ({
                 const isFromExpertise = expertiseSkills.includes(skill);
                 const canSelect = isSelected || castingStyleSkills.length < 2;
 
-                // If skill is already at expertise level, don't show it as selectable
                 if (isFromExpertise) {
                   return (
                     <div

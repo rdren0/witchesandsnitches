@@ -31,7 +31,7 @@ import { AdminProvider, useAdmin } from "../contexts/AdminContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
-import { LOCAL_HOST, WEBSITE } from "./const";
+import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 
 const supabase = createClient(
@@ -608,18 +608,29 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
           </p>
         )}
 
-        {hasCharacters && (
-          <>
-            <div style={styles.featureGrid}>
-              <div
-                style={styles.featureCard}
-                onClick={() => handleCardClick("/character/sheet")}
-              >
-                <h3>Character Sheet</h3>
-                <p>View and manage your character's stats and abilities.</p>
-              </div>
+        <div style={styles.featureGrid}>
+          <a
+            href={RULE_BOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "none" }}
+          >
+            <div style={styles.featureCard}>
+              <h3>View Rulebook</h3>
             </div>
-          </>
+          </a>
+        </div>
+
+        {hasCharacters && (
+          <div style={styles.featureGrid}>
+            <div
+              style={styles.featureCard}
+              onClick={() => handleCardClick("/character/sheet")}
+            >
+              <h3>Character Sheet</h3>
+              <p>View and manage your character's stats and abilities.</p>
+            </div>
+          </div>
         )}
         <hr
           style={{ border: `1px solid ${theme.border}`, marginBottom: "16px" }}
@@ -1296,6 +1307,8 @@ function AppContent() {
                   user={user}
                   selectedCharacter={selectedCharacter}
                   supabase={supabase}
+                  adminMode={adminMode}
+                  isUserAdmin={isUserAdmin}
                 />
               </ProtectedRoute>
             }

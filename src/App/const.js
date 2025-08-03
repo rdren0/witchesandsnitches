@@ -42,3 +42,6 @@ export const getDiscordWebhook = (gameSession) =>
 
 export const LOCAL_HOST = "http://localhost:3000";
 export const WEBSITE = "https://witchesandsnitches.com";
+
+export const RULE_BOOK_URL =
+  "https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde";

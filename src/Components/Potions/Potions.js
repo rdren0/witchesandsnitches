@@ -26,6 +26,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
   const [isRolling, setIsRolling] = useState(false);
   const [selectedPotion, setSelectedPotion] = useState(null);
+  const [brewingSkills, setBrewingSkill] = useState("potionMaking");
   const [brewingInProgress, setBrewingInProgress] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -634,6 +635,26 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                 <option value={3}>1 Proficiency + 1 Expertise</option>
                 <option value={4}>2 Expertise</option>
               </select>
+            </div>
+
+            <div style={styles.checkboxGroup}>
+              <label style={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={brewingSkills === "potionMaking"}
+                  onChange={(e) => ({})}
+                />
+                Potion Making
+              </label>
+
+              {/* <label style={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={brewingSkills === "medicine"}
+                  onChange={(e) => ({})}
+                />
+                Medicine
+              </label> */}
             </div>
 
             <div style={styles.checkboxGroup}>

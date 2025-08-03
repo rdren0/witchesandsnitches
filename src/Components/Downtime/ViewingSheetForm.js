@@ -13,6 +13,8 @@ import {
   activityRequiresNameInput,
   activityRequiresExtraDie,
   getMultiSuccessActivityInfo,
+  activityRequiresAbilitySelection,
+  getAvailableAbilityScores,
 } from "./downtimeHelpers";
 import { formatModifier } from "./utils/modifierUtils";
 
@@ -366,7 +368,73 @@ const ViewingSheetForm = ({
 
     return calculateModifier(skillName, selectedCharacter);
   };
+  const renderAbilityScoreRollInfo = (activity, assignment, dicePool) => {
+    const diceValue = dicePool?.[assignment.diceIndex];
 
+    if (diceValue === undefined || diceValue === null) {
+      return (
+        <div style={styles.rollContainer}>
+          <div style={styles.rollLabel}>No dice assigned</div>
+        </div>
+      );
+    }
+
+    const abilityName = activity.selectedAbilityScore;
+    const currentScore =
+      selectedCharacter?.ability_scores?.[abilityName] ||
+      selectedCharacter?.[abilityName] ||
+      10;
+    const modifier = Math.floor((currentScore - 10) / 2);
+    const total = diceValue + modifier;
+    const dc = currentScore;
+
+    const isSuccess = total >= dc;
+    const isNat20 = diceValue === 20;
+
+    const abilities = [
+      { name: "strength", displayName: "Strength" },
+      { name: "dexterity", displayName: "Dexterity" },
+      { name: "constitution", displayName: "Constitution" },
+      { name: "intelligence", displayName: "Intelligence" },
+      { name: "wisdom", displayName: "Wisdom" },
+      { name: "charisma", displayName: "Charisma" },
+    ];
+
+    const selectedAbility = abilities.find((a) => a.name === abilityName);
+    const abilityDisplayName =
+      selectedAbility?.displayName ||
+      abilityName?.charAt(0).toUpperCase() + abilityName?.slice(1) ||
+      "Unknown";
+
+    const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
+
+    return (
+      <div style={styles.rollContainer}>
+        <div style={styles.rollLabel}>Ability Score Check</div>
+        <div>
+          <div style={styles.label}>Ability Used:</div>
+          <div style={styles.value}>
+            {abilityDisplayName} ({formatModifier(modifier)})
+          </div>
+        </div>
+        <div style={styles.rollInfo}>
+          <div style={styles.diceValue}>
+            Roll: {diceValue} {formatModifier(modifier)} = {total}
+          </div>
+          <div
+            style={{
+              fontSize: "12px",
+              color: theme.textSecondary,
+              marginTop: "4px",
+            }}
+          >
+            Target DC: {dc} - {isSuccess ? "✅ Success" : "❌ Failure"}
+            {isNat20 && " (Natural 20 - counts as 2 successes!)"}
+          </div>
+        </div>
+      </div>
+    );
+  };
   const renderRollInfo = (
     assignment,
     dicePool,
@@ -738,6 +806,28 @@ const ViewingSheetForm = ({
       );
     }
 
+    if (
+      activityRequiresAbilitySelection(activity.activity) &&
+      activity.selectedAbilityScore
+    ) {
+      const abilities = getAvailableAbilityScores(selectedCharacter);
+      const selectedAbility = abilities.find(
+        (a) => a.name === activity.selectedAbilityScore
+      );
+
+      components.push(
+        <div key="ability" style={styles.skillInfo}>
+          {" "}
+          <div style={styles.label}>Selected Ability Score:</div>
+          <div style={styles.value}>
+            {selectedAbility?.displayName ||
+              activity.selectedAbilityScore.charAt(0).toUpperCase() +
+                activity.selectedAbilityScore.slice(1)}
+          </div>
+        </div>
+      );
+    }
+
     if (activityRequiresNameInput(activity.activity)) {
       const nameField = activity.activity.toLowerCase().includes("potion")
         ? "potionName"
@@ -934,18 +1024,17 @@ const ViewingSheetForm = ({
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          {viewingSheet.review_status === "failure" &&
-            viewingSheet.user_id === user?.id && (
-              <button
-                onClick={() => onEditRejected(viewingSheet)}
-                style={{
-                  ...styles.backButton,
-                  backgroundColor: theme.warning,
-                }}
-              >
-                ✏️ Edit & Resubmit
-              </button>
-            )}
+          {viewingSheet.review_status === "failure" && (
+            <button
+              onClick={() => onEditRejected(viewingSheet)}
+              style={{
+                ...styles.backButton,
+                backgroundColor: theme.warning,
+              }}
+            >
+              ✏️ Edit & Resubmit
+            </button>
+          )}
 
           <button onClick={onBack} style={styles.backButton}>
             <ArrowLeft size={16} />
@@ -1207,6 +1296,23 @@ const ViewingSheetForm = ({
                           activity
                         );
                       })()}
+                    {activityRequiresAbilitySelection(activity.activity)
+                      ? renderAbilityScoreRollInfo(
+                          activity,
+                          assignment,
+                          viewingSheet.dice_pool
+                        )
+                      : assignment.diceIndex !== null &&
+                        assignment.diceIndex !== undefined &&
+                        assignment.skill
+                      ? renderRollInfo(
+                          assignment,
+                          viewingSheet.dice_pool,
+                          "skill",
+                          "diceIndex",
+                          "Roll"
+                        )
+                      : null}
                     {!assignment.firstSpellDice &&
                       !assignment.secondSpellDice && (
                         <>
@@ -1243,21 +1349,29 @@ const ViewingSheetForm = ({
                     );
                   })()
                 ) : (
-                  assignment.skill &&
+                  (assignment.skill ||
+                    activityRequiresAbilitySelection(activity.activity)) &&
                   assignment.diceIndex !== null &&
                   assignment.diceIndex !== undefined &&
-                  renderRollInfo(
-                    assignment,
-                    viewingSheet.dice_pool,
-                    "skill",
-                    "diceIndex",
-                    "Roll Result"
-                  )
+                  (activityRequiresAbilitySelection(activity.activity)
+                    ? renderAbilityScoreRollInfo(
+                        activity,
+                        assignment,
+                        viewingSheet.dice_pool
+                      )
+                    : renderRollInfo(
+                        assignment,
+                        viewingSheet.dice_pool,
+                        "skill",
+                        "diceIndex",
+                        "Roll Result"
+                      ))
                 )}
 
                 {!isDualCheck &&
                   !requiresExtraDie &&
                   !assignment.customDice &&
+                  !activityRequiresAbilitySelection(activity.activity) &&
                   (!assignment.skill ||
                     assignment.diceIndex === null ||
                     assignment.diceIndex === undefined) && (

@@ -448,7 +448,6 @@ const CharacterSheet = ({
       let data, error;
 
       if (adminMode && isUserAdmin) {
-        // Admin can access any character
         const response = await supabase
           .from("characters")
           .select(
@@ -702,7 +701,6 @@ const CharacterSheet = ({
       const hpRestored = maxHP - currentHP;
       const hitDiceRestored = maxHitDice - currentHitDice;
 
-      // Use the character's original owner ID for database operations
       const characterOwnerId = character.discord_user_id || character.ownerId;
 
       const { error: characterError } = await supabase
@@ -1027,29 +1025,60 @@ const CharacterSheet = ({
           <>
             <div style={styles.headerCard}>
               <div style={styles.headerFlex}>
-                <div style={styles.avatar}>
+                <div
+                  style={{
+                    ...styles.avatar,
+                    position: "relative",
+                  }}
+                >
                   {character.imageUrl ? (
-                    <img
-                      src={character.imageUrl}
-                      alt={`${character.name}'s portrait`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "flex";
-                      }}
-                    />
+                    <>
+                      <img
+                        src={character.imageUrl}
+                        alt={`${character.name}'s portrait`}
+                        style={{
+                          width: "150%",
+                          height: "150%",
+                          objectFit: "cover",
+                          borderRadius: "50%",
+                          border: `1px solid ${theme.primary || "#6366f1"}`,
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                        onError={(e) => {
+                          console.error(
+                            "Failed to load character image:",
+                            character.imageUrl
+                          );
+                          e.target.style.display = "none";
+                          e.target.parentNode.querySelector(
+                            ".fallback-icon"
+                          ).style.display = "flex";
+                        }}
+                      />
+                    </>
                   ) : null}
-                  <User
-                    className="w-8 h-8 text-indigo-600"
+
+                  <div
+                    className="fallback-icon"
                     style={{
                       display: character.imageUrl ? "none" : "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: theme.surface || "#f8fafc",
+                      borderRadius: "50%",
+                      border: `2px solid ${theme.border || "#e2e8f0"}`,
                     }}
-                  />
+                  >
+                    <User
+                      style={{
+                        color: theme.textSecondary || "#64748b",
+                        width: "50%",
+                        height: "50%",
+                      }}
+                    />
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div
@@ -1207,7 +1236,8 @@ const CharacterSheet = ({
               <div
                 style={{
                   ...styles.combatStats,
-                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                  gridAutoFlow: "column",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))",
                   gap: "12px",
                 }}
               >
@@ -1335,8 +1365,7 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#e30716",
                       backgroundColor: isRolling
-                        ? // eslint-disable-next-line
-                          "#e30716" + "20"
+                        ? "#e30716" + "20"
                         : "transparent",
                       transition: "all 0.2s ease",
                     }}
@@ -1372,8 +1401,7 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#8b5cf6",
                       backgroundColor: isRolling
-                        ? // eslint-disable-next-line
-                          "#8b5cf6" + "20"
+                        ? "#8b5cf6" + "20"
                         : "transparent",
                       transition: "all 0.2s ease",
                     }}

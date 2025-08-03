@@ -15,6 +15,7 @@ export const getInitialCharacterState = () => ({
   hitPoints: 0,
   house: "",
   houseChoices: {},
+  imageUrl: "",
   initiativeAbility: "dexterity",
   innateHeritage: "",
   innateHeritageSkills: [],

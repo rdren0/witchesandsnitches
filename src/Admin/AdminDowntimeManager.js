@@ -682,7 +682,7 @@ const AdminDowntimeManager = ({ supabase }) => {
                     </div>
                   </div>
 
-                  <div>Year {sheet.year}</div>
+                  <div>Year {sheet.school_year || sheet?.year}</div>
                   <div>Semester {sheet.semester}</div>
 
                   <div>{getReviewStatusDisplay(sheet)}</div>

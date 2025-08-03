@@ -525,7 +525,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
               ))}
             </select>
           </div>
-
           <div
             style={{
               display: "flex",

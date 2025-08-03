@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Circle, Star } from "lucide-react";
-import { formatModifier, modifiers } from "./utils";
+import {
+  calculatePassivePerception,
+  calculatePassiveInvestigation,
+  calculatePassiveDeception,
+  calculateModifier,
+  formatModifier,
+  modifiers,
+  getPassiveSkillBreakdown,
+} from "./utils";
 import { skillMap, allSkills } from "../../SharedData/data";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createThemedStyles } from "./styles";
@@ -19,6 +27,10 @@ export const Skills = ({
   const [sortColumn, setSortColumn] = useState("skill");
   const [sortDirection, setSortDirection] = useState("asc");
   const [isRolling, setIsRolling] = useState(false);
+
+  const passivePerception = calculatePassivePerception(character);
+  const passiveInvestigation = calculatePassiveInvestigation(character);
+  const passiveDeception = calculatePassiveDeception(character);
 
   const calculateSkillBonus = (skillName, abilityMod) => {
     if (!character) return 0;
@@ -246,9 +258,45 @@ export const Skills = ({
     }
   };
 
+  const renderPassiveSkillBreakdown = (skillName, passiveValue) => {
+    const breakdown = getPassiveSkillBreakdown(skillName, character);
+    const skillModifier = calculateModifier(skillName, character);
+    const baseValue = 10 + skillModifier;
+    const featBonus = passiveValue - baseValue;
+
+    return (
+      <div
+        style={{
+          fontSize: "0.75rem",
+          color: theme.textSecondary,
+          fontWeight: "normal",
+          lineHeight: "1.3",
+          marginTop: "0.25rem",
+        }}
+      >
+        <div>
+          10 +(
+          {formatModifier(skillModifier)}) = {baseValue}
+        </div>
+        {featBonus > 0 && (
+          <div
+            style={{
+              color: theme.success || theme.primary,
+              fontWeight: "500",
+              marginTop: "0.125rem",
+            }}
+          >
+            + Feat Bonuses (+{featBonus})
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={styles.skillsCard}>
       <h2 style={styles.skillsTitle}>SKILLS</h2>
+
       <div
         style={{
           marginBottom: "12px",
@@ -260,6 +308,7 @@ export const Skills = ({
       >
         Click icons to cycle: None → Proficient → Expertise
       </div>
+
       <table style={styles.skillsTable}>
         <thead>
           <tr style={styles.skillsHeaderRow}>
@@ -318,12 +367,30 @@ export const Skills = ({
             const abilityMod = modifiers(character)[skill.ability];
             const skillBonus = calculateSkillBonus(skill.name, abilityMod);
             const skillLevel = character.skills?.[skill.name] || 0;
+            const isPerception = skill.name === "perception";
+            const isInvestigation = skill.name === "investigation";
+            const isDeception = skill.name === "deception";
+            const isPassiveSkill =
+              isPerception || isInvestigation || isDeception;
+
+            let passiveValue = null;
+            if (isPerception) passiveValue = passivePerception;
+            else if (isInvestigation) passiveValue = passiveInvestigation;
+            else if (isDeception) passiveValue = passiveDeception;
 
             return (
               <tr
                 key={skill.name}
                 style={{
                   ...styles.skillRow,
+
+                  ...(isPassiveSkill
+                    ? {
+                        backgroundColor: `${
+                          theme.secondary || theme.primary
+                        }08`,
+                      }
+                    : {}),
                 }}
               >
                 <td style={styles.skillCell}>
@@ -369,10 +436,10 @@ export const Skills = ({
                       ...(skillLevel === 2
                         ? {
                             fontWeight: "bold",
-                            color: theme.warning || "#f59e0b",
-                            borderColor: theme.warning || "#f59e0b",
+                            color: "#f59e0b",
                           }
                         : {}),
+
                       ...(isRolling
                         ? { opacity: 0.5, cursor: "not-allowed" }
                         : {}),
@@ -383,7 +450,7 @@ export const Skills = ({
                         : skillLevel === 2
                         ? " (Expertise)"
                         : ""
-                    }`}
+                    }${passiveValue ? ` - Passive: ${passiveValue}` : ""}`}
                   >
                     {skill.displayName}
                     {skillLevel === 2 && (
@@ -391,9 +458,21 @@ export const Skills = ({
                         size={12}
                         style={{
                           marginLeft: "4px",
-                          color: theme.warning || "#f59e0b",
+                          color: theme.success || "#f59e0b",
                         }}
                       />
+                    )}
+                    {passiveValue && (
+                      <span
+                        style={{
+                          marginLeft: "0.5rem",
+                          fontSize: "0.75rem",
+                          color: theme.success,
+                          fontWeight: "normal",
+                        }}
+                      >
+                        (Passive: {passiveValue})
+                      </span>
                     )}
                   </button>
                 </td>
@@ -404,7 +483,7 @@ export const Skills = ({
                       ...(skillLevel === 2
                         ? {
                             fontWeight: "bold",
-                            color: theme.warning || "#f59e0b",
+                            color: theme.success || "#f59e0b",
                           }
                         : skillLevel === 1
                         ? {

@@ -613,7 +613,6 @@ export const SubjectCard = ({
 
   useEffect(() => {
     loadSpellProgress();
-    // eslint-disable-next-line
   }, [selectedCharacter?.id, selectedCharacter?.discord_user_id]);
 
   const toggleDescription = (spellName) => {
@@ -1014,18 +1013,18 @@ export const SubjectCard = ({
                     letterSpacing: "0.5px",
                     backgroundColor:
                       isMastered && hasCriticalSuccess
-                        ? "#ffd700" // Gold for critical mastery
+                        ? "#ffd700"
                         : isMastered
-                        ? theme.success || "#10b981" // Green for mastery
+                        ? theme.success || "#10b981"
                         : hasAttempts
-                        ? "#f59e0b" // Yellow for successful attempts
+                        ? "#f59e0b"
                         : hasFailedAttempt
-                        ? theme.error || "#ef4444" // Red for only failed attempts
+                        ? theme.error || "#ef4444"
                         : "#6b7280",
                     color:
                       (isMastered && hasCriticalSuccess) || hasAttempts
-                        ? "#000000" // Black text on gold/yellow
-                        : "white", // White text on green/red
+                        ? "#000000"
+                        : "white",
                     boxShadow:
                       isMastered && hasCriticalSuccess
                         ? "0 0 8px rgba(255, 215, 0, 0.5)"
@@ -1039,7 +1038,7 @@ export const SubjectCard = ({
                     : hasAttempts
                     ? "Attempted"
                     : hasFailedAttempt
-                    ? "Failed" // ✅ This was the missing piece!
+                    ? "Failed"
                     : "Unknown"}
                 </span>
               )}
