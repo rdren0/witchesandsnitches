@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -544,7 +544,7 @@ export const SubjectCard = ({
   const { totalSpells, masteredCount, progressPercentage } =
     getSubjectStats(subjectName);
 
-  const loadSpellProgress = async () => {
+  const loadSpellProgress = useCallback(async () => {
     if (!selectedCharacter) return;
 
     const characterOwnerDiscordId = selectedCharacter.discord_user_id;
@@ -609,11 +609,20 @@ export const SubjectCard = ({
     } catch (error) {
       console.error("Error loading spell progress:", error);
     }
-  };
+  }, [
+    selectedCharacter,
+    supabase,
+    setSpellAttempts,
+    setCriticalSuccesses,
+    setFailedAttempts,
+    setResearchedSpells,
+    setArithmancticTags,
+    setRunicTags,
+  ]);
 
   useEffect(() => {
     loadSpellProgress();
-  }, [selectedCharacter?.id, selectedCharacter?.discord_user_id]);
+  }, [selectedCharacter]);
 
   const toggleDescription = (spellName) => {
     setExpandedDescriptions((prev) => ({

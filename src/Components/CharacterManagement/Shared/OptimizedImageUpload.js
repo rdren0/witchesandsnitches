@@ -1,5 +1,17 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { Upload, X, User, Loader, AlertCircle, Check } from "lucide-react";
+import {
+  Upload,
+  X,
+  User,
+  Loader,
+  AlertCircle,
+  Check,
+  Move,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import Cropper from "react-easy-crop";
 
 const OptimizedImageUpload = ({
   currentImageUrl = "",
@@ -24,6 +36,13 @@ const OptimizedImageUpload = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [rotation, setRotation] = useState(0);
+  const [originalFile, setOriginalFile] = useState(null);
+
   const fileInputRef = useRef(null);
   const uploadControllerRef = useRef(null);
 
@@ -41,6 +60,84 @@ const OptimizedImageUpload = ({
       return () => clearTimeout(timer);
     }
   }, [uploadSuccess]);
+
+  const createImage = (url) =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener("load", () => resolve(image));
+      image.addEventListener("error", (error) => reject(error));
+      image.setAttribute("crossOrigin", "anonymous");
+      image.src = url;
+    });
+
+  const getRadianAngle = (degreeValue) => (degreeValue * Math.PI) / 180;
+
+  const rotateSize = (width, height, rotation) => {
+    const rotRad = getRadianAngle(rotation);
+    return {
+      width:
+        Math.abs(Math.cos(rotRad) * width) +
+        Math.abs(Math.sin(rotRad) * height),
+      height:
+        Math.abs(Math.sin(rotRad) * width) +
+        Math.abs(Math.cos(rotRad) * height),
+    };
+  };
+
+  const getCroppedImg = useCallback(
+    async (imageSrc, pixelCrop, rotation = 0) => {
+      const image = await createImage(imageSrc);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        return null;
+      }
+
+      const rotRad = getRadianAngle(rotation);
+      const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
+        image.width,
+        image.height,
+        rotation
+      );
+
+      canvas.width = bBoxWidth;
+      canvas.height = bBoxHeight;
+
+      ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
+      ctx.rotate(rotRad);
+      ctx.translate(-image.width / 2, -image.height / 2);
+
+      ctx.drawImage(image, 0, 0);
+
+      const croppedCanvas = document.createElement("canvas");
+      const croppedCtx = croppedCanvas.getContext("2d");
+
+      if (!croppedCtx) {
+        return null;
+      }
+
+      croppedCanvas.width = pixelCrop.width;
+      croppedCanvas.height = pixelCrop.height;
+
+      croppedCtx.drawImage(
+        canvas,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+
+      return new Promise((resolve) => {
+        croppedCanvas.toBlob(resolve, "image/jpeg", compressionQuality);
+      });
+    },
+    [compressionQuality]
+  );
 
   const compressImage = useCallback(
     (file, quality = 0.8, maxWidth = 800, maxHeight = 800) => {
@@ -106,7 +203,7 @@ const OptimizedImageUpload = ({
 
   const uploadToSupabase = useCallback(
     async (file) => {
-      const fileExt = file?.name?.split(".").pop().toLowerCase();
+      const fileExt = file?.name?.split(".").pop().toLowerCase() || "jpg";
       const fileName = `${
         folder ? folder + "/" : ""
       }${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -159,70 +256,116 @@ const OptimizedImageUpload = ({
 
         const newPreviewUrl = URL.createObjectURL(file);
         setPreviewUrl(newPreviewUrl);
-
-        if (onImageChange) {
-          onImageChange(file, newPreviewUrl);
-        }
-
-        setIsUploading(true);
-        setUploadProgress(0);
-
-        setUploadProgress(20);
-
-        let fileToUpload = file;
-        if (file.type !== "image/gif") {
-          fileToUpload = await compressImage(
-            file,
-            compressionQuality,
-            maxWidth,
-            maxHeight
-          );
-          setUploadProgress(40);
-        }
-
-        setUploadProgress(60);
-        const uploadedUrl = await uploadToSupabase(fileToUpload);
-        setUploadProgress(100);
-
-        setUploadSuccess(true);
-
-        if (onUploadComplete) {
-          onUploadComplete(uploadedUrl);
-        }
+        setOriginalFile(file);
+        setShowCropModal(true);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
       } catch (err) {
         console.error("Error handling file:", err);
         setError(err.message);
+      }
 
-        if (previewUrl && previewUrl.startsWith("blob:")) {
-          URL.revokeObjectURL(previewUrl);
-          setPreviewUrl(null);
-        }
-
-        if (onImageChange) {
-          onImageChange(null, null);
-        }
-      } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
-        uploadControllerRef.current = null;
-
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     },
-    [
-      previewUrl,
-      validateFile,
-      compressImage,
-      compressionQuality,
-      maxWidth,
-      maxHeight,
-      uploadToSupabase,
-      onImageChange,
-      onUploadComplete,
-    ]
+    [previewUrl, validateFile]
   );
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropSave = useCallback(async () => {
+    try {
+      if (!croppedAreaPixels || !previewUrl) return;
+
+      setShowCropModal(false);
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      const croppedImage = await getCroppedImg(
+        previewUrl,
+        croppedAreaPixels,
+        rotation
+      );
+
+      if (!croppedImage) {
+        throw new Error("Failed to crop image");
+      }
+
+      setUploadProgress(20);
+
+      const croppedFile = new File([croppedImage], originalFile.name, {
+        type: "image/jpeg",
+      });
+
+      if (onImageChange) {
+        const croppedPreviewUrl = URL.createObjectURL(croppedImage);
+        onImageChange(croppedFile, croppedPreviewUrl);
+        if (previewUrl && previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(previewUrl);
+        }
+        setPreviewUrl(croppedPreviewUrl);
+      }
+
+      setUploadProgress(40);
+
+      let fileToUpload = croppedFile;
+      if (originalFile.type !== "image/gif") {
+        fileToUpload = await compressImage(
+          croppedFile,
+          compressionQuality,
+          maxWidth,
+          maxHeight
+        );
+        setUploadProgress(60);
+      }
+
+      setUploadProgress(80);
+      const uploadedUrl = await uploadToSupabase(fileToUpload);
+      setUploadProgress(100);
+
+      setUploadSuccess(true);
+
+      if (onUploadComplete) {
+        onUploadComplete(uploadedUrl);
+      }
+    } catch (err) {
+      console.error("Error processing crop:", err);
+      setError(err.message);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      uploadControllerRef.current = null;
+    }
+  }, [
+    croppedAreaPixels,
+    previewUrl,
+    rotation,
+    getCroppedImg,
+    originalFile,
+    onImageChange,
+    compressImage,
+    compressionQuality,
+    maxWidth,
+    maxHeight,
+    uploadToSupabase,
+    onUploadComplete,
+  ]);
+
+  const handleCropCancel = useCallback(() => {
+    setShowCropModal(false);
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setOriginalFile(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+  }, [previewUrl]);
 
   const cancelUpload = useCallback(() => {
     if (uploadControllerRef.current) {
@@ -237,6 +380,7 @@ const OptimizedImageUpload = ({
     setPreviewUrl(null);
     setError(null);
     setUploadSuccess(false);
+    setOriginalFile(null);
 
     if (onImageChange) {
       onImageChange(null, null);
@@ -307,6 +451,57 @@ const OptimizedImageUpload = ({
     color: theme?.primary || "#3b82f6",
   };
 
+  const modalStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  };
+
+  const modalContentStyle = {
+    backgroundColor: "white",
+    borderRadius: "12px",
+    padding: "24px",
+    width: "90vw",
+    maxWidth: "600px",
+    height: "80vh",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  };
+
+  const cropContainerStyle = {
+    position: "relative",
+    flex: 1,
+    borderRadius: "8px",
+    overflow: "hidden",
+  };
+
+  const controlsStyle = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  };
+
+  const buttonGroupStyle = {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "center",
+  };
+
+  const controlRowStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    justifyContent: "center",
+  };
+
   return (
     <div style={{ textAlign: "center", ...styles.wrapper }}>
       <div style={containerStyle}>
@@ -330,7 +525,7 @@ const OptimizedImageUpload = ({
               />
               <div style={{ fontSize: "12px" }}>
                 {uploadProgress < 40
-                  ? "Compressing..."
+                  ? "Processing..."
                   : uploadProgress < 80
                   ? "Uploading..."
                   : "Finishing..."}
@@ -441,24 +636,7 @@ const OptimizedImageUpload = ({
       >
         {hasImage ? (
           <div>
-            {uploadSuccess ? (
-              <div
-                style={{
-                  color: "#10b981",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "4px",
-                }}
-              >
-                <Check size={16} />
-                Upload successful!
-              </div>
-            ) : previewUrl ? (
-              "📷 New image selected - uploading automatically"
-            ) : (
-              "Click to upload a new image or click X to remove"
-            )}
+            {!previewUrl && "Click to upload a new image or click X to remove"}
           </div>
         ) : (
           <div>
@@ -495,6 +673,106 @@ const OptimizedImageUpload = ({
         >
           <AlertCircle size={16} />
           {error}
+        </div>
+      )}
+
+      {/* Crop Modal */}
+      {showCropModal && previewUrl && (
+        <div style={modalStyle}>
+          <div style={modalContentStyle}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "1px solid #e5e7eb",
+                paddingBottom: "16px",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}>
+                Position Your Avatar
+              </h3>
+              <Move size={20} color="#6b7280" />
+            </div>
+
+            <div style={cropContainerStyle}>
+              <Cropper
+                image={previewUrl}
+                crop={crop}
+                zoom={zoom}
+                rotation={rotation}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                cropShape="round"
+                showGrid={false}
+              />
+            </div>
+
+            <div style={controlsStyle}>
+              <div style={controlRowStyle}>
+                <ZoomOut size={16} />
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(e.target.value)}
+                  style={{ flex: 1, margin: "0 8px" }}
+                />
+                <ZoomIn size={16} />
+              </div>
+
+              <div style={controlRowStyle}>
+                <RotateCw size={16} />
+                <input
+                  type="range"
+                  value={rotation}
+                  min={0}
+                  max={360}
+                  step={1}
+                  onChange={(e) => setRotation(e.target.value)}
+                  style={{ flex: 1, margin: "0 8px" }}
+                />
+                <span style={{ minWidth: "40px", fontSize: "14px" }}>
+                  {rotation}°
+                </span>
+              </div>
+
+              <div style={buttonGroupStyle}>
+                <button
+                  onClick={handleCropCancel}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#f3f4f6",
+                    color: "#374151",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: "500",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCropSave}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: theme?.primary || "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: "500",
+                  }}
+                >
+                  Save & Upload
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -86,7 +86,7 @@ export const getModifierForCombinedSchool = (schoolString) => {
 };
 
 export const standardSchools = [
-  "charms",
+  ["charms"],
   "jhc",
   "transfiguration",
   "healing",
@@ -103,6 +103,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Accio",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -115,6 +116,7 @@ export const spellsData = {
         },
         {
           name: "Alohomora",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
@@ -125,6 +127,7 @@ export const spellsData = {
         },
         {
           name: "Carpe Retractum",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
@@ -137,6 +140,7 @@ export const spellsData = {
         },
         {
           name: "Capto",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -147,6 +151,7 @@ export const spellsData = {
         },
         {
           name: "Cistem Aperio",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
@@ -157,6 +162,7 @@ export const spellsData = {
         },
         {
           name: "Colloportus",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -167,6 +173,7 @@ export const spellsData = {
         },
         {
           name: "Colovaria",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -177,6 +184,7 @@ export const spellsData = {
         },
         {
           name: "Defodio",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet (5 Foot Cube)",
@@ -189,6 +197,7 @@ export const spellsData = {
         },
         {
           name: "Duro",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
@@ -199,6 +208,7 @@ export const spellsData = {
         },
         {
           name: "Finestra",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "1 Action",
           range: "10 Feet",
@@ -209,6 +219,7 @@ export const spellsData = {
         },
         {
           name: "Flagrate",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "10 Feet",
@@ -219,6 +230,7 @@ export const spellsData = {
         },
         {
           name: "Glisseo",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -229,6 +241,7 @@ export const spellsData = {
         },
         {
           name: "Illegibilus",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "10 Feet",
@@ -239,6 +252,7 @@ export const spellsData = {
         },
         {
           name: "Impervius",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -249,6 +263,7 @@ export const spellsData = {
         },
         {
           name: "Lumos/Nox",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self",
@@ -257,8 +272,10 @@ export const spellsData = {
           description:
             "Upon muttering the incantation, the tip of your wand sheds bright light in a narrow 15-foot cone and dim light for an additional 15 feet, much like a flashlight. The light is a bright white with a slight bluish tint. Completely covering the tip of your wand with something opaque blocks the light. The spell ends if you dismiss it with the nox incantation, as a bonus action.",
         },
+
         {
           name: "Molliare",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -269,6 +286,7 @@ export const spellsData = {
         },
         {
           name: "Pereo",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -279,6 +297,7 @@ export const spellsData = {
         },
         {
           name: "Scourgify",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "10 Feet",
@@ -289,6 +308,7 @@ export const spellsData = {
         },
         {
           name: "Spongify",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime:
             "1 action or reaction, which you take when a collision occurs within 30 feet",
@@ -300,6 +320,7 @@ export const spellsData = {
         },
         {
           name: "Periculum/Verdimillious",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self",
@@ -310,6 +331,7 @@ export const spellsData = {
         },
         {
           name: "Sonorus/Quietus",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self",
@@ -320,6 +342,7 @@ export const spellsData = {
         },
         {
           name: "Tergeo",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -330,6 +353,7 @@ export const spellsData = {
         },
         {
           name: "Wingardium Leviosa",
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -344,13 +368,13 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Arrest Momentum",
+          class: ["Charms"],
           level: "1st Level",
           castingTime:
             "1 reaction, which you take when you or a creature within 60 feet of you falls",
           range: "60 Feet",
           duration: "1 minute",
           year: 2,
-          tags: ["C", "R"],
           description:
             "Choose up to five falling creatures within range. A falling creature's rate of descent slows to 60 feet per round until the spell ends. If the creature lands before the spell ends, it takes no falling damage and can land on its feet, and the spell ends for that creature. This spell is particularly useful for preventing fall damage from great heights or during aerial combat situations.",
           higherLevels:
@@ -358,12 +382,12 @@ export const spellsData = {
         },
         {
           name: "Diffindo",
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
           duration: "Instantaneous",
           year: 2,
-          tags: ["R"],
           description:
             "An object is precisely torn or cut, as if a magical blade extended from the tip of your wand. This spell was not designed to be used on creatures and only makes very shallow cuts. Choose a target you can see within range that fits within a 5-foot cube. If the target is a creature, it must make a Dexterity saving throw. It takes 4d4 slashing damage on a failed save or half as much damage on a successful one. This is the counterspell to incarcerous, immediately ending that spell's effects.",
           higherLevels:
@@ -371,7 +395,8 @@ export const spellsData = {
         },
         {
           name: "Exhilaro",
-          level: "1st Level (ritual)",
+          class: ["Defense Against the Dark Arts"],
+          level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
           duration: "Concentration, up to 1 minute",
@@ -382,12 +407,12 @@ export const spellsData = {
         },
         {
           name: "Glacius",
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
           duration: "1 Hour",
           year: 1,
-          tags: ["R"],
           description:
             "You freeze an area of water that you can see within range and that fits within a 5-foot cube. The area becomes difficult terrain for the duration. Each Medium or smaller creature that is covered, submerged or partially submerged in the affected water has its speed halved and must make a Constitution saving throw. On a failed save, a creature takes 3d8 cold damage, or half as much damage on a successful one.",
           higherLevels:
@@ -395,51 +420,52 @@ export const spellsData = {
         },
         {
           name: "Locomotor",
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
           duration: "1 Hour",
           year: 2,
-          tags: ["R"],
           description:
             "One object that isn't being worn or carried of your choice that you can see within range rises 3 feet off the ground, and remains suspended there for the duration. The spell can levitate a target that weighs up to 500 pounds. If more weight than the limit is placed on top of the object, the spell ends, and it falls to the ground. The object is immobile while you are within 20 feet of it. If you move more than 20 feet away from it, the object follows you so that it remains within 20 feet of you.",
         },
         {
           name: "Mobilicorpus",
-          level: "1st Level (ritual)",
+          class: ["Charms"],
+          level: "1st Level",
           castingTime: "1 action",
           range: "30 feet",
           duration: "1 hour",
           year: 3,
-          tags: ["R"],
           description:
             "You animate a corpse or unconscious creature to move under your control for the duration.",
         },
         {
           name: "Perfusorius",
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "Action",
           range: "Touch",
           duration: "1 Hour",
           year: 2,
-          tags: ["R"],
           description:
             "This spell alters an object of up to 500 pounds, changing its weight to be just barely heavier than the atmosphere around it. The slightest force is needed to move, pick up, or carry this object for the duration. It can be easily thrown as well.",
         },
         {
           name: "Protego",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime:
             "1 action or reaction, which you take when you are hit by an attack",
           range: "Self",
           duration: "Dedication, up to 10 minutes",
           year: 3,
-
           description:
             "An invisible barrier of magical force appears in front of you and protects you. For the duration, you have a +5 bonus to AC, including against the triggering attack. If you are targeted by a spell that requires an attack roll and the spell's level is equal to or lower than half your proficiency bonus, the spell has no effect on you. You can use a bonus action to change which direction the shield is facing. If you are attacked from either of your sides or from behind while casting this spell, you must use your reaction to redirect the shield to point towards the threat. Otherwise, this spell doesn't protect you.",
         },
         {
           name: "Riddikulus",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -450,17 +476,18 @@ export const spellsData = {
         },
         {
           name: "Reducio",
-          level: "1st Level (ritual)",
+          class: ["Charms"],
+          level: "1st Level",
           castingTime: "1 action",
           range: "30 feet",
           duration: "1 hour",
           year: 3,
-          tags: ["R"],
           description:
             "You cause an object that isn't being worn or carried and that you can see within range to shrink in size for the duration. The target's size is halved in all dimensions, and its weight is reduced to one-eighth of normal. This reduction decreases its size by one category – from Medium to Small, for example.",
         },
         {
           name: "Rictusempra",
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -471,12 +498,12 @@ export const spellsData = {
         },
         {
           name: "Vigilatus",
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "1 Minute",
           range: "30 Feet",
           duration: "8 Hours",
           year: 2,
-          tags: ["R"],
           description:
             "You set a mental alarm against unwanted intrusion. Choose a door, a window, or an area within range that is no larger than a 20-foot cube. Until the spell ends, a ping in your mind alerts you whenever a Tiny or larger creature touches or enters the warded area, if you are within 1 mile of the warded area. This ping awakens you if you are sleeping. When you cast the spell, you can designate creatures that won't set off the alarm.",
         },
@@ -484,7 +511,8 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Abscondi",
-          level: "2nd Level (ritual)",
+          class: ["Charms"],
+          level: "2nd Level",
           castingTime: "1 action",
           range: "Self",
           duration: "Concentration, up to 1 hour",
@@ -495,6 +523,7 @@ export const spellsData = {
         },
         {
           name: "Diminuendo",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -505,7 +534,8 @@ export const spellsData = {
         },
         {
           name: "Engorgio",
-          level: "2nd Level (ritual)",
+          class: ["Charms"],
+          level: "2nd Level",
           castingTime: "1 action",
           range: "Touch",
           duration: "1 minute",
@@ -516,6 +546,7 @@ export const spellsData = {
         },
         {
           name: "Expelliarmus",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -528,12 +559,12 @@ export const spellsData = {
         },
         {
           name: "Finite Incantatem",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "30 feet",
           duration: "instantaneous",
           year: 3,
-
           description:
             "Choose any creature, object, or magical effect within range. One non-Transfiguration spell of 2nd level or lower on the target ends. If you are aware of at least one spell affecting the target, you can specify that spell in your mind. If you are unaware of what spells are affecting the target, one randomly selected spell ends. For a spell of a higher level on the target, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level.",
           higherLevels:
@@ -541,6 +572,7 @@ export const spellsData = {
         },
         {
           name: "Fumos",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "Self (15 foot cube)",
@@ -554,12 +586,12 @@ export const spellsData = {
         },
         {
           name: "Geminio",
-          level: "2nd Level (ritual)",
+          class: ["Charms"],
+          level: "2nd Level",
           castingTime: "1 action",
           range: "30 feet",
           duration: "10 days",
           year: 3,
-          tags: ["R"],
           description:
             "You tap an object that fits within a 1-foot cube with your wand and a perfect duplicate of it pops out from the object. The duplicate is indistinguishable from the object by normal means, but does not share any of its magical qualities or functions. The duplicate has one quarter of the original object's hit points and vanishes at the end of the spell's duration.",
           higherLevels:
@@ -567,6 +599,7 @@ export const spellsData = {
         },
         {
           name: "Immobulus",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "Action",
           range: "Self (15 Feet Cube)",
@@ -579,6 +612,7 @@ export const spellsData = {
         },
         {
           name: "Muffliato",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "Self",
@@ -590,6 +624,7 @@ export const spellsData = {
         },
         {
           name: "Partis Temporus",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "90 feet",
@@ -601,7 +636,8 @@ export const spellsData = {
             "When you cast this spell using a spell slot of 3rd level or higher, you automatically create an opening in the spell if the spell's level is one level higher than, equal to or less than the level of the spell slot you used.",
         },
         {
-          name: "Pellucidi Pellis",
+          name: "Pelucidi Pellis",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "Touch",
@@ -614,24 +650,24 @@ export const spellsData = {
         },
         {
           name: "Protego Maxima",
+          class: ["Charms"],
           level: "2nd Level",
           castingTime:
             "1 action or reaction, which you take when you are hit by an attack",
           range: "Self",
           duration: "Dedication, up to 10 minutes",
           year: 4,
-
           description:
             "You cast a fully encompassing protego around yourself, sacrificing durability for coverage. For the duration, you have a +3 bonus to AC, including against the triggering attack. If you are subjected to an effect that allows you to make a Strength or Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail.",
         },
         {
           name: "Reparo",
-          level: "2nd Level (ritual)",
+          class: ["Charms"],
+          level: "2nd Level",
           castingTime: "1 action",
           range: "30 feet",
           duration: "Instantaneous",
           year: 3,
-          tags: ["R"],
           description:
             "This spell magically reverses any damage done to any objects or structures within a 5-foot cube, collecting all the pieces or components and reassembling them. Anything previously contained by the broken target, like a spilled liquid, is not placed back inside it. This spell can physically repair a magic item, but the spell can't restore magic to such an object.",
           higherLevels:
@@ -639,7 +675,8 @@ export const spellsData = {
         },
         {
           name: "Silencio",
-          level: "2nd Level (ritual)",
+          level: "2nd Level",
+          class: ["Defense Against the Dark Arts"],
           castingTime: "Action",
           range: "90 Feet",
           duration: "1 Minute",
@@ -664,7 +701,8 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Deprimo",
-          level: "3rd Level (ritual)",
+          level: "3rd Level",
+          class: ["Defense Against the Dark Arts"],
           castingTime: "Action",
           range: "120 Feet",
           duration: "Instantaneous",
@@ -679,17 +717,19 @@ export const spellsData = {
           name: "Depulso",
           level: "3rd Level",
           castingTime: "Action",
+          class: [],
           range: "60 Feet",
           duration: "Instantaneous",
           year: 4,
           description:
-            "A target is pushed directly away from the caster as if shoved by an invisible hand, being thrown 5 feet away plus a number of feet equal to five times your spellcasting ability modifier. The target is selected by pointing at it with a wand. If targeting a creature or object that is being worn or carried, make a check with 26 Strength (+8) contested by the Strength (Athletics) check of the target creature. If the target is Medium or smaller, you have advantage on the check. If you succeed, the target is thrown the same distance.",
+            "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 20-foot cube. The image appears at a spot that you can see within range and lasts for the duration. It seems completely real, including sounds, smells, and temperature appropriate to the thing depicted. Physical interaction with the image reveals it to be an illusion, because things can pass through it.",
           higherLevels:
             "When you cast this spell using a spell slot of 4th level or higher, the shove distance is increased by 10 feet for each slot level above 3rd.",
         },
         {
           name: "Dissonus Ululatus",
           level: "3rd Level",
+          class: ["Charms"],
           castingTime: "10 minutes",
           range: "Self (30-foot-radius hemisphere)",
           duration: "8 hours",
@@ -700,7 +740,8 @@ export const spellsData = {
         },
         {
           name: "Expecto Patronum",
-          level: "3rd Level (ritual)",
+          level: "3rd Level",
+          class: ["Defense Against the Dark Arts"],
           castingTime: "Action",
           range: "10 Feet",
           duration: "Concentration, up to 1 minute",
@@ -714,6 +755,7 @@ export const spellsData = {
         {
           name: "Fianto Duri",
           level: "3rd Level",
+          class: ["Charms"],
           castingTime: "1 action",
           range: "90 feet",
           duration: "Instantaneous",
@@ -724,6 +766,7 @@ export const spellsData = {
         },
         {
           name: "Fortissimum",
+          class: ["Charms"],
           level: "3rd Level",
           castingTime: "1 action",
           range: "Touch",
@@ -736,6 +779,7 @@ export const spellsData = {
         },
         {
           name: "Herbivicus",
+          class: ["Charms"],
           level: "3rd Level",
           castingTime: "1 action or 1 minute",
           range: "90 feet",
@@ -746,29 +790,30 @@ export const spellsData = {
         },
         {
           name: "Lumos Maxima",
-          level: "3rd Level (ritual)",
+          class: ["Charms"],
+          level: "3rd Level",
           castingTime: "1 action",
           range: "90 feet",
           duration: "1 hour",
           year: 3,
-          tags: ["R"],
           description:
             "A 60-foot-radius sphere of light spreads out from a small floating ball of light that hovers in place. The sphere is bright light and sheds dim light for an additional 60 feet. As a bonus action, you can direct the ball of light to a new position within range.",
         },
         {
           name: "Novum Spirare",
-          level: "3rd Level (ritual)",
+          class: ["Charms"],
+          level: "3rd Level",
           castingTime: "1 action",
           range: "Touch",
           duration: "24 hours",
           year: 4,
-          tags: ["R"],
           description:
             "Accurately named, the bubble-head charm forms a large bubble-like mask over a creature's mouth, nose, and ears that is magically filled with never-ending fresh air. This spell grants one willing creature you can see within range the ability to breathe underwater or in a vacuum until the spell ends. Additionally, the creature is immune to poison damage due to inhalation for the duration.",
         },
         {
           name: "Repello Inimicum",
           level: "3rd Level",
+          class: ["Charms"],
           castingTime: "1 minute",
           range: "Self (20-foot-radius hemisphere)",
           duration: "1 hour",
@@ -783,7 +828,8 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Capacious Extremis",
-          level: "4th Level (ritual)",
+          class: ["Charms"],
+          level: "4th Level",
           castingTime: "10 minutes",
           range: "Touch",
           duration: "Until dispelled",
@@ -794,25 +840,38 @@ export const spellsData = {
         },
         {
           name: "Confundo",
-          level: "4th Level (ritual)",
+          class: ["Charms"],
+          level: "4th Level",
           castingTime: "1 action",
           range: "90 feet",
           duration: "Concentration, up to 1 minute",
           year: 6,
-          tags: ["R"],
           description:
             "The Confundus Charm is a particularly powerful charm that leaves anything confused, forgetful, and impressionable, often causing people to wander off absent-mindedly. If the target is an object you can see within range that operates or functions on its own, it will operate erratically, malfunction, or completely shut down. If the target is a creature you can see within range, it must succeed on a Wisdom saving throw when you cast this spell or be affected by it.",
           higherLevels:
             "When you cast this spell using a spell slot of 5th level or higher, you can target one additional target for each slot level above 4th.",
         },
+
+        {
+          name: "Fianto Duri",
+          class: ["Charms"],
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Instantaneous",
+          year: 5,
+          description:
+            "Whenever you cast this spell on an active defensive spell within range that improves a creature's AC or grants it temporary hit points, each creature affected by the targeted spell gains temporary hit points equal to twice your caster level + your spellcasting ability modifier. When the targeted spell ends or an affected creature is no longer affected by it, the creature loses any remaining temporary hit points from this spell.",
+        },
+
         {
           name: "Repello Muggletum",
-          level: "4th Level (ritual)",
+          class: ["Charms"],
+          level: "4th Level",
           castingTime: "10 minutes",
           range: "Self (60-foot-radius hemisphere)",
           duration: "8 hours",
           year: 7,
-          tags: ["R"],
           description:
             "Frequently used around wizarding areas, this charm keeps Muggles away from dangerous situations or overtly magical locations. You enchant an area to suggest a course of activity and magically influence a non-magical human. Upon entering the warded area, the subject must make a Wisdom saving throw at disadvantage. On a failed save, it pursues a course of action that takes it away from the area of the spell.",
         },
@@ -820,12 +879,12 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Cave Inimicum",
+          class: ["Charms"],
           level: "5th Level",
           castingTime: "1 minute",
           range: "Self (10-foot-radius hemisphere)",
           duration: "1 hour",
           year: 7,
-
           description:
             "A forcefield-like dome forms a perimeter around the caster that filters vision of anything or anyone designated by the caster, rendering those objects infallibly invisible. The dome is undetectable from the outside, but slightly visible from the inside, like a wavering glass barrier. Anyone can move through the field freely to see the hidden contents.",
           higherLevels:
@@ -834,6 +893,7 @@ export const spellsData = {
         {
           name: "Ne Ustio",
           level: "5th Level",
+          class: ["Defense Against the Dark Arts"],
           castingTime: "Action",
           range: "Touch",
           duration: "Concentration, up to 1 hour",
@@ -846,6 +906,7 @@ export const spellsData = {
         },
         {
           name: "Obliviate",
+          class: ["Charms"],
           level: "5th Level",
           castingTime: "1 action",
           range: "30 feet",
@@ -859,6 +920,7 @@ export const spellsData = {
         },
         {
           name: "Piertotum Locomotor",
+          class: ["Charms"],
           level: "5th Level",
           castingTime: "1 action",
           range: "90 feet",
@@ -874,6 +936,7 @@ export const spellsData = {
           name: "Salvio Hexia",
           level: "5th Level",
           castingTime: "Action",
+          class: ["Defense Against the Dark Arts"],
           range: "Self (10-foot-radius sphere)",
           duration: "Concentration, up to 1 minute",
           year: 7,
@@ -882,22 +945,7 @@ export const spellsData = {
             "Each creature within the spell's area gains temporary hit points equal to your spellcasting modifier at the beginning of its turn and advantage on all saving throws against spells.",
         },
       ],
-      "6th Level": [
-        {
-          name: "Protego Totalum",
-          level: "6th Level",
-          castingTime: "Action",
-          range: "Self (10-foot-radius sphere)",
-          duration: "Concentration, up to 1 minute",
-          year: 7,
-          restriction: true,
-
-          description:
-            "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th.",
-        },
-      ],
+      "6th Level": [],
       "7th Level": [
         {
           name: "Herbarifors",
@@ -911,19 +959,8 @@ export const spellsData = {
             "You touch a creature, and magical healing plants begin to grow from its wounds stimulating its natural healing ability. The target regains 4d8 + 15 hit points. For the duration of the spell, the target regains 1 hit point at the start of each of its turns (10 hit points each minute). The target’s severed body members (fingers, legs, tails, and so on), if any, grow limb shaped vines, restoring the limb after 2 minutes. If you have the severed part and hold it to the stump, the spell instantaneously causes the plants to reach out to knit to the stump.",
         },
       ],
-      "9th Level": [
-        {
-          name: "Fidelius Mysteria Celare",
-          level: "9th Level",
-          castingTime: "1 hour",
-          range: "Self (150-foot-radius hemisphere)",
-          duration: "Until dispelled",
-          year: 7,
-          restriction: true,
-          description:
-            "When cast upon a single dwelling that fits within range, it becomes a secret, infallibly invisible and inaccessible by anyone else. This effect reaches to the dwelling's property lines, or if no property lines are defined, the edge of the hemisphere centered on the caster at the time of casting. You choose yourself or one person within the area of the spell to be the Secret-Keeper. If the Secret-Keeper tells someone the secret (the location of the dwelling) verbally or in writing, that person can see the secret like the Secret-Keeper and step onto the property.",
-        },
-      ],
+      "8th Level": [],
+      "9th Level": [],
     },
   },
   "Jinxes, Hexes & Curses": {
@@ -935,245 +972,454 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Bombarda",
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Instantaneous",
           year: 3,
           description:
-            "A controlled explosion emanates from your wand's tip, capable of blasting open doors and breaking barriers. This spell creates a focused burst of force that can damage structures while minimizing harm to nearby creatures.",
+            "The spell blasts whatever it hits, creating a localized concussive explosion upon impact. Make a ranged spell attack against a target within range. On a hit, the target takes 1d10 bludgeoning damage.",
+          higherLevels:
+            "This spell's damage increases by 1d10 when you reach 5th level (2d10), 11th level (3d10), and 17th level (4d10).",
         },
         {
           name: "Cantis",
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Round",
           year: 1,
           description:
-            "A minor jinx that causes the target to uncontrollably sing loudly for a short duration. While harmless, it can be quite embarrassing and disruptive in social situations.",
+            "When struck by this spell, a being can't help but belt out a couple of lines from the first song that comes to mind. Make a ranged spell attack against a being within range. On a hit, the target must cast all other spells non-verbally until the end of its next turn. If it tries to cast a spell verbally, it must first succeed on an Intelligence saving throw, or the casting fails and the spell is wasted.",
         },
         {
           name: "Devicto",
+          class: ["Defense Against the Dark Arts"],
+          level: "Cantrip",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Instantaneous",
+          year: 4,
+          description:
+            "This weak jinx is a classic training spell between duelists, a startling sting on impact. Make a ranged spell attack against a creature within range. On a hit, it takes 1d6 force damage, and it can't take reactions until the start of its next turn.",
+          higherLevels:
+            "The spell's damage increases by 1d6 when you reach 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
+        },
+        {
+          name: "Furnunculus",
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
           duration: "Instantaneous",
-          year: 4,
-          description:
-            "An advanced hex that overwhelms the target with magical interference. The spell disrupts the target's concentration and magical abilities through a combination of mathematical precision and runic power. When enhanced through extensive study, this spell demonstrates the perfect fusion of analytical and symbolic magical theory.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 1st level or higher, you can target one additional creature for each slot level above 0.",
-          restriction: false, // Available to Researcher characters even though normally restricted
-        },
-        {
-          name: "Furnunculus",
-          level: "Cantrip",
           year: 2,
           description:
-            "Causes painful boils to appear on the target's skin, creating discomfort and embarrassment without permanent harm.",
+            "Outbreaks of this jinx is a common occurrence when students get in fights, resulting in grotesque pimples covering the victims face. Make a ranged spell attack against a being within range. On a hit, it takes 1d4 psychic damage and has disadvantage on the next attack roll it makes before the end of its next turn. Additionally, it has disadvantage on the next Charisma ability check it makes.",
+          higherLevels:
+            "This spell's damage increases by 1d4 when you reach 5th level (2d4), 11th level (3d4), and 17th level (4d4).",
         },
         {
           name: "Genu Recurvatum",
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Minute",
           year: 1,
           description:
-            "A leg-locking jinx that temporarily reverses the target's knee joints, making walking extremely difficult and awkward.",
+            "This hex flips around a beast or being's knees, forcing them to take awkward, uncoordinated steps. Make a ranged spell attack against a creature within range. On a hit, the target's speed is halved for the duration of the spell.",
         },
         {
           name: "Infirma Cerebra",
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
+          castingTime: "1 Action",
+          range: "60 Feet",
+          duration: "1 Round",
           year: 2,
           description:
-            "A mind-weakening jinx that temporarily reduces the target's cognitive abilities, making complex thoughts and concentration difficult.",
+            "This jinxes a target's mind, giving them a brief moment of disorientation. Make a ranged spell attack against a creature within range. On a hit, the target takes 1d6 psychic damage, and the first time it makes a saving throw before the end of your next turn, it must roll a d4 and subtract the number rolled from the save.",
+          higherLevels:
+            "This spell's damage increases by 1d6 when you reach certain levels: 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
+        },
+        {
+          name: "Insectum",
+          class: ["Defense Against the Dark Arts"],
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
+          year: 6,
+          restriction: true,
+          description: "Insect control or summoning spell",
         },
         {
           name: "Locomotor Wibbly",
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
           year: 1,
           description:
-            "Causes the target's legs to move uncontrollably in a wobbling motion, making coordinated movement nearly impossible.",
+            "This will make a person's legs so unsteady and weak that they aren't able to keep their balance. Make a ranged spell attack against a being within range. On a hit, the target is knocked prone.",
         },
       ],
       "1st Level": [
         {
           name: "Colloshoo",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "90 Feet",
+          duration: "Concentration, 1 Minute",
           year: 1,
-          description: "Stickfast hex",
+          description:
+            "This creative hex sticks a being's shoes to the ground, rooting them in place. Choose a being you can see within range that is wearing shoes to make a Dexterity saving throw. On a failed save, the target is restrained for the duration. If the saving throw fails by 5 or more, the target is knocked prone as well. The target can use its action to take off its shoes, or make a Strength check against your spell save DC. On a success, it pulls its shoes free.",
         },
         {
           name: "Densaugeo",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "1 Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
           year: 2,
-          description: "Tooth-growing hex",
+          description:
+            "A target's front two teeth grow abnormally long, protruding downwards past its chin. Make a ranged spell attack against a creature within range. On a hit, it takes 2d8 psychic damage and has disadvantage on the next attack roll it makes before the end of its next turn.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage is increased by 1d8 for each slot level above 1st.",
         },
         {
           name: "Digitus Wibbly",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "1 Minute",
           year: 1,
-          description: "Finger-removal jinx",
+          description:
+            "This jinx makes fingers numb and relaxed. Make a ranged spell attack against a being within range. On a hit, the target has disadvantage on attack rolls for the duration. At the end of each of its turns, the target can make a Dexterity saving throw. On a success, the spell ends.",
         },
         {
           name: "Flipendo",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Instantaneous",
           year: 3,
-          description: "Knockback jinx",
+          description:
+            "The spell feels like a very heavy blow, sharply throwing a creature from its standing position to the ground. Choose a being you can see within range to make a Strength saving throw. On a failed save, a creature takes 1d10 bludgeoning damage, is knocked back a number of feet equal to five times your spellcasting ability modifier, and is knocked prone. On a successful save, the creature takes half as much damage, is knocked back 5 feet, and isn't knocked prone.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 and the knockback on a failed save increases by 5 feet for each slot level above 1st.",
         },
         {
           name: "Locomotor Mortis",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "1 Action",
+          range: "90 Feet",
+          duration: "1 Minute",
           year: 2,
-          description: "Leg-locker curse",
+          description:
+            "A common tool among bullies, this 'curse' binds a creature's legs as if they were tied together with rope. A creature you can see within range must succeed on a Wisdom saving throw or have its speed halved and suffer disadvantage on Dexterity saving throws. Additionally, each time it moves within the duration, it must succeed on a Dexterity saving throw without disadvantage from this spell, or be knocked prone and take 2d4 bludgeoning damage.",
         },
         {
           name: "Mimblewimble",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "90 Feet",
+          duration: "1 Round",
           year: 1,
-          description: "Tongue-tying curse",
+          description:
+            "If you're hit with this spell, this produces the strange sensation of your tongue being rolled up into the back of your mouth. Choose one being you can see within range. If it tries to cast a spell verbally before the end of its next turn, it must first succeed on a Dexterity saving throw, or the casting fails and the spell is wasted.",
         },
         {
           name: "Petrificus Totalus",
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Dedication, up to 1 minute",
           year: 3,
-          description: "Full body-bind curse",
+          description:
+            "This spell makes a being's arms and legs snap together, and it will fall down, stiff as a board. Make a ranged spell attack against a being within range. On a hit, the target is knocked prone and paralyzed for the duration.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you can target a beast instead of a being.",
         },
       ],
       "2nd Level": [
         {
           name: "Arania Exumai",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
+          castingTime: "1 action",
+          range: "Self (15 foot cube)",
+          duration: "Instantaneous",
           year: 3,
-          description: "Spider repelling charm",
+          description:
+            "This spell blasts away spiders, Acromantulas, or arachnids with a cone of bright scorching light. Each spider-like creature in a 30-foot cone must make a Constitution saving throw. On a failed save, a creature takes 4d6 radiant damage and is knocked back 5 feet plus a number of feet equal to five times your spellcasting ability modifier. On a successful save, it takes half as much damage and isn't knocked back. Any non-arachnid creatures within the area of the spell are unaffected.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 and the shove distance increases by 10 feet for each slot level above 2nd.",
         },
         {
           name: "Oppugno",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 minute",
           year: 4,
-          description: "Oppugning charm",
+          description:
+            "You cast this jinx on a group of tiny objects or a group of birds within range. The targets start swarming in the air in a 5-foot-diameter sphere in an unoccupied space of your choice. Any creature that starts its turn within 5 feet of the swarm or enters the swarm's area for the first time on a turn must make a Dexterity saving throw. The creature takes 4d4 slashing damage on a failed save, or half as much damage on a successful one. As a bonus action, you can move the sphere up to 30 feet. While the swarm shares the same space with a creature, that creature has disadvantage on attack rolls. The swarm's space counts as difficult terrain.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d4 for each slot level above 2nd.",
         },
         {
           name: "Relashio",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
+          castingTime: "1 Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
           year: 2,
-          description: "Revulsion jinx",
+          description:
+            "This spell forces both living and inanimate targets to release their grip. Choose an object or creature that you can see within range. The object can be a set of manacles, a padlock, chains, or another object that is wrapped around or restraining something. If the target is a creature, it must make a Wisdom saving throw. On a failed save, it must let go of whatever it is restraining. This effect ends any grappled or restrained condition that is being imposed by the target. An object that is secured by a mundane or magical lock or that is stuck becomes unlocked, unstuck, or unbarred. When you cast the spell on an object, a loud rattling or clanking, audible from as far away as 100 feet, emanates from the target object. A creature is not forced to drop any object that it is holding. The creature must be restraining the object in some way, like holding onto an object that has had accio cast upon it.",
         },
         {
           name: "Slugulus Eructo",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "1 round",
           year: 5,
-          description: "Slug-vomiting charm",
+          description:
+            "This particularly nasty hex causes one to spit up slugs for the duration. Make a ranged spell attack against a creature within range. On a hit, it takes 3d8 psychic damage and gains one level of exhaustion. This spell cannot cause it to reach more than 5 levels of exhaustion. If it tries to cast a spell verbally before the end of its next turn, it must first succeed on a Constitution saving throw, or the casting fails and the spell is wasted.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for each slot level above 2nd.",
         },
         {
           name: "Tarantallegra",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
+          castingTime: "1 Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 minute",
           year: 2,
-          description: "Dancing feet spell",
+          description:
+            "This entertaining jinx forces its victim to do a comic dance in place: shuffling, tapping its feet, and capering. Make a ranged spell attack against a target within range. On a hit, a dancing creature must use all its movement to dance without leaving its space until the end of your next turn. While the creature is affected by this spell, it has disadvantage on Dexterity saving throws and attack rolls and other creatures have advantage on attack rolls against it. As an action, a dancing creature can make a Wisdom saving throw to regain control of itself. On a successful save, the spell ends.",
         },
         {
           name: "Ventus",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
           year: 3,
-          tags: ["R"],
-          description: "Wind jinx",
+          description:
+            "A strong gust of air flows out from the tip of your wand, and creates one of the following effects at a point you can see within range: One Medium or smaller creature that you choose must succeed on a Strength saving throw or be instantaneously pushed up to 5 feet away from you and be rendered unable to move closer to you for the duration. You create a small blast of air capable of moving one object that is neither held nor carried and that weighs no more than 5 pounds. The object is pushed up to 10 feet away from you per round, for the duration of the spell. It isn't pushed with enough force to cause damage. You create a harmless sensory effect using air, such as causing leaves to rustle, wind to slam shutters shut, or your clothing to ripple in a breeze. If desired, the air can be hot and function like a blow dryer.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd. The creatures must be within 30 feet of each other when you target them.",
         },
       ],
       "3rd Level": [
         {
           name: "Confringo",
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Instantaneous",
           year: 5,
-          description: "Blasting curse",
+          description:
+            "A tiny ball of fire flashes from your wand to a point you choose within range and then explodes into a fiery blast on impact. Each creature in a 10-foot-radius sphere centered on that point must make a Dexterity saving throw. A target takes 8d6 fire damage on a failed save, or half as much damage on a successful one. The fire spreads around corners. It ignites flammable objects in the area that aren't worn or carried.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 and the radius increases by 5 feet for each slot level above 3rd.",
         },
         {
           name: "Conjunctivia",
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "1 minute",
           year: 5,
-          description: "Conjunctivitis curse",
+          description:
+            "When struck by this curse, a creature's eyes to become irritated and painful, swelling shut. Make a ranged spell attack against a creature within range. On a hit, the target takes 4d8 necrotic damage and is blinded for the duration. At the end of each of its turns, the target can make a Constitution saving throw. On a success, the spell ends. Creatures that are normally magically resistant are vulnerable to this spell.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for each slot level above 3rd.",
         },
         {
           name: "Expulso",
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Instantaneous",
           year: 3,
-          description: "Exploding curse",
+          description:
+            "The spell shoots out from your wand and a wave of thunderous force sweeps out from a point of your choice within range. Each creature in a 10-foot-radius sphere centered on that point must make a Constitution saving throw. On a failed save, a creature takes 4d8 thunder damage and is pushed 10 feet away from that point. On a successful save, the creature takes half as much damage and isn't pushed. In addition, unsecured objects that are completely within the area of effect are automatically pushed 10 feet away from that point by the spell's effect, and the spell emits a thunderous boom audible out to 100 feet.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for each slot level above 3rd.",
         },
         {
           name: "Impedimenta",
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "1 minute",
           year: 6,
-          description: "Impediment jinx",
+          description:
+            "A powerful dueling spell, this jinx alters time around one creature you can see within range, severely inhibiting its ability in combat. The target must succeed on a Wisdom saving throw or be affected by this spell for the duration. An affected target's speed is halved, it takes a -2 penalty to AC and Dexterity saving throws, and it can't use reactions. On its turn, it can use either an action or a bonus action, not both. Regardless of the creature's abilities or magic items, it can't make more than one melee or ranged attack during its turn. If the creature attempts to cast a spell with a casting time of 1 action, roll a d20. On an 11 or higher, the spell doesn't take effect until the creature's next turn, and the creature must use its action on that turn to complete the spell. If it can't, the spell is wasted. A creature affected by this spell makes another Wisdom saving throw at the end of its turn. On a successful save, the effect ends for it.",
         },
         {
           name: "Langlock",
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
+          castingTime:
+            "1 action or reaction, which you take when you see a creature within 60 feet of you casting a spell",
+          range: "60 feet",
+          duration: "1 round",
           year: 4,
           restriction: true,
-          description: "Tongue-tying curse",
+          description:
+            "You attempt to interrupt a being you can see in the process of casting a spell. If the creature is verbally casting a spell of 3rd level or lower, its spell fails and has no effect. If it is verbally casting a spell of 4th level or higher, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level. On a success, the creature's spell fails and has no effect. On a success or if the being was casting the spell non-verbally, the target must cast all other spells non-verbally until the end of its next turn. If it tries to cast a spell verbally, it must first succeed on an Intelligence saving throw, or the casting fails and the spell is wasted.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the interrupted spell has no effect if its level is less than or equal to the level of the spell slot you used.",
         },
       ],
       "4th Level": [
         {
           name: "Levicorpus/Liberacorpus",
+          class: ["Defense Against the Dark Arts"],
           level: "4th Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "1 minute",
           year: 4,
-          description: "Dangles target by ankle",
+          description:
+            "One of the few spells that are a non-verbal spell by design, this jinx yanks a being's feet out from under it and dangles it in the air, hanging by its ankle. This spell always is cast with the effects of the Subtle Spell metamagic, at no sorcery point cost and whether you have Subtle Spell or not. A creature you can see within range must make a Wisdom saving throw or take 3d10 psychic damage and be restrained. Additionally, if the target tries to cast a spell, it must first succeed on a Wisdom saving throw, or the casting fails and the spell is wasted.",
         },
         {
           name: "Muco Volatilis",
+          class: ["Defense Against the Dark Arts"],
           level: "4th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
           year: 5,
-          description: "Bat-bogey hex",
+          description:
+            "This terrifying spell transforms the victim's bogies (or boogers) into nasty green bats that crawl out of their nose and attack. Make a ranged spell attack against a being within range. On a hit, the target and any hostile creatures within 5 feet of the target take 6d4 slashing damage. At the start of the target's turn and when any hostile creature starts its turn within 5 feet of the target, it takes 3d4 slashing damage. If any creature has to make a saving throw to maintain concentration because of this spell's damage, the saving throw is made at disadvantage.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 5th level or higher, the initial damage increases by 2d4 for each slot level above 4th.",
         },
         {
           name: "Reducto",
+          class: ["Defense Against the Dark Arts"],
           level: "4th Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Instantaneous",
           year: 4,
-          description: "Reductor curse",
+          description:
+            "This spell disintegrates a Large or smaller nonmagical object or transfigured/conjured construct you can see within range. If the target is a Huge or larger object or construct, this spell disintegrates a 10-foot-cube portion of it.",
         },
         {
           name: "Sectumsempra",
+          class: ["Defense Against the Dark Arts"],
           level: "4th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Instantaneous",
           year: 6,
           restriction: true,
-          description: "Slashing curse",
+          description:
+            "Make a ranged spell attack against a target within range. On a hit, the target must make a Constitution saving throw. On a failed save, a creature takes 10d6 slashing damage and another 5d6 slashing damage at the end of its next turn. On a successful save, a creature takes half the initial damage and half the damage at the end of its next turn.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 5th level or higher, the initial damage increases by 2d6 for each slot level above 4th.",
         },
       ],
       "5th Level": [
         {
           name: "Imperio",
+          class: ["Defense Against the Dark Arts"],
           level: "5th Level",
+          castingTime: "Action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
           year: 6,
-          description: "Imperius curse",
+          description:
+            "You attempt to beguile a humanoid that you can see within range. It must succeed on a Wisdom saving throw or be charmed by you for the duration. If you or creatures that are friendly to you are fighting it, it has advantage on the saving throw. While the target is charmed, you have a telepathic link with it as long as the two of you are on the same plane of existence. You can use this telepathic link to issue commands to the creature while you are conscious (no action required), which it does its best to obey. You can specify a simple and general course of action, such as 'Attack that creature,' 'Run over there,' or 'Fetch that object.' If the creature completes the order and doesn't receive further direction from you, it defends and preserves itself to the best of its ability. You can use your action to take total and precise control of the target. Until the end of your next turn, the creature takes only the actions you choose, and doesn't do anything that you don't allow it to do. During this time, you can also cause the creature to use a reaction, but this requires you to use your own reaction as well. Each time the target takes damage, it makes a new Wisdom saving throw against the spell. If the saving throw succeeds, the spell ends.",
         },
         {
           name: "Nullum Effugium",
+          class: ["Defense Against the Dark Arts"],
           level: "5th Level",
+          castingTime: "10 minutes",
+          range: "Self (60-foot-radius sphere)",
+          duration: "8 hours",
           year: 7,
           restriction: true,
-          description: "No escape curse",
+          description:
+            "Commonly used by the Department of Magical Law enforcement, this wards an area against apparition or disapparition. No one may arrive in the warded area via apparition, nor may any creatures within the warded area cast the spell. Any attempt to do so results in the typical apparition effect, except the creature stays exactly where they are.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th level or higher, the radius of the sphere increases by 60 feet for each slot level above 5th.",
         },
         {
           name: "Omnifracto",
+          class: ["Defense Against the Dark Arts"],
           level: "5th Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Instantaneous",
           year: 7,
           restriction: true,
-          description: "Breaking curse",
+          description:
+            "A piercing beam of light shoots out from the tip of your wand, shattering any defensive magic it passes through. Choose a target within range. Protego totalum, repello inimicum, and all defensive spells that are improving that creature's AC or granting it temporary hit points are dispelled.",
         },
       ],
       "7th Level": [
         {
           name: "Azreth",
+          class: ["Defense Against the Dark Arts"],
           level: "7th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Instantaneous",
           year: null,
-          description: "Killing curse variant",
+          description:
+            "Fiendfyre - A cursed fire that takes the shape of fantastic beasts and is extremely difficult to control. The fire spreads rapidly and can destroy almost anything in its path, including Horcruxes. Only the most skilled dark wizards dare attempt this spell.",
         },
         {
           name: "Crucio",
+          class: ["Defense Against the Dark Arts"],
           level: "7th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
           year: null,
-          description: "Cruciatus curse",
+          description:
+            "The Cruciatus Curse - One of the three Unforgivable Curses. Causes intense, excruciating pain to the victim. Prolonged use can cause permanent insanity. Using this curse on another human being is punishable by a life sentence in Azkaban.",
         },
       ],
       "8th Level": [
         {
           name: "Avada Kedavra",
+          class: ["Defense Against the Dark Arts"],
           level: "8th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Instantaneous",
           year: null,
-          description: "Killing curse",
+          description:
+            "The Killing Curse - One of the three Unforgivable Curses. Causes instant death with no known counter-curse. There is no way to block it except with physical barriers or sacrificial protection. Using this curse is punishable by a life sentence in Azkaban. Known to leave no trace of physical damage on the victim.",
         },
       ],
     },
@@ -1187,72 +1433,123 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Aguamenti",
+          class: ["Transfiguration"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "Self (30 Foot Cone)",
+          duration: "Dedication, 1 Minute",
           year: 1,
-          description: "Water-making spell",
+          description:
+            "A cone of clear, pure water shoots from the tip of the caster's wand with the desired force. The water doesn't go bad and extinguishes exposed flames in the area.",
         },
         {
           name: "Crinus Muto",
+          class: ["Transfiguration"],
           level: "Cantrip",
+          castingTime: "1 Action",
+          range: "Self",
+          duration: "1 Hour",
           year: 1,
-          description: "Hair color change",
+          description:
+            "Your hair is magically lengthened, shortened, styled, or colored. This may also be applied to eyebrows and facial hair. If your appearance is drastically changed, you may be hard to recognize. To discern that you are disguised, a creature can use its action to inspect your appearance and must succeed on an Intelligence (Investigation) check against your spell save DC.",
         },
         {
           name: "Epoximise",
+          class: ["Transfiguration"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
           year: 1,
-          description: "Bonding agent",
+          description:
+            "This spell transfigures the surface of an object to become extremely sticky. One object of your choice that you can see within range and that fits within a 1-foot cube adheres to anything it touches for the duration. If a creature wants to overcome the sticking effect, it can use its action to make a Strength check against your spell save DC. On a success, it can pull the target object free or remove one thing from the target object's surface.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 1st level or higher, the cube's size increases by 1 foot for each slot level above 0.",
         },
         {
           name: "Incendio Glacia",
+          class: ["Transfiguration"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "1 Hour",
           year: 1,
-          description: "Fire and ice spell",
+          description:
+            "A flickering blue flame flows out from the tip of your wand, condensing on an object, in a container, or in your hand. The flame remains there for the duration and only emanates heat directly upwards. It doesn't harm anything beneath or around it, and seems to hover slightly above whatever it's resting upon. If placed beneath a flammable object, a natural fire may be started from the heat. The flame sheds bright light in a 10-foot radius and dim light for an additional 10 feet. The spell ends if you dismiss it as a bonus action.",
         },
         {
           name: "Orchideous",
+          class: ["Transfiguration"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "Instantaneous",
           year: 1,
-          description: "Orchid conjuration",
+          description:
+            "You conjure a blooming flower, bouquet, or wreath in the desired location within range.",
         },
         {
           name: "Vera Verto",
+          class: ["Transfiguration"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Until Dispelled",
           year: 2,
-          description: "True transformation",
+          description:
+            "This universal incantation is taught to Hogwarts students in their first Transfiguration class. You transfigure one nonmagical object that you can see within range and that fits within a 1-foot cube into another nonmagical object of similar size and mass and of equal or lesser value.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 1st level or higher, you may select or stack one of the following effects for each slot level above 0: Increase the cube's size by 1 foot, Affect a magical object, Affect a living creature (3rd level+), Create an object of greater value.",
         },
       ],
       "1st Level": [
         {
           name: "Inanimatus Conjurus",
+          class: ["Transfiguration"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "60 feet",
+          duration: "1 hour",
           year: 2,
-          tags: ["R"],
           description: "Conjures inanimate objects",
         },
         {
           name: "Incendio",
+          class: ["Transfiguration"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "120 feet",
+          duration: "Instantaneous",
           year: 2,
-          tags: ["R"],
           description: "Fire-making spell",
         },
         {
           name: "Nebulus",
+          class: ["Transfiguration"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "120 feet",
+          duration: "Concentration, up to 1 hour",
           year: 3,
           description: "Fog creation",
         },
         {
           name: "Obscuro",
+          class: ["Transfiguration"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 minute",
           year: 2,
-          tags: ["R"],
           description: "Blindfold hex",
         },
         {
           name: "Sagittario",
+          class: ["Transfiguration"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "80 feet",
+          duration: "Instantaneous",
           year: 4,
           description: "Arrow conjuration",
         },
@@ -1260,28 +1557,43 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Incarcerous",
+          class: ["Transfiguration"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "30 feet",
+          duration: "1 hour",
           year: 3,
-          tags: ["R"],
           description: "Rope binding",
         },
         {
           name: "Orbis",
+          class: ["Transfiguration"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "60 feet",
+          duration: "Instantaneous",
           year: 3,
           restriction: true,
           description: "Orb creation",
         },
         {
           name: "Reparifarge",
+          class: ["Transfiguration"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Instantaneous",
           year: 3,
           restriction: true,
           description: "Untransfiguration",
         },
         {
           name: "Serpensortia",
+          class: ["Transfiguration"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 hour",
           year: 4,
           description: "Snake conjuration",
         },
@@ -1289,26 +1601,42 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Avis",
+          class: ["Transfiguration"],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 hour",
           year: 5,
           description: "Bird conjuration",
         },
         {
           name: "Evanesco",
+          class: ["Transfiguration"],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "30 feet",
+          duration: "Instantaneous",
           year: 5,
           description: "Vanishing spell",
         },
         {
           name: "Ignis Laquis",
+          class: ["Transfiguration"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Dedication, up to 1 minute",
           year: 5,
           restriction: true,
           description: "Fire rope",
         },
         {
           name: "Melofors",
+          class: ["Transfiguration"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "1 minute",
           year: 4,
           description: "Pumpkin head jinx",
         },
@@ -1316,14 +1644,21 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Ebublio",
+          class: ["Transfiguration"],
           level: "4th Level",
+          castingTime: "Action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 minute",
           year: 6,
-          tags: ["R"],
           description: "Bubble creation",
         },
         {
           name: "Lapifors",
+          class: ["Transfiguration"],
           level: "4th Level",
+          castingTime: "Action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 hour",
           year: 6,
           restriction: true,
           description: "Rabbit transformation",
@@ -1332,13 +1667,21 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Draconifors",
+          class: ["Transfiguration"],
           level: "5th Level",
+          castingTime: "1 minute",
+          range: "60 feet",
+          duration: "Concentration, up to 1 hour",
           year: 7,
           description: "Dragon transformation",
         },
         {
           name: "Transmogrify",
+          class: ["Transfiguration"],
           level: "5th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 hour",
           year: null,
           description: "Complete transformation",
         },
@@ -1346,7 +1689,11 @@ export const spellsData = {
       "6th Level": [
         {
           name: "Ignis Furore",
+          class: ["Transfiguration"],
           level: "6th Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
           year: 7,
           description: "Raging fire",
         },
@@ -1361,201 +1708,439 @@ export const spellsData = {
     levels: {
       Cantrips: [
         {
-          name: "Mumblio",
+          name: "Ignis Lunalis",
+          class: ["Divinations"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: 3,
+          description:
+            "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage. The target gains no benefit from cover for this saving throw.",
+          higherLevels:
+            "The spell's damage increases by 1d8 when you reach 5th level (2d8), 11th level (3d8), and 17th level (4d8).",
+        },
+        {
+          name: "Lux",
+          class: ["Divinations"],
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 1 minute",
+          year: 3,
+          description:
+            "You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice. It can roll the die before or after making the ability check. The spell then ends.",
+        },
+        {
+          name: "Mumblio",
+          class: ["Divinations"],
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "1 Round",
           year: 3,
           restriction: true,
-          description: "Mumbling charm",
+          description:
+            "You point your wand toward a being within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear.",
         },
         {
           name: "Point Me",
+          class: ["Divinations"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Instantaneous",
           year: 3,
-          description: "Four-point spell",
+          description:
+            "Placing your wand flat in your open palm, this spell picks up the wand and points north, much like a compass. The spell's usefulness is situational, but often grants advantage on Wisdom (Survival) checks to not get lost outdoors.",
         },
         {
           name: "Prior Incantato",
+          class: ["Divinations"],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Instantaneous",
           year: 3,
-          description: "Reveals last spell cast",
+          description:
+            "Often used as an investigative tool in wizarding crimes, this spell produces a ghostly recreation of the previous spell cast by the currently used wand. If the previously cast spell cannot be represented visually, you learn the incantation that was used. This spell can be cast a total of three consecutive times on a single wand, revealing the three most recently cast spells.",
         },
       ],
       "1st Level": [
         {
-          name: "Linguarium",
+          name: "Bestia Vinculum",
+          class: ["Divinations"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 10 minutes",
           year: 3,
-          tags: ["R"],
-          description: "Language comprehension",
+          description:
+            "You establish a telepathic link with one beast you touch that is friendly to you or charmed by you. The spell fails if the beast's Intelligence is 4 or higher. Until the spell ends, the link is active while you and the beast are within line of sight of each other.",
+        },
+        {
+          name: "Formidulosus",
+          class: ["Divinations"],
+          level: "1st Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          year: 3,
+          description:
+            "You whisper a discordant melody that only one creature of your choice within range can hear, wracking it with terrible pain. The target must make a Wisdom saving throw. On a failed save, it takes 3d6 psychic damage and must immediately use its reaction, if available, to move as far as its speed allows away from you.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st.",
+        },
+        {
+          name: "Linguarium",
+          class: ["Divinations"],
+          level: "1st Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "1 Hour",
+          year: 3,
+          description:
+            "For the duration, you understand the literal meaning of any spoken language that you hear. You also understand any written language that you see, but you must be touching the surface on which the words are written. It takes about 1 minute to read one page of text.",
+        },
+        {
+          name: "Lux Maxima",
+          class: ["Divinations"],
+          level: "1st Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "1 Round",
+          year: 3,
+          description:
+            "A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target. On a hit, the target takes 2d6 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st.",
         },
         {
           name: "Luxus Manus",
+          class: ["Divinations"],
           level: "1st Level",
+          castingTime: "1 Minute",
+          range: "5 Feet",
+          duration: "Concentration, 8 Hours",
           year: 4,
-          tags: ["R"],
-          description: "Hand of light",
+          description:
+            "You create a Tiny incorporeal hand of shimmering light in an unoccupied space you can see within range. The hand exists for the duration, but it disappears if you apparate or use a portkey. When the hand appears, you name one major landmark, and the hand moves in the direction of the landmark.",
         },
         {
           name: "Martem",
+          class: ["Divinations"],
           level: "1st Level",
+          castingTime: "1 Minute",
+          range: "Touch",
+          duration: "8 Hours",
           year: 3,
           restriction: true,
-          description: "War sight",
+          description:
+            "You touch a willing creature. For the duration, the target can add 1d8 to its initiative rolls.",
         },
         {
           name: "Motus Revelio",
+          class: ["Divinations"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Concentration, 1 Minute",
           year: 3,
-          description: "Motion detection",
+          description:
+            "You attune your senses to pick up the emotions of others for the duration. When you cast the spell, and as your action on each turn until the spell ends, you can focus your senses on one being you can see within 30 feet of you. You instantly learn the target's prevailing emotion.",
         },
         {
           name: "Specialis Revelio",
+          class: ["Divinations"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Instantaneous",
           year: 4,
-          description: "Reveals magical properties",
+          description:
+            "You tap your wand on an object or area, revealing magical influences. If it is a magic item or some other magic-imbued object, you learn its properties and how to use them, whether it requires attunement to use, and how many charges it has, if any.",
         },
         {
           name: "Venenum Revelio",
+          class: ["Divinations"],
           level: "1st Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Concentration, 10 Minutes",
           year: 3,
-          tags: ["R"],
-          description: "Poison detection",
+          description:
+            "For the duration, you can sense the presence and location of poisons, poisonous creatures, and diseases within 30 feet of you. You also identify the kind of poison, poisonous creature, or disease in each case.",
         },
       ],
       "2nd Level": [
         {
           name: "Absconditus Revelio",
+          class: ["Divinations"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "1 Hour",
           year: 4,
-          description: "Reveals hidden objects",
+          description:
+            "For the duration, you see invisible creatures (excluding beings) and objects as if they were visible.",
         },
+
         {
           name: "Facultatem",
+          class: ["Divinations"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "1 Hour",
           year: 4,
           restriction: true,
-          description: "Ability detection",
+          description:
+            "You temporarily gain knowledge by using your divination magic to guide you. Choose one skill in which you lack proficiency. For the spell's duration, you have proficiency in the chosen skill. The spell ends early if you cast it again.",
         },
         {
           name: "Inanimatus Revelio",
+          class: ["Divinations"],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Concentration, 10 Minutes",
           year: 4,
-          description: "Inanimate detection",
+          description:
+            "Describe or name an object that is familiar to you. You sense the direction to the object's location, as long as that object is within 1,000 feet of you. If the object is in motion, you know the direction of its movement.",
         },
         {
           name: "Secundio",
+          class: ["Divinations"],
           level: "2nd Level",
+          castingTime: "1 Minute",
+          range: "60 Feet",
+          duration: "1 Hour",
           year: 4,
-          description: "Secondary sight",
+          description:
+            "You impart latent luck to yourself or one willing creature you can see within range. When the chosen creature makes an attack roll, an ability check, or a saving throw before the spell ends, it can dismiss this spell on itself to roll an additional d20 and choose which of the d20s to use.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd.",
+        },
+        {
+          name: "Trabem",
+          class: ["Divinations"],
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 4,
+          description:
+            "A silvery beam of pale light shines down in a 5-foot radius, 40-foot-high cylinder centered on a point within range. Until the spell ends, dim light fills the cylinder. When a creature enters the spell's area for the first time on a turn or starts its turn there, it takes 2d10 radiant damage on a failed Constitution save, or half as much on a successful one.",
         },
       ],
       "3rd Level": [
         {
           name: "Annotatem",
+          class: ["Divinations"],
           level: "3rd Level",
+          castingTime: "10 Minutes",
+          range: "1 Mile",
+          duration: "Concentration, 10 Minutes",
           year: 5,
-          description: "Note-taking charm",
+          description:
+            "You create an invisible sensor within range in a location familiar to you (a place you have visited or seen before) or in an obvious location that is unfamiliar to you. The sensor remains in place for the duration, and it can't be attacked or otherwise interacted with.",
         },
         {
           name: "Legilimens",
+          class: ["Divinations"],
           level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "Concentration, up to 1 minute",
           year: null,
           restriction: true,
           description: "Mind reading",
         },
         {
           name: "Linguarium Maxima",
+          class: ["Divinations"],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "1 Hour",
           year: 5,
-          description: "Enhanced language comprehension",
+          description:
+            "This spell grants the being you touch the ability to understand any spoken language it hears. Moreover, when the target speaks, any creature that knows at least one language and can hear the target understands what it says.",
         },
         {
           name: "Mumblio Maxima",
+          class: ["Divinations"],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "Unlimited",
+          duration: "1 Round",
           year: 5,
           restriction: true,
-          description: "Enhanced mumbling",
+          description:
+            "You send a short message of twenty-five words or less to a creature with which you are familiar. The creature hears the message in its mind, recognizes you as the sender if it knows you, and can answer in a like manner immediately.",
         },
         {
           name: "Revelio",
+          class: ["Divinations"],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "Instantaneous",
           year: 5,
-          description: "General revealing charm",
+          description:
+            "With a twist of your wand, the true appearance of a creature or object is revealed. A disguised, hidden, invisible or otherwise magically concealed target is made visible, dispelling any spell producing such effects and magically removing physical alterations.",
+        },
+        {
+          name: "Stellaro",
+          class: ["Divinations"],
+          level: "3rd Level",
+          castingTime: "Action",
+          range: "Self (15 Foot Radius)",
+          duration: "Concentration, up to 10 minutes",
+          year: 5,
+          description:
+            "You call forth Constellations to protect you. Tiny Stars flit around you to a distance of 15 feet for the duration. An affected creature's speed is halved in the area, and when the creature enters the area for the first time on a turn or starts its turn there, it must make a Wisdom saving throw. On a failed save, the creature takes 3d8 radiant damage (if you are good or neutral) or 3d8 necrotic damage (if you are evil).",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for each slot level above 3rd.",
         },
       ],
       "4th Level": [
         {
           name: "Appare Vestigium",
+          class: ["Divinations"],
           level: "4th Level",
+          castingTime: "1 Minute",
+          range: "Self (30 Foot Radius Hemisphere)",
+          duration: "Concentration, 10 Minutes",
           year: 7,
-          tags: ["R"],
-          description: "Tracking spell",
+          description:
+            "With a spin and a spray of golden mist, recent magical activity is revealed and illuminated through ghostly images hanging in the air, recreating the magical beings, magical creatures, or magical events that have been in the area within the last 10 minutes.",
+          higherLevels:
+            "When you cast this spell using a spell slot of a higher level, the historical window extends to 1 hour (5th level), 24 hours (6th level), or a week (7th level).",
         },
         {
           name: "Creatura Revelio",
+          class: ["Divinations"],
           level: "4th Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Dedication, 1 Hour",
           year: 6,
-          description: "Creature detection",
+          description:
+            "Describe or name a creature that is familiar to you. You sense the direction to the creature's location, as long as that creature is within 1,000 feet of you. If the creature is moving, you know the direction of its movement.",
         },
         {
           name: "Homenum Revelio",
+          class: ["Divinations"],
           level: "4th Level",
+          castingTime: "1 Action",
+          range: "Self (60 Foot Sphere)",
+          duration: "Instantaneous",
           year: 7,
-          description: "Human detection",
+          description:
+            "You sense the presence and general direction of each human or magical being within range. If any being is moving, you know its direction. A being is alerted to being detected by this spell, as the spell produces an odd feeling of something standing right behind you or over you.",
         },
         {
           name: "Oculus Speculatem",
+          class: ["Divinations"],
           level: "4th Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Dedication, 1 Hour",
           year: 6,
-          description: "Scrying eye",
+          description:
+            "You create an invisible, magical eye within range that hovers in the air for the duration. You mentally receive visual information from the eye, which has normal vision and darkvision out to 30 feet. The eye can look in every direction.",
+        },
+        {
+          name: "Relicuum",
+          class: ["Divinations"],
+          level: "4th Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Instantaneous",
+          year: 6,
+          restriction: true,
+          description:
+            "Your magic can put you in contact with arcanum to help divine the future. You ask a single question concerning a specific goal, event, or activity to occur within 7 days. The GM offers a truthful reply. The reply might be a short phrase, a cryptic rhyme, or an omen.",
         },
       ],
       "5th Level": [
         {
           name: "Annotatem Maxima",
+          class: ["Divinations"],
           level: "5th Level",
+          castingTime: "10 Minutes",
+          range: "Self",
+          duration: "Dedication, 10 Minutes",
           year: 6,
           restriction: true,
-          description: "Superior note-taking",
+          description:
+            "You can see and hear a particular creature you choose that is on the same plane of existence as you. The target must make a Wisdom saving throw, which is modified by how well you know the target and the sort of physical connection you have to it.",
         },
         {
           name: "Augurium",
+          class: ["Divinations"],
           level: "5th Level",
+          castingTime: "1 Minute",
+          range: "Self",
+          duration: "1 Minute",
           year: 6,
-          tags: ["R"],
-          description: "Divinations spell",
+          description:
+            "You wave your wand and connect with your third eye, asking up to three questions that can be answered with a yes or no. You must ask your questions before the spell ends. You receive a correct answer for each question.",
         },
+
         {
           name: "Mumblio Totalum",
+          class: ["Divinations"],
           level: "5th Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "1 Hour",
           year: 6,
-          tags: ["R"],
           restriction: true,
-          description: "Total mumbling",
+          description:
+            "You forge a telepathic link among up to eight willing creatures of your choice within range, psychically linking each creature to all the others for the duration. Creatures with Intelligence scores of 2 or less aren't affected by this spell.",
         },
       ],
       "6th Level": [
         {
           name: "Invenire Viam",
+          class: ["Divinations"],
           level: "6th Level",
+          castingTime: "1 Minute",
+          range: "Self",
+          duration: "Concentration, 1 Day",
           year: 7,
           restriction: true,
-          description: "Path finding",
+          description:
+            "This spell allows you to find the shortest, most direct physical route to a specific fixed location that you are familiar with on the same plane of existence. If you name a destination that moves (such as a mobile fortress), or a destination that isn't specific (such as 'a green dragon's lair'), the spell fails.",
         },
+
         {
           name: "Verum Aspectum",
+          class: ["Divinations"],
           level: "6th Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "1 Hour",
           year: 7,
-          description: "True sight",
+          description:
+            "This spell gives the willing creature you touch the ability to see things as they actually are. For the duration, the creature has truesight and notices secret doors hidden by magic out to a range of 120 feet.",
         },
       ],
+      "8th Level": [],
       "9th Level": [
         {
           name: "Providentum",
+          class: ["Divinations"],
           level: "9th Level",
+          castingTime: "1 Minute",
+          range: "Touch",
+          duration: "8 Hours",
           year: 7,
           restriction: true,
-          description: "Providence spell",
+          description:
+            "You touch a willing creature and bestow a limited ability to see into the immediate future. For the duration, the target can't be surprised and has advantage on attack rolls, ability checks, and saving throws. Additionally, other creatures have disadvantage on attack rolls against the target for the duration.",
         },
       ],
     },
@@ -1569,7 +2154,11 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Incendio Ruptis",
+          class: [],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "1 Round",
           year: 1,
           restriction: true,
           description: "Enhanced fire spell with explosive properties",
@@ -1578,7 +2167,11 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Diffindo Glacia",
+          class: [],
           level: "1st Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
           year: 2,
           restriction: true,
           description:
@@ -1586,7 +2179,11 @@ export const spellsData = {
         },
         {
           name: "Intonuit Fluctus",
+          class: [],
           level: "1st Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Instantaneous",
           year: 3,
           restriction: true,
           description: "Thunder wave spell",
@@ -1595,14 +2192,22 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Fulgur",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Concentration, up to 10 minutes",
           year: 5,
           restriction: true,
           description: "Lightning spell",
         },
         {
           name: "Respersio",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Instantaneous",
           year: 4,
           restriction: true,
           description: "Elemental spray or splash spell",
@@ -1611,7 +2216,11 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Glacius Maxima",
+          class: [],
           level: "4th Level",
+          castingTime: "Action",
+          range: "300 Feet",
+          duration: "Instantaneous",
           year: 6,
           restriction: true,
           description:
@@ -1621,7 +2230,11 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Tempestus",
+          class: [],
           level: "8th Level",
+          castingTime: "1 Minute",
+          range: "Sight",
+          duration: "Concentration, up to 6 rounds",
           year: 7,
           restriction: true,
           description: "Storm conjuration spell",
@@ -1630,7 +2243,11 @@ export const spellsData = {
       "9th Level": [
         {
           name: "Fulgur Maxima",
+          class: [],
           level: "9th Level",
+          castingTime: "Action",
+          range: "Self (120-foot line)",
+          duration: "Instantaneous",
           year: null,
           restriction: true,
           description: "Maximum power lightning spell",
@@ -1647,7 +2264,11 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Magno",
+          class: [],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "Self (5 Foot Radius)",
+          duration: "1 Round",
           year: 1,
           restriction: true,
           description: "Magnification or enhancement spell",
@@ -1656,35 +2277,55 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Clario",
+          class: [],
           level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "Touch",
+          duration: "Dedication, up to 1 hour",
           year: 7,
           restriction: true,
           description: "Clarity or illumination spell for combat",
         },
         {
           name: "Ignis Ictus",
+          class: [],
           level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Dedication, up to 1 minute",
           year: 2,
           restriction: true,
           description: "Fire strike spell",
         },
         {
           name: "Irus Ictus",
+          class: [],
           level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 2,
           restriction: true,
           description: "Anger strike spell",
         },
         {
           name: "Pererro",
+          class: [],
           level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "Touch",
+          duration: "Dedication, up to 1 hour",
           year: 1,
           restriction: true,
           description: "Wandering or erratic movement spell",
         },
         {
           name: "Tonitrus Ictus",
+          class: [],
           level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 3,
           restriction: true,
           description: "Thunder strike spell",
@@ -1693,7 +2334,11 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Notam Ictus",
+          class: [],
           level: "2nd Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 4,
           restriction: true,
           description: "Mark strike spell",
@@ -1702,7 +2347,11 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Inanus Ictus",
+          class: [],
           level: "3rd Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 5,
           restriction: true,
           description: "Void or empty strike spell",
@@ -1711,7 +2360,11 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Titubo Ictus",
+          class: [],
           level: "4th Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 6,
           restriction: true,
           description: "Staggering strike spell",
@@ -1720,7 +2373,11 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Clario Maxima",
+          class: [],
           level: "5th Level",
+          castingTime: "Bonus Action",
+          range: "Touch",
+          duration: "Dedication, up to 1 hour",
           year: 7,
           restriction: true,
           description: "Maximum clarity spell for combat enhancement",
@@ -1737,14 +2394,22 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Anapneo",
+          class: [],
           level: "Cantrip",
+          castingTime: "1 Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
           year: 2,
           restriction: true,
           description: "Clears breathing passages and airways",
         },
         {
           name: "Rennervate",
+          class: [],
           level: "Cantrip",
+          castingTime: "1 Round",
+          range: "10 Feet",
+          duration: "Instantaneous",
           year: 2,
           description: "Revives unconscious persons",
         },
@@ -1752,19 +2417,31 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Episkey",
+          class: [],
           level: "1st Level",
+          castingTime: "bonus action",
+          range: "10 feet",
+          duration: "Instantaneous",
           year: 3,
           description: "Heals minor injuries",
         },
         {
           name: "Ferula",
+          class: [],
           level: "1st Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "10 minutes",
           year: 4,
           description: "Conjures bandages and splints",
         },
         {
           name: "Reparifors",
+          class: [],
           level: "1st Level",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "Instantaneous",
           year: 3,
           description: "Heals magical transformations",
         },
@@ -1772,41 +2449,59 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Adversus Interitus",
-          level: "2nd Level (ritual)",
+          class: [],
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "24 hours",
           year: null,
           restriction: true,
-          tags: ["R"],
           description: "Protection against death",
         },
       ],
       "3rd Level": [
         {
           name: "Aculeo Sanentur",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Instantaneous",
           year: 5,
           restriction: true,
           description: "Heals puncture wounds and stings",
         },
         {
           name: "Animatem",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Instantaneous",
           year: 4,
           restriction: true,
           description: "Restores life force or animation",
         },
         {
           name: "Intus Sunt",
-          level: "3rd Level (ritual)",
+          class: [],
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 minute",
           year: 4,
           restriction: true,
-          tags: ["R"],
           description: "Internal healing spell",
         },
       ],
       "4th Level": [
         {
           name: "Brackium Emendo",
+          class: [],
           level: "4th Level",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "Instantaneous",
           year: 5,
           description: "Mends broken bones",
         },
@@ -1814,7 +2509,11 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Pervivo",
+          class: [],
           level: "5th Level",
+          castingTime: "1 Hour",
+          range: "Touch",
+          duration: "Instantaneous",
           year: 6,
           restriction: true,
           description: "Survival or life extension spell",
@@ -1822,8 +2521,27 @@ export const spellsData = {
       ],
       "6th Level": [
         {
-          name: "Vulnera Sanentur",
+          name: "Protego Totalum",
           level: "6th Level",
+          class: [],
+          castingTime: "Action",
+          range: "Self (10-foot-radius sphere)",
+          duration: "Concentration, up to 1 minute",
+          year: 7,
+          restriction: true,
+
+          description:
+            "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th.",
+        },
+        {
+          name: "Vulnera Sanentur",
+          class: [],
+          level: "6th Level",
+          castingTime: "1 action",
+          range: "Touch",
+          duration: "Concentration, up to 1 minute",
           year: 6,
           restriction: true,
           description: "Heals serious wounds and cuts",
@@ -1842,9 +2560,13 @@ export const spellsData = {
         {
           name: "Insectum",
           level: "Cantrip",
+          class: [],
           year: 6,
           restriction: true,
-          description: "Insect control or summoning spell",
+          description:
+            "You cause a cloud of mites, fleas, and other parasites to appear momentarily on one creature you can see within range. The target must succeed on a Constitution saving throw, or it takes 1d6 poison damage and moves 5 feet in a random direction if it can move and its speed is at least 5 feet. Roll a d4 for the direction: 1, north; 2, south; 3, east; or 4, west. This movement doesn’t provoke opportunity attacks, and if the direction rolled is blocked, the target doesn't move.",
+          higherLevels:
+            "At Higher Levels: The spell’s damage increases by 1d6 when you reach 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
         },
       ],
       "1st Level": [
@@ -1852,12 +2574,21 @@ export const spellsData = {
           name: "Beastia Vinculum",
           level: "1st Level",
           year: null,
+          class: [],
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 10 minutes",
           restriction: true,
-          description: "Creates a bond with beasts",
+          description:
+            "You establish a telepathic link with one beast you touch that is friendly to you or charmed by you. The spell fails if the beast’s Intelligence is 4 or higher. Until the spell ends, the link is active while you and the beast are within line of sight of each other. Through the link, the beast can understand your telepathic messages to it, and it can telepathically communicate simple emotions and concepts back to you. While the link is active, the beast gains advantage on attack rolls against any creature within 5 feet of you that you can see.",
         },
         {
           name: "Beastia Amicatum",
+          class: [],
           level: "1st Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "24 Hours",
           year: null,
           restriction: true,
           description: "Befriends beasts and creatures",
@@ -1866,81 +2597,126 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Beastia Nuntium",
-          level: "2nd Level (ritual)",
+          class: [],
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "24 Hours",
           year: 3,
           restriction: true,
-          tags: ["R"],
           description: "Allows communication with beasts",
         },
         {
           name: "Beastia Sensibus",
-          level: "2nd Level (ritual)",
+          class: [],
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 1 hour",
           year: 4,
-          restriction: true,
-          tags: ["R"],
-          description: "Shares senses with beasts",
+          description:
+            "You touch a willing beast. For the duration of the spell, you can use your action to see through the beast's eyes and hear what it hears, and continue to do so until you use your action to return to your normal senses.",
         },
       ],
       "3rd Level": [
         {
           name: "Obtestor",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 hour",
           year: 4,
           restriction: true,
-          description: "Implores or commands creatures",
+          description:
+            "You summon spirits that take the form of beasts and appear in unoccupied spaces that you can see within range. Choose one of the following options for what appears: One beast of challenge rating 2 or lower, Two beasts of challenge rating 1 or lower, Four beasts of challenge rating 1/2 or lower, Eight beasts of challenge rating 1/4 or lower. Each beast spirit disappears when it drops to 0 hit points or when the spell ends. The summoned creatures are friendly to you and your companions. Roll initiative for the summoned creatures as a group, which has its own turns. They obey any verbal commands that you issue to them (no action required by you). If you don't issue any commands to them, they defend themselves from hostile creatures, but otherwise take no actions. The DM has the creatures' statistics.",
+          higherLevels:
+            "When you cast this spell using certain higher-level spell slots, you choose one of the summoning options above, and more creatures appear: twice as many with a 5th-level slot, three times as many with a 7th-level slot, and four times as many with a 9th-level slot.",
         },
       ],
       "4th Level": [
         {
           name: "Imperio Creatura",
+          class: [],
           level: "4th Level",
-          year: null,
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 6,
           restriction: true,
-          description: "Commands creatures (creature-specific Imperius)",
+          description:
+            "You attempt to beguile a beast that you can see within range. It must succeed on a Wisdom saving throw or be charmed by you for the duration. If you or creatures that are friendly to you are fighting it, it has advantage on the saving throw. While the beast is charmed, you have a telepathic link with it as long as the two of you are on the same plane of existence.",
+          higherLevels:
+            "When you cast this spell with a 5th-level spell slot, the duration is concentration, up to 10 minutes. When you use a 6th-level spell slot, the duration is concentration, up to 1 hour. When you use a spell slot of 7th level or higher, the duration is concentration, up to 8 hours.",
         },
         {
           name: "Engorgio Insectum",
+          class: [],
           level: "4th Level",
+          castingTime: "1 Action",
+          range: "30 Feet",
+          duration: "Concentration, up to 10 minutes",
           year: 6,
           restriction: true,
-          description: "Enlarges insects to massive size",
+          description:
+            "You transform up to ten centipedes, three spiders, five wasps, or one scorpion within range into giant versions of their natural forms for the duration. A centipede becomes a giant centipede, a spider becomes a giant spider, a wasp becomes a giant wasp, and a scorpion becomes a giant scorpion.",
         },
       ],
       "5th Level": [
         {
           name: "Insectum Maxima",
+          class: [],
           level: "5th Level",
+          castingTime: "Action",
+          range: "300 Feet",
+          duration: "Concentration, up to 10 minutes",
           year: 6,
           restriction: true,
-          description: "Maximum insect control or summoning",
+          description:
+            "Swarming, biting locusts fill a 20-foot-radius sphere centered on a point you choose within range. The sphere spreads around corners. The sphere remains for the duration, and its area is lightly obscured. The sphere's area is difficult terrain. When the area appears, each creature in it must make a Constitution saving throw. A creature takes 4d10 piercing damage on a failed save, or half as much damage on a successful one. A creature must also make this saving throw when it enters the spell's area for the first time on a turn or ends its turn there.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 1d10 for each slot level above 5th.",
         },
       ],
       "6th Level": [
         {
           name: "Natura Incantatem",
-          level: "6th Level (ritual)",
+          class: [],
+          level: "6th Level",
+          castingTime: "1 Minute",
+          range: "Self",
+          duration: "Instantaneous",
           year: 7,
-          restriction: true,
-          tags: ["R"],
-          description: "Enchants nature itself",
+          description:
+            "You briefly become one with nature and gain knowledge of the surrounding territory. In the outdoors, the spell gives you knowledge of the land within 3 miles of you. In caves and other natural underground settings, the radius is limited to 300 feet.",
         },
       ],
       "7th Level": [
         {
           name: "Draconiverto",
+          class: [],
           level: "7th Level",
+          castingTime: "Bonus Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 7,
           restriction: true,
-          description: "Dragon transformation or control",
+          description:
+            "With a roar, you transform yourself, taking on draconic features. You gain the following benefits until the spell ends: Blindsight: You have blindsight with a range of 30 feet. Within that range, you can effectively see anything that isn't behind total cover, even if you're blinded or in darkness. Moreover, you can see an invisible creature, unless the creature successfully hides from you. Breath Weapon: When you cast this spell, and as a bonus action on subsequent turns for the duration, you can exhale shimmering energy in a 60-foot cone. Each creature in that area must make a Dexterity saving throw, taking 6d8 force damage on a failed save, or half as much damage on a successful one. Wings: Incorporeal wings sprout from your back, giving you a flying speed of 60 feet.",
         },
       ],
       "8th Level": [
         {
           name: "Animato Maxima",
+          class: [],
           level: "8th Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Concentration, up to 24 hours",
           year: 7,
           restriction: true,
-          description: "Maximum animation of creatures",
+          description:
+            "Your magic turns others into beasts. Choose any number of willing creatures that you can see within range. You transfigure each target into the form of a large or smaller beast with a challenge rating of 4 or lower. On subsequent turns, you can use your actions to transform affected creatures into new forms. The transformation lasts for the duration for each target, or until the target drops to 0 hit points or dies. You can choose a different form for each target. A target's game statistics are replaced by the statistics of the chosen beast, though the target retains its alignment and Intelligence, Wisdom, and Charisma scores. The target assumes the hit points of its new form, and when it reverts to its normal form, it returns to the number of hit point it had before it transformed. If it reverts as a result of dropping to 0 hit points, any excess damage carries over to its normal form. As long as the excess damage doesn't reduce the creature's normal form to 0 hit points, it isn't knocked unconscious. The creature is limited in the actions it can perform by the nature of its new form, and it can't speak or cast spells. The target's gear melds into the new form. The target can't activate, wield, or otherwise benefit from any of its equipment.",
         },
       ],
     },
@@ -1953,14 +2729,8 @@ export const spellsData = {
     levels: {
       Cantrips: [
         {
-          name: "Ignis Lunalis",
-          level: "Cantrip",
-          year: 3,
-          restriction: true,
-          description: "Moonfire or eerie flame spell",
-        },
-        {
           name: "Fraudemo",
+          class: [],
           level: "Cantrip",
           year: 5,
           restriction: true,
@@ -1970,32 +2740,55 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Formidulosus",
+          class: [],
           level: "1st Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
           year: 3,
           restriction: true,
-          description: "Induces fear and dread",
+          tags: ["Dark"],
+          description:
+            "You whisper a discordant melody that only one creature of your choice within range can hear, wracking it with terrible pain. The target must make a Wisdom saving throw. On a failed save, it takes 3d6 psychic damage and must immediately use its reaction, if available, to move as far as its speed allows away from you. The creature doesn't move into obviously dangerous ground, such as a fire or a pit. On a successful save, the target takes half as much damage and doesn't have to move away. A deafened creature automatically succeeds on the save.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st.",
         },
       ],
       "2nd Level": [
         {
           name: "Exspiravit",
+          class: [],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, Up to 1 minute",
           year: 4,
-          restriction: true,
-          description: "Expiration or breath-stealing spell",
+          description:
+            "You craft an illusion that takes root in the mind of a creature that you can see within range. The target must make an Intelligence saving throw. On a failed save, you create a phantasmal object, creature, or other visible phenomenon of your choice that is no larger than a 10-foot cube.",
         },
       ],
       "3rd Level": [
         {
           name: "Fraudemo Maxima",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Concentration, up to 10 Minutes",
           year: 5,
           restriction: true,
-          description: "Enhanced deception spell",
+          description:
+            "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 20-foot cube. The image appears at a spot that you can see within range and lasts for the duration. It seems completely real, including sounds, smells, and temperature appropriate to the thing depicted.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th level or higher, the spell lasts until dispelled, without requiring your Concentration.",
         },
         {
           name: "Timor",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "Self 30 Foot Radius",
+          duration: "Concentration, Up to 1 minute",
           year: 4,
           description: "Fear spell",
         },
@@ -2003,29 +2796,46 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Relicuum",
-          level: "4th Level (ritual)",
+          class: [],
+          level: "4th Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Instantaneous",
           year: 6,
           restriction: true,
           tags: ["R"],
-          description: "Relic or remnant spell",
+          description:
+            "Your magic can put you in contact with arcanum to help divine the future. You ask a single question concerning a specific goal, event, or activity to occur within 7 days. The GM offers a truthful reply. The reply might be a short phrase, a cryptic rhyme, or an omen. The spell doesn't take into account any possible circumstances that might change the outcome, such as the casting of additional spells or the loss or gain of a companion. If you cast the spell two or more times before finishing your next long rest, there is a cumulative 25 percent chance for each casting after the first that you get a random reading. The GM makes this roll in secret.",
         },
       ],
+      "5th Level": [],
       "6th Level": [
         {
           name: "Oculus Malus",
+          class: [],
           level: "6th Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Concentration, up to 1 minute",
           year: 7,
           restriction: true,
-          description: "Evil eye curse",
+          description:
+            "For the spell's duration, your eyes become an inky void imbued with dread power. One creature of your choice within 60 feet of you that you can see must succeed on a Wisdom saving throw or be affected by one of the following effects of your choice for the duration. On each of your turns until the spell ends, you can use your action to target another creature but can't target a creature again if it has succeeded on a saving throw against this casting of Oculus Malus. Asleep. The target falls unconscious. It wakes up if it takes any damage or if another creature uses its action to shake the sleeper awake. Panicked. The target is frightened of you. On each of its turns, the frightened creature must take the Dash action and move away from you by the safest and shortest available route, unless there is nowhere to move. If the target moves to a place at least 60 feet away from you where it can no longer see you, this effect ends. Sickened. The target has disadvantage on attack rolls and ability checks. At the end of each of its turns, it can make another Wisdom saving throw. If it succeeds, the effect ends.",
         },
       ],
       "9th Level": [
         {
           name: "Menus Eruptus",
+          class: [],
           level: "9th Level",
-          year: null,
-          restriction: true,
-          description: "Mind eruption or mental explosion spell",
+          castingTime: "Action",
+          range: "90 Feet",
+          duration: "Instantaneous",
+          year: 7,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "You unleash the power of your mind to blast the intellect of up to ten creatures of your choice that you can see within range. Creatures that have an Intelligence score of 2 or lower are unaffected. Each target must make an Intelligence saving throw. On a failed save, a target takes 14d6 psychic damage and is stunned. On a successful save, a target takes half as much damage and isn't stunned. If a target is killed by this damage, its head explodes, assuming it has one. A stunned target can make an Intelligence saving throw at the end of each of its turns. On a successful save, the stunning effect ends.",
         },
       ],
     },
@@ -2039,85 +2849,158 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Ferio",
+          class: [],
           level: "Cantrip",
-          year: null,
-          restriction: true,
-          description: "Strike or wound spell",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Instantaneous",
+          year: 2,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "A beam of crackling black energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.",
+          higherLevels:
+            "The spell creates more than one beam when you reach higher levels: two beams at 5th level, three beams at 11th level, and four beams at 17th level. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
         },
       ],
       "1st Level": [
         {
           name: "Tenebris",
+          class: [],
           level: "1st Level",
-          year: null,
-          restriction: true,
-          description: "Darkness spell",
+          castingTime: "Action",
+          range: "Self (10-foot radius)",
+          duration: "Instantaneous",
+          year: 3,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "You invoke the power of the Unseen Realm. Tendrils of dark energy erupt from you and batter all creatures within 10 feet of you. Each creature in that area must make a Strength saving throw. On a failed save, a target takes 2d6 necrotic damage and can't take reactions until its next turn. On a successful save, the creature takes half damage, but suffers no other effect.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st.",
         },
         {
           name: "Ferio Maxima",
+          class: [],
           level: "1st Level",
-          year: null,
-          restriction: true,
-          description: "Enhanced wounding spell",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 3,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "A beam of crackling, black energy lances out toward a creature within range, forming a sustained arc of lightning between you and the target. Make a ranged spell attack against that creature. On a hit, the target takes 1d12 lightning damage, and on each of your turns for the duration, you can use your bonus action to deal 1d12 lightning damage to the target automatically. The spell ends if you use your action to do anything else. The spell also ends if the target is ever outside the spell's range or if it has total cover from you.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the initial damage increases by 1d12 for each slot level above 1st.",
         },
       ],
       "2nd Level": [
         {
           name: "Sagittario Virius",
+          class: [],
           level: "2nd Level",
-          year: null,
-          restriction: true,
-          description: "Poisoned arrow spell",
+          castingTime: "Action",
+          range: "90 Feet",
+          duration: "Instantaneous",
+          year: 4,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "A poisonous green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage (both initial and later) increases by 1d4 for each slot level above 2nd.",
         },
       ],
       "3rd Level": [
         {
           name: "Gehennus Conjurus",
+          class: [],
           level: "3rd Level",
-          year: null,
-          restriction: true,
-          description: "Conjures hellish flames",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 hour",
+          year: 5,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "You utter foul words, summoning an Inferius from the land of the dead. You choose the unoccupied spaces you can see within range where they appear. A summoned Inferi disappears when it drops to 0 hit points or when the spell ends. The Inferi are hostile to all creatures, including you. Roll initiative for the summoned Inferi which has its own turn(s). The Inferi pursue and attack the nearest non-Inferi to the best of their ability. As part of casting the spell, you can form a magical circle on the ground that is large enough to encompass your space. While the spell lasts, the summoned Inferi can't cross the circle or harm it, and they can't target anyone within it.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th or 7th level, you summon an Inferi Swarm. If you cast it using a spell slot of 8th or 9th level, you summon an Inferi Horde.",
         },
       ],
       "5th Level": [
         {
           name: "Combustio",
+          class: [],
           level: "5th Level",
-          year: null,
-          restriction: true,
-          description: "Spontaneous combustion spell",
+          castingTime: "Action",
+          range: "90 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 6,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "Flames wreathe one creature you can see within range. The target must make a Dexterity saving throw. It takes 7d6 fire damage on a failed save, or half as much damage on a successful one. On a failed save, the target also burns for the spell's duration. The burning target sheds bright light in a 30-foot radius and dim light for an additional 30 feet. At the end of each of its turns, the target repeats the saving throw. It takes 3d6 fire damage on a failed save, and the spell ends on a successful one. These magical flames can't be extinguished through non-magical means. If damage from this spell reduces a target to 0 hit points, the target is turned to ash.",
         },
       ],
       "6th Level": [
         {
           name: "Inmoritatem",
+          class: [],
           level: "6th Level",
-          year: null,
-          restriction: true,
-          description: "Immortality or undeath spell",
+          castingTime:
+            "1 reaction, which you take when a being you can see within 60 feet of you dies",
+          range: "60 Feet",
+          duration: "Until Dispelled",
+          year: 7,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "This spell snatches the soul of a being from the clutches of Death as it dies and traps it inside the tiny magical cage. A stolen soul remains inside the cage until the spell ends or if the cage is destroyed by a Finite Incantatem, which ends the spell. While you have a soul inside the cage, you can exploit it in any of the ways described below. You can use a trapped soul up to six times. Once you exploit a soul for the sixth time, it is released, and the spell ends. While a soul is trapped, the dead being it came from can't be revived. Steal Life. You can use a bonus action to drain vigor from the soul and regain 2d8 hit points. Query Soul. You ask the soul a question (no action required) and receive a brief telepathic answer, which you can understand regardless of the language used. The soul knows only what it knew in life, but it must answer you truthfully and to the best of its ability. The answer is no more than a sentence or two and might be cryptic. Borrow Experience. You can use a bonus action to bolster yourself with the soul's life experience, making your next attack roll, ability check, or saving throw with advantage. If you don't use this benefit before the start of your next turn, it is lost. Eyes of the Dead. You can use an action to name a place the humanoid saw in life, which creates an invisible sensor somewhere in that place if it is on the plane of existence you're currently on. The sensor remains for as long as you concentrate, up to 10 minutes (as if you were concentrating on a spell). You receive visual and auditory information from the sensor as if you were in its space using your senses. A creature that can see the sensor (such as one using see invisibility or truesight) sees a translucent image of the tormented humanoid whose soul you caged.",
         },
         {
           name: "Undanem",
+          class: [],
           level: "6th Level",
-          year: null,
-          restriction: true,
-          description: "Wave or flood spell",
+          castingTime: "Action",
+          range: "150 Feet",
+          duration: "Instantaneous",
+          year: 7,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "A sphere of malicious energy ripples out in a 60-foot-radius sphere from a point within range. Each creature in that area must make a Constitution saving throw. A target takes 8d6 necrotic damage on a failed save, or half as much damage on a successful one.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 7th level or higher, the damage increases by 2d6 for each slot level above 6th.",
         },
       ],
       "8th Level": [
         {
           name: "Tenebris Maxima",
+          class: [],
           level: "8th Level",
-          year: null,
-          restriction: true,
-          description: "Maximum darkness spell",
+          castingTime: "Action",
+          range: "150 Feet",
+          duration: "Concentration, up to 10 minutes",
+          year: 7,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "Magical darkness spreads from a point you choose within range to fill a 60-foot-radius sphere until the spell ends. The darkness spreads around corners. A creature with darkvision can't see through this darkness. Non-magical light, as well as light created by spells of 8th level or lower, can't illuminate the area. Shrieks, gibbering, and mad laughter from the land of the dead can be heard within the sphere. Whenever a creature starts its turn in the sphere, it must make a Wisdom saving throw, taking 8d8 psychic damage on a failed save, or half as much damage on a successful one.",
         },
         {
           name: "Insanio",
+          class: [],
           level: "8th Level",
-          year: null,
-          restriction: true,
-          description: "Madness spell",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 minute",
+          year: 7,
+          restriction: false,
+          tags: ["Dark"],
+          description:
+            "You shatter the barriers between realities and timelines, thrusting a creature into turmoil and madness. The target must succeed on a Wisdom saving throw, or it can't take reactions until the spell ends. The affected target must also roll a d10 at the start of each of its turns; the number rolled determines what happens to the target as shown on the Insanio Effects table. At the end of each of its turns, the affected target can repeat the Wisdom saving throw, ending the spell on itself on a success. Insanio Effects: d10 1-2 Vision of the land of the dead. The target takes 6d12 psychic damage, and it is stunned until the end of the turn. 3-5 Rending Rift. The target must make a Dexterity saving throw, taking 8d12 force damage on a failed save, or half as much damage on a successful save. 6-8 Wormhole. The target is teleported, along with everything it is wearing and carrying, up to 30 feet to an unoccupied space of your choice that you can see. The target also takes 10d12 force damage and is knocked prone. 9-10 Chill of the Touch of Death. The target takes 10d12 cold damage, and it is blinded until the end of the turn.",
         },
       ],
     },
@@ -2131,69 +3014,125 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Utilitatem",
+          class: [],
           level: "Cantrip",
-          year: null,
-          restriction: true,
-          description: "Utility or usefulness spell",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "1 hour",
+          year: 1,
+          restriction: false,
+          tags: ["Arithmantic"],
+          description:
+            "This spell is a minor magical trick that novice spellcasters use for practice. You create one of the following magical effects within range: You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor. You instantaneously light or snuff out a candle, a torch, or a small campfire. You instantaneously clean or soil an object no larger than 1 cubic foot. You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour. You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour. You create a nonmagical trinket or an illusory image that can fit in your hand and that lasts until the end of your next turn. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time, and you can dismiss such an effect as an action.",
         },
       ],
       "1st Level": [
         {
           name: "Facias Infirmitatem",
+          class: [],
           level: "1st Level",
-          year: null,
-          restriction: true,
-          description: "Causes weakness or infirmity",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Concentration, up to 1 round",
+          year: 2,
+          restriction: false,
+          tags: ["Runic"],
+          description:
+            "A magic rune appears on the target's weak spots. Any attacks made against the target are made with advantage until the start of your next turn. Bonus Action casting rules do not apply to this spell.",
         },
       ],
       "2nd Level": [
         {
           name: "Exagitatus",
+          class: [],
           level: "2nd Level",
-          year: null,
-          restriction: true,
-          description: "Agitation or disturbance spell",
+          castingTime: "Bonus Action",
+          range: "90 Feet",
+          duration: "Concentration, 1 hour",
+          year: 4,
+          restriction: false,
+          tags: ["Runic"],
+          description:
+            "You choose a creature you can see within range and mystically mark it as your target. Until the spell ends, you deal an extra 1d6 Runic damage to the target whenever you: hit it with a spell or it fails your spell's saving throw. Additionally, you have advantage on any Wisdom (Perception) or Wisdom (Survival) checks you make to find it. If the target drops to 0 hit points before this spell ends, you can use a bonus action on a subsequent turn of yours to mark a new creature.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level, you can maintain your concentration on the spell for up to 8 hours. When you use a spell slot of 6th level or higher, you can maintain your concentration on the spell for up to 24 hours.",
         },
         {
           name: "Impulso",
+          class: [],
           level: "2nd Level",
-          year: null,
-          restriction: true,
-          description: "Impulse or driving force spell",
+          castingTime: "Reaction",
+          range: "Self",
+          duration: "1 Minute",
+          year: 4,
+          restriction: false,
+          tags: ["Arithmantic"],
+          description:
+            "The spell captures some of the incoming energy, lessening its effect on you and storing it for your next attack. When you are damaged by a spell, roll a number of D4 equal to that spell's level and add half of your proficiency bonus to the roll. You may reduce your damage taken by the triggering attack by that amount. Also, the next time you cast a spell that deals damage, in the next minute, one target of the spell takes extra damage equal to the damage reduced from the triggering attack and the spell ends.",
         },
       ],
       "4th Level": [
         {
           name: "Maledicto",
+          class: [],
           level: "4th Level",
-          year: null,
-          restriction: true,
-          description: "Curse or malediction spell",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "Concentration, 1 minute",
+          year: 6,
+          restriction: false,
+          tags: ["Runic", "Dark"],
+          description:
+            "You choose a creature you can see within range, that creature must succeed on a Wisdom saving throw or become Cursed for the Duration of the spell. When you cast this spell, choose one curse from the following options. • Choose one ability score. While Cursed, the target has disadvantage on Ability Checks and Saving Throws made with that ability score. • While Cursed, the target has disadvantage on Attack rolls against you. • While Cursed, the target must make a Wisdom saving throw at the start of each of its turns. If it fails, it wastes its Action that turn doing nothing. • While the target is Cursed, your spells deal an extra 1d8 damage to the target.",
+          higherLevels:
+            "If you cast this spell using a spell slot of 5th Level or higher, the Duration is Concentration, up to 10 minutes. If you use a spell slot of 6th Level or higher, the Duration is 8 hours. If you use a spell slot of 7th Level or higher, the Duration is 24 hours. If you use a 8th Level spell slot, the spell lasts until it is dispelled. Using a spell slot of 7th Level or higher grants a Duration that doesn't require Concentration.",
         },
         {
           name: "Sagittario Maxima",
+          class: [],
           level: "4th Level",
-          year: null,
-          restriction: true,
-          description: "Maximum arrow spell",
+          castingTime: "Action",
+          range: "Self (60 Foot cone)",
+          duration: "Instantaneous",
+          year: 6,
+          restriction: false,
+          tags: ["Arithmantic", "Dark"],
+          description:
+            "A deadly rain of conjured arrows streaks down towards the earth. Each creature in a 60-foot cone must succeed on a Dexterity saving throw. Each creature takes damage equal to 4d8 + your spellcasting ability modifier on a failed save, or half as much damage on a successful one.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 5th Level or higher, the damage increases by 1d8 for each slot level above 5th.",
         },
       ],
       "6th Level": [
         {
           name: "Sanitatem",
+          class: [],
           level: "6th Level",
-          year: null,
-          restriction: true,
-          description: "Health or sanity spell",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Dedication, 1 minute",
+          year: 7,
+          restriction: false,
+          tags: ["Arithmantic"],
+          description:
+            "Healing equations appear on the chest of up to six Creatures of your choice that you can see within range. For a duration of 1 minute, each creature regains Hit Points equal to 1d4 + your Spellcasting ability modifier at the start of your turns as long as you maintain Dedication. This spell has no Effect on undead or Constructs.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 7th Level or higher, the Healing increases by 1d4 for each slot level above 7th.",
         },
       ],
       "7th Level": [
         {
           name: "Portentia Spiculum",
+          class: [],
           level: "7th Level",
-          year: null,
-          restriction: true,
-          description: "Portent spike or omen dart spell",
+          castingTime: "Action",
+          range: "Self",
+          duration: "Concentration, 10 minutes",
+          year: 7,
+          restriction: false,
+          tags: ["Runic"],
+          description:
+            "You endow yourself with a temporary surge of magic, making yourself lighter on your feet and more powerful in your spellcasting. You gain the following Benefits: You gain 50 temporary hit points. If any of these remain when the spell ends, they are lost. You have +2 to spell attack rolls. When you hit a target with a spell attack, that target takes an extra 1d12 Psychic damage. You have proficiency in Strength and Constitution saving throws. You can cast leveled spells twice, instead of once, when you cast a spell as an action on your turn. You ignore this benefit if you already have a feature, like Extra Attack, that gives you extra attacks. Immediately after the spell ends, you must succeed on a DC 15 Constitution saving throw or suffer one level of exhaustion.",
         },
       ],
     },
@@ -2207,114 +3146,111 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Lux",
+          class: [],
           level: "Cantrip",
-          year: null,
-          restriction: true,
-          description: "Light spell with celestial properties",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "Concentration, up to 1 minute",
+          year: 2,
+          restriction: false,
+          tags: [],
+          description:
+            "You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice. It can roll the die before or after making the ability check. The spell then ends.",
         },
         {
           name: "Ignis Lunalis",
+          class: [],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
           year: 3,
-          restriction: true,
-          description: "Moonfire spell",
+          restriction: false,
+          tags: [],
+          description:
+            "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage. The target gains no benefit from cover for this saving throw.",
+          higherLevels:
+            "The spell's damage increases by 1d8 when you reach 5th level (2d8), 11th level (3d8), and 17th level (4d8).",
         },
       ],
       "1st Level": [
         {
           name: "Lux Maxima",
+          class: [],
           level: "1st Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "1 Round",
           year: 3,
-          restriction: true,
-          description: "Maximum celestial light",
+          restriction: false,
+          tags: [],
+          description:
+            "A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target. On a hit, the target takes 2d6 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage, thanks to the mystical dim light glittering on the target until then.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st.",
         },
       ],
       "2nd Level": [
         {
           name: "Trabem",
+          class: [],
           level: "2nd Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Concentration, up to 1 minute",
           year: 4,
-          restriction: true,
-          description: "Beam or ray spell",
+          restriction: false,
+          tags: [],
+          description:
+            "A silvery beam of pale light shines down in a 5-foot radius, 40-foot-high cylinder centered on a point within range. Until the spell ends, dim light fills the cylinder. When a creature enters the spell's area for the first time on a turn or starts its turn there, it is engulfed in radiant light that causes searing pain, and it must make a Constitution saving throw. It takes 2d10 radiant damage on a failed save, or half as much damage on a successful one. On each of your turns after you cast this spell, you can use an action to move the beam up to 60 feet in any direction.",
         },
       ],
       "3rd Level": [
         {
           name: "Stellaro",
+          class: [],
           level: "3rd Level",
+          castingTime: "Action",
+          range: "Self (15 Foot Radius)",
+          duration: "Concentration, up to 10 minutes",
           year: 5,
-          restriction: true,
-          description: "Star-based spell",
+          restriction: false,
+          tags: [],
+          description:
+            "You call forth Constellations to protect you. Tiny Stars flit around you to a distance of 15 feet for the duration. When you cast this spell, you can designate any number of creatures you can see to be unaffected by it. An affected creature's speed is halved in the area, and when the creature enters the area for the first time on a turn or starts its turn there, it must make a Wisdom saving throw. On a failed save, the creature takes 3d8 radiant damage (if you are good or neutral) or 3d8 necrotic damage (if you are evil). On a successful save, the creature takes half as much damage.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for each slot level above 3rd.",
         },
       ],
       "5th Level": [
         {
           name: "Lunativia",
+          class: [],
           level: "5th Level",
+          castingTime: "Action",
+          range: "Self (60-foot line)",
+          duration: "Concentration and Dedication, up to 1 minute",
           year: 6,
-          restriction: true,
-          description: "Lunar path or moon magic",
+          description:
+            "A beam of brilliant light flashes out from your hand in a 60-foot-line. Each creature in the line must make a Constitution saving throw. On a failed save, a creature takes 6d8 radiant damage and is blinded until your next turn. On a successful save, it takes half as much damage and isn't blinded by this spell.",
         },
       ],
       "8th Level": [
         {
           name: "Solativia",
+          class: [],
           level: "8th Level",
+          castingTime: "Action",
+          range: "150 Feet",
+          duration: "Instantaneous",
           year: 7,
-          restriction: true,
-          description: "Solar path or sun magic",
+          description:
+            "Brilliant sunlight flashes in a 60-foot radius centered on a point you choose within range. Each creature in that light must make a Constitution saving throw. On a failed save, a creature takes 20d6 radiant damage and is blinded for 1 minute. On a successful save, it takes half as much damage and isn't blinded by this spell.",
         },
       ],
     },
   },
-  "Prof. Charms": {
-    hasRestriction: true,
-    icon: "GraduationCap",
-    color: "#51DDF6",
-    description: "Professional and advanced charm work",
-    levels: {
-      "1st Level": [
-        {
-          name: "Diffindo",
-          level: "1st Level (ritual)",
-          year: 2,
-          restriction: true,
-          tags: ["R"],
-          description: "Professional version of the cutting spell",
-        },
-      ],
-      "2nd Level": [
-        {
-          name: "Immobulus",
-          level: "2nd Level",
-          year: 2,
-          restriction: true,
-          description: "Professional version of the freezing spell",
-        },
-      ],
-      "3rd Level": [
-        {
-          name: "Deprimo",
-          level: "3rd Level (ritual)",
-          year: 5,
-          restriction: true,
-          tags: ["R"],
-          description: "Depression or lowering spell",
-        },
-      ],
-      "4th Level": [
-        {
-          name: "Confundo",
-          level: "4th Level (ritual)",
-          year: 6,
-          restriction: true,
-          tags: ["R"],
-          description: "Professional version of the confusion charm",
-        },
-      ],
-      "5th Level": [],
-    },
-  },
+
   Trickery: {
     hasRestriction: true,
     icon: "Star",
@@ -2324,17 +3260,21 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Manus",
+          class: [],
           level: "Cantrip",
+          castingTime: "Action",
+          range: "30 feet",
+          duration: "1 Minute",
           year: 1,
-          restriction: false,
           description:
-            "Create a spectral floating hand that can manipulate objects, open doors, and carry up to 10 pounds within 30 feet for 1 minute",
+            "A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again. You can use your action to control the hand. The hand can't attack, activate magical items, or carry more than 10 pounds.",
         },
       ],
       "1st Level": [],
       "2nd Level": [
         {
           name: "Tranquillitatem",
+          class: [],
           level: "2nd Level",
           year: 3,
           restriction: false,
@@ -2345,6 +3285,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Fictus",
+          class: [],
           level: "3rd Level",
           year: 4,
           restriction: false,
@@ -2353,6 +3294,7 @@ export const spellsData = {
         },
         {
           name: "Roboratum",
+          class: [],
           level: "3rd Level",
           year: 5,
           restriction: false,
@@ -2366,6 +3308,7 @@ export const spellsData = {
         {
           name: "Incarcerebra",
           level: "6th Level",
+          class: [],
           year: 7,
           restriction: false,
           description:
@@ -2376,14 +3319,102 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Dubium/Fiducium",
+          class: [],
           level: "8th Level",
+          castingTime: "1 Hour",
+          range: "60 Feet",
+          duration: "10 days",
           year: 7,
-          restriction: false,
           description:
-            "Enchant an object/area with an aura that repels (Dubium) or attracts (Fiducium) specified intelligent creatures. Lasts 10 days. Targets must save or be frightened away or compelled to approach within 60 feet",
+            "This spell attracts or repels creatures of your choice. You target something within range, either a Huge or smaller object or creature or an area that is no larger than a 200-foot cube. Then specify an intelligent creature. You invest the target with an aura that either attracts or repels the specified intelligent creatures for the duration. Choose antipathy or sympathy as the aura's effect.",
         },
       ],
       "9th Level": [],
+    },
+  },
+  "Prof. Charms": {
+    hasRestriction: true,
+    icon: "GraduationCap",
+    color: "#51DDF6",
+    description: "Professional and advanced charm work",
+    levels: {
+      "1st Level": [
+        {
+          name: "Diffindo (Ritual",
+          class: [],
+          level: "1st Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Instantaneous",
+          year: 2,
+          restriction: true,
+          tags: ["R"],
+          description:
+            "Your cuts have become so precise and strong that you've learned how to make this spell into a deadly weapon. When you cast Diffindo, you can affect any creature or object regardless of size, the spell's duration is increased to one minute, and if the target of the spell is a creature and fails it's dexterity save it is considered bleeding and must succeed on a Constitution saving throw against your spell save DC. On a failed save the creature takes 2d4 slashing damage per round. The creature may repeat this saving throw at the end of its turns to end the effect. This effect ends automatically if the bleeding creature is the target of a healing spell of first level or higher.",
+          higherLevels:
+            "When you cast a diffindo using a spell slot of 2nd level or higher the slashing damage and bleeding damage is increased by 1d4.",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Immobulus",
+          class: [],
+          level: "2nd Level",
+          castingTime: "1 action",
+          range: "Self (15 foot cube)",
+          duration: "1 round",
+          year: 2,
+          restriction: true,
+          tags: [],
+          description:
+            "You have learned how to improve the power of your Immobulus spell without catching your allies in the crossfire. When you cast Immobulus, the range is extended to a 15 foot cube within a 60 foot range, the duration can be increased to 2 rounds with the use of concentration, and any creature whose hit points is equal to or less than 40 and is wholly within the area is automatically affected by this spell for the duration and does not count against the number of hit points you can affect.",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Deprimo (Ritual)",
+          class: [],
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "120 feet",
+          duration: "Instantaneous",
+          year: 5,
+          restriction: true,
+          tags: ["R"],
+          description:
+            "You have learned how to put enough pressure on a creature to momentarily stun your enemies. When a target of your Deprimo spell fails its strength saving throw, it is knocked prone and is stunned for one round. On a successful save, the target is knocked prone. The duration of a creature's stun can be increased to 1 minute with the use of dedication. Any creature stunned this way can make a constitution saving throw at the beginning of its turn to shake off the effect.",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Confundo (Ritual)",
+          class: [],
+          level: "4th Level",
+          castingTime: "1 action",
+          range: "90 feet",
+          duration: "Concentration, up to 1 minute",
+          year: 6,
+          restriction: true,
+          tags: ["R"],
+          description:
+            "Your Confundus Charm has become deadly and precise. When a creature fails its Wisdom save against your Confundus Charm you always choose the direction the affected creature moves in. If a creature who is immune to the charmed condition is targeted by this spell it must succeed on a Wisdom saving throw or be Incapacitated for one round.",
+        },
+      ],
+      "5th Level": [],
+      "9th Level": [
+        {
+          name: "Fidelius Mysteria Celare",
+          class: [],
+          level: "9th Level",
+          castingTime: "1 hour",
+          range: "Self (150-foot-radius hemisphere)",
+          duration: "Until dispelled",
+          year: 7,
+          restriction: true,
+          description:
+            "When cast upon a single dwelling that fits within range, it becomes a secret, infallibly invisible and inaccessible by anyone else. This effect reaches to the dwelling's property lines, or if no property lines are defined, the edge of the hemisphere centered on the caster at the time of casting. You choose yourself or one person within the area of the spell to be the Secret-Keeper. If the Secret-Keeper tells someone the secret (the location of the dwelling) verbally or in writing, that person can see the secret like the Secret-Keeper and step onto the property.",
+        },
+      ],
     },
   },
 };
@@ -2468,6 +3499,7 @@ export const TRADITIONAL_SCHOOL_MAPPINGS = {
   Transfiguration: SUBJECT_TO_MODIFIER_MAP.transfiguration,
   Healing: SUBJECT_TO_MODIFIER_MAP.healing,
   Divinations: SUBJECT_TO_MODIFIER_MAP.divinations,
+  "Defense Against the Dark Arts": SUBJECT_TO_MODIFIER_MAP.jhc,
 };
 
 export const CATEGORY_DEFAULT_MAPPINGS = {

@@ -268,8 +268,7 @@ const isUserForbidden = async (discordUserId) => {
     .from("user_roles")
     .select("role")
     .eq("discord_user_id", discordUserId)
-    .eq("role", "forbidden")
-    .single();
+    .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
     console.error("Error checking forbidden status:", error);

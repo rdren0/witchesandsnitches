@@ -46,8 +46,8 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     Object.entries(availableSpells).forEach(([, subject]) => {
       Object.entries(subject.levels).forEach(([, spells]) => {
         spells.forEach((spell) => {
-          if (spell.class) {
-            classes.add(spell.class);
+          if (Array.isArray(spell.class)) {
+            spell.class.forEach((cls) => classes.add(cls));
           }
         });
       });
@@ -160,7 +160,9 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
               spell.name.toLowerCase().includes(lowerSearchTerm) ||
               spell.description?.toLowerCase().includes(lowerSearchTerm) ||
               spell.level?.toLowerCase().includes(lowerSearchTerm) ||
-              spell.class?.toLowerCase().includes(lowerSearchTerm) ||
+              spell.class?.some((cls) =>
+                cls.toLowerCase().includes(lowerSearchTerm)
+              ) ||
               level.toLowerCase().includes(lowerSearchTerm) ||
               subjectName.toLowerCase().includes(lowerSearchTerm) ||
               spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
@@ -190,7 +192,6 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     } else {
       filteredData = { ...availableSpells };
     }
-
     if (classFilter !== "all") {
       const classFilteredData = {};
 
@@ -200,7 +201,7 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
 
         Object.entries(subjectData.levels).forEach(([level, spells]) => {
           const filteredSpells = spells.filter((spell) => {
-            return spell.class === classFilter;
+            return spell.class?.includes(classFilter) || false;
           });
 
           if (filteredSpells.length > 0) {
