@@ -53,9 +53,7 @@ const InspirationTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} - Inspiration ${
-            newState ? "Gained" : "Used"
-          }`,
+          title: `Inspiration ${newState ? "Gained" : "Used"}`,
           color: newState ? 0x10b981 : 0xf59e0b,
           fields: [
             {

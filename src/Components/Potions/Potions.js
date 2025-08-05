@@ -491,11 +491,10 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
     try {
       const characterModifier = getCharacterPotionModifier;
-
       const brewingResult = await rollBrewPotion({
         isRolling,
         setIsRolling,
-        character: selectedCharacter || character,
+        character: currentCharacter,
         selectedPotion,
         proficiencies,
         ingredientQuality: preparedQuality,
@@ -507,7 +506,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         supabase,
         user,
         rawIngredientQuality: ingredientQuality,
-
         hasHealingSubclass,
         healingSkillChoice,
         skillDisplayInfo: getSkillDisplayInfo,
@@ -520,7 +518,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           preparedIngredientQuality: preparedQuality,
           characterModifier,
           timestamp: new Date().toLocaleString(),
-
           hasHealingSubclass,
           healingSkillChoice,
         };

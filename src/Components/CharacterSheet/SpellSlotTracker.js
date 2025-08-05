@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, BookOpen, PlusIcon, MinusIcon } from "lucide-react";
 import SorceryPointTracker from "./SorceryPointTracker";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { getDiscordWebhook } from "../../../App/const";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getDiscordWebhook } from "../../App/const";
 
 const SpellSlotTracker = ({
   character,
@@ -238,7 +238,7 @@ const SpellSlotTracker = ({
           0
         );
         const embed = {
-          title: `${character.name} - Spell Slots Updated`,
+          title: `Spell Slots Updated`,
           color: 0xf59e0b,
           description: `Spell slot maximums updated (${totalSlots} total slots)`,
           timestamp: new Date().toISOString(),
@@ -303,7 +303,7 @@ const SpellSlotTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} - ${action}`,
+          title: `${action}`,
           color: change > 0 ? 0x10b981 : 0x3b82f6,
           fields: [
             {

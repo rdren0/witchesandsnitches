@@ -19,19 +19,17 @@ export const sendDiscordRollWebhook = async ({
       return false;
     }
 
-    // Build the base embed structure
     const embed = {
       title: title,
       description: description,
       color: embedColor,
       fields: [...fields],
       footer: {
-        text: `Witches and Snitches - ${rollType}`,
+        text: `${character.name} - Witches and Snitches`,
       },
       timestamp: new Date().toISOString(),
     };
 
-    // Add common roll details field if rollResult is provided
     if (rollResult) {
       const {
         d20Roll,
@@ -42,17 +40,13 @@ export const sendDiscordRollWebhook = async ({
         customRoll,
       } = rollResult;
 
-      let rollDescription =
-        customRoll !== null
-          ? `**Assigned Die:** ${d20Roll}`
-          : `**Roll:** ${d20Roll}`;
       const modifierText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
-      rollDescription += ` ${modifierText} = **${total}**`;
+      const rollDescription = `\`${d20Roll}${modifierText}=${total}\``;
 
       if (isCriticalSuccess) {
-        rollDescription += "\n✨ **Critical Success!**";
+        embed.description += "\n\n✨ **Critical Success!**";
       } else if (isCriticalFailure) {
-        rollDescription += "\n💀 **Critical Failure!**";
+        embed.description += "\n\n💀 **Critical Failure!**";
       }
 
       embed.fields.unshift({
@@ -60,23 +54,25 @@ export const sendDiscordRollWebhook = async ({
         value: rollDescription,
         inline: false,
       });
+
+      embed.fields.unshift({
+        name: "",
+        value: `**${total}**`,
+        inline: false,
+      });
     }
 
-    // Build the message payload
     const message = {
       embeds: [embed],
     };
 
-    // Add character avatar if requested and available
     if (useCharacterAvatar && character?.imageUrl) {
       message.username = character.name;
       message.avatar_url = character.imageUrl;
     }
 
-    // Add any additional data to the message
     Object.assign(message, additionalData);
 
-    // Send the webhook
     const response = await fetch(discordWebhookUrl, {
       method: "POST",
       headers: {
@@ -99,10 +95,10 @@ export const sendDiscordRollWebhook = async ({
 export const getRollResultColor = (result, defaultColor = 0x6b7280) => {
   const { isCriticalSuccess, isCriticalFailure, isSuccess } = result;
 
-  if (isCriticalSuccess) return 0xffd700; // Gold
-  if (isCriticalFailure) return 0xff0000; // Red
+  if (isCriticalSuccess) return 0xffd700;
+  if (isCriticalFailure) return 0xff0000;
   if (isSuccess !== undefined) {
-    return isSuccess ? 0x00ff00 : 0xff0000; // Green/Red for success/failure
+    return isSuccess ? 0x00ff00 : 0xff0000;
   }
 
   return defaultColor;
@@ -143,7 +139,6 @@ export const buildModifierBreakdownField = (modifierInfo) => {
     }${wandModifier}`;
   }
 
-  // Add any additional modifiers
   additionalModifiers.forEach(({ name, value, description }) => {
     breakdown += `\n${name}: ${value >= 0 ? "+" : ""}${value}`;
     if (description) breakdown += ` (${description})`;

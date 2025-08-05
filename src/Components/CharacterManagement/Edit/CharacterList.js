@@ -142,6 +142,7 @@ const CharacterList = ({
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
         level: char.level,
+        imageUrl: char.image_url || "",
         level1ChoiceType: char.level1_choice_type || "",
         magicModifiers: char.magic_modifiers || {
           divinations: 0,

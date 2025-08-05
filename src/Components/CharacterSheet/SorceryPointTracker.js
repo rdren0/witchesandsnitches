@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Sparkles, Zap, PlusIcon, MinusIcon } from "lucide-react";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { getDiscordWebhook } from "../../../App/const";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getDiscordWebhook } from "../../App/const";
 
 const SorceryPointTracker = ({
   character,
@@ -68,7 +68,7 @@ const SorceryPointTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} - ${action}`,
+          title: `${action}`,
           color: change > 0 ? 0x10b981 : 0xf59e0b,
           fields: [
             {

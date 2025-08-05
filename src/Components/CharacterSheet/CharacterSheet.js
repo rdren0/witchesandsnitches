@@ -22,6 +22,11 @@ import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import { useCallback } from "react";
 import { getDiscordWebhook } from "../../App/const";
+import {
+  sendDiscordRollWebhook,
+  getRollResultColor,
+  ROLL_COLORS,
+} from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 
@@ -145,6 +150,14 @@ const CharacterSheet = ({
       const isCriticalSuccess = rollValue === 20;
       const isCriticalFailure = rollValue === 1;
 
+      const rollResult = {
+        d20Roll: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+      };
+
       showRollResult({
         title: "Spellcasting Ability Check",
         rollValue: rollValue,
@@ -156,54 +169,29 @@ const CharacterSheet = ({
         description: `d20 + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} - Spellcasting Ability Check`,
-          color: isCriticalSuccess
-            ? 0x00ff00
-            : isCriticalFailure
-            ? 0xff0000
-            : 0x3b82f6,
-          fields: [
-            {
-              name: "Roll",
-              value: `d20: ${rollValue}`,
-              inline: true,
-            },
-            {
-              name: "Modifier",
-              value: `${spellcastingAbility}: ${formatModifier(
-                spellcastingModifier
-              )}`,
-              inline: true,
-            },
-            {
-              name: "Total",
-              value: `${total}`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: "Witches and Snitches - Spellcasting Ability Check",
-          },
-        };
+      const additionalFields = [
+        {
+          name: "Ability",
+          value: `${spellcastingAbility}: ${formatModifier(
+            spellcastingModifier
+          )}`,
+          inline: true,
+        },
+      ];
 
-        if (isCriticalSuccess) {
-          embed.description = "🌟 **Critical Success!**";
-        } else if (isCriticalFailure) {
-          embed.description = "💥 **Critical Failure!**";
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Spellcasting Ability Check",
+        title: "Spellcasting Ability Check",
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+        embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
+        rollResult,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+
+      if (!success) {
+        console.error("Failed to send spellcasting ability check to Discord");
       }
     } catch (error) {
       console.error("Error rolling spellcasting ability check:", error);
@@ -231,6 +219,14 @@ const CharacterSheet = ({
       const isCriticalSuccess = rollValue === 20;
       const isCriticalFailure = rollValue === 1;
 
+      const rollResult = {
+        d20Roll: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+      };
+
       showRollResult({
         title: "Spell Attack Roll",
         rollValue: rollValue,
@@ -241,56 +237,29 @@ const CharacterSheet = ({
         type: "spellattack",
         description: `d20 + ${character.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} - Spell Attack Roll`,
-          color: isCriticalSuccess
-            ? 0x00ff00
-            : isCriticalFailure
-            ? 0xff0000
-            : 0xff6c3a,
-          fields: [
-            {
-              name: "Roll",
-              value: `d20: ${rollValue}`,
-              inline: true,
-            },
-            {
-              name: "Modifiers",
-              value: `Prof: +${
-                character.proficiencyBonus
-              }, ${spellcastingAbility}: ${formatModifier(
-                spellcastingModifier
-              )}`,
-              inline: true,
-            },
-            {
-              name: "Total",
-              value: `${total}`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: "Witches and Snitches - Spell Attack Roll",
-          },
-        };
 
-        if (isCriticalSuccess) {
-          embed.description = "🌟 **Critical Hit!**";
-        } else if (isCriticalFailure) {
-          embed.description = "💥 **Critical Miss!**";
-        }
+      const additionalFields = [
+        {
+          name: "Modifiers",
+          value: `Prof: +${
+            character.proficiencyBonus
+          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}`,
+          inline: true,
+        },
+      ];
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Spell Attack Roll",
+        title: `Spell Attack Roll`,
+        embedColor: getRollResultColor(rollResult, 0xff6c3a),
+        rollResult,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+
+      if (!success) {
+        console.error("Failed to send spell attack to Discord");
       }
     } catch (error) {
       console.error("Error rolling spell attack:", error);

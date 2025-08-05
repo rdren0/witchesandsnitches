@@ -902,6 +902,7 @@ function AppContent() {
         hitPoints: char.hit_points,
         house: char.house,
         houseChoices: char.house_choices || {},
+        imageUrl: char.image || "",
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
         level: char.level,

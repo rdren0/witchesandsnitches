@@ -1123,7 +1123,7 @@ export const rollAbility = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Ability Check",
-      title: `Rolled: ${ability.name} Check`,
+      title: `${ability.name} Check`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
@@ -1770,7 +1770,7 @@ export const rollSkill = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Skill Check",
-      title: `Rolled: ${skill.displayName}`,
+      title: `${skill.displayName}`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
@@ -2633,7 +2633,7 @@ export const rollSavingThrow = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Saving Throw",
-      title: `Rolled: ${ability.name} Saving Throw`,
+      title: `${ability.name} Saving Throw`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure

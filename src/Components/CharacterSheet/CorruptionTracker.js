@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Flame } from "lucide-react";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { getCharacterSheetStyles } from "../../../styles/masterStyles";
-import { useRollFunctions } from "../../utils/diceRoller";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getCharacterSheetStyles } from "../../styles/masterStyles";
+import { useRollFunctions } from "../utils/diceRoller";
 
 export const CorruptionTracker = ({
   character,

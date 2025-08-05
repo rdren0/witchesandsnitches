@@ -5,9 +5,9 @@ import SpellBook from "../SpellBook/SpellBook";
 import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
-import SpellSlotTracker from "./Sections/SpellSlotTracker";
-import SorceryPointTracker from "./Sections/SorceryPointTracker";
-import CorruptionTracker from "./Sections/CorruptionTracker";
+import SpellSlotTracker from "./SpellSlotTracker";
+import SorceryPointTracker from "./SorceryPointTracker";
+import CorruptionTracker from "./CorruptionTracker";
 
 const CharacterTabbedPanel = ({
   supabase,
