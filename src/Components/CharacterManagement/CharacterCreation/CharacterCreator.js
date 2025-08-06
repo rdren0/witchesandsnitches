@@ -739,7 +739,6 @@ const CharacterCreator = ({
       };
 
       setError("Saving character to database...");
-      console.log("💾 Saving character data...");
 
       const savePromise = characterService.saveCharacter(
         characterToSave,
@@ -756,8 +755,6 @@ const CharacterCreator = ({
         savePromise,
         saveTimeoutPromise,
       ]);
-
-      console.log("✅ Character saved successfully");
 
       const transformedCharacter = {
         abilityScores: savedCharacter.ability_scores,
@@ -831,7 +828,6 @@ const CharacterCreator = ({
 
       setError(errorMessage);
     } finally {
-      console.log("Resetting save state...");
       setIsSaving(false);
     }
   };

@@ -244,7 +244,6 @@ const CharacterEditor = ({
   };
 
   const handleImageFileChange = (file) => {
-    console.log("Image file changed in editor:", file?.name || "removed");
     setPendingImageFile(file);
     setHasUnsavedChanges(true);
   };
@@ -623,11 +622,6 @@ const CharacterEditor = ({
         image_url: character.imageUrl || character.image_url || null,
       };
 
-      console.log(
-        "💾 Saving character with image_url:",
-        characterToSave.image_url
-      );
-
       setError("Saving character to database...");
 
       const effectiveUserId = character.discordUserId || discordUserId;
@@ -649,11 +643,6 @@ const CharacterEditor = ({
         savePromise,
         saveTimeoutPromise,
       ]);
-
-      console.log(
-        "✅ Character saved successfully, updated character:",
-        updatedCharacter
-      );
 
       const transformedCharacter = {
         id: updatedCharacter.id,
@@ -689,11 +678,6 @@ const CharacterEditor = ({
         imageUrl: updatedCharacter.image_url || "",
       };
 
-      console.log(
-        "🔄 Transformed character with imageUrl:",
-        transformedCharacter.imageUrl
-      );
-
       setCharacter((prev) => ({
         ...prev,
         imageUrl: transformedCharacter.imageUrl,
@@ -702,8 +686,6 @@ const CharacterEditor = ({
 
       setPendingImageFile(null);
       setHasUnsavedChanges(false);
-
-      console.log("📞 Calling onSave with transformed character");
 
       if (onSave) {
         onSave(transformedCharacter);
@@ -729,7 +711,6 @@ const CharacterEditor = ({
 
       setError(errorMessage);
     } finally {
-      console.log("🏁 Resetting save state...");
       setIsSaving(false);
     }
   };
