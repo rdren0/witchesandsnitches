@@ -70,7 +70,6 @@ const CharacterFeatsDisplay = ({
       const houseData = houseFeatures[character.house];
       const houseName = character.house;
 
-      // Main House Feature
       sections.house.features.push({
         name: `${houseName} House`,
         type: "House Membership",
@@ -90,10 +89,8 @@ const CharacterFeatsDisplay = ({
         ].filter(Boolean),
       });
 
-      // Process house features
       if (houseData.features) {
         if (houseData.features.length === 1) {
-          // Single feature
           const feature = houseData.features[0];
           sections.house.features.push({
             name: feature.name,
@@ -109,7 +106,6 @@ const CharacterFeatsDisplay = ({
                 : [],
           });
         } else if (houseData.features.length > 1) {
-          // Multiple features - group them
           sections.house.features.push({
             name: "House Abilities",
             type: "House Features",
@@ -129,7 +125,6 @@ const CharacterFeatsDisplay = ({
     if (character.subclass) {
       const subclassData = subclassesData?.[character.subclass];
 
-      // Main Subclass Feature
       sections.subclass.features.push({
         name: character.subclass,
         type: "Specialization",
@@ -138,12 +133,9 @@ const CharacterFeatsDisplay = ({
         description:
           subclassData?.description ||
           `Your specialized focus in ${character.subclass}.`,
-        details: [], // No details box for main specialization
+        details: [],
       });
 
-      // Don't show the redundant "Subclass Abilities" section since individual choices are displayed
-
-      // Process character's subclass choices
       if (character.subclassChoices) {
         Object.entries(character.subclassChoices).forEach(([level, choice]) => {
           const choiceName =
@@ -154,10 +146,8 @@ const CharacterFeatsDisplay = ({
                 choice?.name ||
                 String(choice);
 
-          // Find the corresponding choice description from any feature at any level
           let selectedOption = null;
           if (subclassData?.higherLevelFeatures) {
-            // Search through all features and their choices to find the matching option
             for (const feature of subclassData.higherLevelFeatures) {
               if (feature.choices && feature.choices.length > 0) {
                 const foundOption = feature.choices.find(
@@ -235,7 +225,6 @@ const CharacterFeatsDisplay = ({
       }
     }
 
-    // Enhanced Heritage Features Processing
     if (
       character.innateHeritage &&
       heritageDescriptions?.[character.innateHeritage]
@@ -243,20 +232,17 @@ const CharacterFeatsDisplay = ({
       const heritageData = heritageDescriptions[character.innateHeritage];
       const heritageName = character.innateHeritage;
 
-      // Main Heritage Feature - just the core description
       sections.innateHeritage.features.push({
         name: `${heritageName} Heritage`,
         type: "Magical Heritage",
         source: "Innate Heritage",
         level: null,
-        description: heritageData.description,
-        details: [], // No generic details - let the description speak for itself
+        description: "",
+        details: [heritageData.description],
       });
 
-      // Track which benefits we've already processed to avoid duplicates
       const processedBenefitTexts = new Set();
 
-      // Process benefits from the heritage - group them into a single feature if multiple
       if (heritageData.benefits && Array.isArray(heritageData.benefits)) {
         const validBenefits = heritageData.benefits.filter(
           (benefit) =>
@@ -266,12 +252,10 @@ const CharacterFeatsDisplay = ({
         );
 
         if (validBenefits.length === 1) {
-          // Single benefit - extract meaningful name
           const benefit = validBenefits[0];
           let featureName = "Heritage Ability";
           let description = benefit;
 
-          // Try to extract a meaningful name
           if (benefit.includes(":")) {
             const colonIndex = benefit.indexOf(":");
             const potentialName = benefit.substring(0, colonIndex).trim();
@@ -300,11 +284,8 @@ const CharacterFeatsDisplay = ({
             details: [],
           });
         } else if (validBenefits.length > 1) {
-          // Multiple benefits - group them into a single feature using the heritage's actual description
-          // Use the first benefit as the primary description if it's descriptive, otherwise use heritage description
           let primaryDescription = heritageData.description;
 
-          // If the first benefit is more of a description than a mechanical effect, use it
           const firstBenefit = validBenefits[0];
           if (
             firstBenefit &&
@@ -326,11 +307,9 @@ const CharacterFeatsDisplay = ({
         }
       }
 
-      // Process ability score increases from modifiers - only if not already shown in benefits
       if (heritageData.modifiers?.abilityIncreases?.length > 0) {
         heritageData.modifiers.abilityIncreases.forEach((increase) => {
           if (increase.type === "fixed") {
-            // Find the specific ability score increase text from benefits
             let specificBenefit = null;
             if (heritageData.benefits) {
               specificBenefit = heritageData.benefits.find(
@@ -340,7 +319,6 @@ const CharacterFeatsDisplay = ({
               );
             }
 
-            // Only show if there's a specific benefit text, otherwise it might be redundant
             if (specificBenefit) {
               const abilityName =
                 increase.ability.charAt(0).toUpperCase() +
@@ -359,11 +337,9 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Process ability score decreases if any (like Troll Blood)
       if (heritageData.modifiers?.abilityDecreases?.length > 0) {
         heritageData.modifiers.abilityDecreases.forEach((decrease) => {
           if (decrease.type === "fixed") {
-            // Find the specific ability score decrease text from benefits
             let specificBenefit = null;
             if (heritageData.benefits) {
               specificBenefit = heritageData.benefits.find(
@@ -393,9 +369,7 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Process base skill proficiencies from heritage - only if not covered in benefits
       if (heritageData.modifiers?.skillProficiencies?.length > 0) {
-        // Check if skill proficiencies are already covered in the benefits
         const skillsCoveredInBenefits = heritageData.benefits?.some(
           (benefit) =>
             benefit.toLowerCase().includes("proficiency") &&
@@ -405,7 +379,6 @@ const CharacterFeatsDisplay = ({
         );
 
         if (!skillsCoveredInBenefits) {
-          // Find specific skill proficiency text from benefits
           let specificBenefit = null;
           if (heritageData.benefits) {
             specificBenefit = heritageData.benefits.find(
@@ -430,11 +403,9 @@ const CharacterFeatsDisplay = ({
         }
       }
 
-      // Process heritage features with choices
       if (heritageData.features && heritageData.features.length > 0) {
         heritageData.features.forEach((feature) => {
           if (feature.isChoice && feature.options) {
-            // Show the choice feature itself
             sections.innateHeritage.features.push({
               name: feature.name,
               type: "Heritage Choice Feature",
@@ -446,7 +417,6 @@ const CharacterFeatsDisplay = ({
               ),
             });
           } else {
-            // Show non-choice features
             sections.innateHeritage.features.push({
               name: feature.name,
               type: "Heritage Feature",
@@ -459,7 +429,6 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Process character's selected heritage choices
       if (
         character.heritageChoices &&
         character.heritageChoices[heritageName]
@@ -497,12 +466,10 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Process character's heritage skills if separate from choices and not already covered
       if (
         character.innateHeritageSkills &&
         character.innateHeritageSkills.length > 0
       ) {
-        // Check if these skills are already covered by heritage skill proficiencies or benefits
         const skillsAlreadyCovered =
           heritageData.modifiers?.skillProficiencies?.length > 0 ||
           heritageData.benefits?.some((benefit) =>
@@ -512,7 +479,6 @@ const CharacterFeatsDisplay = ({
           );
 
         if (!skillsAlreadyCovered) {
-          // Try to find specific description for heritage skills from benefits
           let specificBenefit = null;
           if (heritageData.benefits) {
             specificBenefit = heritageData.benefits.find((benefit) =>
@@ -537,19 +503,16 @@ const CharacterFeatsDisplay = ({
         }
       }
 
-      // Process other heritage modifiers (like special abilities) - only if not already covered
       if (heritageData.modifiers?.other) {
         const otherAbilities = heritageData.modifiers.other;
         Object.entries(otherAbilities).forEach(([abilityKey, value]) => {
           if (value === true || (typeof value === "number" && value > 0)) {
-            // Find the specific description from the benefits array for this ability
             let specificBenefit = null;
             if (heritageData.benefits) {
               specificBenefit = heritageData.benefits.find((benefit) => {
                 const lowerBenefit = benefit.toLowerCase();
                 const lowerKey = abilityKey.toLowerCase();
 
-                // Map ability keys to their likely text in benefits
                 if (
                   abilityKey === "darkvision" &&
                   lowerBenefit.includes("darkvision")
@@ -606,13 +569,11 @@ const CharacterFeatsDisplay = ({
               });
             }
 
-            // Only show if we have specific benefit text and it's not already processed
             if (
               specificBenefit &&
               !specificBenefit.includes("Ability Score Increase") &&
               !processedBenefitTexts.has(specificBenefit)
             ) {
-              // Extract name and description from the specific benefit
               let featureName, description;
               if (specificBenefit.includes(":")) {
                 const colonIndex = specificBenefit.indexOf(":");
@@ -644,11 +605,9 @@ const CharacterFeatsDisplay = ({
 
     const processedFeats = new Set();
 
-    // Helper function to add feat with deduplication
     const addFeat = (featName, featType, source, level, featData) => {
-      // Use just the feat name for deduplication, ignoring source
       if (processedFeats.has(featName)) {
-        return; // Skip if we've already processed this feat
+        return;
       }
 
       processedFeats.add(featName);
@@ -674,7 +633,6 @@ const CharacterFeatsDisplay = ({
       });
     };
 
-    // Process ASI choice feats first (they have more specific info)
     if (character.asiChoices) {
       Object.entries(character.asiChoices).forEach(([level, choice]) => {
         if (choice.type === "feat" && choice.selectedFeat) {
@@ -693,7 +651,6 @@ const CharacterFeatsDisplay = ({
       });
     }
 
-    // Process allFeats array
     if (character.allFeats && character.allFeats.length > 0) {
       character.allFeats.forEach((featString) => {
         const levelMatch = featString.match(/^(.+?)\s*\(Level\s+(\d+)\)$/);
@@ -723,7 +680,6 @@ const CharacterFeatsDisplay = ({
       });
     }
 
-    // Process standard feats last (lower priority)
     if (character.standardFeats && character.standardFeats.length > 0) {
       character.standardFeats.forEach((featName) => {
         const featData = standardFeats.find((f) => f.name === featName);
@@ -734,7 +690,6 @@ const CharacterFeatsDisplay = ({
 
     Object.keys(sections).forEach((sectionKey) => {
       sections[sectionKey].features.sort((a, b) => {
-        // Sort by level first (nulls last)
         const levelA = a.level === null ? Infinity : a.level;
         const levelB = b.level === null ? Infinity : b.level;
 
@@ -742,7 +697,6 @@ const CharacterFeatsDisplay = ({
           return levelA - levelB;
         }
 
-        // If levels are the same, prioritize by type based on section
         const getTypePriority = (type, section) => {
           if (section === "subclass") {
             if (type === "Specialization") return 0;
@@ -765,7 +719,6 @@ const CharacterFeatsDisplay = ({
           return priorityA - priorityB;
         }
 
-        // If levels and types are the same, sort by name
         return a.name.localeCompare(b.name);
       });
     });
@@ -1110,9 +1063,11 @@ const CharacterFeatsDisplay = ({
                           {feature.type}
                         </div>
                       </div>
-                      <div style={styles.featureDescription}>
-                        {feature.description}
-                      </div>
+                      {feature.description && (
+                        <div style={styles.featureDescription}>
+                          {feature.description}
+                        </div>
+                      )}
 
                       {feature.details && feature.details.length > 0 && (
                         <div style={styles.featureDetails}>
