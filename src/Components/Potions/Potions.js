@@ -266,7 +266,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
             <div
               style={{
                 fontSize: "0.875rem",
-                color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                color: theme.text,
                 marginBottom: "12px",
               }}
             >
@@ -706,10 +706,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                       ingredientQuality.slice(1)}{" "}
                     (raw)
                   </span>
-                  <ArrowRight
-                    size={16}
-                    style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}
-                  />
+                  <ArrowRight size={16} style={{ color: theme.primary }} />
                   <span style={styles.preparedQuality}>
                     {preparedQuality.charAt(0).toUpperCase() +
                       preparedQuality.slice(1)}{" "}
@@ -790,18 +787,20 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           {selectedPotion && (
             <div style={styles.selectedPotionCard}>
               <h2 style={styles.selectedPotionTitle}>
-                <FlaskRound /> Brewing: {selectedPotion.name}
+                <FlaskRound /> Brewing:{" "}
+                <div style={{ color: theme.success, display: "inline" }}>
+                  {selectedPotion.name}
+                </div>
               </h2>
               <p style={styles.selectedPotionDescription}>
                 {selectedPotion.description}
               </p>
 
-              <div style={styles.rollPreview}>
-                <div style={styles.rollPreviewContent}></div>
+              <div style={styles.rollPreviewContent}>
                 <div
                   style={{
-                    fontSize: "0.875rem",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    fontSize: "0.9rem",
+                    color: theme.text,
                     marginTop: "8px",
                   }}
                 >
@@ -812,8 +811,9 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                         <span
                           style={{
                             marginLeft: "8px",
+
                             fontSize: "0.75rem",
-                            color: theme === "dark" ? "#8b5cf6" : "#6366f1",
+                            color: theme.primary,
                             fontWeight: "600",
                           }}
                         >
@@ -830,22 +830,21 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                     • {displayInfo.skillName} Skill:{" "}
                     {displayInfo.skillInfo.description}
                   </div>
-                  <div>
-                    •{" "}
-                    <strong>
+                  <div style={{ paddingTop: "8px" }}>
+                    <strong style={{ color: theme.success }}>
                       Total Skill Modifier: {characterModifier >= 0 ? "+" : ""}
                       {characterModifier}
                     </strong>
                   </div>
-                  <div
+                  {/* <div
                     style={{
                       fontSize: "0.75rem",
-                      color: theme === "dark" ? "#6b7280" : "#9ca3af",
+                      color: theme.success,
                       marginTop: "4px",
                     }}
                   >
                     Current choice: {healingSkillChoice}
-                  </div>
+                  </div> */}
                 </div>
                 {selectedPotion.rarity && qualityDCs[selectedPotion.rarity] && (
                   <div

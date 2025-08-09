@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { Wand, Save, AlertCircle, UserCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { characterService } from "../../../services/characterService";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
@@ -74,6 +75,7 @@ const CharacterCreator = ({
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
+  const navigate = useNavigate();
 
   const [character, setCharacter] = useState(getInitialCharacterState());
   const [rolledStats, setRolledStats] = useState([]);
@@ -99,6 +101,22 @@ const CharacterCreator = ({
 
   const isFeat = character.level1ChoiceType === "feat";
   const isInnateHeritage = character.level1ChoiceType === "innate";
+
+  const handleImageFileChange = (file) => {
+    setImageFile(file);
+  };
+
+  const handleUploadComplete = (uploadedUrl) => {
+    console.log("🔥 handleUploadComplete called with URL:", uploadedUrl);
+    setFinalImageUrl(uploadedUrl);
+    setCharacter((prev) => ({
+      ...prev,
+      imageUrl: uploadedUrl,
+    }));
+    setImageFile(null);
+    setPreviewUrl(null);
+    console.log("🔥 finalImageUrl state should now be:", uploadedUrl);
+  };
 
   const setASILevelFilter = (level, filter) => {
     setASILevelFilters((prev) => ({
@@ -676,12 +694,11 @@ const CharacterCreator = ({
 
     if (!effectiveUserId) {
       setError("No valid user ID found for character creation");
-      setIsSaving(false);
       return;
     }
 
     setIsSaving(true);
-    setError(null);
+    setError("Preparing character data...");
 
     try {
       if (targetUserId) {
@@ -694,8 +711,6 @@ const CharacterCreator = ({
         );
       }
 
-      setError("Preparing character data...");
-
       const allFeats = collectAllFeatsFromChoices({ character });
 
       const finalAbilityScores = calculateFinalAbilityScores(
@@ -707,6 +722,13 @@ const CharacterCreator = ({
 
       const { skill_proficiencies, skill_expertise } =
         calculateFinalSkillsAndExpertise(character);
+
+      console.log("=== IMAGE DEBUG INFO ===");
+      console.log("finalImageUrl:", finalImageUrl);
+      console.log("character.imageUrl:", character.imageUrl);
+      console.log("imageFile:", imageFile);
+      console.log("previewUrl:", previewUrl);
+      console.log("========================");
 
       const characterToSave = {
         ability_scores: finalAbilityScores,
@@ -740,21 +762,16 @@ const CharacterCreator = ({
 
       setError("Saving character to database...");
 
-      const savePromise = characterService.saveCharacter(
+      console.log("🚀 About to call characterService.saveCharacter with:");
+      console.log("characterToSave:", characterToSave);
+      console.log("characterToSave.image_url:", characterToSave.image_url);
+
+      const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         effectiveUserId
       );
-      const saveTimeoutPromise = new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Character save timed out after 30 seconds")),
-          15000
-        )
-      );
 
-      const savedCharacter = await Promise.race([
-        savePromise,
-        saveTimeoutPromise,
-      ]);
+      console.log("Character saved with image_url:", savedCharacter.image_url);
 
       const transformedCharacter = {
         abilityScores: savedCharacter.ability_scores,
@@ -794,6 +811,8 @@ const CharacterCreator = ({
         school_year: savedCharacter.schoolYear || 1,
       };
 
+      setError(null);
+
       if (onCharacterSaved) {
         onCharacterSaved(transformedCharacter);
       }
@@ -809,17 +828,13 @@ const CharacterCreator = ({
       alert(
         `Character "${character.name}" created successfully${imageMessage}${targetUserInfo}!`
       );
+
+      navigate("/character/sheet");
     } catch (err) {
       console.error("💥 Character creation failed:", err);
 
       let errorMessage = "Failed to save character: ";
-      if (err.message.includes("timed out")) {
-        errorMessage +=
-          "The operation timed out. Please try again or check your internet connection.";
-      } else if (
-        err.message.includes("network") ||
-        err.message.includes("fetch")
-      ) {
+      if (err.message.includes("network") || err.message.includes("fetch")) {
         errorMessage +=
           "Network error. Please check your internet connection and try again.";
       } else {
@@ -903,6 +918,8 @@ const CharacterCreator = ({
         setImageFile={setImageFile}
         previewUrl={previewUrl}
         setPreviewUrl={setPreviewUrl}
+        onImageFileChange={handleImageFileChange}
+        onUploadComplete={handleUploadComplete}
       />
 
       <StepIndicator step={2} totalSteps={5} label="House Selection" />

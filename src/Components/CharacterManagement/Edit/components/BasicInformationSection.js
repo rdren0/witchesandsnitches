@@ -35,7 +35,9 @@ const BasicInformationSection = ({
     if (previewUrl) {
       handleInputChange("imageUrl", previewUrl);
     } else if (!file) {
-      handleInputChange("imageUrl", "");
+      if (!character.imageUrl && !character.image_url) {
+        handleInputChange("imageUrl", "");
+      }
     }
   };
 
@@ -66,7 +68,7 @@ const BasicInformationSection = ({
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Portrait</label>
         <OptimizedImageUpload
-          currentImageUrl={character.imageUrl || ""}
+          currentImageUrl={character.imageUrl || character.image_url || ""}
           onImageChange={handleImageChange}
           onUploadComplete={handleUploadComplete}
           supabase={supabase}

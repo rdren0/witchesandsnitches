@@ -202,7 +202,7 @@ const InspirationTracker = ({
         >
           <div
             style={{
-              backgroundColor: theme === "dark" ? "#374151" : "white",
+              backgroundColor: theme.background,
               padding: "24px",
               borderRadius: "12px",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -251,7 +251,7 @@ const InspirationTracker = ({
             <div
               style={{
                 marginBottom: "20px",
-                color: theme === "dark" ? "#f9fafb" : "#374151",
+                color: theme.text,
                 lineHeight: "1.5",
               }}
             >
@@ -260,11 +260,11 @@ const InspirationTracker = ({
               </p>
               <div
                 style={{
-                  backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
+                  backgroundColor: theme.surface,
                   padding: "12px",
                   borderRadius: "8px",
                   fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#6b7280",
+                  color: theme.text,
                 }}
               >
                 <strong>Inspiration allows you to:</strong>
@@ -286,11 +286,9 @@ const InspirationTracker = ({
               <button
                 style={{
                   padding: "10px 20px",
-                  border: `2px solid ${
-                    theme === "dark" ? "#4b5563" : "#d1d5db"
-                  }`,
-                  backgroundColor: theme === "dark" ? "#374151" : "white",
-                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  border: theme.border,
+                  backgroundColor: theme.surface,
+                  color: theme.text,
                   borderRadius: "6px",
                   cursor: "pointer",
                   fontSize: "14px",

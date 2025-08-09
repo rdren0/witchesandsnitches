@@ -1,5 +1,7 @@
 /* Add these styles to your App.css */
-
+* {
+  font-family: "Newsreader", serif;
+}
 /* .app-header {
   display: flex;
   justify-content: space-between;

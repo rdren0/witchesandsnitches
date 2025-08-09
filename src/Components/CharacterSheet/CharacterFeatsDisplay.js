@@ -8,9 +8,15 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Shield,
+  Dna,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
+
+import { houseFeatures } from "../../SharedData/houseData";
+import { subclassesData } from "../../SharedData/subclassesData";
+import { backgroundsData } from "../../SharedData/backgroundsData";
+import { heritageDescriptions } from "../../SharedData/heritageData";
+import { standardFeats } from "../../SharedData/standardFeatData";
 
 const CharacterFeatsDisplay = ({
   character,
@@ -44,6 +50,12 @@ const CharacterFeatsDisplay = ({
         color: "#059669",
         features: [],
       },
+      innateHeritage: {
+        title: "Innate Heritage Features",
+        icon: Dna,
+        color: "#935b35ff",
+        features: [],
+      },
       feats: {
         title: "Feats",
         icon: Award,
@@ -54,7 +66,8 @@ const CharacterFeatsDisplay = ({
 
     if (!character) return sections;
 
-    if (character.house) {
+    if (character.house && houseFeatures?.[character.house]) {
+      const houseData = houseFeatures[character.house];
       const houseName = character.house;
 
       sections.house.features.push({
@@ -65,67 +78,78 @@ const CharacterFeatsDisplay = ({
         description: `Member of ${houseName} house. Each house provides unique magical traits, ability score bonuses, and special abilities that reflect the house's values and traditions.`,
         details: [
           `House: ${houseName}`,
-          "Provides fixed ability score bonuses",
+          `Fixed Ability Bonuses: ${
+            houseData.fixed
+              ?.map(
+                (ability) =>
+                  `+1 ${ability.charAt(0).toUpperCase() + ability.slice(1)}`
+              )
+              .join(", ") || "None"
+          }`,
           "Grants house-specific features and abilities",
           "Access to house common room and resources",
-        ],
+          houseData.feat ? "Provides a free feat" : "",
+        ].filter(Boolean),
       });
 
-      sections.house.features.push({
-        name: `${houseName} Ability Training`,
-        type: "Ability Enhancement",
-        source: houseName,
-        level: null,
-        description: `Your house training has enhanced your natural abilities. ${houseName} focuses on developing specific magical and physical capabilities.`,
-        details: [
-          "Fixed ability score bonuses from house training",
-          "Reflects house values and specializations",
-          "Permanent character enhancement",
-        ],
-      });
+      if (houseData.features) {
+        houseData.features.forEach((feature) => {
+          sections.house.features.push({
+            name: feature.name,
+            type: feature.isChoice ? "House Choice" : "House Feature",
+            source: houseName,
+            level: null,
+            description: feature.description,
+            details:
+              feature.isChoice && feature.options
+                ? feature.options.map(
+                    (opt) => `${opt.name}: ${opt.description}`
+                  )
+                : [feature.description],
+          });
+        });
+      }
 
       if (character.houseChoices && character.houseChoices[character.house]) {
         const choices = character.houseChoices[character.house];
+        Object.entries(choices).forEach(([choiceType, choiceValue]) => {
+          const parentFeature = houseData.features?.find(
+            (f) =>
+              f.isChoice && f.options?.some((opt) => opt.name === choiceValue)
+          );
 
-        if (choices.abilityChoice) {
+          const selectedOption = parentFeature?.options?.find(
+            (opt) => opt.name === choiceValue
+          );
+
           sections.house.features.push({
-            name: `${houseName} Specialization`,
-            type: "Chosen Enhancement",
+            name: choiceValue,
+            type: "Selected House Choice",
             source: houseName,
             level: null,
-            description: `You've specialized in ${choices.abilityChoice}, gaining additional training and enhancement in this area through focused house study.`,
+            description:
+              selectedOption?.description ||
+              `Selected ${choiceType}: ${choiceValue}`,
             details: [
-              `+1 bonus to ${choices.abilityChoice}`,
               "Chosen during character creation",
-              "Represents personal focus within house training",
+              "Represents personal specialization within house training",
             ],
           });
-        }
-
-        if (choices.featureChoice) {
-          sections.house.features.push({
-            name: choices.featureChoice,
-            type: "House Feature Choice",
-            source: houseName,
-            level: null,
-            description: `A specialized house ability you've developed through your time and training in ${houseName}.`,
-            details: [
-              "Unique house-specific ability",
-              "Chosen during character creation",
-              "Reflects house values and traditions",
-            ],
-          });
-        }
+        });
       }
     }
 
     if (character.subclass) {
+      const subclassData = subclassesData?.[character.subclass];
+
       sections.subclass.features.push({
         name: character.subclass,
         type: "Specialization",
         source: "Class Training",
         level: character.subclassLevel || 1,
-        description: `Your specialized focus in ${character.subclass}. This represents advanced study and mastery in a particular school of magic or approach to spellcasting.`,
+        description:
+          subclassData?.description ||
+          `Your specialized focus in ${character.subclass}. This represents advanced study and mastery in a particular school of magic or approach to spellcasting.`,
         details: [
           `Subclass Level: ${character.subclassLevel || 1}`,
           "Provides specialized abilities and bonuses",
@@ -134,76 +158,115 @@ const CharacterFeatsDisplay = ({
         ],
       });
 
-      if (character.subclassFeatures && character.subclassFeatures.length > 0) {
-        character.subclassFeatures.forEach((feature) => {
-          sections.subclass.features.push({
-            name: feature,
-            type: "Subclass Ability",
-            source: character.subclass,
-            level: character.subclassLevel || null,
-            description: getSubclassFeatureDescription(feature),
-            details: getSubclassFeatureDetails(feature),
-          });
-        });
-      }
-
-      if (character.subclassChoices) {
-        Object.entries(character.subclassChoices).forEach(([key, choice]) => {
-          if (choice && typeof choice === "string") {
+      if (subclassData?.higherLevelFeatures) {
+        const currentLevel = character.subclassLevel || 1;
+        subclassData.higherLevelFeatures.forEach((levelFeature) => {
+          if (levelFeature.level <= currentLevel) {
             sections.subclass.features.push({
-              name: choice,
-              type: "Subclass Choice",
+              name: levelFeature.name,
+              type: "Subclass Ability",
               source: character.subclass,
-              level: null,
-              description: `A specialized technique or focus you've chosen as part of your ${character.subclass} training.`,
-              details: [
-                "Chosen during subclass progression",
-                "Represents personal specialization",
-                "Enhances core subclass abilities",
-              ],
+              level: levelFeature.level,
+              description: levelFeature.description,
+              details: levelFeature.choices
+                ? levelFeature.choices.map(
+                    (choice) => `${choice.name}: ${choice.description}`
+                  )
+                : [levelFeature.description],
             });
           }
         });
       }
+
+      if (character.subclassChoices) {
+        Object.entries(character.subclassChoices).forEach(([level, choice]) => {
+          const choiceName =
+            typeof choice === "string"
+              ? choice
+              : choice?.mainChoice ||
+                choice?.selectedChoice ||
+                choice?.name ||
+                String(choice);
+
+          sections.subclass.features.push({
+            name: choiceName,
+            type: "Subclass Choice",
+            source: character.subclass,
+            level: parseInt(level) || null,
+            description: `A specialized technique or focus you've chosen as part of your ${character.subclass} training.`,
+            details: [
+              `Chosen at level ${level}`,
+              "Represents personal specialization",
+              "Enhances core subclass abilities",
+            ],
+          });
+        });
+      }
     }
 
-    if (character.background) {
+    if (character.background && backgroundsData?.[character.background]) {
+      const backgroundData = backgroundsData[character.background];
+
       sections.background.features.push({
         name: character.background,
         type: "Life Experience",
         source: "Personal History",
         level: null,
-        description: `Your background as a ${character.background.toLowerCase()} has shaped your skills, knowledge, and approach to magic. This represents your life experiences before your current adventures.`,
+        description: backgroundData.description,
         details: [
-          "Provides skill proficiencies",
-          "Grants background-specific features",
-          "Reflects pre-adventure life",
+          backgroundData.backgroundBonus ||
+            "Provides specialized background training",
           "Influences roleplay and character motivations",
-        ],
+          "Reflects pre-adventure life experiences",
+          ...(backgroundData.typicalEquipment
+            ? [`Equipment: ${backgroundData.typicalEquipment}`]
+            : []),
+        ].filter(Boolean),
       });
 
-      if (character.backgroundSkills && character.backgroundSkills.length > 0) {
+      if (
+        backgroundData.skillProficiencies &&
+        backgroundData.skillProficiencies.length > 0
+      ) {
         sections.background.features.push({
           name: "Background Skill Training",
           type: "Skill Proficiency",
           source: character.background,
           level: null,
           description: `Your ${character.background.toLowerCase()} background has given you training in specific skills that reflect your life experiences.`,
-          details: character.backgroundSkills.map(
+          details: backgroundData.skillProficiencies.map(
             (skill) => `Proficient in ${skill}`
           ),
         });
       }
+
+      if (backgroundData.features) {
+        backgroundData.features.forEach((feature) => {
+          sections.background.features.push({
+            name: feature.name,
+            type: "Background Feature",
+            source: character.background,
+            level: null,
+            description: feature.description,
+            details: [feature.description],
+          });
+        });
+      }
     }
 
-    if (character.innateHeritage) {
-      sections.background.features.push({
+    if (
+      character.innateHeritage &&
+      heritageDescriptions?.[character.innateHeritage]
+    ) {
+      const heritageData = heritageDescriptions[character.innateHeritage];
+
+      sections.innateHeritage.features.push({
         name: `${character.innateHeritage} Heritage`,
         type: "Magical Heritage",
         source: "Innate Heritage",
         level: null,
-        description: `Your ${character.innateHeritage} heritage grants you inherent magical traits and abilities that are part of your very being.`,
-        details: [
+        description: heritageData.description,
+        details: heritageData.benefits || [
           "Innate magical characteristics",
           "Heritage-specific abilities",
           "Influences magical potential",
@@ -214,7 +277,7 @@ const CharacterFeatsDisplay = ({
         character.innateHeritageSkills &&
         character.innateHeritageSkills.length > 0
       ) {
-        sections.background.features.push({
+        sections.innateHeritage.features.push({
           name: "Heritage Skill Aptitude",
           type: "Heritage Proficiency",
           source: character.innateHeritage,
@@ -226,23 +289,62 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      if (character.heritageChoices) {
-        Object.entries(character.heritageChoices).forEach(([key, choice]) => {
-          if (choice && typeof choice === "string") {
-            sections.background.features.push({
-              name: choice,
-              type: "Heritage Choice",
-              source: character.innateHeritage,
-              level: null,
-              description: `A specialized heritage trait you've developed or chosen to emphasize.`,
-              details: [
-                "Heritage-specific ability",
-                "Chosen during character creation",
-                "Reflects heritage specialization",
-              ],
-            });
-          }
+      if (
+        character.heritageChoices &&
+        character.heritageChoices[character.innateHeritage]
+      ) {
+        const choices = character.heritageChoices[character.innateHeritage];
+        Object.entries(choices).forEach(([featureName, choiceName]) => {
+          const feature = heritageData.features?.find(
+            (f) => f.name === featureName
+          );
+          const choiceDetails = feature?.options?.find(
+            (opt) => opt.name === choiceName
+          );
+
+          sections.innateHeritage.features.push({
+            name: choiceName,
+            type: "Heritage Choice",
+            source: character.innateHeritage,
+            level: null,
+            description:
+              choiceDetails?.description ||
+              `A specialized heritage trait you've developed or chosen to emphasize.`,
+            details: [
+              "Heritage-specific ability",
+              "Chosen during character creation",
+              "Reflects heritage specialization",
+              ...(choiceDetails?.skillProficiencies
+                ? choiceDetails.skillProficiencies.map(
+                    (skill) => `Grants proficiency in ${skill}`
+                  )
+                : []),
+            ].filter(Boolean),
+          });
         });
+      }
+
+      if (heritageData.modifiers?.abilityIncreases?.length > 0) {
+        const abilityIncreases = heritageData.modifiers.abilityIncreases
+          .filter((inc) => inc.type === "fixed")
+          .map(
+            (inc) =>
+              `+${inc.amount} ${
+                inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
+              }`
+          )
+          .join(", ");
+
+        if (abilityIncreases) {
+          sections.innateHeritage.features.push({
+            name: "Heritage Ability Enhancement",
+            type: "Ability Bonus",
+            source: character.innateHeritage,
+            level: null,
+            description: `Your heritage naturally enhances certain abilities.`,
+            details: [`Ability Score Increases: ${abilityIncreases}`],
+          });
+        }
       }
     }
 
@@ -252,22 +354,34 @@ const CharacterFeatsDisplay = ({
       Object.entries(character.asiChoices).forEach(([level, choice]) => {
         if (choice.type === "feat" && choice.selectedFeat) {
           const featKey = `${choice.selectedFeat}-${level}`;
-          processedFeats.add(choice.selectedFeat);
-          processedFeats.add(featKey);
+          if (!processedFeats.has(featKey)) {
+            processedFeats.add(featKey);
 
-          sections.feats.features.push({
-            name: choice.selectedFeat,
-            type: "ASI Choice Feat",
-            source: `Level ${level}`,
-            level: parseInt(level),
-            description: `A feat chosen instead of ability score improvement at level ${level}, representing specialized training or development.`,
-            details: [
-              `Chosen at Level ${level}`,
-              "Selected instead of ability score increase",
-              "Provides specialized capabilities",
-              "Represents character development focus",
-            ],
-          });
+            const featData = standardFeats.find(
+              (f) => f.name === choice.selectedFeat
+            );
+
+            sections.feats.features.push({
+              name: choice.selectedFeat,
+              type: "ASI Choice Feat",
+              source: `Level ${level}`,
+              level: parseInt(level),
+              description:
+                featData?.preview ||
+                featData?.description?.[0] ||
+                `A feat chosen instead of ability score improvement at level ${level}, representing specialized training or development.`,
+              details: Array.isArray(featData?.description)
+                ? featData.description
+                : featData?.description
+                ? [featData.description]
+                : [
+                    `Chosen at Level ${level}`,
+                    "Selected instead of ability score increase",
+                    "Provides specialized capabilities",
+                    "Represents character development focus",
+                  ],
+            });
+          }
         }
       });
     }
@@ -277,17 +391,26 @@ const CharacterFeatsDisplay = ({
         if (!processedFeats.has(featName)) {
           processedFeats.add(featName);
 
+          const featData = standardFeats.find((f) => f.name === featName);
+
           sections.feats.features.push({
             name: featName,
             type: "Standard Feat",
             source: "Character Level",
             level: null,
-            description: `A feat representing specialized training or natural talent that enhances your character's capabilities.`,
-            details: [
-              "Gained through character progression",
-              "Provides specific mechanical benefits",
-              "Represents focused training or talent",
-            ],
+            description:
+              featData?.preview ||
+              featData?.description?.[0] ||
+              `A feat representing specialized training or natural talent that enhances your character's capabilities.`,
+            details: Array.isArray(featData?.description)
+              ? featData.description
+              : featData?.description
+              ? [featData.description]
+              : [
+                  "Gained through character progression",
+                  "Provides specific mechanical benefits",
+                  "Represents focused training or talent",
+                ],
           });
         }
       });
@@ -304,34 +427,52 @@ const CharacterFeatsDisplay = ({
           if (!processedFeats.has(featKey)) {
             processedFeats.add(featKey);
 
+            const featData = standardFeats.find((f) => f.name === featName);
+
             sections.feats.features.push({
               name: featName,
               type: "Level Feat",
               source: `Level ${level}`,
               level: parseInt(level),
-              description: `A feat acquired at level ${level} through character advancement and training.`,
-              details: [
-                `Acquired at Level ${level}`,
-                "Gained through character progression",
-                "Enhances character abilities",
-              ],
+              description:
+                featData?.preview ||
+                featData?.description?.[0] ||
+                `A feat acquired at level ${level} through character advancement and training.`,
+              details: Array.isArray(featData?.description)
+                ? featData.description
+                : featData?.description
+                ? [featData.description]
+                : [
+                    `Acquired at Level ${level}`,
+                    "Gained through character progression",
+                    "Enhances character abilities",
+                  ],
             });
           }
         } else {
           if (!processedFeats.has(featString)) {
             processedFeats.add(featString);
 
+            const featData = standardFeats.find((f) => f.name === featString);
+
             sections.feats.features.push({
               name: featString,
               type: "Character Feat",
               source: "Character Creation",
               level: null,
-              description: `A feat representing your character's background training or natural abilities.`,
-              details: [
-                "Gained during character creation",
-                "Reflects character background",
-                "Provides specialized capabilities",
-              ],
+              description:
+                featData?.preview ||
+                featData?.description?.[0] ||
+                `A feat representing your character's background training or natural abilities.`,
+              details: Array.isArray(featData?.description)
+                ? featData.description
+                : featData?.description
+                ? [featData.description]
+                : [
+                    "Gained during character creation",
+                    "Reflects character background",
+                    "Provides specialized capabilities",
+                  ],
             });
           }
         }
@@ -347,91 +488,6 @@ const CharacterFeatsDisplay = ({
     return sections;
   }, [character]);
 
-  const getSubclassFeatureDescription = (featureName) => {
-    const descriptions = {
-      Researcher:
-        "You've mastered the art of magical research, allowing you to enhance your spellcasting through academic study. You add half your Wisdom modifier to research checks and all researched spells gain both Arithmantic and Runic tags, making them more versatile and powerful.",
-      "Enhanced Spellwork":
-        "Your understanding of Runic and Arithmantic magic allows you to enhance spells in unique ways. Runic spells gain +1 minute duration and deal 1d6 psychic damage per round. Arithmantic spells gain +10 feet range and can convert Dedication to Concentration.",
-      "Nimble Fingers":
-        "Your dexterity with magical implements grants you Sleight of Hand expertise. When casting spells with both Runic and Arithmantic tags, you add half your Dexterity modifier to spell attack rolls and save DCs.",
-      Spellmaker:
-        "Your mastery of dual-tagged magic is so complete that spells with both Arithmantic and Runic tags can be cast using a spell slot one level lower than normal (minimum 1st level).",
-      "Private Lessons":
-        "You've received additional instruction that grants you extra spell attempts in classes, reduces spell learning DCs by 2, and ensures all your spells automatically gain both Arithmantic and Runic tags.",
-      "Perfected Spellwork":
-        "Once per round, instead of rolling dice for enhanced spell effects, you can choose to use the maximum possible result, representing your perfect mastery of magical theory.",
-      "Auror Training":
-        "Specialized combat training focused on fighting dark wizards and dangerous magical creatures. You gain enhanced abilities when dealing with cursed objects and dark magic.",
-      "Curse-Breaking":
-        "Expert knowledge in identifying, analyzing, and safely dismantling magical curses, hexes, and other harmful enchantments.",
-      "Study Buddy":
-        "Your collaborative approach to learning enhances both your own studies and those of your allies through shared magical research and practice.",
-      "Quick Skim":
-        "You can rapidly absorb and understand complex magical texts, allowing you to quickly grasp new concepts and magical theories.",
-      "Practice Makes Perfect":
-        "Your dedication to repeated practice yields exceptional results, with each repetition improving your magical technique.",
-      "Master of None":
-        "Your broad approach to magical education gives you knowledge across multiple disciplines rather than deep specialization in one area.",
-      Imbuement:
-        "The ability to infuse mundane objects with lasting magical properties, creating enchanted items.",
-      Harmonancy:
-        "A deep understanding of magical harmony and resonance, allowing you to work in tune with mystical forces.",
-    };
-    return (
-      descriptions[featureName] ||
-      `${featureName} - A specialized ability gained through your subclass training, providing unique magical techniques and enhanced capabilities.`
-    );
-  };
-
-  const getSubclassFeatureDetails = (featureName) => {
-    const details = {
-      Researcher: [
-        "Add ½ Wisdom modifier to research checks",
-        "All researched spells gain Arithmantic and Runic tags",
-        "Enhanced access to Devicto with both tags",
-        "Improved magical theory understanding",
-      ],
-      "Enhanced Spellwork": [
-        "Runic spells: +1 minute duration",
-        "Runic spells: 1d6 psychic damage per round",
-        "Arithmantic spells: +10 feet range",
-        "Arithmantic spells: Dedication becomes Concentration",
-      ],
-      "Nimble Fingers": [
-        "Gain Sleight of Hand expertise",
-        "Spells with both tags: +½ Dex to attack rolls",
-        "Spells with both tags: +½ Dex to save DC",
-        "Enhanced manual dexterity with magic",
-      ],
-      Spellmaker: [
-        "Dual-tagged spells cost 1 lower spell slot",
-        "Minimum spell slot level: 1st",
-        "Represents mastery of magical efficiency",
-        "Significant resource conservation",
-      ],
-      "Private Lessons": [
-        "Extra spell attempts in classes",
-        "Spell learning DC reduced by 2",
-        "All spells automatically gain both tags",
-        "Enhanced magical education",
-      ],
-      "Perfected Spellwork": [
-        "Once per round: use maximum dice result",
-        "Applies to enhanced spell effects",
-        "Represents perfect magical control",
-        "Ultimate expression of magical mastery",
-      ],
-    };
-    return (
-      details[featureName] || [
-        "Specialized subclass ability",
-        "Enhances magical capabilities",
-        "Reflects advanced training",
-      ]
-    );
-  };
-
   const filteredSections = useMemo(() => {
     if (!searchFilter.trim()) return organizedFeatures;
 
@@ -446,9 +502,11 @@ const CharacterFeatsDisplay = ({
           feature.type.toLowerCase().includes(searchTerm) ||
           feature.source.toLowerCase().includes(searchTerm) ||
           feature.description.toLowerCase().includes(searchTerm) ||
-          feature.details.some((detail) =>
-            detail.toLowerCase().includes(searchTerm)
-          )
+          (Array.isArray(feature.details)
+            ? feature.details.some((detail) =>
+                detail.toLowerCase().includes(searchTerm)
+              )
+            : false)
       );
 
       if (filteredFeatures.length > 0) {
@@ -771,15 +829,21 @@ const CharacterFeatsDisplay = ({
                         {feature.description}
                       </div>
 
-                      {feature.details && feature.details.length > 0 && (
+                      {feature.details && (
                         <div style={styles.featureDetails}>
-                          <ul style={styles.detailsList}>
-                            {feature.details.map((detail, detailIndex) => (
-                              <li key={detailIndex} style={styles.detailItem}>
-                                {detail}
-                              </li>
-                            ))}
-                          </ul>
+                          {Array.isArray(feature.details) ? (
+                            <ul style={styles.detailsList}>
+                              {feature.details.map((detail, detailIndex) => (
+                                <li key={detailIndex} style={styles.detailItem}>
+                                  {detail}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div style={styles.detailItem}>
+                              {feature.details}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

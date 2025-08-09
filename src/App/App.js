@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
 
-import CharacterSheet from "../Components/CharacterSheet/CharacterSheet";
+import CharacterSheetWrapper from "../Components/CharacterSheet/CharacterSheetWrapper";
 import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
 import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
 import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
@@ -33,7 +33,7 @@ import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
-
+import "./App.css";
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
   process.env.REACT_APP_SUPABASE_ANON_KEY
@@ -1164,194 +1164,271 @@ function AppContent() {
   );
 
   return (
-    <div style={styles.appContainer}>
-      <ThemeCharacterSync selectedCharacter={selectedCharacter} />
+    <div
+      style={{
+        ...styles.appContainer,
+        fontFamily: '"Cinzel", "Times New Roman", serif',
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: theme.background,
+      }}
+    >
+      <div style={{ flexShrink: 0 }}>
+        <ThemeCharacterSync selectedCharacter={selectedCharacter} />
 
-      <header style={styles.appHeader}>
-        <Navigation characters={characters} user={user} />
-        <AuthComponent
-          user={user}
-          customUsername={customUsername}
-          onUsernameUpdate={updateCustomUsername}
-          onSignIn={signInWithDiscord}
-          onSignOut={signOut}
-          isLoading={authLoading}
-          onAdminToggleClick={handleAdminToggleClick}
+        <header style={styles.appHeader}>
+          <Navigation characters={characters} user={user} />
+          <AuthComponent
+            user={user}
+            customUsername={customUsername}
+            onUsernameUpdate={updateCustomUsername}
+            onSignIn={signInWithDiscord}
+            onSignOut={signOut}
+            isLoading={authLoading}
+            onAdminToggleClick={handleAdminToggleClick}
+          />
+        </header>
+
+        {location.pathname.startsWith("/character/") && (
+          <CharacterSubNavigation />
+        )}
+
+        <main style={styles.tabContent}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <HomePage
+                  user={user}
+                  customUsername={customUsername}
+                  hasCharacters={characters.length > 0}
+                />
+              }
+            />
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route
+              path="/character-management"
+              element={
+                <ProtectedRoute user={user}>
+                  <CharacterManagement
+                    user={user}
+                    customUsername={customUsername}
+                    onCharacterSaved={() => {
+                      setHasAttemptedLoad(false);
+                    }}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character-management/create"
+              element={
+                <ProtectedRoute user={user}>
+                  <CharacterManagement
+                    user={user}
+                    customUsername={customUsername}
+                    onCharacterSaved={() => {
+                      setHasAttemptedLoad(false);
+                    }}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                    mode="create"
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character-management/edit/:characterId"
+              element={
+                <ProtectedRoute user={user}>
+                  <CharacterManagement
+                    user={user}
+                    customUsername={customUsername}
+                    onCharacterSaved={() => {
+                      setHasAttemptedLoad(false);
+                    }}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                    mode="edit"
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character"
+              element={<Navigate to="/character/sheet" replace />}
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute user={user}>
+                  <AdminDashboard supabase={supabase} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/sheet"
+              element={
+                <ProtectedRoute user={user}>
+                  <CharacterSheetWrapper
+                    user={user}
+                    customUsername={customUsername}
+                    supabase={supabase}
+                    selectedCharacter={selectedCharacter}
+                    characters={characters}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                    characterSelector={characterSelector}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/spellbook"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <SpellBook
+                    user={user}
+                    customUsername={customUsername}
+                    supabase={supabase}
+                    selectedCharacter={selectedCharacter}
+                    characters={characters}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/potions"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <PotionBrewingSystem
+                    user={user}
+                    character={selectedCharacter}
+                    supabase={supabase}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/recipes"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <RecipeCookingSystem
+                    user={user}
+                    selectedCharacter={selectedCharacter}
+                    supabase={supabase}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/inventory"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <Inventory
+                    user={user}
+                    selectedCharacter={selectedCharacter}
+                    supabase={supabase}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/notes"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <CharacterNotes
+                    user={user}
+                    selectedCharacter={selectedCharacter}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/downtime"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <DowntimeWrapper
+                    user={user}
+                    selectedCharacter={selectedCharacter}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/gallery"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <CharacterGallery
+                    selectedCharacter={selectedCharacter}
+                    supabase={supabase}
+                    user={user}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/theme-settings" element={<ThemeSettings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <AdminPasswordModal
+          isOpen={showPasswordModal}
+          onClose={handleModalClose}
+          onPasswordSubmit={handlePasswordSubmit}
+          isLoading={isVerifying}
         />
-      </header>
-
-      {location.pathname.startsWith("/character/") && (
-        <CharacterSubNavigation />
-      )}
-
-      <main style={styles.tabContent}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <HomePage
-                user={user}
-                customUsername={customUsername}
-                hasCharacters={characters.length > 0}
-              />
-            }
-          />
-          <Route path="/home" element={<Navigate to="/" replace />} />
-          <Route
-            path="/character-management"
-            element={
-              <ProtectedRoute user={user}>
-                <CharacterManagement
-                  user={user}
-                  customUsername={customUsername}
-                  onCharacterSaved={() => {
-                    setHasAttemptedLoad(false);
-                  }}
-                  selectedCharacterId={selectedCharacter?.id}
-                  onSelectedCharacterReset={resetSelectedCharacter}
-                  supabase={supabase}
-                  adminMode={adminMode}
-                  isUserAdmin={isUserAdmin}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character"
-            element={<Navigate to="/character/sheet" replace />}
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute user={user}>
-                <AdminDashboard supabase={supabase} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/sheet"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <CharacterSheet
-                  user={user}
-                  customUsername={customUsername}
-                  supabase={supabase}
-                  selectedCharacter={selectedCharacter}
-                  characters={characters}
-                  adminMode={adminMode}
-                  isUserAdmin={isUserAdmin}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/spellbook"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <SpellBook
-                  user={user}
-                  customUsername={customUsername}
-                  supabase={supabase}
-                  selectedCharacter={selectedCharacter}
-                  characters={characters}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/potions"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <PotionBrewingSystem
-                  user={user}
-                  character={selectedCharacter}
-                  supabase={supabase}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/recipes"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <RecipeCookingSystem
-                  user={user}
-                  selectedCharacter={selectedCharacter}
-                  supabase={supabase}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/inventory"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <Inventory
-                  user={user}
-                  selectedCharacter={selectedCharacter}
-                  supabase={supabase}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/notes"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <CharacterNotes
-                  user={user}
-                  selectedCharacter={selectedCharacter}
-                  supabase={supabase}
-                  adminMode={adminMode}
-                  isUserAdmin={isUserAdmin}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/downtime"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <DowntimeWrapper
-                  user={user}
-                  selectedCharacter={selectedCharacter}
-                  supabase={supabase}
-                  adminMode={adminMode}
-                  isUserAdmin={isUserAdmin}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/character/gallery"
-            element={
-              <ProtectedRoute user={user}>
-                {characterSelector}
-                <CharacterGallery
-                  selectedCharacter={selectedCharacter}
-                  supabase={supabase}
-                  user={user}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/theme-settings" element={<ThemeSettings />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-      <AdminPasswordModal
-        isOpen={showPasswordModal}
-        onClose={handleModalClose}
-        onPasswordSubmit={handlePasswordSubmit}
-        isLoading={isVerifying}
-      />
+      </div>
+      <footer
+        style={{
+          marginTop: "auto", // This pushes footer to bottom when there's space
+          paddingBottom: "10px",
+          backgroundColor: theme.surface,
+          color: theme.textSecondary,
+          borderTop: `1px solid ${theme.border}`,
+          fontSize: "14px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0.25rem",
+          textAlign: "center",
+          flexShrink: 0,
+        }}
+      >
+        <div>
+          <a
+            href={RULE_BOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              textDecoration: "none",
+              color: theme.primary,
+              fontWeight: "700",
+            }}
+          >
+            <h3>View Rulebook</h3>
+          </a>
+          © {new Date().getFullYear()} <strong>Witches & Snitches</strong>
+        </div>
+      </footer>
     </div>
   );
 }

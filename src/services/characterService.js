@@ -275,7 +275,7 @@ const isUserForbidden = async (discordUserId) => {
     return false;
   }
 
-  return !!data;
+  return data?.role === "forbidden";
 };
 
 const isUserAdmin = async (discordUserId) => {
@@ -316,9 +316,7 @@ const verifyAdminPassword = async (discordUserId, password) => {
       "The ancient magic recognizes you as forbidden. Access permanently denied."
     );
   }
-
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
-
   if (!ADMIN_PASSWORD) {
     throw new Error("The magical registry is not properly configured");
   }
@@ -433,7 +431,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
         wand_type: characterData.wand_type,
-        image_url: characterData.image_url || null,
+        image_url: characterData.image_url || characterData.imageUrl || null,
       })
       .select()
       .single();
@@ -482,24 +480,24 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         game_session: characterData.game_session,
         heritage_choices: characterData.heritage_choices || {},
         hit_points: characterData.hit_points,
-        house: characterData.house,
         house_choices: characterData.house_choices,
+        house: characterData.house,
+        image_url: characterData.image_url || characterData.imageUrl || null,
         initiative_ability: characterData.initiative_ability,
-        innate_heritage: characterData.innate_heritage,
         innate_heritage_skills: characterData.innate_heritage_skills,
+        innate_heritage: characterData.innate_heritage,
         level: characterData.level,
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
         school_year: characterData.school_year,
-        skill_proficiencies: characterData.skill_proficiencies,
         skill_expertise: characterData.skill_expertise,
+        skill_proficiencies: characterData.skill_proficiencies,
         standard_feats: characterData.standard_feats,
-        subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
-        wand_type: characterData.wand_type,
-        image_url: characterData.image_url || null,
+        subclass: characterData.subclass,
         updated_at: new Date().toISOString(),
+        wand_type: characterData.wand_type,
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)

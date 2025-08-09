@@ -11,6 +11,7 @@ import {
   Star,
   Sparkles,
   Target,
+  Plus,
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -66,6 +67,7 @@ const CharacterSheet = ({
   className = "",
   adminMode = false,
   isUserAdmin = false,
+  onNavigateToCharacterManagement,
 }) => {
   const { rollInitiative } = useRollFunctions();
   const { showRollResult } = useRollModal();
@@ -90,6 +92,12 @@ const CharacterSheet = ({
   const [error, setError] = useState(null);
 
   const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
+  const handleAvatarClick = () => {
+    if (!character.imageUrl && onNavigateToCharacterManagement) {
+      onNavigateToCharacterManagement(character.id, "basicInfo");
+    }
+  };
 
   const getHitDie = useCallback((castingStyle) => {
     return hitDiceData[castingStyle] || hitDiceData.default;
@@ -123,6 +131,7 @@ const CharacterSheet = ({
     };
     return spellcastingAbilityMap[castingStyle] || null;
   };
+
   const getSpellcastingAbilityModifier = (character) => {
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
     if (!spellcastingAbility) return 0;
@@ -998,7 +1007,13 @@ const CharacterSheet = ({
                   style={{
                     ...styles.avatar,
                     position: "relative",
+                    cursor: !character.imageUrl ? "pointer" : "default",
+                    transition: "all 0.2s ease",
                   }}
+                  onClick={handleAvatarClick}
+                  title={
+                    !character.imageUrl ? "Click to add character image" : ""
+                  }
                 >
                   {character.imageUrl ? (
                     <>
@@ -1006,11 +1021,11 @@ const CharacterSheet = ({
                         src={character.imageUrl}
                         alt={`${character.name}'s portrait`}
                         style={{
-                          width: "150%",
-                          height: "150%",
+                          width: "100%",
+                          height: "100%",
                           objectFit: "cover",
                           borderRadius: "50%",
-                          border: `1px solid ${theme.primary || "#6366f1"}`,
+                          border: `2px solid ${theme.primary || "#6366f1"}`,
                           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                         }}
                         onError={(e) => {
@@ -1037,7 +1052,9 @@ const CharacterSheet = ({
                       height: "100%",
                       backgroundColor: theme.surface || "#f8fafc",
                       borderRadius: "50%",
-                      border: `2px solid ${theme.border || "#e2e8f0"}`,
+                      border: `2px dashed ${theme.border || "#e2e8f0"}`,
+                      transition: "all 0.2s ease",
+                      position: "relative",
                     }}
                   >
                     <User
@@ -1047,6 +1064,31 @@ const CharacterSheet = ({
                         height: "50%",
                       }}
                     />
+                    {!character.imageUrl && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: "-8px",
+                          right: "-8px",
+                          backgroundColor: theme.primary || "#6366f1",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: "32px",
+                          height: "32px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                          border: `2px solid ${theme.background || "white"}`,
+                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Plus size={16} />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>

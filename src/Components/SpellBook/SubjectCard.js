@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ChevronDown,
+  Info,
   ChevronRight,
   Wand2,
   Star,
@@ -981,19 +982,24 @@ export const SubjectCard = ({
                     padding: "2px",
                     display: "flex",
                     alignItems: "center",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    color: theme.text || "#1f2937",
                   }}
                   title={
                     isDescriptionExpanded
                       ? "Hide description"
-                      : "Show description"
+                      : "Click to show description"
                   }
                 >
-                  {isDescriptionExpanded ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  )}
+                  <Info
+                    size={14}
+                    style={{
+                      marginTop: "-4px",
+                      marginLeft: "4px",
+                      color: isDescriptionExpanded
+                        ? theme.success
+                        : theme.textSecondary,
+                    }}
+                  />
                 </button>
               )}
             </span>
@@ -1246,10 +1252,9 @@ export const SubjectCard = ({
           <td colSpan="6" style={{ padding: "0", border: "none" }}>
             <div
               style={{
-                margin: "0 16px 12px 16px",
                 padding: "16px",
-                backgroundColor: theme === "dark" ? "#374151" : "#f8fafc",
-                border: `1px solid ${theme === "dark" ? "#4b5563" : "#e2e8f0"}`,
+                backgroundColor: theme.background,
+                border: theme.border,
                 borderRadius: "8px",
                 fontSize: "14px",
                 lineHeight: "1.5",
@@ -1258,7 +1263,7 @@ export const SubjectCard = ({
               <div
                 style={{
                   fontWeight: "600",
-                  color: theme === "dark" ? "#60a5fa" : "#1e40af",
+                  color: theme.text,
                   marginBottom: "8px",
                   fontSize: "16px",
                 }}
@@ -1268,7 +1273,7 @@ export const SubjectCard = ({
               <div
                 style={{
                   fontStyle: "italic",
-                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  color: theme.success,
                   marginBottom: "12px",
                   fontSize: "13px",
                 }}
@@ -1281,7 +1286,7 @@ export const SubjectCard = ({
               <div
                 style={{
                   whiteSpace: "pre-line",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  color: theme.text,
                   marginBottom: "12px",
                 }}
               >
@@ -1292,7 +1297,7 @@ export const SubjectCard = ({
                   style={{
                     marginBottom: "12px",
                     fontStyle: "italic",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    color: theme.primary,
                   }}
                 >
                   <strong>At Higher Levels:</strong> {spellObj.higherLevels}
@@ -1306,9 +1311,8 @@ export const SubjectCard = ({
                       style={{
                         display: "inline-block",
                         padding: "4px 8px",
-                        backgroundColor:
-                          theme === "dark" ? "#4b5563" : "#e5e7eb",
-                        color: theme === "dark" ? "#d1d5db" : "#374151",
+                        backgroundColor: theme.background,
+                        color: theme.text,
                         fontSize: "12px",
                         borderRadius: "4px",
                         marginRight: "6px",
