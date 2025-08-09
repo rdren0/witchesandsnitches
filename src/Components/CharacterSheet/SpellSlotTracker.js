@@ -243,15 +243,24 @@ const SpellSlotTracker = ({
           description: `Spell slot maximums updated (${totalSlots} total slots)`,
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Spell Update",
+            text: `${character.name} - Spell Update`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -326,15 +335,24 @@ const SpellSlotTracker = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Spell Slots",
+            text: `${character.name} - Spell Slots`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);

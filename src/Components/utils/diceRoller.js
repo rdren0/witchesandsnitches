@@ -615,7 +615,9 @@ export const rollCorruption = async ({
         ],
         timestamp: new Date().toISOString(),
         footer: {
-          text: `Witches and Snitches - Corruption ${"Gained"} • Next Wisdom Save DC: ${
+          text: `${
+            character.name
+          } - Corruption ${"Gained"} • Next Wisdom Save DC: ${
             currentTier.saveDC
           }`,
         },
@@ -666,7 +668,7 @@ export const rollCorruption = async ({
         ],
         timestamp: new Date().toISOString(),
         footer: {
-          text: `Witches and Snitches - Corruption Redeemed • Wisdom Save DC: ${currentTier.saveDC}`,
+          text: `${character.name} - Corruption Redeemed • Wisdom Save DC: ${currentTier.saveDC}`,
         },
       };
     }
@@ -906,6 +908,7 @@ export const rollAbilityCheckWithProficiency = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "ability",
+        character: character,
         description: `Rolling ${title} for ${character.name}`,
         ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
         hornedSerpentBonusApplied: hornedSerpentResult.bonusApplied,
@@ -968,6 +971,7 @@ export const rollMagicCasting = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "spell",
+        character: character,
         description: `Rolling ${school} ${type} check for ${character.name}`,
       });
     } else {
@@ -2937,6 +2941,7 @@ export const rollFlexibleDice = async ({
         diceQuantity: diceQuantity,
         diceType: diceType,
         rollType: rollType,
+        character: character,
         individualDiceResults: diceResult.individualDiceResults,
       });
     } else {

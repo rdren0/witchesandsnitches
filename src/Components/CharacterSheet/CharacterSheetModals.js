@@ -62,6 +62,7 @@ const CharacterSheetModals = ({
         isCriticalSuccess: false,
         isCriticalFailure: false,
         type: "hitdice",
+        character: character,
         description: `${selectedHitDiceCount} × ${character.hitDie} + ${
           conModifier * selectedHitDiceCount
         } CON • ${hpGained} HP restored • ${newHitDiceCount}/${
@@ -87,7 +88,7 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} used Hit Dice for Short Rest`,
+          title: `Hit Dice Recovery`,
           color: 0x9d4edd,
           fields: [
             {
@@ -115,15 +116,24 @@ const CharacterSheetModals = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Short Rest Healing",
+            text: `${character.name} - Short Rest Healing`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -178,6 +188,7 @@ const CharacterSheetModals = ({
         rollValue: changeAmount,
         modifier: 0,
         total: changeAmount,
+        character: character,
         isCriticalSuccess: type === "healing" && newCurrentHP === maxHP,
         isCriticalFailure: type === "damage" && newCurrentHP === 0,
         type: changeType,
@@ -201,9 +212,7 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} ${
-            type === "damage" ? "took damage" : "was healed"
-          }!`,
+          title: type === "damage" ? "Damage Taken" : "Healing Applied",
           color: type === "damage" ? 0xef4444 : 0x10b981,
           fields: [
             {
@@ -219,7 +228,7 @@ const CharacterSheetModals = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: `Witches and Snitches - ${
+            text: `${character.name} - ${
               type === "damage" ? "Damage Taken" : "Healing Applied"
             }`,
           },
@@ -232,11 +241,20 @@ const CharacterSheetModals = ({
           embed.description = "✨ **Character is at full health!**";
         }
 
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
+
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);

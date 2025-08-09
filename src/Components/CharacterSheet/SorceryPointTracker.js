@@ -86,7 +86,7 @@ const SorceryPointTracker = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Sorcery Points",
+            text: `${character.name} - Sorcery Points`,
           },
         };
 

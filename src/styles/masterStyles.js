@@ -242,7 +242,7 @@ const createCharacterSheetStyles = (theme) => ({
   },
   statCardBlue: {},
   statCardBrown: {
-    borderColor: "#755224",
+    borderColor: "#b27424ff",
   },
   statCardBrownHover: {
     backgroundColor: `#755224${"10"}`,
@@ -261,7 +261,7 @@ const createCharacterSheetStyles = (theme) => ({
     color: "#3b82f6",
   },
   statValueBrown: {
-    color: "#755224",
+    color: "#b27424ff",
   },
   statLabel: {
     fontSize: "12px",
@@ -276,7 +276,7 @@ const createCharacterSheetStyles = (theme) => ({
     color: "#3b82f6",
   },
   statLabelBrown: {
-    color: "#755224",
+    color: "#b27424ff",
   },
   instructionsCard: {
     backgroundColor: theme.surface,
@@ -637,14 +637,14 @@ export const createAbilityScoresStyles = (theme) => ({
     borderRadius: "12px",
     boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
     marginBottom: "24px",
-    padding: "20px",
+    padding: "12px",
     border: `2px solid ${theme.border}`,
   },
   abilityTitle: {
     fontSize: "20px",
     fontWeight: "bold",
     color: theme.text,
-    marginBottom: "16px",
+    paddingBottom: "16px",
     textAlign: "center",
   },
   abilityGrid: {
@@ -670,16 +670,19 @@ export const createAbilityScoresStyles = (theme) => ({
     color: theme.textSecondary,
     textTransform: "uppercase",
     letterSpacing: "0.5px",
+    marginBottom: "14px",
   },
   abilityModifier: {
     fontSize: "16px",
     fontWeight: "bold",
     color: theme.primary,
+    marginTop: "4px",
   },
   abilityScore: {
     fontSize: "20px",
     fontWeight: "bold",
     color: theme.text,
+    marginTop: "4px",
   },
 });
 

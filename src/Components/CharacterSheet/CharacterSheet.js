@@ -174,6 +174,7 @@ const CharacterSheet = ({
         total: total,
         isCriticalSuccess: isCriticalSuccess,
         isCriticalFailure: isCriticalFailure,
+        character: character,
         type: "abilitycheck",
         description: `d20 + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
@@ -243,6 +244,7 @@ const CharacterSheet = ({
         total: total,
         isCriticalSuccess: isCriticalSuccess,
         isCriticalFailure: isCriticalFailure,
+        character: character,
         type: "spellattack",
         description: `d20 + ${character.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
@@ -737,7 +739,7 @@ const CharacterSheet = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} completed a Long Rest!`,
+          title: `Long Rest Complete`,
           color: 0x3b82f6,
           fields: [
             {
@@ -761,15 +763,24 @@ const CharacterSheet = ({
           description: "💤 **Fully rested and ready for adventure!**",
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Long Rest",
+            text: `${character.name} - Long Rest`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -818,6 +829,7 @@ const CharacterSheet = ({
         isCriticalSuccess: true,
         isCriticalFailure: false,
         type: "heal",
+        character: character,
         description: `${healingAmount} HP restored • ${character.name} is at full health!`,
       });
 
@@ -854,7 +866,7 @@ const CharacterSheet = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Full Heal",
+            text: `${character.name} - Full Heal`,
           },
         };
 
@@ -1275,11 +1287,7 @@ const CharacterSheet = ({
                     style={{
                       ...styles.statValue,
                       color: getHPColor(character),
-                      fontSize:
-                        character.currentHitPoints !==
-                        (character.maxHitPoints ?? character.hitPoints)
-                          ? "1rem"
-                          : "1.25rem",
+                      fontSize: "24px",
                     }}
                   >
                     {character.currentHitPoints ?? character.hitPoints}/
@@ -1356,7 +1364,7 @@ const CharacterSheet = ({
                 >
                   <Swords
                     className="w-6 h-6 text-green-600 mx-auto mb-1"
-                    style={{ color: "#755224" }}
+                    style={{ color: "#b27424ff" }}
                   />
                   <div
                     style={{ ...styles.statValue, ...styles.statValueBrown }}
@@ -1374,10 +1382,7 @@ const CharacterSheet = ({
                     style={{
                       ...styles.statCard,
                       cursor: isRolling ? "wait" : "pointer",
-                      borderColor: "#e30716",
-                      backgroundColor: isRolling
-                        ? "#e30716" + "20"
-                        : "transparent",
+                      borderColor: "#d1323dff",
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellAttack()}
@@ -1391,15 +1396,15 @@ const CharacterSheet = ({
                   >
                     <Target
                       className="w-6 h-6 text-green-600 mx-auto mb-1"
-                      style={{ color: "#e30716" }}
+                      style={{ color: "#d1323dff" }}
                     />
-                    <div style={{ ...styles.statValue, color: "#e30716" }}>
+                    <div style={{ ...styles.statValue, color: "#d1323dff" }}>
                       {formatModifier(
                         character.proficiencyBonus +
                           getSpellcastingAbilityModifier(character)
                       )}
                     </div>
-                    <div style={{ ...styles.statLabel, color: "#e30716" }}>
+                    <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
                       Spell Attack
                     </div>
                   </div>
@@ -1411,9 +1416,7 @@ const CharacterSheet = ({
                       ...styles.statCard,
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#8b5cf6",
-                      backgroundColor: isRolling
-                        ? "#8b5cf6" + "20"
-                        : "transparent",
+
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
@@ -1429,7 +1432,7 @@ const CharacterSheet = ({
                     />
                     <div
                       style={{
-                        fontSize: "1.25rem",
+                        fontSize: "24px",
                         fontWeight: "bold",
                         color: "#8b5cf6",
                         marginBottom: "0.25rem",
@@ -1511,7 +1514,7 @@ const CharacterSheet = ({
                     style={{
                       ...styles.statValue,
                       color: theme.warning || "#d97706",
-                      fontSize: "1.25rem",
+                      fontSize: "24px",
                       fontWeight: "bold",
                       marginBottom: "0.25rem",
                     }}
@@ -1549,7 +1552,7 @@ const CharacterSheet = ({
                     />
                     <div
                       style={{
-                        fontSize: "1.25rem",
+                        fontSize: "24px",
                         fontWeight: "bold",
                         color: "#8b5cf6",
                         marginBottom: "0.25rem",

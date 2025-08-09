@@ -286,7 +286,7 @@ function BasicInfo({
         </div>
       </div>
 
-      <div style={styles.fieldContainer}>
+      {/* <div style={styles.fieldContainer}>
         <label style={styles.label}>Wand Type</label>
         <input
           type="text"
@@ -297,10 +297,9 @@ function BasicInfo({
           maxLength={100}
         />
         <div style={styles.helpText}>
-          Describe your character's wand (wood type, core, length, etc.). This
-          is for flavor and roleplay.
+          Describe your character's wand (wood type, core, length, etc.).
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

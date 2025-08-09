@@ -53,7 +53,7 @@ const InspirationTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `Inspiration ${newState ? "Gained" : "Used"}`,
+          title: `Inspiration ${newState ? "Earned" : "Redeemed"}`,
           color: newState ? 0x10b981 : 0xf59e0b,
           fields: [
             {
@@ -66,15 +66,24 @@ const InspirationTracker = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Inspiration",
+            text: `${character.name} - Inspiration`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
