@@ -70,14 +70,14 @@ const CharacterFeatsDisplay = ({
       const houseData = houseFeatures[character.house];
       const houseName = character.house;
 
+      // Main House Feature
       sections.house.features.push({
-        name: `${houseName} Heritage`,
+        name: `${houseName} House`,
         type: "House Membership",
         source: houseName,
         level: null,
-        description: `Member of ${houseName} house. Each house provides unique magical traits, ability score bonuses, and special abilities that reflect the house's values and traditions.`,
+        description: `Member of ${houseName} house. Your house shapes your magical education and provides specialized training.`,
         details: [
-          `House: ${houseName}`,
           `Fixed Ability Bonuses: ${
             houseData.fixed
               ?.map(
@@ -86,17 +86,18 @@ const CharacterFeatsDisplay = ({
               )
               .join(", ") || "None"
           }`,
-          "Grants house-specific features and abilities",
-          "Access to house common room and resources",
-          houseData.feat ? "Provides a free feat" : "",
+          ...(houseData.feat ? ["Grants a free feat"] : []),
         ].filter(Boolean),
       });
 
+      // Process house features
       if (houseData.features) {
-        houseData.features.forEach((feature) => {
+        if (houseData.features.length === 1) {
+          // Single feature
+          const feature = houseData.features[0];
           sections.house.features.push({
             name: feature.name,
-            type: feature.isChoice ? "House Choice" : "House Feature",
+            type: feature.isChoice ? "House Choice Feature" : "House Feature",
             source: houseName,
             level: null,
             description: feature.description,
@@ -105,43 +106,30 @@ const CharacterFeatsDisplay = ({
                 ? feature.options.map(
                     (opt) => `${opt.name}: ${opt.description}`
                   )
-                : [feature.description],
+                : [],
           });
-        });
-      }
-
-      if (character.houseChoices && character.houseChoices[character.house]) {
-        const choices = character.houseChoices[character.house];
-        Object.entries(choices).forEach(([choiceType, choiceValue]) => {
-          const parentFeature = houseData.features?.find(
-            (f) =>
-              f.isChoice && f.options?.some((opt) => opt.name === choiceValue)
-          );
-
-          const selectedOption = parentFeature?.options?.find(
-            (opt) => opt.name === choiceValue
-          );
-
+        } else if (houseData.features.length > 1) {
+          // Multiple features - group them
           sections.house.features.push({
-            name: choiceValue,
-            type: "Selected House Choice",
+            name: "House Abilities",
+            type: "House Features",
             source: houseName,
             level: null,
-            description:
-              selectedOption?.description ||
-              `Selected ${choiceType}: ${choiceValue}`,
-            details: [
-              "Chosen during character creation",
-              "Represents personal specialization within house training",
-            ],
+            description: `Your training in ${houseName} house has granted you specialized abilities and techniques.`,
+            details: houseData.features.map((feature) =>
+              feature.isChoice && feature.options
+                ? `${feature.name}: ${feature.description}`
+                : `${feature.name}: ${feature.description}`
+            ),
           });
-        });
+        }
       }
     }
 
     if (character.subclass) {
       const subclassData = subclassesData?.[character.subclass];
 
+      // Main Subclass Feature
       sections.subclass.features.push({
         name: character.subclass,
         type: "Specialization",
@@ -149,35 +137,13 @@ const CharacterFeatsDisplay = ({
         level: character.subclassLevel || 1,
         description:
           subclassData?.description ||
-          `Your specialized focus in ${character.subclass}. This represents advanced study and mastery in a particular school of magic or approach to spellcasting.`,
-        details: [
-          `Subclass Level: ${character.subclassLevel || 1}`,
-          "Provides specialized abilities and bonuses",
-          "Unlocks unique spellcasting techniques",
-          "Reflects advanced magical education",
-        ],
+          `Your specialized focus in ${character.subclass}.`,
+        details: [], // No details box for main specialization
       });
 
-      if (subclassData?.higherLevelFeatures) {
-        const currentLevel = character.subclassLevel || 1;
-        subclassData.higherLevelFeatures.forEach((levelFeature) => {
-          if (levelFeature.level <= currentLevel) {
-            sections.subclass.features.push({
-              name: levelFeature.name,
-              type: "Subclass Ability",
-              source: character.subclass,
-              level: levelFeature.level,
-              description: levelFeature.description,
-              details: levelFeature.choices
-                ? levelFeature.choices.map(
-                    (choice) => `${choice.name}: ${choice.description}`
-                  )
-                : [levelFeature.description],
-            });
-          }
-        });
-      }
+      // Don't show the redundant "Subclass Abilities" section since individual choices are displayed
 
+      // Process character's subclass choices
       if (character.subclassChoices) {
         Object.entries(character.subclassChoices).forEach(([level, choice]) => {
           const choiceName =
@@ -188,17 +154,32 @@ const CharacterFeatsDisplay = ({
                 choice?.name ||
                 String(choice);
 
+          // Find the corresponding choice description from any feature at any level
+          let selectedOption = null;
+          if (subclassData?.higherLevelFeatures) {
+            // Search through all features and their choices to find the matching option
+            for (const feature of subclassData.higherLevelFeatures) {
+              if (feature.choices && feature.choices.length > 0) {
+                const foundOption = feature.choices.find(
+                  (opt) => opt.name === choiceName
+                );
+                if (foundOption) {
+                  selectedOption = foundOption;
+                  break;
+                }
+              }
+            }
+          }
+
           sections.subclass.features.push({
-            name: choiceName,
-            type: "Subclass Choice",
+            name: `${choiceName} (Selected)`,
+            type: "Selected Subclass Choice",
             source: character.subclass,
             level: parseInt(level) || null,
-            description: `A specialized technique or focus you've chosen as part of your ${character.subclass} training.`,
-            details: [
-              `Chosen at level ${level}`,
-              "Represents personal specialization",
-              "Enhances core subclass abilities",
-            ],
+            description: `Your selected specialization from level ${level}`,
+            details: selectedOption?.description
+              ? [selectedOption.description]
+              : [`Your chosen specialization: ${choiceName}`],
           });
         });
       }
@@ -254,69 +235,261 @@ const CharacterFeatsDisplay = ({
       }
     }
 
+    // Enhanced Heritage Features Processing
     if (
       character.innateHeritage &&
       heritageDescriptions?.[character.innateHeritage]
     ) {
       const heritageData = heritageDescriptions[character.innateHeritage];
+      const heritageName = character.innateHeritage;
 
+      // Main Heritage Feature - just the core description
       sections.innateHeritage.features.push({
-        name: `${character.innateHeritage} Heritage`,
+        name: `${heritageName} Heritage`,
         type: "Magical Heritage",
         source: "Innate Heritage",
         level: null,
         description: heritageData.description,
-        details: heritageData.benefits || [
-          "Innate magical characteristics",
-          "Heritage-specific abilities",
-          "Influences magical potential",
-        ],
+        details: [], // No generic details - let the description speak for itself
       });
 
-      if (
-        character.innateHeritageSkills &&
-        character.innateHeritageSkills.length > 0
-      ) {
-        sections.innateHeritage.features.push({
-          name: "Heritage Skill Aptitude",
-          type: "Heritage Proficiency",
-          source: character.innateHeritage,
-          level: null,
-          description: `Your magical heritage has given you natural aptitude in certain skills.`,
-          details: character.innateHeritageSkills.map(
-            (skill) => `Heritage proficiency: ${skill}`
-          ),
+      // Track which benefits we've already processed to avoid duplicates
+      const processedBenefitTexts = new Set();
+
+      // Process benefits from the heritage - group them into a single feature if multiple
+      if (heritageData.benefits && Array.isArray(heritageData.benefits)) {
+        const validBenefits = heritageData.benefits.filter(
+          (benefit) =>
+            !benefit.includes("Choose one of") &&
+            !benefit.startsWith("Option") &&
+            !benefit.startsWith("Ability Score Increase")
+        );
+
+        if (validBenefits.length === 1) {
+          // Single benefit - extract meaningful name
+          const benefit = validBenefits[0];
+          let featureName = "Heritage Ability";
+          let description = benefit;
+
+          // Try to extract a meaningful name
+          if (benefit.includes(":")) {
+            const colonIndex = benefit.indexOf(":");
+            const potentialName = benefit.substring(0, colonIndex).trim();
+            if (potentialName.length < 50) {
+              featureName = potentialName;
+              description = benefit.substring(colonIndex + 1).trim();
+            }
+          } else if (benefit.toLowerCase().includes("proficiency")) {
+            featureName = "Heritage Proficiencies";
+          } else if (benefit.toLowerCase().includes("cantrip")) {
+            featureName = "Heritage Magic";
+          } else if (benefit.toLowerCase().includes("spell")) {
+            featureName = "Heritage Spellcasting";
+          } else if (benefit.toLowerCase().includes("resistance")) {
+            featureName = "Heritage Resistance";
+          } else if (benefit.toLowerCase().includes("darkvision")) {
+            featureName = "Heritage Darkvision";
+          }
+
+          sections.innateHeritage.features.push({
+            name: featureName,
+            type: "Heritage Ability",
+            source: heritageName,
+            level: null,
+            description: description,
+            details: [],
+          });
+        } else if (validBenefits.length > 1) {
+          // Multiple benefits - group them into a single feature using the heritage's actual description
+          // Use the first benefit as the primary description if it's descriptive, otherwise use heritage description
+          let primaryDescription = heritageData.description;
+
+          // If the first benefit is more of a description than a mechanical effect, use it
+          const firstBenefit = validBenefits[0];
+          if (
+            firstBenefit &&
+            !firstBenefit.includes("Gain proficiency") &&
+            !firstBenefit.includes("You can") &&
+            firstBenefit.length > 50
+          ) {
+            primaryDescription = firstBenefit;
+          }
+
+          sections.innateHeritage.features.push({
+            name: "Heritage Abilities",
+            type: "Heritage Benefits",
+            source: heritageName,
+            level: null,
+            description: primaryDescription,
+            details: validBenefits,
+          });
+        }
+      }
+
+      // Process ability score increases from modifiers - only if not already shown in benefits
+      if (heritageData.modifiers?.abilityIncreases?.length > 0) {
+        heritageData.modifiers.abilityIncreases.forEach((increase) => {
+          if (increase.type === "fixed") {
+            // Find the specific ability score increase text from benefits
+            let specificBenefit = null;
+            if (heritageData.benefits) {
+              specificBenefit = heritageData.benefits.find(
+                (benefit) =>
+                  benefit.includes("Ability Score Increase") &&
+                  benefit.toLowerCase().includes(increase.ability.toLowerCase())
+              );
+            }
+
+            // Only show if there's a specific benefit text, otherwise it might be redundant
+            if (specificBenefit) {
+              const abilityName =
+                increase.ability.charAt(0).toUpperCase() +
+                increase.ability.slice(1);
+
+              sections.innateHeritage.features.push({
+                name: `${abilityName} Enhancement`,
+                type: "Ability Bonus",
+                source: heritageName,
+                level: null,
+                description: specificBenefit,
+                details: [],
+              });
+            }
+          }
         });
       }
 
+      // Process ability score decreases if any (like Troll Blood)
+      if (heritageData.modifiers?.abilityDecreases?.length > 0) {
+        heritageData.modifiers.abilityDecreases.forEach((decrease) => {
+          if (decrease.type === "fixed") {
+            // Find the specific ability score decrease text from benefits
+            let specificBenefit = null;
+            if (heritageData.benefits) {
+              specificBenefit = heritageData.benefits.find(
+                (benefit) =>
+                  benefit
+                    .toLowerCase()
+                    .includes(decrease.ability.toLowerCase()) &&
+                  (benefit.includes("Reduce") || benefit.includes("-"))
+              );
+            }
+
+            if (specificBenefit) {
+              const abilityName =
+                decrease.ability.charAt(0).toUpperCase() +
+                decrease.ability.slice(1);
+
+              sections.innateHeritage.features.push({
+                name: `${abilityName} Trade-off`,
+                type: "Ability Penalty",
+                source: heritageName,
+                level: null,
+                description: specificBenefit,
+                details: [],
+              });
+            }
+          }
+        });
+      }
+
+      // Process base skill proficiencies from heritage - only if not covered in benefits
+      if (heritageData.modifiers?.skillProficiencies?.length > 0) {
+        // Check if skill proficiencies are already covered in the benefits
+        const skillsCoveredInBenefits = heritageData.benefits?.some(
+          (benefit) =>
+            benefit.toLowerCase().includes("proficiency") &&
+            heritageData.modifiers.skillProficiencies.some((skill) =>
+              benefit.toLowerCase().includes(skill.toLowerCase())
+            )
+        );
+
+        if (!skillsCoveredInBenefits) {
+          // Find specific skill proficiency text from benefits
+          let specificBenefit = null;
+          if (heritageData.benefits) {
+            specificBenefit = heritageData.benefits.find(
+              (benefit) =>
+                benefit.toLowerCase().includes("proficiency") ||
+                benefit.toLowerCase().includes("gain proficiency")
+            );
+          }
+
+          sections.innateHeritage.features.push({
+            name: "Heritage Skill Training",
+            type: "Heritage Proficiency",
+            source: heritageName,
+            level: null,
+            description:
+              specificBenefit ||
+              `Your ${heritageName.toLowerCase()} heritage provides training in specialized skills.`,
+            details: heritageData.modifiers.skillProficiencies.map(
+              (skill) => `Proficient in ${skill}`
+            ),
+          });
+        }
+      }
+
+      // Process heritage features with choices
+      if (heritageData.features && heritageData.features.length > 0) {
+        heritageData.features.forEach((feature) => {
+          if (feature.isChoice && feature.options) {
+            // Show the choice feature itself
+            sections.innateHeritage.features.push({
+              name: feature.name,
+              type: "Heritage Choice Feature",
+              source: heritageName,
+              level: null,
+              description: feature.description,
+              details: feature.options.map(
+                (option) => `${option.name}: ${option.description}`
+              ),
+            });
+          } else {
+            // Show non-choice features
+            sections.innateHeritage.features.push({
+              name: feature.name,
+              type: "Heritage Feature",
+              source: heritageName,
+              level: null,
+              description: feature.description,
+              details: [feature.description],
+            });
+          }
+        });
+      }
+
+      // Process character's selected heritage choices
       if (
         character.heritageChoices &&
-        character.heritageChoices[character.innateHeritage]
+        character.heritageChoices[heritageName]
       ) {
-        const choices = character.heritageChoices[character.innateHeritage];
+        const choices = character.heritageChoices[heritageName];
         Object.entries(choices).forEach(([featureName, choiceName]) => {
-          const feature = heritageData.features?.find(
+          const parentFeature = heritageData.features?.find(
             (f) => f.name === featureName
           );
-          const choiceDetails = feature?.options?.find(
+          const selectedOption = parentFeature?.options?.find(
             (opt) => opt.name === choiceName
           );
 
           sections.innateHeritage.features.push({
-            name: choiceName,
-            type: "Heritage Choice",
-            source: character.innateHeritage,
+            name: `${choiceName} (Selected)`,
+            type: "Selected Heritage Choice",
+            source: heritageName,
             level: null,
             description:
-              choiceDetails?.description ||
-              `A specialized heritage trait you've developed or chosen to emphasize.`,
+              selectedOption?.description ||
+              `Your chosen specialization: ${choiceName}`,
             details: [
-              "Heritage-specific ability",
-              "Chosen during character creation",
-              "Reflects heritage specialization",
-              ...(choiceDetails?.skillProficiencies
-                ? choiceDetails.skillProficiencies.map(
+              ...(selectedOption?.skillProficiencies
+                ? selectedOption.skillProficiencies.map(
                     (skill) => `Grants proficiency in ${skill}`
+                  )
+                : []),
+              ...(selectedOption?.toolProficiencies
+                ? selectedOption.toolProficiencies.map(
+                    (tool) => `Grants proficiency with ${tool}`
                   )
                 : []),
             ].filter(Boolean),
@@ -324,165 +497,277 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      if (heritageData.modifiers?.abilityIncreases?.length > 0) {
-        const abilityIncreases = heritageData.modifiers.abilityIncreases
-          .filter((inc) => inc.type === "fixed")
-          .map(
-            (inc) =>
-              `+${inc.amount} ${
-                inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
-              }`
-          )
-          .join(", ");
+      // Process character's heritage skills if separate from choices and not already covered
+      if (
+        character.innateHeritageSkills &&
+        character.innateHeritageSkills.length > 0
+      ) {
+        // Check if these skills are already covered by heritage skill proficiencies or benefits
+        const skillsAlreadyCovered =
+          heritageData.modifiers?.skillProficiencies?.length > 0 ||
+          heritageData.benefits?.some((benefit) =>
+            character.innateHeritageSkills.some((skill) =>
+              benefit.toLowerCase().includes(skill.toLowerCase())
+            )
+          );
 
-        if (abilityIncreases) {
+        if (!skillsAlreadyCovered) {
+          // Try to find specific description for heritage skills from benefits
+          let specificBenefit = null;
+          if (heritageData.benefits) {
+            specificBenefit = heritageData.benefits.find((benefit) =>
+              character.innateHeritageSkills.some((skill) =>
+                benefit.toLowerCase().includes(skill.toLowerCase())
+              )
+            );
+          }
+
           sections.innateHeritage.features.push({
-            name: "Heritage Ability Enhancement",
-            type: "Ability Bonus",
-            source: character.innateHeritage,
+            name: "Heritage Skill Aptitude",
+            type: "Heritage Proficiency",
+            source: heritageName,
             level: null,
-            description: `Your heritage naturally enhances certain abilities.`,
-            details: [`Ability Score Increases: ${abilityIncreases}`],
+            description:
+              specificBenefit ||
+              `Your ${heritageName.toLowerCase()} heritage grants natural aptitude in specialized skills.`,
+            details: character.innateHeritageSkills.map(
+              (skill) => `Heritage proficiency: ${skill}`
+            ),
           });
         }
+      }
+
+      // Process other heritage modifiers (like special abilities) - only if not already covered
+      if (heritageData.modifiers?.other) {
+        const otherAbilities = heritageData.modifiers.other;
+        Object.entries(otherAbilities).forEach(([abilityKey, value]) => {
+          if (value === true || (typeof value === "number" && value > 0)) {
+            // Find the specific description from the benefits array for this ability
+            let specificBenefit = null;
+            if (heritageData.benefits) {
+              specificBenefit = heritageData.benefits.find((benefit) => {
+                const lowerBenefit = benefit.toLowerCase();
+                const lowerKey = abilityKey.toLowerCase();
+
+                // Map ability keys to their likely text in benefits
+                if (
+                  abilityKey === "darkvision" &&
+                  lowerBenefit.includes("darkvision")
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "speedBonus" &&
+                  (lowerBenefit.includes("speed") ||
+                    lowerBenefit.includes("walking"))
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "naturalWeapons" &&
+                  (lowerBenefit.includes("hooves") ||
+                    lowerBenefit.includes("talons") ||
+                    lowerBenefit.includes("natural weapon"))
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "poisonResistance" &&
+                  lowerBenefit.includes("poison resistance")
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "keenSmell" &&
+                  lowerBenefit.includes("keen smell")
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "muscularBuild" &&
+                  lowerBenefit.includes("muscular build")
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "heftyBuild" &&
+                  lowerBenefit.includes("hefty")
+                ) {
+                  return true;
+                } else if (
+                  abilityKey === "nimbleBody" &&
+                  lowerBenefit.includes("nimble body")
+                ) {
+                  return true;
+                } else if (
+                  lowerKey
+                    .replace(/([A-Z])/g, " $1")
+                    .trim()
+                    .split(" ")
+                    .some((word) => lowerBenefit.includes(word))
+                ) {
+                  return true;
+                }
+                return false;
+              });
+            }
+
+            // Only show if we have specific benefit text and it's not already processed
+            if (
+              specificBenefit &&
+              !specificBenefit.includes("Ability Score Increase") &&
+              !processedBenefitTexts.has(specificBenefit)
+            ) {
+              // Extract name and description from the specific benefit
+              let featureName, description;
+              if (specificBenefit.includes(":")) {
+                const colonIndex = specificBenefit.indexOf(":");
+                featureName = specificBenefit.substring(0, colonIndex).trim();
+                description = specificBenefit.substring(colonIndex + 1).trim();
+              } else {
+                featureName = abilityKey
+                  .replace(/([A-Z])/g, " $1")
+                  .replace(/^./, (str) => str.toUpperCase())
+                  .trim();
+                description = specificBenefit;
+              }
+
+              processedBenefitTexts.add(specificBenefit);
+
+              sections.innateHeritage.features.push({
+                name: featureName,
+                type: "Heritage Ability",
+                source: heritageName,
+                level: null,
+                description: description,
+                details: [],
+              });
+            }
+          }
+        });
       }
     }
 
     const processedFeats = new Set();
 
+    // Helper function to add feat with deduplication
+    const addFeat = (featName, featType, source, level, featData) => {
+      // Use just the feat name for deduplication, ignoring source
+      if (processedFeats.has(featName)) {
+        return; // Skip if we've already processed this feat
+      }
+
+      processedFeats.add(featName);
+
+      sections.feats.features.push({
+        name: featName,
+        type: featType,
+        source: source,
+        level: level,
+        description:
+          featData?.preview ||
+          featData?.description?.[0] ||
+          `A feat representing specialized training or natural talent that enhances your character's capabilities.`,
+        details: Array.isArray(featData?.description)
+          ? featData.description
+          : featData?.description
+          ? [featData.description]
+          : [
+              `Acquired through character progression`,
+              "Provides specific mechanical benefits",
+              "Represents focused training or talent",
+            ],
+      });
+    };
+
+    // Process ASI choice feats first (they have more specific info)
     if (character.asiChoices) {
       Object.entries(character.asiChoices).forEach(([level, choice]) => {
         if (choice.type === "feat" && choice.selectedFeat) {
-          const featKey = `${choice.selectedFeat}-${level}`;
-          if (!processedFeats.has(featKey)) {
-            processedFeats.add(featKey);
+          const featData = standardFeats.find(
+            (f) => f.name === choice.selectedFeat
+          );
 
-            const featData = standardFeats.find(
-              (f) => f.name === choice.selectedFeat
-            );
-
-            sections.feats.features.push({
-              name: choice.selectedFeat,
-              type: "ASI Choice Feat",
-              source: `Level ${level}`,
-              level: parseInt(level),
-              description:
-                featData?.preview ||
-                featData?.description?.[0] ||
-                `A feat chosen instead of ability score improvement at level ${level}, representing specialized training or development.`,
-              details: Array.isArray(featData?.description)
-                ? featData.description
-                : featData?.description
-                ? [featData.description]
-                : [
-                    `Chosen at Level ${level}`,
-                    "Selected instead of ability score increase",
-                    "Provides specialized capabilities",
-                    "Represents character development focus",
-                  ],
-            });
-          }
+          addFeat(
+            choice.selectedFeat,
+            "ASI Choice Feat",
+            `Level ${level}`,
+            parseInt(level),
+            featData
+          );
         }
       });
     }
 
-    if (character.standardFeats && character.standardFeats.length > 0) {
-      character.standardFeats.forEach((featName) => {
-        if (!processedFeats.has(featName)) {
-          processedFeats.add(featName);
-
-          const featData = standardFeats.find((f) => f.name === featName);
-
-          sections.feats.features.push({
-            name: featName,
-            type: "Standard Feat",
-            source: "Character Level",
-            level: null,
-            description:
-              featData?.preview ||
-              featData?.description?.[0] ||
-              `A feat representing specialized training or natural talent that enhances your character's capabilities.`,
-            details: Array.isArray(featData?.description)
-              ? featData.description
-              : featData?.description
-              ? [featData.description]
-              : [
-                  "Gained through character progression",
-                  "Provides specific mechanical benefits",
-                  "Represents focused training or talent",
-                ],
-          });
-        }
-      });
-    }
-
+    // Process allFeats array
     if (character.allFeats && character.allFeats.length > 0) {
       character.allFeats.forEach((featString) => {
         const levelMatch = featString.match(/^(.+?)\s*\(Level\s+(\d+)\)$/);
 
         if (levelMatch) {
           const [, featName, level] = levelMatch;
-          const featKey = `${featName}-${level}`;
+          const featData = standardFeats.find((f) => f.name === featName);
 
-          if (!processedFeats.has(featKey)) {
-            processedFeats.add(featKey);
-
-            const featData = standardFeats.find((f) => f.name === featName);
-
-            sections.feats.features.push({
-              name: featName,
-              type: "Level Feat",
-              source: `Level ${level}`,
-              level: parseInt(level),
-              description:
-                featData?.preview ||
-                featData?.description?.[0] ||
-                `A feat acquired at level ${level} through character advancement and training.`,
-              details: Array.isArray(featData?.description)
-                ? featData.description
-                : featData?.description
-                ? [featData.description]
-                : [
-                    `Acquired at Level ${level}`,
-                    "Gained through character progression",
-                    "Enhances character abilities",
-                  ],
-            });
-          }
+          addFeat(
+            featName,
+            "Level Feat",
+            `Level ${level}`,
+            parseInt(level),
+            featData
+          );
         } else {
-          if (!processedFeats.has(featString)) {
-            processedFeats.add(featString);
+          const featData = standardFeats.find((f) => f.name === featString);
 
-            const featData = standardFeats.find((f) => f.name === featString);
-
-            sections.feats.features.push({
-              name: featString,
-              type: "Character Feat",
-              source: "Character Creation",
-              level: null,
-              description:
-                featData?.preview ||
-                featData?.description?.[0] ||
-                `A feat representing your character's background training or natural abilities.`,
-              details: Array.isArray(featData?.description)
-                ? featData.description
-                : featData?.description
-                ? [featData.description]
-                : [
-                    "Gained during character creation",
-                    "Reflects character background",
-                    "Provides specialized capabilities",
-                  ],
-            });
-          }
+          addFeat(
+            featString,
+            "Character Feat",
+            "Character Creation",
+            null,
+            featData
+          );
         }
       });
     }
 
+    // Process standard feats last (lower priority)
+    if (character.standardFeats && character.standardFeats.length > 0) {
+      character.standardFeats.forEach((featName) => {
+        const featData = standardFeats.find((f) => f.name === featName);
+
+        addFeat(featName, "Standard Feat", "Character Level", null, featData);
+      });
+    }
+
     Object.keys(sections).forEach((sectionKey) => {
-      sections[sectionKey].features.sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
+      sections[sectionKey].features.sort((a, b) => {
+        // Sort by level first (nulls last)
+        const levelA = a.level === null ? Infinity : a.level;
+        const levelB = b.level === null ? Infinity : b.level;
+
+        if (levelA !== levelB) {
+          return levelA - levelB;
+        }
+
+        // If levels are the same, prioritize by type based on section
+        const getTypePriority = (type, section) => {
+          if (section === "subclass") {
+            if (type === "Specialization") return 0;
+            if (type === "Selected Subclass Choice") return 1;
+            return 2;
+          } else if (section === "background") {
+            if (type === "Life Experience") return 0;
+            return 1;
+          } else if (section === "house") {
+            if (type === "House Membership") return 0;
+            return 1;
+          }
+          return 0;
+        };
+
+        const priorityA = getTypePriority(a.type, sectionKey);
+        const priorityB = getTypePriority(b.type, sectionKey);
+
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+
+        // If levels and types are the same, sort by name
+        return a.name.localeCompare(b.name);
+      });
     });
 
     return sections;
@@ -829,7 +1114,7 @@ const CharacterFeatsDisplay = ({
                         {feature.description}
                       </div>
 
-                      {feature.details && (
+                      {feature.details && feature.details.length > 0 && (
                         <div style={styles.featureDetails}>
                           {Array.isArray(feature.details) ? (
                             <ul style={styles.detailsList}>
