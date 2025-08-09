@@ -1408,6 +1408,17 @@ export const spellsData = {
           description:
             "The Cruciatus Curse - One of the three Unforgivable Curses. Causes intense, excruciating pain to the victim. Prolonged use can cause permanent insanity. Using this curse on another human being is punishable by a life sentence in Azkaban.",
         },
+        {
+          name: "Nullum Effigium",
+          class: ["Defense Against the Dark Arts"],
+          level: "5th Level",
+          castingTime: "10 minutes",
+          range: "Self (60-foot-radius sphere)",
+          duration: "8 hours",
+          year: 7,
+          description:
+            "Commonly used by the Department of Magical Law enforcement, this wards an area against apparition or disapparition. No one may arrive in the warded area via apparition, nor may any creatures within the warded area cast the spell. Any attempt to do so results in the typical apparition effect, except the creature stays exactly where they are. At Higher Levels: When you cast this spell using a spell slot of 6th level or higher, the radius of the sphere increases by 60 feet for each slot level above 5th.",
+        },
       ],
       "8th Level": [
         {
@@ -1784,6 +1795,7 @@ export const spellsData = {
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
+          restricted: true,
           duration: "Instantaneous",
           year: 3,
           description:
@@ -1926,6 +1938,7 @@ export const spellsData = {
           class: ["Divinations"],
           level: "2nd Level",
           castingTime: "Action",
+          restriction: true,
           range: "120 Feet",
           duration: "Concentration, up to 1 minute",
           year: 4,
@@ -1995,6 +2008,7 @@ export const spellsData = {
           class: ["Divinations"],
           level: "3rd Level",
           castingTime: "Action",
+          restriction: true,
           range: "Self (15 Foot Radius)",
           duration: "Concentration, up to 10 minutes",
           year: 5,
@@ -2131,7 +2145,7 @@ export const spellsData = {
       "8th Level": [],
       "9th Level": [
         {
-          name: "Providentum",
+          name: "Providentium",
           class: ["Divinations"],
           level: "9th Level",
           castingTime: "1 Minute",
@@ -2154,7 +2168,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Incendio Ruptis",
-          class: [],
+          class: ["Transfiguration"],
           level: "Cantrip",
           castingTime: "Action",
           range: "120 Feet",
@@ -2167,7 +2181,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Diffindo Glacia",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -2179,7 +2193,7 @@ export const spellsData = {
         },
         {
           name: "Intonuit Fluctus",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Action",
           range: "Self",
@@ -2203,7 +2217,7 @@ export const spellsData = {
         },
         {
           name: "Respersio",
-          class: [],
+          class: ["Transfiguration"],
           level: "3rd Level",
           castingTime: "Action",
           range: "120 Feet",
@@ -2216,7 +2230,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Glacius Maxima",
-          class: [],
+          class: ["Charms"],
           level: "4th Level",
           castingTime: "Action",
           range: "300 Feet",
@@ -2230,7 +2244,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Tempestus",
-          class: [],
+          class: ["Transfiguration"],
           level: "8th Level",
           castingTime: "1 Minute",
           range: "Sight",
@@ -2243,7 +2257,7 @@ export const spellsData = {
       "9th Level": [
         {
           name: "Fulgur Maxima",
-          class: [],
+          class: ["Transfiguration"],
           level: "9th Level",
           castingTime: "Action",
           range: "Self (120-foot line)",
@@ -2264,7 +2278,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Magno",
-          class: [],
+          class: ["Transfiguration"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self (5 Foot Radius)",
@@ -2277,7 +2291,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Clario",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Touch",
@@ -2288,7 +2302,7 @@ export const spellsData = {
         },
         {
           name: "Ignis Ictus",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2299,7 +2313,7 @@ export const spellsData = {
         },
         {
           name: "Irus Ictus",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2310,7 +2324,7 @@ export const spellsData = {
         },
         {
           name: "Pererro",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Touch",
@@ -2321,7 +2335,7 @@ export const spellsData = {
         },
         {
           name: "Tonitrus Ictus",
-          class: [],
+          class: ["Transfiguration"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2334,7 +2348,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Notam Ictus",
-          class: [],
+          class: ["Transfiguration"],
           level: "2nd Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2347,7 +2361,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Inanus Ictus",
-          class: [],
+          class: ["Transfiguration"],
           level: "3rd Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2360,7 +2374,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Titubo Ictus",
-          class: [],
+          class: ["Transfiguration"],
           level: "4th Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2394,7 +2408,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Anapneo",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "1 Action",
           range: "30 Feet",
@@ -2462,7 +2476,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Aculeo Sanentur",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2473,7 +2487,7 @@ export const spellsData = {
         },
         {
           name: "Animatem",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           castingTime: "Action",
           range: "Touch",
@@ -2484,7 +2498,7 @@ export const spellsData = {
         },
         {
           name: "Intus Sunt",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           castingTime: "1 action",
           range: "30 feet",
@@ -2509,7 +2523,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Pervivo",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "5th Level",
           castingTime: "1 Hour",
           range: "Touch",
@@ -2523,7 +2537,7 @@ export const spellsData = {
         {
           name: "Protego Totalum",
           level: "6th Level",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           castingTime: "Action",
           range: "Self (10-foot-radius sphere)",
           duration: "Concentration, up to 1 minute",
@@ -2584,7 +2598,7 @@ export const spellsData = {
         },
         {
           name: "Beastia Amicatum",
-          class: [],
+          class: ["Charms"],
           level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2597,7 +2611,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Beastia Nuntium",
-          class: [],
+          class: ["Charms"],
           level: "2nd Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2608,9 +2622,10 @@ export const spellsData = {
         },
         {
           name: "Beastia Sensibus",
-          class: [],
+          class: ["Divinations"],
           level: "2nd Level",
           castingTime: "Action",
+          restriction: true,
           range: "Touch",
           duration: "Concentration, up to 1 hour",
           year: 4,
@@ -2621,7 +2636,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Obtestor",
-          class: [],
+          class: ["Charms"],
           level: "3rd Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -2637,7 +2652,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Imperio Creatura",
-          class: [],
+          class: ["Charms"],
           level: "4th Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -2651,7 +2666,7 @@ export const spellsData = {
         },
         {
           name: "Engorgio Insectum",
-          class: [],
+          class: ["Charms"],
           level: "4th Level",
           castingTime: "1 Action",
           range: "30 Feet",
@@ -2665,7 +2680,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Insectum Maxima",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "5th Level",
           castingTime: "Action",
           range: "300 Feet",
@@ -2681,10 +2696,11 @@ export const spellsData = {
       "6th Level": [
         {
           name: "Natura Incantatem",
-          class: [],
+          class: ["Divinations"],
           level: "6th Level",
           castingTime: "1 Minute",
           range: "Self",
+          restriction: true,
           duration: "Instantaneous",
           year: 7,
           description:
@@ -2694,7 +2710,7 @@ export const spellsData = {
       "7th Level": [
         {
           name: "Draconiverto",
-          class: [],
+          class: ["Transfiguration"],
           level: "7th Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2708,7 +2724,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Animato Maxima",
-          class: [],
+          class: ["Transfiguration"],
           level: "8th Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2757,10 +2773,11 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Exspiravit",
-          class: [],
+          class: ["Divinations"],
           level: "2nd Level",
           castingTime: "Action",
           range: "60 Feet",
+          restriction: "true",
           duration: "Concentration, Up to 1 minute",
           year: 4,
           description:
@@ -2770,7 +2787,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Fraudemo Maxima",
-          class: [],
+          class: ["Charms"],
           level: "3rd Level",
           castingTime: "Action",
           range: "120 Feet",
@@ -2784,7 +2801,7 @@ export const spellsData = {
         },
         {
           name: "Timor",
-          class: [],
+          class: ["Charms"],
           level: "3rd Level",
           castingTime: "Action",
           range: "Self 30 Foot Radius",
@@ -3176,7 +3193,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Lux Maxima",
-          class: [],
+          class: ["Divinations"],
           level: "1st Level",
           castingTime: "Action",
           range: "120 Feet",
@@ -3225,10 +3242,11 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Lunativia",
-          class: [],
+          class: ["Divinations"],
           level: "5th Level",
           castingTime: "Action",
           range: "Self (60-foot line)",
+          restriction: true,
           duration: "Concentration and Dedication, up to 1 minute",
           year: 6,
           description:
@@ -3238,10 +3256,11 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Solativia",
-          class: [],
+          class: ["Divinations"],
           level: "8th Level",
           castingTime: "Action",
           range: "150 Feet",
+          restriction: true,
           duration: "Instantaneous",
           year: 7,
           description:
@@ -3260,7 +3279,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Manus",
-          class: [],
+          class: ["Charms"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 feet",
@@ -3274,7 +3293,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Tranquillitatem",
-          class: [],
+          class: ["Charms"],
           level: "2nd Level",
           year: 3,
           restriction: false,
@@ -3285,7 +3304,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Fictus",
-          class: [],
+          class: ["Charms"],
           level: "3rd Level",
           year: 4,
           restriction: false,
@@ -3294,7 +3313,7 @@ export const spellsData = {
         },
         {
           name: "Roboratum",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           year: 5,
           restriction: false,
@@ -3308,7 +3327,7 @@ export const spellsData = {
         {
           name: "Incarcerebra",
           level: "6th Level",
-          class: [],
+          class: ["Charms"],
           year: 7,
           restriction: false,
           description:
@@ -3319,7 +3338,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Dubium/Fiducium",
-          class: [],
+          class: ["Charms"],
           level: "8th Level",
           castingTime: "1 Hour",
           range: "60 Feet",
@@ -3404,7 +3423,7 @@ export const spellsData = {
       "9th Level": [
         {
           name: "Fidelius Mysteria Celare",
-          class: [],
+          class: ["Charms"],
           level: "9th Level",
           castingTime: "1 hour",
           range: "Self (150-foot-radius hemisphere)",
