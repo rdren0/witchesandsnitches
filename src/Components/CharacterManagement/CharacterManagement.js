@@ -31,7 +31,7 @@ const CharacterManagement = ({
   const [levelingUpCharacter, setLevelingUpCharacter] = useState(null);
   const [selectedTargetUserId, setSelectedTargetUserId] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
-  const [viewMode, setViewMode] = useState("my");
+  const [viewMode, setViewMode] = useState(adminMode ? "all" : "my");
   const [characterLoading, setCharacterLoading] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
@@ -417,21 +417,23 @@ const CharacterManagement = ({
         >
           View:
         </span>
-        <button
-          style={{
-            padding: "6px 12px",
-            borderRadius: "6px",
-            border: `1px solid ${theme.border}`,
-            backgroundColor:
-              viewMode === "my" ? theme.primary : theme.background,
-            color: viewMode === "my" ? "white" : theme.text,
-            cursor: "pointer",
-            fontSize: "12px",
-          }}
-          onClick={() => setViewMode("my")}
-        >
-          My Characters
-        </button>
+        {!adminMode && (
+          <button
+            style={{
+              padding: "6px 12px",
+              borderRadius: "6px",
+              border: `1px solid ${theme.border}`,
+              backgroundColor:
+                viewMode === "my" ? theme.primary : theme.background,
+              color: viewMode === "my" ? "white" : theme.text,
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+            onClick={() => setViewMode("my")}
+          >
+            My Characters
+          </button>
+        )}
         <button
           style={{
             padding: "6px 12px",

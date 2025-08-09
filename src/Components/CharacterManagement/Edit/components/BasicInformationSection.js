@@ -49,10 +49,11 @@ const BasicInformationSection = ({
     if (setPreviewUrl) setPreviewUrl(null);
   };
 
+  console.log({ character, gameSessionOptions });
+
   return (
     <>
       <StepIndicator step={1} totalSteps={5} label="Basic Information" />
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Name *</label>
         <input
@@ -64,7 +65,6 @@ const BasicInformationSection = ({
           maxLength={50}
         />
       </div>
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Portrait</label>
         <OptimizedImageUpload
@@ -94,7 +94,7 @@ const BasicInformationSection = ({
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Game Session</label>
         <select
-          value={character.gameSession || ""}
+          value={character.gameSession || character.game_session || ""}
           onChange={(e) => handleInputChange("gameSession", e.target.value)}
           style={styles.select}
         >
@@ -106,11 +106,10 @@ const BasicInformationSection = ({
           ))}
         </select>
       </div>
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Casting Style</label>
         <select
-          value={character.castingStyle || ""}
+          value={character.castingStyle || character.casting_style || ""}
           onChange={(e) => handleInputChange("castingStyle", e.target.value)}
           style={styles.select}
         >
@@ -122,8 +121,8 @@ const BasicInformationSection = ({
           ))}
         </select>
       </div>
-
-      {character.castingStyle === "Intellect Caster" && (
+      {(character.castingStyle || character.casting_style) ===
+        "Intellect Caster" && (
         <div style={styles.fieldContainer}>
           <label style={styles.label}>Initiative Ability *</label>
           <div style={styles.helpText}>
@@ -155,7 +154,8 @@ const BasicInformationSection = ({
           <div style={styles.level1ChoiceContainer}>
             <label
               style={
-                character.initiativeAbility === "dexterity"
+                (character.initiativeAbility ||
+                  character.initiative_ability) === "dexterity"
                   ? styles.level1ChoiceLabelSelected
                   : styles.level1ChoiceLabel
               }
@@ -164,7 +164,10 @@ const BasicInformationSection = ({
                 type="radio"
                 name="initiativeAbility"
                 value="dexterity"
-                checked={character.initiativeAbility === "dexterity"}
+                checked={
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "dexterity"
+                }
                 onChange={(e) =>
                   handleInputChange("initiativeAbility", e.target.value)
                 }
@@ -172,7 +175,8 @@ const BasicInformationSection = ({
               />
               <span
                 style={
-                  character.initiativeAbility === "dexterity"
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "dexterity"
                     ? styles.level1ChoiceTextSelected
                     : styles.level1ChoiceText
                 }
@@ -217,7 +221,8 @@ const BasicInformationSection = ({
             </label>
             <label
               style={
-                character.initiativeAbility === "intelligence"
+                (character.initiativeAbility ||
+                  character.initiative_ability) === "intelligence"
                   ? styles.level1ChoiceLabelSelected
                   : styles.level1ChoiceLabel
               }
@@ -226,7 +231,10 @@ const BasicInformationSection = ({
                 type="radio"
                 name="initiativeAbility"
                 value="intelligence"
-                checked={character.initiativeAbility === "intelligence"}
+                checked={
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "intelligence"
+                }
                 onChange={(e) =>
                   handleInputChange("initiativeAbility", e.target.value)
                 }
@@ -234,7 +242,8 @@ const BasicInformationSection = ({
               />
               <span
                 style={
-                  character.initiativeAbility === "intelligence"
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "intelligence"
                     ? styles.level1ChoiceTextSelected
                     : styles.level1ChoiceText
                 }
@@ -282,7 +291,6 @@ const BasicInformationSection = ({
           </div>
         </div>
       )}
-
       <SchoolYearSelector
         schoolYear={character.school_year || character.schoolYear}
         onSchoolYearChange={(value) => handleInputChange("schoolYear", value)}
@@ -290,10 +298,9 @@ const BasicInformationSection = ({
         onLevelChange={(value) => handleInputChange("level", value)}
         styles={styles}
       />
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Hit Points</label>
-        {!character.castingStyle ? (
+        {!(character.castingStyle || character.casting_style) ? (
           <div style={styles.skillsPlaceholder}>
             Select a Casting Style first
           </div>
@@ -309,7 +316,7 @@ const BasicInformationSection = ({
                   <input
                     type="number"
                     min="1"
-                    value={character.hitPoints || ""}
+                    value={character.hit_points || ""}
                     onChange={(e) =>
                       handleInputChange(
                         "hitPoints",
@@ -328,7 +335,7 @@ const BasicInformationSection = ({
                 )}
               </div>
             </div>
-            {character.castingStyle && (
+            {(character.castingStyle || character.casting_style) && (
               <div style={styles.hpControlsContainer}>
                 <div style={styles.hpControlsInline}>
                   {!isHpManualMode && (

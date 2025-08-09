@@ -33,36 +33,6 @@ import {
   validateFeatSelections,
 } from "../utils";
 
-export const FeatRequirementsInfo = () => {
-  return (
-    <div
-      style={{
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        border: "1px solid rgba(59, 130, 246, 0.3)",
-        borderRadius: "6px",
-        padding: "12px",
-        marginBottom: "12px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "12px",
-          fontWeight: "600",
-          color: "#2563eb",
-          marginBottom: "6px",
-        }}
-      >
-        📋 Feat Prerequisites
-      </div>
-      <div style={{ fontSize: "11px", color: "#1d4ed8", lineHeight: "1.4" }}>
-        Some feats have prerequisites (ability scores, proficiencies, etc.).
-        Feats you don't meet the requirements for will be clearly marked. Your
-        current character qualifications will be checked automatically.
-      </div>
-    </div>
-  );
-};
-
 const CharacterCreator = ({
   user,
   onCharacterSaved,
@@ -1034,7 +1004,6 @@ const CharacterCreator = ({
 
       {isFeat && (
         <div style={styles.fieldContainer}>
-          <FeatRequirementsInfo character={character} />
           <EnhancedFeatureSelector
             character={character}
             setCharacter={setCharacter}
