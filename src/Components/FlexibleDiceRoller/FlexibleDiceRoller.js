@@ -156,6 +156,8 @@ const FlexibleDiceRoller = ({
       minWidth: "60px",
       color: theme.text,
       outline: "none",
+      MozAppearance: "textfield",
+      WebkitAppearance: "none",
     },
     titleInput: {
       width: "100%",
@@ -251,8 +253,7 @@ const FlexibleDiceRoller = ({
                 e.target.style.borderColor = "#3b82f6";
               }}
               onBlur={(e) => {
-                e.target.style.borderColor =
-                  theme === "dark" ? "#4b5563" : "#d1d5db";
+                e.target.style.borderColor = theme.surface;
               }}
             />
           </div>
@@ -262,6 +263,19 @@ const FlexibleDiceRoller = ({
           <div style={styles.inputContainer}>
             <label style={styles.label}>Dice Quantity</label>
             <div style={styles.modifierContainer}>
+              <style>
+                {`
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+      `}
+              </style>
               <button
                 type="button"
                 onClick={decrementDiceQuantity}
@@ -283,6 +297,9 @@ const FlexibleDiceRoller = ({
                   textAlign: "center",
                   fontWeight: "600",
                   minWidth: "60px",
+                  MozAppearance: "textfield",
+                  WebkitAppearance: "none",
+                  margin: 0,
                 }}
               />
               <button
@@ -322,14 +339,12 @@ const FlexibleDiceRoller = ({
                   minWidth: "80px",
                 }}
                 onFocus={(e) => {
-                  e.target.style.backgroundColor =
-                    theme === "dark" ? "#374151" : "#f8fafc";
+                  e.target.style.backgroundColor = theme.surface;
                   e.target.parentElement.style.borderColor = "#3b82f6";
                 }}
                 onBlur={(e) => {
                   e.target.style.backgroundColor = "transparent";
-                  e.target.parentElement.style.borderColor =
-                    theme === "dark" ? "#4b5563" : "#d1d5db";
+                  e.target.parentElement.style.borderColor = theme.surface;
 
                   const value = parseInt(e.target.value) || 2;
                   setDiceType(Math.max(2, Math.min(9999, value)));
@@ -346,7 +361,7 @@ const FlexibleDiceRoller = ({
             <div
               style={{
                 fontSize: "10px",
-                color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                color: theme.textSecondary,
                 textAlign: "center",
                 marginTop: "2px",
               }}
@@ -370,23 +385,14 @@ const FlexibleDiceRoller = ({
                     onClick={() => setDiceType(dice)}
                     style={{
                       padding: "2px 6px",
+                      height: "40px",
+                      width: "40px",
                       fontSize: "10px",
-                      border: `1px solid ${
-                        theme === "dark" ? "#4b5563" : "#d1d5db"
-                      }`,
+                      border: `1px solid ${theme.text}`,
                       borderRadius: "4px",
                       backgroundColor:
-                        diceType === dice
-                          ? "#3b82f6"
-                          : theme === "dark"
-                          ? "#374151"
-                          : "#ffffff",
-                      color:
-                        diceType === dice
-                          ? "white"
-                          : theme === "dark"
-                          ? "#d1d5db"
-                          : "#374151",
+                        diceType === dice ? "#3b82f6" : theme.background,
+                      color: diceType === dice ? "white" : theme.text,
                       cursor: "pointer",
                       transition: "all 0.1s ease",
                     }}
@@ -396,28 +402,6 @@ const FlexibleDiceRoller = ({
                 ))}
               </div>
             )}
-          </div>
-
-          <div style={styles.inputContainer}>
-            <label style={styles.label}>Roll Type</label>
-            <select
-              value={rollType}
-              onChange={(e) => setRollType(e.target.value)}
-              style={styles.select}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#3b82f6";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor =
-                  theme === "dark" ? "#4b5563" : "#d1d5db";
-              }}
-            >
-              {rollTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div style={styles.inputContainer}>
@@ -436,8 +420,7 @@ const FlexibleDiceRoller = ({
                 onChange={(e) => setModifier(e.target.value)}
                 style={styles.modifierInput}
                 onFocus={(e) => {
-                  e.target.style.backgroundColor =
-                    theme === "dark" ? "#374151" : "#f8fafc";
+                  e.target.style.backgroundColor = theme.surface;
                 }}
                 onBlur={(e) => {
                   e.target.style.backgroundColor = "transparent";
@@ -451,6 +434,26 @@ const FlexibleDiceRoller = ({
                 <Plus size={14} />
               </button>
             </div>
+          </div>
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>Roll Type</label>
+            <select
+              value={rollType}
+              onChange={(e) => setRollType(e.target.value)}
+              style={styles.select}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#3b82f6";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = theme.surface;
+              }}
+            >
+              {rollTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

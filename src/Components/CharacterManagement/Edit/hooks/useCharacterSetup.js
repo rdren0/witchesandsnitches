@@ -74,6 +74,7 @@ export const useCharacterSetup = (originalCharacter) => {
         healing: 0,
         jinxesHexesCurses: 0,
       },
+      imageUrl: "",
     };
 
     const merged = { ...defaultCharacter, ...originalCharacter };
@@ -97,6 +98,9 @@ export const useCharacterSetup = (originalCharacter) => {
       originalCharacter?.heritageChoices ||
       originalCharacter?.heritage_choices ||
       {};
+
+    merged.imageUrl =
+      originalCharacter?.imageUrl || originalCharacter?.image_url || "";
 
     return migrateBackgroundSkills(merged);
   }, [originalCharacter]);

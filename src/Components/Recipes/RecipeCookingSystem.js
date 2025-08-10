@@ -13,7 +13,11 @@ import {
 import { useRollFunctions } from "../utils/diceRoller";
 
 import { useTheme } from "../../contexts/ThemeContext";
-import { recipes, recipeQualityDCs, recipeCategories } from "./recipesData";
+import {
+  recipes,
+  recipeQualityDCs,
+  recipeCategories,
+} from "../../SharedData/recipesData";
 import { createRecipesStyles } from "../../styles/masterStyles";
 import { getDiscordWebhook } from "../../App/const";
 
@@ -384,7 +388,7 @@ const RecipeCookingSystem = ({ character, user, supabase }) => {
                 <div
                   style={{
                     fontSize: "0.875rem",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    color: theme.text,
                     marginTop: "8px",
                   }}
                 >

@@ -79,6 +79,7 @@ const CharacterList = ({
         id: char.id,
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
+        imageUrl: char.image_url || "",
         level: char.level,
         level1ChoiceType: char.level1_choice_type || "",
         magicModifiers: char.magic_modifiers || {
@@ -141,6 +142,7 @@ const CharacterList = ({
         initiativeAbility: char.initiative_ability || "dexterity",
         innateHeritage: char.innate_heritage,
         level: char.level,
+        imageUrl: char.image_url || "",
         level1ChoiceType: char.level1_choice_type || "",
         magicModifiers: char.magic_modifiers || {
           divinations: 0,
@@ -320,7 +322,6 @@ const CharacterList = ({
   };
 
   const filteredCharacters = getSortedAndFilteredCharacters();
-
   if (editingCharacter) {
     return (
       <CharacterEditor

@@ -46,7 +46,7 @@ const EnhancedSubclassSelector = ({
     return selectedClass ? [selectedClass] : subclassArray;
   }, [selectedSubclass]);
 
-  const normalizeSubclassChoices = (choices) => {
+  const normalizeSubclassChoices = useCallback((choices) => {
     if (!choices || typeof choices !== "object") return {};
 
     const normalized = {};
@@ -74,9 +74,11 @@ const EnhancedSubclassSelector = ({
     });
 
     return normalized;
-  };
+  }, []);
 
-  const normalizedSubclassChoices = normalizeSubclassChoices(subclassChoices);
+  const normalizedSubclassChoices = useMemo(() => {
+    return normalizeSubclassChoices(subclassChoices);
+  }, [subclassChoices, normalizeSubclassChoices]);
 
   useEffect(() => {
     if (
@@ -86,7 +88,7 @@ const EnhancedSubclassSelector = ({
       const normalized = normalizeSubclassChoices(externalSubclassChoices);
       setInternalSubclassChoices(normalized);
     }
-  }, [externalSubclassChoices]);
+  }, [externalSubclassChoices, normalizeSubclassChoices]);
 
   useEffect(() => {
     if (selectedSubclass && selectedSubclass.trim() !== "") {
@@ -267,10 +269,16 @@ const EnhancedSubclassSelector = ({
     [normalizedSubclassChoices, parseAllFeaturesByLevel, getAvailableLevels]
   );
 
+  const choiceStatus = useMemo(() => {
+    if (!selectedSubclassData) {
+      return { total: 0, missing: [], missingByLevel: {}, isComplete: true };
+    }
+    return getRequiredChoices(selectedSubclassData);
+  }, [selectedSubclassData, getRequiredChoices]);
+
   useEffect(() => {
     if (characterLevel > 1 && selectedSubclass && selectedSubclassData) {
-      const requiredChoices = getRequiredChoices(selectedSubclassData);
-      if (requiredChoices.total > 0 && !requiredChoices.isComplete) {
+      if (choiceStatus.total > 0 && !choiceStatus.isComplete) {
         setExpandedSubclasses((prev) => {
           const newSet = new Set(prev);
           newSet.add(selectedSubclass);
@@ -282,8 +290,8 @@ const EnhancedSubclassSelector = ({
     characterLevel,
     selectedSubclass,
     selectedSubclassData,
-    normalizedSubclassChoices,
-    getRequiredChoices,
+    choiceStatus.total,
+    choiceStatus.isComplete,
   ]);
 
   const saveToDatabase = useCallback(
@@ -310,7 +318,14 @@ const EnhancedSubclassSelector = ({
         setSaving(false);
       }
     },
-    [autoSave, characterId, discordUserId, onSaveError, onSaveSuccess]
+    [
+      autoSave,
+      characterId,
+      discordUserId,
+      onSaveError,
+      onSaveSuccess,
+      normalizeSubclassChoices,
+    ]
   );
 
   useEffect(() => {
@@ -332,6 +347,7 @@ const EnhancedSubclassSelector = ({
           characterId,
           discordUserId
         );
+
         if (character.subclass && !value) {
           onChange && onChange(character.subclass);
         }
@@ -353,7 +369,7 @@ const EnhancedSubclassSelector = ({
     };
 
     loadCharacterData();
-  }, [characterId, discordUserId, value, onChange, externalSubclassChoices]);
+  }, [characterId, discordUserId]);
 
   const handleSubclassToggle = async (subclassName) => {
     if (selectedSubclass === subclassName) {
@@ -846,9 +862,6 @@ const EnhancedSubclassSelector = ({
   };
 
   const hasSelectedSubclass = selectedSubclass ? 1 : 0;
-  const choiceStatus = selectedSubclassData
-    ? getRequiredChoices(selectedSubclassData)
-    : { total: 0, missing: [], missingByLevel: {}, isComplete: true };
 
   return (
     <div style={styles.fieldContainer}>

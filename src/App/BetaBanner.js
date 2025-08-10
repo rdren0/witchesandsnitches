@@ -3,6 +3,7 @@ import React from "react";
 const BetaBanner = () => {
   return (
     <div
+      className="beta-banner"
       style={{
         backgroundColor: "var(--warning-bg, #fef3c7)",
         color: "var(--warning-text, #92400e)",
@@ -14,6 +15,7 @@ const BetaBanner = () => {
       }}
     >
       <div
+        className="beta-banner-content"
         style={{
           margin: "0 auto",
           display: "flex",
@@ -39,6 +41,7 @@ const BetaBanner = () => {
         </div>
 
         <div
+          className="beta-banner-text"
           style={{
             flex: 1,
             minWidth: "300px",
@@ -53,18 +56,18 @@ const BetaBanner = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @media (max-width: 768px) {
-          div:first-child > div {
+          .beta-banner-content {
             flex-direction: column !important;
             text-align: center !important;
           }
 
-          div:first-child > div > div:nth-child(2) {
+          .beta-banner-text {
             min-width: auto !important;
           }
 
-          div:first-child {
+          .beta-banner {
             padding: 10px 16px !important;
           }
         }

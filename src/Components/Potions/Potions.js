@@ -16,7 +16,7 @@ import {
 import { useRollFunctions } from "../utils/diceRoller";
 
 import { useTheme } from "../../contexts/ThemeContext";
-import { potions, qualityDCs } from "./potionsData";
+import { potions, qualityDCs } from "../../SharedData/potionsData";
 import { createPotionsStyles } from "../../styles/masterStyles";
 
 const PotionBrewingSystem = ({ character, supabase, user }) => {
@@ -31,6 +31,9 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   const [lastResult, setLastResult] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [healingSkillChoice, setHealingSkillChoice] =
+    useState("wisdomPotionMaking");
+
   const [proficiencies, setProficiencies] = useState({
     potionMaking: 0,
     potioneersKit: true,
@@ -43,16 +46,68 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     return character || selectedCharacter;
   }, [character, selectedCharacter]);
 
+  const hasHealingSubclass = useMemo(() => {
+    return currentCharacter?.subclass === "Healing";
+  }, [currentCharacter?.subclass]);
+
+  const getMedicineSkillProficiencyInfo = useMemo(() => {
+    const skillLevel = currentCharacter?.skills?.medicine || 0;
+    const skillProficiencies = currentCharacter?.skillProficiencies || [];
+    const skillExpertise = currentCharacter?.skillExpertise || [];
+
+    const isProficientInMedicine =
+      skillProficiencies.includes("Medicine") ||
+      skillProficiencies.includes("medicine");
+
+    const hasExpertiseInMedicine =
+      skillExpertise.includes("Medicine") ||
+      skillExpertise.includes("medicine");
+
+    const proficiencyBonus = Math.ceil((currentCharacter?.level || 1) / 4) + 1;
+
+    if (skillLevel === 2) {
+      return {
+        status: "expertise",
+        bonus: proficiencyBonus * 2,
+        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
+      };
+    } else if (skillLevel === 1) {
+      return {
+        status: "proficient",
+        bonus: proficiencyBonus,
+        description: `+${proficiencyBonus} (proficient)`,
+      };
+    } else if (hasExpertiseInMedicine) {
+      return {
+        status: "expertise",
+        bonus: proficiencyBonus * 2,
+        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
+      };
+    } else if (isProficientInMedicine) {
+      return {
+        status: "proficient",
+        bonus: proficiencyBonus,
+        description: `+${proficiencyBonus} (proficient)`,
+      };
+    } else {
+      return {
+        status: "not proficient",
+        bonus: 0,
+        description: "+0 (not proficient)",
+      };
+    }
+  }, [
+    currentCharacter?.skills?.medicine,
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    currentCharacter?.level,
+  ]);
+
   const getCharacterPotionModifier = useMemo(() => {
     if (!currentCharacter) return 0;
 
-    const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
-    const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
-
     const level = currentCharacter.level || 1;
     const proficiencyBonus = Math.ceil(level / 4) + 1;
-
-    const skillLevel = currentCharacter.skills?.potionMaking || 0;
 
     const skillProficiencies = currentCharacter.skillProficiencies || [];
     const skillExpertise = currentCharacter.skillExpertise || [];
@@ -67,21 +122,193 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       skillExpertise.includes("Potion-Making") ||
       skillExpertise.includes("potionMaking");
 
-    let skillBonus = 0;
-    if (skillLevel === 1) {
-      skillBonus = proficiencyBonus;
-    } else if (skillLevel === 2) {
-      skillBonus = proficiencyBonus * 2;
-    } else if (hasExpertiseInPotionMaking) {
-      skillBonus = proficiencyBonus * 2;
+    let potionMakingSkillBonus = 0;
+    if (hasExpertiseInPotionMaking) {
+      potionMakingSkillBonus = proficiencyBonus * 2;
     } else if (isProficientInPotionMaking) {
-      skillBonus = proficiencyBonus;
+      potionMakingSkillBonus = proficiencyBonus;
     }
 
-    const totalModifier = wisdomModifier + skillBonus;
+    if (!hasHealingSubclass) {
+      const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+      const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
+      return wisdomModifier + potionMakingSkillBonus;
+    }
 
-    return totalModifier;
-  }, [currentCharacter]);
+    if (healingSkillChoice === "wisdomMedicine") {
+      const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+      const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
+      const medicineSkillBonus = getMedicineSkillProficiencyInfo.bonus;
+      const total = wisdomModifier + medicineSkillBonus;
+
+      return total;
+    } else if (healingSkillChoice === "intelligencePotionMaking") {
+      const intelligenceScore =
+        currentCharacter.abilityScores?.intelligence || 10;
+      const intelligenceModifier = Math.floor((intelligenceScore - 10) / 2);
+      const total = intelligenceModifier + potionMakingSkillBonus;
+
+      return total;
+    } else {
+      const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+      const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
+      const total = wisdomModifier + potionMakingSkillBonus;
+
+      return total;
+    }
+  }, [
+    currentCharacter?.level,
+    currentCharacter?.abilityScores,
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    hasHealingSubclass,
+    healingSkillChoice,
+    getMedicineSkillProficiencyInfo,
+  ]);
+
+  const getSkillProficiencyInfo = useMemo(() => {
+    const skillProficiencies = currentCharacter?.skillProficiencies || [];
+    const skillExpertise = currentCharacter?.skillExpertise || [];
+
+    const isProficientInPotionMaking =
+      skillProficiencies.includes("Potion Making") ||
+      skillProficiencies.includes("Potion-Making") ||
+      skillProficiencies.includes("potionMaking");
+
+    const hasExpertiseInPotionMaking =
+      skillExpertise.includes("Potion Making") ||
+      skillExpertise.includes("Potion-Making") ||
+      skillExpertise.includes("potionMaking");
+
+    const proficiencyBonus = Math.ceil((currentCharacter?.level || 1) / 4) + 1;
+
+    if (hasExpertiseInPotionMaking) {
+      return {
+        status: "expertise",
+        bonus: proficiencyBonus * 2,
+        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
+      };
+    } else if (isProficientInPotionMaking) {
+      return {
+        status: "proficient",
+        bonus: proficiencyBonus,
+        description: `+${proficiencyBonus} (proficient)`,
+      };
+    } else {
+      return {
+        status: "not proficient",
+        bonus: 0,
+        description: "+0 (not proficient)",
+      };
+    }
+  }, [
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    currentCharacter?.level,
+  ]);
+
+  const getSkillDisplayInfo = useMemo(() => {
+    if (!hasHealingSubclass) {
+      return {
+        abilityName: "Wisdom",
+        abilityModifier: Math.floor(
+          ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+        ),
+        skillName: "Potion Making",
+        skillInfo: getSkillProficiencyInfo,
+      };
+    }
+
+    if (healingSkillChoice === "wisdomMedicine") {
+      return {
+        abilityName: "Wisdom",
+        abilityModifier: Math.floor(
+          ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+        ),
+        skillName: "Medicine",
+        skillInfo: getMedicineSkillProficiencyInfo,
+      };
+    } else if (healingSkillChoice === "intelligencePotionMaking") {
+      return {
+        abilityName: "Intelligence",
+        abilityModifier: Math.floor(
+          ((currentCharacter?.abilityScores?.intelligence || 10) - 10) / 2
+        ),
+        skillName: "Potion Making",
+        skillInfo: getSkillProficiencyInfo,
+      };
+    } else {
+      return {
+        abilityName: "Wisdom",
+        abilityModifier: Math.floor(
+          ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+        ),
+        skillName: "Potion Making",
+        skillInfo: getSkillProficiencyInfo,
+      };
+    }
+  }, [
+    hasHealingSubclass,
+    healingSkillChoice,
+    currentCharacter?.abilityScores,
+    getSkillProficiencyInfo,
+    getMedicineSkillProficiencyInfo,
+  ]);
+
+  const renderHealingSkillChoice = () => {
+    if (!hasHealingSubclass) return null;
+
+    return (
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>Healing Subclass - Star Grass Salve</h3>
+        <div style={styles.proficiencyGrid}>
+          <div style={styles.proficiencySection}>
+            <div
+              style={{
+                fontSize: "0.875rem",
+                color: theme.text,
+                marginBottom: "12px",
+              }}
+            >
+              Star Grass Salve allows using Intelligence (Potion Making) or
+              Wisdom (Medicine) instead of the standard Wisdom (Potion Making):
+            </div>
+
+            <div style={styles.inputGroup}>
+              <select
+                value={healingSkillChoice}
+                onChange={(e) => {
+                  setHealingSkillChoice(e.target.value);
+                }}
+                style={styles.select}
+              >
+                <option value="wisdomPotionMaking">
+                  Wisdom (Standard Potion Making) +{" "}
+                  {Math.floor(
+                    ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+                  ) + getSkillProficiencyInfo.bonus}
+                </option>
+                <option value="intelligencePotionMaking">
+                  Intelligence (Potion Making) +{" "}
+                  {Math.floor(
+                    ((currentCharacter?.abilityScores?.intelligence || 10) -
+                      10) /
+                      2
+                  ) + getSkillProficiencyInfo.bonus}
+                </option>
+                <option value="wisdomMedicine">
+                  Wisdom (Medicine) +
+                  {Math.floor(
+                    ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+                  ) + getMedicineSkillProficiencyInfo.bonus}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const ingredientModifiers = {
     flawed: 2,
@@ -264,23 +491,24 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
     try {
       const characterModifier = getCharacterPotionModifier;
-
       const brewingResult = await rollBrewPotion({
         isRolling,
         setIsRolling,
-        character: selectedCharacter || character,
+        character: currentCharacter,
         selectedPotion,
         proficiencies,
         ingredientQuality: preparedQuality,
         qualityDCs,
         ingredientModifiers,
         characterModifier,
-
         addPotionToInventory,
         currentCharacter,
         supabase,
         user,
         rawIngredientQuality: ingredientQuality,
+        hasHealingSubclass,
+        healingSkillChoice,
+        skillDisplayInfo: getSkillDisplayInfo,
       });
 
       if (brewingResult) {
@@ -290,6 +518,8 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           preparedIngredientQuality: preparedQuality,
           characterModifier,
           timestamp: new Date().toLocaleString(),
+          hasHealingSubclass,
+          healingSkillChoice,
         };
         setLastResult(result);
       }
@@ -320,64 +550,57 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     return allPotions;
   };
 
-  const getSkillProficiencyInfo = useMemo(() => {
-    const skillLevel = currentCharacter?.skills?.potionMaking || 0;
-    const skillProficiencies = currentCharacter?.skillProficiencies || [];
-    const skillExpertise = currentCharacter?.skillExpertise || [];
+  const debugModifier = useMemo(() => {
+    if (!currentCharacter) return 0;
 
-    const isProficientInPotionMaking =
-      skillProficiencies.includes("Potion Making") ||
-      skillProficiencies.includes("Potion-Making") ||
-      skillProficiencies.includes("potionMaking");
+    const level = currentCharacter.level || 1;
+    const proficiencyBonus = Math.ceil(level / 4) + 1;
+    const skillProficiencies = currentCharacter.skillProficiencies || [];
+    const skillExpertise = currentCharacter.skillExpertise || [];
 
     const hasExpertiseInPotionMaking =
       skillExpertise.includes("Potion Making") ||
       skillExpertise.includes("Potion-Making") ||
       skillExpertise.includes("potionMaking");
 
-    const proficiencyBonus = Math.ceil((currentCharacter?.level || 1) / 4) + 1;
+    const potionMakingSkillBonus = hasExpertiseInPotionMaking
+      ? proficiencyBonus * 2
+      : 0;
 
-    if (skillLevel === 2) {
-      return {
-        status: "expertise",
-        bonus: proficiencyBonus * 2,
-        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
-      };
-    } else if (skillLevel === 1) {
-      return {
-        status: "proficient",
-        bonus: proficiencyBonus,
-        description: `+${proficiencyBonus} (proficient)`,
-      };
-    } else if (hasExpertiseInPotionMaking) {
-      return {
-        status: "expertise",
-        bonus: proficiencyBonus * 2,
-        description: `+${proficiencyBonus * 2} (expertise: 2x proficiency)`,
-      };
-    } else if (isProficientInPotionMaking) {
-      return {
-        status: "proficient",
-        bonus: proficiencyBonus,
-        description: `+${proficiencyBonus} (proficient)`,
-      };
+    const isProficientInMedicine =
+      skillProficiencies.includes("Medicine") ||
+      skillProficiencies.includes("medicine");
+
+    const hasExpertiseInMedicine =
+      skillExpertise.includes("Medicine") ||
+      skillExpertise.includes("medicine");
+
+    const medicineSkillBonus = hasExpertiseInMedicine
+      ? proficiencyBonus * 2
+      : isProficientInMedicine
+      ? proficiencyBonus
+      : 0;
+
+    const wisdomModifier = Math.floor(
+      ((currentCharacter.abilityScores?.wisdom || 10) - 10) / 2
+    );
+    const intelligenceModifier = Math.floor(
+      ((currentCharacter.abilityScores?.intelligence || 10) - 10) / 2
+    );
+
+    if (healingSkillChoice === "wisdomMedicine") {
+      return wisdomModifier + medicineSkillBonus;
+    } else if (healingSkillChoice === "intelligencePotionMaking") {
+      return intelligenceModifier + potionMakingSkillBonus;
     } else {
-      return {
-        status: "not proficient",
-        bonus: 0,
-        description: "+0 (not proficient)",
-      };
+      return wisdomModifier + potionMakingSkillBonus;
     }
-  }, [
-    currentCharacter?.skills?.potionMaking,
-    currentCharacter?.skillProficiencies,
-    currentCharacter?.skillExpertise,
-    currentCharacter?.level,
-  ]);
+  }, [currentCharacter, healingSkillChoice]);
 
   const filteredPotions = getFilteredPotions();
   const preparedQuality = getPreparedIngredientQuality();
-  const characterModifier = getCharacterPotionModifier;
+  const characterModifier = debugModifier;
+  const displayInfo = getSkillDisplayInfo;
 
   return (
     <div style={styles.container}>
@@ -483,10 +706,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                       ingredientQuality.slice(1)}{" "}
                     (raw)
                   </span>
-                  <ArrowRight
-                    size={16}
-                    style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}
-                  />
+                  <ArrowRight size={16} style={{ color: theme.primary }} />
                   <span style={styles.preparedQuality}>
                     {preparedQuality.charAt(0).toUpperCase() +
                       preparedQuality.slice(1)}{" "}
@@ -508,6 +728,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           </div>
         </div>
       </div>
+      {renderHealingSkillChoice()}
 
       <div style={styles.card}>
         <div style={styles.searchContainer}>
@@ -566,45 +787,64 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           {selectedPotion && (
             <div style={styles.selectedPotionCard}>
               <h2 style={styles.selectedPotionTitle}>
-                <FlaskRound /> Brewing: {selectedPotion.name}
+                <FlaskRound /> Brewing:{" "}
+                <div style={{ color: theme.success, display: "inline" }}>
+                  {selectedPotion.name}
+                </div>
               </h2>
               <p style={styles.selectedPotionDescription}>
                 {selectedPotion.description}
               </p>
 
-              <div style={styles.rollPreview}>
-                <div style={styles.rollPreviewContent}></div>
+              <div style={styles.rollPreviewContent}>
                 <div
                   style={{
-                    fontSize: "0.875rem",
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                    fontSize: "0.9rem",
+                    color: theme.text,
                     marginTop: "8px",
                   }}
                 >
                   <div>
                     <strong>Your Modifier Breakdown:</strong>
+                    {hasHealingSubclass &&
+                      healingSkillChoice !== "wisdomPotionMaking" && (
+                        <span
+                          style={{
+                            marginLeft: "8px",
+
+                            fontSize: "0.75rem",
+                            color: theme.primary,
+                            fontWeight: "600",
+                          }}
+                        >
+                          (Star Grass Salve)
+                        </span>
+                      )}
                   </div>
                   <div>
-                    • Wisdom Modifier:{" "}
-                    {Math.floor(
-                      ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
-                    ) >= 0
-                      ? "+"
-                      : ""}
-                    {Math.floor(
-                      ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
-                    )}
+                    • {displayInfo.abilityName} Modifier:{" "}
+                    {displayInfo.abilityModifier >= 0 ? "+" : ""}
+                    {displayInfo.abilityModifier}
                   </div>
                   <div>
-                    • Potion Making Skill: {getSkillProficiencyInfo.description}
+                    • {displayInfo.skillName} Skill:{" "}
+                    {displayInfo.skillInfo.description}
                   </div>
-                  <div>
-                    •{" "}
-                    <strong>
+                  <div style={{ paddingTop: "8px" }}>
+                    <strong style={{ color: theme.success }}>
                       Total Skill Modifier: {characterModifier >= 0 ? "+" : ""}
                       {characterModifier}
                     </strong>
                   </div>
+                  {/* <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: theme.success,
+                      marginTop: "4px",
+                    }}
+                  >
+                    Current choice: {healingSkillChoice}
+                  </div> */}
                 </div>
                 {selectedPotion.rarity && qualityDCs[selectedPotion.rarity] && (
                   <div

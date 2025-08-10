@@ -1,13 +1,22 @@
 import React, { useState } from "react";
-import { BookOpen, Beaker, Package, Skull, Wand, Dices } from "lucide-react";
+import {
+  BookOpen,
+  Beaker,
+  Package,
+  Skull,
+  Wand,
+  Dices,
+  Award,
+} from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import SpellBook from "../SpellBook/SpellBook";
 import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
-import SpellSlotTracker from "./Sections/SpellSlotTracker";
-import SorceryPointTracker from "./Sections/SorceryPointTracker";
-import CorruptionTracker from "./Sections/CorruptionTracker";
+import SpellSlotTracker from "./SpellSlotTracker";
+import SorceryPointTracker from "./SorceryPointTracker";
+import CorruptionTracker from "./CorruptionTracker";
+import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 
 const CharacterTabbedPanel = ({
   supabase,
@@ -104,7 +113,6 @@ const CharacterTabbedPanel = ({
         </>
       ),
     },
-
     {
       id: "slots",
       label: "Spell & Sorcery",
@@ -143,6 +151,21 @@ const CharacterTabbedPanel = ({
           selectedCharacterId={selectedCharacter.id}
           characters={characters}
           isEmbedded={true}
+        />
+      ),
+    },
+    {
+      id: "feats",
+      label: "Feats",
+      icon: Award,
+      component: (
+        <CharacterFeatsDisplay
+          character={selectedCharacter}
+          supabase={supabase}
+          discordUserId={discordUserId}
+          setCharacter={setCharacter}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
         />
       ),
     },

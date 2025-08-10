@@ -35,6 +35,10 @@ const Level1AndProgressionSection = ({
 }) => {
   const featInfo = getFeatProgressionInfo();
 
+  const getLevel1ChoiceType = () => {
+    return character.level1ChoiceType || character.level1_choice_type || "";
+  };
+
   return (
     <>
       <StepIndicator
@@ -148,7 +152,7 @@ const Level1AndProgressionSection = ({
         <div style={styles.level1ChoiceContainer}>
           <label
             style={
-              character.level1ChoiceType === "innate"
+              getLevel1ChoiceType() === "innate"
                 ? styles.level1ChoiceLabelSelected
                 : styles.level1ChoiceLabel
             }
@@ -157,24 +161,24 @@ const Level1AndProgressionSection = ({
               type="radio"
               name="level1Choice"
               value="innate"
-              checked={character.level1ChoiceType === "innate"}
+              checked={getLevel1ChoiceType() === "innate"}
               onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
               style={styles.level1ChoiceRadio}
               disabled={lockedFields.level1ChoiceType}
             />
             <span
               style={
-                character.level1ChoiceType === "innate"
+                getLevel1ChoiceType() === "innate"
                   ? styles.level1ChoiceTextSelected
                   : styles.level1ChoiceText
               }
             >
-              Innate Heritage
+              Innate Heritage (Variant Human)
             </span>
           </label>
           <label
             style={
-              character.level1ChoiceType === "feat"
+              getLevel1ChoiceType() === "feat"
                 ? styles.level1ChoiceLabelSelected
                 : styles.level1ChoiceLabel
             }
@@ -183,14 +187,14 @@ const Level1AndProgressionSection = ({
               type="radio"
               name="level1Choice"
               value="feat"
-              checked={character.level1ChoiceType === "feat"}
+              checked={getLevel1ChoiceType() === "feat"}
               onChange={(e) => handleLevel1ChoiceChange(e.target.value)}
               style={styles.level1ChoiceRadio}
               disabled={lockedFields.level1ChoiceType}
             />
             <span
               style={
-                character.level1ChoiceType === "feat"
+                getLevel1ChoiceType() === "feat"
                   ? styles.level1ChoiceTextSelected
                   : styles.level1ChoiceText
               }
@@ -201,7 +205,7 @@ const Level1AndProgressionSection = ({
         </div>
       </div>
 
-      {character.level1ChoiceType === "innate" && (
+      {getLevel1ChoiceType() === "innate" && (
         <InnateHeritage
           character={character}
           handleInputChange={handleInputChange}
@@ -211,7 +215,7 @@ const Level1AndProgressionSection = ({
         />
       )}
 
-      {character.level1ChoiceType === "feat" && (
+      {getLevel1ChoiceType() === "feat" && (
         <div style={styles.fieldContainer}>
           <FeatRequirementsInfo character={character} />
           <EnhancedFeatureSelector
@@ -219,9 +223,15 @@ const Level1AndProgressionSection = ({
             setCharacter={(updater) => {
               if (typeof updater === "function") {
                 const updated = updater(character);
-                handleInputChange("standardFeats", updated.standardFeats || []);
+                handleInputChange(
+                  "standardFeats",
+                  updated.standardFeats || updated.standard_feats || []
+                );
               } else {
-                handleInputChange("standardFeats", updater.standardFeats || []);
+                handleInputChange(
+                  "standardFeats",
+                  updater.standardFeats || updater.standard_feats || []
+                );
               }
             }}
             expandedFeats={expandedFeats}
@@ -254,18 +264,8 @@ const Level1AndProgressionSection = ({
             >
               <h3 style={styles.skillsHeader}>
                 Level {level} Choice (
-                {hasSelectedChoice ? "1/1 selected" : "0/1 selected"}) *
+                {hasSelectedChoice ? "✓ Completed" : "⚪ Pending"})
               </h3>
-              {character.level > level && (
-                <div style={styles.warningBadge}>
-                  ⚠️ Editing Level {character.level} Character
-                </div>
-              )}
-            </div>
-
-            <div style={styles.helpText}>
-              At level {level}, choose either an Ability Score Improvement (+2
-              total, max +1 per ability) or a Standard Feat.
             </div>
 
             <div style={styles.level1ChoiceContainer}>
@@ -281,7 +281,7 @@ const Level1AndProgressionSection = ({
                   name={`level${level}Choice`}
                   value="asi"
                   checked={choice.type === "asi"}
-                  onChange={(e) => handleASIChoiceChange(level, "asi")}
+                  onChange={(e) => handleASIChoiceChange(level, e.target.value)}
                   style={styles.level1ChoiceRadio}
                 />
                 <span
@@ -294,7 +294,6 @@ const Level1AndProgressionSection = ({
                   Ability Score Improvement
                 </span>
               </label>
-
               <label
                 style={
                   choice.type === "feat"
@@ -307,7 +306,7 @@ const Level1AndProgressionSection = ({
                   name={`level${level}Choice`}
                   value="feat"
                   checked={choice.type === "feat"}
-                  onChange={(e) => handleASIChoiceChange(level, "feat")}
+                  onChange={(e) => handleASIChoiceChange(level, e.target.value)}
                   style={styles.level1ChoiceRadio}
                 />
                 <span
@@ -323,46 +322,44 @@ const Level1AndProgressionSection = ({
             </div>
 
             {choice.type === "asi" && (
-              <div style={{ marginTop: "16px" }}>
-                <div style={styles.completionMessage}>
-                  ✓ Ability Score Improvement selected!
-                </div>
-
-                <div
-                  style={{
-                    background: theme.surface,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "8px",
-                    padding: "12px",
-                    marginTop: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: theme.text,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Select Ability Score Increases (+2 total, max +1 per
-                    ability):
+              <div
+                style={{
+                  background: theme.surface,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "8px",
+                  padding: "12px",
+                  marginTop: "8px",
+                }}
+              >
+                {choice.abilities && choice.abilities.length > 0 ? (
+                  <div style={styles.completionMessage}>
+                    ✓ ASI selected: +1 to{" "}
+                    {choice.abilities
+                      .map(
+                        (ability) =>
+                          ability.charAt(0).toUpperCase() + ability.slice(1)
+                      )
+                      .join(", ")}
                   </div>
+                ) : (
+                  <div style={styles.helpText}>
+                    Select two different ability scores to increase by +1 each:
+                  </div>
+                )}
 
-                  <AbilityScoreIncrements
-                    level={level}
-                    choice={choice}
-                    character={character}
-                    handleASIAbilityChange={handleASIAbilityChange}
-                    theme={theme}
-                    styles={styles}
-                  />
-                </div>
+                <AbilityScoreIncrements
+                  character={character}
+                  level={level}
+                  choice={choice}
+                  handleASIAbilityChange={handleASIAbilityChange}
+                  theme={theme}
+                  styles={styles}
+                />
               </div>
             )}
 
             {choice.type === "feat" && (
-              <div style={{ marginTop: "16px" }}>
+              <div>
                 {choice.selectedFeat ? (
                   <div style={styles.completionMessage}>
                     ✓ Feat selected: {choice.selectedFeat}

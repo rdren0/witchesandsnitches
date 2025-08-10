@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, BookOpen, PlusIcon, MinusIcon } from "lucide-react";
 import SorceryPointTracker from "./SorceryPointTracker";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { getDiscordWebhook } from "../../../App/const";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getDiscordWebhook } from "../../App/const";
 
 const SpellSlotTracker = ({
   character,
@@ -238,20 +238,29 @@ const SpellSlotTracker = ({
           0
         );
         const embed = {
-          title: `${character.name} - Spell Slots Updated`,
+          title: `Spell Slots Updated`,
           color: 0xf59e0b,
           description: `Spell slot maximums updated (${totalSlots} total slots)`,
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Spell Update",
+            text: `${character.name} - Spell Update`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -303,7 +312,7 @@ const SpellSlotTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} - ${action}`,
+          title: `${action}`,
           color: change > 0 ? 0x10b981 : 0x3b82f6,
           fields: [
             {
@@ -326,15 +335,24 @@ const SpellSlotTracker = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Spell Slots",
+            text: `${character.name} - Spell Slots`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);

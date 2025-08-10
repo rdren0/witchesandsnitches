@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Sparkles, Zap, PlusIcon, MinusIcon } from "lucide-react";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { getDiscordWebhook } from "../../../App/const";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getDiscordWebhook } from "../../App/const";
 
 const SorceryPointTracker = ({
   character,
@@ -68,7 +68,7 @@ const SorceryPointTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} - ${action}`,
+          title: `${action}`,
           color: change > 0 ? 0x10b981 : 0xf59e0b,
           fields: [
             {
@@ -86,7 +86,7 @@ const SorceryPointTracker = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Sorcery Points",
+            text: `${character.name} - Sorcery Points`,
           },
         };
 
@@ -139,7 +139,7 @@ const SorceryPointTracker = ({
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
       gap: "12px",
-      maxWidth: "240px", // Limit to about 2 tiles max
+      maxWidth: "240px",
     },
     slotItem: {
       backgroundColor: theme.surface,

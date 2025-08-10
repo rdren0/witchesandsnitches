@@ -165,6 +165,7 @@ const CharacterEditor = ({
   onSave,
   onCancel,
   user,
+  supabase,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -208,6 +209,8 @@ const CharacterEditor = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lockedFields, setLockedFields] = useFieldLocks(character);
 
+  const [pendingImageFile, setPendingImageFile] = useState(null);
+
   const discordUserId = user?.user_metadata?.provider_id;
 
   const { validateFeatSelections } = useFeatValidation({
@@ -238,6 +241,11 @@ const CharacterEditor = ({
       borderRadius: "8px",
       border: `1px solid ${theme.border}`,
     },
+  };
+
+  const handleImageFileChange = (file) => {
+    setPendingImageFile(file);
+    setHasUnsavedChanges(true);
   };
 
   const handleHouseSelect = (house) => {
@@ -362,6 +370,7 @@ const CharacterEditor = ({
       wandType: "basicInformation",
       gameSession: "basicInformation",
       initiativeAbility: "basicInformation",
+      imageUrl: "basicInformation",
     };
 
     if (field.startsWith("abilityScores.")) {
@@ -461,6 +470,8 @@ const CharacterEditor = ({
         }));
       }
     }
+
+    setHasUnsavedChanges(true);
   };
 
   const handleLevel1ChoiceChange = (choiceType) => {
@@ -577,42 +588,61 @@ const CharacterEditor = ({
       return;
     }
 
-    const allFeats = collectAllFeatsFromChoices();
-    const characterToSave = {
-      ability_scores: character.abilityScores,
-      asi_choices: character.asiChoices || {},
-      background: character.background,
-      background_skills: character.backgroundSkills || [],
-      casting_style: character.castingStyle,
-      feat_choices: character.featChoices || {},
-      game_session: character.gameSession,
-      hit_points: getCurrentHp(),
-      house_choices:
-        Object.keys(houseChoices).length > 0
-          ? houseChoices
-          : character.houseChoices || {},
-      house: character.house,
-      initiative_ability: character.initiativeAbility || "dexterity",
-      innate_heritage: character.innateHeritage,
-      level: character.level,
-      level1_choice_type: character.level1ChoiceType,
-      magic_modifiers: character.magicModifiers,
-      name: character.name.trim(),
-      school_year: character.schoolYear,
-      skill_proficiencies: character.skillProficiencies || [],
-      standard_feats: allFeats,
-      subclass_choices: character.subclassChoices || {},
-      subclass: character.subclass,
-      wand_type: character.wandType,
-    };
     try {
+      setError("Preparing character data...");
+
+      const allFeats = collectAllFeatsFromChoices();
+
+      const characterToSave = {
+        ability_scores: character.abilityScores,
+        asi_choices: character.asiChoices || {},
+        background: character.background,
+        background_skills: character.backgroundSkills || [],
+        casting_style: character.castingStyle,
+        feat_choices: character.featChoices || {},
+        game_session: character.gameSession,
+        hit_points: getCurrentHp(),
+        house_choices:
+          Object.keys(houseChoices).length > 0
+            ? houseChoices
+            : character.houseChoices || {},
+        house: character.house,
+        initiative_ability: character.initiativeAbility || "dexterity",
+        innate_heritage: character.innateHeritage,
+        level: character.level,
+        level1_choice_type: character.level1ChoiceType,
+        magic_modifiers: character.magicModifiers,
+        name: character.name.trim(),
+        school_year: character.schoolYear,
+        skill_proficiencies: character.skillProficiencies || [],
+        standard_feats: allFeats,
+        subclass_choices: character.subclassChoices || {},
+        subclass: character.subclass,
+        wand_type: character.wandType,
+        image_url: character.imageUrl || character.image_url || null,
+      };
+
+      setError("Saving character to database...");
+
       const effectiveUserId = character.discordUserId || discordUserId;
 
-      const updatedCharacter = await characterService.updateCharacter(
+      const savePromise = characterService.updateCharacter(
         character.id,
         characterToSave,
         effectiveUserId
       );
+
+      const saveTimeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Character save timed out after 30 seconds")),
+          15000
+        )
+      );
+
+      const updatedCharacter = await Promise.race([
+        savePromise,
+        saveTimeoutPromise,
+      ]);
 
       const transformedCharacter = {
         id: updatedCharacter.id,
@@ -645,13 +675,41 @@ const CharacterEditor = ({
           healing: 0,
           jinxesHexesCurses: 0,
         },
+        imageUrl: updatedCharacter.image_url || "",
       };
+
+      setCharacter((prev) => ({
+        ...prev,
+        imageUrl: transformedCharacter.imageUrl,
+        image_url: transformedCharacter.imageUrl,
+      }));
+
+      setPendingImageFile(null);
+      setHasUnsavedChanges(false);
+
       if (onSave) {
         onSave(transformedCharacter);
       }
+
+      alert(`Character "${character.name}" updated successfully!`);
     } catch (err) {
-      setError("Failed to update character: " + err.message);
-      console.error("Error updating character:", err);
+      console.error("💥 Error updating character:", err);
+
+      let errorMessage = "Failed to update character: ";
+      if (err.message.includes("timed out")) {
+        errorMessage +=
+          "The operation timed out. Please check your internet connection and try again.";
+      } else if (
+        err.message.includes("network") ||
+        err.message.includes("fetch")
+      ) {
+        errorMessage +=
+          "Network error. Please check your internet connection and try again.";
+      } else {
+        errorMessage += err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -720,9 +778,10 @@ const CharacterEditor = ({
 
   useEffect(() => {
     const hasChanges =
-      JSON.stringify(character) !== JSON.stringify(safeOriginalCharacter);
+      JSON.stringify(character) !== JSON.stringify(safeOriginalCharacter) ||
+      pendingImageFile !== null;
     setHasUnsavedChanges(hasChanges);
-  }, [character, safeOriginalCharacter]);
+  }, [character, safeOriginalCharacter, pendingImageFile]);
 
   useEffect(() => {
     if (character) {
@@ -750,6 +809,7 @@ const CharacterEditor = ({
       </div>
     );
   }
+
   return (
     <div style={enhancedStyles.panel}>
       <div
@@ -837,7 +897,7 @@ const CharacterEditor = ({
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="Basic Information"
-          subtitle="Character name, level, casting style, hit points"
+          subtitle="Character name, level, casting style, hit points, portrait"
           isLocked={sectionLocks.basicInformation}
           onToggleLock={() => toggleSectionLock("basicInformation")}
           styles={enhancedStyles}
@@ -861,6 +921,8 @@ const CharacterEditor = ({
             styles={enhancedStyles}
             theme={theme}
             isLocked={sectionLocks.basicInformation}
+            supabase={supabase}
+            onImageFileChange={handleImageFileChange}
           />
         </div>
       </div>
@@ -949,6 +1011,7 @@ const CharacterEditor = ({
           />
         </div>
       </div>
+
       <EnhancedSkillsSection
         character={character}
         handleSkillToggle={handleSkillToggle}
@@ -956,6 +1019,7 @@ const CharacterEditor = ({
         styles={styles}
         theme={theme}
       />
+
       <div style={enhancedStyles.sectionContainer}>
         <SectionHeader
           title="Ability Scores"

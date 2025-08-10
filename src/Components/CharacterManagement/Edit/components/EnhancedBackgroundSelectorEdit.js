@@ -187,6 +187,7 @@ const BackgroundModifierPills = ({ selectedBackground, character, styles }) => {
 };
 
 const BackgroundFeatures = ({ background, character, styles }) => {
+  const theme = useTheme();
   if (!background.features || background.features.length === 0) {
     return null;
   }
@@ -197,7 +198,7 @@ const BackgroundFeatures = ({ background, character, styles }) => {
         style={{
           fontSize: "14px",
           fontWeight: "600",
-          color: "#374151",
+          color: theme.text,
           marginBottom: "12px",
           margin: "0 0 12px 0",
         }}
@@ -210,9 +211,9 @@ const BackgroundFeatures = ({ background, character, styles }) => {
           style={{
             marginBottom: "12px",
             padding: "12px",
-            backgroundColor: "rgba(249, 250, 251, 1)",
+            backgroundColor: theme.surface,
             borderRadius: "6px",
-            border: "1px solid rgba(229, 231, 235, 1)",
+            border: `2px solid ${theme.border}`,
           }}
         >
           <div

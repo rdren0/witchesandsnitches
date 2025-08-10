@@ -1,8 +1,10 @@
+import React, { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { castingStyles } from "../../../../SharedData/data";
 import StepIndicator from "../../Shared/StepIndicator";
 import { gameSessionOptions } from "../../../../App/const";
 import SchoolYearSelector from "../../Shared/SchoolYearSelector";
+import OptimizedImageUpload from "../../Shared/OptimizedImageUpload";
 
 const BasicInformationSection = ({
   character,
@@ -16,11 +18,42 @@ const BasicInformationSection = ({
   rollHp,
   styles,
   theme,
+  supabase,
+  imageFile,
+  setImageFile,
+  previewUrl,
+  onImageFileChange,
+  setPreviewUrl,
 }) => {
+  const [finalImageUrl, setFinalImageUrl] = useState("");
+
+  const handleImageChange = (file, previewUrl) => {
+    if (onImageFileChange) {
+      onImageFileChange(file);
+    }
+
+    if (previewUrl) {
+      handleInputChange("imageUrl", previewUrl);
+    } else if (!file) {
+      if (!character.imageUrl && !character.image_url) {
+        handleInputChange("imageUrl", "");
+      }
+    }
+  };
+
+  const handleUploadComplete = (uploadedUrl) => {
+    setFinalImageUrl(uploadedUrl);
+    handleInputChange("imageUrl", uploadedUrl);
+
+    if (setImageFile) setImageFile(null);
+    if (setPreviewUrl) setPreviewUrl(null);
+  };
+
+  console.log({ character, gameSessionOptions });
+
   return (
     <>
       <StepIndicator step={1} totalSteps={5} label="Basic Information" />
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Character Name *</label>
         <input
@@ -32,11 +65,36 @@ const BasicInformationSection = ({
           maxLength={50}
         />
       </div>
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Character Portrait</label>
+        <OptimizedImageUpload
+          currentImageUrl={character.imageUrl || character.image_url || ""}
+          onImageChange={handleImageChange}
+          onUploadComplete={handleUploadComplete}
+          supabase={supabase}
+          theme={theme}
+          styles={{
+            container: styles.imageUploadContainer,
+            wrapper: styles.imageUploadWrapper,
+            helpText: styles.helpText,
+            error: styles.errorContainer,
+          }}
+          maxSizeMB={5}
+          compressionQuality={0.8}
+          maxWidth={600}
+          maxHeight={600}
+          bucket="character-images"
+          folder="new-characters"
+          placeholder="Upload character portrait"
+          helpText="JPG, PNG, GIF, or WebP • Images are automatically compressed"
+          size={120}
+        />
+      </div>
 
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Game Session</label>
         <select
-          value={character.gameSession || ""}
+          value={character.gameSession || character.game_session || ""}
           onChange={(e) => handleInputChange("gameSession", e.target.value)}
           style={styles.select}
         >
@@ -48,11 +106,10 @@ const BasicInformationSection = ({
           ))}
         </select>
       </div>
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Casting Style</label>
         <select
-          value={character.castingStyle || ""}
+          value={character.castingStyle || character.casting_style || ""}
           onChange={(e) => handleInputChange("castingStyle", e.target.value)}
           style={styles.select}
         >
@@ -64,8 +121,8 @@ const BasicInformationSection = ({
           ))}
         </select>
       </div>
-
-      {character.castingStyle === "Intellect Caster" && (
+      {(character.castingStyle || character.casting_style) ===
+        "Intellect Caster" && (
         <div style={styles.fieldContainer}>
           <label style={styles.label}>Initiative Ability *</label>
           <div style={styles.helpText}>
@@ -97,7 +154,8 @@ const BasicInformationSection = ({
           <div style={styles.level1ChoiceContainer}>
             <label
               style={
-                character.initiativeAbility === "dexterity"
+                (character.initiativeAbility ||
+                  character.initiative_ability) === "dexterity"
                   ? styles.level1ChoiceLabelSelected
                   : styles.level1ChoiceLabel
               }
@@ -106,7 +164,10 @@ const BasicInformationSection = ({
                 type="radio"
                 name="initiativeAbility"
                 value="dexterity"
-                checked={character.initiativeAbility === "dexterity"}
+                checked={
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "dexterity"
+                }
                 onChange={(e) =>
                   handleInputChange("initiativeAbility", e.target.value)
                 }
@@ -114,7 +175,8 @@ const BasicInformationSection = ({
               />
               <span
                 style={
-                  character.initiativeAbility === "dexterity"
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "dexterity"
                     ? styles.level1ChoiceTextSelected
                     : styles.level1ChoiceText
                 }
@@ -159,7 +221,8 @@ const BasicInformationSection = ({
             </label>
             <label
               style={
-                character.initiativeAbility === "intelligence"
+                (character.initiativeAbility ||
+                  character.initiative_ability) === "intelligence"
                   ? styles.level1ChoiceLabelSelected
                   : styles.level1ChoiceLabel
               }
@@ -168,7 +231,10 @@ const BasicInformationSection = ({
                 type="radio"
                 name="initiativeAbility"
                 value="intelligence"
-                checked={character.initiativeAbility === "intelligence"}
+                checked={
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "intelligence"
+                }
                 onChange={(e) =>
                   handleInputChange("initiativeAbility", e.target.value)
                 }
@@ -176,7 +242,8 @@ const BasicInformationSection = ({
               />
               <span
                 style={
-                  character.initiativeAbility === "intelligence"
+                  (character.initiativeAbility ||
+                    character.initiative_ability) === "intelligence"
                     ? styles.level1ChoiceTextSelected
                     : styles.level1ChoiceText
                 }
@@ -224,7 +291,6 @@ const BasicInformationSection = ({
           </div>
         </div>
       )}
-
       <SchoolYearSelector
         schoolYear={character.school_year || character.schoolYear}
         onSchoolYearChange={(value) => handleInputChange("schoolYear", value)}
@@ -232,10 +298,9 @@ const BasicInformationSection = ({
         onLevelChange={(value) => handleInputChange("level", value)}
         styles={styles}
       />
-
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Hit Points</label>
-        {!character.castingStyle ? (
+        {!(character.castingStyle || character.casting_style) ? (
           <div style={styles.skillsPlaceholder}>
             Select a Casting Style first
           </div>
@@ -251,7 +316,7 @@ const BasicInformationSection = ({
                   <input
                     type="number"
                     min="1"
-                    value={character.hitPoints || ""}
+                    value={character.hit_points || ""}
                     onChange={(e) =>
                       handleInputChange(
                         "hitPoints",
@@ -270,7 +335,7 @@ const BasicInformationSection = ({
                 )}
               </div>
             </div>
-            {character.castingStyle && (
+            {(character.castingStyle || character.casting_style) && (
               <div style={styles.hpControlsContainer}>
                 <div style={styles.hpControlsInline}>
                   {!isHpManualMode && (

@@ -13,7 +13,6 @@ export const parseEquipmentString = (equipmentString) => {
     .filter((item) => item.length > 0);
 
   rawItems.forEach((itemText) => {
-    // Clean up the text
     let cleanText = itemText
       .replace(/^(a|an|the)\s+/i, "")
       .replace(/\s+/g, " ")

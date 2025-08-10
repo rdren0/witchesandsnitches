@@ -11,6 +11,7 @@ import {
   Star,
   Sparkles,
   Target,
+  Plus,
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -22,6 +23,11 @@ import { getCharacterSheetStyles } from "../../styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import { useCallback } from "react";
 import { getDiscordWebhook } from "../../App/const";
+import {
+  sendDiscordRollWebhook,
+  getRollResultColor,
+  ROLL_COLORS,
+} from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 
@@ -61,6 +67,7 @@ const CharacterSheet = ({
   className = "",
   adminMode = false,
   isUserAdmin = false,
+  onNavigateToCharacterManagement,
 }) => {
   const { rollInitiative } = useRollFunctions();
   const { showRollResult } = useRollModal();
@@ -85,6 +92,12 @@ const CharacterSheet = ({
   const [error, setError] = useState(null);
 
   const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+
+  const handleAvatarClick = () => {
+    if (!character.imageUrl && onNavigateToCharacterManagement) {
+      onNavigateToCharacterManagement(character.id, "basicInfo");
+    }
+  };
 
   const getHitDie = useCallback((castingStyle) => {
     return hitDiceData[castingStyle] || hitDiceData.default;
@@ -118,6 +131,7 @@ const CharacterSheet = ({
     };
     return spellcastingAbilityMap[castingStyle] || null;
   };
+
   const getSpellcastingAbilityModifier = (character) => {
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
     if (!spellcastingAbility) return 0;
@@ -145,6 +159,14 @@ const CharacterSheet = ({
       const isCriticalSuccess = rollValue === 20;
       const isCriticalFailure = rollValue === 1;
 
+      const rollResult = {
+        d20Roll: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+      };
+
       showRollResult({
         title: "Spellcasting Ability Check",
         rollValue: rollValue,
@@ -152,58 +174,34 @@ const CharacterSheet = ({
         total: total,
         isCriticalSuccess: isCriticalSuccess,
         isCriticalFailure: isCriticalFailure,
+        character: character,
         type: "abilitycheck",
         description: `d20 + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} - Spellcasting Ability Check`,
-          color: isCriticalSuccess
-            ? 0x00ff00
-            : isCriticalFailure
-            ? 0xff0000
-            : 0x3b82f6,
-          fields: [
-            {
-              name: "Roll",
-              value: `d20: ${rollValue}`,
-              inline: true,
-            },
-            {
-              name: "Modifier",
-              value: `${spellcastingAbility}: ${formatModifier(
-                spellcastingModifier
-              )}`,
-              inline: true,
-            },
-            {
-              name: "Total",
-              value: `${total}`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: "Witches and Snitches - Spellcasting Ability Check",
-          },
-        };
+      const additionalFields = [
+        {
+          name: "Ability",
+          value: `${spellcastingAbility}: ${formatModifier(
+            spellcastingModifier
+          )}`,
+          inline: true,
+        },
+      ];
 
-        if (isCriticalSuccess) {
-          embed.description = "🌟 **Critical Success!**";
-        } else if (isCriticalFailure) {
-          embed.description = "💥 **Critical Failure!**";
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Spellcasting Ability Check",
+        title: "Spellcasting Ability Check",
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+        embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
+        rollResult,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+
+      if (!success) {
+        console.error("Failed to send spellcasting ability check to Discord");
       }
     } catch (error) {
       console.error("Error rolling spellcasting ability check:", error);
@@ -231,6 +229,14 @@ const CharacterSheet = ({
       const isCriticalSuccess = rollValue === 20;
       const isCriticalFailure = rollValue === 1;
 
+      const rollResult = {
+        d20Roll: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+      };
+
       showRollResult({
         title: "Spell Attack Roll",
         rollValue: rollValue,
@@ -238,59 +244,33 @@ const CharacterSheet = ({
         total: total,
         isCriticalSuccess: isCriticalSuccess,
         isCriticalFailure: isCriticalFailure,
+        character: character,
         type: "spellattack",
         description: `d20 + ${character.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} - Spell Attack Roll`,
-          color: isCriticalSuccess
-            ? 0x00ff00
-            : isCriticalFailure
-            ? 0xff0000
-            : 0xff6c3a,
-          fields: [
-            {
-              name: "Roll",
-              value: `d20: ${rollValue}`,
-              inline: true,
-            },
-            {
-              name: "Modifiers",
-              value: `Prof: +${
-                character.proficiencyBonus
-              }, ${spellcastingAbility}: ${formatModifier(
-                spellcastingModifier
-              )}`,
-              inline: true,
-            },
-            {
-              name: "Total",
-              value: `${total}`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: "Witches and Snitches - Spell Attack Roll",
-          },
-        };
 
-        if (isCriticalSuccess) {
-          embed.description = "🌟 **Critical Hit!**";
-        } else if (isCriticalFailure) {
-          embed.description = "💥 **Critical Miss!**";
-        }
+      const additionalFields = [
+        {
+          name: "Modifiers",
+          value: `Prof: +${
+            character.proficiencyBonus
+          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}`,
+          inline: true,
+        },
+      ];
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Spell Attack Roll",
+        title: `Spell Attack Roll`,
+        embedColor: getRollResultColor(rollResult, 0xff6c3a),
+        rollResult,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+
+      if (!success) {
+        console.error("Failed to send spell attack to Discord");
       }
     } catch (error) {
       console.error("Error rolling spell attack:", error);
@@ -759,7 +739,7 @@ const CharacterSheet = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} completed a Long Rest!`,
+          title: `Long Rest Complete`,
           color: 0x3b82f6,
           fields: [
             {
@@ -783,15 +763,24 @@ const CharacterSheet = ({
           description: "💤 **Fully rested and ready for adventure!**",
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Long Rest",
+            text: `${character.name} - Long Rest`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -840,6 +829,7 @@ const CharacterSheet = ({
         isCriticalSuccess: true,
         isCriticalFailure: false,
         type: "heal",
+        character: character,
         description: `${healingAmount} HP restored • ${character.name} is at full health!`,
       });
 
@@ -876,7 +866,7 @@ const CharacterSheet = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Full Heal",
+            text: `${character.name} - Full Heal`,
           },
         };
 
@@ -1025,29 +1015,93 @@ const CharacterSheet = ({
           <>
             <div style={styles.headerCard}>
               <div style={styles.headerFlex}>
-                <div style={styles.avatar}>
+                <div
+                  style={{
+                    ...styles.avatar,
+                    position: "relative",
+                    cursor: !character.imageUrl ? "pointer" : "default",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={handleAvatarClick}
+                  title={
+                    !character.imageUrl ? "Click to add character image" : ""
+                  }
+                >
                   {character.imageUrl ? (
-                    <img
-                      src={character.imageUrl}
-                      alt={`${character.name}'s portrait`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "flex";
-                      }}
-                    />
+                    <>
+                      <img
+                        src={character.imageUrl}
+                        alt={`${character.name}'s portrait`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "50%",
+                          border: `2px solid ${theme.primary || "#6366f1"}`,
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                        onError={(e) => {
+                          console.error(
+                            "Failed to load character image:",
+                            character.imageUrl
+                          );
+                          e.target.style.display = "none";
+                          e.target.parentNode.querySelector(
+                            ".fallback-icon"
+                          ).style.display = "flex";
+                        }}
+                      />
+                    </>
                   ) : null}
-                  <User
-                    className="w-8 h-8 text-indigo-600"
+
+                  <div
+                    className="fallback-icon"
                     style={{
                       display: character.imageUrl ? "none" : "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: theme.surface || "#f8fafc",
+                      borderRadius: "50%",
+                      border: `2px dashed ${theme.border || "#e2e8f0"}`,
+                      transition: "all 0.2s ease",
+                      position: "relative",
                     }}
-                  />
+                  >
+                    <User
+                      style={{
+                        color: theme.textSecondary || "#64748b",
+                        width: "50%",
+                        height: "50%",
+                      }}
+                    />
+                    {!character.imageUrl && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: "-8px",
+                          right: "-8px",
+                          backgroundColor: theme.primary || "#6366f1",
+                          color: "white",
+                          borderRadius: "50%",
+                          width: "32px",
+                          height: "32px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                          border: `2px solid ${theme.background || "white"}`,
+                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Plus size={16} />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div
@@ -1233,11 +1287,7 @@ const CharacterSheet = ({
                     style={{
                       ...styles.statValue,
                       color: getHPColor(character),
-                      fontSize:
-                        character.currentHitPoints !==
-                        (character.maxHitPoints ?? character.hitPoints)
-                          ? "1rem"
-                          : "1.25rem",
+                      fontSize: "24px",
                     }}
                   >
                     {character.currentHitPoints ?? character.hitPoints}/
@@ -1314,7 +1364,7 @@ const CharacterSheet = ({
                 >
                   <Swords
                     className="w-6 h-6 text-green-600 mx-auto mb-1"
-                    style={{ color: "#755224" }}
+                    style={{ color: "#b27424ff" }}
                   />
                   <div
                     style={{ ...styles.statValue, ...styles.statValueBrown }}
@@ -1332,10 +1382,7 @@ const CharacterSheet = ({
                     style={{
                       ...styles.statCard,
                       cursor: isRolling ? "wait" : "pointer",
-                      borderColor: "#e30716",
-                      backgroundColor: isRolling
-                        ? "#e30716" + "20"
-                        : "transparent",
+                      borderColor: "#d1323dff",
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellAttack()}
@@ -1349,15 +1396,15 @@ const CharacterSheet = ({
                   >
                     <Target
                       className="w-6 h-6 text-green-600 mx-auto mb-1"
-                      style={{ color: "#e30716" }}
+                      style={{ color: "#d1323dff" }}
                     />
-                    <div style={{ ...styles.statValue, color: "#e30716" }}>
+                    <div style={{ ...styles.statValue, color: "#d1323dff" }}>
                       {formatModifier(
                         character.proficiencyBonus +
                           getSpellcastingAbilityModifier(character)
                       )}
                     </div>
-                    <div style={{ ...styles.statLabel, color: "#e30716" }}>
+                    <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
                       Spell Attack
                     </div>
                   </div>
@@ -1369,9 +1416,7 @@ const CharacterSheet = ({
                       ...styles.statCard,
                       cursor: isRolling ? "wait" : "pointer",
                       borderColor: "#8b5cf6",
-                      backgroundColor: isRolling
-                        ? "#8b5cf6" + "20"
-                        : "transparent",
+
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
@@ -1387,7 +1432,7 @@ const CharacterSheet = ({
                     />
                     <div
                       style={{
-                        fontSize: "1.25rem",
+                        fontSize: "24px",
                         fontWeight: "bold",
                         color: "#8b5cf6",
                         marginBottom: "0.25rem",
@@ -1469,7 +1514,7 @@ const CharacterSheet = ({
                     style={{
                       ...styles.statValue,
                       color: theme.warning || "#d97706",
-                      fontSize: "1.25rem",
+                      fontSize: "24px",
                       fontWeight: "bold",
                       marginBottom: "0.25rem",
                     }}
@@ -1507,7 +1552,7 @@ const CharacterSheet = ({
                     />
                     <div
                       style={{
-                        fontSize: "1.25rem",
+                        fontSize: "24px",
                         fontWeight: "bold",
                         color: "#8b5cf6",
                         marginBottom: "0.25rem",

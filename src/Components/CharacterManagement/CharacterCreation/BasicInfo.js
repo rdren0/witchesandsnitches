@@ -2,8 +2,10 @@ import { gameSessionOptions } from "../../../App/const";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../styles/masterStyles";
 import { RefreshCw } from "lucide-react";
+
 import SchoolYearSelector from "../Shared/SchoolYearSelector";
 import EnhancedCastingStyleSelector from "./EnhancedCastingStyleSelector";
+import OptimizedImageUpload from "../Shared/OptimizedImageUpload";
 
 function BasicInfo({
   character,
@@ -14,6 +16,11 @@ function BasicInfo({
   rollHp,
   handleInputChange,
   calculateHitPoints,
+  supabase,
+  setImageFile,
+  setPreviewUrl,
+  onImageFileChange,
+  onUploadComplete,
 }) {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -30,6 +37,21 @@ function BasicInfo({
     handleInputChange("castingStyle", castingStyle);
   };
 
+  const handleImageChange = (file, previewUrl) => {
+    if (onImageFileChange) {
+      onImageFileChange(file);
+    } else {
+      if (setImageFile) setImageFile(file);
+      if (setPreviewUrl) setPreviewUrl(previewUrl);
+    }
+
+    if (previewUrl) {
+      handleInputChange("imageUrl", previewUrl);
+    } else if (!file) {
+      handleInputChange("imageUrl", "");
+    }
+  };
+
   return (
     <>
       <div style={styles.fieldContainer}>
@@ -41,6 +63,32 @@ function BasicInfo({
           placeholder="Enter your character's name..."
           style={styles.input}
           maxLength={50}
+        />
+      </div>
+
+      <div style={styles.fieldContainer}>
+        <label style={styles.label}>Character Portrait</label>
+        <OptimizedImageUpload
+          currentImageUrl={character.imageUrl || ""}
+          onImageChange={handleImageChange}
+          onUploadComplete={onUploadComplete}
+          supabase={supabase}
+          theme={theme}
+          styles={{
+            container: styles.imageUploadContainer,
+            wrapper: styles.imageUploadWrapper,
+            helpText: styles.helpText,
+            error: styles.errorContainer,
+          }}
+          maxSizeMB={5}
+          compressionQuality={0.8}
+          maxWidth={600}
+          maxHeight={600}
+          bucket="character-images"
+          folder="new-characters"
+          placeholder="Upload character portrait"
+          helpText="JPG, PNG, GIF, or WebP • Images are automatically compressed"
+          size={120}
         />
       </div>
 
@@ -237,6 +285,21 @@ function BasicInfo({
             : "Click 'Roll' for a random roll, or use the calculated average."}
         </div>
       </div>
+
+      {/* <div style={styles.fieldContainer}>
+        <label style={styles.label}>Wand Type</label>
+        <input
+          type="text"
+          value={character.wandType || ""}
+          onChange={(e) => handleInputChange("wandType", e.target.value)}
+          placeholder="Enter wand description..."
+          style={styles.input}
+          maxLength={100}
+        />
+        <div style={styles.helpText}>
+          Describe your character's wand (wood type, core, length, etc.).
+        </div>
+      </div> */}
     </>
   );
 }

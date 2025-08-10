@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Users, Plus, Crown } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
@@ -9,98 +10,90 @@ import CharacterEditor from "./Edit/CharacterEditor";
 import CharacterList from "./Edit/CharacterList";
 import LevelUpModal from "./Edit/LevelUpModal";
 
-const UserSelector = ({ selectedUserId, onUserChange, allUsers }) => {
-  const { theme } = useTheme();
-
-  const styles = {
-    container: {
-      backgroundColor: `${theme.warning}20`,
-      border: `2px solid ${theme.warning}`,
-      borderRadius: "8px",
-      padding: "16px",
-      marginBottom: "20px",
-    },
-    title: {
-      color: theme.warning,
-      fontSize: "14px",
-      fontWeight: "bold",
-      marginBottom: "12px",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-    select: {
-      width: "100%",
-      padding: "10px",
-      borderRadius: "6px",
-      border: `1px solid ${theme.border}`,
-      backgroundColor: theme.background,
-      color: theme.text,
-      fontSize: "14px",
-    },
-    helper: {
-      color: theme.textSecondary,
-      fontSize: "12px",
-      marginTop: "8px",
-      fontStyle: "italic",
-    },
-  };
-
-  return (
-    <div style={styles.container}>
-      <div style={styles.title}>
-        <Crown size={16} />
-        Admin Mode: Create Character For User
-      </div>
-      <select
-        value={selectedUserId || ""}
-        onChange={(e) => onUserChange(e.target.value)}
-        style={styles.select}
-      >
-        <option value="">Select a user...</option>
-        {allUsers.map((user) => (
-          <option key={user.discordUserId} value={user.discordUserId}>
-            {user.displayName} ({user.username}) - {user.characterCount}{" "}
-            characters
-          </option>
-        ))}
-      </select>
-      <div style={styles.helper}>
-        Creating a character for another user. The character will belong to the
-        selected user.
-      </div>
-    </div>
-  );
-};
-
 const CharacterManagement = ({
   user,
   onCharacterSaved,
-  selectedCharacterId,
-  onSelectedCharacterReset,
   supabase,
   adminMode = false,
   isUserAdmin = false,
+  mode,
 }) => {
   const { theme } = useTheme();
   const { allUsers, loadAllUsers } = useAdmin();
+  const navigate = useNavigate();
+  const { characterId } = useParams();
+  const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState("list");
+  const currentMode = mode || "list";
+  const sectionToOpen = searchParams.get("section");
+
   const [editingCharacter, setEditingCharacter] = useState(null);
   const [levelingUpCharacter, setLevelingUpCharacter] = useState(null);
-
   const [selectedTargetUserId, setSelectedTargetUserId] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
-  const [viewMode, setViewMode] = useState("my");
+  const [viewMode, setViewMode] = useState(adminMode ? "all" : "my");
+  const [characterLoading, setCharacterLoading] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
+
+  useEffect(() => {
+    if (currentMode === "edit" && characterId && user) {
+      loadCharacterForEditing(characterId);
+    }
+  }, [characterId, currentMode, user, adminMode, isUserAdmin]);
+
+  useEffect(() => {
+    if (currentMode !== "edit") {
+      setEditingCharacter(null);
+      setLevelingUpCharacter(null);
+    }
+  }, [currentMode]);
+
+  const loadCharacterForEditing = async (charId) => {
+    if (!user || !discordUserId) {
+      console.log("User not ready, waiting...");
+      return;
+    }
+
+    setCharacterLoading(true);
+    try {
+      let character;
+
+      if (adminMode && isUserAdmin) {
+        character = await characterService.getCharacterByIdAdmin(charId);
+      } else {
+        character = await characterService.getCharacterById(
+          charId,
+          discordUserId
+        );
+      }
+
+      if (character) {
+        setEditingCharacter(character);
+      } else {
+        console.error("Character not found");
+        navigate("/character-management");
+      }
+    } catch (error) {
+      console.error("Error loading character:", error);
+
+      if (error.message.includes("Character not found")) {
+        alert("Character not found or you don't have permission to edit it.");
+      } else {
+        alert("Failed to load character. Please try again.");
+      }
+
+      navigate("/character-management");
+    } finally {
+      setCharacterLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (adminMode && isUserAdmin) {
       loadAllUsers();
       loadAllCharacters();
     }
-    // eslint-disable-next-line
   }, [adminMode, isUserAdmin]);
 
   const loadAllCharacters = async () => {
@@ -118,102 +111,161 @@ const CharacterManagement = ({
     try {
       const effectiveUserId =
         adminMode && isUserAdmin
-          ? updatedCharacter.discordUserId
+          ? selectedTargetUserId || discordUserId
           : discordUserId;
 
-      const { error } = await supabase
-        .from("characters")
-        .update({
-          level: updatedCharacter.level,
-          hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
-          current_hit_points:
-            updatedCharacter.hit_points || updatedCharacter.hitPoints,
-          current_hit_dice: updatedCharacter.level,
-          ability_scores:
-            updatedCharacter.ability_scores || updatedCharacter.abilityScores,
-          standard_feats:
-            updatedCharacter.standard_feats || updatedCharacter.standardFeats,
-          skill_proficiencies:
-            updatedCharacter.skill_proficiencies ||
-            updatedCharacter.skillProficiencies,
-          asi_choices:
-            updatedCharacter.asi_choices || updatedCharacter.asiChoices,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", updatedCharacter.id)
-        .eq("discord_user_id", effectiveUserId);
-
-      if (error) {
-        console.error("Database error:", error);
-        throw error;
+      if (updatedCharacter.id) {
+        await characterService.updateCharacter(
+          updatedCharacter.id,
+          updatedCharacter,
+          effectiveUserId
+        );
+      } else {
+        await characterService.saveCharacter(updatedCharacter, effectiveUserId);
       }
 
-      onCharacterSaved();
-      setActiveTab("list");
-      setEditingCharacter(null);
-      setLevelingUpCharacter(null);
-
-      if (adminMode && isUserAdmin) {
-        loadAllCharacters();
+      if (onCharacterSaved) {
+        onCharacterSaved(updatedCharacter);
       }
+
+      navigate("/character-management");
     } catch (error) {
       console.error("Error saving character:", error);
-      alert("Failed to save character changes: " + error.message);
-      throw error;
+      alert("Failed to save character. Please try again.");
     }
   };
 
   const handleEditCharacter = (character) => {
-    setEditingCharacter(character);
-    setActiveTab("edit");
+    navigate(`/character-management/edit/${character.id}`);
   };
 
   const handleLevelUpCharacter = (character) => {
     setLevelingUpCharacter(character);
-    setActiveTab("levelup");
   };
 
-  const handleBackToList = () => {
-    setActiveTab("list");
-    setEditingCharacter(null);
-    setLevelingUpCharacter(null);
-    setSelectedTargetUserId(null);
-  };
+  const handleDeleteCharacter = async (character) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${character.name}? This action cannot be undone.`
+    );
 
-  const handleNewCharacter = () => {
-    setActiveTab("create");
-    setEditingCharacter(null);
-    setLevelingUpCharacter(null);
+    if (confirmed) {
+      try {
+        if (adminMode && isUserAdmin) {
+          await characterService.deleteCharacter(
+            character.id,
+            character.discord_user_id
+          );
+        } else {
+          await characterService.deleteCharacter(character.id, discordUserId);
+        }
 
-    if (!adminMode) {
-      setSelectedTargetUserId(null);
+        if (adminMode && isUserAdmin) {
+          await loadAllCharacters();
+        }
+        if (onCharacterSaved) {
+          onCharacterSaved();
+        }
+      } catch (error) {
+        console.error("Error deleting character:", error);
+        alert("Failed to delete character. Please try again.");
+      }
     }
   };
 
-  const renderTabNavigation = () => {
-    const tabs = [
-      { key: "list", label: "Character List", icon: Users },
-      { key: "create", label: "Create Character", icon: Plus },
-    ];
+  const handleLevelUpSave = async (updatedCharacter) => {
+    try {
+      await characterService.updateCharacter(
+        updatedCharacter.id,
+        updatedCharacter,
+        updatedCharacter.discord_user_id
+      );
 
+      setLevelingUpCharacter(null);
+
+      if (adminMode && isUserAdmin) {
+        await loadAllCharacters();
+      }
+
+      if (onCharacterSaved) {
+        onCharacterSaved(updatedCharacter);
+      }
+    } catch (error) {
+      console.error("Error saving level up:", error);
+      alert("Failed to save level up changes. Please try again.");
+    }
+  };
+
+  if (!user || !discordUserId) {
     return (
       <div
         style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "20px",
+          backgroundColor: theme.background,
+          minHeight: "calc(100vh - 100px)",
           display: "flex",
-          marginBottom: "2rem",
-          borderBottom: `1px solid ${theme.border}`,
-          gap: "4px",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
+        <div style={{ textAlign: "center", color: theme.textSecondary }}>
+          <div>Loading user information...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    {
+      key: "list",
+      label: "Character List",
+      icon: Users,
+      active: currentMode === "list",
+      onClick: () => navigate("/character-management"),
+    },
+    {
+      key: "create",
+      label: "Create New",
+      icon: Plus,
+      active: currentMode === "create",
+      onClick: () => navigate("/character-management/create"),
+    },
+  ];
+
+  if (currentMode === "edit" && editingCharacter) {
+    tabs.push({
+      key: "edit",
+      label: `Edit ${editingCharacter.name}`,
+      icon: Users,
+      active: true,
+      onClick: () => {},
+    });
+  }
+
+  const renderTabNavigation = () => {
+    const styles = {
+      tabContainer: {
+        display: "flex",
+        borderBottom: `2px solid ${theme.border}`,
+        marginBottom: "20px",
+        backgroundColor: theme.background,
+        borderRadius: "8px 8px 0 0",
+        overflow: "hidden",
+      },
+    };
+
+    return (
+      <div style={styles.tabContainer}>
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
           const Icon = tab.icon;
+          const isActive = tab.active;
 
           return (
             <button
               key={tab.key}
               style={{
-                background: isActive ? theme.surface : "transparent",
+                backgroundColor: isActive ? theme.surface : "transparent",
                 border: "none",
                 borderRadius: "8px 8px 0 0",
                 padding: "12px 20px",
@@ -229,13 +281,7 @@ const CharacterManagement = ({
                   ? `2px solid ${theme.primary}`
                   : "2px solid transparent",
               }}
-              onClick={() => {
-                setActiveTab(tab.key);
-                if (tab.key !== "create") {
-                  setEditingCharacter(null);
-                  setLevelingUpCharacter(null);
-                }
-              }}
+              onClick={tab.onClick}
             >
               <Icon size={16} />
               {tab.label}
@@ -244,6 +290,88 @@ const CharacterManagement = ({
         })}
       </div>
     );
+  };
+
+  const renderContent = () => {
+    switch (currentMode) {
+      case "create":
+        return (
+          <CharacterCreator
+            user={user}
+            onCharacterSaved={handleCharacterSaved}
+            adminMode={adminMode}
+            isUserAdmin={isUserAdmin}
+            allUsers={allUsers}
+            selectedTargetUserId={selectedTargetUserId}
+            onTargetUserChange={setSelectedTargetUserId}
+            supabase={supabase}
+          />
+        );
+
+      case "edit":
+        if (characterLoading) {
+          return (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "400px",
+                color: theme.textSecondary,
+              }}
+            >
+              Loading character...
+            </div>
+          );
+        }
+
+        if (!editingCharacter) {
+          return (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "400px",
+                color: theme.textSecondary,
+              }}
+            >
+              Character not found
+            </div>
+          );
+        }
+
+        return (
+          <CharacterEditor
+            character={editingCharacter}
+            onSave={handleCharacterSaved}
+            onCancel={() => navigate("/character-management")}
+            user={user}
+            supabase={supabase}
+            adminMode={adminMode}
+            isUserAdmin={isUserAdmin}
+            sectionToOpen={sectionToOpen}
+          />
+        );
+
+      default:
+        return (
+          <>
+            {renderViewModeToggle()}
+            <CharacterList
+              user={user}
+              adminMode={adminMode}
+              isUserAdmin={isUserAdmin}
+              viewMode={viewMode}
+              allCharacters={allCharacters}
+              onEditCharacter={handleEditCharacter}
+              onLevelUpCharacter={handleLevelUpCharacter}
+              onDeleteCharacter={handleDeleteCharacter}
+              supabase={supabase}
+            />
+          </>
+        );
+    }
   };
 
   const renderAdminModeIndicator = () => {
@@ -273,7 +401,7 @@ const CharacterManagement = ({
   };
 
   const renderViewModeToggle = () => {
-    if (!adminMode || !isUserAdmin || activeTab !== "list") return null;
+    if (!adminMode || !isUserAdmin || currentMode !== "list") return null;
 
     return (
       <div
@@ -289,21 +417,23 @@ const CharacterManagement = ({
         >
           View:
         </span>
-        <button
-          style={{
-            padding: "6px 12px",
-            borderRadius: "6px",
-            border: `1px solid ${theme.border}`,
-            backgroundColor:
-              viewMode === "my" ? theme.primary : theme.background,
-            color: viewMode === "my" ? "white" : theme.text,
-            cursor: "pointer",
-            fontSize: "12px",
-          }}
-          onClick={() => setViewMode("my")}
-        >
-          My Characters
-        </button>
+        {!adminMode && (
+          <button
+            style={{
+              padding: "6px 12px",
+              borderRadius: "6px",
+              border: `1px solid ${theme.border}`,
+              backgroundColor:
+                viewMode === "my" ? theme.primary : theme.background,
+              color: viewMode === "my" ? "white" : theme.text,
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+            onClick={() => setViewMode("my")}
+          >
+            My Characters
+          </button>
+        )}
         <button
           style={{
             padding: "6px 12px",
@@ -328,148 +458,25 @@ const CharacterManagement = ({
       style={{
         maxWidth: "1200px",
         margin: "0 auto",
-        padding: "2rem",
+        padding: "20px",
         backgroundColor: theme.background,
-        minHeight: "100vh",
+        minHeight: "calc(100vh - 100px)",
       }}
     >
-      <div
-        style={{
-          backgroundColor: theme.surface,
-          borderRadius: "12px",
-          padding: "2rem",
-          border: `1px solid ${theme.border}`,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "2rem",
-          }}
-        >
-          <Users
-            size={28}
-            color={theme.primary}
-            style={{ marginRight: "12px" }}
-          />
-          <h1
-            style={{
-              fontSize: "28px",
-              fontWeight: "bold",
-              color: theme.text,
-              margin: 0,
-            }}
-          >
-            Character Management
-            {adminMode && isUserAdmin && (
-              <span
-                style={{
-                  color: theme.warning,
-                  fontSize: "16px",
-                  marginLeft: "12px",
-                  fontWeight: "normal",
-                }}
-              >
-                (Admin Mode)
-              </span>
-            )}
-          </h1>
-        </div>
+      {renderAdminModeIndicator()}
+      {renderTabNavigation()}
+      {renderContent()}
 
-        {renderAdminModeIndicator()}
-        {renderTabNavigation()}
-        {renderViewModeToggle()}
-
-        {activeTab === "list" && (
-          <>
-            <CharacterList
-              user={user}
-              supabase={supabase}
-              onEditCharacter={handleEditCharacter}
-              onLevelUpCharacter={handleLevelUpCharacter}
-              selectedCharacterId={selectedCharacterId}
-              onSelectedCharacterReset={onSelectedCharacterReset}
-              adminMode={adminMode && viewMode === "all"}
-              isUserAdmin={isUserAdmin}
-              allCharacters={viewMode === "all" ? allCharacters : undefined}
-            />
-            <div style={{ marginTop: "2rem", textAlign: "center" }}>
-              <button
-                onClick={handleNewCharacter}
-                style={{
-                  backgroundColor: theme.primary,
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "12px 24px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  margin: "0 auto",
-                }}
-              >
-                <Plus size={20} />
-                Create New Character
-              </button>
-            </div>
-          </>
-        )}
-
-        {activeTab === "create" && (
-          <>
-            {adminMode && isUserAdmin && (
-              <UserSelector
-                selectedUserId={selectedTargetUserId}
-                onUserChange={setSelectedTargetUserId}
-                allUsers={allUsers}
-              />
-            )}
-            <CharacterCreator
-              user={user}
-              onCharacterSaved={() => {
-                onCharacterSaved();
-                setActiveTab("list");
-                setSelectedTargetUserId(null);
-                if (adminMode && isUserAdmin) {
-                  loadAllCharacters();
-                }
-              }}
-              targetUserId={selectedTargetUserId}
-              adminMode={adminMode && isUserAdmin}
-              supabase={supabase}
-            />
-          </>
-        )}
-
-        {activeTab === "edit" && editingCharacter && (
-          <CharacterEditor
-            character={editingCharacter}
-            onSave={handleCharacterSaved}
-            onCancel={handleBackToList}
-            user={user}
-            supabase={supabase}
-            adminMode={adminMode}
-            isUserAdmin={isUserAdmin}
-          />
-        )}
-
-        {activeTab === "levelup" && levelingUpCharacter && (
-          <LevelUpModal
-            character={levelingUpCharacter}
-            isOpen={true}
-            onSave={handleCharacterSaved}
-            onCancel={handleBackToList}
-            user={user}
-            supabase={supabase}
-            adminMode={adminMode}
-            isUserAdmin={isUserAdmin}
-          />
-        )}
-      </div>
+      {levelingUpCharacter && (
+        <LevelUpModal
+          character={levelingUpCharacter}
+          isOpen={!!levelingUpCharacter}
+          onSave={handleLevelUpSave}
+          onCancel={() => setLevelingUpCharacter(null)}
+          user={user}
+          supabase={supabase}
+        />
+      )}
     </div>
   );
 };

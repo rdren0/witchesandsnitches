@@ -375,7 +375,30 @@ export const activityRequiresDualChecks = (activityText) => {
 export const activityRequiresExtraDie = (activityText) => {
   if (!activityText) return false;
   const text = activityText.toLowerCase();
+
+  return text.includes("attempt spells");
+};
+
+export const activityRequiresSpellDice = (activityText) => {
+  if (!activityText) return false;
+  const text = activityText.toLowerCase();
+
   return text.includes("research spells") || text.includes("attempt spells");
+};
+
+export const getSpellDiceCount = (activityText) => {
+  if (!activityText) return 0;
+  const text = activityText.toLowerCase();
+
+  if (text.includes("research spells")) {
+    return 1;
+  }
+
+  if (text.includes("attempt spells")) {
+    return 2;
+  }
+
+  return 0;
 };
 
 export const activityRequiresNoDiceRoll = (activityText) => {

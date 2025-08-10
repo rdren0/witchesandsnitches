@@ -269,7 +269,7 @@ const isUserForbidden = async (discordUserId) => {
     .select("role")
     .eq("discord_user_id", discordUserId)
     .eq("role", "forbidden")
-    .single();
+    .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
     console.error("Error checking forbidden status:", error);
@@ -317,9 +317,7 @@ const verifyAdminPassword = async (discordUserId, password) => {
       "The ancient magic recognizes you as forbidden. Access permanently denied."
     );
   }
-
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
-
   if (!ADMIN_PASSWORD) {
     throw new Error("The magical registry is not properly configured");
   }
@@ -434,6 +432,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
         wand_type: characterData.wand_type,
+        image_url: characterData.image_url || characterData.imageUrl || null,
       })
       .select()
       .single();
@@ -470,18 +469,7 @@ const saveCharacter = async (characterData, discordUserId) => {
 
 const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
-    const { data: currentCharacter } = await supabase
-      .from("characters")
-      .select("background")
-      .eq("id", characterId)
-      .eq("discord_user_id", discordUserId)
-      .eq("active", true)
-      .single();
-
-    if (!currentCharacter) {
-      throw new Error("Character not found");
-    }
-    const { data: updatedCharacter, error } = await supabase
+    const { data: updatedCharacter, error: characterError } = await supabase
       .from("characters")
       .update({
         ability_scores: characterData.ability_scores,
@@ -493,57 +481,36 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         game_session: characterData.game_session,
         heritage_choices: characterData.heritage_choices || {},
         hit_points: characterData.hit_points,
-        house: characterData.house,
         house_choices: characterData.house_choices,
+        house: characterData.house,
+        image_url: characterData.image_url || characterData.imageUrl || null,
         initiative_ability: characterData.initiative_ability,
-        innate_heritage: characterData.innate_heritage,
         innate_heritage_skills: characterData.innate_heritage_skills,
+        innate_heritage: characterData.innate_heritage,
         level: characterData.level,
         level1_choice_type: characterData.level1_choice_type,
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
         school_year: characterData.school_year,
-        skill_proficiencies: characterData.skill_proficiencies,
         skill_expertise: characterData.skill_expertise,
+        skill_proficiencies: characterData.skill_proficiencies,
         standard_feats: characterData.standard_feats,
-        subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
-        wand_type: characterData.wand_type,
+        subclass: characterData.subclass,
         updated_at: new Date().toISOString(),
+        wand_type: characterData.wand_type,
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
-      .eq("active", true)
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Failed to update character: ${error.message}`);
-    }
-
-    if (
-      characterData.background &&
-      characterData.background !== currentCharacter.background &&
-      updatedCharacter.id
-    ) {
-      try {
-        const startingEquipment = getStartingEquipment(
-          characterData.background
-        );
-        if (startingEquipment.length > 0) {
-          await addStartingEquipment(
-            discordUserId,
-            updatedCharacter.id,
-            startingEquipment,
-            supabase
-          );
-        }
-      } catch (equipmentError) {
-        console.error(
-          "Failed to add starting equipment on background change:",
-          equipmentError
-        );
-      }
+    if (characterError) {
+      console.error(
+        "characterService.updateCharacter - database error:",
+        characterError
+      );
+      throw characterError;
     }
 
     return updatedCharacter;

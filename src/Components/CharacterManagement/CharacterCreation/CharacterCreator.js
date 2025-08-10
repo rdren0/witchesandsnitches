@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { Wand, Save, AlertCircle, UserCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { characterService } from "../../../services/characterService";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
@@ -32,36 +33,6 @@ import {
   validateFeatSelections,
 } from "../utils";
 
-export const FeatRequirementsInfo = () => {
-  return (
-    <div
-      style={{
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        border: "1px solid rgba(59, 130, 246, 0.3)",
-        borderRadius: "6px",
-        padding: "12px",
-        marginBottom: "12px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "12px",
-          fontWeight: "600",
-          color: "#2563eb",
-          marginBottom: "6px",
-        }}
-      >
-        📋 Feat Prerequisites
-      </div>
-      <div style={{ fontSize: "11px", color: "#1d4ed8", lineHeight: "1.4" }}>
-        Some feats have prerequisites (ability scores, proficiencies, etc.).
-        Feats you don't meet the requirements for will be clearly marked. Your
-        current character qualifications will be checked automatically.
-      </div>
-    </div>
-  );
-};
-
 const CharacterCreator = ({
   user,
   onCharacterSaved,
@@ -74,6 +45,7 @@ const CharacterCreator = ({
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
+  const navigate = useNavigate();
 
   const [character, setCharacter] = useState(getInitialCharacterState());
   const [rolledStats, setRolledStats] = useState([]);
@@ -93,8 +65,28 @@ const CharacterCreator = ({
   const [error, setError] = useState(null);
   const [magicModifierTempValues, setMagicModifierTempValues] = useState({});
 
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [finalImageUrl, setFinalImageUrl] = useState("");
+
   const isFeat = character.level1ChoiceType === "feat";
   const isInnateHeritage = character.level1ChoiceType === "innate";
+
+  const handleImageFileChange = (file) => {
+    setImageFile(file);
+  };
+
+  const handleUploadComplete = (uploadedUrl) => {
+    console.log("🔥 handleUploadComplete called with URL:", uploadedUrl);
+    setFinalImageUrl(uploadedUrl);
+    setCharacter((prev) => ({
+      ...prev,
+      imageUrl: uploadedUrl,
+    }));
+    setImageFile(null);
+    setPreviewUrl(null);
+    console.log("🔥 finalImageUrl state should now be:", uploadedUrl);
+  };
 
   const setASILevelFilter = (level, filter) => {
     setASILevelFilters((prev) => ({
@@ -245,6 +237,13 @@ const CharacterCreator = ({
     setRolledHp(null);
     setError(null);
 
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setImageFile(null);
+    setPreviewUrl(null);
+    setFinalImageUrl("");
+
     if (isManualMode) {
       setRolledStats([]);
       setAvailableStats([]);
@@ -268,6 +267,14 @@ const CharacterCreator = ({
     character,
     isFeat,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const assignStat = (ability, statValue) => {
     const oldValue = character.abilityScores[ability];
@@ -657,12 +664,11 @@ const CharacterCreator = ({
 
     if (!effectiveUserId) {
       setError("No valid user ID found for character creation");
-      setIsSaving(false);
       return;
     }
 
     setIsSaving(true);
-    setError(null);
+    setError("Preparing character data...");
 
     try {
       if (targetUserId) {
@@ -687,6 +693,13 @@ const CharacterCreator = ({
       const { skill_proficiencies, skill_expertise } =
         calculateFinalSkillsAndExpertise(character);
 
+      console.log("=== IMAGE DEBUG INFO ===");
+      console.log("finalImageUrl:", finalImageUrl);
+      console.log("character.imageUrl:", character.imageUrl);
+      console.log("imageFile:", imageFile);
+      console.log("previewUrl:", previewUrl);
+      console.log("========================");
+
       const characterToSave = {
         ability_scores: finalAbilityScores,
         asi_choices: character.asiChoices || {},
@@ -700,6 +713,7 @@ const CharacterCreator = ({
         hit_points: getCurrentHp(),
         house_choices: houseChoices,
         house: character.house,
+        image_url: finalImageUrl || character.imageUrl || "",
         initiative_ability: character.initiativeAbility || "dexterity",
         innate_heritage_skills: character.innateHeritageSkills || [],
         innate_heritage: character.innateHeritage,
@@ -716,10 +730,18 @@ const CharacterCreator = ({
         wand_type: character.wandType,
       };
 
+      setError("Saving character to database...");
+
+      console.log("🚀 About to call characterService.saveCharacter with:");
+      console.log("characterToSave:", characterToSave);
+      console.log("characterToSave.image_url:", characterToSave.image_url);
+
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         effectiveUserId
       );
+
+      console.log("Character saved with image_url:", savedCharacter.image_url);
 
       const transformedCharacter = {
         abilityScores: savedCharacter.ability_scores,
@@ -738,6 +760,7 @@ const CharacterCreator = ({
             ? houseChoices
             : character.houseChoices || {},
         id: savedCharacter.id,
+        imageUrl: savedCharacter.image_url || "",
         innateHeritage: savedCharacter.innate_heritage,
         innateHeritageSkills: savedCharacter.innate_heritage_skills || [],
         level: savedCharacter.level,
@@ -758,6 +781,8 @@ const CharacterCreator = ({
         school_year: savedCharacter.schoolYear || 1,
       };
 
+      setError(null);
+
       if (onCharacterSaved) {
         onCharacterSaved(transformedCharacter);
       }
@@ -769,12 +794,24 @@ const CharacterCreator = ({
           ? " for the selected user"
           : "";
 
+      const imageMessage = finalImageUrl ? " with image" : "";
       alert(
-        `Character "${character.name}" created successfully${targetUserInfo}!`
+        `Character "${character.name}" created successfully${imageMessage}${targetUserInfo}!`
       );
+
+      navigate("/character/sheet");
     } catch (err) {
       console.error("💥 Character creation failed:", err);
-      setError("Failed to save character: " + err.message);
+
+      let errorMessage = "Failed to save character: ";
+      if (err.message.includes("network") || err.message.includes("fetch")) {
+        errorMessage +=
+          "Network error. Please check your internet connection and try again.";
+      } else {
+        errorMessage += err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -846,6 +883,13 @@ const CharacterCreator = ({
         rollHp={rollHp}
         handleInputChange={handleInputChange}
         calculateHitPoints={calculateHitPoints}
+        supabase={supabase}
+        imageFile={imageFile}
+        setImageFile={setImageFile}
+        previewUrl={previewUrl}
+        setPreviewUrl={setPreviewUrl}
+        onImageFileChange={handleImageFileChange}
+        onUploadComplete={handleUploadComplete}
       />
 
       <StepIndicator step={2} totalSteps={5} label="House Selection" />
@@ -960,7 +1004,6 @@ const CharacterCreator = ({
 
       {isFeat && (
         <div style={styles.fieldContainer}>
-          <FeatRequirementsInfo character={character} />
           <EnhancedFeatureSelector
             character={character}
             setCharacter={setCharacter}

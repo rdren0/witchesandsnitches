@@ -242,7 +242,7 @@ const createCharacterSheetStyles = (theme) => ({
   },
   statCardBlue: {},
   statCardBrown: {
-    borderColor: "#755224",
+    borderColor: "#b27424ff",
   },
   statCardBrownHover: {
     backgroundColor: `#755224${"10"}`,
@@ -261,7 +261,7 @@ const createCharacterSheetStyles = (theme) => ({
     color: "#3b82f6",
   },
   statValueBrown: {
-    color: "#755224",
+    color: "#b27424ff",
   },
   statLabel: {
     fontSize: "12px",
@@ -276,7 +276,7 @@ const createCharacterSheetStyles = (theme) => ({
     color: "#3b82f6",
   },
   statLabelBrown: {
-    color: "#755224",
+    color: "#b27424ff",
   },
   instructionsCard: {
     backgroundColor: theme.surface,
@@ -500,6 +500,7 @@ const createCharacterSheetStyles = (theme) => ({
     fontSize: "14px",
     color: theme.textSecondary,
     textAlign: "center",
+    marginTop: "8px",
   },
   searchResultsHint: {
     fontStyle: "italic",
@@ -620,36 +621,31 @@ export const createAbilityScoresStyles = (theme) => ({
     padding: "4px 8px",
     fontSize: "10px",
     fontWeight: "500",
-    border: `1px solid ${theme === "dark" ? "#333333" : "#d1d5db"}`,
+    minHeight: "30px",
+    border: `2px solid ${theme.primary}`,
     borderRadius: "4px",
-    backgroundColor: theme === "dark" ? "#1a1a1a" : "#f9fafb",
-    color: theme === "dark" ? "#ffffff" : "#374151",
+    backgroundColor: theme.surface,
+    color: theme.text,
     transition: "all 0.2s ease-in-out",
-    outline: "none",
-    fontFamily: "inherit",
   },
-
   savingThrowButtonHover: {
-    backgroundColor: theme === "dark" ? "#2a2a2a" : "#e5e7eb",
-    borderColor: theme === "dark" ? "#444444" : "#9ca3af",
-    boxShadow:
-      theme === "dark"
-        ? "0 2px 8px rgba(0, 0, 0, 0.5)"
-        : "0 2px 4px rgba(0, 0, 0, 0.1)",
+    backgroundColor: theme.background,
+    borderColor: theme.border,
+    boxShadow: theme.background + "20",
   },
   abilityCard: {
     backgroundColor: theme.surface,
     borderRadius: "12px",
     boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
     marginBottom: "24px",
-    padding: "20px",
+    padding: "12px",
     border: `2px solid ${theme.border}`,
   },
   abilityTitle: {
     fontSize: "20px",
     fontWeight: "bold",
     color: theme.text,
-    marginBottom: "16px",
+    paddingBottom: "16px",
     textAlign: "center",
   },
   abilityGrid: {
@@ -675,16 +671,19 @@ export const createAbilityScoresStyles = (theme) => ({
     color: theme.textSecondary,
     textTransform: "uppercase",
     letterSpacing: "0.5px",
+    marginBottom: "14px",
   },
   abilityModifier: {
     fontSize: "16px",
     fontWeight: "bold",
     color: theme.primary,
+    marginTop: "4px",
   },
   abilityScore: {
     fontSize: "20px",
     fontWeight: "bold",
     color: theme.text,
+    marginTop: "4px",
   },
 });
 
@@ -2411,7 +2410,6 @@ export const createAbilityScorePickerStyles = (theme) => ({
     marginBottom: "8px",
   },
   abilityScoreContainer: {
-    // display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "8px",
@@ -2985,11 +2983,13 @@ export const createSpellBookStyles = (theme) => ({
   searchResultsHint: {
     color: theme.textSecondary,
     opacity: 0.8,
+    marginTop: "8px",
   },
   searchResults: {
     fontSize: "14px",
     color: theme.textSecondary,
     fontStyle: "italic",
+    marginTop: "8px",
   },
   searchSuggestions: {
     textAlign: "left",
@@ -3242,7 +3242,6 @@ export const searchStyles = (theme) => ({
     transition: "all 0.2s ease",
     fontFamily: "inherit",
   },
-
   searchClearButton: {
     position: "absolute",
     right: "8px",
@@ -3256,18 +3255,16 @@ export const searchStyles = (theme) => ({
     justifyContent: "center",
     transition: "background-color 0.2s ease",
   },
-
   searchResults: {
     fontSize: "14px",
     color: theme.textSecondary,
     fontStyle: "italic",
+    marginTop: "8px",
   },
-
   searchResultsHint: {
     color: theme.textSecondary,
     opacity: 0.8,
   },
-
   noResultsContainer: {
     textAlign: "center",
     padding: "60px 20px",
@@ -3276,7 +3273,6 @@ export const searchStyles = (theme) => ({
     borderRadius: "12px",
     border: `2px solid ${theme.border}`,
   },
-
   noResultsIcon: {
     fontSize: "48px",
     marginBottom: "16px",
@@ -3887,7 +3883,12 @@ export const createPotionsStyles = (theme) => ({
     marginTop: "16px",
   },
 
-  rollPreviewContent: {},
+  rollPreviewContent: {
+    padding: "8px",
+    margin: "4px",
+    backgroundColor: theme.surface,
+    borderRadius: "6px",
+  },
 
   totalValue: {
     fontWeight: "700",
@@ -5724,7 +5725,6 @@ export const createDowntimeStyles = (theme) => ({
     gap: "20px",
   },
   activitySection: {
-    // display: "flex",
     backgroundColor: theme.surface,
     borderRadius: "8px",
     padding: "16px",

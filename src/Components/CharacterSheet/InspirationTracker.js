@@ -53,9 +53,7 @@ const InspirationTracker = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} - Inspiration ${
-            newState ? "Gained" : "Used"
-          }`,
+          title: `Inspiration ${newState ? "Earned" : "Redeemed"}`,
           color: newState ? 0x10b981 : 0xf59e0b,
           fields: [
             {
@@ -68,15 +66,24 @@ const InspirationTracker = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Inspiration",
+            text: `${character.name} - Inspiration`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -111,13 +118,13 @@ const InspirationTracker = ({
       backgroundColor: hasInspiration ? "#f59e0b" : "transparent",
       border: " 2px solid #f59e0b",
       borderRadius: "8px",
-      cursor: character.currentHitDice <= 0 ? "not-allowed" : "pointer",
+      cursor: !hasInspiration ? "not-allowed" : "pointer",
       fontSize: "14px",
       fontWeight: "600",
       display: "flex",
       alignItems: "center",
       gap: "8px",
-      opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+      opacity: hasInspiration ? 0.6 : 1,
       transition: "all 0.2s ease",
       justifyContent: "center",
       width: "120px",
@@ -204,7 +211,7 @@ const InspirationTracker = ({
         >
           <div
             style={{
-              backgroundColor: theme === "dark" ? "#374151" : "white",
+              backgroundColor: theme.background,
               padding: "24px",
               borderRadius: "12px",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -253,7 +260,7 @@ const InspirationTracker = ({
             <div
               style={{
                 marginBottom: "20px",
-                color: theme === "dark" ? "#f9fafb" : "#374151",
+                color: theme.text,
                 lineHeight: "1.5",
               }}
             >
@@ -262,11 +269,11 @@ const InspirationTracker = ({
               </p>
               <div
                 style={{
-                  backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
+                  backgroundColor: theme.surface,
                   padding: "12px",
                   borderRadius: "8px",
                   fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#6b7280",
+                  color: theme.text,
                 }}
               >
                 <strong>Inspiration allows you to:</strong>
@@ -288,11 +295,9 @@ const InspirationTracker = ({
               <button
                 style={{
                   padding: "10px 20px",
-                  border: `2px solid ${
-                    theme === "dark" ? "#4b5563" : "#d1d5db"
-                  }`,
-                  backgroundColor: theme === "dark" ? "#374151" : "white",
-                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  border: theme.border,
+                  backgroundColor: theme.surface,
+                  color: theme.text,
                   borderRadius: "6px",
                   cursor: "pointer",
                   fontSize: "14px",

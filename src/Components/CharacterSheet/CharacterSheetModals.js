@@ -62,6 +62,7 @@ const CharacterSheetModals = ({
         isCriticalSuccess: false,
         isCriticalFailure: false,
         type: "hitdice",
+        character: character,
         description: `${selectedHitDiceCount} × ${character.hitDie} + ${
           conModifier * selectedHitDiceCount
         } CON • ${hpGained} HP restored • ${newHitDiceCount}/${
@@ -87,7 +88,7 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} used Hit Dice for Short Rest`,
+          title: `Hit Dice Recovery`,
           color: 0x9d4edd,
           fields: [
             {
@@ -115,15 +116,24 @@ const CharacterSheetModals = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Short Rest Healing",
+            text: `${character.name} - Short Rest Healing`,
           },
         };
+
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
 
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -178,6 +188,7 @@ const CharacterSheetModals = ({
         rollValue: changeAmount,
         modifier: 0,
         total: changeAmount,
+        character: character,
         isCriticalSuccess: type === "healing" && newCurrentHP === maxHP,
         isCriticalFailure: type === "damage" && newCurrentHP === 0,
         type: changeType,
@@ -201,9 +212,7 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `${character.name} ${
-            type === "damage" ? "took damage" : "was healed"
-          }!`,
+          title: type === "damage" ? "Damage Taken" : "Healing Applied",
           color: type === "damage" ? 0xef4444 : 0x10b981,
           fields: [
             {
@@ -219,7 +228,7 @@ const CharacterSheetModals = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: `Witches and Snitches - ${
+            text: `${character.name} - ${
               type === "damage" ? "Damage Taken" : "Healing Applied"
             }`,
           },
@@ -232,11 +241,20 @@ const CharacterSheetModals = ({
           embed.description = "✨ **Character is at full health!**";
         }
 
+        const message = {
+          embeds: [embed],
+        };
+
+        if (character?.imageUrl) {
+          message.username = character.name;
+          message.avatar_url = character.imageUrl;
+        }
+
         try {
           await fetch(discordWebhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
+            body: JSON.stringify(message),
           });
         } catch (discordError) {
           console.error("Error sending to Discord:", discordError);
@@ -310,7 +328,7 @@ const CharacterSheetModals = ({
         >
           <div
             style={{
-              backgroundColor: theme === "dark" ? "#374151" : "white",
+              backgroundColor: theme.background,
               padding: "24px",
               borderRadius: "12px",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -324,7 +342,7 @@ const CharacterSheetModals = ({
                 fontSize: "20px",
                 fontWeight: "600",
                 marginBottom: "16px",
-                color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                color: theme.text,
                 textAlign: "center",
               }}
             >
@@ -342,7 +360,7 @@ const CharacterSheetModals = ({
                   justifyContent: "space-between",
                   marginBottom: "8px",
                   fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  color: theme.color,
                 }}
               >
                 <span>Character:</span>
@@ -354,7 +372,7 @@ const CharacterSheetModals = ({
                   justifyContent: "space-between",
                   marginBottom: "8px",
                   fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  color: theme.color,
                 }}
               >
                 <span>Current HP:</span>
@@ -369,7 +387,7 @@ const CharacterSheetModals = ({
                   justifyContent: "space-between",
                   marginBottom: "8px",
                   fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  color: theme.color,
                 }}
               >
                 <span>Hit Dice Available:</span>
@@ -383,7 +401,7 @@ const CharacterSheetModals = ({
                   justifyContent: "space-between",
                   marginBottom: "8px",
                   fontSize: "14px",
-                  color: theme === "dark" ? "#d1d5db" : "#374151",
+                  color: theme.color,
                 }}
               >
                 <span>Constitution Modifier:</span>
@@ -405,11 +423,9 @@ const CharacterSheetModals = ({
               <button
                 style={{
                   padding: "8px",
-                  border: `2px solid ${
-                    theme === "dark" ? "#4b5563" : "#d1d5db"
-                  }`,
-                  backgroundColor: theme === "dark" ? "#4b5563" : "#f9fafb",
-                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  border: theme.border,
+                  backgroundColor: theme.background,
+                  color: theme.primary,
                   borderRadius: "6px",
                   cursor: selectedHitDiceCount <= 1 ? "not-allowed" : "pointer",
                   opacity: selectedHitDiceCount <= 1 ? 0.5 : 1,
@@ -431,7 +447,7 @@ const CharacterSheetModals = ({
                   fontWeight: "600",
                   minWidth: "40px",
                   textAlign: "center",
-                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  color: theme.text,
                 }}
               >
                 {selectedHitDiceCount}
@@ -440,11 +456,9 @@ const CharacterSheetModals = ({
               <button
                 style={{
                   padding: "8px",
-                  border: `2px solid ${
-                    theme === "dark" ? "#4b5563" : "#d1d5db"
-                  }`,
-                  backgroundColor: theme === "dark" ? "#4b5563" : "#f9fafb",
-                  color: theme === "dark" ? "#f9fafb" : "#374151",
+                  border: theme.border,
+                  backgroundColor: theme.background,
+                  color: theme.primary,
                   borderRadius: "6px",
                   cursor:
                     selectedHitDiceCount >= character.currentHitDice
@@ -472,7 +486,7 @@ const CharacterSheetModals = ({
                 textAlign: "center",
                 marginBottom: "24px",
                 fontSize: "14px",
-                color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                color: theme.textSecondary,
               }}
             >
               Rolling {selectedHitDiceCount} × {character.hitDie} +{" "}
@@ -486,25 +500,6 @@ const CharacterSheetModals = ({
                 justifyContent: "flex-end",
               }}
             >
-              <button
-                style={{
-                  padding: "10px 20px",
-                  border: `2px solid ${
-                    theme === "dark" ? "#4b5563" : "#d1d5db"
-                  }`,
-                  backgroundColor: theme === "dark" ? "#374151" : "white",
-                  color: theme === "dark" ? "#f9fafb" : "#374151",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                }}
-                onClick={() => setShowHitDiceModal(false)}
-                disabled={isRollingHitDice}
-              >
-                <X size={16} style={{ marginRight: "6px" }} />
-                Cancel
-              </button>
               <button
                 style={{
                   padding: "10px 20px",
@@ -525,6 +520,23 @@ const CharacterSheetModals = ({
               >
                 <Dices size={16} />
                 {isRollingHitDice ? "Rolling..." : "Roll Hit Dice"}
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  border: theme.border,
+                  backgroundColor: theme.surface,
+                  color: theme.text,
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+                onClick={() => setShowHitDiceModal(false)}
+                disabled={isRollingHitDice}
+              >
+                <X size={16} style={{ marginRight: "6px" }} />
+                Cancel
               </button>
             </div>
           </div>
@@ -549,7 +561,7 @@ const CharacterSheetModals = ({
         >
           <div
             style={{
-              backgroundColor: theme === "dark" ? "#374151" : "white",
+              backgroundColor: theme.background,
               padding: "24px",
               borderRadius: "12px",
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -569,7 +581,7 @@ const CharacterSheetModals = ({
               <h3
                 style={{
                   margin: 0,
-                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  color: theme.text,
                   fontSize: "18px",
                   fontWeight: "600",
                   display: "flex",
@@ -585,7 +597,7 @@ const CharacterSheetModals = ({
                 style={{
                   background: "none",
                   border: "none",
-                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  color: theme.textSecondary,
                   cursor: "pointer",
                   padding: "4px",
                   borderRadius: "4px",
@@ -600,9 +612,9 @@ const CharacterSheetModals = ({
                 textAlign: "center",
                 marginBottom: "20px",
                 padding: "12px",
-                backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
+                backgroundColor: theme.surface,
                 borderRadius: "8px",
-                border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
+                border: theme.border,
               }}
             >
               <div
@@ -619,7 +631,7 @@ const CharacterSheetModals = ({
               <div
                 style={{
                   fontSize: "12px",
-                  color: theme === "dark" ? "#9ca3af" : "#6b7280",
+                  color: theme.textSecondary,
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                 }}
@@ -633,7 +645,7 @@ const CharacterSheetModals = ({
                 style={{
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  color: theme.text,
                   marginBottom: "8px",
                 }}
               >
@@ -768,7 +780,7 @@ const CharacterSheetModals = ({
                 style={{
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  color: theme.text,
                   marginBottom: "8px",
                 }}
               >
@@ -787,13 +799,12 @@ const CharacterSheetModals = ({
                   placeholder="Amount"
                   style={{
                     flex: 1,
+
                     padding: "8px 12px",
-                    border: `1px solid ${
-                      theme === "dark" ? "#4b5563" : "#d1d5db"
-                    }`,
+                    border: theme.surface,
                     borderRadius: "6px",
-                    backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    backgroundColor: theme.surface,
+                    color: theme.text,
                     fontSize: "14px",
                   }}
                 />
@@ -841,7 +852,7 @@ const CharacterSheetModals = ({
                 style={{
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                  color: theme.text,
                   marginBottom: "8px",
                 }}
               >
@@ -864,12 +875,10 @@ const CharacterSheetModals = ({
                   style={{
                     flex: 1,
                     padding: "8px 12px",
-                    border: `1px solid ${
-                      theme === "dark" ? "#4b5563" : "#d1d5db"
-                    }`,
+                    border: theme.surface,
                     borderRadius: "6px",
-                    backgroundColor: theme === "dark" ? "#1f2937" : "#f9fafb",
-                    color: theme === "dark" ? "#f9fafb" : "#1f2937",
+                    backgroundColor: theme.surface,
+                    color: theme.text,
                     fontSize: "14px",
                   }}
                 />
@@ -883,6 +892,7 @@ const CharacterSheetModals = ({
                   }
                   style={{
                     padding: "8px 16px",
+                    width: "100px",
                     backgroundColor: "#10B981",
                     color: "white",
                     border: "none",
@@ -928,17 +938,13 @@ const CharacterSheetModals = ({
                     (character.currentHitPoints ?? character.hitPoints) ===
                       (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
-                      ? theme === "dark"
-                        ? "#4b5563"
-                        : "#e5e7eb"
+                      ? theme.surface
                       : "#10B981",
                   color:
                     (character.currentHitPoints ?? character.hitPoints) ===
                       (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
-                      ? theme === "dark"
-                        ? "#9ca3af"
-                        : "#6b7280"
+                      ? theme.text
                       : "white",
                   border: "none",
                   borderRadius: "8px",
