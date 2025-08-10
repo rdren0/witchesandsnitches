@@ -216,33 +216,6 @@ export const createCharacterWithSubclass = (
   };
 };
 
-export const updateCharacterSubclass = (character, updates) => {
-  const validUpdates = {};
-
-  if (updates.subclass && SUBCLASS_INFO[updates.subclass]) {
-    validUpdates.subclass = updates.subclass;
-  }
-
-  if (
-    updates.subclassLevel &&
-    updates.subclassLevel >= 1 &&
-    updates.subclassLevel <= 20
-  ) {
-    validUpdates.subclassLevel = updates.subclassLevel;
-  }
-
-  if (updates.subclassFeatures && Array.isArray(updates.subclassFeatures)) {
-    validUpdates.subclassFeatures = updates.subclassFeatures.filter((f) =>
-      VALID_SUBCLASS_FEATURES.includes(f)
-    );
-  }
-
-  return {
-    ...character,
-    ...validUpdates,
-  };
-};
-
 export const getSubclassDisplayInfo = (character) => {
   if (!character.subclass) {
     return {
@@ -291,7 +264,6 @@ export default {
   getAllCharacterBonuses,
   getSpellEnhancements,
   createCharacterWithSubclass,
-  updateCharacterSubclass,
   getSubclassDisplayInfo,
   getFeatureTooltip,
   validateCharacterFeatures,

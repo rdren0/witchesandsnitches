@@ -166,6 +166,9 @@ const CharacterEditor = ({
   onCancel,
   user,
   supabase,
+  adminMode = false,
+  isUserAdmin = false,
+  selectedTargetUserId,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -594,37 +597,52 @@ const CharacterEditor = ({
       const allFeats = collectAllFeatsFromChoices();
 
       const characterToSave = {
-        ability_scores: character.abilityScores,
-        asi_choices: character.asiChoices || {},
+        ability_scores: character.abilityScores || character.ability_scores,
+        asi_choices: character.asiChoices || character.asi_choices || {},
         background: character.background,
-        background_skills: character.backgroundSkills || [],
-        casting_style: character.castingStyle,
-        feat_choices: character.featChoices || {},
-        game_session: character.gameSession,
+        background_skills:
+          character.backgroundSkills || character.background_skills || [],
+        casting_style: character.castingStyle || character.casting_style,
+        feat_choices: character.featChoices || character.feat_choices || {},
+        game_session: character.gameSession || character.game_session,
         hit_points: getCurrentHp(),
         house_choices:
           Object.keys(houseChoices).length > 0
             ? houseChoices
-            : character.houseChoices || {},
+            : character.houseChoices || character.house_choices || {},
         house: character.house,
-        initiative_ability: character.initiativeAbility || "dexterity",
-        innate_heritage: character.innateHeritage,
+        initiative_ability:
+          character.initiativeAbility ||
+          character.initiative_ability ||
+          "dexterity",
+        innate_heritage: character.innateHeritage || character.innate_heritage,
+        innate_heritage_skills:
+          character.innateHeritageSkills ||
+          character.innate_heritage_skills ||
+          [],
         level: character.level,
-        level1_choice_type: character.level1ChoiceType,
-        magic_modifiers: character.magicModifiers,
+        level1_choice_type:
+          character.level1ChoiceType || character.level1_choice_type,
+        magic_modifiers: character.magicModifiers || character.magic_modifiers,
         name: character.name.trim(),
-        school_year: character.schoolYear,
-        skill_proficiencies: character.skillProficiencies || [],
+        school_year: character.schoolYear || character.school_year,
+        skill_proficiencies:
+          character.skillProficiencies || character.skill_proficiencies || [],
+        skill_expertise:
+          character.skillExpertise || character.skill_expertise || [],
         standard_feats: allFeats,
-        subclass_choices: character.subclassChoices || {},
+        subclass_choices:
+          character.subclassChoices || character.subclass_choices || {},
         subclass: character.subclass,
-        wand_type: character.wandType,
+        wand_type: character.wandType || character.wand_type,
         image_url: character.imageUrl || character.image_url || null,
+        heritage_choices:
+          character.heritageChoices || character.heritage_choices || {},
       };
 
       setError("Saving character to database...");
-
-      const effectiveUserId = character.discordUserId || discordUserId;
+      const effectiveUserId =
+        character.discord_user_id || character.discordUserId || discordUserId;
 
       const savePromise = characterService.updateCharacter(
         character.id,
@@ -646,36 +664,90 @@ const CharacterEditor = ({
 
       const transformedCharacter = {
         id: updatedCharacter.id,
-        abilityScores: updatedCharacter.ability_scores,
-        asiChoices: updatedCharacter.asi_choices || {},
+        abilityScores:
+          updatedCharacter.ability_scores || updatedCharacter.abilityScores,
+        asiChoices:
+          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {},
         background: updatedCharacter.background,
-        backgroundSkills: updatedCharacter.background_skills || [],
-        castingStyle: updatedCharacter.casting_style,
-        createdAt: updatedCharacter.created_at,
-        gameSession: updatedCharacter.game_session || "",
-        hitPoints: updatedCharacter.hit_points,
+        backgroundSkills:
+          updatedCharacter.background_skills ||
+          updatedCharacter.backgroundSkills ||
+          [],
+        castingStyle:
+          updatedCharacter.casting_style || updatedCharacter.castingStyle,
+        createdAt: updatedCharacter.created_at || updatedCharacter.createdAt,
+        gameSession:
+          updatedCharacter.game_session || updatedCharacter.gameSession || "",
+        hitPoints: updatedCharacter.hit_points || updatedCharacter.hitPoints,
         house: updatedCharacter.house,
-        houseChoices: updatedCharacter.house_choices || {},
-        initiativeAbility: updatedCharacter.initiative_ability || "dexterity",
-        innateHeritage: updatedCharacter.innate_heritage,
+        houseChoices:
+          updatedCharacter.house_choices || updatedCharacter.houseChoices || {},
+        heritageChoices:
+          updatedCharacter.heritage_choices ||
+          updatedCharacter.heritageChoices ||
+          {},
+        initiativeAbility:
+          updatedCharacter.initiative_ability ||
+          updatedCharacter.initiativeAbility ||
+          "dexterity",
+        innateHeritage:
+          updatedCharacter.innate_heritage || updatedCharacter.innateHeritage,
+        innateHeritageSkills:
+          updatedCharacter.innate_heritage_skills ||
+          updatedCharacter.innateHeritageSkills ||
+          [],
         level: updatedCharacter.level,
-        level1ChoiceType: updatedCharacter.level1_choice_type || "",
+        level1ChoiceType:
+          updatedCharacter.level1_choice_type ||
+          updatedCharacter.level1ChoiceType ||
+          "",
         name: updatedCharacter.name,
-        schoolYear: updatedCharacter.school_year || 1,
-        skillExpertise: updatedCharacter.skill_expertise || [],
-        skillProficiencies: updatedCharacter.skill_proficiencies || [],
-        standardFeats: updatedCharacter.standard_feats || [],
+        schoolYear:
+          updatedCharacter.school_year || updatedCharacter.schoolYear || 1,
+        skillExpertise:
+          updatedCharacter.skill_expertise ||
+          updatedCharacter.skillExpertise ||
+          [],
+        skillProficiencies:
+          updatedCharacter.skill_proficiencies ||
+          updatedCharacter.skillProficiencies ||
+          [],
+        standardFeats:
+          updatedCharacter.standard_feats ||
+          updatedCharacter.standardFeats ||
+          [],
+        featChoices:
+          updatedCharacter.feat_choices || updatedCharacter.featChoices || {},
         subclass: updatedCharacter.subclass,
-        subclassChoices: updatedCharacter.subclass_choices || {},
-        wandType: updatedCharacter.wand_type || "",
-        magicModifiers: updatedCharacter.magic_modifiers || {
-          divinations: 0,
-          charms: 0,
-          transfiguration: 0,
-          healing: 0,
-          jinxesHexesCurses: 0,
-        },
-        imageUrl: updatedCharacter.image_url || "",
+        subclassChoices:
+          updatedCharacter.subclass_choices ||
+          updatedCharacter.subclassChoices ||
+          {},
+        wandType: updatedCharacter.wand_type || updatedCharacter.wandType || "",
+        magicModifiers: updatedCharacter.magic_modifiers ||
+          updatedCharacter.magicModifiers || {
+            divinations: 0,
+            charms: 0,
+            transfiguration: 0,
+            healing: 0,
+            jinxesHexesCurses: 0,
+          },
+        imageUrl: updatedCharacter.image_url || updatedCharacter.imageUrl || "",
+        baseAbilityScores:
+          updatedCharacter.base_ability_scores ||
+          updatedCharacter.baseAbilityScores,
+        calculatedAbilityScores:
+          updatedCharacter.calculated_ability_scores ||
+          updatedCharacter.calculatedAbilityScores,
+        currentHitPoints:
+          updatedCharacter.current_hit_points ||
+          updatedCharacter.currentHitPoints,
+        currentHitDice:
+          updatedCharacter.current_hit_dice || updatedCharacter.currentHitDice,
+        corruptionPoints:
+          updatedCharacter.corruption_points ||
+          updatedCharacter.corruptionPoints ||
+          0,
       };
 
       setCharacter((prev) => ({
@@ -688,7 +760,7 @@ const CharacterEditor = ({
       setHasUnsavedChanges(false);
 
       if (onSave) {
-        onSave(transformedCharacter);
+        onSave(transformedCharacter, true);
       }
 
       alert(`Character "${character.name}" updated successfully!`);
@@ -953,18 +1025,6 @@ const CharacterEditor = ({
             getAvailableSkills={getAvailableSkills}
             styles={enhancedStyles}
             theme={theme}
-            characterId={character.id}
-            discordUserId={discordUserId}
-            autoSave={true}
-            onSaveError={(error) => {
-              console.error("Subclass save error:", error);
-              setError(`Failed to save subclass: ${error.message}`);
-            }}
-            onSaveSuccess={() => {
-              if (error && error.includes("subclass")) {
-                setError(null);
-              }
-            }}
             isLocked={sectionLocks.houseAndSubclass}
           />
         </div>
