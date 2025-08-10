@@ -268,6 +268,7 @@ const isUserForbidden = async (discordUserId) => {
     .from("user_roles")
     .select("role")
     .eq("discord_user_id", discordUserId)
+    .eq("role", "forbidden")
     .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
@@ -275,7 +276,7 @@ const isUserForbidden = async (discordUserId) => {
     return false;
   }
 
-  return data?.role === "forbidden";
+  return !!data;
 };
 
 const isUserAdmin = async (discordUserId) => {
