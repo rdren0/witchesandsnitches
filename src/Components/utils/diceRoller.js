@@ -993,15 +993,6 @@ export const rollMagicCasting = async ({
       JHC: 0x8330ee,
     };
 
-    const wandEmojis = {
-      Divinations: "🔮",
-      Transfig: "🐁",
-      Charms: "💫",
-      Healing: "❤️",
-      JHC: "⚡",
-    };
-
-    const schoolEmoji = wandEmojis[school] || "🪄";
     const rollResult = {
       d20Roll,
       modifier,
@@ -1026,7 +1017,7 @@ export const rollMagicCasting = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Magic Casting",
-      title: `${schoolEmoji} Cast: ${school} ${type}`,
+      title: `Cast: ${school} ${type}`,
       description: isCriticalSuccess
         ? "Natural 20! Exceptional magical prowess!"
         : isCriticalFailure
@@ -2113,9 +2104,9 @@ export const attemptArithmancySpell = async ({
 
     let title = `Arithmancy Cast: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `⭐ Arithmancy Cast: ${spellName}`;
+      title = `Arithmancy Cast: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `💥 Arithmancy Cast: ${spellName}`;
+      title = `Arithmancy Cast: ${spellName}`;
     }
 
     const additionalFields = [
@@ -2264,9 +2255,9 @@ export const attemptRunesSpell = async ({
 
     let title = `Runic Cast: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `⭐ Runic Cast: ${spellName}`;
+      title = `Runic Cast: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `💥 Runic Cast: ${spellName}`;
+      title = `Runic Cast: ${spellName}`;
     }
 
     const additionalFields = [

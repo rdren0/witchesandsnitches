@@ -19,9 +19,12 @@ export const sendDiscordRollWebhook = async ({
       return false;
     }
 
+    const characterName = character?.name || "Unknown Character";
+    const enhancedTitle = `${characterName}: \n${title}`;
+
     const embed = {
-      title: title,
-      description: description,
+      title: enhancedTitle,
+      description: null,
       color: embedColor,
       fields: [...fields],
       footer: {
@@ -65,9 +68,7 @@ export const sendDiscordRollWebhook = async ({
     const message = {
       embeds: [embed],
     };
-
     if (useCharacterAvatar && character?.imageUrl) {
-      message.username = character.name;
       message.avatar_url = character.imageUrl;
     }
 
