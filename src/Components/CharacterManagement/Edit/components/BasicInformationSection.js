@@ -49,8 +49,6 @@ const BasicInformationSection = ({
     if (setPreviewUrl) setPreviewUrl(null);
   };
 
-  console.log({ character, gameSessionOptions });
-
   return (
     <>
       <StepIndicator step={1} totalSteps={5} label="Basic Information" />
