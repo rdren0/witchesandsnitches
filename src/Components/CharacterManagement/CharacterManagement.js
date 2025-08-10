@@ -31,7 +31,7 @@ const CharacterManagement = ({
   const [levelingUpCharacter, setLevelingUpCharacter] = useState(null);
   const [selectedTargetUserId, setSelectedTargetUserId] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
-  const [viewMode, setViewMode] = useState(adminMode ? "all" : "my");
+  const [viewMode, setViewMode] = useState("my");
   const [characterLoading, setCharacterLoading] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
@@ -107,21 +107,26 @@ const CharacterManagement = ({
     }
   };
 
-  const handleCharacterSaved = async (updatedCharacter) => {
+  const handleCharacterSaved = async (updatedCharacter, skipSave = false) => {
     try {
-      const effectiveUserId =
-        adminMode && isUserAdmin
-          ? selectedTargetUserId || discordUserId
-          : discordUserId;
+      if (!skipSave) {
+        const effectiveUserId =
+          adminMode && isUserAdmin
+            ? selectedTargetUserId || discordUserId
+            : discordUserId;
 
-      if (updatedCharacter.id) {
-        await characterService.updateCharacter(
-          updatedCharacter.id,
-          updatedCharacter,
-          effectiveUserId
-        );
-      } else {
-        await characterService.saveCharacter(updatedCharacter, effectiveUserId);
+        if (updatedCharacter.id) {
+          await characterService.updateCharacter(
+            updatedCharacter.id,
+            updatedCharacter,
+            effectiveUserId
+          );
+        } else {
+          await characterService.saveCharacter(
+            updatedCharacter,
+            effectiveUserId
+          );
+        }
       }
 
       if (onCharacterSaved) {
@@ -350,6 +355,7 @@ const CharacterManagement = ({
             supabase={supabase}
             adminMode={adminMode}
             isUserAdmin={isUserAdmin}
+            selectedTargetUserId={selectedTargetUserId}
             sectionToOpen={sectionToOpen}
           />
         );

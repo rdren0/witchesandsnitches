@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { subclassesData } from "../../../../SharedData/subclassesData";
 import { createFeatStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { characterService } from "../../../../services/characterService";
 
 const EnhancedSubclassSelector = ({
   value,
@@ -11,17 +10,11 @@ const EnhancedSubclassSelector = ({
   onSubclassChoicesChange,
   characterLevel = 1,
   disabled = false,
-  characterId = null,
-  discordUserId = null,
-  autoSave = false,
-  onSaveError = null,
-  onSaveSuccess = null,
 }) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
   const [expandedSubclasses, setExpandedSubclasses] = useState(new Set());
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
+
   const [internalSubclassChoices, setInternalSubclassChoices] = useState({});
 
   const subclassChoices = externalSubclassChoices || internalSubclassChoices;
@@ -294,84 +287,7 @@ const EnhancedSubclassSelector = ({
     choiceStatus.isComplete,
   ]);
 
-  const saveToDatabase = useCallback(
-    async (subclass, choices) => {
-      if (!autoSave || !characterId || !discordUserId) return;
-
-      setSaving(true);
-      setSaveError(null);
-
-      try {
-        const normalizedChoices = normalizeSubclassChoices(choices);
-        await characterService.updateCharacterSubclass(
-          characterId,
-          subclass,
-          normalizedChoices,
-          discordUserId
-        );
-        onSaveSuccess && onSaveSuccess();
-      } catch (error) {
-        console.error("Failed to save subclass choices:", error);
-        setSaveError(error.message);
-        onSaveError && onSaveError(error);
-      } finally {
-        setSaving(false);
-      }
-    },
-    [
-      autoSave,
-      characterId,
-      discordUserId,
-      onSaveError,
-      onSaveSuccess,
-      normalizeSubclassChoices,
-    ]
-  );
-
-  useEffect(() => {
-    if (!autoSave) return;
-
-    const timeoutId = setTimeout(() => {
-      saveToDatabase(selectedSubclass, normalizedSubclassChoices);
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [selectedSubclass, normalizedSubclassChoices, saveToDatabase, autoSave]);
-
-  useEffect(() => {
-    const loadCharacterData = async () => {
-      if (!characterId || !discordUserId) return;
-
-      try {
-        const character = await characterService.getCharacterById(
-          characterId,
-          discordUserId
-        );
-
-        if (character.subclass && !value) {
-          onChange && onChange(character.subclass);
-        }
-
-        const characterSubclassChoices =
-          character.subclass_choices || character.subclassChoices || {};
-
-        if (
-          Object.keys(characterSubclassChoices).length > 0 &&
-          !externalSubclassChoices
-        ) {
-          const normalized = normalizeSubclassChoices(characterSubclassChoices);
-          setInternalSubclassChoices(normalized);
-        }
-      } catch (error) {
-        console.error("Failed to load character data:", error);
-        setSaveError(`Failed to load character: ${error.message}`);
-      }
-    };
-
-    loadCharacterData();
-  }, [characterId, discordUserId]);
-
-  const handleSubclassToggle = async (subclassName) => {
+  const handleSubclassToggle = (subclassName) => {
     if (selectedSubclass === subclassName) {
       onChange("");
       setSubclassChoices({});
@@ -881,26 +797,7 @@ const EnhancedSubclassSelector = ({
         )}
       </h3>
 
-      {autoSave && (saving || saveError) && (
-        <div
-          style={{
-            ...styles.saveStatus,
-            ...(saving ? styles.saveStatusSaving : styles.saveStatusError),
-          }}
-        >
-          {saving ? (
-            <>
-              <span>💾</span>
-              <span>Saving choices...</span>
-            </>
-          ) : saveError ? (
-            <>
-              <span>⚠️</span>
-              <span>Save failed: {saveError}</span>
-            </>
-          ) : null}
-        </div>
-      )}
+      {/* REMOVE: Auto-save status UI */}
 
       <div style={styles.helpText}>
         Choose a subclass to specialize your character's abilities and features.
@@ -916,18 +813,6 @@ const EnhancedSubclassSelector = ({
             {characterLevel} are available.
             {choiceStatus.total > 1 &&
               " All level-appropriate choices must be completed."}
-          </span>
-        )}
-        {autoSave && characterId && (
-          <span
-            style={{
-              display: "block",
-              marginTop: "4px",
-              fontStyle: "italic",
-              color: theme.textSecondary,
-            }}
-          >
-            Your choices are automatically saved.
           </span>
         )}
       </div>
@@ -1090,8 +975,7 @@ const EnhancedSubclassSelector = ({
         {characterLevel > 1 && (
           <span style={{ display: "block", marginTop: "4px" }}>
             For Level {characterLevel} characters, all subclass choices through
-            level {characterLevel}
-            must be completed if a subclass is selected.
+            level {characterLevel} must be completed if a subclass is selected.
           </span>
         )}
         {selectedSubclass && (

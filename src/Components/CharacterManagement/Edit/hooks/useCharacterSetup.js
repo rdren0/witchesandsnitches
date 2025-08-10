@@ -102,6 +102,74 @@ export const useCharacterSetup = (originalCharacter) => {
     merged.imageUrl =
       originalCharacter?.imageUrl || originalCharacter?.image_url || "";
 
+    merged.abilityScores =
+      originalCharacter?.ability_scores ||
+      originalCharacter?.abilityScores ||
+      defaultCharacter.abilityScores;
+
+    merged.castingStyle =
+      originalCharacter?.casting_style ||
+      originalCharacter?.castingStyle ||
+      defaultCharacter.castingStyle;
+
+    merged.hitPoints =
+      originalCharacter?.hit_points ||
+      originalCharacter?.hitPoints ||
+      defaultCharacter.hitPoints;
+
+    merged.initiativeAbility =
+      originalCharacter?.initiative_ability ||
+      originalCharacter?.initiativeAbility ||
+      defaultCharacter.initiativeAbility;
+
+    merged.magicModifiers =
+      originalCharacter?.magic_modifiers ||
+      originalCharacter?.magicModifiers ||
+      defaultCharacter.magicModifiers;
+
+    merged.skillProficiencies =
+      originalCharacter?.skill_proficiencies ||
+      originalCharacter?.skillProficiencies ||
+      defaultCharacter.skillProficiencies;
+
+    merged.backgroundSkills =
+      originalCharacter?.background_skills ||
+      originalCharacter?.backgroundSkills ||
+      defaultCharacter.backgroundSkills;
+
+    merged.standardFeats =
+      originalCharacter?.standard_feats ||
+      originalCharacter?.standardFeats ||
+      defaultCharacter.standardFeats;
+
+    merged.asiChoices =
+      originalCharacter?.asi_choices ||
+      originalCharacter?.asiChoices ||
+      defaultCharacter.asiChoices;
+
+    merged.featChoices =
+      originalCharacter?.feat_choices || originalCharacter?.featChoices || {};
+
+    merged.level1ChoiceType =
+      originalCharacter?.level1_choice_type ||
+      originalCharacter?.level1ChoiceType ||
+      defaultCharacter.level1ChoiceType;
+
+    merged.gameSession =
+      originalCharacter?.game_session ||
+      originalCharacter?.gameSession ||
+      defaultCharacter.gameSession;
+
+    merged.wandType =
+      originalCharacter?.wand_type ||
+      originalCharacter?.wandType ||
+      defaultCharacter.wandType;
+
+    merged.schoolYear =
+      originalCharacter?.school_year ||
+      originalCharacter?.schoolYear ||
+      defaultCharacter.schoolYear;
+
     return migrateBackgroundSkills(merged);
   }, [originalCharacter]);
 

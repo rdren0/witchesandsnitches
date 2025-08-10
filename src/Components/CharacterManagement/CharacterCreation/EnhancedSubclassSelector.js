@@ -286,43 +286,6 @@ const EnhancedSubclassSelector = ({
     getRequiredChoices,
   ]);
 
-  const saveToDatabase = useCallback(
-    async (subclass, choices) => {
-      if (!autoSave || !characterId || !discordUserId) return;
-
-      setSaving(true);
-      setSaveError(null);
-
-      try {
-        const normalizedChoices = normalizeSubclassChoices(choices);
-        await characterService.updateCharacterSubclass(
-          characterId,
-          subclass,
-          normalizedChoices,
-          discordUserId
-        );
-        onSaveSuccess && onSaveSuccess();
-      } catch (error) {
-        console.error("Failed to save subclass choices:", error);
-        setSaveError(error.message);
-        onSaveError && onSaveError(error);
-      } finally {
-        setSaving(false);
-      }
-    },
-    [autoSave, characterId, discordUserId, onSaveError, onSaveSuccess]
-  );
-
-  useEffect(() => {
-    if (!autoSave) return;
-
-    const timeoutId = setTimeout(() => {
-      saveToDatabase(selectedSubclass, normalizedSubclassChoices);
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [selectedSubclass, normalizedSubclassChoices, saveToDatabase, autoSave]);
-
   useEffect(() => {
     const loadCharacterData = async () => {
       if (!characterId || !discordUserId) return;

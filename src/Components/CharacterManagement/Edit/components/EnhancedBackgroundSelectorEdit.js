@@ -328,10 +328,6 @@ const EnhancedBackgroundSelectorEdit = ({
     }
 
     onChange(updatedCharacter.background);
-
-    if (onCharacterUpdate) {
-      onCharacterUpdate(updatedCharacter);
-    }
   };
 
   const toggleBackgroundExpansion = (backgroundName) => {
