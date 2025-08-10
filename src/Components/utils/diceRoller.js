@@ -1816,6 +1816,25 @@ const getSpellCastingDC = (spellLevel) => {
   return 10 + spellLevel;
 };
 
+const getSpellData = (spellName) => {
+  if (!spellName) return null;
+
+  for (const [subject, subjectData] of Object.entries(spellsData)) {
+    if (subjectData.levels) {
+      for (const [, levelSpells] of Object.entries(subjectData.levels)) {
+        const spell = levelSpells.find((s) => s.name === spellName);
+        if (spell) {
+          return {
+            ...spell,
+            subject: subject,
+          };
+        }
+      }
+    }
+  }
+  return null;
+};
+
 export const attemptSpell = async ({
   spellName,
   subject,
@@ -1834,6 +1853,9 @@ export const attemptSpell = async ({
     alert("Please select a character first!");
     return;
   }
+
+  // Check if spell has restrictions
+  const spellData = getSpellData(spellName);
 
   setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
 

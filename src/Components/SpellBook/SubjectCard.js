@@ -28,6 +28,7 @@ import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
 import { createSpellBookStyles } from "../../styles/masterStyles";
+import RestrictionModal from "./RestrictionModal";
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -497,6 +498,12 @@ export const SubjectCard = ({
   } = useRollFunctions();
   const { theme } = useTheme();
 
+  const [restrictionModal, setRestrictionModal] = useState({
+    isOpen: false,
+    spellName: "",
+    onConfirm: null,
+  });
+
   const baseStyles = createSpellBookStyles(theme);
   const additionalStyles = getAdditionalStyles(theme);
   const styles = { ...baseStyles, ...additionalStyles };
@@ -517,6 +524,110 @@ export const SubjectCard = ({
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
+
+  const getSpellData = (spellName) => {
+    if (!spellName) return null;
+
+    for (const [subject, subjectData] of Object.entries(spellsData)) {
+      if (subjectData.levels) {
+        for (const [, levelSpells] of Object.entries(subjectData.levels)) {
+          const spell = levelSpells.find((s) => s.name === spellName);
+          if (spell) {
+            return {
+              ...spell,
+              subject: subject,
+            };
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleSpellAttempt = async (spellName, subject) => {
+    const spellData = getSpellData(spellName);
+
+    if (spellData && spellData.restriction === true) {
+      setRestrictionModal({
+        isOpen: true,
+        spellName: spellName,
+        onConfirm: () => {
+          setRestrictionModal({
+            isOpen: false,
+            spellName: "",
+            onConfirm: null,
+          });
+          proceedWithSpellCasting(spellName, subject);
+        },
+      });
+      return;
+    }
+
+    proceedWithSpellCasting(spellName, subject);
+  };
+
+  const proceedWithSpellCasting = async (spellName, subject) => {
+    await attemptSpell({
+      spellName,
+      subject,
+      getSpellModifier,
+      selectedCharacter,
+      setSpellAttempts,
+      discordUserId: selectedCharacter.discord_user_id,
+      setAttemptingSpells,
+      setCriticalSuccesses,
+      setFailedAttempts,
+      updateSpellProgressSummary,
+    });
+  };
+
+  const handleRestrictionCancel = () => {
+    setRestrictionModal({ isOpen: false, spellName: "", onConfirm: null });
+  };
+
+  const handleAlternateCasting = (spellName, subject, castingType) => {
+    const spellData = getSpellData(spellName);
+
+    if (spellData && spellData.restriction === true) {
+      setRestrictionModal({
+        isOpen: true,
+        spellName: spellName,
+        onConfirm: () => {
+          setRestrictionModal({
+            isOpen: false,
+            spellName: "",
+            onConfirm: null,
+          });
+          proceedWithAlternateCasting(spellName, subject, castingType);
+          setAlternateAttemptsModal(null);
+        },
+      });
+    } else {
+      proceedWithAlternateCasting(spellName, subject, castingType);
+      setAlternateAttemptsModal(null);
+    }
+  };
+
+  const proceedWithAlternateCasting = async (
+    spellName,
+    subject,
+    castingType
+  ) => {
+    const castingFunction =
+      castingType === "arithmancy" ? attemptArithmancySpell : attemptRunesSpell;
+
+    await castingFunction({
+      spellName,
+      subject,
+      selectedCharacter,
+      setSpellAttempts,
+      discordUserId: selectedCharacter.discord_user_id,
+      setAttemptingSpells,
+      setCriticalSuccesses,
+      setFailedAttempts,
+      updateSpellProgressSummary,
+    });
+  };
 
   const getSubjectStats = (subject) => {
     const levels = spellsData[subject].levels;
@@ -818,20 +929,9 @@ export const SubjectCard = ({
 
             <div style={styles.alternateButtonsGrid}>
               <button
-                onClick={() => {
-                  attemptArithmancySpell({
-                    spellName,
-                    subject,
-                    selectedCharacter,
-                    setSpellAttempts,
-                    discordUserId: selectedCharacter.discord_user_id,
-                    setAttemptingSpells,
-                    setCriticalSuccesses,
-                    setFailedAttempts,
-                    updateSpellProgressSummary,
-                  });
-                  setAlternateAttemptsModal(null);
-                }}
+                onClick={() =>
+                  handleAlternateCasting(spellName, subject, "arithmancy")
+                }
                 disabled={isAttempting || isMastered || !selectedCharacter}
                 style={styles.alternateButton}
               >
@@ -851,20 +951,9 @@ export const SubjectCard = ({
               </button>
 
               <button
-                onClick={() => {
-                  attemptRunesSpell({
-                    spellName,
-                    subject,
-                    selectedCharacter,
-                    setSpellAttempts,
-                    discordUserId: selectedCharacter.discord_user_id,
-                    setAttemptingSpells,
-                    setCriticalSuccesses,
-                    setFailedAttempts,
-                    updateSpellProgressSummary,
-                  });
-                  setAlternateAttemptsModal(null);
-                }}
+                onClick={() =>
+                  handleAlternateCasting(spellName, subject, "runes")
+                }
                 disabled={isAttempting || isMastered || !selectedCharacter}
                 style={styles.alternateButton}
               >
@@ -1151,20 +1240,7 @@ export const SubjectCard = ({
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
           <button
-            onClick={() =>
-              attemptSpell({
-                spellName,
-                subject,
-                getSpellModifier,
-                selectedCharacter,
-                setSpellAttempts,
-                discordUserId: selectedCharacter.discord_user_id,
-                setAttemptingSpells,
-                setCriticalSuccesses,
-                setFailedAttempts,
-                updateSpellProgressSummary,
-              })
-            }
+            onClick={() => handleSpellAttempt(spellName, subject)}
             disabled={isAttempting || isMastered || !selectedCharacter}
             style={{
               ...styles.attemptButton,
@@ -1987,6 +2063,7 @@ export const SubjectCard = ({
           </div>
         </div>
       )}
+
       {alternateAttemptsModal && (
         <AlternateAttemptsModal
           spellName={alternateAttemptsModal}
@@ -1994,6 +2071,15 @@ export const SubjectCard = ({
           subject={subjectName}
         />
       )}
+
+      {/* Restriction Modal */}
+      <RestrictionModal
+        spellName={restrictionModal.spellName}
+        isOpen={restrictionModal.isOpen}
+        onConfirm={restrictionModal.onConfirm}
+        onCancel={handleRestrictionCancel}
+        theme={theme}
+      />
     </div>
   );
 };

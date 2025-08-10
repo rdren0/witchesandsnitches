@@ -500,6 +500,7 @@ const createCharacterSheetStyles = (theme) => ({
     fontSize: "14px",
     color: theme.textSecondary,
     textAlign: "center",
+    marginTop: "8px",
   },
   searchResultsHint: {
     fontStyle: "italic",
@@ -2982,11 +2983,13 @@ export const createSpellBookStyles = (theme) => ({
   searchResultsHint: {
     color: theme.textSecondary,
     opacity: 0.8,
+    marginTop: "8px",
   },
   searchResults: {
     fontSize: "14px",
     color: theme.textSecondary,
     fontStyle: "italic",
+    marginTop: "8px",
   },
   searchSuggestions: {
     textAlign: "left",
@@ -3239,7 +3242,6 @@ export const searchStyles = (theme) => ({
     transition: "all 0.2s ease",
     fontFamily: "inherit",
   },
-
   searchClearButton: {
     position: "absolute",
     right: "8px",
@@ -3253,18 +3255,16 @@ export const searchStyles = (theme) => ({
     justifyContent: "center",
     transition: "background-color 0.2s ease",
   },
-
   searchResults: {
     fontSize: "14px",
     color: theme.textSecondary,
     fontStyle: "italic",
+    marginTop: "8px",
   },
-
   searchResultsHint: {
     color: theme.textSecondary,
     opacity: 0.8,
   },
-
   noResultsContainer: {
     textAlign: "center",
     padding: "60px 20px",
@@ -3273,7 +3273,6 @@ export const searchStyles = (theme) => ({
     borderRadius: "12px",
     border: `2px solid ${theme.border}`,
   },
-
   noResultsIcon: {
     fontSize: "48px",
     marginBottom: "16px",

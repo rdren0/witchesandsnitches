@@ -3296,7 +3296,7 @@ export const spellsData = {
           class: ["Charms"],
           level: "2nd Level",
           year: 3,
-          restriction: false,
+          restriction: true,
           description:
             "Suppress strong emotions in a 20-foot radius. Remove charm/fear effects or make hostile creatures indifferent toward chosen targets. Concentration, up to 1 minute",
         },
@@ -3307,7 +3307,7 @@ export const spellsData = {
           class: ["Charms"],
           level: "3rd Level",
           year: 4,
-          restriction: false,
+          restriction: true,
           description:
             "Create a realistic illusion up to 20-foot cube with sounds, smells, and temperature. Lasts 10 minutes with concentration. Physical interaction reveals it's fake. At 6th level+, becomes permanent without concentration",
         },
@@ -3316,7 +3316,7 @@ export const spellsData = {
           class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           year: 5,
-          restriction: false,
+          restriction: true,
           description:
             "Grant up to 5 creatures 5 temporary HP, advantage on Wisdom saves, and advantage on next attack after being hit. Lasts 1 hour. Higher levels add +5 temp HP per slot level",
         },
@@ -3329,7 +3329,7 @@ export const spellsData = {
           level: "6th Level",
           class: ["Charms"],
           year: 7,
-          restriction: false,
+          restriction: true,
           description:
             "Bind a creature in an illusory cell only it perceives. Target takes 5d10 psychic damage and is restrained, unable to see/hear beyond the illusion. Moving through it deals 10d10 damage and ends the spell",
         },
