@@ -12,6 +12,7 @@ export const gameSessionOptions = [
   "Saturday - Knights AM",
   "Saturday - Knights PM",
   "DEVELOPMENT",
+  "Jaguaras",
 ];
 
 export const DISCORD_WEBHOOKS = {
