@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Skills } from "./Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
-import LevelUpModal from "../CharacterManagement/Edit/LevelUpModal";
+import LevelUpModal from "../CharacterManager/LevelUpModal";
 import CharacterSheetModals from "./CharacterSheetModals";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";

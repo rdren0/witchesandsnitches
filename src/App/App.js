@@ -24,7 +24,7 @@ import { RollModalProvider } from "../Components/utils/diceRoller";
 import { createAppStyles } from "../styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
-import CharacterManagement from "../Components/CharacterManagement/CharacterManagement";
+import CharacterManager from "../Components/CharacterManager/CharacterManager";
 import logo from "./../Images/logo/Thumbnail-01.png";
 import BetaBanner from "./BetaBanner";
 import { AdminProvider, useAdmin } from "../contexts/AdminContext";
@@ -1211,7 +1211,7 @@ function AppContent() {
               path="/character-management"
               element={
                 <ProtectedRoute user={user}>
-                  <CharacterManagement
+                  <CharacterManager
                     user={user}
                     customUsername={customUsername}
                     onCharacterSaved={() => {
@@ -1228,7 +1228,7 @@ function AppContent() {
               path="/character-management/create"
               element={
                 <ProtectedRoute user={user}>
-                  <CharacterManagement
+                  <CharacterManager
                     user={user}
                     customUsername={customUsername}
                     onCharacterSaved={() => {
@@ -1246,7 +1246,7 @@ function AppContent() {
               path="/character-management/edit/:characterId"
               element={
                 <ProtectedRoute user={user}>
-                  <CharacterManagement
+                  <CharacterManager
                     user={user}
                     customUsername={customUsername}
                     onCharacterSaved={() => {

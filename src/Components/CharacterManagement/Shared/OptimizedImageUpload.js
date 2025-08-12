@@ -676,7 +676,6 @@ const OptimizedImageUpload = ({
         </div>
       )}
 
-      {/* Crop Modal */}
       {showCropModal && previewUrl && (
         <div style={modalStyle}>
           <div style={modalContentStyle}>

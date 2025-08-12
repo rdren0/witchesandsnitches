@@ -12,11 +12,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import { useTheme } from "../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { characterService } from "../../../services/characterService";
+import { useTheme } from "../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../styles/masterStyles";
+import { characterService } from "../../services/characterService";
 import CharacterEditor from "./CharacterEditor";
-import { gameSessionOptions } from "../../../App/const";
+import { gameSessionOptions } from "../../App/const";
 
 const CharacterList = ({
   user,

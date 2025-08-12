@@ -88,7 +88,7 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: `Hit Dice Recovery`,
+          title: `${character.name} - Hit Dice Recovery`,
           color: 0x9d4edd,
           fields: [
             {
@@ -116,7 +116,7 @@ const CharacterSheetModals = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: `${character.name} - Short Rest Healing`,
+            text: `Short Rest Healing`,
           },
         };
 
@@ -212,7 +212,9 @@ const CharacterSheetModals = ({
 
       if (discordWebhookUrl) {
         const embed = {
-          title: type === "damage" ? "Damage Taken" : "Healing Applied",
+          title: `${character.name} - ${
+            type === "damage" ? "Damage Taken" : "Healing Applied"
+          }`,
           color: type === "damage" ? 0xef4444 : 0x10b981,
           fields: [
             {
@@ -228,9 +230,7 @@ const CharacterSheetModals = ({
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: `${character.name} - ${
-              type === "damage" ? "Damage Taken" : "Healing Applied"
-            }`,
+            text: `${type === "damage" ? "Damage Taken" : "Healing Applied"}`,
           },
         };
 

@@ -1,29 +1,29 @@
-import { gameSessionOptions } from "../../../App/const";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../styles/masterStyles";
+import React, { useState } from "react";
+import { gameSessionOptions } from "../../../../App/const";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../../styles/masterStyles";
 import { RefreshCw } from "lucide-react";
+import SchoolYearSelector from "../../../CharacterManagement/Shared/SchoolYearSelector";
+import EnhancedCastingStyleSelector from "../../../CharacterManagement/CharacterCreation/EnhancedCastingStyleSelector";
+import OptimizedImageUpload from "../../../CharacterManagement/Shared/OptimizedImageUpload";
 
-import SchoolYearSelector from "../Shared/SchoolYearSelector";
-import EnhancedCastingStyleSelector from "./EnhancedCastingStyleSelector";
-import OptimizedImageUpload from "../Shared/OptimizedImageUpload";
-
-function BasicInfo({
+const BasicInfoSection = ({
   character,
-  isHpManualMode,
-  setIsHpManualMode,
-  rolledHp,
-  setRolledHp,
-  rollHp,
-  handleInputChange,
-  calculateHitPoints,
+  onChange,
+  errors = {},
+  mode = "create",
+  disabled = false,
   supabase,
-  setImageFile,
-  setPreviewUrl,
-  onImageFileChange,
-  onUploadComplete,
-}) {
+}) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
+
+  const [isHpManualMode, setIsHpManualMode] = useState(false);
+  const [rolledHp, setRolledHp] = useState(null);
+
+  const handleInputChange = (field, value) => {
+    onChange(field, value);
+  };
 
   const handleSchoolYearChange = (schoolYear) => {
     handleInputChange("schoolYear", schoolYear);
@@ -38,18 +38,31 @@ function BasicInfo({
   };
 
   const handleImageChange = (file, previewUrl) => {
-    if (onImageFileChange) {
-      onImageFileChange(file);
-    } else {
-      if (setImageFile) setImageFile(file);
-      if (setPreviewUrl) setPreviewUrl(previewUrl);
-    }
-
     if (previewUrl) {
       handleInputChange("imageUrl", previewUrl);
     } else if (!file) {
       handleInputChange("imageUrl", "");
     }
+  };
+
+  const calculateHitPoints = ({ character }) => {
+    const level = character.level || 1;
+    const con = character.ability_scores?.constitution || 8;
+    const conMod = Math.floor((con - 10) / 2);
+    return level * (6 + conMod);
+  };
+
+  const rollHp = () => {
+    const con = character.ability_scores?.constitution || 8;
+    const conMod = Math.floor((con - 10) / 2);
+    const rolled = Math.floor(Math.random() * 6) + 1 + conMod;
+    setRolledHp(Math.max(1, rolled));
+    handleInputChange("hit_points", Math.max(1, rolled));
+    handleInputChange("current_hit_points", Math.max(1, rolled));
+  };
+
+  const onUploadComplete = (url) => {
+    handleInputChange("imageUrl", url);
   };
 
   return (
@@ -61,8 +74,13 @@ function BasicInfo({
           value={character.name || ""}
           onChange={(e) => handleInputChange("name", e.target.value)}
           placeholder="Enter your character's name..."
-          style={styles.input}
+          style={{
+            ...styles.input,
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+          }}
           maxLength={50}
+          disabled={disabled}
         />
       </div>
 
@@ -74,6 +92,7 @@ function BasicInfo({
           onUploadComplete={onUploadComplete}
           supabase={supabase}
           theme={theme}
+          disabled={disabled}
           styles={{
             container: styles.imageUploadContainer,
             wrapper: styles.imageUploadWrapper,
@@ -95,9 +114,14 @@ function BasicInfo({
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Game Session</label>
         <select
-          value={character.gameSession || ""}
-          onChange={(e) => handleInputChange("gameSession", e.target.value)}
-          style={styles.select}
+          value={character.game_session || ""}
+          onChange={(e) => handleInputChange("game_session", e.target.value)}
+          style={{
+            ...styles.select,
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+          }}
+          disabled={disabled}
         >
           <option value="">Select Game Session...</option>
           {gameSessionOptions.map((session) => (
@@ -117,18 +141,32 @@ function BasicInfo({
         level={character.level}
         onLevelChange={handleLevelChange}
         styles={styles}
+        disabled={disabled}
       />
 
-      <div style={styles.fieldContainer}>
+      <div
+        style={{
+          ...styles.fieldContainer,
+          opacity: disabled ? 0.6 : 1,
+          pointerEvents: disabled ? "none" : "auto",
+        }}
+      >
         <EnhancedCastingStyleSelector
           selectedStyle={character.castingStyle || ""}
           onStyleChange={handleCastingStyleChange}
           required={true}
+          disabled={disabled}
         />
       </div>
 
       {character.castingStyle === "Intellect Caster" && (
-        <div style={styles.fieldContainer}>
+        <div
+          style={{
+            ...styles.fieldContainer,
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+          }}
+        >
           <label style={styles.label}>Initiative Ability *</label>
           <div style={styles.helpText}>
             As an intellect caster, you may choose to use Intelligence or
@@ -151,6 +189,7 @@ function BasicInfo({
                   handleInputChange("initiativeAbility", e.target.value)
                 }
                 style={styles.level1ChoiceRadio}
+                disabled={disabled}
               />
               <span
                 style={
@@ -178,6 +217,7 @@ function BasicInfo({
                   handleInputChange("initiativeAbility", e.target.value)
                 }
                 style={styles.level1ChoiceRadio}
+                disabled={disabled}
               />
               <span
                 style={
@@ -193,7 +233,13 @@ function BasicInfo({
         </div>
       )}
 
-      <div style={styles.fieldContainer}>
+      <div
+        style={{
+          ...styles.fieldContainer,
+          opacity: disabled ? 0.6 : 1,
+          pointerEvents: disabled ? "none" : "auto",
+        }}
+      >
         <label style={styles.label}>Hit Points</label>
         {!character.castingStyle ? (
           <div style={styles.skillsPlaceholder}>
@@ -207,15 +253,15 @@ function BasicInfo({
                   <input
                     type="number"
                     min="1"
-                    value={character.hitPoints || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "hitPoints",
-                        parseInt(e.target.value) || 1
-                      )
-                    }
+                    value={character.hit_points || ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      handleInputChange("hit_points", value);
+                      handleInputChange("current_hit_points", value);
+                    }}
                     placeholder="--"
                     style={styles.hpManualInput}
+                    disabled={disabled}
                   />
                 ) : rolledHp !== null ? (
                   <div style={styles.hpRollDisplay}>{rolledHp}</div>
@@ -238,7 +284,9 @@ function BasicInfo({
                         backgroundColor: "#EF4444",
                         fontSize: "12px",
                       }}
-                      disabled={!character.castingStyle || !character.level}
+                      disabled={
+                        disabled || !character.castingStyle || !character.level
+                      }
                     >
                       <RefreshCw size={14} />
                       Roll
@@ -246,10 +294,14 @@ function BasicInfo({
                   )}
 
                   <div
-                    onClick={() => {
-                      setIsHpManualMode(!isHpManualMode);
-                      setRolledHp(null);
-                    }}
+                    onClick={
+                      disabled
+                        ? undefined
+                        : () => {
+                            setIsHpManualMode(!isHpManualMode);
+                            setRolledHp(null);
+                          }
+                    }
                     style={{
                       ...styles.hpToggle,
                       backgroundColor: isHpManualMode
@@ -258,6 +310,8 @@ function BasicInfo({
                       borderColor: isHpManualMode
                         ? theme.success
                         : theme.textSecondary,
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      opacity: disabled ? 0.5 : 1,
                     }}
                     title={
                       isHpManualMode
@@ -287,6 +341,6 @@ function BasicInfo({
       </div>
     </>
   );
-}
+};
 
-export default BasicInfo;
+export default BasicInfoSection;

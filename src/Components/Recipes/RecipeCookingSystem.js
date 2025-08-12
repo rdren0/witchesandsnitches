@@ -462,33 +462,6 @@ const RecipeCookingSystem = ({ character, user, supabase }) => {
                   )}
                 </button>
               </div>
-              {/* 
-              <div style={styles.qualityEffects}>
-                <h3 style={styles.sectionTitle}>Quality Effects</h3>
-                <div style={styles.qualityList}>
-                  {Object.entries(selectedRecipe.qualities).map(
-                    ([quality, effect]) => (
-                      <div key={quality} style={styles.qualityEffect}>
-                        <div
-                          style={{
-                            ...styles.qualityEffectHeader,
-                            ...styles[
-                              `quality${
-                                quality.charAt(0).toUpperCase() +
-                                quality.slice(1)
-                              }`
-                            ],
-                          }}
-                        >
-                          <Star size={16} />
-                          {quality.charAt(0).toUpperCase() + quality.slice(1)}
-                        </div>
-                        <p style={styles.qualityEffectText}>{effect}</p>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div> */}
             </div>
           )}
         </div>
