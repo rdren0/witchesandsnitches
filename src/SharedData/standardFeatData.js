@@ -495,6 +495,88 @@ export const standardFeats = [
     },
   },
   {
+    name: "Get Whacked",
+    preview: "Unarmed combat mastery with bonus action strikes. +1 Str or Dex.",
+    description: [
+      "Your Strength or Dexterity increases by 1 to a maximum of 20.",
+      "You can use Dexterity instead of Strength for attack and damage rolls of unarmed strikes.",
+      "When you use the Attack action with a weapon or unarmed strike, you can make one unarmed strike as a bonus action.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        ability: "choice",
+        options: ["strength", "dexterity"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Dexterity-Based Unarmed Strikes",
+          type: "passive",
+          description:
+            "Use Dexterity instead of Strength for unarmed strike attacks and damage",
+        },
+        {
+          name: "Bonus Unarmed Strike",
+          type: "active",
+          usage: "bonus_action",
+          description:
+            "Make unarmed strike as bonus action after attacking with weapon or unarmed strike",
+        },
+      ],
+    },
+  },
+  {
+    name: "Grappler",
+    preview: "Grappling mastery with enhanced unarmed combat. +1 Str or Dex.",
+    description: [
+      "Increase your Strength or Dexterity by 1, to a maximum of 20.",
+      "When you hit with an Unarmed Strike as part of Attack action, you can use both Damage and Grapple option.",
+      "You can use this benefit only once per turn.",
+      "You have Advantage on attack rolls against creatures Grappled by you.",
+      "You don't spend extra movement to move a Grappled creature your size or smaller.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        ability: "choice",
+        options: ["strength", "dexterity"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {
+        advantageConditions: ["Grappled targets"],
+      },
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Punch and Grab",
+          type: "active",
+          usage: "once_per_turn",
+          description:
+            "Unarmed Strike can deal damage and grapple simultaneously",
+        },
+        {
+          name: "Fast Wrestler",
+          type: "passive",
+          description:
+            "No extra movement cost to move grappled creatures your size or smaller",
+        },
+      ],
+    },
+  },
+  {
     name: "Guile of the Cloud Giant",
     preview: "Cloud giant powers. +1 Str/Con/Cha, defensive teleportation.",
     description: [
@@ -533,6 +615,41 @@ export const standardFeats = [
         { type: "castingStyle", value: "Vigor Caster" },
         { type: "innateHeritage", value: "Giant's Blood" },
         { type: "innateHeritage", value: "Troll Blood" },
+      ],
+    },
+  },
+  {
+    name: "Inspiring Leader",
+    preview:
+      "Motivational leader granting temporary hit points to allies. +1 Wis or Cha.",
+    description: [
+      "Increase your Wisdom or Charisma by 1, to a maximum of 20.",
+      "When you finish a Short or Long Rest, you can give an inspiring performance: a speech, song, or dance.",
+      "Choose up to six allies within 30 feet who witness the performance.",
+      "Each chosen creature gains Temporary Hit Points equal to your level plus the modifier of the ability you increased.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        ability: "choice",
+        options: ["wisdom", "charisma"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {},
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Bolstering Performance",
+          type: "active",
+          usage: "short_or_long_rest",
+          description:
+            "Grant temp HP = level + ability mod to up to 6 allies within 30 feet",
+        },
       ],
     },
   },
@@ -685,6 +802,47 @@ export const standardFeats = [
         },
       },
       specialAbilities: [],
+    },
+  },
+  {
+    name: "Mage Slayer",
+    preview:
+      "Anti-magic combat specialist with concentration disruption. +1 Str or Dex.",
+    description: [
+      "Increase your Strength or Dexterity by 1, to a maximum of 20.",
+      "When you damage a creature that is Concentrating, it has Disadvantage on the saving throw to maintain Concentration.",
+      "You have advantage on saving throws against spells cast by creatures within 5 feet of you.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        ability: "choice",
+        options: ["strength", "dexterity"],
+        amount: 1,
+      },
+      skillProficiencies: [],
+      expertise: [],
+      savingThrowProficiencies: [],
+      resistances: [],
+      immunities: [],
+      speeds: {},
+      combatBonuses: {
+        advantageConditions: ["Saves vs spells from creatures within 5 feet"],
+      },
+      spellcasting: {},
+      specialAbilities: [
+        {
+          name: "Concentration Breaker",
+          type: "passive",
+          description:
+            "Damage gives target disadvantage on concentration saves",
+        },
+        {
+          name: "Guarded Mind",
+          type: "passive",
+          description:
+            "Advantage on saves vs spells from creatures within 5 feet",
+        },
+      ],
     },
   },
   {
