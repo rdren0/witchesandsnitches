@@ -101,7 +101,7 @@ const SchoolYearSelector = ({
               <span style={{ color: theme.danger, marginLeft: "4px" }}>*</span>
             </label>
             <select
-              value={schoolYear || ""}
+              value={schoolYear ?? ""}
               onChange={(e) => onSchoolYearChange(parseInt(e.target.value))}
               style={
                 componentStyles.select || {
