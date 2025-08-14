@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { gameSessionOptions } from "../../../../App/const";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../../styles/masterStyles";
-import { RefreshCw } from "lucide-react";
 import SchoolYearSelector from "../../../CharacterManagement/Shared/SchoolYearSelector";
 import EnhancedCastingStyleSelector from "../../../CharacterManagement/CharacterCreation/EnhancedCastingStyleSelector";
 import OptimizedImageUpload from "../../../CharacterManagement/Shared/OptimizedImageUpload";
@@ -17,9 +16,6 @@ const BasicInfoSection = ({
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
-
-  const [isHpManualMode, setIsHpManualMode] = useState(false);
-  const [rolledHp, setRolledHp] = useState(null);
 
   const handleInputChange = (field, value) => {
     onChange(field, value);
@@ -43,22 +39,6 @@ const BasicInfoSection = ({
     } else if (!file) {
       handleInputChange("imageUrl", "");
     }
-  };
-
-  const calculateHitPoints = ({ character }) => {
-    const level = character.level || 1;
-    const con = character.ability_scores?.constitution || 8;
-    const conMod = Math.floor((con - 10) / 2);
-    return level * (6 + conMod);
-  };
-
-  const rollHp = () => {
-    const con = character.ability_scores?.constitution || 8;
-    const conMod = Math.floor((con - 10) / 2);
-    const rolled = Math.floor(Math.random() * 6) + 1 + conMod;
-    setRolledHp(Math.max(1, rolled));
-    handleInputChange("hit_points", Math.max(1, rolled));
-    handleInputChange("current_hit_points", Math.max(1, rolled));
   };
 
   const onUploadComplete = (url) => {
@@ -114,8 +94,8 @@ const BasicInfoSection = ({
       <div style={styles.fieldContainer}>
         <label style={styles.label}>Game Session</label>
         <select
-          value={character.game_session || ""}
-          onChange={(e) => handleInputChange("game_session", e.target.value)}
+          value={character.gameSession || ""}
+          onChange={(e) => handleInputChange("gameSession", e.target.value)}
           style={{
             ...styles.select,
             opacity: disabled ? 0.6 : 1,
@@ -171,6 +151,28 @@ const BasicInfoSection = ({
           <div style={styles.helpText}>
             As an intellect caster, you may choose to use Intelligence or
             Dexterity for initiative.
+            {character.abilityScores &&
+              character.abilityScores.dexterity &&
+              character.abilityScores.intelligence && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "12px",
+                    fontStyle: "italic",
+                    color: theme.primary,
+                  }}
+                >
+                  {Math.floor((character.abilityScores.intelligence - 10) / 2) >
+                  Math.floor((character.abilityScores.dexterity - 10) / 2)
+                    ? "💡 Intelligence gives a higher modifier"
+                    : Math.floor((character.abilityScores.dexterity - 10) / 2) >
+                      Math.floor(
+                        (character.abilityScores.intelligence - 10) / 2
+                      )
+                    ? "⚡ Dexterity gives a higher modifier"
+                    : "⚖️ Both abilities give the same modifier"}
+                </div>
+              )}
           </div>
           <div style={styles.level1ChoiceContainer}>
             <label
@@ -232,113 +234,6 @@ const BasicInfoSection = ({
           </div>
         </div>
       )}
-
-      <div
-        style={{
-          ...styles.fieldContainer,
-          opacity: disabled ? 0.6 : 1,
-          pointerEvents: disabled ? "none" : "auto",
-        }}
-      >
-        <label style={styles.label}>Hit Points</label>
-        {!character.castingStyle ? (
-          <div style={styles.skillsPlaceholder}>
-            Select a Casting Style first
-          </div>
-        ) : (
-          <div style={styles.levelHpGrid}>
-            <div style={styles.hpFieldContainer}>
-              <div style={styles.hpValueContainer}>
-                {isHpManualMode ? (
-                  <input
-                    type="number"
-                    min="1"
-                    value={character.hit_points || ""}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 1;
-                      handleInputChange("hit_points", value);
-                      handleInputChange("current_hit_points", value);
-                    }}
-                    placeholder="--"
-                    style={styles.hpManualInput}
-                    disabled={disabled}
-                  />
-                ) : rolledHp !== null ? (
-                  <div style={styles.hpRollDisplay}>{rolledHp}</div>
-                ) : (
-                  <div style={styles.hpDisplay}>
-                    {calculateHitPoints({ character })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {character.castingStyle && (
-              <div style={styles.hpControlsContainer}>
-                <div style={styles.hpControlsInline}>
-                  {!isHpManualMode && (
-                    <button
-                      onClick={rollHp}
-                      style={{
-                        ...styles.button,
-                        backgroundColor: "#EF4444",
-                        fontSize: "12px",
-                      }}
-                      disabled={
-                        disabled || !character.castingStyle || !character.level
-                      }
-                    >
-                      <RefreshCw size={14} />
-                      Roll
-                    </button>
-                  )}
-
-                  <div
-                    onClick={
-                      disabled
-                        ? undefined
-                        : () => {
-                            setIsHpManualMode(!isHpManualMode);
-                            setRolledHp(null);
-                          }
-                    }
-                    style={{
-                      ...styles.hpToggle,
-                      backgroundColor: isHpManualMode
-                        ? theme.success
-                        : theme.border,
-                      borderColor: isHpManualMode
-                        ? theme.success
-                        : theme.textSecondary,
-                      cursor: disabled ? "not-allowed" : "pointer",
-                      opacity: disabled ? 0.5 : 1,
-                    }}
-                    title={
-                      isHpManualMode
-                        ? "Switch to Auto/Roll mode"
-                        : "Switch to Manual mode"
-                    }
-                  >
-                    <div
-                      style={{
-                        ...styles.hpToggleKnob,
-                        left: isHpManualMode ? "22px" : "2px",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        <div style={styles.helpText}>
-          {isHpManualMode
-            ? "Manually enter your character's hit points."
-            : rolledHp !== null
-            ? "Click 'Roll' to reroll, or use the calculated value."
-            : "Click 'Roll' for a random roll, or use the calculated average."}
-        </div>
-      </div>
     </>
   );
 };

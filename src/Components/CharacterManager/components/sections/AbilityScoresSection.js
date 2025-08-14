@@ -81,14 +81,6 @@ const AbilityScoresSection = ({
   const heritageChoices =
     character.heritage_choices || character.heritageChoices || {};
 
-  console.log("🔍 AbilityScoresSection Debug:", {
-    characterHouse: character.house,
-    houseChoices: houseChoices,
-    featChoices: featChoices,
-    allSelectedFeats: getAllSelectedFeats(character),
-    fullCharacter: character,
-  });
-
   const {
     totalModifiers,
     allDetails,

@@ -103,7 +103,7 @@ const FeatureSelectorSection = ({
       fontWeight: "600",
       marginBottom: "16px",
     },
-    // New styles for feat choices
+
     featChoicesContainer: {
       backgroundColor: `${theme.primary}10`,
       border: `1px solid ${theme.primary}30`,
@@ -117,12 +117,13 @@ const FeatureSelectorSection = ({
       color: theme.primary,
       marginBottom: "8px",
     },
-    abilityChoiceGroup: {
+    choiceGroup: {
       display: "flex",
       flexWrap: "wrap",
       gap: "8px",
+      marginBottom: "12px",
     },
-    abilityChoiceLabel: {
+    choiceLabel: {
       display: "flex",
       alignItems: "center",
       cursor: "pointer",
@@ -134,32 +135,147 @@ const FeatureSelectorSection = ({
       backgroundColor: theme.surface,
       transition: "all 0.2s ease",
     },
-    abilityChoiceRadio: {
+    choiceRadio: {
       marginRight: "6px",
       accentColor: theme.primary,
     },
+    choiceSection: {
+      marginBottom: "16px",
+    },
+    choiceSectionTitle: {
+      fontSize: "13px",
+      fontWeight: "600",
+      color: theme.primary,
+      marginBottom: "8px",
+      borderBottom: `1px solid ${theme.primary}30`,
+      paddingBottom: "4px",
+    },
+  };
+  const checkRequirement = (req) => {
+    const type = req.type?.toLowerCase() || "";
+
+    const patterns = {
+      ability: /^(ability|ability[_\s]?score)$/i,
+      level: /^level$/i,
+      feat: /^feat$/i,
+      innateHeritage: /^(innate[_\s]?heritage)$/i,
+      skill: /^(skill|skill[_\s]?proficiency)$/i,
+      castingStyle: /^(casting[_\s]?style)$/i,
+      house: /^house$/i,
+      background: /^background$/i,
+      subclass: /^subclass$/i,
+    };
+
+    if (patterns.ability.test(type)) {
+      const abilityName = req.value?.toLowerCase();
+      const abilityScore = character.abilityScores?.[abilityName] || 0;
+      const requiredAmount = req.amount || 13;
+      return abilityScore >= requiredAmount;
+    }
+
+    if (patterns.level.test(type)) {
+      const characterLevel = character.level || 1;
+      const requiredLevel = req.amount || req.value || 1;
+      return characterLevel >= requiredLevel;
+    }
+
+    if (patterns.feat.test(type)) {
+      const allSelectedFeats = getAllSelectedFeats(character);
+      return allSelectedFeats.includes(req.value);
+    }
+
+    if (patterns.innateHeritage.test(type)) {
+      return character.innateHeritage === req.value;
+    }
+
+    if (patterns.skill.test(type)) {
+      const skillProfs = character.skillProficiencies || [];
+      return skillProfs.includes(req.value);
+    }
+
+    if (patterns.castingStyle.test(type)) {
+      return character.castingStyle === req.value;
+    }
+
+    if (patterns.house.test(type)) {
+      return character.house === req.value;
+    }
+
+    if (patterns.background.test(type)) {
+      return character.background === req.value;
+    }
+
+    if (patterns.subclass.test(type)) {
+      return character.subclass === req.value;
+    }
+
+    console.warn(`Unknown prerequisite type: ${req.type}`);
+    return false;
   };
 
-  // Helper function to determine if a feat has choices
-  const featHasChoices = (feat) => {
-    if (!feat?.benefits?.abilityScoreIncrease) return false;
+  const meetsPrerequisites = (feat, character) => {
+    if (!feat.prerequisites) return true;
 
-    // Check for choice-based ability score increases
+    if (feat.prerequisites.anyOf && Array.isArray(feat.prerequisites.anyOf)) {
+      const meetsAnyOf = feat.prerequisites.anyOf.some(checkRequirement);
+      if (!meetsAnyOf) return false;
+    }
+
+    if (feat.prerequisites.allOf && Array.isArray(feat.prerequisites.allOf)) {
+      const meetsAllOf = feat.prerequisites.allOf.every(checkRequirement);
+      if (!meetsAllOf) return false;
+    }
+
+    if (
+      feat.prerequisites.type &&
+      !feat.prerequisites.anyOf &&
+      !feat.prerequisites.allOf
+    ) {
+      return checkRequirement(feat.prerequisites);
+    }
+
+    return true;
+  };
+
+  const featHasChoices = (feat) => {
+    if (!feat?.benefits) return false;
+
     const asiIncrease = feat.benefits.abilityScoreIncrease;
+    const hasAbilityChoice =
+      asiIncrease &&
+      (asiIncrease.type === "choice" ||
+        asiIncrease.type === "choice_any" ||
+        asiIncrease.ability === "choice");
+
+    const hasSkillChoices = feat.benefits.skillProficiencies?.some(
+      (skill) => typeof skill === "object" && skill.type === "choice"
+    );
+
+    const hasToolChoices = feat.benefits.toolProficiencies?.some(
+      (tool) => typeof tool === "object" && tool.type === "choice"
+    );
+
+    const hasSaveChoices = feat.benefits.savingThrowProficiencies?.some(
+      (save) => typeof save === "object" && save.type === "choice"
+    );
+
     return (
-      asiIncrease.type === "choice" ||
-      asiIncrease.type === "choice_any" ||
-      asiIncrease.ability === "choice"
+      hasAbilityChoice || hasSkillChoices || hasToolChoices || hasSaveChoices
     );
   };
 
-  // Helper function to get available ability choices for a feat
   const getFeatAbilityChoices = (feat) => {
     if (!feat?.benefits?.abilityScoreIncrease) return [];
-
     const asiIncrease = feat.benefits.abilityScoreIncrease;
 
-    // Try different property names for choices
+    if (
+      asiIncrease.type !== "choice" &&
+      asiIncrease.type !== "choice_any" &&
+      asiIncrease.ability !== "choice"
+    ) {
+      return [];
+    }
+
     return (
       asiIncrease.abilities ||
       asiIncrease.options ||
@@ -174,6 +290,42 @@ const FeatureSelectorSection = ({
     );
   };
 
+  const getFeatSkillChoices = (feat) => {
+    if (!feat?.benefits?.skillProficiencies) return [];
+
+    return feat.benefits.skillProficiencies
+      .filter((skill) => typeof skill === "object" && skill.type === "choice")
+      .map((choice, index) => ({
+        ...choice,
+        index,
+        id: `skill_${index}`,
+      }));
+  };
+
+  const getFeatToolChoices = (feat) => {
+    if (!feat?.benefits?.toolProficiencies) return [];
+
+    return feat.benefits.toolProficiencies
+      .filter((tool) => typeof tool === "object" && tool.type === "choice")
+      .map((choice, index) => ({
+        ...choice,
+        index,
+        id: `tool_${index}`,
+      }));
+  };
+
+  const getFeatSaveChoices = (feat) => {
+    if (!feat?.benefits?.savingThrowProficiencies) return [];
+
+    return feat.benefits.savingThrowProficiencies
+      .filter((save) => typeof save === "object" && save.type === "choice")
+      .map((choice, index) => ({
+        ...choice,
+        index,
+        id: `save_${index}`,
+      }));
+  };
+
   const handleFeatToggle = (featName) => {
     setCharacter((prev) => {
       const currentFeats = prev.standardFeats || [];
@@ -182,11 +334,9 @@ const FeatureSelectorSection = ({
       let newFeats, newChoices;
 
       if (currentFeats.includes(featName)) {
-        // Remove feat
         newFeats = currentFeats.filter((f) => f !== featName);
         newChoices = { ...currentChoices };
 
-        // Remove any choices for this feat
         Object.keys(newChoices).forEach((key) => {
           if (key.startsWith(`${featName}_`)) {
             delete newChoices[key];
@@ -199,24 +349,43 @@ const FeatureSelectorSection = ({
           return newSet;
         });
       } else {
-        // Add feat
         newFeats = [...currentFeats, featName];
         newChoices = { ...currentChoices };
 
-        // Initialize choices for this feat if needed
         const feat = standardFeats.find((f) => f.name === featName);
         if (featHasChoices(feat)) {
-          const availableChoices = getFeatAbilityChoices(feat);
-
-          // Use multiple choice key formats for compatibility
-          const choiceKey1 = `${featName}_abilityChoice`;
-          const choiceKey2 = `${featName}_ability_0`;
-
-          if (!newChoices[choiceKey1] && !newChoices[choiceKey2]) {
-            // Set default choice to first available ability
-            newChoices[choiceKey1] = availableChoices[0];
-            newChoices[choiceKey2] = availableChoices[0]; // Also set the alternate format
+          const abilityChoices = getFeatAbilityChoices(feat);
+          if (abilityChoices.length > 0) {
+            const choiceKey = `${featName}_abilityChoice`;
+            if (!newChoices[choiceKey]) {
+              newChoices[choiceKey] = abilityChoices[0];
+              newChoices[`${featName}_ability_0`] = abilityChoices[0];
+            }
           }
+
+          const skillChoices = getFeatSkillChoices(feat);
+          skillChoices.forEach((choice) => {
+            const choiceKey = `${featName}_skill_${choice.index}`;
+            if (!newChoices[choiceKey] && choice.skills?.length > 0) {
+              newChoices[choiceKey] = choice.skills[0];
+            }
+          });
+
+          const toolChoices = getFeatToolChoices(feat);
+          toolChoices.forEach((choice) => {
+            const choiceKey = `${featName}_tool_${choice.index}`;
+            if (!newChoices[choiceKey] && choice.tools?.length > 0) {
+              newChoices[choiceKey] = choice.tools[0];
+            }
+          });
+
+          const saveChoices = getFeatSaveChoices(feat);
+          saveChoices.forEach((choice) => {
+            const choiceKey = `${featName}_save_${choice.index}`;
+            if (!newChoices[choiceKey] && choice.saves?.length > 0) {
+              newChoices[choiceKey] = choice.saves[0];
+            }
+          });
         }
 
         setExpandedFeats(new Set([featName]));
@@ -230,18 +399,22 @@ const FeatureSelectorSection = ({
     });
   };
 
-  // Handle feat choice changes
   const handleFeatChoiceChange = (featName, choiceKey, value) => {
-    setCharacter((prev) => ({
-      ...prev,
-      featChoices: {
+    setCharacter((prev) => {
+      const newChoices = {
         ...prev.featChoices,
         [choiceKey]: value,
-        // Also update the alternate choice key format for compatibility
-        [`${featName}_abilityChoice`]: value,
-        [`${featName}_ability_0`]: value,
-      },
-    }));
+      };
+
+      if (choiceKey.includes("abilityChoice")) {
+        newChoices[`${featName}_ability_0`] = value;
+      }
+
+      return {
+        ...prev,
+        featChoices: newChoices,
+      };
+    });
   };
 
   const toggleFeatExpansion = (featName) => {
@@ -256,6 +429,12 @@ const FeatureSelectorSection = ({
     });
   };
 
+  const formatChoiceName = (name) => {
+    return (
+      name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, " $1")
+    );
+  };
+
   const filteredFeats = useMemo(() => {
     const allSelectedFeats = getAllSelectedFeats(character);
     const currentStandardFeats = character.standardFeats || [];
@@ -266,9 +445,17 @@ const FeatureSelectorSection = ({
       );
     }
 
-    let availableFeats = standardFeats.filter(
-      (feat) => !allSelectedFeats.includes(feat.name)
-    );
+    let availableFeats = standardFeats.filter((feat) => {
+      if (currentStandardFeats.includes(feat.name)) {
+        return true;
+      }
+
+      if (allSelectedFeats.includes(feat.name)) {
+        return false;
+      }
+
+      return meetsPrerequisites(feat, character);
+    });
 
     if (!featFilter.trim()) {
       return availableFeats;
@@ -307,6 +494,13 @@ const FeatureSelectorSection = ({
   const allSelectedFeats = getAllSelectedFeats(character);
   const availableCount = standardFeats.length - allSelectedFeats.length;
 
+  const featsFilteredByPrereqs = standardFeats.filter((feat) => {
+    return (
+      !allSelectedFeats.includes(feat.name) &&
+      !meetsPrerequisites(feat, character)
+    );
+  }).length;
+
   return (
     <div style={styles.container}>
       <div
@@ -321,7 +515,23 @@ const FeatureSelectorSection = ({
           Standard Feats ({selectedFeats.length}/{maxFeats} selected)
         </h3>
 
-        <div style={enhancedStyles.helpText}>{getHelpText()}</div>
+        <div style={enhancedStyles.helpText}>
+          {getHelpText()}
+          {featsFilteredByPrereqs > 0 && (
+            <div
+              style={{
+                fontSize: "12px",
+                color: theme.warning,
+                marginTop: "8px",
+                fontStyle: "italic",
+              }}
+            >
+              💡 {featsFilteredByPrereqs} feat
+              {featsFilteredByPrereqs !== 1 ? "s are" : " is"} hidden because
+              you don't meet the prerequisites yet.
+            </div>
+          )}
+        </div>
 
         {selectedFeats.length < maxFeats && (
           <div style={enhancedStyles.featFilterContainer}>
@@ -369,6 +579,17 @@ const FeatureSelectorSection = ({
                     ({allSelectedFeats.length} already selected)
                   </span>
                 )}
+                {featsFilteredByPrereqs > 0 && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: theme.warning,
+                      marginLeft: "8px",
+                    }}
+                  >
+                    ({featsFilteredByPrereqs} hidden due to unmet prerequisites)
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -385,6 +606,11 @@ const FeatureSelectorSection = ({
             const isSelected = selectedFeats.includes(feat.name);
             const isExpanded = expandedFeats.has(feat.name);
             const hasChoices = featHasChoices(feat);
+
+            const abilityChoices = getFeatAbilityChoices(feat);
+            const skillChoices = getFeatSkillChoices(feat);
+            const toolChoices = getFeatToolChoices(feat);
+            const saveChoices = getFeatSaveChoices(feat);
 
             return (
               <div
@@ -448,58 +674,202 @@ const FeatureSelectorSection = ({
                   {feat.preview}
                 </div>
 
-                {/* Feat Choices Section - NEW! */}
                 {isSelected && hasChoices && (
                   <div style={enhancedStyles.featChoicesContainer}>
-                    <div style={enhancedStyles.featChoicesLabel}>
-                      Choose your ability score increase:
-                    </div>
-                    <div style={enhancedStyles.abilityChoiceGroup}>
-                      {getFeatAbilityChoices(feat).map((ability) => {
-                        const choiceKey1 = `${feat.name}_abilityChoice`;
-                        const choiceKey2 = `${feat.name}_ability_0`;
-                        const currentChoice =
-                          featChoices[choiceKey1] || featChoices[choiceKey2];
+                    {abilityChoices.length > 0 && (
+                      <div style={enhancedStyles.choiceSection}>
+                        <div style={enhancedStyles.choiceSectionTitle}>
+                          Choose your ability score increase:
+                        </div>
+                        <div style={enhancedStyles.choiceGroup}>
+                          {abilityChoices.map((ability) => {
+                            const choiceKey = `${feat.name}_abilityChoice`;
+                            const currentChoice = featChoices[choiceKey];
 
-                        return (
-                          <label
-                            key={ability}
-                            style={{
-                              ...enhancedStyles.abilityChoiceLabel,
-                              backgroundColor:
-                                currentChoice === ability
-                                  ? `${theme.primary}20`
-                                  : theme.surface,
-                              borderColor:
-                                currentChoice === ability
-                                  ? theme.primary
-                                  : theme.border,
-                            }}
-                          >
-                            <input
-                              type="radio"
-                              name={`${feat.name}_ability_choice`}
-                              value={ability}
-                              checked={currentChoice === ability}
-                              onChange={(e) =>
-                                handleFeatChoiceChange(
-                                  feat.name,
-                                  choiceKey1,
-                                  e.target.value
-                                )
-                              }
-                              style={enhancedStyles.abilityChoiceRadio}
-                              disabled={disabled}
-                            />
-                            <span>
-                              {ability.charAt(0).toUpperCase() +
-                                ability.slice(1)}{" "}
-                              (+1)
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
+                            return (
+                              <label
+                                key={ability}
+                                style={{
+                                  ...enhancedStyles.choiceLabel,
+                                  backgroundColor:
+                                    currentChoice === ability
+                                      ? `${theme.primary}20`
+                                      : theme.surface,
+                                  borderColor:
+                                    currentChoice === ability
+                                      ? theme.primary
+                                      : theme.border,
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`${feat.name}_ability_choice`}
+                                  value={ability}
+                                  checked={currentChoice === ability}
+                                  onChange={(e) =>
+                                    handleFeatChoiceChange(
+                                      feat.name,
+                                      choiceKey,
+                                      e.target.value
+                                    )
+                                  }
+                                  style={enhancedStyles.choiceRadio}
+                                  disabled={disabled}
+                                />
+                                <span>{formatChoiceName(ability)} (+1)</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {skillChoices.map((choice) => (
+                      <div key={choice.id} style={enhancedStyles.choiceSection}>
+                        <div style={enhancedStyles.choiceSectionTitle}>
+                          Choose {choice.count || 1} skill proficienc
+                          {choice.count > 1 ? "ies" : "y"}:
+                        </div>
+                        <div style={enhancedStyles.choiceGroup}>
+                          {choice.skills?.map((skill) => {
+                            const choiceKey = `${feat.name}_skill_${choice.index}`;
+                            const currentChoice = featChoices[choiceKey];
+
+                            return (
+                              <label
+                                key={skill}
+                                style={{
+                                  ...enhancedStyles.choiceLabel,
+                                  backgroundColor:
+                                    currentChoice === skill
+                                      ? `${theme.success}20`
+                                      : theme.surface,
+                                  borderColor:
+                                    currentChoice === skill
+                                      ? theme.success
+                                      : theme.border,
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`${feat.name}_skill_${choice.index}`}
+                                  value={skill}
+                                  checked={currentChoice === skill}
+                                  onChange={(e) =>
+                                    handleFeatChoiceChange(
+                                      feat.name,
+                                      choiceKey,
+                                      e.target.value
+                                    )
+                                  }
+                                  style={enhancedStyles.choiceRadio}
+                                  disabled={disabled}
+                                />
+                                <span>{formatChoiceName(skill)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {toolChoices.map((choice) => (
+                      <div key={choice.id} style={enhancedStyles.choiceSection}>
+                        <div style={enhancedStyles.choiceSectionTitle}>
+                          Choose {choice.count || 1} tool proficienc
+                          {choice.count > 1 ? "ies" : "y"}:
+                        </div>
+                        <div style={enhancedStyles.choiceGroup}>
+                          {choice.tools?.map((tool) => {
+                            const choiceKey = `${feat.name}_tool_${choice.index}`;
+                            const currentChoice = featChoices[choiceKey];
+
+                            return (
+                              <label
+                                key={tool}
+                                style={{
+                                  ...enhancedStyles.choiceLabel,
+                                  backgroundColor:
+                                    currentChoice === tool
+                                      ? `${theme.warning}20`
+                                      : theme.surface,
+                                  borderColor:
+                                    currentChoice === tool
+                                      ? theme.warning
+                                      : theme.border,
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`${feat.name}_tool_${choice.index}`}
+                                  value={tool}
+                                  checked={currentChoice === tool}
+                                  onChange={(e) =>
+                                    handleFeatChoiceChange(
+                                      feat.name,
+                                      choiceKey,
+                                      e.target.value
+                                    )
+                                  }
+                                  style={enhancedStyles.choiceRadio}
+                                  disabled={disabled}
+                                />
+                                <span>{formatChoiceName(tool)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {saveChoices.map((choice) => (
+                      <div key={choice.id} style={enhancedStyles.choiceSection}>
+                        <div style={enhancedStyles.choiceSectionTitle}>
+                          Choose {choice.count || 1} saving throw proficienc
+                          {choice.count > 1 ? "ies" : "y"}:
+                        </div>
+                        <div style={enhancedStyles.choiceGroup}>
+                          {choice.saves?.map((save) => {
+                            const choiceKey = `${feat.name}_save_${choice.index}`;
+                            const currentChoice = featChoices[choiceKey];
+
+                            return (
+                              <label
+                                key={save}
+                                style={{
+                                  ...enhancedStyles.choiceLabel,
+                                  backgroundColor:
+                                    currentChoice === save
+                                      ? `${theme.error}20`
+                                      : theme.surface,
+                                  borderColor:
+                                    currentChoice === save
+                                      ? theme.error
+                                      : theme.border,
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`${feat.name}_save_${choice.index}`}
+                                  value={save}
+                                  checked={currentChoice === save}
+                                  onChange={(e) =>
+                                    handleFeatChoiceChange(
+                                      feat.name,
+                                      choiceKey,
+                                      e.target.value
+                                    )
+                                  }
+                                  style={enhancedStyles.choiceRadio}
+                                  disabled={disabled}
+                                />
+                                <span>{formatChoiceName(save)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -533,7 +903,6 @@ const FeatureSelectorSection = ({
                             lineHeight: "1.4",
                           }}
                         >
-                          {/* Ability Score Increase */}
                           {feat.benefits.abilityScoreIncrease && (
                             <div
                               style={{
@@ -554,41 +923,22 @@ const FeatureSelectorSection = ({
                                   {feat.benefits.abilityScoreIncrease.amount ||
                                     1}{" "}
                                   to{" "}
-                                  {isSelected && hasChoices ? (
+                                  {isSelected && abilityChoices.length > 0 ? (
                                     <span
                                       style={{
                                         color: theme.primary,
                                         fontWeight: "bold",
                                       }}
                                     >
-                                      {(
+                                      {formatChoiceName(
                                         featChoices[
                                           `${feat.name}_abilityChoice`
-                                        ] ||
-                                        featChoices[`${feat.name}_ability_0`] ||
-                                        getFeatAbilityChoices(feat)[0] ||
-                                        "chosen ability"
-                                      )
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                        (
-                                          featChoices[
-                                            `${feat.name}_abilityChoice`
-                                          ] ||
-                                          featChoices[
-                                            `${feat.name}_ability_0`
-                                          ] ||
-                                          getFeatAbilityChoices(feat)[0] ||
-                                          "chosen ability"
-                                        ).slice(1)}
+                                        ] || abilityChoices[0]
+                                      )}
                                     </span>
                                   ) : (
-                                    getFeatAbilityChoices(feat)
-                                      .map(
-                                        (ability) =>
-                                          ability.charAt(0).toUpperCase() +
-                                          ability.slice(1)
-                                      )
+                                    abilityChoices
+                                      .map(formatChoiceName)
                                       .join(" or ")
                                   )}
                                 </>
@@ -597,19 +947,14 @@ const FeatureSelectorSection = ({
                                   +
                                   {feat.benefits.abilityScoreIncrease.amount ||
                                     1}{" "}
-                                  {feat.benefits.abilityScoreIncrease.ability
-                                    ?.charAt(0)
-                                    .toUpperCase() +
-                                    feat.benefits.abilityScoreIncrease.ability?.slice(
-                                      1
-                                    )}
+                                  {formatChoiceName(
+                                    feat.benefits.abilityScoreIncrease.ability
+                                  )}
                                 </>
                               )}
                             </div>
                           )}
 
-                          {/* Rest of the benefits display stays the same... */}
-                          {/* Skill Proficiencies */}
                           {feat.benefits.skillProficiencies?.length > 0 && (
                             <div
                               style={{
@@ -622,34 +967,45 @@ const FeatureSelectorSection = ({
                               {feat.benefits.skillProficiencies
                                 .map((skillProf, index) => {
                                   if (typeof skillProf === "string") {
-                                    return (
-                                      skillProf.charAt(0).toUpperCase() +
-                                      skillProf
-                                        .slice(1)
-                                        .replace(/([A-Z])/g, " $1")
-                                    );
+                                    return formatChoiceName(skillProf);
                                   } else if (
                                     skillProf &&
                                     typeof skillProf === "object"
                                   ) {
                                     if (skillProf.type === "choice") {
-                                      return `${skillProf.count} chosen skill${
-                                        skillProf.count > 1 ? "s" : ""
-                                      }`;
+                                      if (isSelected) {
+                                        const choiceKey = `${feat.name}_skill_${index}`;
+                                        const selectedSkill =
+                                          featChoices[choiceKey];
+                                        return selectedSkill
+                                          ? `${formatChoiceName(
+                                              selectedSkill
+                                            )} (chosen)`
+                                          : `${
+                                              skillProf.count || 1
+                                            } chosen skill${
+                                              skillProf.count > 1 ? "s" : ""
+                                            }`;
+                                      } else {
+                                        return skillProf.skills
+                                          ? skillProf.skills
+                                              .map(formatChoiceName)
+                                              .join(" or ")
+                                          : `${
+                                              skillProf.count || 1
+                                            } chosen skill${
+                                              skillProf.count > 1 ? "s" : ""
+                                            }`;
+                                      }
                                     } else if (
                                       skillProf.skills &&
                                       Array.isArray(skillProf.skills)
                                     ) {
-                                      return skillProf.skills.join(", ");
+                                      return skillProf.skills
+                                        .map(formatChoiceName)
+                                        .join(", ");
                                     } else if (skillProf.skill) {
-                                      return (
-                                        skillProf.skill
-                                          .charAt(0)
-                                          .toUpperCase() +
-                                        skillProf.skill
-                                          .slice(1)
-                                          .replace(/([A-Z])/g, " $1")
-                                      );
+                                      return formatChoiceName(skillProf.skill);
                                     }
                                   }
                                   return "Unknown skill";
@@ -658,7 +1014,6 @@ const FeatureSelectorSection = ({
                             </div>
                           )}
 
-                          {/* Tool Proficiencies */}
                           {feat.benefits.toolProficiencies?.length > 0 && (
                             <div
                               style={{
@@ -668,12 +1023,152 @@ const FeatureSelectorSection = ({
                               }}
                             >
                               <strong>• Tool Proficiencies:</strong>{" "}
-                              {feat.benefits.toolProficiencies.join(", ")}
+                              {feat.benefits.toolProficiencies
+                                .map((toolProf, index) => {
+                                  if (typeof toolProf === "string") {
+                                    return toolProf;
+                                  } else if (
+                                    toolProf &&
+                                    typeof toolProf === "object" &&
+                                    toolProf.type === "choice"
+                                  ) {
+                                    if (isSelected) {
+                                      const choiceKey = `${feat.name}_tool_${index}`;
+                                      const selectedTool =
+                                        featChoices[choiceKey];
+                                      return selectedTool
+                                        ? `${selectedTool} (chosen)`
+                                        : `${toolProf.count || 1} chosen tool${
+                                            toolProf.count > 1 ? "s" : ""
+                                          }`;
+                                    } else {
+                                      return toolProf.tools
+                                        ? toolProf.tools.join(" or ")
+                                        : `${toolProf.count || 1} chosen tool${
+                                            toolProf.count > 1 ? "s" : ""
+                                          }`;
+                                    }
+                                  }
+                                  return toolProf;
+                                })
+                                .join(", ")}
                             </div>
                           )}
 
-                          {/* Continue with other benefits... */}
-                          {/* I'm keeping the rest of the benefits display code the same for brevity */}
+                          {feat.benefits.savingThrowProficiencies?.length >
+                            0 && (
+                            <div
+                              style={{
+                                color: "#ef4444",
+                                marginBottom: "8px",
+                                padding: "4px 0",
+                              }}
+                            >
+                              <strong>• Saving Throw Proficiencies:</strong>{" "}
+                              {feat.benefits.savingThrowProficiencies
+                                .map((saveProf, index) => {
+                                  if (typeof saveProf === "string") {
+                                    return formatChoiceName(saveProf);
+                                  } else if (
+                                    saveProf &&
+                                    typeof saveProf === "object" &&
+                                    saveProf.type === "choice"
+                                  ) {
+                                    if (isSelected) {
+                                      const choiceKey = `${feat.name}_save_${index}`;
+                                      const selectedSave =
+                                        featChoices[choiceKey];
+                                      return selectedSave
+                                        ? `${formatChoiceName(
+                                            selectedSave
+                                          )} (chosen)`
+                                        : `${saveProf.count || 1} chosen save${
+                                            saveProf.count > 1 ? "s" : ""
+                                          }`;
+                                    } else {
+                                      return saveProf.saves
+                                        ? saveProf.saves
+                                            .map(formatChoiceName)
+                                            .join(" or ")
+                                        : `${saveProf.count || 1} chosen save${
+                                            saveProf.count > 1 ? "s" : ""
+                                          }`;
+                                    }
+                                  }
+                                  return saveProf;
+                                })
+                                .join(", ")}
+                            </div>
+                          )}
+
+                          {feat.benefits.speeds &&
+                            Object.keys(feat.benefits.speeds).length > 0 && (
+                              <div
+                                style={{
+                                  color: "#06b6d4",
+                                  marginBottom: "8px",
+                                  padding: "4px 0",
+                                }}
+                              >
+                                <strong>• Speed Bonuses:</strong>{" "}
+                                {Object.entries(feat.benefits.speeds)
+                                  .map(
+                                    ([type, speed]) =>
+                                      `${
+                                        speed.bonus ? `+${speed.bonus}` : speed
+                                      } ft ${type}`
+                                  )
+                                  .join(", ")}
+                              </div>
+                            )}
+
+                          {feat.benefits.resistances?.length > 0 && (
+                            <div
+                              style={{
+                                color: "#84cc16",
+                                marginBottom: "8px",
+                                padding: "4px 0",
+                              }}
+                            >
+                              <strong>• Damage Resistances:</strong>{" "}
+                              {feat.benefits.resistances
+                                .map(formatChoiceName)
+                                .join(", ")}
+                            </div>
+                          )}
+
+                          {feat.benefits.immunities?.length > 0 && (
+                            <div
+                              style={{
+                                color: "#22c55e",
+                                marginBottom: "8px",
+                                padding: "4px 0",
+                              }}
+                            >
+                              <strong>• Damage Immunities:</strong>{" "}
+                              {feat.benefits.immunities
+                                .map(formatChoiceName)
+                                .join(", ")}
+                            </div>
+                          )}
+
+                          {feat.benefits.specialAbilities?.length > 0 && (
+                            <div
+                              style={{
+                                color: "#a855f7",
+                                marginBottom: "8px",
+                                padding: "4px 0",
+                              }}
+                            >
+                              <strong>• Special Abilities:</strong>{" "}
+                              {feat.benefits.specialAbilities
+                                .map(
+                                  (ability) =>
+                                    ability.name || ability.description
+                                )
+                                .join(", ")}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -682,33 +1177,151 @@ const FeatureSelectorSection = ({
                         style={{
                           marginTop: "8px",
                           padding: "8px",
-                          backgroundColor: "rgba(239, 68, 68, 0.1)",
+                          backgroundColor: meetsPrerequisites(feat, character)
+                            ? "rgba(34, 197, 94, 0.1)"
+                            : "rgba(239, 68, 68, 0.1)",
                           borderRadius: "4px",
-                          border: "1px solid rgba(239, 68, 68, 0.3)",
+                          border: `1px solid ${
+                            meetsPrerequisites(feat, character)
+                              ? "rgba(34, 197, 94, 0.3)"
+                              : "rgba(239, 68, 68, 0.3)"
+                          }`,
                         }}
                       >
-                        <strong style={{ color: "#ef4444" }}>
-                          Prerequisites:
+                        <strong
+                          style={{
+                            color: meetsPrerequisites(feat, character)
+                              ? "#22c55e"
+                              : "#ef4444",
+                          }}
+                        >
+                          Prerequisites:{" "}
+                          {meetsPrerequisites(feat, character)
+                            ? "✓ Met"
+                            : "✗ Not Met"}
                         </strong>
                         <div
                           style={{
                             fontSize: "12px",
-                            color: "#ef4444",
+                            color: meetsPrerequisites(feat, character)
+                              ? "#16a34a"
+                              : "#ef4444",
                             marginTop: "4px",
                           }}
                         >
-                          {feat.prerequisites.anyOf && "Any of: "}
-                          {feat.prerequisites.allOf && "All of: "}
-                          {(
-                            feat.prerequisites.anyOf ||
-                            feat.prerequisites.allOf ||
-                            []
-                          ).map((req, index) => (
-                            <div key={index}>
-                              • {req.type}: {req.value}{" "}
-                              {req.amount && `(${req.amount}+)`}
+                          {feat.prerequisites.anyOf.map((req, index) => {
+                            const meetsSingle = checkRequirement(req);
+
+                            return (
+                              <div
+                                key={index}
+                                style={{
+                                  marginLeft: "12px",
+                                  color: meetsSingle ? "#22c55e" : "#ef4444",
+                                  fontWeight: meetsSingle ? "600" : "normal",
+                                }}
+                              >
+                                {meetsSingle ? "✓" : "✗"}{" "}
+                                {formatChoiceName(req.type || "")}:{" "}
+                                {formatChoiceName(req.value || "")}{" "}
+                                {req.amount && `(${req.amount}+)`}
+                                {req.type?.toLowerCase().includes("ability") &&
+                                  character.abilityScores?.[
+                                    req.value?.toLowerCase()
+                                  ] &&
+                                  ` (Current: ${
+                                    character.abilityScores[
+                                      req.value.toLowerCase()
+                                    ]
+                                  })`}
+                              </div>
+                            );
+                          })}
+                          {feat.prerequisites.allOf && (
+                            <div>
+                              <strong>All of:</strong>
+                              {feat.prerequisites.allOf.map((req, index) => {
+                                const meetsSingle = (() => {
+                                  switch (req.type?.toLowerCase()) {
+                                    case "ability":
+                                    case "ability_score":
+                                      const abilityScore =
+                                        character.abilityScores?.[
+                                          req.value?.toLowerCase()
+                                        ] || 0;
+                                      return abilityScore >= (req.amount || 13);
+                                    case "level":
+                                      return (
+                                        (character.level || 1) >=
+                                        (req.amount || req.value || 1)
+                                      );
+                                    case "feat":
+                                      return getAllSelectedFeats(
+                                        character
+                                      ).includes(req.value);
+                                    case "skill":
+                                    case "skill_proficiency":
+                                      return (
+                                        character.skillProficiencies || []
+                                      ).includes(req.value);
+                                    case "casting_style":
+                                      return (
+                                        character.castingStyle === req.value
+                                      );
+                                    case "house":
+                                      return character.house === req.value;
+                                    case "background":
+                                      return character.background === req.value;
+                                    case "subclass":
+                                      return character.subclass === req.value;
+                                    default:
+                                      return true;
+                                  }
+                                })();
+
+                                return (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      marginLeft: "12px",
+                                      color: meetsSingle
+                                        ? "#22c55e"
+                                        : "#ef4444",
+                                      fontWeight: meetsSingle
+                                        ? "600"
+                                        : "normal",
+                                    }}
+                                  >
+                                    {meetsSingle ? "✓" : "✗"}{" "}
+                                    {formatChoiceName(req.type || "")}:{" "}
+                                    {formatChoiceName(req.value || "")}{" "}
+                                    {req.amount && `(${req.amount}+)`}
+                                    {req.type
+                                      ?.toLowerCase()
+                                      .includes("ability") &&
+                                      character.abilityScores?.[
+                                        req.value?.toLowerCase()
+                                      ] &&
+                                      ` (Current: ${
+                                        character.abilityScores[
+                                          req.value.toLowerCase()
+                                        ]
+                                      })`}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          ))}
+                          )}
+                          {feat.prerequisites.type &&
+                            !feat.prerequisites.anyOf &&
+                            !feat.prerequisites.allOf && (
+                              <div>
+                                • {formatChoiceName(feat.prerequisites.type)}:{" "}
+                                {formatChoiceName(feat.prerequisites.value)}{" "}
+                                {feat.prerequisites.amount &&
+                                  `(${feat.prerequisites.amount}+)`}
+                              </div>
+                            )}
                         </div>
                       </div>
                     )}

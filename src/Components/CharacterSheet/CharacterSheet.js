@@ -102,7 +102,6 @@ const CharacterSheet = ({
   const getHitDie = useCallback((castingStyle) => {
     return hitDiceData[castingStyle] || hitDiceData.default;
   }, []);
-
   const getBaseArmorClass = useCallback((castingStyle) => {
     const baseACMap = {
       Willpower: 13,

@@ -22,14 +22,12 @@ const BaseSelector = ({
     if (disabled) return;
 
     if (allowMultiple) {
-      // Handle multiple selection
       const currentValues = Array.isArray(selectedValue) ? selectedValue : [];
       const newValues = checked
         ? [...currentValues, option.value]
         : currentValues.filter((v) => v !== option.value);
       onChange(newValues);
     } else {
-      // Handle single selection
       onChange(option.value);
     }
   };

@@ -466,6 +466,34 @@ const CharacterEditor = ({
             skillProficiencies: [...new Set(updatedSkills)],
           };
         });
+      } else if (field === "subclass") {
+        // console.log({ field, value });
+        // const background = backgroundsData[value];
+        // const newBackgroundSkills =
+        //   background && background.skillProficiencies
+        //     ? background.skillProficiencies
+        //     : [];
+
+        // setCharacter((prev) => {
+        //   const currentSkills = prev.skillProficiencies || [];
+        //   const oldBackgroundSkills = prev.backgroundSkills || [];
+
+        //   const skillsWithoutOldBackground = currentSkills.filter(
+        //     (skill) => !oldBackgroundSkills.includes(skill)
+        //   );
+
+        //   const updatedSkills = [
+        //     ...skillsWithoutOldBackground,
+        //     ...newBackgroundSkills,
+        //   ];
+
+        //   return {
+        //     ...prev,
+        //     [field]: value,
+        //     backgroundSkills: newBackgroundSkills,
+        //     skillProficiencies: [...new Set(updatedSkills)],
+        //   };
+        // });
       } else {
         setCharacter((prev) => ({
           ...prev,

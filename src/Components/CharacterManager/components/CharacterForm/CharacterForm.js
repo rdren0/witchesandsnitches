@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Save, X, RotateCcw } from "lucide-react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBaseStyles } from "../../utils/styles";
@@ -8,6 +8,7 @@ import { FormSection } from "../index";
 import {
   BasicInfoSection,
   AbilityScoresSection,
+  HitPointsSection,
   BackgroundSection,
   HouseSection,
   Level1ChoiceSection,
@@ -15,6 +16,7 @@ import {
   HeritageSection,
   SkillsSection,
   ASILevelChoices,
+  MagicModifiersSection,
 } from "../sections";
 
 import {
@@ -34,6 +36,11 @@ const CharacterForm = ({
 }) => {
   const { theme } = useTheme();
   const styles = createBaseStyles(theme);
+
+  const [isSticky, setIsSticky] = useState(false);
+  const toolbarRef = useRef(null);
+  const placeholderRef = useRef(null);
+  const [toolbarHeight, setToolbarHeight] = useState(0);
 
   const {
     character,
@@ -55,15 +62,48 @@ const CharacterForm = ({
   } = useFormSections(
     {
       basicInfo: false,
+      abilityScores: false,
+      hitPoints: false,
       house: false,
       subclass: false,
       background: false,
       level1Choice: false,
       asiProgression: false,
       skills: false,
+      magicModifiers: false,
     },
     mode
   );
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!placeholderRef.current || !toolbarRef.current) return;
+
+      const placeholder = placeholderRef.current;
+      const toolbar = toolbarRef.current;
+      const rect = placeholder.getBoundingClientRect();
+
+      if (toolbar && !isSticky) {
+        setToolbarHeight(toolbar.offsetHeight);
+      }
+
+      if (rect.top <= 0) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
+      }
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [isSticky]);
 
   const handleASIChoiceChange = (level, choiceType) => {
     const updatedCharacter = utilsHandleASIChoiceChange(
@@ -130,20 +170,49 @@ const CharacterForm = ({
     );
   }
 
+  // const isSaveEnabled =
+  // character.name.trim() &&
+  //   character.house &&
+  //   character.schoolYear &&
+  //   character.castingStyle &&
+  //   character.level1ChoiceType;
+  // console.log(!!isSaveEnabled);
+
+  const toolbarStyles = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: isSticky ? "0" : "20px",
+    padding: "16px",
+    backgroundColor: theme.surface,
+    borderRadius: isSticky ? "0" : "8px",
+    border: `1px solid ${theme.border}`,
+    ...(isSticky && {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+      borderRadius: 0,
+      borderTop: "none",
+      borderLeft: "none",
+      borderRight: "none",
+    }),
+    transition: "all 0.3s ease",
+  };
+
   return (
     <div>
       <div
+        ref={placeholderRef}
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-          padding: "16px",
-          backgroundColor: theme.surface,
-          borderRadius: "8px",
-          border: `1px solid ${theme.border}`,
+          height: isSticky ? `${toolbarHeight}px` : 0,
+          transition: "height 0.3s ease",
         }}
-      >
+      />
+
+      <div ref={toolbarRef} style={toolbarStyles}>
         <div>
           <h2
             style={{
@@ -168,8 +237,8 @@ const CharacterForm = ({
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
-          {canLock && (
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {canLock && !isSticky && (
             <>
               <button
                 onClick={unlockAllSections}
@@ -217,6 +286,7 @@ const CharacterForm = ({
               ...styles.button,
               ...styles.buttonPrimary,
               opacity: loading || !hasChanges ? 0.6 : 1,
+              backgroundColor: hasChanges ? theme.primary : theme.border,
             }}
           >
             <Save size={16} />
@@ -358,6 +428,9 @@ const CharacterForm = ({
             character={character}
             onChange={updateCharacter}
             onCharacterUpdate={updateCharacterBulk}
+            onASIChoiceChange={handleASIChoiceChange}
+            onASIFeatChange={handleASIFeatChange}
+            onASIAbilityChange={handleASIAbilityChange}
             disabled={sectionLocks.asiProgression}
             mode={mode}
           />
@@ -379,6 +452,7 @@ const CharacterForm = ({
           mode={mode}
         />
       </FormSection>
+
       <FormSection
         title="Ability Scores"
         subtitle="Set your character's base ability scores"
@@ -398,6 +472,38 @@ const CharacterForm = ({
           houseChoices={character.houseChoices || {}}
           heritageChoices={character.heritageChoices || {}}
           showModifiers={true}
+        />
+      </FormSection>
+
+      <FormSection
+        title="Hit Points"
+        subtitle="Calculate your character's hit points based on casting style and constitution"
+        isLocked={sectionLocks.hitPoints}
+        onToggleLock={
+          canLock ? () => toggleSectionLock("hitPoints") : undefined
+        }
+        lockable={canLock}
+      >
+        <HitPointsSection
+          character={character}
+          onChange={updateCharacter}
+          disabled={sectionLocks.hitPoints}
+        />
+      </FormSection>
+
+      <FormSection
+        title="Magic Modifiers & Wand"
+        subtitle="Wand bonuses and character wand information"
+        isLocked={sectionLocks.magicModifiers}
+        onToggleLock={
+          canLock ? () => toggleSectionLock("magicModifiers") : undefined
+        }
+        lockable={canLock}
+      >
+        <MagicModifiersSection
+          character={character}
+          onChange={updateCharacter}
+          disabled={sectionLocks.magicModifiers}
         />
       </FormSection>
     </div>

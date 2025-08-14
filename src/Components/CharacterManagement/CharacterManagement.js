@@ -51,7 +51,6 @@ const CharacterManagement = ({
 
   const loadCharacterForEditing = async (charId) => {
     if (!user || !discordUserId) {
-      console.log("User not ready, waiting...");
       return;
     }
 

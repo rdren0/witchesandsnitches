@@ -6,7 +6,6 @@ import {
   innateHeritages,
 } from "../../../../SharedData/heritageData";
 
-// Helper function to check for skill proficiencies
 const checkForSkillProficiencies = (item) => {
   const skills = [];
 
@@ -25,7 +24,6 @@ const checkForSkillProficiencies = (item) => {
   return skills;
 };
 
-// Helper function to check for ability score choices
 const checkForAbilityChoices = (item) => {
   const abilities = [];
 
@@ -44,7 +42,6 @@ const checkForAbilityChoices = (item) => {
   return abilities;
 };
 
-// Apply heritage proficiencies to character
 const applyHeritageProficiencies = (
   character,
   heritageName,
@@ -103,7 +100,6 @@ const applyHeritageProficiencies = (
   };
 };
 
-// Remove heritage proficiencies
 const removeHeritageProficiencies = (currentProficiencies, heritageName) => {
   if (!heritageName || !heritageDescriptions[heritageName]) {
     return currentProficiencies;
@@ -117,7 +113,6 @@ const removeHeritageProficiencies = (currentProficiencies, heritageName) => {
   );
 };
 
-// Heritage Choice Selector Component
 const HeritageChoiceSelector = ({
   heritage,
   heritageData,
@@ -228,7 +223,6 @@ const HeritageChoiceSelector = ({
   );
 };
 
-// Main Component
 const InnateHeritageSection = ({
   character,
   handleInputChange,

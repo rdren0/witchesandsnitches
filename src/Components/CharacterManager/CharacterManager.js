@@ -50,7 +50,6 @@ const CharacterManager = ({
 
   const loadCharacterForEditing = async (charId) => {
     if (!user || !discordUserId) {
-      console.log("User not ready, waiting...");
       return;
     }
 
@@ -304,8 +303,7 @@ const CharacterManager = ({
             mode="create"
             userId={discordUserId}
             onSave={(character) => {
-              console.log("Character saved:", character);
-              handleCharacterSaved(character, true); // Skip save since form handles it
+              handleCharacterSaved(character, true);
             }}
             onCancel={() => navigate("/character-management")}
             supabase={supabase}

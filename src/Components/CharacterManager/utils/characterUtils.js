@@ -1,10 +1,11 @@
-// Add these imports to the top of characterUtils.js
 import {
   standardFeats,
   backgroundsData,
   houseFeatures,
   heritageDescriptions,
+  subclassesData,
 } from "../../../SharedData";
+import { subclasses } from "../../../SharedData/subclassesData";
 
 export const getAllSelectedFeats = (character) => {
   const selectedFeats = [];
@@ -296,7 +297,6 @@ export const getCharacterProgressionSummary = (character) => {
   };
 };
 
-// Helper functions for modifier calculations
 export const checkForModifiers = (obj, type = "abilityIncreases") => {
   const results = [];
 
@@ -349,13 +349,91 @@ export const checkForAbilityChoices = (obj) => {
   return choices;
 };
 
-// Modifier calculation functions
-export const calculateFeatModifiers = (character, featChoices = {}) => {
-  console.log("calculateFeatModifiers called with:", {
-    character: character,
-    featChoices: featChoices,
+export const getAllAbilityModifiers = (character) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const featChoices = { ...character.featChoices };
+  if (character.asiChoices) {
+    Object.values(character.asiChoices).forEach((choice) => {
+      if (choice.type === "feat" && choice.featChoices) {
+        Object.assign(featChoices, choice.featChoices);
+      }
+    });
+  }
+
+  const houseChoices = character.house_choices || character.houseChoices || {};
+  const heritageChoices =
+    character.heritage_choices || character.heritageChoices || {};
+
+  const { totalModifiers } = calculateTotalModifiers(
+    character,
+    featChoices,
+    houseChoices,
+    heritageChoices
+  );
+
+  Object.keys(modifiers).forEach((ability) => {
+    modifiers[ability] = totalModifiers[ability] || 0;
   });
 
+  if (character.asiChoices) {
+    Object.entries(character.asiChoices).forEach(([level, choice]) => {
+      if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+        choice.abilityScoreIncreases.forEach((increase) => {
+          if (increase.ability && increase.increase) {
+            modifiers[increase.ability] += increase.increase;
+          }
+        });
+      }
+    });
+  }
+
+  if (
+    character.subclass &&
+    character.subclassChoices &&
+    subclassesData &&
+    character.castingStyle
+  ) {
+    const subclassData =
+      subclasses[character.castingStyle]?.[character.subclass];
+
+    if (subclassData) {
+      Object.entries(character.subclassChoices).forEach(
+        ([level, choiceName]) => {
+          const levelChoices = subclassData.choices?.[level];
+          if (levelChoices && Array.isArray(levelChoices)) {
+            const selectedChoice = levelChoices.find(
+              (choice) => choice.name === choiceName
+            );
+
+            if (selectedChoice) {
+              const abilityIncreases = checkForModifiers(
+                selectedChoice,
+                "abilityIncreases"
+              );
+              abilityIncreases.forEach((mod) => {
+                if (mod.ability && mod.value) {
+                  modifiers[mod.ability] += mod.value;
+                }
+              });
+            }
+          }
+        }
+      );
+    }
+  }
+
+  return modifiers;
+};
+
+export const calculateFeatModifiers = (character, featChoices = {}) => {
   const modifiers = {
     strength: 0,
     dexterity: 0,
@@ -368,30 +446,24 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
   const featDetails = {};
 
   const allSelectedFeats = getAllSelectedFeats(character);
-  console.log("All selected feats:", allSelectedFeats);
 
   if (character.level1ChoiceType === "feat" && character.standardFeats) {
     allSelectedFeats.push(...character.standardFeats);
   }
 
   const uniqueFeats = [...new Set(allSelectedFeats)];
-  console.log("Unique feats:", uniqueFeats);
 
   uniqueFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
-    console.log(`Processing feat: ${featName}`, feat);
 
     if (!feat?.benefits?.abilityScoreIncrease) {
-      console.log(`Feat ${featName} has no ability score increase benefit`);
       return;
     }
 
     const increase = feat.benefits.abilityScoreIncrease;
-    console.log(`Ability score increase for ${featName}:`, increase);
 
     let abilityToIncrease;
 
-    // Try multiple choice key formats for compatibility
     const choiceKey1 = `${featName}_ability_0`;
     const choiceKey2 = `${featName}_abilityChoice`;
     const choiceKey3 = `${featName}_ability`;
@@ -399,36 +471,20 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     switch (increase.type) {
       case "fixed":
         abilityToIncrease = increase.ability;
-        console.log(`Fixed ability for ${featName}: ${abilityToIncrease}`);
         break;
       case "choice":
       case "choice_any":
-        // Try different choice key formats
         abilityToIncrease =
           featChoices[choiceKey1] ||
           featChoices[choiceKey2] ||
           featChoices[choiceKey3] ||
           increase.abilities?.[0];
 
-        console.log(`Choice ability for ${featName}:`, {
-          choiceKey1: featChoices[choiceKey1],
-          choiceKey2: featChoices[choiceKey2],
-          choiceKey3: featChoices[choiceKey3],
-          defaultAbility: increase.abilities?.[0],
-          selectedAbility: abilityToIncrease,
-          availableChoices: increase.abilities,
-        });
         break;
       case "spellcasting_ability":
         abilityToIncrease = getSpellcastingAbility(character);
-        console.log(
-          `Spellcasting ability for ${featName}: ${abilityToIncrease}`
-        );
         break;
       default:
-        console.log(
-          `Unknown ability increase type for ${featName}: ${increase.type}`
-        );
         break;
     }
 
@@ -443,19 +499,9 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         featName,
         amount: increase.amount,
       });
-
-      console.log(
-        `Applied +${increase.amount} ${abilityToIncrease} from ${featName}`
-      );
-    } else {
-      console.log(
-        `Could not apply ability increase for ${featName}: abilityToIncrease=${abilityToIncrease}`
-      );
     }
   });
 
-  console.log("Final feat modifiers:", modifiers);
-  console.log("Final feat details:", featDetails);
   return { modifiers, featDetails };
 };
 
@@ -515,19 +561,11 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
   }
 
   if (!houseFeatures[character.house]) {
-    console.log(
-      "House not found in houseFeatures:",
-      character.house,
-      "Available houses:",
-      Object.keys(houseFeatures)
-    );
     return { modifiers, houseDetails };
   }
 
   const houseBonuses = houseFeatures[character.house];
-  console.log("House bonuses for", character.house, ":", houseBonuses);
 
-  // Fixed bonuses from house
   if (houseBonuses.fixed) {
     houseBonuses.fixed.forEach((ability) => {
       if (modifiers.hasOwnProperty(ability)) {
@@ -546,15 +584,9 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
     });
   }
 
-  // Choice bonuses from house
   if (houseChoices[character.house]?.abilityChoice) {
     const chosenAbility = houseChoices[character.house].abilityChoice;
-    console.log(
-      "House choice bonus:",
-      chosenAbility,
-      "for house",
-      character.house
-    );
+
     if (modifiers.hasOwnProperty(chosenAbility)) {
       modifiers[chosenAbility] += 1;
 
@@ -568,16 +600,8 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
         amount: 1,
       });
     }
-  } else {
-    console.log(
-      "No house choice found for:",
-      character.house,
-      "in houseChoices:",
-      houseChoices
-    );
   }
 
-  console.log("Final house modifiers:", modifiers);
   return { modifiers, houseDetails };
 };
 
@@ -677,14 +701,10 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   return { modifiers, heritageDetails };
 };
 
-// Helper function for spellcasting ability - you may need to implement this
 export const getSpellcastingAbility = (character) => {
-  // This should return the character's spellcasting ability based on their class/subclass
-  // For now, returning a default - you'll need to implement based on your game rules
   return character.castingStyle || "intelligence";
 };
 
-// Main function to calculate total modifiers
 export const calculateTotalModifiers = (
   character,
   featChoices = {},

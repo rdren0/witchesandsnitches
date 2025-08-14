@@ -28,7 +28,6 @@ const ASILevelChoices = ({
     return null;
   }
 
-  // Handler functions that use utils and update the character
   const handleASIChoiceChange = (level, choiceType) => {
     try {
       const updatedCharacter = utilsHandleASIChoiceChange(
@@ -232,7 +231,6 @@ const ASILevelChoices = ({
   );
 };
 
-// Ability Score Increment Sub-component
 const AbilityScoreIncrementSection = ({
   level,
   choice,
@@ -260,13 +258,11 @@ const AbilityScoreIncrementSection = ({
     );
 
     if (existingIncrease) {
-      // Remove this ability increase
       const newIncreases = currentIncreases.filter(
         (inc) => inc.ability !== ability
       );
       onAbilityChange(level, newIncreases);
     } else if (currentIncreases.length < 2) {
-      // Add new ability increase
       const newIncreases = [...currentIncreases, { ability, increase: 1 }];
       onAbilityChange(level, newIncreases);
     }
@@ -386,7 +382,6 @@ const AbilityScoreIncrementSection = ({
   );
 };
 
-// Feat Selection Sub-component
 const FeatSelectionSection = ({
   level,
   choice,
@@ -398,20 +393,19 @@ const FeatSelectionSection = ({
   setFeatFilter,
   disabled,
 }) => {
-  // Create a mock character that keeps all feat data for filtering but only shows this level's feat as selected
   const mockCharacter = {
     ...character,
-    // Only show THIS level's feat as selected (not Level 1 feats)
+
     standardFeats: choice.selectedFeat ? [choice.selectedFeat] : [],
-    // Only this level's feat choices for display
+
     featChoices: choice.featChoices || {},
-    // Keep ALL ASI choices except current level so getAllSelectedFeats can see them for filtering
+
     asiChoices: Object.fromEntries(
       Object.entries(character.asiChoices || {}).filter(
         ([lvl]) => parseInt(lvl) !== level
       )
     ),
-    // Mark this as an ASI editing context
+
     _editingASILevel: level,
   };
 
