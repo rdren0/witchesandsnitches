@@ -112,7 +112,7 @@ function BasicInfo({
       </div>
 
       <SchoolYearSelector
-        schoolYear={character.schoolYear}
+        schoolYear={character.schoolYear ?? character.school_year}
         onSchoolYearChange={handleSchoolYearChange}
         level={character.level}
         onLevelChange={handleLevelChange}

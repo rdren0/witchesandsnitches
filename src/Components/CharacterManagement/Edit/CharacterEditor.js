@@ -376,6 +376,29 @@ const CharacterEditor = ({
       imageUrl: "basicInformation",
     };
 
+    const fieldMapping = {
+      schoolYear: "school_year",
+      gameSession: "game_session",
+      castingStyle: "casting_style",
+      hitPoints: "hit_points",
+      wandType: "wand_type",
+      initiativeAbility: "initiative_ability",
+      imageUrl: "image_url",
+      level1ChoiceType: "level1_choice_type",
+      innateHeritage: "innate_heritage",
+      skillProficiencies: "skill_proficiencies",
+      skillExpertise: "skill_expertise",
+      standardFeats: "standard_feats",
+      backgroundSkills: "background_skills",
+      innateHeritageSkills: "innate_heritage_skills",
+      houseChoices: "house_choices",
+      subclassChoices: "subclass_choices",
+      featChoices: "feat_choices",
+      heritageChoices: "heritage_choices",
+      asiChoices: "asi_choices",
+      magicModifiers: "magic_modifiers",
+    };
+
     if (field.startsWith("abilityScores.")) {
       if (sectionLocks.abilityScores) return;
     } else if (field.startsWith("magicModifiers.")) {
@@ -403,12 +426,6 @@ const CharacterEditor = ({
         return newCharacter;
       });
     } else {
-      if (field === "schoolYear") {
-        setCharacter((prev) => ({
-          ...prev,
-          schoolYear: value,
-        }));
-      }
       if (field === "castingStyle") {
         setCharacter((prev) => {
           const newCharacter = {
@@ -416,6 +433,10 @@ const CharacterEditor = ({
             [field]: value,
             skillProficiencies: [],
           };
+
+          if (fieldMapping[field]) {
+            newCharacter[fieldMapping[field]] = value;
+          }
 
           if (value) {
             newCharacter.hitPoints = calculateHPForCharacter(newCharacter);
@@ -467,10 +488,18 @@ const CharacterEditor = ({
           };
         });
       } else {
-        setCharacter((prev) => ({
-          ...prev,
-          [field]: value,
-        }));
+        setCharacter((prev) => {
+          const updates = {
+            ...prev,
+            [field]: value,
+          };
+
+          if (fieldMapping[field]) {
+            updates[fieldMapping[field]] = value;
+          }
+
+          return updates;
+        });
       }
     }
 

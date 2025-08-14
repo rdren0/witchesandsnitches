@@ -290,7 +290,7 @@ const BasicInformationSection = ({
         </div>
       )}
       <SchoolYearSelector
-        schoolYear={character.school_year || character.schoolYear}
+        schoolYear={character.schoolYear ?? character.school_year}
         onSchoolYearChange={(value) => handleInputChange("schoolYear", value)}
         level={character.level}
         onLevelChange={(value) => handleInputChange("level", value)}

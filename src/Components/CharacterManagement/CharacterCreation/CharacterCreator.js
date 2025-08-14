@@ -336,6 +336,7 @@ const CharacterCreator = ({
         setCharacter((prev) => ({
           ...prev,
           schoolYear: value,
+          school_year: value,
         }));
       }
       if (field === "castingStyle") {

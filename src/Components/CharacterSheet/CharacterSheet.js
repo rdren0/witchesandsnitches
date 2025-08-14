@@ -30,6 +30,7 @@ import {
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
+import { characterService } from "../../services/characterService";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -890,42 +891,74 @@ const CharacterSheet = ({
 
   const handleCharacterUpdated = async (updatedCharacter) => {
     try {
-      const { error } = await supabase
-        .from("characters")
-        .update({
-          level: updatedCharacter.level,
-          hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
-          current_hit_points:
-            updatedCharacter.hit_points || updatedCharacter.hitPoints,
-          current_hit_dice: updatedCharacter.level,
-          ability_scores:
-            updatedCharacter.ability_scores || updatedCharacter.abilityScores,
-          standard_feats:
-            updatedCharacter.standard_feats || updatedCharacter.standardFeats,
-          skill_proficiencies:
-            updatedCharacter.skill_proficiencies ||
-            updatedCharacter.skillProficiencies,
-          asi_choices:
-            updatedCharacter.asi_choices || updatedCharacter.asiChoices,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", character.id)
-        .eq("discord_user_id", discordUserId);
+      const characterOwnerId = character.discord_user_id || character.ownerId;
 
-      if (error) {
-        console.error("Error updating character:", error);
-        alert("Failed to save level up changes. Please try again.");
-        return;
-      }
+      const characterToSave = {
+        level: updatedCharacter.level,
+        hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
+        current_hit_points:
+          updatedCharacter.hit_points || updatedCharacter.hitPoints,
+        current_hit_dice: updatedCharacter.level,
+        ability_scores:
+          updatedCharacter.ability_scores || updatedCharacter.abilityScores,
+        standard_feats:
+          updatedCharacter.standard_feats ||
+          updatedCharacter.standardFeats ||
+          [],
+        skill_proficiencies:
+          updatedCharacter.skill_proficiencies ||
+          updatedCharacter.skillProficiencies ||
+          [],
+        skill_expertise:
+          updatedCharacter.skill_expertise ||
+          updatedCharacter.skillExpertise ||
+          [],
+        asi_choices:
+          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {},
+
+        name: character.name,
+        house: character.house,
+        casting_style: character.castingStyle || character.casting_style,
+        subclass: character.subclass,
+        background: character.background,
+        wand_type: character.wandType || character.wand_type,
+        magic_modifiers: character.magicModifiers || character.magic_modifiers,
+        game_session: character.gameSession || character.game_session,
+        initiative_ability:
+          character.initiativeAbility ||
+          character.initiative_ability ||
+          "dexterity",
+        school_year: character.schoolYear || character.school_year,
+        level1_choice_type:
+          character.level1ChoiceType || character.level1_choice_type,
+        innate_heritage: character.innateHeritage || character.innate_heritage,
+        house_choices: character.houseChoices || character.house_choices || {},
+        subclass_choices:
+          character.subclassChoices || character.subclass_choices || {},
+        feat_choices: character.featChoices || character.feat_choices || {},
+        heritage_choices:
+          character.heritageChoices || character.heritage_choices || {},
+        innate_heritage_skills:
+          character.innateHeritageSkills ||
+          character.innate_heritage_skills ||
+          [],
+        background_skills:
+          character.backgroundSkills || character.background_skills || [],
+      };
+
+      const result = await characterService.updateCharacter(
+        character.id,
+        characterToSave,
+        characterOwnerId
+      );
 
       setShowLevelUp(false);
       await fetchCharacterDetails();
-
       alert(
         `${character.name} successfully leveled up to level ${updatedCharacter.level}!`
       );
     } catch (error) {
-      console.error("Error saving character:", error);
+      console.error("Error saving level up:", error);
       alert("Failed to save level up changes. Please try again.");
     }
   };

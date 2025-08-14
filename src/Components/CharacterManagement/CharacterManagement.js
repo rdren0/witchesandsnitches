@@ -179,10 +179,32 @@ const CharacterManagement = ({
 
   const handleLevelUpSave = async (updatedCharacter) => {
     try {
-      await characterService.updateCharacter(
+      const characterToSave = {
+        ...updatedCharacter,
+
+        ability_scores:
+          updatedCharacter.ability_scores || updatedCharacter.abilityScores,
+        hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
+        skill_proficiencies:
+          updatedCharacter.skill_proficiencies ||
+          updatedCharacter.skillProficiencies ||
+          [],
+        skill_expertise:
+          updatedCharacter.skill_expertise ||
+          updatedCharacter.skillExpertise ||
+          [],
+        standard_feats:
+          updatedCharacter.standard_feats ||
+          updatedCharacter.standardFeats ||
+          [],
+        asi_choices:
+          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {},
+      };
+
+      const result = await characterService.updateCharacter(
         updatedCharacter.id,
-        updatedCharacter,
-        updatedCharacter.discord_user_id
+        characterToSave,
+        updatedCharacter.discord_user_id || discordUserId
       );
 
       setLevelingUpCharacter(null);
@@ -192,10 +214,14 @@ const CharacterManagement = ({
       }
 
       if (onCharacterSaved) {
-        onCharacterSaved(updatedCharacter);
+        onCharacterSaved(result);
       }
+
+      alert(
+        `${updatedCharacter.name} successfully leveled up to level ${updatedCharacter.level}!`
+      );
     } catch (error) {
-      console.error("Error saving level up:", error);
+      console.error("Failed to save level up:", error);
       alert("Failed to save level up changes. Please try again.");
     }
   };
