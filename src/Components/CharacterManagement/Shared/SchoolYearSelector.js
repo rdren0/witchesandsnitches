@@ -56,19 +56,6 @@ const SchoolYearSelector = ({
 
   return (
     <div style={componentStyles.fieldContainer}>
-      <h3
-        style={
-          componentStyles.sectionHeader || {
-            fontSize: "18px",
-            fontWeight: "600",
-            color: theme.text,
-            marginBottom: "12px",
-          }
-        }
-      >
-        Character Progression
-      </h3>
-
       <div
         style={{
           background: theme.surface,

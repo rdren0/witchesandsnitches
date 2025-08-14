@@ -4,13 +4,12 @@ import { Users, Plus, Crown } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import { characterService } from "../../services/characterService";
+import CharacterForm from "./components/CharacterForm/CharacterForm";
+import CharacterEditor from "./CharacterEditor";
+import CharacterList from "./CharacterList";
+import LevelUpModal from "./LevelUpModal";
 
-import CharacterCreator from "./CharacterCreation/CharacterCreator";
-import CharacterEditor from "./Edit/CharacterEditor";
-import CharacterList from "./Edit/CharacterList";
-import LevelUpModal from "./Edit/LevelUpModal";
-
-const CharacterManagement = ({
+const CharacterManager = ({
   user,
   onCharacterSaved,
   supabase,
@@ -178,32 +177,10 @@ const CharacterManagement = ({
 
   const handleLevelUpSave = async (updatedCharacter) => {
     try {
-      const characterToSave = {
-        ...updatedCharacter,
-
-        ability_scores:
-          updatedCharacter.ability_scores || updatedCharacter.abilityScores,
-        hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
-        skill_proficiencies:
-          updatedCharacter.skill_proficiencies ||
-          updatedCharacter.skillProficiencies ||
-          [],
-        skill_expertise:
-          updatedCharacter.skill_expertise ||
-          updatedCharacter.skillExpertise ||
-          [],
-        standard_feats:
-          updatedCharacter.standard_feats ||
-          updatedCharacter.standardFeats ||
-          [],
-        asi_choices:
-          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {},
-      };
-
-      const result = await characterService.updateCharacter(
+      await characterService.updateCharacter(
         updatedCharacter.id,
-        characterToSave,
-        updatedCharacter.discord_user_id || discordUserId
+        updatedCharacter,
+        updatedCharacter.discord_user_id
       );
 
       setLevelingUpCharacter(null);
@@ -213,14 +190,10 @@ const CharacterManagement = ({
       }
 
       if (onCharacterSaved) {
-        onCharacterSaved(result);
+        onCharacterSaved(updatedCharacter);
       }
-
-      alert(
-        `${updatedCharacter.name} successfully leveled up to level ${updatedCharacter.level}!`
-      );
     } catch (error) {
-      console.error("Failed to save level up:", error);
+      console.error("Error saving level up:", error);
       alert("Failed to save level up changes. Please try again.");
     }
   };
@@ -326,14 +299,13 @@ const CharacterManagement = ({
     switch (currentMode) {
       case "create":
         return (
-          <CharacterCreator
-            user={user}
-            onCharacterSaved={handleCharacterSaved}
-            adminMode={adminMode}
-            isUserAdmin={isUserAdmin}
-            allUsers={allUsers}
-            selectedTargetUserId={selectedTargetUserId}
-            onTargetUserChange={setSelectedTargetUserId}
+          <CharacterForm
+            mode="create"
+            userId={discordUserId}
+            onSave={(character) => {
+              handleCharacterSaved(character, true);
+            }}
+            onCancel={() => navigate("/character-management")}
             supabase={supabase}
           />
         );
@@ -512,4 +484,4 @@ const CharacterManagement = ({
   );
 };
 
-export default CharacterManagement;
+export default CharacterManager;

@@ -643,15 +643,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                 />
                 Potion Making
               </label>
-
-              {/* <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={brewingSkills === "medicine"}
-                  onChange={(e) => ({})}
-                />
-                Medicine
-              </label> */}
             </div>
 
             <div style={styles.checkboxGroup}>
@@ -836,15 +827,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                       {characterModifier}
                     </strong>
                   </div>
-                  {/* <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: theme.success,
-                      marginTop: "4px",
-                    }}
-                  >
-                    Current choice: {healingSkillChoice}
-                  </div> */}
                 </div>
                 {selectedPotion.rarity && qualityDCs[selectedPotion.rarity] && (
                   <div

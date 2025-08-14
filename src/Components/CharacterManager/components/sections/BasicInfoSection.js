@@ -1,29 +1,25 @@
-import { gameSessionOptions } from "../../../App/const";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { RefreshCw } from "lucide-react";
+import React from "react";
+import { gameSessionOptions } from "../../../../App/const";
+import { useTheme } from "../../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../../styles/masterStyles";
+import SchoolYearSelector from "../../../CharacterManagement/Shared/SchoolYearSelector";
+import EnhancedCastingStyleSelector from "../../../CharacterManagement/CharacterCreation/EnhancedCastingStyleSelector";
+import OptimizedImageUpload from "../../../CharacterManagement/Shared/OptimizedImageUpload";
 
-import SchoolYearSelector from "../Shared/SchoolYearSelector";
-import EnhancedCastingStyleSelector from "./EnhancedCastingStyleSelector";
-import OptimizedImageUpload from "../Shared/OptimizedImageUpload";
-
-function BasicInfo({
+const BasicInfoSection = ({
   character,
-  isHpManualMode,
-  setIsHpManualMode,
-  rolledHp,
-  setRolledHp,
-  rollHp,
-  handleInputChange,
-  calculateHitPoints,
+  onChange,
+  errors = {},
+  mode = "create",
+  disabled = false,
   supabase,
-  setImageFile,
-  setPreviewUrl,
-  onImageFileChange,
-  onUploadComplete,
-}) {
+}) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
+
+  const handleInputChange = (field, value) => {
+    onChange(field, value);
+  };
 
   const handleSchoolYearChange = (schoolYear) => {
     handleInputChange("schoolYear", schoolYear);
@@ -38,18 +34,15 @@ function BasicInfo({
   };
 
   const handleImageChange = (file, previewUrl) => {
-    if (onImageFileChange) {
-      onImageFileChange(file);
-    } else {
-      if (setImageFile) setImageFile(file);
-      if (setPreviewUrl) setPreviewUrl(previewUrl);
-    }
-
     if (previewUrl) {
       handleInputChange("imageUrl", previewUrl);
     } else if (!file) {
       handleInputChange("imageUrl", "");
     }
+  };
+
+  const onUploadComplete = (url) => {
+    handleInputChange("imageUrl", url);
   };
 
   return (
@@ -61,8 +54,13 @@ function BasicInfo({
           value={character.name || ""}
           onChange={(e) => handleInputChange("name", e.target.value)}
           placeholder="Enter your character's name..."
-          style={styles.input}
+          style={{
+            ...styles.input,
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+          }}
           maxLength={50}
+          disabled={disabled}
         />
       </div>
 
@@ -74,6 +72,7 @@ function BasicInfo({
           onUploadComplete={onUploadComplete}
           supabase={supabase}
           theme={theme}
+          disabled={disabled}
           styles={{
             container: styles.imageUploadContainer,
             wrapper: styles.imageUploadWrapper,
@@ -97,7 +96,12 @@ function BasicInfo({
         <select
           value={character.gameSession || ""}
           onChange={(e) => handleInputChange("gameSession", e.target.value)}
-          style={styles.select}
+          style={{
+            ...styles.select,
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+          }}
+          disabled={disabled}
         >
           <option value="">Select Game Session...</option>
           {gameSessionOptions.map((session) => (
@@ -112,27 +116,63 @@ function BasicInfo({
       </div>
 
       <SchoolYearSelector
-        schoolYear={character.schoolYear ?? character.school_year}
+        schoolYear={character.schoolYear}
         onSchoolYearChange={handleSchoolYearChange}
         level={character.level}
         onLevelChange={handleLevelChange}
         styles={styles}
+        disabled={disabled}
       />
 
-      <div style={styles.fieldContainer}>
+      <div
+        style={{
+          ...styles.fieldContainer,
+          opacity: disabled ? 0.6 : 1,
+          pointerEvents: disabled ? "none" : "auto",
+        }}
+      >
         <EnhancedCastingStyleSelector
           selectedStyle={character.castingStyle || ""}
           onStyleChange={handleCastingStyleChange}
           required={true}
+          disabled={disabled}
         />
       </div>
 
       {character.castingStyle === "Intellect Caster" && (
-        <div style={styles.fieldContainer}>
+        <div
+          style={{
+            ...styles.fieldContainer,
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+          }}
+        >
           <label style={styles.label}>Initiative Ability *</label>
           <div style={styles.helpText}>
             As an intellect caster, you may choose to use Intelligence or
             Dexterity for initiative.
+            {character.abilityScores &&
+              character.abilityScores.dexterity &&
+              character.abilityScores.intelligence && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "12px",
+                    fontStyle: "italic",
+                    color: theme.primary,
+                  }}
+                >
+                  {Math.floor((character.abilityScores.intelligence - 10) / 2) >
+                  Math.floor((character.abilityScores.dexterity - 10) / 2)
+                    ? "💡 Intelligence gives a higher modifier"
+                    : Math.floor((character.abilityScores.dexterity - 10) / 2) >
+                      Math.floor(
+                        (character.abilityScores.intelligence - 10) / 2
+                      )
+                    ? "⚡ Dexterity gives a higher modifier"
+                    : "⚖️ Both abilities give the same modifier"}
+                </div>
+              )}
           </div>
           <div style={styles.level1ChoiceContainer}>
             <label
@@ -151,6 +191,7 @@ function BasicInfo({
                   handleInputChange("initiativeAbility", e.target.value)
                 }
                 style={styles.level1ChoiceRadio}
+                disabled={disabled}
               />
               <span
                 style={
@@ -178,6 +219,7 @@ function BasicInfo({
                   handleInputChange("initiativeAbility", e.target.value)
                 }
                 style={styles.level1ChoiceRadio}
+                disabled={disabled}
               />
               <span
                 style={
@@ -192,101 +234,8 @@ function BasicInfo({
           </div>
         </div>
       )}
-
-      <div style={styles.fieldContainer}>
-        <label style={styles.label}>Hit Points</label>
-        {!character.castingStyle ? (
-          <div style={styles.skillsPlaceholder}>
-            Select a Casting Style first
-          </div>
-        ) : (
-          <div style={styles.levelHpGrid}>
-            <div style={styles.hpFieldContainer}>
-              <div style={styles.hpValueContainer}>
-                {isHpManualMode ? (
-                  <input
-                    type="number"
-                    min="1"
-                    value={character.hitPoints || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "hitPoints",
-                        parseInt(e.target.value) || 1
-                      )
-                    }
-                    placeholder="--"
-                    style={styles.hpManualInput}
-                  />
-                ) : rolledHp !== null ? (
-                  <div style={styles.hpRollDisplay}>{rolledHp}</div>
-                ) : (
-                  <div style={styles.hpDisplay}>
-                    {calculateHitPoints({ character })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {character.castingStyle && (
-              <div style={styles.hpControlsContainer}>
-                <div style={styles.hpControlsInline}>
-                  {!isHpManualMode && (
-                    <button
-                      onClick={rollHp}
-                      style={{
-                        ...styles.button,
-                        backgroundColor: "#EF4444",
-                        fontSize: "12px",
-                      }}
-                      disabled={!character.castingStyle || !character.level}
-                    >
-                      <RefreshCw size={14} />
-                      Roll
-                    </button>
-                  )}
-
-                  <div
-                    onClick={() => {
-                      setIsHpManualMode(!isHpManualMode);
-                      setRolledHp(null);
-                    }}
-                    style={{
-                      ...styles.hpToggle,
-                      backgroundColor: isHpManualMode
-                        ? theme.success
-                        : theme.border,
-                      borderColor: isHpManualMode
-                        ? theme.success
-                        : theme.textSecondary,
-                    }}
-                    title={
-                      isHpManualMode
-                        ? "Switch to Auto/Roll mode"
-                        : "Switch to Manual mode"
-                    }
-                  >
-                    <div
-                      style={{
-                        ...styles.hpToggleKnob,
-                        left: isHpManualMode ? "22px" : "2px",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        <div style={styles.helpText}>
-          {isHpManualMode
-            ? "Manually enter your character's hit points."
-            : rolledHp !== null
-            ? "Click 'Roll' to reroll, or use the calculated value."
-            : "Click 'Roll' for a random roll, or use the calculated average."}
-        </div>
-      </div>
     </>
   );
-}
+};
 
-export default BasicInfo;
+export default BasicInfoSection;

@@ -9,24 +9,24 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
-import { skillsByCastingStyle } from "../utils";
-import { hpData } from "../../../SharedData/data";
-import { standardFeats as importedStandardFeats } from "../../../SharedData/standardFeatData";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { characterService } from "../../../services/characterService";
-import { createCharacterCreationStyles } from "../../../styles/masterStyles";
-import { backgroundsData } from "../../../SharedData/backgroundsData";
+import { skillsByCastingStyle } from "../CharacterManagement/utils";
+import { hpData } from "../../SharedData/data";
+import { standardFeats as importedStandardFeats } from "../../SharedData/standardFeatData";
+import { useTheme } from "../../contexts/ThemeContext";
+import { characterService } from "../../services/characterService";
+import { createCharacterCreationStyles } from "../../styles/masterStyles";
+import { backgroundsData } from "../../SharedData/backgroundsData";
 
-import BasicInformationSection from "./components/BasicInformationSection";
-import HouseAndSubclassSection from "./components/HouseAndSubclassSection";
-import Level1AndProgressionSection from "./components/Level1AndProgressionSection";
-import AbilityScoresSection from "./components/AbilityScoresSection";
-import MagicModifiersSection from "./components/MagicModifiersSection";
-import { useCharacterSetup } from "./hooks/useCharacterSetup";
-import { useFieldLocks } from "./hooks/useFieldLocks";
-import { useFeatValidation } from "./hooks/useFeatValidation ";
-import { useASIHandlers } from "./hooks/useASIHandlers";
-import EnhancedSkillsSection from "../CharacterCreation/EnhancedSkillsSection";
+import BasicInformationSection from "../CharacterManagement/Edit/components/BasicInformationSection";
+import HouseAndSubclassSection from "../CharacterManagement/Edit/components/HouseAndSubclassSection";
+import Level1AndProgressionSection from "../CharacterManagement/Edit/components/Level1AndProgressionSection";
+import AbilityScoresSection from "../CharacterManagement/Edit/components/AbilityScoresSection";
+import MagicModifiersSection from "../CharacterManagement/Edit/components/MagicModifiersSection";
+import { useCharacterSetup } from "../CharacterManagement/Edit/hooks/useCharacterSetup";
+import { useFieldLocks } from "../CharacterManagement/Edit/hooks/useFieldLocks";
+import { useFeatValidation } from "../CharacterManagement/Edit/hooks/useFeatValidation ";
+import { useASIHandlers } from "../CharacterManagement/Edit/hooks/useASIHandlers";
+import EnhancedSkillsSection from "../CharacterManagement/CharacterCreation/EnhancedSkillsSection";
 
 const standardFeats = importedStandardFeats || [];
 
@@ -487,6 +487,34 @@ const CharacterEditor = ({
             skillProficiencies: [...new Set(updatedSkills)],
           };
         });
+      } else if (field === "subclass") {
+        // console.log({ field, value });
+        // const background = backgroundsData[value];
+        // const newBackgroundSkills =
+        //   background && background.skillProficiencies
+        //     ? background.skillProficiencies
+        //     : [];
+
+        // setCharacter((prev) => {
+        //   const currentSkills = prev.skillProficiencies || [];
+        //   const oldBackgroundSkills = prev.backgroundSkills || [];
+
+        //   const skillsWithoutOldBackground = currentSkills.filter(
+        //     (skill) => !oldBackgroundSkills.includes(skill)
+        //   );
+
+        //   const updatedSkills = [
+        //     ...skillsWithoutOldBackground,
+        //     ...newBackgroundSkills,
+        //   ];
+
+        //   return {
+        //     ...prev,
+        //     [field]: value,
+        //     backgroundSkills: newBackgroundSkills,
+        //     skillProficiencies: [...new Set(updatedSkills)],
+        //   };
+        // });
       } else {
         setCharacter((prev) => {
           const updates = {

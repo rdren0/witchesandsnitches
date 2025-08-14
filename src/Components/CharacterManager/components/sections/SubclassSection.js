@@ -1,27 +1,17 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { subclassesData } from "../../../../SharedData/subclassesData";
 import { createFeatStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 
-const EnhancedSubclassSelector = ({
-  value,
-  onChange,
-  subclassChoices: externalSubclassChoices,
-  onSubclassChoicesChange,
-  characterLevel = 1,
-  disabled = false,
-}) => {
+const SubclassSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
   const styles = createFeatStyles(theme);
   const [expandedSubclasses, setExpandedSubclasses] = useState(new Set());
 
-  const [internalSubclassChoices, setInternalSubclassChoices] = useState({});
+  const selectedSubclass = character?.subclass || "";
+  const characterLevel = character?.level || 1;
+  const subclassChoices = character?.subclassChoices || {};
 
-  const subclassChoices = externalSubclassChoices || internalSubclassChoices;
-  const setSubclassChoices =
-    onSubclassChoicesChange || setInternalSubclassChoices;
-
-  const selectedSubclass = value || "";
   const selectedSubclassData = selectedSubclass
     ? subclassesData[selectedSubclass]
     : null;
@@ -72,16 +62,6 @@ const EnhancedSubclassSelector = ({
   const normalizedSubclassChoices = useMemo(() => {
     return normalizeSubclassChoices(subclassChoices);
   }, [subclassChoices, normalizeSubclassChoices]);
-
-  useEffect(() => {
-    if (
-      externalSubclassChoices &&
-      Object.keys(externalSubclassChoices).length > 0
-    ) {
-      const normalized = normalizeSubclassChoices(externalSubclassChoices);
-      setInternalSubclassChoices(normalized);
-    }
-  }, [externalSubclassChoices, normalizeSubclassChoices]);
 
   useEffect(() => {
     if (selectedSubclass && selectedSubclass.trim() !== "") {
@@ -289,8 +269,8 @@ const EnhancedSubclassSelector = ({
 
   const handleSubclassToggle = (subclassName) => {
     if (selectedSubclass === subclassName) {
-      onChange("");
-      setSubclassChoices({});
+      onChange("subclass", "");
+      onChange("subclassChoices", {});
 
       setExpandedSubclasses((prev) => {
         const newSet = new Set(prev);
@@ -298,7 +278,7 @@ const EnhancedSubclassSelector = ({
         return newSet;
       });
     } else {
-      onChange(subclassName);
+      onChange("subclass", subclassName);
 
       setExpandedSubclasses((prev) => {
         const newSet = new Set(prev);
@@ -315,34 +295,34 @@ const EnhancedSubclassSelector = ({
     subChoiceName = null
   ) => {
     const currentChoice = normalizedSubclassChoices[level];
+    let newChoices;
 
     if (isMainChoice) {
       if (
         typeof currentChoice === "object" &&
         currentChoice.mainChoice === choiceName
       ) {
-        const newChoices = {
+        newChoices = {
           ...normalizedSubclassChoices,
           [level]: currentChoice,
         };
-        setSubclassChoices(newChoices);
       } else {
-        const newChoices = {
+        newChoices = {
           ...normalizedSubclassChoices,
           [level]: choiceName,
         };
-        setSubclassChoices(newChoices);
       }
     } else {
-      const newChoices = {
+      newChoices = {
         ...normalizedSubclassChoices,
         [level]: {
           mainChoice: choiceName,
           subChoice: subChoiceName,
         },
       };
-      setSubclassChoices(newChoices);
     }
+
+    onChange("subclassChoices", newChoices);
   };
 
   const isChoiceSelected = (level, choiceName, subChoiceName = null) => {
@@ -700,7 +680,6 @@ const EnhancedSubclassSelector = ({
     return (
       <div
         style={{
-          ...styles.choiceSummary,
           backgroundColor: choiceStatus.isComplete
             ? `${theme.success}15`
             : `${theme.warning}15`,
@@ -993,4 +972,4 @@ const EnhancedSubclassSelector = ({
   );
 };
 
-export default EnhancedSubclassSelector;
+export default SubclassSection;

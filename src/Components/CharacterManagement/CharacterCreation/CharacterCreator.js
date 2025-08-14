@@ -77,7 +77,6 @@ const CharacterCreator = ({
   };
 
   const handleUploadComplete = (uploadedUrl) => {
-    console.log("🔥 handleUploadComplete called with URL:", uploadedUrl);
     setFinalImageUrl(uploadedUrl);
     setCharacter((prev) => ({
       ...prev,
@@ -85,7 +84,6 @@ const CharacterCreator = ({
     }));
     setImageFile(null);
     setPreviewUrl(null);
-    console.log("🔥 finalImageUrl state should now be:", uploadedUrl);
   };
 
   const setASILevelFilter = (level, filter) => {
@@ -694,13 +692,6 @@ const CharacterCreator = ({
       const { skill_proficiencies, skill_expertise } =
         calculateFinalSkillsAndExpertise(character);
 
-      console.log("=== IMAGE DEBUG INFO ===");
-      console.log("finalImageUrl:", finalImageUrl);
-      console.log("character.imageUrl:", character.imageUrl);
-      console.log("imageFile:", imageFile);
-      console.log("previewUrl:", previewUrl);
-      console.log("========================");
-
       const characterToSave = {
         ability_scores: finalAbilityScores,
         asi_choices: character.asiChoices || {},
@@ -733,16 +724,10 @@ const CharacterCreator = ({
 
       setError("Saving character to database...");
 
-      console.log("🚀 About to call characterService.saveCharacter with:");
-      console.log("characterToSave:", characterToSave);
-      console.log("characterToSave.image_url:", characterToSave.image_url);
-
       const savedCharacter = await characterService.saveCharacter(
         characterToSave,
         effectiveUserId
       );
-
-      console.log("Character saved with image_url:", savedCharacter.image_url);
 
       const transformedCharacter = {
         abilityScores: savedCharacter.ability_scores,

@@ -2072,7 +2072,6 @@ export const SubjectCard = ({
         />
       )}
 
-      {/* Restriction Modal */}
       <RestrictionModal
         spellName={restrictionModal.spellName}
         isOpen={restrictionModal.isOpen}

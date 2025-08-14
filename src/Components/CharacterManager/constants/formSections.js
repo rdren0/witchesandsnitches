@@ -1,0 +1,72 @@
+export const FORM_SECTIONS = [
+  {
+    id: "basicInfo",
+    title: "Basic Information",
+    subtitle: "Character name, portrait, and core details",
+    required: true,
+    lockable: true,
+    order: 1,
+  },
+  {
+    id: "abilityScores",
+    title: "Ability Scores",
+    subtitle: "Character attributes and modifiers",
+    required: true,
+    lockable: true,
+    order: 2,
+  },
+  {
+    id: "background",
+    title: "Background",
+    subtitle: "Character background and starting proficiencies",
+    required: true,
+    lockable: true,
+    order: 3,
+  },
+  {
+    id: "houseAndSubclass",
+    title: "House & Subclass",
+    subtitle: "House selection and subclass progression",
+    required: true,
+    lockable: true,
+    order: 4,
+  },
+  {
+    id: "heritage",
+    title: "Heritage",
+    subtitle: "Character heritage and related choices",
+    required: false,
+    lockable: true,
+    order: 5,
+  },
+  {
+    id: "progression",
+    title: "Level Progression",
+    subtitle: "ASI, feats, and level-based features",
+    required: false,
+    lockable: true,
+    order: 6,
+  },
+  {
+    id: "skills",
+    title: "Skills & Proficiencies",
+    subtitle: "Skill proficiencies and expertise",
+    required: false,
+    lockable: true,
+    order: 7,
+  },
+  {
+    id: "magic",
+    title: "Magic Modifiers",
+    subtitle: "Spell attack bonus and save DC",
+    required: false,
+    lockable: true,
+    order: 8,
+  },
+];
+
+export const FORM_MODES = {
+  CREATE: "create",
+  EDIT: "edit",
+  VIEW: "view",
+};
