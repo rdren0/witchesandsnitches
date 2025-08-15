@@ -30,9 +30,6 @@ const CharacterFeatsDisplay = ({
   const [searchFilter, setSearchFilter] = useState("");
   const [expandedSections, setExpandedSections] = useState(new Set([]));
 
-  // Complete replacement for the organizedFeatures useMemo in CharacterFeatsDisplay.js
-  // This handles all user choices properly across all sections
-
   const organizedFeatures = useMemo(() => {
     const sections = {
       house: {
@@ -69,13 +66,35 @@ const CharacterFeatsDisplay = ({
 
     if (!character) return sections;
 
-    // Helper function to parse all features by level (for subclasses)
+    const normalizeSubclassName = (name) => {
+      if (!name) return name;
+
+      return [
+        name,
+        name.replace(/ and /g, " & "),
+        name.replace(/ & /g, " and "),
+        name.replace(/&/g, " & "),
+        name.replace(/ {2,}/g, " "),
+      ];
+    };
+
+    const findSubclassData = (subclassName) => {
+      if (!subclassName || !subclassesData) return null;
+
+      const variations = normalizeSubclassName(subclassName);
+      for (const variant of variations) {
+        if (subclassesData[variant]) {
+          return subclassesData[variant];
+        }
+      }
+      return null;
+    };
+
     const parseAllFeaturesByLevel = (subclassData) => {
       if (!subclassData) return {};
 
       const featuresByLevel = {};
 
-      // Parse level 1 features
       if (subclassData.level1Features) {
         featuresByLevel[1] = {
           features: subclassData.level1Features || [],
@@ -83,7 +102,6 @@ const CharacterFeatsDisplay = ({
         };
       }
 
-      // Parse higher level features
       if (subclassData.higherLevelFeatures) {
         subclassData.higherLevelFeatures.forEach((feature) => {
           const level = feature.level;
@@ -96,7 +114,8 @@ const CharacterFeatsDisplay = ({
           }
 
           if (feature.choices && Array.isArray(feature.choices)) {
-            featuresByLevel[level].choices = feature.choices;
+            featuresByLevel[level].choices.push(...feature.choices);
+
             featuresByLevel[level].features.push({
               name: feature.name,
               description: feature.description,
@@ -110,7 +129,6 @@ const CharacterFeatsDisplay = ({
       return featuresByLevel;
     };
 
-    // HOUSE SECTION
     if (character.house && houseFeatures?.[character.house]) {
       const houseData = houseFeatures[character.house];
       const houseName = character.house;
@@ -134,11 +152,9 @@ const CharacterFeatsDisplay = ({
         ].filter(Boolean),
       });
 
-      // Display house features
       if (houseData.features && houseData.features.length > 0) {
         houseData.features.forEach((feature) => {
           if (!feature.isChoice) {
-            // Non-choice features
             sections.house.features.push({
               name: feature.name,
               type: "House Feature",
@@ -148,12 +164,10 @@ const CharacterFeatsDisplay = ({
               details: [],
             });
           } else {
-            // Choice features - check if user made a choice
             const userChoice =
               character.houseChoices?.[houseName]?.[feature.name];
 
             if (userChoice) {
-              // Find the selected option details
               const selectedOption = feature.options?.find(
                 (opt) => opt.name === userChoice
               );
@@ -169,7 +183,6 @@ const CharacterFeatsDisplay = ({
                 details: selectedOption ? [selectedOption.description] : [],
               });
             } else {
-              // Show available options if no choice made
               sections.house.features.push({
                 name: feature.name,
                 type: "House Choice Feature",
@@ -187,7 +200,6 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Display chosen ability bonus if any
       if (character.houseChoices?.[houseName]?.abilityChoice) {
         const chosenAbility = character.houseChoices[houseName].abilityChoice;
         sections.house.features.push({
@@ -203,9 +215,8 @@ const CharacterFeatsDisplay = ({
       }
     }
 
-    // SUBCLASS SECTION
     if (character.subclass) {
-      const subclassData = subclassesData?.[character.subclass];
+      const subclassData = findSubclassData(character.subclass);
 
       sections.subclass.features.push({
         name: character.subclass,
@@ -222,7 +233,6 @@ const CharacterFeatsDisplay = ({
         const featuresByLevel = parseAllFeaturesByLevel(subclassData);
 
         Object.entries(character.subclassChoices).forEach(([level, choice]) => {
-          // Normalize the choice data
           let choiceName, subChoiceName;
 
           if (typeof choice === "string") {
@@ -240,7 +250,6 @@ const CharacterFeatsDisplay = ({
             }
           }
 
-          // Find the choice details from the parsed features
           let selectedOption = null;
           let fullDescription = null;
 
@@ -268,28 +277,105 @@ const CharacterFeatsDisplay = ({
             }
           }
 
-          // Create the feature entry
-          const featureName = subChoiceName
-            ? `${choiceName}: ${subChoiceName}`
-            : choiceName;
+          const hasSpecialAbilities =
+            selectedOption?.benefits?.specialAbilities?.length > 0;
 
-          sections.subclass.features.push({
-            name: `${featureName} (Selected)`,
-            type: "Selected Subclass Choice",
-            source: character.subclass,
-            level: parseInt(level) || null,
-            description:
-              fullDescription ||
-              `Your selected specialization from level ${level}`,
-            details: fullDescription
-              ? [fullDescription]
-              : [`Selected at level ${level}: ${featureName}`],
-          });
+          if (!hasSpecialAbilities) {
+            const featureName = subChoiceName
+              ? `${choiceName}: ${subChoiceName}`
+              : choiceName;
+
+            sections.subclass.features.push({
+              name: `${featureName} (Selected)`,
+              type: "Selected Subclass Choice",
+              source: character.subclass,
+              level: parseInt(level) || null,
+              description:
+                fullDescription ||
+                `Your selected specialization from level ${level}`,
+              details: fullDescription
+                ? [fullDescription]
+                : [`Selected at level ${level}: ${featureName}`],
+            });
+          }
+
+          if (selectedOption && selectedOption.benefits) {
+            const benefits = selectedOption.benefits;
+
+            if (benefits.immunities && benefits.immunities.length > 0) {
+              sections.subclass.features.push({
+                name: `${choiceName} - Immunities`,
+                type: "Choice Benefit",
+                source: character.subclass,
+                level: parseInt(level) || null,
+                description: `Immunities gained from ${choiceName}`,
+                details: benefits.immunities.map(
+                  (immunity) => `Immune to ${immunity}`
+                ),
+              });
+            }
+
+            if (
+              benefits.specialAbilities &&
+              benefits.specialAbilities.length > 0
+            ) {
+              benefits.specialAbilities.forEach((ability) => {
+                const abilityDetails = [];
+
+                if (ability.type) abilityDetails.push(`Type: ${ability.type}`);
+                if (ability.duration)
+                  abilityDetails.push(`Duration: ${ability.duration}`);
+                if (ability.tempHP)
+                  abilityDetails.push(`Temporary HP: ${ability.tempHP}`);
+                if (ability.save) abilityDetails.push(`Save: ${ability.save}`);
+                if (ability.uses) abilityDetails.push(`Uses: ${ability.uses}`);
+                if (ability.damage)
+                  abilityDetails.push(`Damage: ${ability.damage}`);
+                if (ability.range)
+                  abilityDetails.push(`Range: ${ability.range}`);
+                if (ability.effect)
+                  abilityDetails.push(`Effect: ${ability.effect}`);
+
+                sections.subclass.features.push({
+                  name: ability.name || `${choiceName} - Special Ability`,
+                  type: "Special Ability",
+                  source: character.subclass,
+                  level: parseInt(level) || null,
+                  description:
+                    ability.description || `Special ability from ${choiceName}`,
+                  details: abilityDetails,
+                });
+              });
+            }
+
+            if (benefits.resistances && benefits.resistances.length > 0) {
+              sections.subclass.features.push({
+                name: `${choiceName} - Resistances`,
+                type: "Choice Benefit",
+                source: character.subclass,
+                level: parseInt(level) || null,
+                description: `Damage resistances gained from ${choiceName}`,
+                details: benefits.resistances.map(
+                  (res) => `Resistance to ${res} damage`
+                ),
+              });
+            }
+
+            if (benefits.languages && benefits.languages.length > 0) {
+              sections.subclass.features.push({
+                name: `${choiceName} - Languages`,
+                type: "Choice Benefit",
+                source: character.subclass,
+                level: parseInt(level) || null,
+                description: `Languages gained from ${choiceName}`,
+                details: benefits.languages,
+              });
+            }
+          }
         });
       }
     }
 
-    // BACKGROUND SECTION
     if (character.background && backgroundsData?.[character.background]) {
       const backgroundData = backgroundsData[character.background];
 
@@ -310,7 +396,6 @@ const CharacterFeatsDisplay = ({
         ].filter(Boolean),
       });
 
-      // Display background skills
       if (character.backgroundSkills && character.backgroundSkills.length > 0) {
         sections.background.features.push({
           name: "Background Skills",
@@ -338,7 +423,6 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Display background features
       if (backgroundData.features) {
         backgroundData.features.forEach((feature) => {
           sections.background.features.push({
@@ -353,7 +437,6 @@ const CharacterFeatsDisplay = ({
       }
     }
 
-    // INNATE HERITAGE SECTION
     if (
       character.innateHeritage &&
       heritageDescriptions?.[character.innateHeritage]
@@ -370,7 +453,6 @@ const CharacterFeatsDisplay = ({
         details: [],
       });
 
-      // Display heritage benefits (non-choice)
       if (heritageData.benefits && Array.isArray(heritageData.benefits)) {
         const validBenefits = heritageData.benefits.filter(
           (benefit) =>
@@ -403,11 +485,9 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Display heritage choices made by the user
       if (character.heritageChoices?.[heritageName]) {
         Object.entries(character.heritageChoices[heritageName]).forEach(
           ([featureName, choiceName]) => {
-            // Find the feature and selected option
             const feature = heritageData.features?.find(
               (f) => f.name === featureName
             );
@@ -440,16 +520,13 @@ const CharacterFeatsDisplay = ({
         );
       }
 
-      // Display heritage features with choices that haven't been selected
       if (heritageData.features && heritageData.features.length > 0) {
         heritageData.features.forEach((feature) => {
           if (feature.isChoice && feature.options) {
-            // Check if this choice has been made
             const userChoice =
               character.heritageChoices?.[heritageName]?.[feature.name];
 
             if (!userChoice) {
-              // Show available options if no choice made
               sections.innateHeritage.features.push({
                 name: feature.name,
                 type: "Heritage Choice Feature",
@@ -462,7 +539,6 @@ const CharacterFeatsDisplay = ({
               });
             }
           } else if (!feature.isChoice) {
-            // Non-choice features
             sections.innateHeritage.features.push({
               name: feature.name,
               type: "Heritage Feature",
@@ -475,7 +551,6 @@ const CharacterFeatsDisplay = ({
         });
       }
 
-      // Display chosen heritage skills
       if (
         character.innateHeritageSkills &&
         character.innateHeritageSkills.length > 0
@@ -493,7 +568,6 @@ const CharacterFeatsDisplay = ({
       }
     }
 
-    // FEATS SECTION
     const processedFeats = new Set();
 
     const addFeat = (featName, featType, source, level, featData) => {
@@ -524,7 +598,6 @@ const CharacterFeatsDisplay = ({
       });
     };
 
-    // ASI choice feats
     if (character.asiChoices) {
       Object.entries(character.asiChoices).forEach(([level, choice]) => {
         if (choice.type === "feat" && choice.selectedFeat) {
@@ -543,7 +616,6 @@ const CharacterFeatsDisplay = ({
       });
     }
 
-    // All feats (includes level-based)
     if (character.allFeats && character.allFeats.length > 0) {
       character.allFeats.forEach((featString) => {
         const levelMatch = featString.match(/^(.+?)\s*\(Level\s+(\d+)\)$/);
@@ -573,7 +645,6 @@ const CharacterFeatsDisplay = ({
       });
     }
 
-    // Standard feats
     if (character.standardFeats && character.standardFeats.length > 0) {
       character.standardFeats.forEach((featName) => {
         const featData = standardFeats.find((f) => f.name === featName);
@@ -582,7 +653,6 @@ const CharacterFeatsDisplay = ({
       });
     }
 
-    // Sort features within each section
     Object.keys(sections).forEach((sectionKey) => {
       sections[sectionKey].features.sort((a, b) => {
         const levelA = a.level === null ? Infinity : a.level;

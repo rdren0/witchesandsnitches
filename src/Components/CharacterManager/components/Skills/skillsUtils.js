@@ -209,9 +209,7 @@ export const organizeSkillsBySource = (character) => {
       subclassSkills.includes(skill) ||
       featSkills.includes(skill)
     ) {
-      if (studyBuddySkills.includes(skill)) return true;
-      if (hasExpertiseGranter.length > 0) return true;
-      return false;
+      return studyBuddySkills.includes(skill);
     }
 
     return true;

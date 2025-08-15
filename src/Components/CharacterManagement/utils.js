@@ -513,6 +513,41 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   return { modifiers, heritageDetails };
 };
 
+export const calculateASIModifiers = (character) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const bonusDetails = {};
+
+  if (!character.asiChoices) return { modifiers, bonusDetails };
+
+  Object.entries(character.asiChoices).forEach(([level, choice]) => {
+    if (choice.type === "asi" && choice.abilityScoreIncreases) {
+      choice.abilityScoreIncreases.forEach((increase) => {
+        if (increase.ability && increase.increase) {
+          modifiers[increase.ability] += increase.increase;
+
+          if (!bonusDetails[increase.ability]) {
+            bonusDetails[increase.ability] = [];
+          }
+          bonusDetails[increase.ability].push({
+            source: `Level ${level} ASI`,
+            amount: increase.increase,
+          });
+        }
+      });
+    }
+  });
+
+  return { modifiers, bonusDetails };
+};
+
 export const calculateTotalModifiers = (
   character,
   featChoices = {},
@@ -524,37 +559,62 @@ export const calculateTotalModifiers = (
   const houseResult = calculateHouseModifiers(character, houseChoices);
   const heritageResult = calculateHeritageModifiers(character, heritageChoices);
 
+  const asiAlreadyApplied = detectIfASIAlreadyApplied(character);
+
+  let asiResult;
+  if (asiAlreadyApplied) {
+    asiResult = {
+      modifiers: {
+        strength: 0,
+        dexterity: 0,
+        constitution: 0,
+        intelligence: 0,
+        wisdom: 0,
+        charisma: 0,
+      },
+      bonusDetails: {},
+    };
+  } else {
+    asiResult = calculateASIModifiers(character);
+  }
+
   const totalModifiers = {
     strength:
       featResult.modifiers.strength +
       backgroundResult.modifiers.strength +
       houseResult.modifiers.strength +
-      heritageResult.modifiers.strength,
+      heritageResult.modifiers.strength +
+      asiResult.modifiers.strength,
     dexterity:
       featResult.modifiers.dexterity +
       backgroundResult.modifiers.dexterity +
       houseResult.modifiers.dexterity +
-      heritageResult.modifiers.dexterity,
+      heritageResult.modifiers.dexterity +
+      asiResult.modifiers.dexterity,
     constitution:
       featResult.modifiers.constitution +
       backgroundResult.modifiers.constitution +
       houseResult.modifiers.constitution +
-      heritageResult.modifiers.constitution,
+      heritageResult.modifiers.constitution +
+      asiResult.modifiers.constitution,
     intelligence:
       featResult.modifiers.intelligence +
       backgroundResult.modifiers.intelligence +
       houseResult.modifiers.intelligence +
-      heritageResult.modifiers.intelligence,
+      heritageResult.modifiers.intelligence +
+      asiResult.modifiers.intelligence,
     wisdom:
       featResult.modifiers.wisdom +
       backgroundResult.modifiers.wisdom +
       houseResult.modifiers.wisdom +
-      heritageResult.modifiers.wisdom,
+      heritageResult.modifiers.wisdom +
+      asiResult.modifiers.wisdom,
     charisma:
       featResult.modifiers.charisma +
       backgroundResult.modifiers.charisma +
       houseResult.modifiers.charisma +
-      heritageResult.modifiers.charisma,
+      heritageResult.modifiers.charisma +
+      asiResult.modifiers.charisma,
   };
 
   const allDetails = {};
@@ -564,6 +624,7 @@ export const calculateTotalModifiers = (
       ...(backgroundResult.backgroundDetails[ability] || []),
       ...(houseResult.houseDetails[ability] || []),
       ...(heritageResult.heritageDetails[ability] || []),
+      ...(asiResult.bonusDetails[ability] || []),
     ];
   });
 
@@ -574,5 +635,38 @@ export const calculateTotalModifiers = (
     backgroundModifiers: backgroundResult.modifiers,
     houseModifiers: houseResult.modifiers,
     heritageModifiers: heritageResult.modifiers,
+    asiModifiers: asiResult.modifiers,
+    _asiAlreadyApplied: asiAlreadyApplied,
   };
+};
+export const detectIfASIAlreadyApplied = (character) => {
+  if (character._asiApplied || character.asiApplied) {
+    return true;
+  }
+
+  if (character.baseAbilityScores) {
+    return true;
+  }
+
+  if (character.ability_scores && character.abilityScores) {
+    const oldScores = Object.values(character.ability_scores);
+    const newScores = Object.values(character.abilityScores).filter(
+      (s) => s !== null
+    );
+
+    const oldAllEights = oldScores.every((score) => score === 8);
+    const newAverage =
+      newScores.reduce((sum, score) => sum + score, 0) / newScores.length;
+
+    if (
+      oldAllEights &&
+      newAverage > 10 &&
+      character.asiChoices &&
+      Object.keys(character.asiChoices).length > 0
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 };
