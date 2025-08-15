@@ -488,7 +488,6 @@ const CharacterEditor = ({
           };
         });
       } else if (field === "subclass") {
-        // console.log({ field, value });
         // const background = backgroundsData[value];
         // const newBackgroundSkills =
         //   background && background.skillProficiencies

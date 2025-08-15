@@ -75,15 +75,39 @@ const AbilityScoresSection = ({
     return allFeatChoices;
   };
 
-  const featChoices = getFeatChoices();
+  const calculateASIModifiers = () => {
+    const asiModifiers = {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    };
 
+    if (character.asiChoices) {
+      Object.values(character.asiChoices).forEach((choice) => {
+        if (choice.type === "asi" && choice.abilityScoreIncreases) {
+          choice.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability && increase.increase) {
+              asiModifiers[increase.ability] += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    return asiModifiers;
+  };
+
+  const featChoices = getFeatChoices();
   const houseChoices = character.house_choices || character.houseChoices || {};
   const heritageChoices =
     character.heritage_choices || character.heritageChoices || {};
 
   const {
-    totalModifiers,
-    allDetails,
+    totalModifiers: baseTotalModifiers,
+    allDetails: baseAllDetails,
     featModifiers,
     backgroundModifiers,
     houseModifiers,
@@ -138,6 +162,44 @@ const AbilityScoresSection = ({
           charisma: 0,
         },
       };
+
+  const asiModifiers = calculateASIModifiers();
+  const totalModifiers = {};
+  const allDetails = { ...baseAllDetails };
+
+  Object.keys(baseTotalModifiers).forEach((ability) => {
+    totalModifiers[ability] =
+      baseTotalModifiers[ability] + asiModifiers[ability];
+
+    if (asiModifiers[ability] > 0) {
+      if (!allDetails[ability]) {
+        allDetails[ability] = [];
+      }
+
+      const levelsWithASI = [];
+      if (character.asiChoices) {
+        Object.entries(character.asiChoices).forEach(([level, choice]) => {
+          if (choice.type === "asi" && choice.abilityScoreIncreases) {
+            const hasThisAbility = choice.abilityScoreIncreases.some(
+              (inc) => inc.ability === ability
+            );
+            if (hasThisAbility) {
+              levelsWithASI.push(level);
+            }
+          }
+        });
+      }
+
+      allDetails[ability].push({
+        source: "asi",
+        amount: asiModifiers[ability],
+        levels: levelsWithASI,
+        asiName: `ASI Level${
+          levelsWithASI.length > 1 ? "s" : ""
+        } ${levelsWithASI.join(", ")}`,
+      });
+    }
+  });
 
   const rollStat = useCallback(() => {
     const rolls = Array.from(
@@ -373,6 +435,7 @@ const AbilityScoresSection = ({
       background: [],
       house: [],
       heritage: [],
+      asi: [],
     };
 
     details.forEach((detail) => {
@@ -384,10 +447,19 @@ const AbilityScoresSection = ({
         sourceGroups.house.push(detail);
       } else if (detail.source === "heritage") {
         sourceGroups.heritage.push(detail);
+      } else if (detail.source === "asi") {
+        sourceGroups.asi.push(detail);
       }
     });
 
     const tooltipParts = [];
+
+    if (sourceGroups.asi.length > 0) {
+      const asiBonuses = sourceGroups.asi
+        .map((d) => `${d.asiName} (+${d.amount})`)
+        .join(", ");
+      tooltipParts.push(`ASI: ${asiBonuses}`);
+    }
 
     if (sourceGroups.feat.length > 0) {
       const featBonuses = sourceGroups.feat
@@ -832,6 +904,7 @@ const AbilityScoresSection = ({
             const backgroundBonus = backgroundModifiers[ability] || 0;
             const houseBonus = houseModifiers[ability] || 0;
             const heritageBonus = heritageModifiers[ability] || 0;
+            const asiBonus = asiModifiers[ability] || 0;
             const actualScore = isManualMode ? score || 8 : score;
             const effectiveScore =
               actualScore !== null ? actualScore + totalBonus : null;
@@ -868,6 +941,11 @@ const AbilityScoresSection = ({
               >
                 <div style={componentStyles.abilityName}>
                   {ability.charAt(0).toUpperCase() + ability.slice(1)}
+                  {asiBonus > 0 && (
+                    <span style={componentStyles.modifierBonus}>
+                      +{asiBonus}
+                    </span>
+                  )}
                   {featBonus > 0 && (
                     <span style={componentStyles.modifierBonus}>
                       +{featBonus}
@@ -967,6 +1045,7 @@ const AbilityScoresSection = ({
                       {score !== null && hasModifier && (
                         <div style={componentStyles.scoreBreakdown}>
                           Base: {actualScore}
+                          {asiBonus > 0 && ` + ASI: ${asiBonus}`}
                           {featBonus > 0 && ` + Feat: ${featBonus}`}
                           {backgroundBonus > 0 && ` + Bg: ${backgroundBonus}`}
                           {houseBonus > 0 && ` + House: ${houseBonus}`}
@@ -998,6 +1077,7 @@ const AbilityScoresSection = ({
                                   }}
                                 >
                                   {actualScore}
+                                  {asiBonus > 0 && ` + ${asiBonus}`}
                                   {featBonus > 0 && ` + ${featBonus}`}
                                   {backgroundBonus > 0 &&
                                     ` + ${backgroundBonus}`}
@@ -1102,7 +1182,7 @@ const AbilityScoresSection = ({
         >
           💡 Tip: Use + and - buttons to adjust ability scores (1-40)
           {showModifiers &&
-            " • House, feat, background, and heritage bonuses are automatically added to your base scores"}
+            " • House, feat, background, heritage, and ASI bonuses are automatically added to your base scores"}
         </div>
       )}
     </div>

@@ -510,7 +510,7 @@ const CharacterSheet = ({
 
       if (data) {
         const baseAbilityScores = data.ability_scores || {};
-        const asiChoices = data.asi_choices || {};
+        const asiChoices = {};
         const effectiveAbilityScores = calculateEffectiveAbilityScores(
           baseAbilityScores,
           asiChoices
