@@ -36,9 +36,11 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
     const rolled = Math.floor(Math.random() * castingHpData.base) + 1 + conMod;
-    setRolledHp(Math.max(1, rolled));
-    onChange("hitPoints", Math.max(1, rolled));
-    onChange("currentHitPoints", Math.max(1, rolled));
+    const totalHp = Math.max(1, rolled * (character.level || 1));
+
+    setRolledHp(totalHp);
+    onChange("hitPoints", totalHp);
+    onChange("currentHitPoints", totalHp);
   };
 
   const hpStyles = {
@@ -123,7 +125,7 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     hitDie: {
       padding: "4px 8px",
       backgroundColor: theme.primary,
-      color: "white",
+      color: theme.text,
       borderRadius: "4px",
       fontSize: "12px",
       fontWeight: "600",
@@ -131,15 +133,15 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     modifier: {
       padding: "4px 8px",
       backgroundColor: conMod >= 0 ? theme.success : theme.error,
-      color: "white",
+      color: theme.text,
       borderRadius: "4px",
       fontSize: "12px",
       fontWeight: "600",
     },
     constitutionScore: {
       padding: "4px 8px",
-      backgroundColor: theme.textSecondary,
-      color: "white",
+      backgroundColor: theme.background,
+      color: theme.text,
       borderRadius: "4px",
       fontSize: "12px",
       fontWeight: "600",
@@ -155,8 +157,8 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
       alignItems: "center",
       gap: "8px",
       padding: "10px 16px",
-      backgroundColor: "#EF4444",
-      color: "white",
+      backgroundColor: theme.warning,
+      color: theme.text,
       border: "none",
       borderRadius: "6px",
       fontSize: "14px",
@@ -169,7 +171,7 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     toggleButton: {
       padding: "10px 16px",
       backgroundColor: isHpManualMode ? theme.success : theme.textSecondary,
-      color: "white",
+      color: theme.text,
       border: "none",
       borderRadius: "6px",
       fontSize: "14px",

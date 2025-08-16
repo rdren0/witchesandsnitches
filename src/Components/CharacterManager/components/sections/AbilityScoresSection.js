@@ -532,7 +532,7 @@ const AbilityScoresSection = ({
       ...styles.button,
       ...styles.buttonSecondary,
       backgroundColor: "#EF4444",
-      color: "white",
+      color: theme.text,
       display: "flex",
       alignItems: "center",
       gap: "8px",
@@ -554,7 +554,7 @@ const AbilityScoresSection = ({
       left: isManualMode ? "22px" : "2px",
       width: "16px",
       height: "16px",
-      backgroundColor: "white",
+      backgroundcolor: theme.text,
       borderRadius: "50%",
       transition: "left 0.2s ease",
       boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
@@ -570,7 +570,7 @@ const AbilityScoresSection = ({
     modeIndicator: {
       padding: "2px 6px",
       backgroundColor: isManualMode ? "#10B981" : "#EF4444",
-      color: "white",
+      color: theme.text,
       borderRadius: "4px",
       fontSize: "10px",
       fontWeight: "bold",
@@ -596,9 +596,9 @@ const AbilityScoresSection = ({
     statBadge: {
       padding: "4px 8px",
       backgroundColor: theme.primary,
-      color: "white",
+      color: theme.text,
       borderRadius: "4px",
-      fontSize: "12px",
+      fontSize: "16px",
       fontWeight: "bold",
     },
     abilityGrid: {
@@ -646,7 +646,7 @@ const AbilityScoresSection = ({
     effectiveScore: {
       fontSize: "14px",
       fontWeight: "bold",
-      color: "#8b5cf6",
+      color: theme.primary,
     },
     scoreBreakdown: {
       fontSize: "10px",
@@ -703,20 +703,19 @@ const AbilityScoresSection = ({
     trashButton: {
       ...styles.button,
       ...styles.buttonSecondary,
-      backgroundColor: "#EF4444",
-      color: "white",
+      backgroundColor: theme.error,
+      color: theme.text,
       padding: "4px 8px",
       marginTop: "8px",
     },
     modifierBonus: {
-      color: "#10B981",
+      color: theme.success,
       fontSize: "10px",
       fontWeight: "bold",
       marginLeft: "2px",
     },
     bonusesSection: {
-      background:
-        "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 25%, rgba(168, 85, 247, 0.1) 50%, rgba(139, 92, 246, 0.1) 100%)",
+      background: theme.surface,
       border: "1px solid rgba(139, 92, 246, 0.3)",
       borderRadius: "6px",
       padding: "12px",
@@ -870,10 +869,10 @@ const AbilityScoresSection = ({
                 Available Base Stats to Assign:
               </span>
             )}
-            <span style={{ fontSize: "12px", color: theme.textSecondary }}>
+            <span style={{ fontSize: "24px", color: theme.textSecondary }}>
               Total: {rolledStats.reduce((sum, stat) => sum + stat, 0)}
               {allStatsAssigned() && (
-                <span style={{ color: "#10B981", marginLeft: "8px" }}>
+                <span style={{ color: theme.success, marginLeft: "8px" }}>
                   ✓ Complete
                 </span>
               )}
@@ -1155,8 +1154,8 @@ const AbilityScoresSection = ({
                     style={{
                       fontSize: "11px",
                       padding: "2px 6px",
-                      backgroundColor: "#8b5cf6",
-                      color: "white",
+                      backgroundColor: theme.primary,
+                      color: theme.text,
                       borderRadius: "4px",
                       cursor: "help",
                     }}
