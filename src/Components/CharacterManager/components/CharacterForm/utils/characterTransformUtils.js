@@ -22,18 +22,6 @@ export const transformCharacterForSave = (character) => {
   }
 
   return {
-    name: character.name?.trim() || "",
-    level: character.level || 1,
-    casting_style: character.castingStyle,
-    school_year: character.schoolYear || 1,
-
-    house: character.house,
-    subclass: character.subclass,
-    background: character.background,
-
-    level1_choice_type: character.level1ChoiceType,
-    innate_heritage: character.innateHeritage,
-
     ability_scores: character.abilityScores || {
       strength: 8,
       dexterity: 8,
@@ -42,33 +30,37 @@ export const transformCharacterForSave = (character) => {
       wisdom: 8,
       charisma: 8,
     },
-
-    base_ability_scores: character.baseAbilityScores || null,
-
-    hit_points: character.hitPoints || 0,
-    current_hit_points: character.currentHitPoints || character.hitPoints || 0,
-    current_hit_dice: character.level || 1,
-
-    skill_proficiencies: skillProficiencies,
-    skill_expertise: skillExpertise,
-    innate_heritage_skills: character.innateHeritageSkills || [],
-
-    standard_feats: allFeats,
     asi_choices: character.asiChoices || {},
-    feat_choices: character.featChoices || {},
-    house_choices: character.houseChoices || {},
-    subclass_choices: character.subclassChoices || {},
-    heritage_choices: character.heritageChoices || {},
-
-    game_session: character.gameSession || "",
-    discord_user_id: character.discordUserId || character.discord_user_id || "",
-    magic_modifiers: character.magicModifiers || {},
-    initiative_ability: character.initiativeAbility || "dexterity",
-    wand_type: character.wandType || "",
-    image_url: character.imageUrl || character.image_url || null,
-
+    background: character.background,
+    base_ability_scores: character.baseAbilityScores || null,
+    casting_style: character.castingStyle,
     corruption_points: character.corruptionPoints || 0,
+    current_hit_dice: character.level || 1,
+    current_hit_points: character.currentHitPoints || character.hitPoints || 0,
+    discord_user_id: character.discordUserId || character.discord_user_id || "",
+    feat_choices: character.featChoices || {},
+    game_session: character.gameSession || "",
+    heritage_choices: character.heritageChoices || {},
+    hit_points: character.hitPoints || 0,
+    house_choices: character.houseChoices || {},
+    house: character.house,
+    image_url: character.imageUrl || character.image_url || null,
+    initiative_ability: character.initiativeAbility || "dexterity",
+    innate_heritage_skills: character.innateHeritageSkills || [],
+    innate_heritage: character.innateHeritage,
+    level: character.level || 1,
+    level1_choice_type: character.level1ChoiceType,
+    magic_modifiers: character.magicModifiers || {},
+    name: character.name?.trim() || "",
+    notes: character.notes || null,
+    school_year: character.schoolYear || 1,
+    skill_expertise: skillExpertise,
+    skill_proficiencies: skillProficiencies,
+    standard_feats: allFeats,
+    subclass_choices: character.subclassChoices || {},
+    subclass: character.subclass,
     tool_proficiencies: character.toolProficiencies || [],
+    wand_type: character.wandType || "",
   };
 };
 
@@ -76,20 +68,6 @@ export const transformCharacterFromDB = (dbCharacter) => {
   if (!dbCharacter) return null;
 
   return {
-    id: dbCharacter.id,
-    name: dbCharacter.name || "",
-    level: dbCharacter.level || 1,
-    castingStyle: dbCharacter.casting_style,
-    schoolYear: dbCharacter.school_year || 1,
-
-    house: dbCharacter.house,
-    subclass: dbCharacter.subclass,
-    background: dbCharacter.background,
-
-    level1ChoiceType: dbCharacter.level1_choice_type,
-    innateHeritage: dbCharacter.innate_heritage,
-    selectedInnateHeritage: dbCharacter.innate_heritage,
-
     abilityScores: dbCharacter.ability_scores || {
       strength: 8,
       dexterity: 8,
@@ -98,17 +76,35 @@ export const transformCharacterFromDB = (dbCharacter) => {
       wisdom: 8,
       charisma: 8,
     },
-
+    asiChoices: dbCharacter.asi_choices || {},
+    background: dbCharacter.background,
     baseAbilityScores: dbCharacter.base_ability_scores || null,
-
-    hitPoints: dbCharacter.hit_points || 0,
-    currentHitPoints: dbCharacter.current_hit_points || 0,
+    castingStyle: dbCharacter.casting_style,
+    corruptionPoints: dbCharacter.corruption_points || 0,
+    createdAt: dbCharacter.created_at,
     currentHitDice: dbCharacter.current_hit_dice || 1,
-
-    skillProficiencies: dbCharacter.skill_proficiencies || [],
-    skillExpertise: dbCharacter.skill_expertise || [],
+    currentHitPoints: dbCharacter.current_hit_points || 0,
+    discordUserId: dbCharacter.discord_user_id || "",
+    featChoices: dbCharacter.feat_choices || {},
+    gameSession: dbCharacter.game_session || "",
+    heritageChoices: dbCharacter.heritage_choices || {},
+    hitPoints: dbCharacter.hit_points || 0,
+    house: dbCharacter.house,
+    houseChoices: dbCharacter.house_choices || {},
+    id: dbCharacter.id,
+    imageUrl: dbCharacter.image_url || null,
+    initiativeAbility: dbCharacter.initiative_ability || "dexterity",
+    innateHeritage: dbCharacter.innate_heritage,
     innateHeritageSkills: dbCharacter.innate_heritage_skills || [],
-
+    level: dbCharacter.level || 1,
+    level1ChoiceType: dbCharacter.level1_choice_type,
+    magicModifiers: dbCharacter.magic_modifiers || {},
+    name: dbCharacter.name || "",
+    notes: dbCharacter.notes || "",
+    schoolYear: dbCharacter.school_year || 1,
+    selectedInnateHeritage: dbCharacter.innate_heritage,
+    skillExpertise: dbCharacter.skill_expertise || [],
+    skillProficiencies: dbCharacter.skill_proficiencies || [],
     standardFeats: (() => {
       if (dbCharacter.standard_feats && dbCharacter.standard_feats.length > 0) {
         return dbCharacter.standard_feats;
@@ -123,24 +119,10 @@ export const transformCharacterFromDB = (dbCharacter) => {
 
       return [];
     })(),
-
-    asiChoices: dbCharacter.asi_choices || {},
-    featChoices: dbCharacter.feat_choices || {},
-    houseChoices: dbCharacter.house_choices || {},
+    subclass: dbCharacter.subclass,
     subclassChoices: dbCharacter.subclass_choices || {},
-    heritageChoices: dbCharacter.heritage_choices || {},
-
-    gameSession: dbCharacter.game_session || "",
-    discordUserId: dbCharacter.discord_user_id || "",
-    magicModifiers: dbCharacter.magic_modifiers || {},
-    initiativeAbility: dbCharacter.initiative_ability || "dexterity",
-    wandType: dbCharacter.wand_type || "",
-    imageUrl: dbCharacter.image_url || null,
-
-    corruptionPoints: dbCharacter.corruption_points || 0,
     toolProficiencies: dbCharacter.tool_proficiencies || [],
-
-    createdAt: dbCharacter.created_at,
     updatedAt: dbCharacter.updated_at,
+    wandType: dbCharacter.wand_type || "",
   };
 };

@@ -9,12 +9,19 @@ import { getAllAbilityModifiers } from "../utils/characterUtils";
 
 export const useCharacterData = (characterId = null, userId = null) => {
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
+  const [originalCharacter, setOriginalCharacter] = useState(DEFAULT_CHARACTER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [hasChanges, setHasChanges] = useState(false);
+
+  const hasChanges =
+    JSON.stringify(character) !== JSON.stringify(originalCharacter);
 
   const loadCharacter = useCallback(async () => {
-    if (!characterId || !userId) return;
+    if (!characterId || !userId) {
+      setCharacter(DEFAULT_CHARACTER);
+      setOriginalCharacter(DEFAULT_CHARACTER);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -33,11 +40,13 @@ export const useCharacterData = (characterId = null, userId = null) => {
             loadedCharacter.base_ability_scores;
         }
 
-        setCharacter({
+        const finalCharacter = {
           ...DEFAULT_CHARACTER,
           ...transformedCharacter,
-        });
-        setHasChanges(false);
+        };
+
+        setCharacter(finalCharacter);
+        setOriginalCharacter(finalCharacter);
       }
     } catch (err) {
       console.error("Error loading character:", err);
@@ -63,7 +72,6 @@ export const useCharacterData = (characterId = null, userId = null) => {
 
       return updated;
     });
-    setHasChanges(true);
   }, []);
 
   const updateCharacterBulk = useCallback((updates) => {
@@ -71,14 +79,12 @@ export const useCharacterData = (characterId = null, userId = null) => {
       ...prev,
       ...updates,
     }));
-    setHasChanges(true);
   }, []);
 
   const resetCharacter = useCallback(() => {
-    setCharacter(DEFAULT_CHARACTER);
-    setHasChanges(false);
+    setCharacter(originalCharacter);
     setError(null);
-  }, []);
+  }, [originalCharacter]);
 
   const saveCharacter = useCallback(async () => {
     if (!userId) {
@@ -111,9 +117,7 @@ export const useCharacterData = (characterId = null, userId = null) => {
 
       const characterWithFinalScores = {
         ...character,
-
         abilityScores: finalAbilityScores,
-
         baseAbilityScores: baseScores,
       };
 
@@ -139,14 +143,16 @@ export const useCharacterData = (characterId = null, userId = null) => {
           transformedResult.abilityScores = result.base_ability_scores;
         }
 
-        setCharacter((prev) => ({
-          ...prev,
+        const savedCharacter = {
+          ...character,
           ...transformedResult,
-        }));
-        setHasChanges(false);
-      }
+        };
 
-      return result;
+        setCharacter(savedCharacter);
+        setOriginalCharacter(savedCharacter);
+
+        return result;
+      }
     } catch (err) {
       console.error("Error saving character:", err);
       setError(err.message);
@@ -157,9 +163,7 @@ export const useCharacterData = (characterId = null, userId = null) => {
   }, [character, userId]);
 
   useEffect(() => {
-    if (characterId && userId) {
-      loadCharacter();
-    }
+    loadCharacter();
   }, [loadCharacter]);
 
   return {
