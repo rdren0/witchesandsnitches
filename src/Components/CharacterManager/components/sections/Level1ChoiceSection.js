@@ -74,10 +74,10 @@ const Level1ChoiceSection = ({
   };
 
   const choiceContainerStyle = {
-    display: "flex",
+    display: "grid",
     gap: "16px",
     marginBottom: "24px",
-    flexWrap: "wrap",
+    gridTemplateColumns: "repeat(2, 1fr)",
   };
 
   const choiceLabelStyle = (isSelected) => ({
