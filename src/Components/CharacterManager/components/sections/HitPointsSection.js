@@ -299,7 +299,8 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             {rolledHp !== null && (
               <div style={hpStyles.calculationRow}>
                 <span style={{ color: theme.success, fontSize: "14px" }}>
-                  Rolled: {castingHpData.hitDie} + {conMod} CON = {rolledHp}
+                  Rolled: ({castingHpData.hitDie} + {conMod}) ×{" "}
+                  {character.level || 1} CON = {rolledHp}
                 </span>
               </div>
             )}
