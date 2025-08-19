@@ -367,7 +367,7 @@ export const spellsData = {
       ],
       "1st Level": [
         {
-          name: "Arrest Momentum",
+          name: "Arresto Momentum",
           class: ["Charms"],
           level: "1st Level",
           castingTime:
