@@ -321,17 +321,14 @@ const GameSessionInspirationManager = ({ supabase }) => {
         .from("characters")
         .select(
           `
-          id,
-          name,
-          level,
-          game_session,
-          discord_user_id,
-          active,
-          archived_at,
-          character_resources (
-            inspiration
-          )
-        `
+        id,
+        name,
+        level,
+        game_session,
+        discord_user_id,
+        active,
+        archived_at
+      `
         )
         .eq("active", true)
         .order("game_session")
@@ -341,9 +338,34 @@ const GameSessionInspirationManager = ({ supabase }) => {
         throw charactersError;
       }
 
+      const characterIds = characters.map((c) => c.id);
+      const { data: resources, error: resourcesError } = await supabase
+        .from("character_resources")
+        .select("character_id, discord_user_id, inspiration")
+        .in("character_id", characterIds);
+
+      if (resourcesError) {
+        throw resourcesError;
+      }
+
+      const resourceMap = new Map();
+      resources.forEach((resource) => {
+        const key = `${resource.character_id}-${resource.discord_user_id}`;
+        resourceMap.set(key, resource);
+      });
+
+      const charactersWithResources = characters.map((character) => {
+        const key = `${character.id}-${character.discord_user_id}`;
+        const resource = resourceMap.get(key);
+        return {
+          ...character,
+          hasInspiration: resource?.inspiration || false,
+        };
+      });
+
       const sessionsMap = new Map();
 
-      characters.forEach((character) => {
+      charactersWithResources.forEach((character) => {
         if (
           !character.game_session ||
           character.game_session.trim() === "" ||
@@ -364,16 +386,10 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }
 
         const session = sessionsMap.get(sessionName);
-        const hasInspiration =
-          character.character_resources?.[0]?.inspiration || false;
 
-        session.characters.push({
-          ...character,
-          hasInspiration,
-        });
-
+        session.characters.push(character);
         session.totalCharacters++;
-        if (hasInspiration) {
+        if (character.hasInspiration) {
           session.withInspiration++;
         }
       });
@@ -385,52 +401,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
             a.name.localeCompare(b.name)
           ),
         }))
-        .sort((a, b) => {
-          const today = new Date().getDay();
-
-          const dayMap = {
-            Sunday: 0,
-            Monday: 1,
-            Tuesday: 2,
-            Wednesday: 3,
-            Thursday: 4,
-            Friday: 5,
-            Saturday: 6,
-          };
-
-          const getDayFromSession = (sessionName) => {
-            const dayPart = sessionName.split(" - ")[0];
-            return dayMap[dayPart];
-          };
-
-          const dayA = getDayFromSession(a.name);
-          const dayB = getDayFromSession(b.name);
-
-          if (dayA === undefined && dayB === undefined) {
-            return a.name.localeCompare(b.name);
-          }
-          if (dayA === undefined) return 1;
-          if (dayB === undefined) return -1;
-
-          const getPriority = (day) => {
-            return (day - today + 7) % 7;
-          };
-
-          const priorityA = getPriority(dayA);
-          const priorityB = getPriority(dayB);
-
-          if (priorityA !== priorityB) {
-            return priorityA - priorityB;
-          }
-
-          const indexA = gameSessionOptions.indexOf(a.name);
-          const indexB = gameSessionOptions.indexOf(b.name);
-
-          if (indexA === -1) return 1;
-          if (indexB === -1) return -1;
-
-          return indexA - indexB;
-        });
+        .sort((a, b) => {});
 
       setSessions(sessionsArray);
     } catch (err) {
@@ -451,23 +422,56 @@ const GameSessionInspirationManager = ({ supabase }) => {
     setUpdating((prev) => new Set(prev).add(updateKey));
 
     try {
-      const { error: updateError } = await supabase
+      const { data: existingRecord, error: checkError } = await supabase
         .from("character_resources")
-        .upsert(
-          {
+        .select("*")
+        .eq("character_id", characterId)
+        .eq("discord_user_id", discordUserId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking for existing record:", checkError);
+        throw checkError;
+      }
+
+      let result;
+
+      if (existingRecord) {
+        console.log("Updating existing record for:", characterName);
+        result = await supabase
+          .from("character_resources")
+          .update({
+            inspiration: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("character_id", characterId)
+          .eq("discord_user_id", discordUserId)
+          .select();
+      } else {
+        console.log("Creating new record for:", characterName);
+        result = await supabase
+          .from("character_resources")
+          .insert({
             character_id: characterId,
             discord_user_id: discordUserId,
             inspiration: true,
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "character_id,discord_user_id",
-          }
-        );
 
-      if (updateError) {
-        throw updateError;
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select();
       }
+
+      if (result.error) {
+        console.error("Database operation error:", result.error);
+        throw result.error;
+      }
+
+      if (!result.data || result.data.length === 0) {
+        throw new Error("No data returned from database operation");
+      }
+
+      console.log("Successfully updated/created record:", result.data);
 
       const discordWebhookUrl = getDiscordWebhook(gameSession);
       if (discordWebhookUrl) {
@@ -515,8 +519,10 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }))
       );
     } catch (err) {
-      console.error("Error granting inspiration:", err);
-      alert(`Failed to grant inspiration: ${err.message}`);
+      console.error("Error granting inspiration - Full error:", err);
+      alert(
+        `Failed to grant inspiration: ${err.message || JSON.stringify(err)}`
+      );
     } finally {
       setUpdating((prev) => {
         const newSet = new Set(prev);
