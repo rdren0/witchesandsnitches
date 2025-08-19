@@ -321,14 +321,14 @@ const GameSessionInspirationManager = ({ supabase }) => {
         .from("characters")
         .select(
           `
-        id,
-        name,
-        level,
-        game_session,
-        discord_user_id,
-        active,
-        archived_at
-      `
+          id,
+          name,
+          level,
+          game_session,
+          discord_user_id,
+          active,
+          archived_at
+        `
         )
         .eq("active", true)
         .order("game_session")
@@ -338,11 +338,9 @@ const GameSessionInspirationManager = ({ supabase }) => {
         throw charactersError;
       }
 
-      const characterIds = characters.map((c) => c.id);
       const { data: resources, error: resourcesError } = await supabase
         .from("character_resources")
-        .select("character_id, discord_user_id, inspiration")
-        .in("character_id", characterIds);
+        .select("character_id, discord_user_id, inspiration");
 
       if (resourcesError) {
         throw resourcesError;
@@ -354,18 +352,19 @@ const GameSessionInspirationManager = ({ supabase }) => {
         resourceMap.set(key, resource);
       });
 
-      const charactersWithResources = characters.map((character) => {
+      const charactersWithInspiration = characters.map((character) => {
         const key = `${character.id}-${character.discord_user_id}`;
-        const resource = resourceMap.get(key);
+        const matchingResource = resourceMap.get(key);
+
         return {
           ...character,
-          hasInspiration: resource?.inspiration || false,
+          hasInspiration: matchingResource?.inspiration || false,
         };
       });
 
       const sessionsMap = new Map();
 
-      charactersWithResources.forEach((character) => {
+      charactersWithInspiration.forEach((character) => {
         if (
           !character.game_session ||
           character.game_session.trim() === "" ||
@@ -401,7 +400,52 @@ const GameSessionInspirationManager = ({ supabase }) => {
             a.name.localeCompare(b.name)
           ),
         }))
-        .sort((a, b) => {});
+        .sort((a, b) => {
+          const today = new Date().getDay();
+
+          const dayMap = {
+            Sunday: 0,
+            Monday: 1,
+            Tuesday: 2,
+            Wednesday: 3,
+            Thursday: 4,
+            Friday: 5,
+            Saturday: 6,
+          };
+
+          const getDayFromSession = (sessionName) => {
+            const dayPart = sessionName.split(" - ")[0];
+            return dayMap[dayPart];
+          };
+
+          const dayA = getDayFromSession(a.name);
+          const dayB = getDayFromSession(b.name);
+
+          if (dayA === undefined && dayB === undefined) {
+            return a.name.localeCompare(b.name);
+          }
+          if (dayA === undefined) return 1;
+          if (dayB === undefined) return -1;
+
+          const getPriority = (day) => {
+            return (day - today + 7) % 7;
+          };
+
+          const priorityA = getPriority(dayA);
+          const priorityB = getPriority(dayB);
+
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+
+          const indexA = gameSessionOptions.indexOf(a.name);
+          const indexB = gameSessionOptions.indexOf(b.name);
+
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+
+          return indexA - indexB;
+        });
 
       setSessions(sessionsArray);
     } catch (err) {
