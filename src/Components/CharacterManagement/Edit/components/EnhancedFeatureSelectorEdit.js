@@ -15,6 +15,17 @@ const getSpellcastingAbility = (character) => {
   return abilityMap[castingStyle] || "intelligence";
 };
 
+const normalizeValue = (value) => {
+  if (typeof value === "object" && value !== null) {
+    if ("bonus" in value) return value.bonus;
+    if ("value" in value) return value.value;
+    if ("amount" in value) return value.amount;
+
+    return 0;
+  }
+  return value;
+};
+
 const calculateAllFeatBenefits = (
   selectedFeats,
   character,
@@ -137,9 +148,11 @@ const calculateAllFeatBenefits = (
     if (Object.keys(featBenefits.speeds || {}).length > 0) {
       Object.entries(featBenefits.speeds).forEach(([speedType, value]) => {
         if (!benefits.speeds[speedType]) benefits.speeds[speedType] = [];
+
+        const normalizedValue = normalizeValue(value);
         benefits.speeds[speedType].push({
           source: featName,
-          value: value,
+          value: normalizedValue,
         });
       });
     }
@@ -149,9 +162,12 @@ const calculateAllFeatBenefits = (
         ([bonusType, value]) => {
           if (!benefits.combatBonuses[bonusType])
             benefits.combatBonuses[bonusType] = [];
+
+          const normalizedValue = normalizeValue(value);
+
           benefits.combatBonuses[bonusType].push({
             source: featName,
-            value: value,
+            value: normalizedValue,
           });
         }
       );
@@ -162,9 +178,12 @@ const calculateAllFeatBenefits = (
         ([benefitType, value]) => {
           if (!benefits.spellcastingBenefits[benefitType])
             benefits.spellcastingBenefits[benefitType] = [];
+
+          const normalizedValue = normalizeValue(value);
+
           benefits.spellcastingBenefits[benefitType].push({
             source: featName,
-            value: value,
+            value: normalizedValue,
           });
         }
       );
@@ -299,7 +318,7 @@ const ComprehensiveFeatBenefitPills = ({
                   : bonusType.slice(0, 4).toUpperCase()}
               </span>
               <span style={styles.pillModifier}>
-                {typeof bonus.value === "number" ? `+${bonus.value}` : "✓"}
+                {typeof bonus.value === "number" ? `+${bonus.value}` : "✔"}
               </span>
             </div>
           ))
@@ -310,13 +329,13 @@ const ComprehensiveFeatBenefitPills = ({
             <div
               key={`speed-${speedType}-${index}`}
               style={styles.speedPill}
-              title={`${speedType} speed: ${speed.value} from ${speed.source}`}
+              title={`${speedType} speed: +${speed.value} from ${speed.source}`}
             >
               <span style={styles.pillAbility}>
                 {speedType.slice(0, 4).toUpperCase()}
               </span>
               <span style={styles.pillModifier}>
-                {speed.value === "equal_to_walking" ? "=" : speed.value}
+                {speed.value === "equal_to_walking" ? "=" : `+${speed.value}`}
               </span>
             </div>
           ))
