@@ -37,6 +37,10 @@ export const sendDiscordRollWebhook = async ({
       embed.thumbnail = {
         url: character.imageUrl,
       };
+    } else if (character?.image_url) {
+      embed.thumbnail = {
+        url: character.image_url,
+      };
     }
 
     if (rollResult) {
