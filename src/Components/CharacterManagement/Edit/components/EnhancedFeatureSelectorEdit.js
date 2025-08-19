@@ -15,14 +15,12 @@ const getSpellcastingAbility = (character) => {
   return abilityMap[castingStyle] || "intelligence";
 };
 
-// Helper function to safely extract value from potential object structures
 const normalizeValue = (value) => {
   if (typeof value === "object" && value !== null) {
-    // Check for common object patterns
     if ("bonus" in value) return value.bonus;
     if ("value" in value) return value.value;
     if ("amount" in value) return value.amount;
-    // If it's an object but doesn't match known patterns, return a default
+
     return 0;
   }
   return value;
@@ -150,7 +148,7 @@ const calculateAllFeatBenefits = (
     if (Object.keys(featBenefits.speeds || {}).length > 0) {
       Object.entries(featBenefits.speeds).forEach(([speedType, value]) => {
         if (!benefits.speeds[speedType]) benefits.speeds[speedType] = [];
-        // Normalize the value in case it's an object with a 'bonus' property
+
         const normalizedValue = normalizeValue(value);
         benefits.speeds[speedType].push({
           source: featName,
@@ -165,7 +163,6 @@ const calculateAllFeatBenefits = (
           if (!benefits.combatBonuses[bonusType])
             benefits.combatBonuses[bonusType] = [];
 
-          // Normalize the value in case it's an object with a 'bonus' property
           const normalizedValue = normalizeValue(value);
 
           benefits.combatBonuses[bonusType].push({
@@ -182,7 +179,6 @@ const calculateAllFeatBenefits = (
           if (!benefits.spellcastingBenefits[benefitType])
             benefits.spellcastingBenefits[benefitType] = [];
 
-          // Normalize the value in case it's an object
           const normalizedValue = normalizeValue(value);
 
           benefits.spellcastingBenefits[benefitType].push({
