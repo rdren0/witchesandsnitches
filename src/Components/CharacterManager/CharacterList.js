@@ -221,6 +221,7 @@ const CharacterList = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            borderRadius: "120px",
           }}
         >
           {character.imageUrl ? (
