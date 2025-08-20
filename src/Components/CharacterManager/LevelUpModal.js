@@ -14,7 +14,7 @@ import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { standardFeats } from "../../SharedData/standardFeatData";
 import { hpData } from "../../SharedData/data";
 import { checkFeatPrerequisites } from "../CharacterSheet/utils";
-import { getAllSelectedFeats } from "../CharacterManagement/utils";
+import { getAllSelectedFeats } from "./utils/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const LevelUpModal = ({

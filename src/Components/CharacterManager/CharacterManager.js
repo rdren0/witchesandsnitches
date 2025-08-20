@@ -4,8 +4,8 @@ import { Users, Plus, Crown } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import { characterService } from "../../services/characterService";
+
 import CharacterForm from "./components/CharacterForm/CharacterForm";
-import CharacterEditor from "./CharacterEditor";
 import CharacterList from "./CharacterList";
 import LevelUpModal from "./LevelUpModal";
 
@@ -26,66 +26,22 @@ const CharacterManager = ({
   const currentMode = mode || "list";
   const sectionToOpen = searchParams.get("section");
 
-  const [editingCharacter, setEditingCharacter] = useState(null);
   const [levelingUpCharacter, setLevelingUpCharacter] = useState(null);
   const [selectedTargetUserId, setSelectedTargetUserId] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
   const [viewMode, setViewMode] = useState("my");
-  const [characterLoading, setCharacterLoading] = useState(false);
+  const [isUserDataReady, setIsUserDataReady] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
   useEffect(() => {
-    if (currentMode === "edit" && characterId && user) {
-      loadCharacterForEditing(characterId);
+    if (discordUserId) {
+      setIsUserDataReady(true);
+    } else {
+      setIsUserDataReady(false);
     }
-  }, [characterId, currentMode, user, adminMode, isUserAdmin]);
-
-  useEffect(() => {
-    if (currentMode !== "edit") {
-      setEditingCharacter(null);
-      setLevelingUpCharacter(null);
-    }
-  }, [currentMode]);
-
-  const loadCharacterForEditing = async (charId) => {
-    if (!user || !discordUserId) {
-      return;
-    }
-
-    setCharacterLoading(true);
-    try {
-      let character;
-
-      if (adminMode && isUserAdmin) {
-        character = await characterService.getCharacterByIdAdmin(charId);
-      } else {
-        character = await characterService.getCharacterById(
-          charId,
-          discordUserId
-        );
-      }
-
-      if (character) {
-        setEditingCharacter(character);
-      } else {
-        console.error("Character not found");
-        navigate("/character-management");
-      }
-    } catch (error) {
-      console.error("Error loading character:", error);
-
-      if (error.message.includes("Character not found")) {
-        alert("Character not found or you don't have permission to edit it.");
-      } else {
-        alert("Failed to load character. Please try again.");
-      }
-
-      navigate("/character-management");
-    } finally {
-      setCharacterLoading(false);
-    }
-  };
+  }, [discordUserId]);
 
   useEffect(() => {
     if (adminMode && isUserAdmin) {
@@ -105,26 +61,22 @@ const CharacterManager = ({
     }
   };
 
-  const handleCharacterSaved = async (updatedCharacter, skipSave = false) => {
+  const handleCharacterSaved = async (updatedCharacter) => {
     try {
-      if (!skipSave) {
-        const effectiveUserId =
-          adminMode && isUserAdmin
-            ? selectedTargetUserId || discordUserId
-            : discordUserId;
+      console.log("CharacterManager: Triggering refresh after level up");
+      setRefreshTrigger((prev) => {
+        const newValue = prev + 1;
+        console.log(
+          "CharacterManager: refreshTrigger changing from",
+          prev,
+          "to",
+          newValue
+        );
+        return newValue;
+      });
 
-        if (updatedCharacter.id) {
-          await characterService.updateCharacter(
-            updatedCharacter.id,
-            updatedCharacter,
-            effectiveUserId
-          );
-        } else {
-          await characterService.saveCharacter(
-            updatedCharacter,
-            effectiveUserId
-          );
-        }
+      if (adminMode && isUserAdmin) {
+        await loadAllCharacters();
       }
 
       if (onCharacterSaved) {
@@ -133,8 +85,7 @@ const CharacterManager = ({
 
       navigate("/character-management");
     } catch (error) {
-      console.error("Error saving character:", error);
-      alert("Failed to save character. Please try again.");
+      console.error("Error in handleCharacterSaved:", error);
     }
   };
 
@@ -144,6 +95,32 @@ const CharacterManager = ({
 
   const handleLevelUpCharacter = (character) => {
     setLevelingUpCharacter(character);
+  };
+
+  const handleLevelUpSave = async (updatedCharacter) => {
+    try {
+      await characterService.updateCharacter(
+        updatedCharacter.id,
+        updatedCharacter,
+        updatedCharacter.discord_user_id || discordUserId
+      );
+
+      setLevelingUpCharacter(null);
+
+      if (adminMode && isUserAdmin) {
+        const newCharacters = await characterService.getAllCharacters();
+        setAllCharacters(newCharacters);
+      }
+
+      setRefreshTrigger((prev) => prev + 1);
+
+      if (onCharacterSaved) {
+        onCharacterSaved(updatedCharacter);
+      }
+    } catch (error) {
+      console.error("Error saving level up:", error);
+      alert("Failed to save level up changes. Please try again.");
+    }
   };
 
   const handleDeleteCharacter = async (character) => {
@@ -162,6 +139,8 @@ const CharacterManager = ({
           await characterService.deleteCharacter(character.id, discordUserId);
         }
 
+        setRefreshTrigger((prev) => prev + 1);
+
         if (adminMode && isUserAdmin) {
           await loadAllCharacters();
         }
@@ -175,30 +154,7 @@ const CharacterManager = ({
     }
   };
 
-  const handleLevelUpSave = async (updatedCharacter) => {
-    try {
-      await characterService.updateCharacter(
-        updatedCharacter.id,
-        updatedCharacter,
-        updatedCharacter.discord_user_id
-      );
-
-      setLevelingUpCharacter(null);
-
-      if (adminMode && isUserAdmin) {
-        await loadAllCharacters();
-      }
-
-      if (onCharacterSaved) {
-        onCharacterSaved(updatedCharacter);
-      }
-    } catch (error) {
-      console.error("Error saving level up:", error);
-      alert("Failed to save level up changes. Please try again.");
-    }
-  };
-
-  if (!user || !discordUserId) {
+  if (!user || !discordUserId || !isUserDataReady) {
     return (
       <div
         style={{
@@ -236,10 +192,10 @@ const CharacterManager = ({
     },
   ];
 
-  if (currentMode === "edit" && editingCharacter) {
+  if (currentMode === "edit" && characterId) {
     tabs.push({
       key: "edit",
-      label: `Edit ${editingCharacter.name}`,
+      label: `Edit Character`,
       icon: Users,
       active: true,
       onClick: () => {},
@@ -293,88 +249,6 @@ const CharacterManager = ({
         })}
       </div>
     );
-  };
-
-  const renderContent = () => {
-    switch (currentMode) {
-      case "create":
-        return (
-          <CharacterForm
-            mode="create"
-            userId={discordUserId}
-            onSave={(character) => {
-              handleCharacterSaved(character, true);
-            }}
-            onCancel={() => navigate("/character-management")}
-            supabase={supabase}
-          />
-        );
-
-      case "edit":
-        if (characterLoading) {
-          return (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "400px",
-                color: theme.textSecondary,
-              }}
-            >
-              Loading character...
-            </div>
-          );
-        }
-
-        if (!editingCharacter) {
-          return (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "400px",
-                color: theme.textSecondary,
-              }}
-            >
-              Character not found
-            </div>
-          );
-        }
-
-        return (
-          <CharacterEditor
-            character={editingCharacter}
-            onSave={handleCharacterSaved}
-            onCancel={() => navigate("/character-management")}
-            user={user}
-            supabase={supabase}
-            adminMode={adminMode}
-            isUserAdmin={isUserAdmin}
-            selectedTargetUserId={selectedTargetUserId}
-            sectionToOpen={sectionToOpen}
-          />
-        );
-
-      default:
-        return (
-          <>
-            {renderViewModeToggle()}
-            <CharacterList
-              user={user}
-              adminMode={adminMode}
-              isUserAdmin={isUserAdmin}
-              viewMode={viewMode}
-              allCharacters={allCharacters}
-              onEditCharacter={handleEditCharacter}
-              onLevelUpCharacter={handleLevelUpCharacter}
-              onDeleteCharacter={handleDeleteCharacter}
-              supabase={supabase}
-            />
-          </>
-        );
-    }
   };
 
   const renderAdminModeIndicator = () => {
@@ -468,7 +342,53 @@ const CharacterManager = ({
     >
       {renderAdminModeIndicator()}
       {renderTabNavigation()}
-      {renderContent()}
+
+      {currentMode === "list" && (
+        <>
+          {renderViewModeToggle()}
+          <CharacterList
+            user={user}
+            adminMode={adminMode}
+            isUserAdmin={isUserAdmin}
+            viewMode={viewMode}
+            allCharacters={allCharacters}
+            onEditCharacter={handleEditCharacter}
+            onLevelUpCharacter={handleLevelUpCharacter}
+            onDeleteCharacter={handleDeleteCharacter}
+            supabase={supabase}
+            refreshTrigger={refreshTrigger}
+          />
+        </>
+      )}
+
+      {currentMode === "create" && (
+        <CharacterForm
+          userId={discordUserId}
+          mode="create"
+          onSave={handleCharacterSaved}
+          onCancel={() => navigate("/character-management")}
+          supabase={supabase}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
+          selectedTargetUserId={selectedTargetUserId}
+          onTargetUserChange={setSelectedTargetUserId}
+          initialSection={sectionToOpen}
+        />
+      )}
+
+      {currentMode === "edit" && characterId && (
+        <CharacterForm
+          characterId={characterId}
+          userId={discordUserId}
+          mode="edit"
+          onSave={handleCharacterSaved}
+          onCancel={() => navigate("/character-management")}
+          supabase={supabase}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
+          initialSection={sectionToOpen}
+        />
+      )}
 
       {levelingUpCharacter && (
         <LevelUpModal

@@ -10,13 +10,12 @@ import {
   Calendar,
   Edit3,
   TrendingUp,
+  User,
 } from "lucide-react";
 
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../styles/masterStyles";
 import { characterService } from "../../services/characterService";
-import CharacterEditor from "./CharacterEditor";
-import { gameSessionOptions } from "../../App/const";
 
 const CharacterList = ({
   user,
@@ -25,11 +24,14 @@ const CharacterList = ({
   onSelectedCharacterReset,
   onEditCharacter,
   onLevelUpCharacter,
+  onDeleteCharacter,
   onCreateNew,
   supabase,
   adminMode = false,
   isUserAdmin = false,
   allCharacters = undefined,
+  viewMode = "my",
+  refreshTrigger = 0,
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterCreationStyles(theme);
@@ -38,13 +40,27 @@ const CharacterList = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [editingCharacter, setEditingCharacter] = useState(null);
-  const [sortBy, setSortBy] = useState("created");
+  const [sortBy, setSortBy] = useState("level");
   const [sortDirection, setSortDirection] = useState("desc");
   const [filterValue, setFilterValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const discordUserId = user?.user_metadata?.provider_id;
+
+  const getAvailableGameSessions = () => {
+    const sessionCounts = {};
+    savedCharacters.forEach((char) => {
+      if (char.gameSession) {
+        sessionCounts[char.gameSession] =
+          (sessionCounts[char.gameSession] || 0) + 1;
+      }
+    });
+    return Object.entries(sessionCounts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([session, count]) => ({ session, count }));
+  };
+
+  const availableGameSessions = getAvailableGameSessions();
 
   const loadCharacters = useCallback(async () => {
     if (!discordUserId && !adminMode) return;
@@ -55,7 +71,9 @@ const CharacterList = ({
     try {
       let charactersData;
 
-      if (adminMode && isUserAdmin) {
+      if (adminMode && isUserAdmin && allCharacters) {
+        charactersData = allCharacters;
+      } else if (adminMode && isUserAdmin) {
         charactersData = await characterService.getAllCharacters();
       } else {
         charactersData = await characterService.getCharacters(discordUserId);
@@ -72,310 +90,356 @@ const CharacterList = ({
         createdAt: char.created_at,
         currentHitDice: char.current_hit_dice || char.level,
         currentHitPoints: char.current_hit_points ?? char.hit_points,
-        gameSession: char.game_session,
+        discordUserId: char.discord_user_id,
+        featChoices: char.feat_choices || {},
+        gameSession: char.game_session || char.gameSession,
         hitPoints: char.hit_points,
         house: char.house,
         houseChoices: char.house_choices || {},
         id: char.id,
-        initiativeAbility: char.initiative_ability || "dexterity",
+        imageUrl: char.image_url,
+        initiativeAbility: char.initiative_ability,
         innateHeritage: char.innate_heritage,
-        imageUrl: char.image_url || "",
         level: char.level,
-        level1ChoiceType: char.level1_choice_type || "",
-        magicModifiers: char.magic_modifiers || {
-          divinations: 0,
-          charms: 0,
-          transfiguration: 0,
-          healing: 0,
-          jinxesHexesCurses: 0,
-        },
+        level1ChoiceType: char.level1_choice_type,
+        magicModifiers: char.magic_modifiers || {},
+        maxHitDice: char.max_hit_dice || char.level,
         name: char.name,
-        skillProficiencies: char.skill_proficiencies || [],
-        skillExpertise: char.skill_expertise || [],
-        standardFeats: char.standard_feats || [],
         schoolYear: char.school_year,
+        skillExpertise: char.skill_expertise || [],
+        skillProficiencies: char.skill_proficiencies || [],
+        standardFeats: char.standard_feats || [],
         subclass: char.subclass,
         subclassChoices: char.subclass_choices || {},
+        tempHitPoints: char.temp_hit_points || 0,
         updatedAt: char.updated_at,
-        wandType: char.wand_type || "",
-
-        discordUserId: char.discord_user_id,
-        ownerInfo: char.discord_users
-          ? {
-              username: char.discord_users.username,
-              displayName: char.discord_users.display_name,
-            }
-          : null,
+        wandCore: char.wand_core,
+        wandFlexibility: char.wand_flexibility,
+        wandLength: char.wand_length,
+        wandType: char.wand_type,
+        wandWood: char.wand_wood,
       }));
 
-      const sortedCharacters = transformedCharacters.sort((a, b) => {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      let filteredCharacters = transformedCharacters;
+      if (viewMode === "my" && !adminMode) {
+        filteredCharacters = transformedCharacters.filter(
+          (char) => char.discordUserId === discordUserId
+        );
+      }
 
-      setSavedCharacters(sortedCharacters);
+      setSavedCharacters(filteredCharacters);
     } catch (err) {
       console.error("Error loading characters:", err);
-      setError(err.message);
+      setError("Failed to load characters. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }, [discordUserId, adminMode, isUserAdmin]);
+  }, [discordUserId, adminMode, isUserAdmin, allCharacters, viewMode]);
 
   useEffect(() => {
-    if (adminMode && allCharacters) {
-      const transformedCharacters = allCharacters.map((char) => ({
-        abilityScores: char.ability_scores,
-        asiChoices: char.asi_choices || {},
-        background: char.background,
-        backgroundSkills: char.background_skills || [],
-        heritageChoices: char.heritage_choices || {},
-        innateHeritageSkills: char.innate_heritage_skills || [],
-        castingStyle: char.casting_style,
-        createdAt: char.created_at,
-        currentHitDice: char.current_hit_dice || char.level,
-        currentHitPoints: char.current_hit_points ?? char.hit_points,
-        gameSession: char.game_session,
-        hitPoints: char.hit_points,
-        house: char.house,
-        houseChoices: char.house_choices || {},
-        id: char.id,
-        initiativeAbility: char.initiative_ability || "dexterity",
-        innateHeritage: char.innate_heritage,
-        level: char.level,
-        imageUrl: char.image_url || "",
-        level1ChoiceType: char.level1_choice_type || "",
-        magicModifiers: char.magic_modifiers || {
-          divinations: 0,
-          charms: 0,
-          transfiguration: 0,
-          healing: 0,
-          jinxesHexesCurses: 0,
-        },
-        name: char.name,
-        schoolYear: char.school_year,
-        skillProficiencies: char.skill_proficiencies || [],
-        skillExpertise: char.skill_expertise || [],
-        standardFeats: char.standard_feats || [],
-        subclass: char.subclass,
-        subclassChoices: char.subclass_choices || {},
-        updatedAt: char.updated_at,
-        wandType: char.wand_type || "",
+    loadCharacters();
+  }, [loadCharacters, refreshTrigger]);
 
-        discordUserId: char.discord_user_id,
-        ownerInfo: char.discord_users
-          ? {
-              username: char.discord_users.username,
-              displayName: char.discord_users.display_name,
-            }
-          : null,
-      }));
-      setSavedCharacters(transformedCharacters);
-    } else {
-      loadCharacters();
+  useEffect(() => {
+    if (
+      filterValue &&
+      !availableGameSessions.some(({ session }) => session === filterValue)
+    ) {
+      setFilterValue("");
     }
-  }, [adminMode, allCharacters, loadCharacters]);
+  }, [availableGameSessions, filterValue]);
 
-  const handleEdit = (character) => {
-    if (onEditCharacter) {
-      onEditCharacter(character);
-    } else {
-      setEditingCharacter(character);
-    }
-  };
-
-  const handleLevelUp = (character) => {
-    if (onLevelUpCharacter) {
-      onLevelUpCharacter(character);
-    }
-  };
-
-  const handleArchive = async (character) => {
-    const effectiveUserId =
-      adminMode && isUserAdmin ? character.discordUserId : discordUserId;
-
-    const confirmMessage =
-      adminMode && character.discordUserId !== discordUserId
-        ? `Are you sure you want to delete "${
-            character.name
-          }"? This character belongs to ${
-            character.ownerInfo?.displayName ||
-            character.ownerInfo?.username ||
-            "another user"
-          }.`
-        : `Are you sure you want to delete "${character.name}"? This action cannot be undone.`;
-
-    if (!window.confirm(confirmMessage)) return;
-
-    try {
-      await characterService.deleteCharacter(character.id, effectiveUserId);
-
-      setSavedCharacters((prev) =>
-        prev.filter((char) => char.id !== character.id)
-      );
-
-      if (selectedCharacterId === character.id) {
-        onSelectedCharacterReset();
-      }
-
-      alert(`Character "${character.name}" has been deleted.`);
-    } catch (error) {
-      console.error("Error deleting character:", error);
-      alert(`Failed to delete character: ${error.message}`);
-    }
-  };
-
-  const handleSaveEdit = async (editedCharacter) => {
-    try {
-      setSavedCharacters((prev) =>
-        prev.map((char) =>
-          char.id === editedCharacter.id
-            ? { ...char, ...editedCharacter }
-            : char
-        )
-      );
-
-      setEditingCharacter(null);
-      alert(`Character "${editedCharacter.name}" updated successfully!`);
-    } catch (error) {
-      console.error("Error updating character:", error);
-      alert(`Failed to update character: ${error.message}`);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCharacter(null);
-  };
-
-  const getSortedAndFilteredCharacters = () => {
-    let filtered = savedCharacters;
-
-    if (searchTerm) {
-      filtered = filtered.filter((char) =>
-        char.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (filterValue) {
-      if (adminMode) {
-        filtered = filtered.filter((char) => char.gameSession === filterValue);
-      } else {
-        filtered = filtered.filter((char) => char.house === filterValue);
-      }
-    }
-
-    filtered.sort((a, b) => {
-      let aValue, bValue;
-
+  const sortedAndFilteredCharacters = savedCharacters
+    .filter((char) => {
+      const matchesSearch = searchTerm
+        ? char.name.toLowerCase().includes(searchTerm.toLowerCase())
+        : true;
+      const matchesFilter = filterValue
+        ? char.gameSession === filterValue
+        : true;
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
       switch (sortBy) {
         case "name":
-          aValue = a.name;
-          bValue = b.name;
+          comparison = a.name.localeCompare(b.name);
           break;
         case "level":
-          aValue = a.level;
-          bValue = b.level;
-          break;
-        case "house":
-          aValue = a.house;
-          bValue = b.house;
+          comparison = a.level - b.level;
           break;
         case "created":
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
-          break;
-        case "updated":
-          aValue = new Date(a.updatedAt || a.createdAt);
-          bValue = new Date(b.updatedAt || b.createdAt);
-          break;
         default:
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
+          comparison = new Date(a.createdAt) - new Date(b.createdAt);
+          break;
       }
-
-      if (sortDirection === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
+      return sortDirection === "asc" ? comparison : -comparison;
     });
 
-    return filtered;
-  };
-
-  const handleSort = (newSortBy) => {
-    if (sortBy === newSortBy) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(newSortBy);
-      setSortDirection("asc");
+  const handleDeleteCharacter = async (character) => {
+    if (onDeleteCharacter) {
+      await onDeleteCharacter(character);
     }
   };
 
-  const getFilterOptions = () => {
-    if (adminMode) {
-      return gameSessionOptions;
-    } else {
-      return gameSessionOptions.filter((game) =>
-        savedCharacters.find((char) => game === char.gameSession)
-      );
-    }
-  };
+  const renderCharacterCard = (character) => {
+    const isSelectedCharacter = selectedCharacterId === character.id;
 
-  const filteredCharacters = getSortedAndFilteredCharacters();
-  if (editingCharacter) {
     return (
-      <CharacterEditor
-        character={editingCharacter}
-        onSave={handleSaveEdit}
-        onCancel={handleCancelEdit}
-        user={user}
-        customUsername={customUsername}
-        supabase={supabase}
-        adminMode={adminMode}
-        isUserAdmin={isUserAdmin}
-      />
+      <div
+        key={character.id}
+        style={{
+          ...styles.panel,
+          padding: "20px",
+          marginBottom: "16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "20px",
+          cursor: "pointer",
+          border: isSelectedCharacter
+            ? `2px solid ${theme.primary}`
+            : `1px solid ${theme.border}`,
+          backgroundColor: isSelectedCharacter
+            ? theme.surface
+            : theme.background,
+          transition: "all 0.2s ease",
+          boxShadow: isSelectedCharacter
+            ? `0 4px 12px ${theme.primary}20`
+            : "0 2px 4px rgba(0,0,0,0.1)",
+        }}
+        onClick={() => onEditCharacter && onEditCharacter(character)}
+      >
+        <div
+          style={{
+            width: "80px",
+            height: "80px",
+            borderRadius: "12px",
+            overflow: "hidden",
+            backgroundColor: theme.surface,
+            border: `2px solid ${theme.border}`,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {character.imageUrl ? (
+            <img
+              src={character.imageUrl}
+              alt={character.name}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              onError={(e) => {
+                e.target.style.display = "none";
+                if (e.target.nextSibling) {
+                  e.target.nextSibling.style.display = "flex";
+                }
+              }}
+            />
+          ) : null}
+          <div
+            style={{
+              display: character.imageUrl ? "none" : "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+              backgroundColor: theme.surface,
+            }}
+          >
+            <User size={32} style={{ color: theme.textSecondary }} />
+          </div>
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <h3
+            style={{
+              ...styles.title,
+              fontSize: "20px",
+              marginBottom: "6px",
+              color: theme.text,
+            }}
+          >
+            {character.name}
+          </h3>
+          <p
+            style={{
+              ...styles.subtitle,
+              fontSize: "14px",
+              marginBottom: "4px",
+            }}
+          >
+            Level {character.level} {character.castingStyle}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "4px",
+                backgroundColor: `${theme.primary}20`,
+                color: theme.primary,
+                fontSize: "12px",
+                fontWeight: "500",
+              }}
+            >
+              {character.house}
+            </span>
+            {character.subclass && (
+              <span
+                style={{
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  backgroundColor: `${theme.secondary}20`,
+                  color: theme.secondary,
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}
+              >
+                {character.subclass}
+              </span>
+            )}
+            {character.gameSession && (
+              <span
+                style={{
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                  backgroundColor: theme.surface,
+                  color: theme.textSecondary,
+                  fontSize: "11px",
+                }}
+              >
+                {character.gameSession}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onLevelUpCharacter && onLevelUpCharacter(character);
+            }}
+            style={{
+              ...styles.button,
+              backgroundColor: theme.success,
+              color: "white",
+              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              borderRadius: "6px",
+              fontSize: "13px",
+            }}
+            title="Level Up"
+          >
+            <TrendingUp size={14} />
+            <span
+              style={{ display: window.innerWidth > 768 ? "inline" : "none" }}
+            >
+              Level Up
+            </span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditCharacter && onEditCharacter(character);
+            }}
+            style={{
+              ...styles.button,
+              backgroundColor: theme.primary,
+              color: "white",
+              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              borderRadius: "6px",
+              fontSize: "13px",
+            }}
+            title="Edit"
+          >
+            <Edit3 size={14} />
+            <span
+              style={{ display: window.innerWidth > 768 ? "inline" : "none" }}
+            >
+              Edit
+            </span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteCharacter(character);
+            }}
+            style={{
+              ...styles.button,
+              backgroundColor: theme.error,
+              color: "white",
+              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              borderRadius: "6px",
+              fontSize: "13px",
+            }}
+            title="Delete"
+          >
+            <Trash2 size={14} />
+            <span
+              style={{ display: window.innerWidth > 768 ? "inline" : "none" }}
+            >
+              Delete
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  if (isLoading && savedCharacters.length === 0) {
+    return (
+      <div style={{ ...styles.panel, padding: "40px", textAlign: "center" }}>
+        <p style={styles.subtitle}>Loading characters...</p>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <div style={styles.panel}>
-        <div style={styles.errorContainer}>
-          <AlertCircle size={48} color={theme.error} />
-          <h3>Error Loading Characters</h3>
-          <p>{error}</p>
-          <button onClick={loadCharacters} style={styles.button}>
-            Try Again
-          </button>
-        </div>
+      <div style={{ ...styles.panel, padding: "40px", textAlign: "center" }}>
+        <AlertCircle
+          size={24}
+          style={{ color: theme.error, marginBottom: "8px" }}
+        />
+        <p style={{ color: theme.error }}>{error}</p>
       </div>
     );
   }
 
-  return (
-    <div style={styles.panel}>
-      <div
-        style={{
-          ...styles.header,
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <div style={{ color: theme.primary }}>
-          <Users />
-        </div>
-        <div style={{ flex: 1 }}>
-          <h1 style={styles.title}>
-            {adminMode ? "All Characters" : "My Characters"}
-          </h1>
-          <p style={styles.subtitle}>
-            {adminMode
-              ? "Manage all characters in the system (Admin Mode)"
-              : "Manage your characters, level up, edit details, and create duplicates"}
-          </p>
-        </div>
+  if (savedCharacters.length === 0) {
+    return (
+      <div style={{ ...styles.panel, padding: "60px", textAlign: "center" }}>
+        <Users
+          size={64}
+          style={{ color: theme.textSecondary, marginBottom: "20px" }}
+        />
+        <h3 style={{ ...styles.title, fontSize: "24px", marginBottom: "8px" }}>
+          No Characters Yet
+        </h3>
+        <p style={{ ...styles.subtitle, marginBottom: "24px" }}>
+          Create your first character to get started!
+        </p>
         {onCreateNew && (
           <button
             onClick={onCreateNew}
@@ -383,301 +447,161 @@ const CharacterList = ({
               ...styles.button,
               backgroundColor: theme.primary,
               color: "white",
-              display: "flex",
+              padding: "14px 28px",
+              display: "inline-flex",
               alignItems: "center",
               gap: "8px",
+              fontSize: "16px",
+              borderRadius: "8px",
             }}
           >
-            <Plus size={16} />
-            Create New
+            <Plus size={18} />
+            Create Character
           </button>
         )}
       </div>
+    );
+  }
 
-      <div style={styles.filtersContainer}>
-        <div style={styles.searchContainer}>
+  return (
+    <div>
+      <div
+        style={{
+          ...styles.panel,
+          padding: "20px",
+          marginBottom: "24px",
+          position: "relative",
+        }}
+      >
+        {isLoading && savedCharacters.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: "8px",
+              right: "8px",
+              padding: "4px 8px",
+              backgroundColor: theme.primary,
+              color: "white",
+              borderRadius: "4px",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            Refreshing...
+          </div>
+        )}
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <input
             type="text"
-            placeholder="Search characters..."
+            placeholder="Search characters by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
+            style={{
+              ...styles.input,
+              flex: "1 1 250px",
+              margin: 0,
+              padding: "10px 14px",
+              fontSize: "14px",
+            }}
           />
-        </div>
 
-        <div style={styles.filterContainer}>
           <select
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            style={styles.filterSelect}
+            style={{
+              ...styles.select,
+              padding: "10px 14px",
+              fontSize: "14px",
+              minWidth: "250px",
+            }}
+            disabled={availableGameSessions.length === 0}
           >
-            <option value="">All Game Sessions</option>
-            {getFilterOptions().map((option) => (
-              <option key={option} value={option}>
-                {option}
+            <option value="">
+              All Sessions{" "}
+              {savedCharacters.length > 0 && `(${savedCharacters.length})`}
+            </option>
+            {availableGameSessions.map(({ session, count }) => (
+              <option key={session} value={session}>
+                {session} ({count})
               </option>
             ))}
+            {availableGameSessions.length === 0 && (
+              <option value="" disabled>
+                No sessions available
+              </option>
+            )}
           </select>
-        </div>
 
-        <div style={styles.sortContainer}>
-          <button
-            onClick={() => handleSort("name")}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
             style={{
-              ...styles.sortButton,
-              ...(sortBy === "name" ? styles.activeSortButton : {}),
+              ...styles.select,
+              padding: "10px 14px",
+              fontSize: "14px",
+              minWidth: "140px",
             }}
           >
-            Name
-            {sortBy === "name" && (
-              <ArrowUp
-                size={12}
-                style={{
-                  transform:
-                    sortDirection === "desc" ? "rotate(180deg)" : "none",
-                }}
-              />
-            )}
-          </button>
+            <option value="level">Sort by Level</option>
+            <option value="name">Sort by Name</option>
+            <option value="created">Sort by Date</option>
+          </select>
+
           <button
-            onClick={() => handleSort("level")}
+            onClick={() =>
+              setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+            }
             style={{
-              ...styles.sortButton,
-              ...(sortBy === "level" ? styles.activeSortButton : {}),
+              ...styles.button,
+              backgroundColor: theme.surface,
+              color: theme.text,
+              padding: "10px 14px",
+              fontSize: "18px",
+              borderRadius: "6px",
+              minWidth: "44px",
             }}
+            title={
+              sortDirection === "asc" ? "Sort Ascending" : "Sort Descending"
+            }
           >
-            Level
-            {sortBy === "level" && (
-              <ArrowUp
-                size={12}
-                style={{
-                  transform:
-                    sortDirection === "desc" ? "rotate(180deg)" : "none",
-                }}
-              />
-            )}
-          </button>
-          <button
-            onClick={() => handleSort("created")}
-            style={{
-              ...styles.sortButton,
-              ...(sortBy === "created" ? styles.activeSortButton : {}),
-            }}
-          >
-            Created
-            {sortBy === "created" && (
-              <ArrowUp
-                size={12}
-                style={{
-                  transform:
-                    sortDirection === "desc" ? "rotate(180deg)" : "none",
-                }}
-              />
-            )}
+            {sortDirection === "asc" ? "↑" : "↓"}
           </button>
         </div>
       </div>
 
-      {isLoading ? (
-        <div style={styles.loadingContainer}>Loading characters...</div>
-      ) : filteredCharacters.length === 0 ? (
-        <div style={styles.noCharactersContainer}>
-          <Users size={48} color={theme.textSecondary} />
-          <h3>
-            {savedCharacters.length === 0
-              ? adminMode
-                ? "No characters found in the system."
-                : "You haven't created any characters yet."
-              : "No characters match your search criteria."}
-          </h3>
-          <p>
-            {savedCharacters.length === 0
-              ? 'Click "Create New Character" to get started!'
-              : "Try adjusting your search or filter settings."}
+      <div
+        style={{
+          opacity: isLoading && savedCharacters.length > 0 ? 0.7 : 1,
+          transition: "opacity 0.2s ease",
+        }}
+      >
+        {sortedAndFilteredCharacters.map(renderCharacterCard)}
+      </div>
+
+      {sortedAndFilteredCharacters.length > 0 && (
+        <div
+          style={{
+            ...styles.panel,
+            padding: "16px",
+            marginTop: "24px",
+            textAlign: "center",
+          }}
+        >
+          <p style={styles.subtitle}>
+            Showing {sortedAndFilteredCharacters.length} of{" "}
+            {savedCharacters.length} characters
+            {searchTerm && ` matching "${searchTerm}"`}
+            {filterValue && ` in ${filterValue}`}
           </p>
-        </div>
-      ) : (
-        <div style={styles.charactersGrid}>
-          {filteredCharacters.map((character) => {
-            const isSelected =
-              selectedCharacterId &&
-              selectedCharacterId.toString() === character.id.toString();
-            const isOwnCharacter = character.discordUserId === discordUserId;
-            const canEdit = isOwnCharacter || (adminMode && isUserAdmin);
-
-            return (
-              <div
-                key={character.id}
-                style={{
-                  ...styles.characterCard,
-                  ...(isSelected ? styles.characterCardSelected : {}),
-                  position: "relative",
-                }}
-              >
-                <div style={styles.characterCardHeader}>
-                  <div style={styles.characterCardTitle}>
-                    <div style={styles.characterNameSection}>
-                      <h3 style={styles.characterCardName}>{character.name}</h3>
-                    </div>
-                    <div style={styles.characterLevel}>
-                      Level {character.level}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={styles.characterCardBody}>
-                  {adminMode && character.ownerInfo && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: theme.textSecondary,
-                        marginBottom: "8px",
-                        fontStyle: "italic",
-                        textAlign: "center",
-                      }}
-                    >
-                      Owner:{" "}
-                      {character.ownerInfo.displayName ||
-                        character.ownerInfo.username}
-                    </div>
-                  )}
-
-                  <div style={styles.characterInfoRow}>
-                    <div style={styles.characterInfoItem}>
-                      <Shield size={14} color={theme.primary} />
-                      <span>{character.house}</span>
-                    </div>
-                    <div style={styles.characterInfoItem}>
-                      <Star size={14} color={theme.secondary} />
-                      <span>{character.castingStyle}</span>
-                    </div>
-                  </div>
-
-                  {character.gameSession && (
-                    <div style={styles.characterInfoRow}>
-                      <div style={styles.characterInfoItem}>
-                        <Calendar size={14} color={theme.textSecondary} />
-                        <span>{character.gameSession}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div style={styles.characterStats}>
-                    <div style={styles.statBadge}>
-                      <span style={styles.statLabel}>HP:</span>
-                      <span style={styles.statValue}>
-                        {character.currentHitPoints}/{character.hitPoints}
-                      </span>
-                    </div>
-
-                    {character.innateHeritage && (
-                      <div style={styles.heritageBadge}>
-                        <Star size={12} />
-                        {character.innateHeritage}
-                      </div>
-                    )}
-
-                    {character.standardFeats &&
-                      character.standardFeats.length > 0 && (
-                        <div style={styles.featsBadge}>
-                          <Plus size={12} />
-                          {character.standardFeats.length} Feat
-                          {character.standardFeats.length > 1 ? "s" : ""}
-                        </div>
-                      )}
-                  </div>
-
-                  {character.subclass && (
-                    <div style={styles.subclassInfo}>
-                      <span style={styles.subclassLabel}>Subclass:</span>
-                      <span style={styles.subclassValue}>
-                        {character.subclass}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div style={styles.characterCardActions}>
-                  {canEdit && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(character)}
-                        style={{
-                          ...styles.actionButton,
-                          ...styles.editButton,
-                        }}
-                        title="Edit character"
-                      >
-                        <Edit3 size={14} />
-                        Edit
-                      </button>
-
-                      {character.level < 20 && (
-                        <button
-                          onClick={() => handleLevelUp(character)}
-                          style={{
-                            ...styles.actionButton,
-                            ...styles.levelUpButton,
-                          }}
-                          title="Level up character"
-                        >
-                          <TrendingUp size={14} />
-                          Level Up
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => handleArchive(character)}
-                        style={{
-                          ...styles.actionButton,
-                          ...styles.deleteButton,
-                        }}
-                        title="Delete character"
-                      >
-                        <Trash2 size={14} />
-                        Delete
-                      </button>
-                    </>
-                  )}
-
-                  {!canEdit && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: theme.textSecondary,
-                        fontStyle: "italic",
-                        textAlign: "center",
-                        padding: "8px",
-                      }}
-                    >
-                      View Only
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {filteredCharacters.length > 0 && (
-        <div style={styles.summaryContainer}>
-          <div style={styles.summaryStats}>
-            <div style={styles.summaryItem}>
-              <span style={styles.summaryLabel}>
-                {adminMode ? "Total Characters:" : "Total Characters:"}
-              </span>
-              <span style={styles.summaryValue}>{savedCharacters.length}</span>
-            </div>
-            {(searchTerm || filterValue) && (
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Showing:</span>
-                <span style={styles.summaryValue}>
-                  {filteredCharacters.length}
-                </span>
-              </div>
-            )}
-          </div>
         </div>
       )}
     </div>

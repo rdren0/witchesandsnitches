@@ -1,6 +1,6 @@
 import React from "react";
-import { useTheme } from "../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../styles/masterStyles";
+import { useTheme } from "../../../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../../../styles/masterStyles";
 
 const SchoolYearSelector = ({
   schoolYear,

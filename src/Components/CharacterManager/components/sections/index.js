@@ -1,4 +1,4 @@
-export { default as BasicInfoSection } from "./BasicInfoSection";
+export { default as BasicInfoSection } from "./BasicInfo/BasicInfoSection";
 export { default as AbilityScoresSection } from "./AbilityScoresSection";
 export { default as HitPointsSection } from "./HitPointsSection";
 export { default as BackgroundSection } from "./BackgroundSection";
