@@ -63,15 +63,9 @@ const CharacterManager = ({
 
   const handleCharacterSaved = async (updatedCharacter) => {
     try {
-      console.log("CharacterManager: Triggering refresh after level up");
       setRefreshTrigger((prev) => {
         const newValue = prev + 1;
-        console.log(
-          "CharacterManager: refreshTrigger changing from",
-          prev,
-          "to",
-          newValue
-        );
+
         return newValue;
       });
 

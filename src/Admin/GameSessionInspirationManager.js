@@ -481,7 +481,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
       let result;
 
       if (existingRecord) {
-        console.log("Updating existing record for:", characterName);
         result = await supabase
           .from("character_resources")
           .update({
@@ -492,7 +491,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
           .eq("discord_user_id", discordUserId)
           .select();
       } else {
-        console.log("Creating new record for:", characterName);
         result = await supabase
           .from("character_resources")
           .insert({
@@ -514,8 +512,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
       if (!result.data || result.data.length === 0) {
         throw new Error("No data returned from database operation");
       }
-
-      console.log("Successfully updated/created record:", result.data);
 
       const discordWebhookUrl = getDiscordWebhook(gameSession);
       if (discordWebhookUrl) {
