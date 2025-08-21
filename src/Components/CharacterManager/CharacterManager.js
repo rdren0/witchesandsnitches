@@ -373,7 +373,7 @@ const CharacterManager = ({
       {currentMode === "edit" && characterId && (
         <CharacterForm
           characterId={characterId}
-          userId={discordUserId}
+          userId={adminMode && isUserAdmin ? null : discordUserId}
           mode="edit"
           onSave={handleCharacterSaved}
           onCancel={() => navigate("/character-management")}
@@ -384,14 +384,16 @@ const CharacterManager = ({
         />
       )}
 
-      {levelingUpCharacter && (
-        <LevelUpModal
-          character={levelingUpCharacter}
-          isOpen={!!levelingUpCharacter}
-          onSave={handleLevelUpSave}
-          onCancel={() => setLevelingUpCharacter(null)}
-          user={user}
+      {currentMode === "create" && (
+        <CharacterForm
+          userId={discordUserId}
+          mode="create"
+          onSave={handleCharacterSaved}
+          onCancel={() => navigate("/character-management")}
           supabase={supabase}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
+          initialSection={sectionToOpen}
         />
       )}
     </div>

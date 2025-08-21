@@ -33,6 +33,8 @@ const CharacterForm = ({
   onSave,
   onCancel,
   supabase,
+  adminMode = false,
+  isUserAdmin = false,
 }) => {
   const { theme } = useTheme();
   const styles = createBaseStyles(theme);
@@ -51,7 +53,7 @@ const CharacterForm = ({
     updateCharacterBulk,
     saveCharacter,
     resetCharacter,
-  } = useCharacterData(characterId, userId);
+  } = useCharacterData(characterId, userId, adminMode, isUserAdmin);
 
   const {
     sectionLocks,
@@ -461,7 +463,7 @@ const CharacterForm = ({
           disabled={sectionLocks.abilityScores}
           mode={mode}
           featChoices={getAllSelectedFeats(character)}
-          houseChoices={character.houseChoices || {}}
+          houseChoices={character.houseChoices || character.house_choices}
           heritageChoices={character.heritageChoices || {}}
           showModifiers={true}
         />

@@ -100,7 +100,7 @@ const HouseAbilityChoice = ({
   styles,
   disabled = false,
 }) => {
-  if (!house) return null;
+  if (!house || !houseFeatures[house]) return null;
 
   const handleAbilityChoice = (ability) => {
     if (!disabled) {
@@ -108,7 +108,8 @@ const HouseAbilityChoice = ({
     }
   };
 
-  const currentChoice = houseChoices[house]?.abilityChoice;
+  const currentChoice = houseChoices?.[house]?.abilityChoice || "";
+
   const abilities = [
     "strength",
     "dexterity",
@@ -129,29 +130,52 @@ const HouseAbilityChoice = ({
         Choose additional +1 ability score increase:
       </div>
       <div style={styles.abilityChoiceGroup}>
-        {availableAbilities.map((ability) => (
-          <label
-            key={ability}
-            style={{
-              ...styles.abilityChoiceLabel,
-              opacity: disabled ? 0.6 : 1,
-              cursor: disabled ? "not-allowed" : "pointer",
-            }}
-          >
-            <input
-              type="radio"
-              name={`${house}_ability_choice`}
-              value={ability}
-              checked={currentChoice === ability}
-              onChange={(e) => handleAbilityChoice(e.target.value)}
-              style={styles.abilityChoiceRadio}
-              disabled={disabled}
-            />
-            <span style={styles.abilityChoiceName}>
-              {ability.charAt(0).toUpperCase() + ability.slice(1)} (+1)
-            </span>
-          </label>
-        ))}
+        {availableAbilities.map((ability) => {
+          const isSelected = currentChoice === ability;
+
+          return (
+            <label
+              key={ability}
+              style={{
+                ...styles.abilityChoiceLabel,
+                backgroundColor: isSelected
+                  ? "rgba(16, 185, 129, 0.15)"
+                  : styles.abilityChoiceLabel.backgroundColor,
+                borderColor: isSelected
+                  ? "#10b981"
+                  : styles.abilityChoiceLabel.border,
+                borderWidth: isSelected ? "2px" : "1px",
+                opacity: disabled ? 0.6 : 1,
+                cursor: disabled ? "not-allowed" : "pointer",
+                fontWeight: isSelected ? "600" : "400",
+              }}
+            >
+              <input
+                type="radio"
+                name={`${house}_ability_choice`}
+                value={ability}
+                checked={isSelected}
+                onChange={(e) => handleAbilityChoice(e.target.value)}
+                style={{
+                  ...styles.abilityChoiceRadio,
+                  accentColor: "#10b981",
+                }}
+                disabled={disabled}
+              />
+              <span
+                style={{
+                  ...styles.abilityChoiceName,
+                  fontWeight: isSelected ? "600" : "400",
+                  color: isSelected
+                    ? "#10b981"
+                    : styles.abilityChoiceName.color,
+                }}
+              >
+                {ability.charAt(0).toUpperCase() + ability.slice(1)} (+1)
+              </span>
+            </label>
+          );
+        })}
       </div>
     </div>
   );
@@ -447,7 +471,6 @@ const HouseSection = ({
   errors = {},
   mode = "create",
   disabled = false,
-
   selectedHouse,
   onHouseSelect,
   houseChoices,
@@ -459,30 +482,38 @@ const HouseSection = ({
   const styles = createHouseSpecificStyles(theme, baseStyles);
 
   const actualSelectedHouse = character ? character.house : selectedHouse;
+
   const actualHouseChoices = character
-    ? character.house_choices || {}
+    ? character.houseChoices && Object.keys(character.houseChoices).length > 0
+      ? character.houseChoices
+      : character.house_choices || {}
     : houseChoices || {};
+
   const actualReadOnly = disabled !== undefined ? disabled : readOnly || false;
 
   const actualOnHouseSelect = character
     ? (house) => {
         onChange("house", house);
 
-        if (house !== character.house) {
+        if (house !== character.house && mode === "create") {
           onChange("house_choices", {});
+          onChange("houseChoices", {});
         }
       }
     : onHouseSelect || (() => {});
 
   const actualOnHouseChoiceSelect = character
     ? (house, featureName, optionName) => {
-        onChange("house_choices", {
-          ...character.house_choices,
+        const updatedChoices = {
+          ...actualHouseChoices,
           [house]: {
-            ...character.house_choices?.[house],
+            ...actualHouseChoices[house],
             [featureName]: optionName,
           },
-        });
+        };
+
+        onChange("house_choices", updatedChoices);
+        onChange("houseChoices", updatedChoices);
       }
     : onHouseChoiceSelect || (() => {});
 
@@ -495,7 +526,6 @@ const HouseSection = ({
 
   const getThemeAwareHouseColor = (house, theme) => {
     const baseHouseColors = houseColors[house];
-
     return {
       primary: theme.primary,
       secondary: theme.surface,
@@ -594,7 +624,6 @@ const HouseSection = ({
                         fontWeight: isSelected ? "600" : "500",
                         opacity: actualReadOnly ? 0.6 : 1,
                         cursor: actualReadOnly ? "not-allowed" : "pointer",
-
                         ...(isSelected && {
                           boxShadow: `0 0 0 1px ${houseColor.accent}33`,
                         }),
@@ -627,34 +656,48 @@ const HouseSection = ({
                       {expandedHouse === house ? "▲" : "▼"}
                     </button>
 
-                    {expandedHouse === house &&
-                      houseFeatures[house] &&
-                      houseFeatures[house] && (
-                        <div style={styles.houseDetails}>
-                          <HouseAbilityModifierPills
-                            house={house}
-                            houseChoices={actualHouseChoices}
-                            styles={styles}
-                          />
+                    {expandedHouse === house && houseFeatures[house] && (
+                      <div style={styles.houseDetails}>
+                        <HouseAbilityModifierPills
+                          house={house}
+                          houseChoices={actualHouseChoices}
+                          styles={styles}
+                        />
 
-                          <div style={styles.sectionContainer}>
-                            <h4 style={styles.sectionTitle}>
-                              ➕ Ability Score Details
-                            </h4>
-                            <div style={styles.abilityBonusContainer}>
-                              {houseFeatures[house]?.fixed.map((ability) => (
-                                <span
-                                  key={ability}
-                                  style={{
-                                    ...styles.abilityBonus,
-                                    backgroundColor: theme.primary,
-                                    color: theme.surface,
-                                  }}
-                                >
-                                  +1 {formatAbilityName(ability)} (Fixed)
-                                </span>
-                              ))}
+                        <div style={styles.sectionContainer}>
+                          <h4 style={styles.sectionTitle}>
+                            ➕ Ability Score Details
+                          </h4>
+                          <div style={styles.abilityBonusContainer}>
+                            {houseFeatures[house]?.fixed.map((ability) => (
+                              <span
+                                key={ability}
+                                style={{
+                                  ...styles.abilityBonus,
+                                  backgroundColor: theme.primary,
+                                  color: theme.surface,
+                                }}
+                              >
+                                +1 {formatAbilityName(ability)} (Fixed)
+                              </span>
+                            ))}
 
+                            {/* Show the actual selected choice if it exists */}
+                            {actualHouseChoices?.[house]?.abilityChoice ? (
+                              <span
+                                style={{
+                                  ...styles.abilityBonus,
+                                  backgroundColor: theme.primary,
+                                  color: theme.surface,
+                                }}
+                              >
+                                +1{" "}
+                                {formatAbilityName(
+                                  actualHouseChoices[house].abilityChoice
+                                )}{" "}
+                                (Choice)
+                              </span>
+                            ) : (
                               <span
                                 style={{
                                   ...styles.abilityBonus,
@@ -665,136 +708,133 @@ const HouseSection = ({
                               >
                                 +1 Any Ability (Choice)
                               </span>
-                            </div>
-                          </div>
-                          {!actualReadOnly && (
-                            <HouseAbilityChoice
-                              house={house}
-                              houseChoices={actualHouseChoices}
-                              onHouseChoiceSelect={actualOnHouseChoiceSelect}
-                              styles={styles}
-                              disabled={actualReadOnly}
-                            />
-                          )}
-                          <div style={styles.sectionContainer}>
-                            <h4 style={styles.sectionTitle}>
-                              🪄 House Features
-                            </h4>
-
-                            {houseFeatures[house].features.map(
-                              (feature, index) => (
-                                <div
-                                  key={index}
-                                  style={styles.featureContainer}
-                                >
-                                  <div style={styles.featureCard}>
-                                    <h5 style={styles.featureName}>
-                                      {feature.name}
-                                    </h5>
-
-                                    {!feature.isChoice ? (
-                                      <p style={styles.featureDescription}>
-                                        {feature.description}
-                                      </p>
-                                    ) : (
-                                      <div>
-                                        <p style={styles.choiceText}>
-                                          {actualReadOnly || !actualHouseChoices
-                                            ? "Available options:"
-                                            : "Choose one option:"}
-                                        </p>
-
-                                        {feature.options.map(
-                                          (option, optionIndex) => (
-                                            <div
-                                              key={optionIndex}
-                                              style={styles.optionContainer}
-                                            >
-                                              <label
-                                                style={{
-                                                  ...styles.optionLabel,
-                                                  cursor: actualReadOnly
-                                                    ? "not-allowed"
-                                                    : "pointer",
-                                                  opacity: actualReadOnly
-                                                    ? 0.6
-                                                    : 1,
-                                                }}
-                                              >
-                                                <div
-                                                  style={{
-                                                    ...styles.optionContent,
-                                                    backgroundColor:
-                                                      isChoiceSelected(
-                                                        house,
-                                                        feature.name,
-                                                        option.name
-                                                      )
-                                                        ? `${theme.primary}15`
-                                                        : theme.background,
-                                                    borderColor:
-                                                      isChoiceSelected(
-                                                        house,
-                                                        feature.name,
-                                                        option.name
-                                                      )
-                                                        ? theme.primary
-                                                        : theme.border,
-                                                  }}
-                                                >
-                                                  <input
-                                                    type="radio"
-                                                    name={`${house}-${feature.name}`}
-                                                    checked={isChoiceSelected(
-                                                      house,
-                                                      feature.name,
-                                                      option.name
-                                                    )}
-                                                    onChange={() =>
-                                                      !actualReadOnly &&
-                                                      handleChoiceSelect(
-                                                        house,
-                                                        feature.name,
-                                                        option.name
-                                                      )
-                                                    }
-                                                    disabled={actualReadOnly}
-                                                    style={{
-                                                      marginTop: "2px",
-                                                      accentColor:
-                                                        theme.primary,
-                                                    }}
-                                                  />
-                                                  <div
-                                                    style={styles.optionDetails}
-                                                  >
-                                                    <div
-                                                      style={styles.optionName}
-                                                    >
-                                                      {option.name}
-                                                    </div>
-                                                    <div
-                                                      style={
-                                                        styles.optionDescription
-                                                      }
-                                                    >
-                                                      {option.description}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </label>
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )
                             )}
                           </div>
                         </div>
-                      )}
+
+                        {/* FIXED: Always show HouseAbilityChoice for selected house */}
+                        {actualSelectedHouse === house && (
+                          <HouseAbilityChoice
+                            house={house}
+                            houseChoices={actualHouseChoices}
+                            onHouseChoiceSelect={actualOnHouseChoiceSelect}
+                            styles={styles}
+                            disabled={actualReadOnly}
+                          />
+                        )}
+
+                        <div style={styles.sectionContainer}>
+                          <h4 style={styles.sectionTitle}>🪄 House Features</h4>
+
+                          {houseFeatures[house].features.map(
+                            (feature, index) => (
+                              <div key={index} style={styles.featureContainer}>
+                                <div style={styles.featureCard}>
+                                  <h5 style={styles.featureName}>
+                                    {feature.name}
+                                  </h5>
+
+                                  {!feature.isChoice ? (
+                                    <p style={styles.featureDescription}>
+                                      {feature.description}
+                                    </p>
+                                  ) : (
+                                    <div>
+                                      <p style={styles.choiceText}>
+                                        {actualReadOnly
+                                          ? "Selected option:"
+                                          : "Choose one option:"}
+                                      </p>
+
+                                      {feature.options.map(
+                                        (option, optionIndex) => (
+                                          <div
+                                            key={optionIndex}
+                                            style={styles.optionContainer}
+                                          >
+                                            <label
+                                              style={{
+                                                ...styles.optionLabel,
+                                                cursor: actualReadOnly
+                                                  ? "not-allowed"
+                                                  : "pointer",
+                                                opacity: actualReadOnly
+                                                  ? 0.6
+                                                  : 1,
+                                              }}
+                                            >
+                                              <div
+                                                style={{
+                                                  ...styles.optionContent,
+                                                  backgroundColor:
+                                                    isChoiceSelected(
+                                                      house,
+                                                      feature.name,
+                                                      option.name
+                                                    )
+                                                      ? `${theme.primary}15`
+                                                      : theme.background,
+                                                  borderColor: isChoiceSelected(
+                                                    house,
+                                                    feature.name,
+                                                    option.name
+                                                  )
+                                                    ? theme.primary
+                                                    : theme.border,
+                                                }}
+                                              >
+                                                <input
+                                                  type="radio"
+                                                  name={`${house}-${feature.name}`}
+                                                  checked={isChoiceSelected(
+                                                    house,
+                                                    feature.name,
+                                                    option.name
+                                                  )}
+                                                  onChange={() =>
+                                                    !actualReadOnly &&
+                                                    handleChoiceSelect(
+                                                      house,
+                                                      feature.name,
+                                                      option.name
+                                                    )
+                                                  }
+                                                  disabled={actualReadOnly}
+                                                  style={{
+                                                    marginTop: "2px",
+                                                    accentColor: theme.primary,
+                                                  }}
+                                                />
+                                                <div
+                                                  style={styles.optionDetails}
+                                                >
+                                                  <div
+                                                    style={styles.optionName}
+                                                  >
+                                                    {option.name}
+                                                  </div>
+                                                  <div
+                                                    style={
+                                                      styles.optionDescription
+                                                    }
+                                                  >
+                                                    {option.description}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </label>
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -814,7 +854,6 @@ const HouseSection = ({
       }}
     >
       {renderSchoolGroup("main", schoolGroups.main)}
-
       {renderSchoolGroup("international", schoolGroups.international)}
     </div>
   );

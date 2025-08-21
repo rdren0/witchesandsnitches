@@ -58,6 +58,7 @@ export const useCharacterData = (
         setCharacter({
           ...DEFAULT_CHARACTER,
           ...transformedCharacter,
+          discord_user_id: loadedCharacter.discord_user_id,
         });
         setHasChanges(false);
       }
@@ -103,7 +104,9 @@ export const useCharacterData = (
   }, []);
 
   const saveCharacter = useCallback(async () => {
-    if (!userId && !(adminMode && isUserAdmin)) {
+    const effectiveUserId = character.discord_user_id || userId;
+
+    if (!effectiveUserId && !(adminMode && isUserAdmin)) {
       throw new Error("User ID required to save character");
     }
 
@@ -141,15 +144,25 @@ export const useCharacterData = (
         characterWithFinalScores
       );
 
+      characterToSave.discord_user_id = effectiveUserId;
+      characterToSave.base_ability_scores = baseScores;
+      characterToSave.ability_modifiers = modifiers;
+
       let result;
-      const effectiveUserId = userId || character.discord_user_id;
 
       if (character.id) {
-        result = await characterService.updateCharacter(
-          character.id,
-          characterToSave,
-          effectiveUserId
-        );
+        if (adminMode && isUserAdmin) {
+          result = await characterService.updateCharacterAsAdmin(
+            character.id,
+            characterToSave
+          );
+        } else {
+          result = await characterService.updateCharacter(
+            character.id,
+            characterToSave,
+            effectiveUserId
+          );
+        }
       } else {
         result = await characterService.saveCharacter(
           characterToSave,
@@ -167,6 +180,7 @@ export const useCharacterData = (
         setCharacter((prev) => ({
           ...prev,
           ...transformedResult,
+          discord_user_id: result.discord_user_id,
         }));
         setHasChanges(false);
       }
