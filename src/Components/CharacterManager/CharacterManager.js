@@ -373,7 +373,7 @@ const CharacterManager = ({
       {currentMode === "edit" && characterId && (
         <CharacterForm
           characterId={characterId}
-          userId={adminMode && isUserAdmin ? null : discordUserId} // Pass null for admin mode!
+          userId={adminMode && isUserAdmin ? null : discordUserId}
           mode="edit"
           onSave={handleCharacterSaved}
           onCancel={() => navigate("/character-management")}
@@ -386,7 +386,7 @@ const CharacterManager = ({
 
       {currentMode === "create" && (
         <CharacterForm
-          userId={discordUserId} // For create, always use current user
+          userId={discordUserId}
           mode="create"
           onSave={handleCharacterSaved}
           onCancel={() => navigate("/character-management")}
