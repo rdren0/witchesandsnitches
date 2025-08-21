@@ -1,10 +1,10 @@
 import React from "react";
-import { gameSessionOptions } from "../../../../App/const";
-import { useTheme } from "../../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../../styles/masterStyles";
-import SchoolYearSelector from "../../../CharacterManagement/Shared/SchoolYearSelector";
-import EnhancedCastingStyleSelector from "../../../CharacterManagement/CharacterCreation/EnhancedCastingStyleSelector";
-import OptimizedImageUpload from "../../../CharacterManagement/Shared/OptimizedImageUpload";
+import { gameSessionOptions } from "../../../../../App/const";
+import { useTheme } from "../../../../../contexts/ThemeContext";
+import { createCharacterCreationStyles } from "../../../../../styles/masterStyles";
+import OptimizedImageUpload from "./OptimizedImageUpload";
+import SchoolYearSelector from "./SchoolYearSelector";
+import EnhancedCastingStyleSelector from "./EnhancedCastingStyleSelector";
 
 const BasicInfoSection = ({
   character,

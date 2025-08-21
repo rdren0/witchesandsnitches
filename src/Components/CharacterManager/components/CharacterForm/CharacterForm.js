@@ -170,14 +170,6 @@ const CharacterForm = ({
     );
   }
 
-  // const isSaveEnabled =
-  // character.name.trim() &&
-  //   character.house &&
-  //   character.schoolYear &&
-  //   character.castingStyle &&
-  //   character.level1ChoiceType;
-  // console.log(!!isSaveEnabled);
-
   const toolbarStyles = {
     display: "flex",
     justifyContent: "space-between",

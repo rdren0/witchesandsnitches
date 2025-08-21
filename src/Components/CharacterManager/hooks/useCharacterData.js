@@ -7,23 +7,45 @@ import {
 } from "../components/CharacterForm/utils/characterTransformUtils";
 import { getAllAbilityModifiers } from "../utils/characterUtils";
 
-export const useCharacterData = (characterId = null, userId = null) => {
+export const useCharacterData = (
+  characterId = null,
+  userId = null,
+  adminMode = false,
+  isUserAdmin = false
+) => {
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
   const loadCharacter = useCallback(async () => {
-    if (!characterId || !userId) return;
+    if (!characterId) return;
+
+    if (!userId && !(adminMode && isUserAdmin)) {
+      console.warn(
+        "Cannot load character: userId is undefined and not in admin mode"
+      );
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      const loadedCharacter = await characterService.getCharacterById(
-        characterId,
-        userId
-      );
+      let loadedCharacter;
+
+      if (adminMode && isUserAdmin) {
+        loadedCharacter = await characterService.getCharacterByIdAdmin(
+          characterId
+        );
+      } else if (userId) {
+        loadedCharacter = await characterService.getCharacterById(
+          characterId,
+          userId
+        );
+      } else {
+        throw new Error("Cannot load character: missing userId");
+      }
 
       if (loadedCharacter) {
         const transformedCharacter = transformCharacterFromDB(loadedCharacter);
@@ -45,7 +67,7 @@ export const useCharacterData = (characterId = null, userId = null) => {
     } finally {
       setLoading(false);
     }
-  }, [characterId, userId]);
+  }, [characterId, userId, adminMode, isUserAdmin]);
 
   const updateCharacter = useCallback((field, value) => {
     setCharacter((prev) => {
@@ -81,7 +103,7 @@ export const useCharacterData = (characterId = null, userId = null) => {
   }, []);
 
   const saveCharacter = useCallback(async () => {
-    if (!userId) {
+    if (!userId && !(adminMode && isUserAdmin)) {
       throw new Error("User ID required to save character");
     }
 
@@ -111,9 +133,7 @@ export const useCharacterData = (characterId = null, userId = null) => {
 
       const characterWithFinalScores = {
         ...character,
-
         abilityScores: finalAbilityScores,
-
         baseAbilityScores: baseScores,
       };
 
@@ -122,14 +142,19 @@ export const useCharacterData = (characterId = null, userId = null) => {
       );
 
       let result;
+      const effectiveUserId = userId || character.discord_user_id;
+
       if (character.id) {
         result = await characterService.updateCharacter(
           character.id,
           characterToSave,
-          userId
+          effectiveUserId
         );
       } else {
-        result = await characterService.saveCharacter(characterToSave, userId);
+        result = await characterService.saveCharacter(
+          characterToSave,
+          effectiveUserId
+        );
       }
 
       if (result) {
@@ -154,13 +179,15 @@ export const useCharacterData = (characterId = null, userId = null) => {
     } finally {
       setLoading(false);
     }
-  }, [character, userId]);
+  }, [character, userId, adminMode, isUserAdmin]);
 
   useEffect(() => {
-    if (characterId && userId) {
-      loadCharacter();
+    if (characterId) {
+      if (userId || (adminMode && isUserAdmin)) {
+        loadCharacter();
+      }
     }
-  }, [loadCharacter]);
+  }, [characterId, userId, adminMode, isUserAdmin, loadCharacter]);
 
   return {
     character,
