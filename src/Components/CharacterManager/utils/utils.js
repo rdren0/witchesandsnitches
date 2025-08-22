@@ -1,8 +1,8 @@
-import { standardFeats } from "../../SharedData/standardFeatData";
-import { backgroundsData } from "../../SharedData/backgroundsData";
-import { houseFeatures } from "../../SharedData/houseData";
-import { heritageDescriptions } from "../../SharedData/heritageData";
-import { hpData } from "../../SharedData/data";
+import { standardFeats } from "../../../SharedData/standardFeatData";
+import { backgroundsData } from "../../../SharedData/backgroundsData";
+import { houseFeatures } from "../../../SharedData/houseData";
+import { heritageDescriptions } from "../../../SharedData/heritageData";
+import { hpData } from "../../../SharedData/data";
 
 export const getAllSelectedFeats = (character) => {
   const allFeats = [];

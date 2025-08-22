@@ -7,7 +7,12 @@ import {
 } from "../components/CharacterForm/utils/characterTransformUtils";
 import { getAllAbilityModifiers } from "../utils/characterUtils";
 
-export const useCharacterData = (characterId = null, userId = null) => {
+export const useCharacterData = (
+  characterId = null,
+  userId = null,
+  adminMode = false,
+  isUserAdmin = false
+) => {
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
   const [originalCharacter, setOriginalCharacter] = useState(DEFAULT_CHARACTER);
   const [loading, setLoading] = useState(false);
@@ -17,9 +22,12 @@ export const useCharacterData = (characterId = null, userId = null) => {
     JSON.stringify(character) !== JSON.stringify(originalCharacter);
 
   const loadCharacter = useCallback(async () => {
-    if (!characterId || !userId) {
-      setCharacter(DEFAULT_CHARACTER);
-      setOriginalCharacter(DEFAULT_CHARACTER);
+    if (!characterId) return;
+
+    if (!userId && !(adminMode && isUserAdmin)) {
+      console.warn(
+        "Cannot load character: userId is undefined and not in admin mode"
+      );
       return;
     }
 
@@ -27,10 +35,20 @@ export const useCharacterData = (characterId = null, userId = null) => {
     setError(null);
 
     try {
-      const loadedCharacter = await characterService.getCharacterById(
-        characterId,
-        userId
-      );
+      let loadedCharacter;
+
+      if (adminMode && isUserAdmin) {
+        loadedCharacter = await characterService.getCharacterByIdAdmin(
+          characterId
+        );
+      } else if (userId) {
+        loadedCharacter = await characterService.getCharacterById(
+          characterId,
+          userId
+        );
+      } else {
+        throw new Error("Cannot load character: missing userId");
+      }
 
       if (loadedCharacter) {
         const transformedCharacter = transformCharacterFromDB(loadedCharacter);
@@ -54,7 +72,7 @@ export const useCharacterData = (characterId = null, userId = null) => {
     } finally {
       setLoading(false);
     }
-  }, [characterId, userId]);
+  }, [characterId, userId, adminMode, isUserAdmin]);
 
   const updateCharacter = useCallback((field, value) => {
     setCharacter((prev) => {
@@ -87,7 +105,9 @@ export const useCharacterData = (characterId = null, userId = null) => {
   }, [originalCharacter]);
 
   const saveCharacter = useCallback(async () => {
-    if (!userId) {
+    const effectiveUserId = character.discord_user_id || userId;
+
+    if (!effectiveUserId && !(adminMode && isUserAdmin)) {
       throw new Error("User ID required to save character");
     }
 
@@ -125,15 +145,30 @@ export const useCharacterData = (characterId = null, userId = null) => {
         characterWithFinalScores
       );
 
+      characterToSave.discord_user_id = effectiveUserId;
+      characterToSave.base_ability_scores = baseScores;
+      characterToSave.ability_modifiers = modifiers;
+
       let result;
+
       if (character.id) {
-        result = await characterService.updateCharacter(
-          character.id,
-          characterToSave,
-          userId
-        );
+        if (adminMode && isUserAdmin) {
+          result = await characterService.updateCharacterAsAdmin(
+            character.id,
+            characterToSave
+          );
+        } else {
+          result = await characterService.updateCharacter(
+            character.id,
+            characterToSave,
+            effectiveUserId
+          );
+        }
       } else {
-        result = await characterService.saveCharacter(characterToSave, userId);
+        result = await characterService.saveCharacter(
+          characterToSave,
+          effectiveUserId
+        );
       }
 
       if (result) {
@@ -160,11 +195,15 @@ export const useCharacterData = (characterId = null, userId = null) => {
     } finally {
       setLoading(false);
     }
-  }, [character, userId]);
+  }, [character, userId, adminMode, isUserAdmin]);
 
   useEffect(() => {
-    loadCharacter();
-  }, [loadCharacter]);
+    if (characterId) {
+      if (userId || (adminMode && isUserAdmin)) {
+        loadCharacter();
+      }
+    }
+  }, [characterId, userId, adminMode, isUserAdmin, loadCharacter]);
 
   return {
     character,

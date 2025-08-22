@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { castingStyleData } from "../../../SharedData/data";
-import { useTheme } from "../../../contexts/ThemeContext";
+import { castingStyleData } from "../../../../../SharedData/data";
+import { useTheme } from "../../../../../contexts/ThemeContext";
 
 const CastingStyleCard = ({
   styleName,

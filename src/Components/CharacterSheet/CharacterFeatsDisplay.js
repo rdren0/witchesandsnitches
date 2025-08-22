@@ -309,8 +309,10 @@ const CharacterFeatsDisplay = ({
                 source: character.subclass,
                 level: parseInt(level) || null,
                 description: `Immunities gained from ${choiceName}`,
-                details: benefits.immunities.map(
-                  (immunity) => `Immune to ${immunity}`
+                details: benefits.immunities.map((immunity) =>
+                  typeof immunity === "object"
+                    ? JSON.stringify(immunity)
+                    : `Immune to ${immunity}`
                 ),
               });
             }
@@ -336,6 +338,17 @@ const CharacterFeatsDisplay = ({
                 if (ability.effect)
                   abilityDetails.push(`Effect: ${ability.effect}`);
 
+                // Handle bonus if it exists and is an object
+                if (ability.bonus) {
+                  if (typeof ability.bonus === "object") {
+                    abilityDetails.push(
+                      `Bonus: ${JSON.stringify(ability.bonus)}`
+                    );
+                  } else {
+                    abilityDetails.push(`Bonus: ${ability.bonus}`);
+                  }
+                }
+
                 sections.subclass.features.push({
                   name: ability.name || `${choiceName} - Special Ability`,
                   type: "Special Ability",
@@ -355,8 +368,10 @@ const CharacterFeatsDisplay = ({
                 source: character.subclass,
                 level: parseInt(level) || null,
                 description: `Damage resistances gained from ${choiceName}`,
-                details: benefits.resistances.map(
-                  (res) => `Resistance to ${res} damage`
+                details: benefits.resistances.map((res) =>
+                  typeof res === "object"
+                    ? JSON.stringify(res)
+                    : `Resistance to ${res} damage`
                 ),
               });
             }
@@ -368,7 +383,9 @@ const CharacterFeatsDisplay = ({
                 source: character.subclass,
                 level: parseInt(level) || null,
                 description: `Languages gained from ${choiceName}`,
-                details: benefits.languages,
+                details: benefits.languages.map((lang) =>
+                  typeof lang === "object" ? JSON.stringify(lang) : String(lang)
+                ),
               });
             }
           }

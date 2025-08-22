@@ -6,7 +6,6 @@ import { useCharacterData } from "../../hooks/useCharacterData";
 import { useFormSections } from "../../hooks/useFormSections";
 import { FormSection } from "../index";
 import {
-  BasicInfoSection,
   AbilityScoresSection,
   HitPointsSection,
   BackgroundSection,
@@ -17,6 +16,7 @@ import {
   ASILevelChoices,
   MagicModifiersSection,
   NotesSection,
+  BasicInfoSection,
 } from "../sections";
 
 import {
@@ -33,6 +33,8 @@ const CharacterForm = ({
   onSave,
   onCancel,
   supabase,
+  adminMode = false,
+  isUserAdmin = false,
 }) => {
   const { theme } = useTheme();
   const styles = createBaseStyles(theme);
@@ -51,7 +53,7 @@ const CharacterForm = ({
     updateCharacterBulk,
     saveCharacter,
     resetCharacter,
-  } = useCharacterData(characterId, userId);
+  } = useCharacterData(characterId, userId, adminMode, isUserAdmin);
 
   const {
     sectionLocks,
@@ -461,7 +463,7 @@ const CharacterForm = ({
           disabled={sectionLocks.abilityScores}
           mode={mode}
           featChoices={getAllSelectedFeats(character)}
-          houseChoices={character.houseChoices || {}}
+          houseChoices={character.houseChoices || character.house_choices}
           heritageChoices={character.heritageChoices || {}}
           showModifiers={true}
         />
@@ -500,7 +502,7 @@ const CharacterForm = ({
       </FormSection>
       <FormSection
         title="Character Notes"
-        subtitle="Additional notes, backstory, and campaign information"
+        subtitle="Additional notes, character flaws, backstory etc"
         isLocked={sectionLocks.notes}
         onToggleLock={canLock ? () => toggleSectionLock("notes") : undefined}
         lockable={canLock}

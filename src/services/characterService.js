@@ -426,7 +426,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         magic_modifiers: characterData.magic_modifiers,
         name: characterData.name,
         notes: characterData.notes || null,
-        school_year: characterData.schoolYear,
+        school_year: characterData.schoolYear || characterData.school_year,
         skill_proficiencies: characterData.skill_proficiencies,
         skill_expertise: characterData.skill_expertise,
         standard_feats: characterData.standard_feats,
@@ -434,6 +434,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         subclass_choices: characterData.subclass_choices,
         wand_type: characterData.wand_type,
         image_url: characterData.image_url || characterData.imageUrl || null,
+        base_ability_scores: characterData.base_ability_scores,
       })
       .select()
       .single();
@@ -501,6 +502,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         subclass: characterData.subclass,
         updated_at: new Date().toISOString(),
         wand_type: characterData.wand_type,
+        base_ability_scores: characterData.base_ability_scores,
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
@@ -518,6 +520,61 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
     return updatedCharacter;
   } catch (error) {
     console.error("Error in updateCharacter:", error);
+    throw error;
+  }
+};
+
+const updateCharacterAsAdmin = async (characterId, characterData) => {
+  try {
+    const { data: updatedCharacter, error: characterError } = await supabase
+      .from("characters")
+      .update({
+        ability_scores: characterData.ability_scores,
+        asi_choices: characterData.asi_choices,
+        background: characterData.background,
+        casting_style: characterData.casting_style,
+        current_hit_dice: characterData.level,
+        current_hit_points: characterData.hit_points,
+        game_session: characterData.game_session,
+        heritage_choices: characterData.heritage_choices || {},
+        hit_points: characterData.hit_points,
+        house_choices: characterData.house_choices,
+        house: characterData.house,
+        image_url: characterData.image_url || characterData.imageUrl || null,
+        initiative_ability: characterData.initiative_ability,
+        innate_heritage_skills: characterData.innate_heritage_skills,
+        innate_heritage: characterData.innate_heritage,
+        level: characterData.level,
+        level1_choice_type: characterData.level1_choice_type,
+        magic_modifiers: characterData.magic_modifiers,
+        name: characterData.name,
+        school_year: characterData.school_year,
+        skill_expertise: characterData.skill_expertise,
+        skill_proficiencies: characterData.skill_proficiencies,
+        standard_feats: characterData.standard_feats,
+        subclass_choices: characterData.subclass_choices,
+        subclass: characterData.subclass,
+        updated_at: new Date().toISOString(),
+        wand_type: characterData.wand_type,
+        base_ability_scores: characterData.base_ability_scores,
+        discord_user_id: characterData.discord_user_id,
+      })
+      .eq("id", characterId)
+      .eq("active", true)
+      .select()
+      .single();
+
+    if (characterError) {
+      console.error(
+        "characterService.updateCharacterAsAdmin - database error:",
+        characterError
+      );
+      throw characterError;
+    }
+
+    return updatedCharacter;
+  } catch (error) {
+    console.error("Error in updateCharacterAsAdmin:", error);
     throw error;
   }
 };
@@ -578,12 +635,14 @@ const getCharacterByIdAdmin = async (characterId) => {
       *,
       discord_users (
         username,
-        display_name
+        display_name,
+        discord_user_id
       )
     `
     )
     .eq("id", characterId)
     .eq("active", true)
+
     .single();
 
   if (error) {
@@ -605,6 +664,24 @@ const deleteCharacter = async (characterId, discordUserId) => {
     })
     .eq("id", characterId)
     .eq("discord_user_id", discordUserId)
+    .eq("active", true)
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to archive character: ${error.message}`);
+  }
+
+  return data[0];
+};
+
+const deleteCharacterAsAdmin = async (characterId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .update({
+      active: false,
+      archived_at: new Date().toISOString(),
+    })
+    .eq("id", characterId)
     .eq("active", true)
     .select();
 
@@ -746,8 +823,10 @@ export const characterService = {
   getCharacterByIdAdmin,
   saveCharacter,
   updateCharacter,
+  updateCharacterAsAdmin,
   updateCharacterSubclass,
   deleteCharacter,
+  deleteCharacterAsAdmin,
   restoreCharacter,
   getArchivedCharacters,
   advanceSchoolYear,

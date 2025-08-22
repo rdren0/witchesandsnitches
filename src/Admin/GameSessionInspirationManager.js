@@ -327,10 +327,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
           game_session,
           discord_user_id,
           active,
-          archived_at,
-          character_resources (
-            inspiration
-          )
+          archived_at
         `
         )
         .eq("active", true)
@@ -341,9 +338,33 @@ const GameSessionInspirationManager = ({ supabase }) => {
         throw charactersError;
       }
 
+      const { data: resources, error: resourcesError } = await supabase
+        .from("character_resources")
+        .select("character_id, discord_user_id, inspiration");
+
+      if (resourcesError) {
+        throw resourcesError;
+      }
+
+      const resourceMap = new Map();
+      resources.forEach((resource) => {
+        const key = `${resource.character_id}-${resource.discord_user_id}`;
+        resourceMap.set(key, resource);
+      });
+
+      const charactersWithInspiration = characters.map((character) => {
+        const key = `${character.id}-${character.discord_user_id}`;
+        const matchingResource = resourceMap.get(key);
+
+        return {
+          ...character,
+          hasInspiration: matchingResource?.inspiration || false,
+        };
+      });
+
       const sessionsMap = new Map();
 
-      characters.forEach((character) => {
+      charactersWithInspiration.forEach((character) => {
         if (
           !character.game_session ||
           character.game_session.trim() === "" ||
@@ -364,16 +385,10 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }
 
         const session = sessionsMap.get(sessionName);
-        const hasInspiration =
-          character.character_resources?.[0]?.inspiration || false;
 
-        session.characters.push({
-          ...character,
-          hasInspiration,
-        });
-
+        session.characters.push(character);
         session.totalCharacters++;
-        if (hasInspiration) {
+        if (character.hasInspiration) {
           session.withInspiration++;
         }
       });
@@ -451,22 +466,51 @@ const GameSessionInspirationManager = ({ supabase }) => {
     setUpdating((prev) => new Set(prev).add(updateKey));
 
     try {
-      const { error: updateError } = await supabase
+      const { data: existingRecord, error: checkError } = await supabase
         .from("character_resources")
-        .upsert(
-          {
+        .select("*")
+        .eq("character_id", characterId)
+        .eq("discord_user_id", discordUserId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking for existing record:", checkError);
+        throw checkError;
+      }
+
+      let result;
+
+      if (existingRecord) {
+        result = await supabase
+          .from("character_resources")
+          .update({
+            inspiration: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("character_id", characterId)
+          .eq("discord_user_id", discordUserId)
+          .select();
+      } else {
+        result = await supabase
+          .from("character_resources")
+          .insert({
             character_id: characterId,
             discord_user_id: discordUserId,
             inspiration: true,
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "character_id,discord_user_id",
-          }
-        );
 
-      if (updateError) {
-        throw updateError;
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select();
+      }
+
+      if (result.error) {
+        console.error("Database operation error:", result.error);
+        throw result.error;
+      }
+
+      if (!result.data || result.data.length === 0) {
+        throw new Error("No data returned from database operation");
       }
 
       const discordWebhookUrl = getDiscordWebhook(gameSession);
@@ -515,8 +559,10 @@ const GameSessionInspirationManager = ({ supabase }) => {
         }))
       );
     } catch (err) {
-      console.error("Error granting inspiration:", err);
-      alert(`Failed to grant inspiration: ${err.message}`);
+      console.error("Error granting inspiration - Full error:", err);
+      alert(
+        `Failed to grant inspiration: ${err.message || JSON.stringify(err)}`
+      );
     } finally {
       setUpdating((prev) => {
         const newSet = new Set(prev);

@@ -1,6 +1,4 @@
 import React from "react";
-import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import {
   getAvailableSkillsForCastingStyle,
   organizeSkillsBySource,
@@ -10,6 +8,8 @@ import {
   getAllCharacterSkills,
   parseFeatSkills,
 } from "./skillsUtils";
+import { createBackgroundStyles } from "../../../../../styles/masterStyles";
+import { useTheme } from "../../../../../contexts/ThemeContext";
 
 const SkillsSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
