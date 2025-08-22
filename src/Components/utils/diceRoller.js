@@ -1043,6 +1043,235 @@ export const rollMagicCasting = async ({
   }
 };
 
+export const rollMagicalTheoryCheck = async ({
+  character,
+  showRollResult,
+  supabase,
+  discordUserId,
+  setIsRolling,
+  isRolling,
+  customRoll = null,
+  isForSpellDice = null,
+}) => {
+  if (isRolling) return;
+
+  if (isForSpellDice === false) {
+    return rollSkill({
+      skill: { name: "magicalTheory", displayName: "Magical Theory" },
+      abilityMod: Math.floor((character.intelligence - 10) / 2),
+      character,
+      showRollResult,
+      setIsRolling,
+      isRolling,
+    });
+  }
+
+  if (isForSpellDice === null) {
+    console.warn(
+      "rollMagicalTheoryCheck called without isForSpellDice parameter. Modal should be shown by caller."
+    );
+    return;
+  }
+
+  setIsRolling(true);
+
+  try {
+    const intelligenceMod = Math.floor((character.intelligence - 10) / 2);
+    const proficiencyBonus = character.proficiencyBonus || 2;
+
+    const hasProficiency =
+      character.skillProficiencies?.includes("Magical Theory") ||
+      character.skill_proficiencies?.includes("Magical Theory") ||
+      character.skills?.magicalTheory >= 1;
+
+    const modifier = intelligenceMod + (hasProficiency ? proficiencyBonus : 0);
+
+    let d20Roll;
+    if (customRoll !== null) {
+      d20Roll = customRoll;
+    } else {
+      const diceResult = rollDice();
+      d20Roll = diceResult.total;
+    }
+
+    const total = d20Roll + modifier;
+    const isNaturalTwenty = d20Roll === 20;
+    const isCriticalFailure = d20Roll === 1;
+
+    let bonusDie = null;
+    let dcMet = null;
+    let diceDescription = "";
+
+    if (isCriticalFailure) {
+      bonusDie = null;
+      diceDescription = "No bonus die earned (Natural 1)";
+    } else if (isNaturalTwenty) {
+      bonusDie = "1d10";
+      dcMet = "Natural 20";
+      diceDescription = "Superior Magical Theory Understanding!";
+    } else if (total >= 20) {
+      bonusDie = "1d8";
+      dcMet = "DC 20";
+      diceDescription = "Excellent Magical Theory Knowledge!";
+    } else if (total >= 15) {
+      bonusDie = "1d6";
+      dcMet = "DC 15";
+      diceDescription = "Good Magical Theory Knowledge!";
+    } else if (total >= 10) {
+      bonusDie = "1d4";
+      dcMet = "DC 10";
+      diceDescription = "Basic Magical Theory Knowledge!";
+    } else {
+      bonusDie = null;
+      diceDescription = "Failed to meet DC 10";
+    }
+
+    let resourcesUpdated = false;
+    if (bonusDie && supabase && character.id) {
+      try {
+        const { data: existingResources, error: fetchError } = await supabase
+          .from("character_resources")
+          .select("spell_bonus_dice")
+          .eq("character_id", character.id)
+          .eq("discord_user_id", discordUserId || character.discord_user_id)
+          .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+          console.error("Error fetching character resources:", fetchError);
+        } else {
+          let currentDiceArray = [];
+          if (existingResources?.spell_bonus_dice) {
+            if (typeof existingResources.spell_bonus_dice === "string") {
+              currentDiceArray = [existingResources.spell_bonus_dice];
+            } else if (Array.isArray(existingResources.spell_bonus_dice)) {
+              currentDiceArray = [...existingResources.spell_bonus_dice];
+            }
+          }
+
+          currentDiceArray.push(bonusDie);
+
+          const updateData = {
+            spell_bonus_dice: currentDiceArray,
+          };
+
+          if (existingResources) {
+            const { error: updateError } = await supabase
+              .from("character_resources")
+              .update(updateData)
+              .eq("character_id", character.id)
+              .eq(
+                "discord_user_id",
+                discordUserId || character.discord_user_id
+              );
+
+            if (!updateError) {
+              resourcesUpdated = true;
+            } else {
+              console.error("Error updating character resources:", updateError);
+            }
+          } else {
+            const { error: insertError } = await supabase
+              .from("character_resources")
+              .insert({
+                character_id: character.id,
+                discord_user_id: discordUserId || character.discord_user_id,
+                spell_bonus_dice: [bonusDie],
+              });
+
+            if (!insertError) {
+              resourcesUpdated = true;
+            } else {
+              console.error(
+                "Error inserting character resources:",
+                insertError
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error updating character resources:", error);
+      }
+    }
+
+    if (showRollResult) {
+      showRollResult({
+        title: "Magical Theory Check (Spell Bonus)",
+        rollValue: d20Roll,
+        modifier: modifier,
+        total: total,
+        isCriticalSuccess: isNaturalTwenty,
+        isCriticalFailure: isCriticalFailure,
+        type: "skill",
+        character: character,
+        description: `${diceDescription}${
+          bonusDie ? ` - Earned ${bonusDie}!` : ""
+        }${resourcesUpdated ? " (Added to dice pool)" : ""}`,
+      });
+    }
+
+    const rollResult = {
+      d20Roll,
+      modifier,
+      total,
+      isCriticalSuccess: isNaturalTwenty,
+      isCriticalFailure,
+    };
+
+    const additionalFields = [
+      {
+        name: "Check Type",
+        value: "Magical Theory (Spell Bonus Die)",
+        inline: true,
+      },
+      {
+        name: "Result",
+        value: bonusDie
+          ? `✅ Earned ${bonusDie} - ${dcMet}`
+          : "❌ No bonus die earned",
+        inline: true,
+      },
+    ];
+
+    if (resourcesUpdated) {
+      additionalFields.push({
+        name: "Resources",
+        value: "✨ Bonus die added to dice pool!",
+        inline: false,
+      });
+    }
+
+    await sendDiscordRollWebhook({
+      character,
+      rollType: "Magical Theory Check",
+      title: "Magical Theory Check (Spell Bonus)",
+      description: isNaturalTwenty
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : bonusDie
+        ? `Success! Earned ${bonusDie}`
+        : "Failed to earn bonus die",
+      embedColor: bonusDie ? 0x00ff00 : 0xff0000,
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: true,
+    });
+
+    return {
+      success: true,
+      bonusDie,
+      dcMet,
+      total,
+      resourcesUpdated,
+    };
+  } catch (error) {
+    console.error("Error with Magical Theory check:", error);
+    alert("Error performing Magical Theory check. Please try again.");
+  } finally {
+    setIsRolling(false);
+  }
+};
+
 export const rollAbility = async ({
   ability,
   isRolling,
@@ -1826,6 +2055,84 @@ const getSpellData = (spellName) => {
   return null;
 };
 
+export const getCharacterSpellBonusDice = async (
+  supabase,
+  characterId,
+  discordUserId
+) => {
+  const { data, error } = await supabase
+    .from("character_resources")
+    .select("spell_bonus_dice")
+    .eq("character_id", characterId)
+    .eq("discord_user_id", discordUserId)
+    .single();
+
+  if (error || !data?.spell_bonus_dice) {
+    return null;
+  }
+
+  if (typeof data.spell_bonus_dice === "string") {
+    return [data.spell_bonus_dice];
+  } else if (Array.isArray(data.spell_bonus_dice)) {
+    return data.spell_bonus_dice.length > 0 ? data.spell_bonus_dice : null;
+  }
+
+  return null;
+};
+
+export const removeSpellBonusDie = async (
+  supabase,
+  characterId,
+  discordUserId,
+  dieToRemove
+) => {
+  try {
+    const { data: existingResources, error: fetchError } = await supabase
+      .from("character_resources")
+      .select("spell_bonus_dice")
+      .eq("character_id", characterId)
+      .eq("discord_user_id", discordUserId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching character resources:", fetchError);
+      return false;
+    }
+
+    let currentDiceArray = [];
+    if (existingResources?.spell_bonus_dice) {
+      if (typeof existingResources.spell_bonus_dice === "string") {
+        currentDiceArray = [existingResources.spell_bonus_dice];
+      } else if (Array.isArray(existingResources.spell_bonus_dice)) {
+        currentDiceArray = [...existingResources.spell_bonus_dice];
+      }
+    }
+
+    const indexToRemove = currentDiceArray.indexOf(dieToRemove);
+    if (indexToRemove > -1) {
+      currentDiceArray.splice(indexToRemove, 1);
+    }
+
+    const { error: updateError } = await supabase
+      .from("character_resources")
+      .update({
+        spell_bonus_dice: currentDiceArray.length > 0 ? currentDiceArray : null,
+      })
+      .eq("character_id", characterId)
+      .eq("discord_user_id", discordUserId);
+
+    if (updateError) {
+      console.error("Error updating spell bonus dice:", updateError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error removing spell bonus die:", error);
+    return false;
+  }
+};
+
 export const attemptSpell = async ({
   spellName,
   subject,
@@ -1839,13 +2146,15 @@ export const attemptSpell = async ({
   setFailedAttempts,
   updateSpellProgressSummary,
   customRoll = null,
+  supabase,
+  showBonusDiceModal,
+  hideBonusDiceModal,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
   }
 
-  // Check if spell has restrictions
   const spellData = getSpellData(spellName);
 
   setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
@@ -1865,39 +2174,86 @@ export const attemptSpell = async ({
       subject,
       selectedCharacter
     );
-    const total = d20Roll + totalModifier;
+    let total = d20Roll + totalModifier;
 
     const spellLevel = getSpellLevel(spellName, subject);
     const goal = getSpellCastingDC(spellLevel);
 
-    const isCriticalSuccess = d20Roll === 20;
-    const isCriticalFailure = d20Roll === 1;
-    const isSuccess =
-      (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+    let isCriticalSuccess = d20Roll === 20;
+    let isCriticalFailure = d20Roll === 1;
+    let isSuccess = (total >= goal || isCriticalSuccess) && !isCriticalFailure;
+
+    let bonusDiceUsed = null;
+    let bonusDiceRoll = null;
+    let bonusDiceTotal = null;
+
+    if (!isSuccess && !isCriticalFailure && customRoll === null && supabase) {
+      const availableDice = await getCharacterSpellBonusDice(
+        supabase,
+        selectedCharacter.id,
+        discordUserId
+      );
+
+      if (availableDice) {
+        const userWantsToUseDice = await new Promise((resolve) => {
+          showBonusDiceModal({
+            availableDice,
+            spellName,
+            originalRoll: d20Roll,
+            originalModifier: totalModifier,
+            originalTotal: total,
+            targetDC: goal,
+            onConfirm: async (selectedDie) => {
+              hideBonusDiceModal();
+              resolve(selectedDie);
+            },
+            onClose: () => {
+              hideBonusDiceModal();
+              resolve(null);
+            },
+          });
+        });
+
+        if (userWantsToUseDice) {
+          const roller = new DiceRoller();
+          const bonusRoll = roller.roll(userWantsToUseDice);
+          bonusDiceRoll = bonusRoll.total;
+          bonusDiceUsed = userWantsToUseDice;
+
+          bonusDiceTotal = total + bonusDiceRoll;
+          total = bonusDiceTotal;
+
+          isSuccess = total >= goal && !isCriticalFailure;
+
+          await removeSpellBonusDie(
+            supabase,
+            selectedCharacter.id,
+            discordUserId,
+            userWantsToUseDice
+          );
+        }
+      }
+    }
 
     if (showRollResult) {
+      let description = `Attempting to cast ${spellName} (Level ${spellLevel}, DC ${goal}) for ${
+        selectedCharacter.name
+      }${customRoll !== null ? " using assigned die" : ""}`;
+
+      if (bonusDiceUsed) {
+        description += `\n🎲 Bonus Die Used: ${bonusDiceUsed} rolled ${bonusDiceRoll}!`;
+      }
+
       showRollResult({
-        title: `${spellName} Attempt`,
+        title: `${spellName} Attempt${bonusDiceUsed ? " (With Bonus)" : ""}`,
         rollValue: d20Roll,
-        modifier: totalModifier,
+        modifier: totalModifier + (bonusDiceRoll || 0),
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
         type: "spell",
-        description: `Attempting to cast ${spellName} (Level ${spellLevel}, DC ${goal}) for ${
-          selectedCharacter.name
-        }${customRoll !== null ? " using assigned die" : ""}`,
+        description: description,
       });
-    } else {
-      const criticalText = isCriticalSuccess
-        ? " - CRITICAL SUCCESS!"
-        : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
-      const resultText = isSuccess ? "SUCCESS" : "FAILED";
-      alert(
-        `${spellName} Attempt: d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`
-      );
     }
 
     if (isCriticalSuccess) {
@@ -1929,6 +2285,17 @@ export const attemptSpell = async ({
       }));
     }
 
+    let rollDetailsDisplay;
+    if (bonusDiceUsed && bonusDiceRoll !== null) {
+      const modifierDisplay =
+        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+      rollDetailsDisplay = `${d20Roll}${modifierDisplay}+${bonusDiceRoll} = ${total}`;
+    } else {
+      const modifierDisplay =
+        totalModifier >= 0 ? `+${totalModifier}` : `${totalModifier}`;
+      rollDetailsDisplay = `${d20Roll}${modifierDisplay} = ${total}`;
+    }
+
     const rollResult = {
       d20Roll,
       modifier: totalModifier,
@@ -1937,13 +2304,20 @@ export const attemptSpell = async ({
       isCriticalFailure,
       isSuccess,
       customRoll,
+      bonusDiceUsed,
+      bonusDiceRoll,
+
+      rollDetailsDisplay: rollDetailsDisplay,
     };
 
     let title = `Attempted: ${spellName}`;
+    if (bonusDiceUsed) {
+      title += ` (Bonus ${bonusDiceUsed})`;
+    }
     if (isCriticalSuccess) {
-      title = `⭐ Attempted: ${spellName}`;
+      title = `⭐ ${title}`;
     } else if (isCriticalFailure) {
-      title = `💥 Attempted: ${spellName}`;
+      title = `💥 ${title}`;
     }
 
     const additionalFields = [
@@ -1958,6 +2332,14 @@ export const attemptSpell = async ({
         inline: true,
       },
     ];
+
+    if (bonusDiceUsed) {
+      additionalFields.push({
+        name: "Magical Theory Bonus",
+        value: `🎲 ${bonusDiceUsed} rolled **${bonusDiceRoll}**`,
+        inline: false,
+      });
+    }
 
     if (selectedCharacter) {
       const modifierInfo = getModifierInfo(
@@ -1992,6 +2374,8 @@ export const attemptSpell = async ({
       d20Roll,
       total,
       goal,
+      bonusDiceUsed,
+      bonusDiceRoll,
     };
   } catch (error) {
     console.error("Error attempting spell:", error);
@@ -3067,5 +3451,7 @@ export const useRollFunctions = () => {
       rollMagicCasting({ ...params, showRollResult }),
     rollFlexibleDice: (params) =>
       rollFlexibleDice({ ...params, showRollResult }),
+    rollMagicalTheoryCheck: (params) =>
+      rollMagicalTheoryCheck({ ...params, showRollResult }),
   };
 };

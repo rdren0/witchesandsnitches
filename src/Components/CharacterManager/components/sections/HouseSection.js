@@ -682,7 +682,6 @@ const HouseSection = ({
                               </span>
                             ))}
 
-                            {/* Show the actual selected choice if it exists */}
                             {actualHouseChoices?.[house]?.abilityChoice ? (
                               <span
                                 style={{
@@ -712,7 +711,6 @@ const HouseSection = ({
                           </div>
                         </div>
 
-                        {/* FIXED: Always show HouseAbilityChoice for selected house */}
                         {actualSelectedHouse === house && (
                           <HouseAbilityChoice
                             house={house}

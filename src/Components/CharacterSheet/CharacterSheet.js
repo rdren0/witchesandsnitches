@@ -13,7 +13,7 @@ import {
   Target,
   Plus,
 } from "lucide-react";
-import { Skills } from "./Skills";
+import { Skills } from "./Skills/Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
 import LevelUpModal from "../CharacterManager/LevelUpModal";
 import CharacterSheetModals from "./CharacterSheetModals";

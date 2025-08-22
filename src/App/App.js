@@ -1399,7 +1399,7 @@ function AppContent() {
       </div>
       <footer
         style={{
-          marginTop: "auto", // This pushes footer to bottom when there's space
+          marginTop: "auto",
           paddingBottom: "10px",
           backgroundColor: theme.surface,
           color: theme.textSecondary,

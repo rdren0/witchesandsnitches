@@ -1,12 +1,10 @@
 export const DEFAULT_CHARACTER = {
-  // Basic Info
   name: "",
   imageUrl: "",
   level: 1,
   schoolYear: "First",
   castingStyle: "",
 
-  // Ability Scores
   ability_scores: {
     strength: 8,
     dexterity: 8,
@@ -16,30 +14,25 @@ export const DEFAULT_CHARACTER = {
     charisma: 8,
   },
 
-  // Character Choices
   background: "",
   house: "",
   heritage: "",
 
-  // Game Info
   hit_points: 0,
   current_hit_points: 0,
   current_hit_dice: 1,
   game_session: "",
 
-  // Progression
   asi_choices: {},
   house_choices: {},
   heritage_choices: {},
   feat_choices: {},
   subclass_choices: {},
 
-  // Derived Values
   level1ChoiceType: "",
   selectedFeat: "",
   selectedInnateHeritage: "",
 
-  // Meta
   discord_user_id: "",
   created_at: "",
   updated_at: "",

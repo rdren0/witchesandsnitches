@@ -1,5 +1,4 @@
 export const createBaseStyles = (theme) => ({
-  // Section styles
   section: {
     backgroundColor: theme.surface,
     border: `1px solid ${theme.border}`,
@@ -34,7 +33,6 @@ export const createBaseStyles = (theme) => ({
     padding: "20px",
   },
 
-  // Button styles
   button: {
     padding: "8px 16px",
     border: "none",
@@ -64,7 +62,6 @@ export const createBaseStyles = (theme) => ({
     fontSize: "12px",
   },
 
-  // Form styles
   fieldContainer: {
     marginBottom: "16px",
   },
@@ -87,7 +84,6 @@ export const createBaseStyles = (theme) => ({
     fontSize: "14px",
   },
 
-  // Selection styles
   optionGroup: {
     display: "flex",
     flexDirection: "column",

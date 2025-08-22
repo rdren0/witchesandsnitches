@@ -29,6 +29,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
 import { createSpellBookStyles } from "../../styles/masterStyles";
 import RestrictionModal from "./RestrictionModal";
+import { SpellBonusDiceModal } from "./SpellBonusDiceModal";
 
 const getIcon = (iconName) => {
   const iconMap = {
@@ -525,6 +526,25 @@ export const SubjectCard = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
 
+  const [bonusDiceModalState, setBonusDiceModalState] = useState({
+    isOpen: false,
+    props: {},
+  });
+
+  const showBonusDiceModal = (props) => {
+    setBonusDiceModalState({
+      isOpen: true,
+      props,
+    });
+  };
+
+  const hideBonusDiceModal = () => {
+    setBonusDiceModalState({
+      isOpen: false,
+      props: {},
+    });
+  };
+
   const getSpellData = (spellName) => {
     if (!spellName) return null;
 
@@ -578,6 +598,9 @@ export const SubjectCard = ({
       setCriticalSuccesses,
       setFailedAttempts,
       updateSpellProgressSummary,
+      supabase,
+      showBonusDiceModal,
+      hideBonusDiceModal,
     });
   };
 
@@ -2078,6 +2101,17 @@ export const SubjectCard = ({
         onConfirm={restrictionModal.onConfirm}
         onCancel={handleRestrictionCancel}
         theme={theme}
+      />
+      <SpellBonusDiceModal
+        isOpen={bonusDiceModalState.isOpen}
+        onClose={bonusDiceModalState.props.onClose}
+        onConfirm={bonusDiceModalState.props.onConfirm}
+        availableDice={bonusDiceModalState.props.availableDice}
+        spellName={bonusDiceModalState.props.spellName}
+        originalRoll={bonusDiceModalState.props.originalRoll}
+        originalModifier={bonusDiceModalState.props.originalModifier}
+        originalTotal={bonusDiceModalState.props.originalTotal}
+        targetDC={bonusDiceModalState.props.targetDC}
       />
     </div>
   );

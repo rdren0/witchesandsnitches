@@ -1,7 +1,7 @@
 import * as images from "../Images";
 
 export const ALL_CHARACTERS = [
-  // ILVERMORNY ClassmateS (sorted by last name)
+  // ILVERMORNY Classmates (sorted by last name)
   {
     id: 7,
     name: "Erika Baker",
