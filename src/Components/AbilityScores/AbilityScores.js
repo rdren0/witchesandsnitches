@@ -9,7 +9,6 @@ const AbilityScores = ({ character }) => {
   const { theme } = useTheme();
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
-  // eslint-disable-next-line
   const characterModifiers = modifiers(character);
 
   const getSavingThrowProficiencies = (castingStyle) => {

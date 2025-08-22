@@ -14,7 +14,6 @@ import { gameSessionOptions } from "../App/const";
 
 const SessionManagement = ({ supabase }) => {
   const { theme } = useTheme();
-  // eslint-disable-next-line
   const [characters, setCharacters] = useState([]);
   const [gameSessions, setGameSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +79,6 @@ const SessionManagement = ({ supabase }) => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line
   }, [supabase]);
 
   const groupCharactersBySession = (characters) => {

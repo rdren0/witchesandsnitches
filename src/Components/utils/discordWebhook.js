@@ -51,10 +51,16 @@ export const sendDiscordRollWebhook = async ({
         isCriticalSuccess,
         isCriticalFailure,
         customRoll,
+        rollDetailsDisplay,
       } = rollResult;
 
-      const modifierText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
-      const rollDescription = `\`${d20Roll}${modifierText}=${total}\``;
+      let rollDescription;
+      if (rollDetailsDisplay) {
+        rollDescription = `\`${rollDetailsDisplay}\``;
+      } else {
+        const modifierText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+        rollDescription = `\`${d20Roll}${modifierText}=${total}\``;
+      }
 
       if (isCriticalSuccess) {
         embed.description += "\n\n✨ **Critical Success!**";

@@ -338,7 +338,6 @@ const CharacterFeatsDisplay = ({
                 if (ability.effect)
                   abilityDetails.push(`Effect: ${ability.effect}`);
 
-                // Handle bonus if it exists and is an object
                 if (ability.bonus) {
                   if (typeof ability.bonus === "object") {
                     abilityDetails.push(

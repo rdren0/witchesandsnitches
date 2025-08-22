@@ -541,7 +541,6 @@ const SkillsSection = ({ character, onChange, disabled = false }) => {
                   fontSize: "12px",
                   fontWeight: "600",
                   marginBottom: "8px",
-                  // width: "45%",
                 }}
               >
                 ✓ Casting style skill selection complete! You've chosen your 2

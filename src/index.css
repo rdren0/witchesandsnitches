@@ -9,7 +9,6 @@ body {
 }
 
 #root {
-  /* allow users to view more content on smaller screens */
   @media (max-width: 960px) {
     width: 250vw;
   }
@@ -20,12 +19,10 @@ code {
     monospace;
 }
 
-/* Ensure magical fonts load properly */
 * {
   box-sizing: border-box;
 }
 
-/* Scrollbar styling for magical theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
