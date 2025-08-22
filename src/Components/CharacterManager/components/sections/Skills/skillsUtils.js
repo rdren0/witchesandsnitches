@@ -425,19 +425,3 @@ export const getStudyBuddySummary = (character) => {
     hasExpertiseGranter: hasExpertiseGranter.length > 0,
   };
 };
-
-export const getFeatSkillsSummary = (character) => {
-  const featSkills = parseFeatSkills(character);
-  const featChoices = character.featChoices || {};
-
-  return {
-    featSkills,
-    featChoices,
-    selectedFeats: [
-      ...(character.standardFeats || []),
-      ...Object.values(character.asiChoices || {})
-        .filter((choice) => choice.type === "feat" && choice.selectedFeat)
-        .map((choice) => choice.selectedFeat),
-    ],
-  };
-};

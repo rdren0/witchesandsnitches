@@ -14,9 +14,12 @@ export const useCharacterData = (
   isUserAdmin = false
 ) => {
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
+  const [originalCharacter, setOriginalCharacter] = useState(DEFAULT_CHARACTER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [hasChanges, setHasChanges] = useState(false);
+
+  const hasChanges =
+    JSON.stringify(character) !== JSON.stringify(originalCharacter);
 
   const loadCharacter = useCallback(async () => {
     if (!characterId) return;
@@ -55,12 +58,13 @@ export const useCharacterData = (
             loadedCharacter.base_ability_scores;
         }
 
-        setCharacter({
+        const finalCharacter = {
           ...DEFAULT_CHARACTER,
           ...transformedCharacter,
-          discord_user_id: loadedCharacter.discord_user_id,
-        });
-        setHasChanges(false);
+        };
+
+        setCharacter(finalCharacter);
+        setOriginalCharacter(finalCharacter);
       }
     } catch (err) {
       console.error("Error loading character:", err);
@@ -86,7 +90,6 @@ export const useCharacterData = (
 
       return updated;
     });
-    setHasChanges(true);
   }, []);
 
   const updateCharacterBulk = useCallback((updates) => {
@@ -94,14 +97,12 @@ export const useCharacterData = (
       ...prev,
       ...updates,
     }));
-    setHasChanges(true);
   }, []);
 
   const resetCharacter = useCallback(() => {
-    setCharacter(DEFAULT_CHARACTER);
-    setHasChanges(false);
+    setCharacter(originalCharacter);
     setError(null);
-  }, []);
+  }, [originalCharacter]);
 
   const saveCharacter = useCallback(async () => {
     const effectiveUserId = character.discord_user_id || userId;
@@ -177,15 +178,16 @@ export const useCharacterData = (
           transformedResult.abilityScores = result.base_ability_scores;
         }
 
-        setCharacter((prev) => ({
-          ...prev,
+        const savedCharacter = {
+          ...character,
           ...transformedResult,
-          discord_user_id: result.discord_user_id,
-        }));
-        setHasChanges(false);
-      }
+        };
 
-      return result;
+        setCharacter(savedCharacter);
+        setOriginalCharacter(savedCharacter);
+
+        return result;
+      }
     } catch (err) {
       console.error("Error saving character:", err);
       setError(err.message);

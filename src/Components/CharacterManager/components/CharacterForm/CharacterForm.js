@@ -6,17 +6,17 @@ import { useCharacterData } from "../../hooks/useCharacterData";
 import { useFormSections } from "../../hooks/useFormSections";
 import { FormSection } from "../index";
 import {
-  BasicInfoSection,
   AbilityScoresSection,
   HitPointsSection,
   BackgroundSection,
   HouseSection,
   Level1ChoiceSection,
   SubclassSection,
-  HeritageSection,
   SkillsSection,
   ASILevelChoices,
   MagicModifiersSection,
+  NotesSection,
+  BasicInfoSection,
 } from "../sections";
 
 import {
@@ -73,6 +73,7 @@ const CharacterForm = ({
       asiProgression: false,
       skills: false,
       magicModifiers: false,
+      notes: false,
     },
     mode
   );
@@ -180,7 +181,7 @@ const CharacterForm = ({
     padding: "16px",
     backgroundColor: theme.surface,
     borderRadius: isSticky ? "0" : "8px",
-    border: `1px solid ${theme.border}`,
+    border: `3px solid ${theme.text}`,
     ...(isSticky && {
       position: "fixed",
       top: 0,
@@ -189,9 +190,6 @@ const CharacterForm = ({
       zIndex: 1000,
       boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
       borderRadius: 0,
-      borderTop: "none",
-      borderLeft: "none",
-      borderRight: "none",
     }),
     transition: "all 0.3s ease",
   };
@@ -265,7 +263,7 @@ const CharacterForm = ({
                 ...styles.button,
                 ...styles.buttonSecondary,
                 backgroundColor: theme.error,
-                color: theme.surface,
+                border: theme.border,
               }}
             >
               <RotateCcw size={16} />
@@ -280,7 +278,7 @@ const CharacterForm = ({
               ...styles.button,
               ...styles.buttonPrimary,
               opacity: loading || !hasChanges ? 0.6 : 1,
-              backgroundColor: hasChanges ? theme.primary : theme.border,
+              backgroundColor: hasChanges ? theme.success : theme.border,
             }}
           >
             <Save size={16} />
@@ -292,7 +290,9 @@ const CharacterForm = ({
               onClick={onCancel}
               style={{
                 ...styles.button,
-                ...styles.buttonSecondary,
+                ...styles.buttonPrimary,
+                opacity: loading || !hasChanges ? 0.6 : 1,
+                backgroundColor: theme.warning,
               }}
             >
               <X size={16} />
@@ -498,6 +498,19 @@ const CharacterForm = ({
           character={character}
           onChange={updateCharacter}
           disabled={sectionLocks.magicModifiers}
+        />
+      </FormSection>
+      <FormSection
+        title="Character Notes"
+        subtitle="Additional notes, character flaws, backstory etc"
+        isLocked={sectionLocks.notes}
+        onToggleLock={canLock ? () => toggleSectionLock("notes") : undefined}
+        lockable={canLock}
+      >
+        <NotesSection
+          character={character}
+          onChange={updateCharacter}
+          disabled={sectionLocks.notes}
         />
       </FormSection>
     </div>

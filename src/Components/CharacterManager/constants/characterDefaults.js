@@ -4,7 +4,6 @@ export const DEFAULT_CHARACTER = {
   level: 1,
   schoolYear: "First",
   castingStyle: "",
-
   ability_scores: {
     strength: 8,
     dexterity: 8,
@@ -13,16 +12,16 @@ export const DEFAULT_CHARACTER = {
     wisdom: 8,
     charisma: 8,
   },
-
   background: "",
   house: "",
   heritage: "",
-
   hit_points: 0,
   current_hit_points: 0,
   current_hit_dice: 1,
+  current_hit_points: 0,
+  discord_user_id: "",
+  feat_choices: {},
   game_session: "",
-
   asi_choices: {},
   house_choices: {},
   heritage_choices: {},
@@ -30,9 +29,11 @@ export const DEFAULT_CHARACTER = {
   subclass_choices: {},
 
   level1ChoiceType: "",
+  name: "",
+  notes: "",
+  schoolYear: "1",
   selectedFeat: "",
   selectedInnateHeritage: "",
-
   discord_user_id: "",
   created_at: "",
   updated_at: "",

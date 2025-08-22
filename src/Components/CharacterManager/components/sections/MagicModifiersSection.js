@@ -226,44 +226,6 @@ const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
             rows={5}
           />
         </div>
-
-        <div
-          style={{
-            fontSize: "12px",
-            color: theme.textSecondary,
-            marginTop: "16px",
-            padding: "8px",
-            backgroundColor: theme.surface,
-            borderRadius: "4px",
-            border: `1px solid ${theme.border}`,
-          }}
-        >
-          <strong>Magic Modifiers Summary:</strong>{" "}
-          {magicSubjects.map(({ key, label }, index) => {
-            const value = magicModifiers[key] || 0;
-            const sign = value >= 0 ? "+" : "";
-            return (
-              <span key={key}>
-                {label}: {sign}
-                {value}
-                {index < magicSubjects.length - 1 ? ", " : ""}
-              </span>
-            );
-          })}
-        </div>
-
-        <div
-          style={{
-            fontSize: "12px",
-            color: theme.textSecondary,
-            marginTop: "12px",
-            fontStyle: "italic",
-          }}
-        >
-          Magic modifiers affect your spell attack bonuses and save DCs for
-          specific schools of magic. Positive values provide bonuses, negative
-          values impose penalties.
-        </div>
       </div>
     </div>
   );

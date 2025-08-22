@@ -106,7 +106,7 @@ const CharacterSheet = ({
   const getBaseArmorClass = useCallback((castingStyle) => {
     const baseACMap = {
       Willpower: 13,
-      "Willpower Caster": 13,
+      "Willpower Caster": 15,
       Technique: 10,
       "Technique Caster": 10,
       Intellect: 11,
