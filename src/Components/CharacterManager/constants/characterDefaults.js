@@ -26,7 +26,7 @@ export const DEFAULT_CHARACTER = {
   level1ChoiceType: "",
   name: "",
   notes: "",
-  schoolYear: "First",
+  schoolYear: "1",
   selectedFeat: "",
   selectedInnateHeritage: "",
   subclass_choices: {},
