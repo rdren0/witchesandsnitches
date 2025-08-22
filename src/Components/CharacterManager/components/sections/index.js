@@ -9,3 +9,4 @@ export { default as Level1ChoiceSection } from "./Level1ChoiceSection";
 export { default as SkillsSection } from "./Skills/SkillsSection";
 export { default as ASILevelChoices } from "./ASILevelChoices";
 export { default as MagicModifiersSection } from "./MagicModifiersSection";
+export { default as NotesSection } from "./NotesSection";

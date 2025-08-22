@@ -47,10 +47,9 @@ export const createBaseStyles = (theme) => ({
     alignItems: "center",
     gap: "6px",
   },
-
   buttonPrimary: {
     backgroundColor: theme.primary,
-    color: theme.surface,
+    color: theme.text,
   },
 
   buttonSecondary: {

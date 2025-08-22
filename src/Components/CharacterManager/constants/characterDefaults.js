@@ -1,12 +1,4 @@
 export const DEFAULT_CHARACTER = {
-  // Basic Info
-  name: "",
-  imageUrl: "",
-  level: 1,
-  schoolYear: "First",
-  castingStyle: "",
-
-  // Ability Scores
   ability_scores: {
     strength: 8,
     dexterity: 8,
@@ -15,33 +7,29 @@ export const DEFAULT_CHARACTER = {
     wisdom: 8,
     charisma: 8,
   },
-
-  // Character Choices
-  background: "",
-  house: "",
-  heritage: "",
-
-  // Game Info
-  hit_points: 0,
-  current_hit_points: 0,
-  current_hit_dice: 1,
-  game_session: "",
-
-  // Progression
   asi_choices: {},
-  house_choices: {},
-  heritage_choices: {},
+  background: "",
+  castingStyle: "",
+  created_at: "",
+  current_hit_dice: 1,
+  current_hit_points: 0,
+  discord_user_id: "",
   feat_choices: {},
-  subclass_choices: {},
-
-  // Derived Values
+  game_session: "",
+  heritage_choices: {},
+  heritage: "",
+  hit_points: 0,
+  house_choices: {},
+  house: "",
+  imageUrl: "",
+  level: 1,
   level1ChoiceType: "",
+  name: "",
+  notes: "",
+  schoolYear: "First",
   selectedFeat: "",
   selectedInnateHeritage: "",
-
-  // Meta
-  discord_user_id: "",
-  created_at: "",
+  subclass_choices: {},
   updated_at: "",
 };
 
