@@ -26,6 +26,76 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const [yearFilter, setYearFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
 
+  const loadSpellProgress = useCallback(async () => {
+    if (!selectedCharacter || !user?.user_metadata?.provider_id) return;
+
+    const characterOwnerDiscordId = user.user_metadata.provider_id;
+
+    try {
+      const { data, error } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", selectedCharacter.id)
+        .eq("discord_user_id", characterOwnerDiscordId);
+
+      if (error) {
+        console.error("Error fetching spell progress:", error);
+        return;
+      }
+
+      const newSpellAttempts = {};
+      const newCriticalSuccesses = {};
+      const newFailedAttempts = {};
+      const newResearchedSpells = {};
+      const newArithmancticTags = {};
+      const newRunicTags = {};
+
+      data.forEach((spell) => {
+        const spellName = spell.spell_name;
+
+        if (spell.successful_attempts > 0) {
+          newSpellAttempts[spellName] = {
+            1: true,
+            2: spell.successful_attempts >= 2,
+          };
+        }
+
+        if (spell.has_natural_twenty) {
+          newCriticalSuccesses[spellName] = true;
+        }
+
+        if (spell.has_failed_attempt) {
+          newFailedAttempts[spellName] = true;
+        }
+
+        if (spell.researched) {
+          newResearchedSpells[spellName] = true;
+        }
+
+        if (spell.has_arithmantic_tag) {
+          newArithmancticTags[spellName] = true;
+        }
+
+        if (spell.has_runic_tag) {
+          newRunicTags[spellName] = true;
+        }
+      });
+
+      setSpellAttempts(newSpellAttempts);
+      setCriticalSuccesses(newCriticalSuccesses);
+      setFailedAttempts(newFailedAttempts);
+      setResearchedSpells(newResearchedSpells);
+      setArithmancticTags(newArithmancticTags);
+      setRunicTags(newRunicTags);
+    } catch (error) {
+      console.error("Error loading spell progress:", error);
+    }
+  }, [selectedCharacter, user, supabase]);
+
+  useEffect(() => {
+    loadSpellProgress();
+  }, [loadSpellProgress]);
+
   const discordUserId = user?.user_metadata?.provider_id;
 
   const attemptFilterOptions = [
@@ -834,7 +904,8 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
               subjectName={subjectName}
               supabase={supabase}
               user={user}
-              searchTerm={searchTerm}
+              globalSearchTerm={searchTerm}
+              onSpellProgressUpdate={loadSpellProgress}
             />
           )
         )}

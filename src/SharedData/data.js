@@ -263,3 +263,43 @@ export const allSkills = [
   { name: "performance", displayName: "Performance", ability: "charisma" },
   { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
 ];
+
+export const skillDescriptions = {
+  acrobatics:
+    "Balance, tumble, perform stunts, escape grapples, avoid falling damage",
+  athletics: "Jump, climb, swim, grapple, shove, resist being pushed",
+  deception:
+    "Lie convincingly, disguise yourself, con others, create false impressions",
+  herbology:
+    "Identify magical plants, harvest ingredients, understand plant properties, cultivate magical flora",
+  historyOfMagic:
+    "Recall magical events, know famous wizards, understand magical conflicts, recognize historical artifacts",
+  insight:
+    "Detect lies, read emotions, understand motivations, sense hidden intentions",
+  intimidation:
+    "Threaten others, coerce information, demoralize enemies, display dominance",
+  investigation:
+    "Search for clues, find hidden objects, research information, analyze evidence",
+  magicalCreatures:
+    "Identify creatures, understand behaviors, handle safely, know weaknesses and strengths",
+  magicalTheory:
+    "Understand magical principles, earn bonus dice for spellcasting attempts!",
+  medicine:
+    "Stabilize dying creatures, diagnose illnesses, treat wounds, identify causes of death",
+  muggleStudies:
+    "Understand non-magical technology, blend into muggle society, operate muggle devices",
+  perception:
+    "Notice hidden things, spot danger, hear faint sounds, detect ambushes",
+  performance:
+    "Sing, dance, act, tell stories, play instruments, entertain crowds",
+  persuasion:
+    "Influence others diplomatically, negotiate deals, inspire cooperation, make friends",
+  potionMaking:
+    "Brew potions accurately, identify ingredients, follow complex recipes, improvise mixtures",
+  sleightOfHand:
+    "Pickpocket, conceal objects, perform tricks, pick locks, plant items",
+  stealth:
+    "Hide, move silently, sneak past guards, blend into crowds, avoid detection",
+  survival:
+    "Track creatures, navigate, find food/shelter, predict weather, avoid natural hazards",
+};

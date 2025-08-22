@@ -482,14 +482,12 @@ export const SubjectCard = ({
   researchedSpells,
   setResearchedSpells,
   arithmancticTags,
-  setArithmancticTags,
   runicTags,
-  setRunicTags,
   subjectData,
   subjectName,
   supabase,
-  user,
   globalSearchTerm = "",
+  onSpellProgressUpdate,
 }) => {
   const {
     attemptSpell,
@@ -678,86 +676,6 @@ export const SubjectCard = ({
 
   const { totalSpells, masteredCount, progressPercentage } =
     getSubjectStats(subjectName);
-
-  const loadSpellProgress = useCallback(async () => {
-    if (!selectedCharacter) return;
-
-    const characterOwnerDiscordId = selectedCharacter.discord_user_id;
-    if (!characterOwnerDiscordId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", characterOwnerDiscordId);
-
-      if (error) {
-        console.error("Error fetching spell progress:", error);
-        return;
-      }
-
-      const newSpellAttempts = {};
-      const newCriticalSuccesses = {};
-      const newFailedAttempts = {};
-      const newResearchedSpells = {};
-      const newArithmancticTags = {};
-      const newRunicTags = {};
-
-      data.forEach((spell) => {
-        const spellName = spell.spell_name;
-
-        if (spell.successful_attempts > 0) {
-          newSpellAttempts[spellName] = {
-            1: true,
-            2: spell.successful_attempts >= 2,
-          };
-        }
-
-        if (spell.has_natural_twenty) {
-          newCriticalSuccesses[spellName] = true;
-        }
-
-        if (spell.has_failed_attempt) {
-          newFailedAttempts[spellName] = true;
-        }
-
-        if (spell.researched) {
-          newResearchedSpells[spellName] = true;
-        }
-
-        if (spell.has_arithmantic_tag) {
-          newArithmancticTags[spellName] = true;
-        }
-
-        if (spell.has_runic_tag) {
-          newRunicTags[spellName] = true;
-        }
-      });
-
-      setSpellAttempts(newSpellAttempts);
-      setCriticalSuccesses(newCriticalSuccesses);
-      setFailedAttempts(newFailedAttempts);
-      setResearchedSpells(newResearchedSpells);
-      setArithmancticTags(newArithmancticTags);
-      setRunicTags(newRunicTags);
-    } catch (error) {
-      console.error("Error loading spell progress:", error);
-    }
-  }, [
-    selectedCharacter,
-    supabase,
-    setSpellAttempts,
-    setCriticalSuccesses,
-    setFailedAttempts,
-    setResearchedSpells,
-    setArithmancticTags,
-    setRunicTags,
-  ]);
-
-  useEffect(() => {
-    loadSpellProgress();
-  }, [selectedCharacter]);
 
   const toggleDescription = (spellName) => {
     setExpandedDescriptions((prev) => ({
@@ -1639,7 +1557,9 @@ export const SubjectCard = ({
         }
       }
 
-      await loadSpellProgress();
+      if (onSpellProgressUpdate) {
+        await onSpellProgressUpdate();
+      }
     } catch (error) {
       console.error("Error during research attempt:", error);
       setError("Error occurred during research attempt");
@@ -1717,7 +1637,9 @@ export const SubjectCard = ({
         }
       }
 
-      await loadSpellProgress();
+      if (onSpellProgressUpdate) {
+        await onSpellProgressUpdate();
+      }
       cancelEditing();
     } catch (error) {
       console.error("Error saving spell progress:", error);
