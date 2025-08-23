@@ -355,26 +355,24 @@ const CharacterManager = ({
         </>
       )}
 
-      {currentMode === "create" && (
-        <CharacterForm
-          userId={discordUserId}
-          mode="create"
-          onSave={handleCharacterSaved}
-          onCancel={() => navigate("/character-management")}
-          supabase={supabase}
-          adminMode={adminMode}
-          isUserAdmin={isUserAdmin}
-          selectedTargetUserId={selectedTargetUserId}
-          onTargetUserChange={setSelectedTargetUserId}
-          initialSection={sectionToOpen}
-        />
-      )}
-
       {currentMode === "edit" && characterId && (
         <CharacterForm
           characterId={characterId}
           userId={adminMode && isUserAdmin ? null : discordUserId}
           mode="edit"
+          onSave={handleCharacterSaved}
+          onCancel={() => navigate("/character-management")}
+          supabase={supabase}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
+          initialSection={sectionToOpen}
+        />
+      )}
+
+      {currentMode === "create" && (
+        <CharacterForm
+          userId={discordUserId}
+          mode="create"
           onSave={handleCharacterSaved}
           onCancel={() => navigate("/character-management")}
           supabase={supabase}
