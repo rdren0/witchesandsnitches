@@ -127,6 +127,9 @@ const CharacterSheetModals = ({
         if (character?.imageUrl) {
           message.username = character.name;
           message.avatar_url = character.imageUrl;
+        } else if (character?.image_url) {
+          message.username = character.name;
+          message.avatar_url = character.image_url;
         }
 
         try {
@@ -248,6 +251,9 @@ const CharacterSheetModals = ({
         if (character?.imageUrl) {
           message.username = character.name;
           message.avatar_url = character.imageUrl;
+        } else if (character?.image_url) {
+          message.username = character.name;
+          message.avatar_url = character.image_url;
         }
 
         try {

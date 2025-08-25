@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { Users, Plus, Crown } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
@@ -20,6 +25,7 @@ const CharacterManager = ({
   const { theme } = useTheme();
   const { allUsers, loadAllUsers } = useAdmin();
   const navigate = useNavigate();
+  const location = useLocation();
   const { characterId } = useParams();
   const [searchParams] = useSearchParams();
 
@@ -34,6 +40,7 @@ const CharacterManager = ({
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const discordUserId = user?.user_metadata?.provider_id;
+  console.log({ discordUserId });
 
   useEffect(() => {
     if (discordUserId) {
@@ -84,7 +91,12 @@ const CharacterManager = ({
   };
 
   const handleEditCharacter = (character) => {
-    navigate(`/character-management/edit/${character.id}`);
+    navigate(`/character-management/edit/${character.id}`, {
+      state: {
+        characterOwnerId: character.discord_user_id,
+        characterName: character.name,
+      },
+    });
   };
 
   const handleLevelUpCharacter = (character) => {
@@ -358,7 +370,11 @@ const CharacterManager = ({
       {currentMode === "edit" && characterId && (
         <CharacterForm
           characterId={characterId}
-          userId={adminMode && isUserAdmin ? null : discordUserId}
+          userId={
+            adminMode && isUserAdmin
+              ? location.state?.characterOwnerId
+              : discordUserId
+          }
           mode="edit"
           onSave={handleCharacterSaved}
           onCancel={() => navigate("/character-management")}

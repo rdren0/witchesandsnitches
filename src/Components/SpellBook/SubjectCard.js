@@ -731,7 +731,7 @@ export const SubjectCard = ({
         .eq("character_id", selectedCharacter.id)
         .eq("discord_user_id", characterOwnerDiscordId)
         .eq("spell_name", spellName)
-        .single();
+        .maybeSingle();
 
       if (fetchError && fetchError.code !== "PGRST116") {
         console.error("Error fetching spell progress:", fetchError);
@@ -1495,7 +1495,7 @@ export const SubjectCard = ({
           .eq("character_id", selectedCharacter.id)
           .eq("discord_user_id", characterOwnerDiscordId)
           .eq("spell_name", spellName)
-          .single();
+          .maybeSingle();
 
         if (fetchError && fetchError.code !== "PGRST116") {
           console.error(
@@ -1593,7 +1593,7 @@ export const SubjectCard = ({
         .eq("character_id", selectedCharacter.id)
         .eq("discord_user_id", characterOwnerDiscordId)
         .eq("spell_name", editingSpell)
-        .single();
+        .maybeSingle();
 
       if (fetchError && fetchError.code !== "PGRST116") {
         console.error("Error fetching spell progress:", fetchError);
