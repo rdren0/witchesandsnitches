@@ -2544,6 +2544,9 @@ export const createSpellBookStyles = (theme) => ({
   },
   searchResultsContainer: {
     backgroundColor: theme.surface,
+    width: "100%",
+    padding: "0",
+    boxSizing: "border-box",
   },
   noResultsContainer: {
     textAlign: "center",

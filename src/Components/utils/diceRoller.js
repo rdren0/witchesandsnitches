@@ -4,7 +4,6 @@ import { X, Dice6 } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
 import { spellsData } from "../../SharedData/spells";
 import { getDiscordWebhook } from "../../App/const";
-import * as images from "../../Images";
 import {
   sendDiscordRollWebhook,
   getRollResultColor,

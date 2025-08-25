@@ -13,6 +13,7 @@ export const useCharacterData = (
   adminMode = false,
   isUserAdmin = false
 ) => {
+  console.log({ characterId, userId, adminMode, isUserAdmin });
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
   const [originalCharacter, setOriginalCharacter] = useState(DEFAULT_CHARACTER);
   const [loading, setLoading] = useState(false);
@@ -105,10 +106,21 @@ export const useCharacterData = (
   }, [originalCharacter]);
 
   const saveCharacter = useCallback(async () => {
-    const effectiveUserId = character.discord_user_id || userId;
+    let effectiveUserId;
 
-    if (!effectiveUserId && !(adminMode && isUserAdmin)) {
-      throw new Error("User ID required to save character");
+    if (adminMode && isUserAdmin) {
+      effectiveUserId =
+        originalCharacter.discordUserId || character.discordUserId;
+
+      if (!effectiveUserId) {
+        throw new Error("Character's discord_user_id is missing");
+      }
+    } else {
+      effectiveUserId = userId;
+
+      if (!effectiveUserId) {
+        throw new Error("User ID required to save character");
+      }
     }
 
     setLoading(true);
@@ -195,7 +207,7 @@ export const useCharacterData = (
     } finally {
       setLoading(false);
     }
-  }, [character, userId, adminMode, isUserAdmin]);
+  }, [character, originalCharacter, userId, adminMode, isUserAdmin]);
 
   useEffect(() => {
     if (characterId) {

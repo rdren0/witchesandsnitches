@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "@dice-roller/rpg-dice-roller": "^5.5.1",
+    "@statsig/js-client": "^3.24.4",
+    "@statsig/session-replay": "^3.24.4",
+    "@statsig/web-analytics": "^3.24.4",
     "@supabase/supabase-js": "^2.49.8",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

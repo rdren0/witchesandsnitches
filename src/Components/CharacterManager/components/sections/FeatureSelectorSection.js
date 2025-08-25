@@ -430,8 +430,16 @@ const FeatureSelectorSection = ({
   };
 
   const formatChoiceName = (name) => {
+    if (!name) {
+      return "";
+    }
+    const nameStr = String(name);
+    if (!nameStr || nameStr.length === 0) {
+      return "";
+    }
     return (
-      name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, " $1")
+      nameStr.charAt(0).toUpperCase() +
+      nameStr.slice(1).replace(/([A-Z])/g, " $1")
     );
   };
 
@@ -942,13 +950,24 @@ const FeatureSelectorSection = ({
                                       .join(" or ")
                                   )}
                                 </>
+                              ) : feat.benefits.abilityScoreIncrease.type ===
+                                "spellcasting_ability" ? (
+                                <>
+                                  +
+                                  {feat.benefits.abilityScoreIncrease.amount ||
+                                    1}{" "}
+                                  to Spellcasting Ability
+                                </>
                               ) : (
                                 <>
                                   +
                                   {feat.benefits.abilityScoreIncrease.amount ||
                                     1}{" "}
                                   {formatChoiceName(
-                                    feat.benefits.abilityScoreIncrease.ability
+                                    feat.benefits.abilityScoreIncrease
+                                      .ability ||
+                                      feat.benefits.abilityScoreIncrease.type ||
+                                      ""
                                   )}
                                 </>
                               )}
