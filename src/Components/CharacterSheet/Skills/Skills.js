@@ -164,7 +164,7 @@ export const Skills = ({
       marginLeft: "10px",
       padding: "8px 12px",
       backgroundColor: theme.background,
-      color: "white",
+      color: theme.text,
       borderRadius: "6px",
       fontSize: "12px",
       whiteSpace: "nowrap",
