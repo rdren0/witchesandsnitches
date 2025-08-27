@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { characterService } from "../services/characterService";
-import { useCallback } from "react";
 
 const AdminContext = createContext();
 
@@ -21,6 +25,17 @@ export const useAdmin = () => {
       loadAllUsers: () => {
         console.warn("loadAllUsers called outside of AdminProvider context");
       },
+      markPasswordVerified: () => {
+        console.warn(
+          "markPasswordVerified called outside of AdminProvider context"
+        );
+      },
+      clearPasswordVerification: () => {
+        console.warn(
+          "clearPasswordVerification called outside of AdminProvider context"
+        );
+      },
+      isInitialized: true,
     };
   }
   return context;
@@ -30,103 +45,86 @@ export const AdminProvider = ({ children, user }) => {
   const [adminMode, setAdminModeState] = useState(false);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
-
-  let searchParams, setSearchParams;
-  try {
-    [searchParams, setSearchParams] = useSearchParams();
-  } catch (error) {
-    console.warn(
-      "useSearchParams not available, admin mode URL persistence disabled"
-    );
-    searchParams = new URLSearchParams();
-    setSearchParams = () => {};
-  }
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!discordUserId) {
-        setIsUserAdmin(false);
-        setAdminModeState(false);
-        return;
-      }
+    if (!discordUserId) {
+      setIsInitialized(true);
+      return;
+    }
 
+    const initializeAdminState = async () => {
       try {
-        const adminStatus = await characterService.isUserAdmin(discordUserId);
-        setIsUserAdmin(adminStatus);
+        const hasAdminPassword =
+          localStorage.getItem(`admin_password_verified_${discordUserId}`) ===
+          "true";
 
-        if (!adminStatus) {
+        const sessionAdminMode =
+          sessionStorage.getItem("admin_mode_enabled") === "true";
+
+        const currentAdminStatus = await characterService.isUserAdmin(
+          discordUserId
+        );
+
+        const isAdmin = currentAdminStatus || hasAdminPassword;
+        setIsUserAdmin(isAdmin);
+
+        if (sessionAdminMode && isAdmin) {
+          setAdminModeState(true);
+        } else {
           setAdminModeState(false);
 
-          if (setSearchParams && typeof setSearchParams === "function") {
-            try {
-              const newParams = new URLSearchParams(searchParams);
-              newParams.delete("admin");
-              setSearchParams(newParams, { replace: true });
-            } catch (error) {
-              console.warn("Failed to update URL parameters:", error);
-            }
+          if (!isAdmin) {
+            sessionStorage.removeItem("admin_mode_enabled");
           }
         }
       } catch (error) {
-        console.error("Error checking admin status:", error);
+        console.error("Error initializing admin state:", error);
         setIsUserAdmin(false);
         setAdminModeState(false);
+        sessionStorage.removeItem("admin_mode_enabled");
+      } finally {
+        setIsInitialized(true);
       }
     };
 
-    checkAdminStatus();
-  }, [discordUserId, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    if (!searchParams) return;
-
-    const adminParam = searchParams.get("admin");
-
-    if (adminParam === "true" && isUserAdmin) {
-      setAdminModeState(true);
-    } else if (
-      adminParam === "true" &&
-      !isUserAdmin &&
-      setSearchParams &&
-      typeof setSearchParams === "function"
-    ) {
-      try {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete("admin");
-        setSearchParams(newParams, { replace: true });
-      } catch (error) {
-        console.warn("Failed to update URL parameters:", error);
-      }
-    }
-  }, [isUserAdmin, searchParams, setSearchParams]);
+    initializeAdminState();
+  }, [discordUserId]);
 
   const setAdminMode = useCallback(
     (isActive) => {
-      if (!isUserAdmin) {
+      if (!isUserAdmin && isActive) {
         console.warn("Cannot set admin mode: user is not an admin");
         return;
       }
 
       setAdminModeState(isActive);
 
-      if (setSearchParams && typeof setSearchParams === "function") {
-        try {
-          const newParams = new URLSearchParams(searchParams);
-          if (isActive) {
-            newParams.set("admin", "true");
-          } else {
-            newParams.delete("admin");
-          }
-          setSearchParams(newParams, { replace: true });
-        } catch (error) {
-          console.warn("Failed to update URL parameters:", error);
-        }
+      if (isActive) {
+        sessionStorage.setItem("admin_mode_enabled", "true");
+      } else {
+        sessionStorage.removeItem("admin_mode_enabled");
       }
     },
-    [isUserAdmin, setAdminModeState, setSearchParams, searchParams]
+    [isUserAdmin]
   );
+
+  const markPasswordVerified = useCallback(() => {
+    if (discordUserId) {
+      localStorage.setItem(`admin_password_verified_${discordUserId}`, "true");
+    }
+  }, [discordUserId]);
+
+  const clearPasswordVerification = useCallback(() => {
+    if (discordUserId) {
+      localStorage.removeItem(`admin_password_verified_${discordUserId}`);
+      sessionStorage.removeItem("admin_mode_enabled");
+      setAdminModeState(false);
+      setIsUserAdmin(false);
+    }
+  }, [discordUserId]);
 
   useEffect(() => {
     if (!isUserAdmin && adminMode) {
@@ -142,7 +140,6 @@ export const AdminProvider = ({ children, user }) => {
 
     try {
       const allCharacters = await characterService.getAllCharacters();
-
       const userMap = new Map();
 
       allCharacters.forEach((character) => {
@@ -188,6 +185,9 @@ export const AdminProvider = ({ children, user }) => {
     setIsUserAdmin,
     allUsers,
     loadAllUsers,
+    markPasswordVerified,
+    clearPasswordVerification,
+    isInitialized,
   };
 
   return (

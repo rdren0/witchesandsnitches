@@ -15,7 +15,10 @@ import { standardFeats } from "../../SharedData/standardFeatData";
 import { hpData } from "../../SharedData/data";
 import { checkFeatPrerequisites } from "../CharacterSheet/utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getAllSelectedFeats } from "./utils/characterUtils";
+import {
+  getAllSelectedFeats,
+  getSpellcastingAbility,
+} from "./utils/characterUtils";
 
 const LevelUpModal = ({
   character,
@@ -330,10 +333,6 @@ const LevelUpModal = ({
     return character.skill_proficiencies || character.skillProficiencies || [];
   };
 
-  const getSpellcastingAbility = () => {
-    return "intelligence";
-  };
-
   const updateFeatChoice = (choiceId, value) => {
     setLevelUpData((prev) => ({
       ...prev,
@@ -587,7 +586,7 @@ const LevelUpModal = ({
                 abilityToIncrease = levelUpData.featChoices[`ability_${index}`];
                 break;
               case "spellcastingAbility":
-                abilityToIncrease = getSpellcastingAbility();
+                abilityToIncrease = getSpellcastingAbility(character);
                 break;
               default:
                 break;

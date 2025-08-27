@@ -113,13 +113,13 @@ const InspirationTracker = ({
   };
 
   const getInspirationColor = () => {
-    return hasInspiration ? "white" : "#f59e0b";
+    return hasInspiration ? theme.text : "#c3b111ff";
   };
 
   const getTileStyle = () => {
     const baseStyle = {
-      backgroundColor: hasInspiration ? "#f59e0b" : "transparent",
-      border: " 2px solid #f59e0b",
+      backgroundColor: hasInspiration ? "#d2bf13ff" : "transparent",
+      border: "2px solid #c3b111ff",
       borderRadius: "8px",
       cursor: !hasInspiration ? "not-allowed" : "pointer",
       fontSize: "14px",
@@ -127,7 +127,6 @@ const InspirationTracker = ({
       display: "flex",
       alignItems: "center",
       gap: "8px",
-      opacity: hasInspiration ? 0.6 : 1,
       transition: "all 0.2s ease",
       justifyContent: "center",
       width: "120px",
@@ -136,7 +135,7 @@ const InspirationTracker = ({
     };
 
     if (hasInspiration) {
-      baseStyle.boxShadow = "0 0 15px rgba(245, 158, 11, 0.3)";
+      baseStyle.boxShadow = "0 0 15px #c3b111ff";
     }
 
     return baseStyle;
@@ -159,7 +158,7 @@ const InspirationTracker = ({
           className="w-6 h-6 mx-auto mb-1"
           style={{
             color: getInspirationColor(),
-            fill: hasInspiration ? "#f59e0b" : "transparent",
+            fill: hasInspiration ? "#c3b111ff" : "transparent",
           }}
           size={18}
         />
@@ -220,7 +219,7 @@ const InspirationTracker = ({
               boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
               minWidth: "300px",
               maxWidth: "400px",
-              border: `2px solid #f59e0b`,
+              border: `2px solid #c3b111ff`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -239,10 +238,13 @@ const InspirationTracker = ({
                   gap: "8px",
                   fontSize: "18px",
                   fontWeight: "600",
-                  color: "#f59e0b",
+                  color: "#c3b111ff",
                 }}
               >
-                <Star size={20} style={{ fill: "#f59e0b", color: "#f59e0b" }} />
+                <Star
+                  size={20}
+                  style={{ fill: "#c3b111ff", color: "#c3b111ff" }}
+                />
                 Use Inspiration
               </div>
               <button
@@ -314,7 +316,7 @@ const InspirationTracker = ({
               <button
                 style={{
                   padding: "10px 20px",
-                  backgroundColor: "#f59e0b",
+                  backgroundColor: "#c3b111ff",
                   color: "white",
                   border: "none",
                   borderRadius: "6px",

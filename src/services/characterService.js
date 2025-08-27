@@ -317,6 +317,7 @@ const verifyAdminPassword = async (discordUserId, password) => {
       "The ancient magic recognizes you as forbidden. Access permanently denied."
     );
   }
+
   const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD;
   if (!ADMIN_PASSWORD) {
     throw new Error("The magical registry is not properly configured");
@@ -325,6 +326,8 @@ const verifyAdminPassword = async (discordUserId, password) => {
   if (password !== ADMIN_PASSWORD) {
     throw new Error("The unlocking charm failed");
   }
+
+  localStorage.setItem(`admin_password_verified_${discordUserId}`, "true");
 
   const insertData = {
     discord_user_id: discordUserId,
@@ -339,9 +342,7 @@ const verifyAdminPassword = async (discordUserId, password) => {
     .select();
 
   if (error && error.code !== "23505") {
-    console.error("❌ Database error (not a duplicate key):", error);
-    console.error("This is the actual error causing the failure!");
-    throw new Error(`Database error: ${error.message}`);
+    console.error("Database error (not a duplicate key):", error);
   }
 
   return true;

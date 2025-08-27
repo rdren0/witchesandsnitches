@@ -686,7 +686,13 @@ function AppContent() {
   const styles = createAppStyles(theme);
   const location = useLocation();
   const navigate = useNavigate();
-  const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
+  const {
+    adminMode,
+    setAdminMode,
+    isUserAdmin,
+    setIsUserAdmin,
+    markPasswordVerified,
+  } = useAdmin();
 
   const [user, setUser] = useState(null);
   const [customUsername, setCustomUsername] = useState("");
@@ -749,16 +755,6 @@ function AppContent() {
     }
   }, [selectedCharacter, setThemeSelectedCharacter]);
 
-  const resetSelectedCharacter = (newCharacter = null) => {
-    if (newCharacter) {
-      debouncedSelectCharacter(newCharacter);
-    } else {
-      setSelectedCharacter(null);
-      setThemeSelectedCharacter(null);
-      sessionStorage.removeItem("selectedCharacterId");
-    }
-  };
-
   const handleAdminToggleClick = () => {
     if (adminMode) {
       setAdminMode(false);
@@ -772,6 +768,12 @@ function AppContent() {
     }
   };
 
+  useEffect(() => {
+    if (!adminMode && location.pathname === "/admin") {
+      navigate("/", { replace: true });
+    }
+  }, [adminMode, location.pathname, navigate]);
+
   const handlePasswordSubmit = async (password) => {
     setIsVerifying(true);
 
@@ -779,6 +781,8 @@ function AppContent() {
       const discordUserId = user?.user_metadata?.provider_id;
 
       await characterService.verifyAdminPassword(discordUserId, password);
+
+      markPasswordVerified();
 
       setIsUserAdmin(true);
 
@@ -788,7 +792,6 @@ function AppContent() {
     } catch (error) {
       console.error("❌ Password verification failed!");
       console.error("Error:", error);
-
       throw error;
     } finally {
       setIsVerifying(false);

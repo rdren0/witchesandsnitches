@@ -168,7 +168,6 @@ src/
 │   ├── AdminDowntimeManager.js    # Downtime management
 │   ├── AdminDowntimeReviewer.js   # Downtime review system
 │   ├── AdminPasswordModal.js      # Admin authentication
-│   ├── AdminToggle.js      # Admin mode toggle
 │   ├── GameSessionInspiration.js  # Session tracking
 │   └── SessionManagement.js       # Session management
 ├── App/

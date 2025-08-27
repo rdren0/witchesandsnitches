@@ -6,6 +6,110 @@ import {
   subclassesData,
 } from "../../../SharedData";
 import { subclasses } from "../../../SharedData/subclassesData";
+import { hpData } from "../../../SharedData/data";
+
+const ASI_LEVELS = [4, 8, 12, 16, 19];
+
+export const skillsByCastingStyle = {
+  "Willpower Caster": [
+    "Athletics",
+    "Acrobatics",
+    "Deception",
+    "Intimidation",
+    "History of Magic",
+    "Magical Creatures",
+    "Persuasion",
+    "Sleight of Hand",
+    "Survival",
+  ],
+  "Technique Caster": [
+    "Acrobatics",
+    "Herbology",
+    "Magical Theory",
+    "Insight",
+    "Perception",
+    "Potion Making",
+    "Sleight of Hand",
+    "Stealth",
+  ],
+  "Intellect Caster": [
+    "Acrobatics",
+    "Herbology",
+    "Magical Theory",
+    "Insight",
+    "Investigation",
+    "Magical Creatures",
+    "History of Magic",
+    "Medicine",
+    "Muggle Studies",
+    "Survival",
+  ],
+  "Vigor Caster": [
+    "Athletics",
+    "Acrobatics",
+    "Deception",
+    "Stealth",
+    "Magical Creatures",
+    "Medicine",
+    "Survival",
+    "Intimidation",
+    "Performance",
+  ],
+};
+
+export const getSpellcastingAbility = (characterOrCastingStyle) => {
+  const castingStyle =
+    typeof characterOrCastingStyle === "string"
+      ? characterOrCastingStyle
+      : characterOrCastingStyle?.castingStyle ||
+        characterOrCastingStyle?.casting_style;
+
+  const abilityMap = {
+    "Willpower Caster": "charisma",
+    "Technique Caster": "wisdom",
+    "Intellect Caster": "intelligence",
+    "Vigor Caster": "constitution",
+    Willpower: "charisma",
+    Technique: "wisdom",
+    Intellect: "intelligence",
+    Vigor: "constitution",
+  };
+
+  return abilityMap[castingStyle] || "intelligence";
+};
+
+export const getAbilityModifier = (abilityScore) => {
+  if (abilityScore === null || abilityScore === undefined) return 0;
+  return Math.floor((abilityScore - 10) / 2);
+};
+
+export const getAbilityDisplayName = (ability) => {
+  const names = {
+    strength: "Strength",
+    dexterity: "Dexterity",
+    constitution: "Constitution",
+    intelligence: "Intelligence",
+    wisdom: "Wisdom",
+    charisma: "Charisma",
+  };
+  return names[ability] || ability;
+};
+
+export const getAbilityShortName = (ability) => {
+  const names = {
+    strength: "STR",
+    dexterity: "DEX",
+    constitution: "CON",
+    intelligence: "INT",
+    wisdom: "WIS",
+    charisma: "CHA",
+  };
+  return names[ability] || ability.substring(0, 3).toUpperCase();
+};
+
+export const getAvailableASILevels = (currentLevel) => {
+  return ASI_LEVELS.filter((level) => level <= currentLevel);
+};
 
 export const getAllSelectedFeats = (character) => {
   const selectedFeats = [];
@@ -22,7 +126,96 @@ export const getAllSelectedFeats = (character) => {
     });
   }
 
-  return selectedFeats;
+  return [...new Set(selectedFeats)];
+};
+
+export const validateFeatSelections = (character) => {
+  const allSelectedFeats = getAllSelectedFeats(character);
+  const uniqueFeats = [...new Set(allSelectedFeats)];
+
+  if (allSelectedFeats.length !== uniqueFeats.length) {
+    const duplicates = allSelectedFeats.filter(
+      (feat, index) => allSelectedFeats.indexOf(feat) !== index
+    );
+
+    return {
+      isValid: false,
+      duplicates: [...new Set(duplicates)],
+      message: `Duplicate feats detected: ${[...new Set(duplicates)].join(
+        ", "
+      )}. Each feat can only be selected once.`,
+    };
+  }
+
+  return {
+    isValid: true,
+    duplicates: [],
+    message: null,
+  };
+};
+
+export const getFeatProgressionInfo = (character) => {
+  const currentLevel = character.level || 1;
+  const availableASILevels = getAvailableASILevels(currentLevel);
+  const nextASILevel = ASI_LEVELS.find((level) => currentLevel < level);
+
+  const choices = [];
+
+  if (character.level1ChoiceType === "innate") {
+    choices.push({
+      level: 1,
+      choice: character.selectedInnateHeritage || "Innate Heritage",
+      type: "innate",
+    });
+  } else if (character.level1ChoiceType === "feat") {
+    const featName = character.standardFeats?.[0] || "Standard Feat";
+    choices.push({
+      level: 1,
+      choice: featName,
+      type: "feat",
+    });
+  }
+
+  availableASILevels.forEach((level) => {
+    const asiChoice = character.asiChoices?.[level];
+    if (asiChoice) {
+      if (asiChoice.type === "asi") {
+        const increases = asiChoice.abilityScoreIncreases || [];
+        const abilityNames = increases
+          .map(
+            (inc) => inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
+          )
+          .join(", ");
+        choices.push({
+          level,
+          choice: `ASI (+1 ${abilityNames})`,
+          type: "asi",
+        });
+      } else if (asiChoice.type === "feat") {
+        choices.push({
+          level,
+          choice: asiChoice.selectedFeat || "Feat (not selected)",
+          type: "feat",
+        });
+      }
+    } else {
+      choices.push({
+        level,
+        choice: "Not selected",
+        type: "none",
+      });
+    }
+  });
+
+  return {
+    choices,
+    nextASILevel,
+    totalFeatsSelected: getAllSelectedFeats(character).length,
+    availableASILevels,
+    maxPossibleFeats:
+      availableASILevels.length +
+      (character.level1ChoiceType === "feat" ? 1 : 0),
+  };
 };
 
 export const handleASIChoiceChange = (character, level, choiceType) => {
@@ -110,193 +303,6 @@ export const handleASIAbilityChange = (character, level, abilityUpdates) => {
   };
 };
 
-export const getAvailableASILevels = (currentLevel) => {
-  const ASI_LEVELS = [4, 8, 12, 16, 19];
-  return ASI_LEVELS.filter((level) => level <= currentLevel);
-};
-
-export const validateFeatSelections = (character) => {
-  const allSelectedFeats = getAllSelectedFeats(character);
-  const uniqueFeats = [...new Set(allSelectedFeats)];
-
-  if (allSelectedFeats.length !== uniqueFeats.length) {
-    const duplicates = allSelectedFeats.filter(
-      (feat, index) => allSelectedFeats.indexOf(feat) !== index
-    );
-
-    return {
-      isValid: false,
-      duplicates: [...new Set(duplicates)],
-      message: `Duplicate feats detected: ${[...new Set(duplicates)].join(
-        ", "
-      )}. Each feat can only be selected once.`,
-    };
-  }
-
-  return {
-    isValid: true,
-    duplicates: [],
-    message: null,
-  };
-};
-
-export const getFeatProgressionInfo = (character) => {
-  const currentLevel = character.level || 1;
-  const availableASILevels = getAvailableASILevels(currentLevel);
-  const nextASILevel = [4, 8, 12, 16, 19].find((level) => currentLevel < level);
-
-  const choices = [];
-
-  if (character.level1ChoiceType === "innate") {
-    choices.push({
-      level: 1,
-      choice: character.selectedInnateHeritage || "Innate Heritage",
-      type: "innate",
-    });
-  } else if (character.level1ChoiceType === "feat") {
-    const featName = character.standardFeats?.[0] || "Standard Feat";
-    choices.push({
-      level: 1,
-      choice: featName,
-      type: "feat",
-    });
-  }
-
-  availableASILevels.forEach((level) => {
-    const asiChoice = character.asiChoices?.[level];
-    if (asiChoice) {
-      if (asiChoice.type === "asi") {
-        const increases = asiChoice.abilityScoreIncreases || [];
-        const abilityNames = increases
-          .map(
-            (inc) => inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
-          )
-          .join(", ");
-        choices.push({
-          level,
-          choice: `ASI (+1 ${abilityNames})`,
-          type: "asi",
-        });
-      } else if (asiChoice.type === "feat") {
-        choices.push({
-          level,
-          choice: asiChoice.selectedFeat || "Feat (not selected)",
-          type: "feat",
-        });
-      }
-    } else {
-      choices.push({
-        level,
-        choice: "Not selected",
-        type: "none",
-      });
-    }
-  });
-
-  return {
-    choices,
-    nextASILevel,
-    totalFeatsSelected: getAllSelectedFeats(character).length,
-    availableASILevels,
-    maxPossibleFeats:
-      availableASILevels.length +
-      (character.level1ChoiceType === "feat" ? 1 : 0),
-  };
-};
-
-export const getAbilityModifier = (abilityScore) => {
-  if (abilityScore === null || abilityScore === undefined) return 0;
-  return Math.floor((abilityScore - 10) / 2);
-};
-
-export const getAbilityDisplayName = (ability) => {
-  const names = {
-    strength: "Strength",
-    dexterity: "Dexterity",
-    constitution: "Constitution",
-    intelligence: "Intelligence",
-    wisdom: "Wisdom",
-    charisma: "Charisma",
-  };
-  return names[ability] || ability;
-};
-
-export const getAbilityShortName = (ability) => {
-  const names = {
-    strength: "STR",
-    dexterity: "DEX",
-    constitution: "CON",
-    intelligence: "INT",
-    wisdom: "WIS",
-    charisma: "CHA",
-  };
-  return names[ability] || ability.substring(0, 3).toUpperCase();
-};
-
-export const isCharacterComplete = (character) => {
-  if (!character.name || !character.level || !character.castingStyle) {
-    return false;
-  }
-
-  if (!character.level1ChoiceType) {
-    return false;
-  }
-
-  if (
-    character.level1ChoiceType === "innate" &&
-    !character.selectedInnateHeritage
-  ) {
-    return false;
-  }
-
-  if (
-    character.level1ChoiceType === "feat" &&
-    (!character.standardFeats || character.standardFeats.length === 0)
-  ) {
-    return false;
-  }
-
-  if (character.level > 1) {
-    const requiredASILevels = getAvailableASILevels(character.level);
-    for (const level of requiredASILevels) {
-      const choice = character.asiChoices?.[level];
-      if (!choice || !choice.type) {
-        return false;
-      }
-
-      if (
-        choice.type === "asi" &&
-        (!choice.abilityScoreIncreases ||
-          choice.abilityScoreIncreases.length === 0)
-      ) {
-        return false;
-      }
-
-      if (choice.type === "feat" && !choice.selectedFeat) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-};
-
-export const getCharacterProgressionSummary = (character) => {
-  const progression = getFeatProgressionInfo(character);
-  const isComplete = isCharacterComplete(character);
-
-  return {
-    ...progression,
-    isComplete,
-    missingChoices: progression.choices.filter(
-      (choice) => choice.choice === "Not selected"
-    ),
-    completedChoices: progression.choices.filter(
-      (choice) => choice.choice !== "Not selected"
-    ),
-  };
-};
-
 export const checkForModifiers = (obj, type = "abilityIncreases") => {
   const results = [];
 
@@ -349,90 +355,6 @@ export const checkForAbilityChoices = (obj) => {
   return choices;
 };
 
-export const getAllAbilityModifiers = (character) => {
-  const modifiers = {
-    strength: 0,
-    dexterity: 0,
-    constitution: 0,
-    intelligence: 0,
-    wisdom: 0,
-    charisma: 0,
-  };
-
-  const featChoices = { ...character.featChoices };
-  if (character.asiChoices) {
-    Object.values(character.asiChoices).forEach((choice) => {
-      if (choice.type === "feat" && choice.featChoices) {
-        Object.assign(featChoices, choice.featChoices);
-      }
-    });
-  }
-
-  const houseChoices = character.house_choices || character.houseChoices || {};
-  const heritageChoices =
-    character.heritage_choices || character.heritageChoices || {};
-
-  const { totalModifiers } = calculateTotalModifiers(
-    character,
-    featChoices,
-    houseChoices,
-    heritageChoices
-  );
-
-  Object.keys(modifiers).forEach((ability) => {
-    modifiers[ability] = totalModifiers[ability] || 0;
-  });
-
-  if (character.asiChoices) {
-    Object.entries(character.asiChoices).forEach(([level, choice]) => {
-      if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
-        choice.abilityScoreIncreases.forEach((increase) => {
-          if (increase.ability && increase.increase) {
-            modifiers[increase.ability] += increase.increase;
-          }
-        });
-      }
-    });
-  }
-
-  if (
-    character.subclass &&
-    character.subclassChoices &&
-    subclassesData &&
-    character.castingStyle
-  ) {
-    const subclassData =
-      subclasses[character.castingStyle]?.[character.subclass];
-
-    if (subclassData) {
-      Object.entries(character.subclassChoices).forEach(
-        ([level, choiceName]) => {
-          const levelChoices = subclassData.choices?.[level];
-          if (levelChoices && Array.isArray(levelChoices)) {
-            const selectedChoice = levelChoices.find(
-              (choice) => choice.name === choiceName
-            );
-
-            if (selectedChoice) {
-              const abilityIncreases = checkForModifiers(
-                selectedChoice,
-                "abilityIncreases"
-              );
-              abilityIncreases.forEach((mod) => {
-                if (mod.ability && mod.value) {
-                  modifiers[mod.ability] += mod.value;
-                }
-              });
-            }
-          }
-        }
-      );
-    }
-  }
-
-  return modifiers;
-};
-
 export const calculateFeatModifiers = (character, featChoices = {}) => {
   const modifiers = {
     strength: 0,
@@ -445,13 +367,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
 
   const featDetails = {};
 
-  const allSelectedFeats = getAllSelectedFeats(character);
-
-  if (character.level1ChoiceType === "feat" && character.standardFeats) {
-    allSelectedFeats.push(...character.standardFeats);
-  }
-
-  const uniqueFeats = [...new Set(allSelectedFeats)];
+  const uniqueFeats = [...new Set(getAllSelectedFeats(character))];
 
   uniqueFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
@@ -461,7 +377,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     }
 
     const increase = feat.benefits.abilityScoreIncrease;
-
     let abilityToIncrease;
 
     const choiceKey1 = `${featName}_ability_0`;
@@ -479,7 +394,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
           featChoices[choiceKey2] ||
           featChoices[choiceKey3] ||
           increase.abilities?.[0];
-
         break;
       case "spellcasting_ability":
         abilityToIncrease = getSpellcastingAbility(character);
@@ -556,11 +470,7 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
 
   const houseDetails = {};
 
-  if (!character.house) {
-    return { modifiers, houseDetails };
-  }
-
-  if (!houseFeatures[character.house]) {
+  if (!character.house || !houseFeatures[character.house]) {
     return { modifiers, houseDetails };
   }
 
@@ -586,7 +496,6 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
 
   if (houseChoices[character.house]?.abilityChoice) {
     const chosenAbility = houseChoices[character.house].abilityChoice;
-
     if (modifiers.hasOwnProperty(chosenAbility)) {
       modifiers[chosenAbility] += 1;
 
@@ -699,10 +608,6 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   }
 
   return { modifiers, heritageDetails };
-};
-
-export const getSpellcastingAbility = (character) => {
-  return character.castingStyle || "intelligence";
 };
 
 export const calculateASIModifiers = (character) => {
@@ -832,6 +737,90 @@ export const calculateTotalModifiers = (
   };
 };
 
+export const getAllAbilityModifiers = (character) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const featChoices = { ...character.featChoices };
+  if (character.asiChoices) {
+    Object.values(character.asiChoices).forEach((choice) => {
+      if (choice.type === "feat" && choice.featChoices) {
+        Object.assign(featChoices, choice.featChoices);
+      }
+    });
+  }
+
+  const houseChoices = character.house_choices || character.houseChoices || {};
+  const heritageChoices =
+    character.heritage_choices || character.heritageChoices || {};
+
+  const { totalModifiers } = calculateTotalModifiers(
+    character,
+    featChoices,
+    houseChoices,
+    heritageChoices
+  );
+
+  Object.keys(modifiers).forEach((ability) => {
+    modifiers[ability] = totalModifiers[ability] || 0;
+  });
+
+  if (character.asiChoices) {
+    Object.entries(character.asiChoices).forEach(([level, choice]) => {
+      if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+        choice.abilityScoreIncreases.forEach((increase) => {
+          if (increase.ability && increase.increase) {
+            modifiers[increase.ability] += increase.increase;
+          }
+        });
+      }
+    });
+  }
+
+  if (
+    character.subclass &&
+    character.subclassChoices &&
+    subclassesData &&
+    character.castingStyle
+  ) {
+    const subclassData =
+      subclasses[character.castingStyle]?.[character.subclass];
+
+    if (subclassData) {
+      Object.entries(character.subclassChoices).forEach(
+        ([level, choiceName]) => {
+          const levelChoices = subclassData.choices?.[level];
+          if (levelChoices && Array.isArray(levelChoices)) {
+            const selectedChoice = levelChoices.find(
+              (choice) => choice.name === choiceName
+            );
+
+            if (selectedChoice) {
+              const abilityIncreases = checkForModifiers(
+                selectedChoice,
+                "abilityIncreases"
+              );
+              abilityIncreases.forEach((mod) => {
+                if (mod.ability && mod.value) {
+                  modifiers[mod.ability] += mod.value;
+                }
+              });
+            }
+          }
+        }
+      );
+    }
+  }
+
+  return modifiers;
+};
+
 export const detectIfASIAlreadyApplied = (character) => {
   if (character._asiApplied || character.asiApplied) {
     return true;
@@ -862,4 +851,89 @@ export const detectIfASIAlreadyApplied = (character) => {
   }
 
   return false;
+};
+
+export const isCharacterComplete = (character) => {
+  if (!character.name || !character.level || !character.castingStyle) {
+    return false;
+  }
+
+  if (!character.level1ChoiceType) {
+    return false;
+  }
+
+  if (
+    character.level1ChoiceType === "innate" &&
+    !character.selectedInnateHeritage
+  ) {
+    return false;
+  }
+
+  if (
+    character.level1ChoiceType === "feat" &&
+    (!character.standardFeats || character.standardFeats.length === 0)
+  ) {
+    return false;
+  }
+
+  if (character.level > 1) {
+    const requiredASILevels = getAvailableASILevels(character.level);
+    for (const level of requiredASILevels) {
+      const choice = character.asiChoices?.[level];
+      if (!choice || !choice.type) {
+        return false;
+      }
+
+      if (
+        choice.type === "asi" &&
+        (!choice.abilityScoreIncreases ||
+          choice.abilityScoreIncreases.length === 0)
+      ) {
+        return false;
+      }
+
+      if (choice.type === "feat" && !choice.selectedFeat) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+
+export const getCharacterProgressionSummary = (character) => {
+  const progression = getFeatProgressionInfo(character);
+  const isComplete = isCharacterComplete(character);
+
+  return {
+    ...progression,
+    isComplete,
+    missingChoices: progression.choices.filter(
+      (choice) => choice.choice === "Not selected"
+    ),
+    completedChoices: progression.choices.filter(
+      (choice) => choice.choice !== "Not selected"
+    ),
+  };
+};
+
+export const calculateHitPoints = ({ character }) => {
+  if (!character.castingStyle) return 0;
+
+  const castingData = hpData[character.castingStyle];
+  if (!castingData) return 0;
+
+  const conScore = character.abilityScores.constitution;
+  const conMod = conScore !== null ? Math.floor((conScore - 10) / 2) : 0;
+  const level = character.level || 1;
+
+  const baseHP = castingData.base + conMod;
+  const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
+
+  return Math.max(1, baseHP + additionalHP);
+};
+
+export const getAvailableSkills = ({ character }) => {
+  if (!character.castingStyle) return [];
+  return skillsByCastingStyle[character.castingStyle] || [];
 };
