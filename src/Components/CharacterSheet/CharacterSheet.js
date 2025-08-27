@@ -31,6 +31,10 @@ import {
 import InspirationTracker from "./InspirationTracker";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
+import {
+  getSpellcastingAbility,
+  calculateTotalModifiers,
+} from "../CharacterManager/utils/characterUtils";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -70,6 +74,7 @@ const CharacterSheet = ({
   isUserAdmin = false,
   onNavigateToCharacterManagement,
 }) => {
+  console.log({ selectedCharacter });
   const { rollInitiative } = useRollFunctions();
   const { showRollResult } = useRollModal();
 
@@ -117,27 +122,30 @@ const CharacterSheet = ({
     return baseACMap[castingStyle] || 11;
   }, []);
 
-  const getSpellcastingAbility = (castingStyle) => {
-    const spellcastingAbilityMap = {
-      "Willpower Caster": "Charisma",
-      "Technique Caster": "Wisdom",
-      "Intellect Caster": "Intelligence",
-      "Vigor Caster": "Constitution",
-
-      Willpower: "Charisma",
-      Technique: "Wisdom",
-      Intellect: "Intelligence",
-      Vigor: "Constitution",
-    };
-    return spellcastingAbilityMap[castingStyle] || null;
-  };
-
   const getSpellcastingAbilityModifier = (character) => {
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
     if (!spellcastingAbility) return 0;
 
     const abilityKey = spellcastingAbility.toLowerCase();
-    const abilityScore = character[abilityKey] || 10;
+    let abilityScore = character[abilityKey] || 10;
+
+    if (character.asiChoices) {
+      Object.values(character.asiChoices).forEach((choice) => {
+        console.log({ choice });
+        if (
+          choice?.type === "feat" &&
+          choice?.selectedFeat === "Cantrip Master"
+        ) {
+          console.log("Cantrip Master found - adding +2");
+          abilityScore += 2;
+        }
+      });
+    }
+    console.log({
+      character,
+      abilityScore,
+      result: Math.floor((abilityScore - 10) / 2),
+    });
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -322,21 +330,9 @@ const CharacterSheet = ({
       userSelect: "none",
     };
   };
-
   const calculateEffectiveAbilityScores = useCallback(
-    (baseScores, asiChoices) => {
-      const effectiveScores = { ...baseScores };
-      Object.entries(asiChoices).forEach(([level, choice]) => {
-        if (choice.type === "asi" && choice.abilityScoreIncreases) {
-          choice.abilityScoreIncreases.forEach((increase) => {
-            if (effectiveScores[increase.ability] !== undefined) {
-              effectiveScores[increase.ability] =
-                (effectiveScores[increase.ability] || 10) + 1;
-            }
-          });
-        }
-      });
-      return effectiveScores;
+    (baseScores, character) => {
+      return { ...baseScores };
     },
     []
   );
@@ -510,10 +506,29 @@ const CharacterSheet = ({
 
       if (data) {
         const baseAbilityScores = data.ability_scores || {};
-        const asiChoices = {};
+        const asiChoices = data.asi_choices || {};
         const effectiveAbilityScores = calculateEffectiveAbilityScores(
           baseAbilityScores,
-          asiChoices
+          {
+            ...data,
+            castingStyle: data.casting_style,
+            casting_style: data.casting_style,
+            standardFeats: data.standard_feats || [],
+            standard_feats: data.standard_feats || [],
+            houseChoices: data.house_choices || {},
+            house_choices: data.house_choices || {},
+            featChoices: data.feat_choices || {},
+            feat_choices: data.feat_choices || {},
+            asiChoices: data.asi_choices || {},
+            asi_choices: data.asi_choices || {},
+            heritageChoices: data.heritage_choices || {},
+            heritage_choices: data.heritage_choices || {},
+            level1ChoiceType: data.level1_choice_type,
+            level1_choice_type: data.level1_choice_type,
+            innateHeritage: data.innate_heritage,
+            innate_heritage: data.innate_heritage,
+            background: data.background,
+          }
         );
 
         const allFeats = getAllCharacterFeats(
@@ -771,10 +786,10 @@ const CharacterSheet = ({
           embeds: [embed],
         };
 
-         if (character?.imageUrl) {
+        if (character?.imageUrl) {
           message.username = character.name;
           message.avatar_url = character.imageUrl;
-        }else  if (character?.image_url) {
+        } else if (character?.image_url) {
           message.username = character.name;
           message.avatar_url = character.image_url;
         }

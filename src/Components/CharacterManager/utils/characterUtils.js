@@ -8,6 +8,15 @@ import {
 import { subclasses } from "../../../SharedData/subclassesData";
 import { hpData } from "../../../SharedData/data";
 
+import {
+  CASTING_STYLE_FEATURES,
+  getCastingStyleFeatures as getFeatures,
+  getCastingStyleAC as getBaseCastingStyleAC,
+  getCastingStyleMetamagics,
+  hasCastingStyleFeature,
+  getFeatureDamageScaling,
+} from "../../../SharedData/castingStyleFeatures";
+
 const ASI_LEVELS = [4, 8, 12, 16, 19];
 
 export const skillsByCastingStyle = {
@@ -105,6 +114,142 @@ export const getAbilityShortName = (ability) => {
     charisma: "CHA",
   };
   return names[ability] || ability.substring(0, 3).toUpperCase();
+};
+
+export const calculateCharacterAC = (character) => {
+  const dexModifier = getAbilityModifier(
+    character.dexterity || character.abilityScores?.dexterity || 10
+  );
+
+  const castingStyleMap = {
+    "Willpower Caster": "Willpower",
+    "Technique Caster": "Technique",
+    "Intellect Caster": "Intellect",
+    "Vigor Caster": "Vigor",
+  };
+
+  const mappedStyle =
+    castingStyleMap[character.castingStyle] || character.castingStyle;
+  const baseAC = getBaseCastingStyleAC(mappedStyle, 0);
+
+  let totalAC = baseAC + dexModifier;
+
+  if (character.magicModifiers?.ac) {
+    totalAC += character.magicModifiers.ac;
+  }
+
+  return totalAC;
+};
+
+export const getCastingStyleFeatures = (character) => {
+  const castingStyleMap = {
+    "Willpower Caster": "Willpower",
+    "Technique Caster": "Technique",
+    "Intellect Caster": "Intellect",
+    "Vigor Caster": "Vigor",
+  };
+
+  const mappedStyle =
+    castingStyleMap[character.castingStyle] || character.castingStyle;
+  return getFeatures(mappedStyle, character.level);
+};
+
+export const calculateInitiativeModifier = (character) => {
+  let initiativeAbility = character.initiativeAbility || "dexterity";
+
+  if (
+    (character.castingStyle === "Intellect Caster" ||
+      character.castingStyle === "Intellect") &&
+    character.level >= 1
+  ) {
+    const intMod = getAbilityModifier(
+      character.intelligence || character.abilityScores?.intelligence || 10
+    );
+    const dexMod = getAbilityModifier(
+      character.dexterity || character.abilityScores?.dexterity || 10
+    );
+
+    if (intMod > dexMod) {
+      initiativeAbility = "intelligence";
+    }
+  }
+
+  const abilityScore =
+    character[initiativeAbility] ||
+    character.abilityScores?.[initiativeAbility] ||
+    10;
+  return getAbilityModifier(abilityScore);
+};
+
+export const getBlackMagicDamage = (character) => {
+  if (
+    character.castingStyle !== "Willpower Caster" &&
+    character.castingStyle !== "Willpower"
+  ) {
+    return null;
+  }
+
+  const mappedStyle =
+    character.castingStyle === "Willpower Caster"
+      ? "Willpower"
+      : character.castingStyle;
+  return getFeatureDamageScaling(mappedStyle, "Black Magic", character.level);
+};
+
+export const getAllMetamagicOptions = (character) => {
+  const metamagics = [];
+
+  if (character.metamagicOptions) {
+    metamagics.push(...character.metamagicOptions);
+  }
+
+  const castingStyleMap = {
+    "Willpower Caster": "Willpower",
+    "Technique Caster": "Technique",
+    "Intellect Caster": "Intellect",
+    "Vigor Caster": "Vigor",
+  };
+
+  const mappedStyle =
+    castingStyleMap[character.castingStyle] || character.castingStyle;
+  const styleMetamagics = getCastingStyleMetamagics(
+    mappedStyle,
+    character.level
+  );
+  metamagics.push(...styleMetamagics);
+
+  return metamagics;
+};
+
+export const hasCharacterFeature = (character, featureName) => {
+  const castingStyleMap = {
+    "Willpower Caster": "Willpower",
+    "Technique Caster": "Technique",
+    "Intellect Caster": "Intellect",
+    "Vigor Caster": "Vigor",
+  };
+
+  const mappedStyle =
+    castingStyleMap[character.castingStyle] || character.castingStyle;
+
+  if (
+    hasCastingStyleFeature(
+      { castingStyle: mappedStyle, level: character.level },
+      featureName
+    )
+  ) {
+    return true;
+  }
+
+  if (character.standardFeats?.includes(featureName)) {
+    return true;
+  }
+
+  if (character.subclassFeatures?.includes(featureName)) {
+    return true;
+  }
+
+  return false;
 };
 
 export const getAvailableASILevels = (currentLevel) => {
@@ -645,6 +790,38 @@ export const calculateASIModifiers = (character) => {
   return { modifiers, bonusDetails };
 };
 
+export const calculateCastingStyleModifiers = (character) => {
+  const modifiers = {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  };
+
+  const castingStyleDetails = {};
+
+  if (
+    (character.castingStyle === "Vigor Caster" ||
+      character.castingStyle === "Vigor") &&
+    character.level >= 20
+  ) {
+    modifiers.constitution += 4;
+
+    if (!castingStyleDetails.constitution) {
+      castingStyleDetails.constitution = [];
+    }
+    castingStyleDetails.constitution.push({
+      source: "castingStyle",
+      feature: "Vigorous Perfection",
+      amount: 4,
+    });
+  }
+
+  return { modifiers, castingStyleDetails };
+};
+
 export const calculateTotalModifiers = (
   character,
   featChoices = {},
@@ -655,6 +832,7 @@ export const calculateTotalModifiers = (
   const backgroundResult = calculateBackgroundModifiers(character);
   const houseResult = calculateHouseModifiers(character, houseChoices);
   const heritageResult = calculateHeritageModifiers(character, heritageChoices);
+  const castingStyleResult = calculateCastingStyleModifiers(character);
 
   const asiAlreadyApplied = detectIfASIAlreadyApplied(character);
 
@@ -681,36 +859,42 @@ export const calculateTotalModifiers = (
       backgroundResult.modifiers.strength +
       houseResult.modifiers.strength +
       heritageResult.modifiers.strength +
+      castingStyleResult.modifiers.strength +
       asiResult.modifiers.strength,
     dexterity:
       featResult.modifiers.dexterity +
       backgroundResult.modifiers.dexterity +
       houseResult.modifiers.dexterity +
       heritageResult.modifiers.dexterity +
+      castingStyleResult.modifiers.dexterity +
       asiResult.modifiers.dexterity,
     constitution:
       featResult.modifiers.constitution +
       backgroundResult.modifiers.constitution +
       houseResult.modifiers.constitution +
       heritageResult.modifiers.constitution +
+      castingStyleResult.modifiers.constitution +
       asiResult.modifiers.constitution,
     intelligence:
       featResult.modifiers.intelligence +
       backgroundResult.modifiers.intelligence +
       houseResult.modifiers.intelligence +
       heritageResult.modifiers.intelligence +
+      castingStyleResult.modifiers.intelligence +
       asiResult.modifiers.intelligence,
     wisdom:
       featResult.modifiers.wisdom +
       backgroundResult.modifiers.wisdom +
       houseResult.modifiers.wisdom +
       heritageResult.modifiers.wisdom +
+      castingStyleResult.modifiers.wisdom +
       asiResult.modifiers.wisdom,
     charisma:
       featResult.modifiers.charisma +
       backgroundResult.modifiers.charisma +
       houseResult.modifiers.charisma +
       heritageResult.modifiers.charisma +
+      castingStyleResult.modifiers.charisma +
       asiResult.modifiers.charisma,
   };
 
@@ -721,6 +905,7 @@ export const calculateTotalModifiers = (
       ...(backgroundResult.backgroundDetails[ability] || []),
       ...(houseResult.houseDetails[ability] || []),
       ...(heritageResult.heritageDetails[ability] || []),
+      ...(castingStyleResult.castingStyleDetails[ability] || []),
       ...(asiResult.bonusDetails[ability] || []),
     ];
   });
@@ -732,6 +917,7 @@ export const calculateTotalModifiers = (
     backgroundModifiers: backgroundResult.modifiers,
     houseModifiers: houseResult.modifiers,
     heritageModifiers: heritageResult.modifiers,
+    castingStyleModifiers: castingStyleResult.modifiers,
     asiModifiers: asiResult.modifiers,
     _asiAlreadyApplied: asiAlreadyApplied,
   };
@@ -895,6 +1081,23 @@ export const isCharacterComplete = (character) => {
       if (choice.type === "feat" && !choice.selectedFeat) {
         return false;
       }
+    }
+  }
+
+  if (
+    character.castingStyle === "Willpower Caster" &&
+    character.level >= 5 &&
+    !character.blackMagicEnhancement
+  ) {
+    return false;
+  }
+
+  if (character.castingStyle === "Intellect Caster" && character.level >= 3) {
+    if (
+      !character.schoolOfMagicFeatures ||
+      character.schoolOfMagicFeatures.length < 2
+    ) {
+      return false;
     }
   }
 
