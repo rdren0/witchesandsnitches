@@ -40,7 +40,6 @@ const CharacterManager = ({
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const discordUserId = user?.user_metadata?.provider_id;
-  console.log({ discordUserId });
 
   useEffect(() => {
     if (discordUserId) {

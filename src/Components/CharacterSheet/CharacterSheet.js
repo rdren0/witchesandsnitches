@@ -74,7 +74,6 @@ const CharacterSheet = ({
   isUserAdmin = false,
   onNavigateToCharacterManagement,
 }) => {
-  console.log({ selectedCharacter });
   const { rollInitiative } = useRollFunctions();
   const { showRollResult } = useRollModal();
 
@@ -131,21 +130,15 @@ const CharacterSheet = ({
 
     if (character.asiChoices) {
       Object.values(character.asiChoices).forEach((choice) => {
-        console.log({ choice });
         if (
           choice?.type === "feat" &&
           choice?.selectedFeat === "Cantrip Master"
         ) {
-          console.log("Cantrip Master found - adding +2");
           abilityScore += 2;
         }
       });
     }
-    console.log({
-      character,
-      abilityScore,
-      result: Math.floor((abilityScore - 10) / 2),
-    });
+
     return Math.floor((abilityScore - 10) / 2);
   };
 
