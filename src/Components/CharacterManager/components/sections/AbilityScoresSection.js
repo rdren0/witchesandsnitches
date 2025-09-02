@@ -349,9 +349,20 @@ const AbilityScoresSection = ({
     if (newManualMode) {
       setRolledAssignments({ ...character.abilityScores });
 
+      const currentScores = {
+        strength: character.abilityScores?.strength || 8,
+        dexterity: character.abilityScores?.dexterity || 8,
+        constitution: character.abilityScores?.constitution || 8,
+        intelligence: character.abilityScores?.intelligence || 8,
+        wisdom: character.abilityScores?.wisdom || 8,
+        charisma: character.abilityScores?.charisma || 8,
+      };
+
+      setManualScores(currentScores);
+
       handleCharacterUpdate({
         ...character,
-        abilityScores: { ...manualScores },
+        abilityScores: currentScores,
       });
     } else {
       setManualScores({ ...character.abilityScores });
