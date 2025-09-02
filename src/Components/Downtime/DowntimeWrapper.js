@@ -1197,7 +1197,8 @@ const DowntimeWrapper = ({
               <div key={sheet.id} style={styles.listItem}>
                 <div style={styles.listItemInfo}>
                   <div style={styles.listItemTitle}>
-                    Year {sheet.year}, Semester {sheet.semester}
+                    Year {sheet.year || sheet.school_year}, Semester{" "}
+                    {sheet.semester}
                   </div>
                   <div style={styles.listItemSubtitle}>
                     Submitted: {new Date(sheet.submitted_at).toLocaleString()}
