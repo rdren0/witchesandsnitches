@@ -1195,7 +1195,6 @@ const DowntimeWrapper = ({
           <div style={styles.listContainer}>
             {submittedSheets.map((sheet) => (
               <div key={sheet.id} style={styles.listItem}>
-                {console.log(sheet)}
                 <div style={styles.listItemInfo}>
                   <div style={styles.listItemTitle}>
                     Year {sheet.year || sheet.school_year}, Semester{" "}
