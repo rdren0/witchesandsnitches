@@ -1,19 +1,39 @@
 import { spellsData } from "../../../SharedData/spells";
 import { getSpellModifier } from "../../SpellBook/utils";
 
-export const calculateResearchDC = (
+const calculateResearchDC = (
   playerYear,
   spellYear,
   spellName,
   selectedCharacter
 ) => {
-  let baseDC = 8 + 2 * playerYear;
+  const spellData = getSpellData(spellName);
+  let spellLevel = 0;
+
+  if (spellData) {
+    for (const [subject, subjectData] of Object.entries(spellsData)) {
+      if (subjectData.levels) {
+        for (const [levelKey, spells] of Object.entries(subjectData.levels)) {
+          const spell = spells.find((s) => s.name === spellName);
+          if (spell) {
+            if (levelKey === "Cantrips") {
+              spellLevel = 0;
+            } else {
+              const match = levelKey.match(/(\d+)/);
+              spellLevel = match ? parseInt(match[1]) : 0;
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  let baseDC = 10 + spellLevel;
 
   const yearDifference = spellYear - playerYear;
   if (yearDifference > 0) {
-    baseDC += 2 * playerYear;
-  } else if (yearDifference < 0) {
-    baseDC += yearDifference * 2;
+    baseDC += yearDifference;
   }
 
   const difficultSpells = [

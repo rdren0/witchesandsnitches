@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronRight,
   Dna,
+  Zap,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -17,6 +18,10 @@ import { subclassesData } from "../../SharedData/subclassesData";
 import { backgroundsData } from "../../SharedData/backgroundsData";
 import { heritageDescriptions } from "../../SharedData/heritageData";
 import { standardFeats } from "../../SharedData/standardFeatData";
+import {
+  getCastingStyleFeatures,
+  getFeatureDamageScaling,
+} from "../../SharedData/castingStyleFeatures";
 
 const CharacterFeatsDisplay = ({
   character,
@@ -32,6 +37,12 @@ const CharacterFeatsDisplay = ({
 
   const organizedFeatures = useMemo(() => {
     const sections = {
+      castingStyle: {
+        title: "Casting Style Features",
+        icon: Zap,
+        color: "#F59E0B",
+        features: [],
+      },
       house: {
         title: "House Features",
         icon: Home,
@@ -65,6 +76,203 @@ const CharacterFeatsDisplay = ({
     };
 
     if (!character) return sections;
+
+    if (character.castingStyle) {
+      const castingStyleName = character.castingStyle.replace(" Caster", "");
+
+      const castingStyleColors = {
+        Willpower: "#FF6B6B",
+        Technique: "#4ECDC4",
+        Intellect: "#6C5CE7",
+        Vigor: "#F39C12",
+      };
+      sections.castingStyle.color =
+        castingStyleColors[castingStyleName] || "#F59E0B";
+
+      sections.castingStyle.features.push({
+        name: `${character.castingStyle}`,
+        type: "Casting Style",
+        source: "Class Feature",
+        level: 1,
+        description: `Your magical approach and spellcasting style. Determines your spellcasting ability and class features.`,
+        details: [],
+      });
+
+      const castingFeatures = getCastingStyleFeatures(character);
+
+      castingFeatures.forEach((feature) => {
+        const featureDetails = [];
+
+        if (feature.type === "passive" && feature.modifiers?.baseAC) {
+          featureDetails.push(
+            `Base AC: ${feature.modifiers.baseAC} + Dexterity modifier`
+          );
+        }
+
+        if (feature.type === "action" && feature.actionType) {
+          featureDetails.push(
+            `Action Type: ${
+              feature.actionType === "free"
+                ? "Free Action"
+                : feature.actionType === "bonus"
+                ? "Bonus Action"
+                : "Action"
+            }`
+          );
+        }
+
+        if (feature.uses) {
+          featureDetails.push(
+            `Uses: ${feature.uses.max} per ${feature.uses.recharge}`
+          );
+        }
+
+        if (feature.cost) {
+          if (typeof feature.cost === "object") {
+            if (feature.cost.oneLevel) {
+              featureDetails.push(
+                `Cost: ${feature.cost.oneLevel} sorcery points (1 level higher)`
+              );
+            }
+            if (feature.cost.twoLevels) {
+              featureDetails.push(
+                `Cost: ${feature.cost.twoLevels} sorcery points (2 levels higher)`
+              );
+            }
+          } else {
+            featureDetails.push(`Cost: ${feature.cost} sorcery points`);
+          }
+        }
+
+        if (
+          feature.name === "Black Magic" &&
+          character.castingStyle === "Willpower Caster"
+        ) {
+          const currentDamage = getFeatureDamageScaling(
+            "Willpower",
+            "Black Magic",
+            character.level
+          );
+          featureDetails.push(`Current Damage: ${currentDamage}`);
+          featureDetails.push(`Requires advantage on the attack roll`);
+
+          if (character.blackMagicEnhancement && character.level >= 5) {
+            const enhancements = {
+              Ambush:
+                "Advantage vs creatures that haven't acted; crits on surprised",
+              Gambit: "Use Black Magic within 5ft without advantage (if alone)",
+              Grudge: "Advantage vs creatures that damaged you",
+              Pique: "Advantage when at half HP or less",
+              Hubris: "Advantage vs creatures with fewer HP",
+            };
+            featureDetails.push(
+              `Enhancement: ${character.blackMagicEnhancement} - ${
+                enhancements[character.blackMagicEnhancement]
+              }`
+            );
+          }
+        }
+
+        if (feature.type === "choice" && feature.options) {
+          if (
+            feature.name === "Black Magic Enhancement" &&
+            !character.blackMagicEnhancement
+          ) {
+            featureDetails.push("⚠️ Enhancement not selected yet");
+            feature.options.forEach((opt) => {
+              featureDetails.push(`• ${opt.name}: ${opt.description}`);
+            });
+          }
+        }
+
+        if (feature.type === "metamagic" && feature.options) {
+          feature.options.forEach((opt) => {
+            featureDetails.push(
+              `• ${opt.name} (${opt.cost} SP): ${opt.description}`
+            );
+          });
+        }
+
+        if (feature.grantsFeatures) {
+          featureDetails.push(
+            `Grants ${feature.grantsFeatures.count} level ${feature.grantsFeatures.level} features from ${feature.grantsFeatures.source}`
+          );
+          if (
+            character.schoolOfMagicFeatures &&
+            character.schoolOfMagicFeatures.length > 0
+          ) {
+            character.schoolOfMagicFeatures.forEach((f) => {
+              featureDetails.push(`• Selected: ${f}`);
+            });
+          } else if (feature.name === "Diverse Studies") {
+            featureDetails.push("⚠️ School of Magic features not selected yet");
+          }
+        }
+
+        if (feature.recovery) {
+          featureDetails.push(
+            `Recovery: ${feature.recovery.amount} ${
+              feature.recovery.recharge === "short rest"
+                ? "on short rest"
+                : "on long rest"
+            }`
+          );
+        }
+
+        if (feature.spellSlots) {
+          featureDetails.push(
+            `${feature.spellSlots.count} level ${feature.spellSlots.level} spells`
+          );
+          featureDetails.push(`Recharge: ${feature.spellSlots.recharge}`);
+          if (
+            character.signatureSpells &&
+            character.signatureSpells.length > 0
+          ) {
+            character.signatureSpells.forEach((spell) => {
+              featureDetails.push(`• Signature Spell: ${spell}`);
+            });
+          } else if (feature.name === "Signature Spells") {
+            featureDetails.push("⚠️ Signature spells not selected yet");
+          }
+        }
+
+        sections.castingStyle.features.push({
+          name: feature.name,
+          type:
+            feature.type === "passive"
+              ? "Passive Ability"
+              : feature.type === "action"
+              ? "Active Ability"
+              : feature.type === "reaction"
+              ? "Reaction"
+              : feature.type === "metamagic"
+              ? "Metamagic"
+              : feature.type === "choice"
+              ? "Feature Choice"
+              : feature.type === "feature"
+              ? "Class Feature"
+              : "Special Ability",
+          source: character.castingStyle,
+          level: feature.unlockedAt,
+          description: feature.description,
+          details: featureDetails,
+        });
+      });
+
+      if (character.castingStyle === "Vigor Caster" && character.level >= 20) {
+        const vigorPerfection = sections.castingStyle.features.find(
+          (f) => f.name === "Vigorous Perfection"
+        );
+        if (vigorPerfection) {
+          vigorPerfection.details.push(
+            "Your maximum Constitution score is now 24"
+          );
+          vigorPerfection.details.push(
+            "This bonus has been applied to your ability scores"
+          );
+        }
+      }
+    }
 
     const normalizeSubclassName = (name) => {
       if (!name) return name;
@@ -679,7 +887,14 @@ const CharacterFeatsDisplay = ({
         }
 
         const getTypePriority = (type, section) => {
-          if (section === "subclass") {
+          if (section === "castingStyle") {
+            if (type === "Casting Style") return 0;
+            if (type === "Passive Ability") return 1;
+            if (type === "Active Ability") return 2;
+            if (type === "Metamagic") return 3;
+            if (type === "Feature Choice") return 4;
+            return 5;
+          } else if (section === "subclass") {
             if (type === "Specialization") return 0;
             if (type === "Selected Subclass Choice") return 1;
             return 2;

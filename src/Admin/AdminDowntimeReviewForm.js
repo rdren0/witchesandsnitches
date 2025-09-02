@@ -456,7 +456,7 @@ const AdminDowntimeReviewForm = React.memo(
 
         const yearDifference = spellYear - playerYear;
         if (yearDifference > 0) {
-          baseDC += 2 * playerYear;
+          baseDC += yearDifference;
         } else if (yearDifference < 0) {
           baseDC += yearDifference * 2;
         }
