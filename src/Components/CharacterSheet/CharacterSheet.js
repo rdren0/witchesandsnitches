@@ -32,6 +32,7 @@ import {
 import InspirationTracker from "./InspirationTracker";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
+import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -868,6 +869,55 @@ const CharacterSheet = ({
     }
   };
 
+  const updateSpellSlotResources = async (
+    character,
+    newLevel,
+    discordUserId
+  ) => {
+    try {
+      const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ];
+
+      const updateData = {
+        character_id: character.id,
+        discord_user_id: discordUserId,
+        updated_at: new Date().toISOString(),
+      };
+
+      for (let i = 1; i <= 9; i++) {
+        const newMax = newMaxSlots[i - 1];
+        const currentSlots = character[`spellSlots${i}`] || 0;
+        const currentMax = character[`maxSpellSlots${i}`] || 0;
+
+        updateData[`max_spell_slots_${i}`] = newMax;
+
+        if (currentSlots > currentMax) {
+          const bonusSlots = currentSlots - currentMax;
+          updateData[`spell_slots_${i}`] = newMax + bonusSlots;
+        } else {
+          updateData[`spell_slots_${i}`] = newMax;
+        }
+      }
+
+      const { error } = await supabase
+        .from("character_resources")
+        .upsert(updateData, {
+          onConflict: "character_id,discord_user_id",
+        });
+
+      if (error) {
+        console.error("Error updating spell slot resources:", error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in updateSpellSlotResources:", error);
+      throw error;
+    }
+  };
+
   const handleCharacterUpdated = async (updatedCharacter, levelUpDetails) => {
     try {
       const characterOwnerId = character.discord_user_id || character.ownerId;
@@ -932,6 +982,18 @@ const CharacterSheet = ({
         characterToSave,
         characterOwnerId
       );
+
+      if (levelUpDetails) {
+        try {
+          await updateSpellSlotResources(
+            updatedCharacter,
+            levelUpDetails.newLevel,
+            characterOwnerId
+          );
+        } catch (spellSlotError) {
+          console.error("Error updating spell slot resources:", spellSlotError);
+        }
+      }
 
       if (levelUpDetails) {
         const {

@@ -4,6 +4,7 @@ import SorceryPointTracker from "./SorceryPointTracker";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
+import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
 
 const SpellSlotTracker = ({
   character,
@@ -22,31 +23,6 @@ const SpellSlotTracker = ({
     action: "use",
     amount: 1,
   });
-  const SPELL_SLOT_PROGRESSION = useMemo(
-    () => ({
-      1: [2, 0, 0, 0, 0, 0, 0, 0, 0],
-      2: [3, 0, 0, 0, 0, 0, 0, 0, 0],
-      3: [4, 2, 0, 0, 0, 0, 0, 0, 0],
-      4: [4, 3, 0, 0, 0, 0, 0, 0, 0],
-      5: [4, 3, 2, 0, 0, 0, 0, 0, 0],
-      6: [4, 3, 3, 0, 0, 0, 0, 0, 0],
-      7: [4, 3, 3, 1, 0, 0, 0, 0, 0],
-      8: [4, 3, 3, 2, 0, 0, 0, 0, 0],
-      9: [4, 3, 3, 3, 1, 0, 0, 0, 0],
-      10: [4, 3, 3, 3, 2, 0, 0, 0, 0],
-      11: [4, 3, 3, 3, 2, 1, 0, 0, 0],
-      12: [4, 3, 3, 3, 2, 1, 0, 0, 0],
-      13: [4, 3, 3, 3, 2, 1, 1, 0, 0],
-      14: [4, 3, 3, 3, 2, 1, 1, 0, 0],
-      15: [4, 3, 3, 3, 2, 1, 1, 1, 0],
-      16: [4, 3, 3, 3, 2, 1, 1, 1, 0],
-      17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
-      18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
-      19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
-      20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
-    }),
-    []
-  );
 
   const setupStandardSpellSlots = useCallback(
     async (characterLevel, isLevelUpRefresh = false) => {
@@ -78,7 +54,11 @@ const SpellSlotTracker = ({
           const spellLevel = index + 1;
           updateData[`max_spell_slots_${spellLevel}`] = maxSlots;
 
-          updateData[`spell_slots_${spellLevel}`] = maxSlots;
+          const currentSlots = character?.[`spellSlots${spellLevel}`] || 0;
+
+          if (currentSlots === 0 || currentSlots < maxSlots) {
+            updateData[`spell_slots_${spellLevel}`] = maxSlots;
+          }
         });
 
         const { error } = await supabase
@@ -96,7 +76,12 @@ const SpellSlotTracker = ({
         progression.forEach((maxSlots, index) => {
           const spellLevel = index + 1;
           newCharacterState[`maxSpellSlots${spellLevel}`] = maxSlots;
-          newCharacterState[`spellSlots${spellLevel}`] = maxSlots;
+
+          const currentSlots = character?.[`spellSlots${spellLevel}`] || 0;
+
+          if (currentSlots === 0 || currentSlots < maxSlots) {
+            newCharacterState[`spellSlots${spellLevel}`] = maxSlots;
+          }
         });
         setCharacter(newCharacterState);
       } catch (error) {
@@ -129,16 +114,81 @@ const SpellSlotTracker = ({
   });
   const [lastKnownLevel, setLastKnownLevel] = useState(null);
 
+  const updateMaxSpellSlotsOnLevelUp = useCallback(
+    async (characterLevel) => {
+      if (
+        !character ||
+        isUpdating ||
+        !characterLevel ||
+        characterLevel < 1 ||
+        characterLevel > 20
+      )
+        return;
+
+      setIsUpdating(true);
+
+      try {
+        const progression = SPELL_SLOT_PROGRESSION[characterLevel];
+        if (!progression) {
+          console.error("Invalid character level:", characterLevel);
+          return;
+        }
+
+        const updateData = {
+          character_id: selectedCharacterId,
+          discord_user_id: discordUserId,
+          updated_at: new Date().toISOString(),
+        };
+
+        progression.forEach((maxSlots, index) => {
+          const spellLevel = index + 1;
+          updateData[`max_spell_slots_${spellLevel}`] = maxSlots;
+        });
+
+        const { error } = await supabase
+          .from("character_resources")
+          .upsert(updateData, {
+            onConflict: "character_id,discord_user_id",
+          });
+
+        if (error) {
+          console.error("Error updating max spell slots:", error);
+          return;
+        }
+
+        const newCharacterState = { ...character };
+        progression.forEach((maxSlots, index) => {
+          const spellLevel = index + 1;
+          newCharacterState[`maxSpellSlots${spellLevel}`] = maxSlots;
+        });
+        setCharacter(newCharacterState);
+      } catch (error) {
+        console.error("Error updating max spell slots:", error);
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [
+      character,
+      isUpdating,
+      SPELL_SLOT_PROGRESSION,
+      selectedCharacterId,
+      discordUserId,
+      supabase,
+      setCharacter,
+    ]
+  );
+
   useEffect(() => {
     if (
       character?.level &&
       lastKnownLevel &&
       character.level !== lastKnownLevel
     ) {
-      setupStandardSpellSlots(character.level, true);
+      updateMaxSpellSlotsOnLevelUp(character.level);
     }
     setLastKnownLevel(character?.level);
-  }, [character?.level, lastKnownLevel, setupStandardSpellSlots]);
+  }, [character?.level, lastKnownLevel]);
 
   useEffect(() => {
     const autoSetupSpellSlots = async () => {
@@ -266,7 +316,8 @@ const SpellSlotTracker = ({
     try {
       const currentSlots = character?.[`spellSlots${level}`] || 0;
       const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
-      const newSlots = Math.max(0, Math.min(maxSlots, currentSlots + change));
+
+      const newSlots = Math.max(0, currentSlots + change);
 
       const updateData = {
         character_id: selectedCharacterId,

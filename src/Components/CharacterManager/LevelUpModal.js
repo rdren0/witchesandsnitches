@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { standardFeats } from "../../SharedData/standardFeatData";
-import { hpData } from "../../SharedData/data";
+import { hpData, SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
 import { checkFeatPrerequisites } from "../CharacterSheet/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllSelectedFeats } from "./utils/characterUtils";
@@ -143,6 +143,83 @@ const LevelUpModal = ({
   const getToughFeatLevelUpBonus = () => {
     const allSelectedFeats = getAllSelectedFeats(character);
     return allSelectedFeats.includes("Tough") ? 2 : 0;
+  };
+
+  const updateSpellSlotsOnLevelUp = (character, newLevel) => {
+    const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
+      0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    const updatedSpellSlots = {};
+
+    for (let i = 1; i <= 9; i++) {
+      const maxKey = `maxSpellSlots${i}`;
+      const currentKey = `spellSlots${i}`;
+
+      const newMax = newMaxSlots[i - 1];
+      const currentSlots = character[currentKey] || 0;
+      const currentMax = character[maxKey] || 0;
+
+      updatedSpellSlots[maxKey] = newMax;
+
+      if (currentSlots > currentMax) {
+        const bonusSlots = currentSlots - currentMax;
+        updatedSpellSlots[currentKey] = newMax + bonusSlots;
+      } else {
+        updatedSpellSlots[currentKey] = newMax;
+      }
+    }
+
+    return updatedSpellSlots;
+  };
+
+  const updateSpellSlotResources = async (
+    character,
+    newLevel,
+    supabase,
+    discordUserId
+  ) => {
+    try {
+      const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ];
+
+      const updateData = {
+        character_id: character.id,
+        discord_user_id: discordUserId,
+        updated_at: new Date().toISOString(),
+      };
+
+      for (let i = 1; i <= 9; i++) {
+        const newMax = newMaxSlots[i - 1];
+        const currentSlots = character[`spellSlots${i}`] || 0;
+        const currentMax = character[`maxSpellSlots${i}`] || 0;
+
+        updateData[`max_spell_slots_${i}`] = newMax;
+
+        if (currentSlots > currentMax) {
+          const bonusSlots = currentSlots - currentMax;
+          updateData[`spell_slots_${i}`] = newMax + bonusSlots;
+        } else {
+          updateData[`spell_slots_${i}`] = newMax;
+        }
+      }
+
+      const { error } = await supabase
+        .from("character_resources")
+        .upsert(updateData, {
+          onConflict: "character_id,discord_user_id",
+        });
+
+      if (error) {
+        console.error("Error updating spell slot resources:", error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in updateSpellSlotResources:", error);
+      throw error;
+    }
   };
 
   const rollHitPoints = () => {
@@ -491,6 +568,8 @@ const LevelUpModal = ({
 
       let newFullHP = currentFullHP + levelUpData.hitPointIncrease;
 
+      const spellSlotUpdates = updateSpellSlotsOnLevelUp(character, newLevel);
+
       const updatedCharacter = {
         ...character,
         level: newLevel,
@@ -498,6 +577,7 @@ const LevelUpModal = ({
         hitPoints: newFullHP,
         image_url: character.image_url || character.imageUrl || null,
         imageUrl: character.imageUrl || character.image_url || null,
+        ...spellSlotUpdates,
       };
 
       if (
@@ -700,6 +780,23 @@ const LevelUpModal = ({
             ? levelUpData.selectedFeats[0]
             : null,
       };
+
+      try {
+        const discordUserId =
+          character.discord_user_id ||
+          character.ownerId ||
+          user?.user_metadata?.provider_id;
+        if (supabase && discordUserId) {
+          await updateSpellSlotResources(
+            updatedCharacter,
+            newLevel,
+            supabase,
+            discordUserId
+          );
+        }
+      } catch (spellSlotError) {
+        console.error("Error updating spell slot resources:", spellSlotError);
+      }
 
       await onSave(updatedCharacter, levelUpDetails);
       setIsSaving(false);
