@@ -3,6 +3,7 @@ import { Plus, BookOpen, PlusIcon, MinusIcon } from "lucide-react";
 import SorceryPointTracker from "./SorceryPointTracker";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
+import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 
 const SpellSlotTracker = ({
   character,
@@ -230,44 +231,24 @@ const SpellSlotTracker = ({
 
       setShowCustomModal(false);
 
-      const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+      const totalSlots = Object.values(customSlots).reduce(
+        (sum, slots) => sum + slots,
+        0
+      );
 
-      if (discordWebhookUrl) {
-        const totalSlots = Object.values(customSlots).reduce(
-          (sum, slots) => sum + slots,
-          0
-        );
-        const embed = {
-          title: `Spell Slots Updated`,
-          color: 0xf59e0b,
-          description: `Spell slot maximums updated (${totalSlots} total slots)`,
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Spell Update`,
-          },
-        };
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Spell Update",
+        title: "Spell Slots Updated",
+        embedColor: 0xf59e0b,
+        rollResult: null,
+        fields: [],
+        useCharacterAvatar: true,
+        description: `Spell slot maximums updated (${totalSlots} total slots)`,
+      });
 
-        const message = {
-          embeds: [embed],
-        };
-
-        if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        } else if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
-
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      if (!success) {
+        console.error("Failed to send spell slot update to Discord");
       }
     } catch (error) {
       console.error("Error updating spell slots:", error);
@@ -311,58 +292,38 @@ const SpellSlotTracker = ({
         [`spellSlots${level}`]: newSlots,
       }));
 
-      const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+      const additionalFields = [
+        {
+          name: "Spell Level",
+          value: `Level ${level}`,
+          inline: true,
+        },
+        {
+          name: "Change",
+          value: `${change > 0 ? "+" : ""}${change} Slot${
+            Math.abs(change) !== 1 ? "s" : ""
+          }`,
+          inline: true,
+        },
+        {
+          name: "Current Total",
+          value: `${newSlots}/${maxSlots} Slots`,
+          inline: true,
+        },
+      ];
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${action}`,
-          color: change > 0 ? 0x10b981 : 0x3b82f6,
-          fields: [
-            {
-              name: "Spell Level",
-              value: `Level ${level}`,
-              inline: true,
-            },
-            {
-              name: "Change",
-              value: `${change > 0 ? "+" : ""}${change} Slot${
-                Math.abs(change) !== 1 ? "s" : ""
-              }`,
-              inline: true,
-            },
-            {
-              name: "Current Total",
-              value: `${newSlots}/${maxSlots} Slots`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Spell Slots`,
-          },
-        };
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Spell Slots",
+        title: action,
+        embedColor: change > 0 ? 0x10b981 : 0x3b82f6,
+        rollResult: null,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
 
-        const message = {
-          embeds: [embed],
-        };
-
-        if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        } else if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
-
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      if (!success) {
+        console.error("Failed to send spell slot change to Discord");
       }
 
       setShowModal(false);

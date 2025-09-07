@@ -165,6 +165,103 @@ export const buildModifierBreakdownField = (modifierInfo) => {
   };
 };
 
+export const sendDiscordLevelUpMessage = async ({
+  character,
+  oldLevel,
+  newLevel,
+  hitPointIncrease,
+  abilityIncreases = [],
+  selectedFeat = null,
+}) => {
+  try {
+    const discordWebhookUrl = getDiscordWebhook(
+      character?.game_session || character?.gameSession
+    );
+
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return false;
+    }
+
+    const characterName = character?.name || "Unknown Character";
+
+    const fields = [
+      {
+        name: "Level Progression",
+        value: `**${oldLevel}** → **${newLevel}**`,
+        inline: true,
+      },
+      {
+        name: "❤️ Hit Points Gained",
+        value: `+${hitPointIncrease} HP`,
+        inline: true,
+      },
+    ];
+
+    if (abilityIncreases && abilityIncreases.length > 0) {
+      const abilityText = abilityIncreases
+        .map((inc) => `${inc.ability}: ${inc.from} → ${inc.to}`)
+        .join("\n");
+
+      fields.push({
+        name: "⚡ Ability Score Improvements",
+        value: abilityText,
+        inline: false,
+      });
+    }
+
+    if (selectedFeat) {
+      fields.push({
+        name: "⭐ New Feat",
+        value: selectedFeat,
+        inline: false,
+      });
+    }
+
+    const embed = {
+      title: `🎉 ${characterName} has leveled up!`,
+      description: `${characterName} has grown stronger and gained new abilities!`,
+      color: 0xffd700,
+      fields: fields,
+      footer: {
+        text: `${characterName} - Witches and Snitches`,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    if (character?.imageUrl) {
+      embed.thumbnail = {
+        url: character.imageUrl,
+      };
+    } else if (character?.image_url) {
+      embed.thumbnail = {
+        url: character.image_url,
+      };
+    }
+
+    const message = {
+      embeds: [embed],
+    };
+
+    const response = await fetch(discordWebhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(message),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending Discord level-up webhook:", error);
+    return false;
+  }
+};
+
 export const ROLL_COLORS = {
   ability: 0x20b7b0,
   initiative: 0x107319,
@@ -181,4 +278,5 @@ export const ROLL_COLORS = {
   generic: 0xff9e3d,
   magic_casting: 0x9d4edd,
   corruption: 0x1f2937,
+  levelup: 0xffd700,
 };

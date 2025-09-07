@@ -27,6 +27,7 @@ import {
   sendDiscordRollWebhook,
   getRollResultColor,
   ROLL_COLORS,
+  sendDiscordLevelUpMessage,
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
@@ -737,57 +738,39 @@ const CharacterSheet = ({
         } • ${character.name} is fully rested!`,
       });
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `Long Rest Complete`,
-          color: 0x3b82f6,
-          fields: [
-            {
-              name: "HP Restored",
-              value: `${hpRestored} HP`,
-              inline: true,
-            },
-            {
-              name: "Hit Dice Restored",
-              value: `${hitDiceRestored} × ${character.hitDie}`,
-              inline: true,
-            },
-            {
-              name: "Current Status",
-              value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice${
-                hasSpellSlots ? " • All spell slots restored" : ""
-              }`,
-              inline: false,
-            },
-          ],
-          description: "💤 **Fully rested and ready for adventure!**",
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Long Rest`,
-          },
-        };
+      const additionalFields = [
+        {
+          name: "HP Restored",
+          value: `${hpRestored} HP`,
+          inline: true,
+        },
+        {
+          name: "Hit Dice Restored",
+          value: `${hitDiceRestored} × ${character.hitDie}`,
+          inline: true,
+        },
+        {
+          name: "Current Status",
+          value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice${
+            hasSpellSlots ? " • All spell slots restored" : ""
+          }`,
+          inline: false,
+        },
+      ];
 
-        const message = {
-          embeds: [embed],
-        };
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Long Rest",
+        title: "Long Rest Complete",
+        embedColor: 0x3b82f6,
+        rollResult: null,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+        description: "💤 **Fully rested and ready for adventure!**",
+      });
 
-         if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        }else  if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
-
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      if (!success) {
+        console.error("Failed to send long rest to Discord");
       }
 
       await fetchCharacterDetails();
@@ -851,37 +834,31 @@ const CharacterSheet = ({
         return;
       }
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} was fully healed!`,
-          color: 0x10b981,
-          fields: [
-            {
-              name: "HP Restored",
-              value: `${maxHP - currentHP} HP`,
-              inline: true,
-            },
-            {
-              name: "Current HP",
-              value: `${maxHP}/${maxHP} (Full Health)`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Full Heal`,
-          },
-        };
+      const additionalFields = [
+        {
+          name: "HP Restored",
+          value: `${maxHP - currentHP} HP`,
+          inline: true,
+        },
+        {
+          name: "Current HP",
+          value: `${maxHP}/${maxHP} (Full Health)`,
+          inline: true,
+        },
+      ];
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Full Heal",
+        title: `${character.name} was fully healed!`,
+        embedColor: 0x10b981,
+        rollResult: null,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+
+      if (!success) {
+        console.error("Failed to send full heal to Discord");
       }
 
       await fetchCharacterDetails();
@@ -891,7 +868,7 @@ const CharacterSheet = ({
     }
   };
 
-  const handleCharacterUpdated = async (updatedCharacter) => {
+  const handleCharacterUpdated = async (updatedCharacter, levelUpDetails) => {
     try {
       const characterOwnerId = character.discord_user_id || character.ownerId;
 
@@ -946,6 +923,8 @@ const CharacterSheet = ({
           [],
         background_skills:
           character.backgroundSkills || character.background_skills || [],
+        image_url: character.image_url || character.imageUrl || null,
+        imageUrl: character.imageUrl || character.image_url || null,
       };
 
       const result = await characterService.updateCharacter(
@@ -953,6 +932,32 @@ const CharacterSheet = ({
         characterToSave,
         characterOwnerId
       );
+
+      if (levelUpDetails) {
+        const {
+          oldLevel,
+          newLevel,
+          hitPointIncrease,
+          abilityIncreases,
+          selectedFeat,
+        } = levelUpDetails;
+
+        try {
+          await sendDiscordLevelUpMessage({
+            character: updatedCharacter,
+            oldLevel,
+            newLevel,
+            hitPointIncrease,
+            abilityIncreases,
+            selectedFeat,
+          });
+        } catch (discordError) {
+          console.error(
+            "Error sending Discord level-up message:",
+            discordError
+          );
+        }
+      }
 
       setShowLevelUp(false);
       await fetchCharacterDetails();

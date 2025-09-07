@@ -9,6 +9,7 @@ import { Users, Plus, Crown } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import { characterService } from "../../services/characterService";
+import { sendDiscordLevelUpMessage } from "../utils/discordWebhook";
 
 import CharacterForm from "./components/CharacterForm/CharacterForm";
 import CharacterList from "./CharacterList";
@@ -103,13 +104,39 @@ const CharacterManager = ({
     setLevelingUpCharacter(character);
   };
 
-  const handleLevelUpSave = async (updatedCharacter) => {
+  const handleLevelUpSave = async (updatedCharacter, levelUpDetails) => {
     try {
       await characterService.updateCharacter(
         updatedCharacter.id,
         updatedCharacter,
         updatedCharacter.discord_user_id || discordUserId
       );
+
+      if (levelUpDetails) {
+        const {
+          oldLevel,
+          newLevel,
+          hitPointIncrease,
+          abilityIncreases,
+          selectedFeat,
+        } = levelUpDetails;
+
+        try {
+          await sendDiscordLevelUpMessage({
+            character: updatedCharacter,
+            oldLevel,
+            newLevel,
+            hitPointIncrease,
+            abilityIncreases,
+            selectedFeat,
+          });
+        } catch (discordError) {
+          console.error(
+            "Error sending Discord level-up message:",
+            discordError
+          );
+        }
+      }
 
       setLevelingUpCharacter(null);
 

@@ -1,6 +1,7 @@
 import { Heart, Dices, Plus, Minus, X, Coffee, RotateCcw } from "lucide-react";
 import { formatModifier } from "./utils";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
+import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 
 const CharacterSheetModals = ({
   character,
@@ -86,61 +87,52 @@ const CharacterSheetModals = ({
         return;
       }
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} - Hit Dice Recovery`,
-          color: 0x9d4edd,
-          fields: [
-            {
-              name: "Hit Dice Used",
-              value: `${selectedHitDiceCount} × ${character.hitDie}`,
-              inline: true,
-            },
-            {
-              name: "Roll Result",
-              value: `${rollResult.output} + ${
-                conModifier * selectedHitDiceCount
-              } (CON) = ${actualHealing}`,
-              inline: true,
-            },
-            {
-              name: "HP Restored",
-              value: `${hpGained} HP (${character.currentHitPoints} → ${newCurrentHP})`,
-              inline: true,
-            },
-            {
-              name: "Hit Dice Remaining",
-              value: `${newHitDiceCount}/${character.maxHitDice}`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `Short Rest Healing`,
-          },
-        };
+      const rollResultForWebhook = {
+        d20Roll: rollResult.total,
+        modifier: conModifier * selectedHitDiceCount,
+        total: actualHealing,
+        isCriticalSuccess: false,
+        isCriticalFailure: false,
+      };
 
-        const message = {
-          embeds: [embed],
-        };
+      const additionalFields = [
+        {
+          name: "Hit Dice Used",
+          value: `${selectedHitDiceCount} × ${character.hitDie}`,
+          inline: true,
+        },
+        {
+          name: "Roll Result",
+          value: `${rollResult.output} + ${
+            conModifier * selectedHitDiceCount
+          } (CON) = ${actualHealing}`,
+          inline: true,
+        },
+        {
+          name: "HP Restored",
+          value: `${hpGained} HP (${character.currentHitPoints} → ${newCurrentHP})`,
+          inline: true,
+        },
+        {
+          name: "Hit Dice Remaining",
+          value: `${newHitDiceCount}/${character.maxHitDice}`,
+          inline: true,
+        },
+      ];
 
-        if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        } else if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Hit Dice Recovery",
+        title: `${character.name} - Hit Dice Recovery`,
+        embedColor: 0x9d4edd,
+        rollResult: rollResultForWebhook,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+        description: "☕ **Short Rest Healing**",
+      });
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      if (!success) {
+        console.error("Failed to send hit dice recovery to Discord");
       }
 
       await fetchCharacterDetails();
@@ -213,58 +205,44 @@ const CharacterSheetModals = ({
         return;
       }
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} - ${
-            type === "damage" ? "Damage Taken" : "Healing Applied"
-          }`,
-          color: type === "damage" ? 0xef4444 : 0x10b981,
-          fields: [
-            {
-              name: type === "damage" ? "Damage Taken" : "HP Restored",
-              value: `${changeAmount} ${type === "damage" ? "damage" : "HP"}`,
-              inline: true,
-            },
-            {
-              name: "Current HP",
-              value: `${newCurrentHP}/${maxHP}`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${type === "damage" ? "Damage Taken" : "Healing Applied"}`,
-          },
-        };
+      const additionalFields = [
+        {
+          name: type === "damage" ? "Damage Taken" : "HP Restored",
+          value: `${changeAmount} ${type === "damage" ? "damage" : "HP"}`,
+          inline: true,
+        },
+        {
+          name: "Current HP",
+          value: `${newCurrentHP}/${maxHP}`,
+          inline: true,
+        },
+      ];
 
-        if (type === "damage" && newCurrentHP === 0) {
-          embed.description = "⚠️ **Character is unconscious!**";
-          embed.color = 0x7f1d1d;
-        } else if (type === "healing" && newCurrentHP === maxHP) {
-          embed.description = "✨ **Character is at full health!**";
-        }
+      let webhookDescription = "";
+      let embedColor = type === "damage" ? 0xef4444 : 0x10b981;
 
-        const message = {
-          embeds: [embed],
-        };
+      if (type === "damage" && newCurrentHP === 0) {
+        webhookDescription = "⚠️ **Character is unconscious!**";
+        embedColor = 0x7f1d1d;
+      } else if (type === "healing" && newCurrentHP === maxHP) {
+        webhookDescription = "✨ **Character is at full health!**";
+      }
 
-        if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        } else if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: type === "damage" ? "Damage Taken" : "Healing Applied",
+        title: `${character.name} - ${
+          type === "damage" ? "Damage Taken" : "Healing Applied"
+        }`,
+        embedColor: embedColor,
+        rollResult: null,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+        description: webhookDescription,
+      });
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      if (!success) {
+        console.error("Failed to send HP change to Discord");
       }
 
       await fetchCharacterDetails();

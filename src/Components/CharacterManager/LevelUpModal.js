@@ -672,7 +672,20 @@ const LevelUpModal = ({
         }
       }
 
-      await onSave(updatedCharacter);
+      const levelUpDetails = {
+        oldLevel: currentLevel,
+        newLevel: newLevel,
+        hitPointIncrease: levelUpData.hitPointIncrease,
+        abilityIncreases:
+          levelUpData.asiChoice === "asi" ? levelUpData.abilityIncreases : [],
+        selectedFeat:
+          levelUpData.asiChoice === "feat" &&
+          levelUpData.selectedFeats.length > 0
+            ? levelUpData.selectedFeats[0]
+            : null,
+      };
+
+      await onSave(updatedCharacter, levelUpDetails);
       setIsSaving(false);
     } catch (error) {
       console.error("Error during level up:", error);
