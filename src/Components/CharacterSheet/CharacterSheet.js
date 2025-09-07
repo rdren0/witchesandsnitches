@@ -30,6 +30,7 @@ import {
   sendDiscordLevelUpMessage,
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
+import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
@@ -460,7 +461,8 @@ const CharacterSheet = ({
             max_spell_slots_7,
             max_spell_slots_8,
             max_spell_slots_9,
-            inspiration
+            inspiration,
+            luck
           )
         `
           )
@@ -498,7 +500,8 @@ const CharacterSheet = ({
             max_spell_slots_7,
             max_spell_slots_8,
             max_spell_slots_9,
-            inspiration
+            inspiration,
+            luck
           )
         `
           )
@@ -560,6 +563,7 @@ const CharacterSheet = ({
           ),
           innateHeritage: data.innate_heritage,
           inspiration: resources.inspiration ?? 0,
+          luck: resources.luck,
           intelligence: effectiveAbilityScores.intelligence || 10,
           level: data.level || 1,
           magicModifiers: data.magic_modifiers || {},
@@ -670,12 +674,23 @@ const CharacterSheet = ({
       return;
     }
 
+    const hasLuckyFeat =
+      character?.selectedFeats?.some((feat) =>
+        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
+      ) ||
+      character?.feats?.some((feat) =>
+        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
+      ) ||
+      character?.standardFeats?.some((feat) =>
+        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
+      );
+
     const confirmed = window.confirm(
       `Take a long rest for ${
         character.name
       }?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}${
         hasSpellSlots ? "\n• All Spell Slots" : ""
-      }`
+      }${hasLuckyFeat ? "\n• All Luck Points" : ""}`
     );
     if (!confirmed) return;
 
@@ -703,28 +718,43 @@ const CharacterSheet = ({
         return;
       }
 
-      if (hasSpellSlots) {
-        const spellSlotUpdates = {
+      const getProficiencyBonus = (level) => {
+        if (level <= 4) return 2;
+        if (level <= 8) return 3;
+        if (level <= 12) return 4;
+        if (level <= 16) return 5;
+        return 6;
+      };
+
+      if (hasSpellSlots || hasLuckyFeat) {
+        const resourceUpdates = {
           character_id: character.id,
           discord_user_id: characterOwnerId,
           updated_at: new Date().toISOString(),
         };
 
-        [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((level) => {
-          const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
-          if (maxSlots > 0) {
-            spellSlotUpdates[`spell_slots_${level}`] = maxSlots;
-          }
-        });
+        if (hasSpellSlots) {
+          [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((level) => {
+            const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
+            if (maxSlots > 0) {
+              resourceUpdates[`spell_slots_${level}`] = maxSlots;
+            }
+          });
+        }
+
+        if (hasLuckyFeat) {
+          const maxLuckPoints = getProficiencyBonus(character?.level || 1);
+          resourceUpdates.luck = maxLuckPoints;
+        }
 
         const { error: resourcesError } = await supabase
           .from("character_resources")
-          .upsert(spellSlotUpdates, {
+          .upsert(resourceUpdates, {
             onConflict: "character_id,discord_user_id",
           });
 
         if (resourcesError) {
-          console.error("Error updating spell slots:", resourcesError);
+          console.error("Error updating resources:", resourcesError);
         }
       }
 
@@ -1244,6 +1274,14 @@ const CharacterSheet = ({
                     selectedCharacterId={selectedCharacter.id}
                     isAdmin={adminMode}
                   />
+                  <LuckPointButton
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    setCharacter={setCharacter}
+                    selectedCharacterId={selectedCharacter.id}
+                    isAdmin={adminMode}
+                  />
                   <button
                     style={{
                       backgroundColor: "#9d4edd",
@@ -1338,7 +1376,6 @@ const CharacterSheet = ({
                 {(() => {
                   const allInfo = [];
 
-                  // Primary info
                   allInfo.push(
                     `Level ${character.level} ${character.castingStyle}`
                   );
@@ -1362,7 +1399,6 @@ const CharacterSheet = ({
                     allInfo.push(character.bloodStatus);
                   }
 
-                  // Secondary info
                   if (
                     character.background &&
                     character.background !== "Unknown"

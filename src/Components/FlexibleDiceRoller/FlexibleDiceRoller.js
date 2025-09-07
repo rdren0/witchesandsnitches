@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dice6, Plus, Minus } from "lucide-react";
+import { Dice6, Plus, Minus, ChevronDown } from "lucide-react";
 import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -72,27 +72,27 @@ const FlexibleDiceRoller = ({
 
   const styles = {
     container: {
-      padding: compact ? "12px" : "16px",
+      padding: compact ? "16px" : "20px",
       backgroundColor: theme.surface,
-      border: `2px solid ${theme.border}`,
-      borderRadius: "8px",
-      boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "12px",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
       ...style,
     },
     title: {
-      fontSize: compact ? "14px" : "16px",
-      fontWeight: "600",
+      fontSize: compact ? "16px" : "18px",
+      fontWeight: "700",
       color: theme.text,
-      marginBottom: compact ? "8px" : "12px",
+      marginBottom: compact ? "16px" : "20px",
       display: "flex",
       alignItems: "center",
-      gap: "8px",
+      gap: "10px",
     },
     inputGroup: {
       display: "flex",
       flexDirection: "column",
-      gap: compact ? "8px" : "12px",
-      marginBottom: compact ? "8px" : "12px",
+      gap: compact ? "12px" : "16px",
+      marginBottom: compact ? "16px" : "20px",
     },
     inputRow: {
       display: "flex",
@@ -106,52 +106,70 @@ const FlexibleDiceRoller = ({
       flex: 1,
     },
     label: {
-      fontSize: "12px",
-      fontWeight: "500",
-      color: theme.text,
-      marginBottom: "4px",
+      fontSize: "13px",
+      fontWeight: "600",
+      color: theme.textSecondary,
+      marginBottom: "6px",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+    },
+    selectContainer: {
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
     },
     select: {
-      padding: "8px 12px",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "6px",
+      width: "100%",
+      padding: "10px 40px 10px 12px",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "8px",
       fontSize: "14px",
       backgroundColor: theme.background,
       color: theme.text,
       outline: "none",
       cursor: "pointer",
       appearance: "none",
-      backgroundRepeat: "no-repeat",
-      backgroundPosition: "right 8px center",
-      backgroundSize: "16px",
-      paddingRight: "32px",
+      transition: "all 0.2s ease",
+      fontWeight: "500",
+    },
+    selectArrow: {
+      position: "absolute",
+      right: "12px",
+      pointerEvents: "none",
+      color: theme.textSecondary,
+      transition: "color 0.2s ease",
     },
     modifierContainer: {
       display: "flex",
       alignItems: "center",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "6px",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "8px",
       backgroundColor: theme.background,
       overflow: "hidden",
-      transition: "border-color 0.2s ease",
+      transition: "all 0.2s ease",
+      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
     },
     modifierButton: {
       background: "none",
       border: "none",
-      padding: "8px",
+      padding: "10px",
       cursor: "pointer",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: theme.text,
-      transition: "background-color 0.2s ease",
+      color: theme.textSecondary,
+      transition: "all 0.2s ease",
+      "&:hover": {
+        backgroundColor: theme.primary + "10",
+        color: theme.primary,
+      },
     },
     modifierInput: {
       border: "none",
       background: "none",
-      padding: "8px 12px",
-      fontSize: "14px",
-      fontWeight: "500",
+      padding: "10px 12px",
+      fontSize: "15px",
+      fontWeight: "600",
       textAlign: "center",
       minWidth: "60px",
       color: theme.text,
@@ -161,56 +179,81 @@ const FlexibleDiceRoller = ({
     },
     titleInput: {
       width: "100%",
-      padding: "8px 12px",
-      border: `2px solid ${theme.border}`,
-      borderRadius: "6px",
+      padding: "10px 14px",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "8px",
       fontSize: "14px",
       backgroundColor: theme.background,
       color: theme.text,
       outline: "none",
-      transition: "border-color 0.2s ease",
+      transition: "all 0.2s ease",
+      fontWeight: "500",
+      "&:focus": {
+        borderColor: theme.primary,
+        boxShadow: `0 0 0 3px ${theme.primary}15`,
+      },
     },
     rollButton: {
       width: "100%",
-      padding: compact ? "8px 16px" : "12px 20px",
-      backgroundColor: isRolling ? theme.background : "#3b82f6",
+      padding: compact ? "12px 20px" : "14px 24px",
+      backgroundColor: isRolling ? theme.surface : theme.primary || "#6366f1",
       color: "white",
       border: "none",
-      borderRadius: "6px",
-      fontSize: compact ? "14px" : "16px",
-      fontWeight: "600",
+      borderRadius: "8px",
+      fontSize: compact ? "15px" : "16px",
+      fontWeight: "700",
       cursor: isRolling ? "not-allowed" : "pointer",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      gap: "8px",
+      gap: "10px",
       transition: "all 0.2s ease",
-      opacity: isRolling ? 0.7 : 1,
+      opacity: isRolling ? 0.6 : 1,
+      boxShadow: isRolling ? "none" : "0 2px 4px rgba(0, 0, 0, 0.1)",
+      transform: isRolling ? "scale(0.98)" : "scale(1)",
+      "&:hover": {
+        transform: isRolling ? "scale(0.98)" : "scale(1.02)",
+        boxShadow: isRolling ? "none" : "0 4px 8px rgba(0, 0, 0, 0.15)",
+      },
     },
     rollFormula: {
-      fontSize: "12px",
-      color: theme.text,
+      fontSize: "14px",
+      color: theme.primary,
       textAlign: "center",
-      fontFamily: "monospace",
-      marginBottom: "8px",
-      padding: "4px 8px",
-      backgroundColor: theme.background,
-      border: `2px solid ${theme.border}`,
-      borderRadius: "4px",
+      fontFamily: "'Courier New', monospace",
+      marginBottom: "16px",
+      padding: "10px 14px",
+      backgroundColor: theme.primary + "10",
+      border: `1px solid ${theme.primary}30`,
+      borderRadius: "8px",
+      fontWeight: "600",
+      letterSpacing: "1px",
     },
     advantageIndicator: {
-      fontSize: "10px",
-      fontWeight: "600",
-      padding: "2px 6px",
-      borderRadius: "4px",
+      fontSize: "11px",
+      fontWeight: "700",
+      padding: "4px 8px",
+      borderRadius: "6px",
       backgroundColor:
+        rollType === "advantage"
+          ? "#10b98120"
+          : rollType === "disadvantage"
+          ? "#ef444420"
+          : theme.background,
+      color:
         rollType === "advantage"
           ? "#10b981"
           : rollType === "disadvantage"
           ? "#ef4444"
-          : theme.background,
-      color: theme.text,
-      marginLeft: "8px",
+          : theme.text,
+      marginLeft: "auto",
+      border: `1px solid ${
+        rollType === "advantage"
+          ? "#10b981"
+          : rollType === "disadvantage"
+          ? "#ef4444"
+          : "transparent"
+      }`,
     },
   };
 
@@ -229,8 +272,16 @@ const FlexibleDiceRoller = ({
 
   return (
     <div style={styles.container}>
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
       <div style={styles.title}>
-        <Dice6 size={compact ? 16 : 20} color="#3b82f6" />
+        <Dice6 size={compact ? 18 : 22} color={theme.primary || "#6366f1"} />
         {compact ? "Dice Roll" : "Flexible Dice Roller"}
         {rollType !== "normal" && (
           <span style={styles.advantageIndicator}>
@@ -250,10 +301,12 @@ const FlexibleDiceRoller = ({
               placeholder={title}
               style={styles.titleInput}
               onFocus={(e) => {
-                e.target.style.borderColor = "#3b82f6";
+                e.target.style.borderColor = theme.primary;
+                e.target.style.boxShadow = `0 0 0 3px ${theme.primary}15`;
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = theme.surface;
+                e.target.style.borderColor = theme.border;
+                e.target.style.boxShadow = "none";
               }}
             />
           </div>
@@ -339,12 +392,13 @@ const FlexibleDiceRoller = ({
                   minWidth: "80px",
                 }}
                 onFocus={(e) => {
-                  e.target.style.backgroundColor = theme.surface;
-                  e.target.parentElement.style.borderColor = "#3b82f6";
+                  e.target.parentElement.style.borderColor = theme.primary;
+                  e.target.parentElement.style.boxShadow = `0 0 0 3px ${theme.primary}15`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.backgroundColor = "transparent";
-                  e.target.parentElement.style.borderColor = theme.surface;
+                  e.target.parentElement.style.borderColor = theme.border;
+                  e.target.parentElement.style.boxShadow =
+                    "0 1px 2px rgba(0, 0, 0, 0.05)";
 
                   const value = parseInt(e.target.value) || 2;
                   setDiceType(Math.max(2, Math.min(9999, value)));
@@ -384,17 +438,38 @@ const FlexibleDiceRoller = ({
                     type="button"
                     onClick={() => setDiceType(dice)}
                     style={{
-                      padding: "2px 6px",
-                      height: "40px",
-                      width: "40px",
-                      fontSize: "10px",
-                      border: `1px solid ${theme.text}`,
-                      borderRadius: "4px",
+                      padding: "6px 8px",
+                      height: "36px",
+                      width: "42px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      border: `1px solid ${
+                        diceType === dice ? theme.primary : theme.border
+                      }`,
+                      borderRadius: "6px",
                       backgroundColor:
-                        diceType === dice ? "#3b82f6" : theme.background,
-                      color: diceType === dice ? "white" : theme.text,
+                        diceType === dice ? theme.primary : theme.background,
+                      color: diceType === dice ? "white" : theme.textSecondary,
                       cursor: "pointer",
-                      transition: "all 0.1s ease",
+                      transition: "all 0.2s ease",
+                      boxShadow:
+                        diceType === dice
+                          ? "0 2px 4px rgba(0, 0, 0, 0.1)"
+                          : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (diceType !== dice) {
+                        e.target.style.backgroundColor = theme.primary + "10";
+                        e.target.style.borderColor = theme.primary;
+                        e.target.style.color = theme.primary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (diceType !== dice) {
+                        e.target.style.backgroundColor = theme.background;
+                        e.target.style.borderColor = theme.border;
+                        e.target.style.color = theme.textSecondary;
+                      }
                     }}
                   >
                     d{dice}
@@ -420,10 +495,13 @@ const FlexibleDiceRoller = ({
                 onChange={(e) => setModifier(e.target.value)}
                 style={styles.modifierInput}
                 onFocus={(e) => {
-                  e.target.style.backgroundColor = theme.surface;
+                  e.target.parentElement.style.borderColor = theme.primary;
+                  e.target.parentElement.style.boxShadow = `0 0 0 3px ${theme.primary}15`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.backgroundColor = "transparent";
+                  e.target.parentElement.style.borderColor = theme.border;
+                  e.target.parentElement.style.boxShadow =
+                    "0 1px 2px rgba(0, 0, 0, 0.05)";
                 }}
               />
               <button
@@ -437,23 +515,30 @@ const FlexibleDiceRoller = ({
           </div>
           <div style={styles.inputContainer}>
             <label style={styles.label}>Roll Type</label>
-            <select
-              value={rollType}
-              onChange={(e) => setRollType(e.target.value)}
-              style={styles.select}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#3b82f6";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = theme.surface;
-              }}
-            >
-              {rollTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div style={styles.selectContainer}>
+              <select
+                value={rollType}
+                onChange={(e) => setRollType(e.target.value)}
+                style={styles.select}
+                onFocus={(e) => {
+                  e.target.style.borderColor = theme.primary;
+                  e.target.style.boxShadow = `0 0 0 3px ${theme.primary}15`;
+                  e.target.nextElementSibling.style.color = theme.primary;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = theme.border;
+                  e.target.style.boxShadow = "none";
+                  e.target.nextElementSibling.style.color = theme.textSecondary;
+                }}
+              >
+                {rollTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} style={styles.selectArrow} />
+            </div>
           </div>
         </div>
       </div>
@@ -465,8 +550,13 @@ const FlexibleDiceRoller = ({
         disabled={isRolling}
         style={styles.rollButton}
       >
-        <Dice6 size={16} />
-        {isRolling ? "Rolling..." : `Roll ${diceQuantity}d${diceType}`}
+        <Dice6
+          size={18}
+          style={{
+            animation: isRolling ? "spin 0.5s linear infinite" : "none",
+          }}
+        />
+        {isRolling ? "Rolling..." : `Roll ${formula}`}
       </button>
     </div>
   );
