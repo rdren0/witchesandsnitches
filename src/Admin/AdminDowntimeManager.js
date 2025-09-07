@@ -312,6 +312,7 @@ const AdminDowntimeManager = ({ supabase }) => {
           )
         `
         )
+        .eq("archived", false)
         .order("submitted_at", { ascending: false });
 
       if (sheetsError) throw sheetsError;
@@ -442,7 +443,7 @@ const AdminDowntimeManager = ({ supabase }) => {
     try {
       const { error } = await supabase
         .from("character_downtime")
-        .delete()
+        .update({ archived: true })
         .eq("id", sheetId);
 
       if (error) throw error;

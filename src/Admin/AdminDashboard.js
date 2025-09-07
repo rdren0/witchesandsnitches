@@ -184,7 +184,8 @@ const AdminDashboard = ({ supabase }) => {
 
       const { data: downtimeSheets } = await supabase
         .from("character_downtime")
-        .select("review_status, is_draft");
+        .select("review_status, is_draft")
+        .eq("archived", false);
 
       const pendingReviewCount =
         downtimeSheets?.filter(

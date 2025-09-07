@@ -488,6 +488,8 @@ const LevelUpModal = ({
         level: newLevel,
         hit_points: newFullHP,
         hitPoints: newFullHP,
+        image_url: character.image_url || character.imageUrl || null,
+        imageUrl: character.imageUrl || character.image_url || null,
       };
 
       if (

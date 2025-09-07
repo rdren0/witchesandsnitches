@@ -7,6 +7,77 @@ import {
   getAllSelectedFeats,
 } from "../../utils/characterUtils";
 
+const ABILITY_ORDER = [
+  "strength",
+  "dexterity",
+  "constitution",
+  "intelligence",
+  "wisdom",
+  "charisma",
+];
+
+const createAbilityScoreObject = (defaultValue) =>
+  ABILITY_ORDER.reduce(
+    (acc, ability) => ({ ...acc, [ability]: defaultValue }),
+    {}
+  );
+
+const formatModifierText = (modifiers) => {
+  const { asiBonus, featBonus, backgroundBonus, houseBonus, heritageBonus } =
+    modifiers;
+  const parts = [];
+
+  if (asiBonus > 0) parts.push(`ASI: ${asiBonus}`);
+  if (featBonus > 0) parts.push(`Feat: ${featBonus}`);
+  if (backgroundBonus > 0) parts.push(`Bg: ${backgroundBonus}`);
+  if (houseBonus > 0) parts.push(`House: ${houseBonus}`);
+  if (heritageBonus > 0) parts.push(`Heritage: ${heritageBonus}`);
+
+  return parts.length > 0 ? ` + ${parts.join(" + ")}` : "";
+};
+
+const getAbilityModifier = (score) => {
+  if (score === null || score === undefined || isNaN(score)) return 0;
+  return Math.floor((score - 10) / 2);
+};
+
+const DisabledAbilityCard = ({ ability, score, theme }) => (
+  <div
+    style={{
+      padding: "12px",
+      backgroundColor: theme.surface,
+      borderRadius: "6px",
+      textAlign: "center",
+      border: `1px solid ${theme.border}`,
+    }}
+  >
+    <div
+      style={{
+        fontSize: "12px",
+        color: theme.textSecondary,
+        marginBottom: "4px",
+      }}
+    >
+      {ability.charAt(0).toUpperCase() + ability.slice(1)}
+    </div>
+    <div
+      style={{
+        fontSize: "18px",
+        fontWeight: "bold",
+        color: theme.text,
+      }}
+    >
+      {score || "--"}
+    </div>
+    {score && (
+      <div style={{ fontSize: "12px", color: theme.textSecondary }}>
+        {getAbilityModifier(score) >= 0 ? "+" : ""}
+        {getAbilityModifier(score)}
+      </div>
+    )}
+  </div>
+);
+
 const AbilityScoresSection = ({
   character,
   onChange,
@@ -22,33 +93,14 @@ const AbilityScoresSection = ({
   const [availableStats, setAvailableStats] = useState([]);
   const [tempInputValues, setTempInputValues] = useState({});
   const [isManualMode, setIsManualMode] = useState(false);
-  const [manualScores, setManualScores] = useState({
-    strength: 8,
-    dexterity: 8,
-    constitution: 8,
-    intelligence: 8,
-    wisdom: 8,
-    charisma: 8,
-  });
-  const [rolledAssignments, setRolledAssignments] = useState({
-    strength: null,
-    dexterity: null,
-    constitution: null,
-    intelligence: null,
-    wisdom: null,
-    charisma: null,
-  });
+  const [manualScores, setManualScores] = useState(createAbilityScoreObject(8));
+  const [rolledAssignments, setRolledAssignments] = useState(
+    createAbilityScoreObject(null)
+  );
 
   useEffect(() => {
     if (!character.abilityScores) {
-      const initialScores = {
-        strength: null,
-        dexterity: null,
-        constitution: null,
-        intelligence: null,
-        wisdom: null,
-        charisma: null,
-      };
+      const initialScores = createAbilityScoreObject(null);
 
       if (onCharacterUpdate) {
         onCharacterUpdate({
@@ -76,14 +128,7 @@ const AbilityScoresSection = ({
   };
 
   const calculateASIModifiers = () => {
-    const asiModifiers = {
-      strength: 0,
-      dexterity: 0,
-      constitution: 0,
-      intelligence: 0,
-      wisdom: 0,
-      charisma: 0,
-    };
+    const asiModifiers = createAbilityScoreObject(0);
 
     if (character.asiChoices) {
       Object.values(character.asiChoices).forEach((choice) => {
@@ -215,14 +260,7 @@ const AbilityScoresSection = ({
     setRolledStats(newStats);
     setAvailableStats([...newStats]);
 
-    const clearedScores = {
-      strength: null,
-      dexterity: null,
-      constitution: null,
-      intelligence: null,
-      wisdom: null,
-      charisma: null,
-    };
+    const clearedScores = createAbilityScoreObject(null);
 
     if (onCharacterUpdate) {
       onCharacterUpdate({
@@ -347,41 +385,49 @@ const AbilityScoresSection = ({
     setIsManualMode(newManualMode);
 
     if (newManualMode) {
+      const baseScores = createAbilityScoreObject(null);
+      ABILITY_ORDER.forEach((ability) => {
+        baseScores[ability] = character.abilityScores?.[ability] || 8;
+      });
+
       setRolledAssignments({ ...character.abilityScores });
 
-      const currentScores = {
-        strength: character.abilityScores?.strength || 8,
-        dexterity: character.abilityScores?.dexterity || 8,
-        constitution: character.abilityScores?.constitution || 8,
-        intelligence: character.abilityScores?.intelligence || 8,
-        wisdom: character.abilityScores?.wisdom || 8,
-        charisma: character.abilityScores?.charisma || 8,
-      };
-
-      setManualScores(currentScores);
+      setManualScores(baseScores);
 
       handleCharacterUpdate({
         ...character,
-        abilityScores: currentScores,
+        abilityScores: baseScores,
       });
     } else {
-      setManualScores({ ...character.abilityScores });
+      if (Object.values(rolledAssignments).some((val) => val !== null)) {
+        handleCharacterUpdate({
+          ...character,
+          abilityScores: rolledAssignments,
+        });
 
-      handleCharacterUpdate({
-        ...character,
-        abilityScores: { ...rolledAssignments },
-      });
-
-      if (rolledStats.length === 0) {
-        rollAllStats();
-      } else {
-        const assignedStats = Object.values(rolledAssignments).filter(
-          (score) => score !== null
+        const assignedValues = Object.values(rolledAssignments).filter(
+          (val) => val !== null
         );
         const unassignedStats = rolledStats.filter(
-          (stat) => !assignedStats.includes(stat)
+          (stat) =>
+            !assignedValues.includes(stat) ||
+            assignedValues.filter((v) => v === stat).length <
+              rolledStats.filter((s) => s === stat).length
         );
         setAvailableStats(unassignedStats);
+      } else {
+        const clearedScores = createAbilityScoreObject(null);
+
+        handleCharacterUpdate({
+          ...character,
+          abilityScores: clearedScores,
+        });
+
+        setAvailableStats([]);
+
+        if (rolledStats.length === 0) {
+          rollAllStats();
+        }
       }
     }
   };
@@ -424,11 +470,6 @@ const AbilityScoresSection = ({
       ...prev,
       [ability]: newScore,
     }));
-  };
-
-  const getAbilityModifier = (score) => {
-    if (score === null || score === undefined || isNaN(score)) return 0;
-    return Math.floor((score - 10) / 2);
   };
 
   const getEffectiveAbilityScore = (ability) => {
@@ -508,6 +549,20 @@ const AbilityScoresSection = ({
       rollAllStats();
     }
   }, [isManualMode, rolledStats.length, mode, rollAllStats]);
+
+  useEffect(() => {
+    if (mode === "edit" && character.abilityScores) {
+      const hasScores = Object.values(character.abilityScores).some(
+        (score) => score !== null && score !== undefined
+      );
+      if (
+        hasScores &&
+        Object.values(rolledAssignments).every((val) => val === null)
+      ) {
+        setRolledAssignments({ ...character.abilityScores });
+      }
+    }
+  }, [mode, character.abilityScores]);
 
   const componentStyles = {
     container: {
@@ -660,9 +715,9 @@ const AbilityScoresSection = ({
       color: theme.primary,
     },
     scoreBreakdown: {
-      fontSize: "10px",
+      fontSize: "14px",
       color: theme.textSecondary,
-      lineHeight: "1.2",
+      lineHeight: "1.4",
       marginTop: "4px",
     },
     manualControls: {
@@ -782,42 +837,13 @@ const AbilityScoresSection = ({
 
         {character.abilityScores && (
           <div style={componentStyles.abilityGrid}>
-            {Object.entries(character.abilityScores).map(([ability, score]) => (
-              <div
+            {ABILITY_ORDER.map((ability) => (
+              <DisabledAbilityCard
                 key={ability}
-                style={{
-                  padding: "12px",
-                  backgroundColor: theme.surface,
-                  borderRadius: "6px",
-                  textAlign: "center",
-                  border: `1px solid ${theme.border}`,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: theme.textSecondary,
-                    marginBottom: "4px",
-                  }}
-                >
-                  {ability.charAt(0).toUpperCase() + ability.slice(1)}
-                </div>
-                <div
-                  style={{
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    color: theme.text,
-                  }}
-                >
-                  {score || "--"}
-                </div>
-                {score && (
-                  <div style={{ fontSize: "12px", color: theme.textSecondary }}>
-                    {getAbilityModifier(score) >= 0 ? "+" : ""}
-                    {getAbilityModifier(score)}
-                  </div>
-                )}
-              </div>
+                ability={ability}
+                score={character.abilityScores?.[ability] || null}
+                theme={theme}
+              />
             ))}
           </div>
         )}
@@ -907,241 +933,229 @@ const AbilityScoresSection = ({
       )}
 
       <div style={componentStyles.abilityGrid}>
-        {Object.entries(character.abilityScores || {}).map(
-          ([ability, score]) => {
-            const totalBonus = totalModifiers[ability] || 0;
-            const featBonus = featModifiers[ability] || 0;
-            const backgroundBonus = backgroundModifiers[ability] || 0;
-            const houseBonus = houseModifiers[ability] || 0;
-            const heritageBonus = heritageModifiers[ability] || 0;
-            const asiBonus = asiModifiers[ability] || 0;
-            const actualScore = isManualMode ? score || 8 : score;
-            const effectiveScore =
-              actualScore !== null ? actualScore + totalBonus : null;
-            const hasModifier = totalBonus > 0;
-            const baseModifier = getAbilityModifier(actualScore);
-            const effectiveModifier =
-              effectiveScore !== null ? getAbilityModifier(effectiveScore) : 0;
-            const tooltipText = getTooltipText(ability);
+        {ABILITY_ORDER.map((ability) => {
+          const score = character.abilityScores?.[ability] || null;
+          const totalBonus = totalModifiers[ability] || 0;
+          const featBonus = featModifiers[ability] || 0;
+          const backgroundBonus = backgroundModifiers[ability] || 0;
+          const houseBonus = houseModifiers[ability] || 0;
+          const heritageBonus = heritageModifiers[ability] || 0;
+          const asiBonus = asiModifiers[ability] || 0;
+          const actualScore = isManualMode ? score || 8 : score;
+          const effectiveScore =
+            actualScore !== null ? actualScore + totalBonus : null;
+          const hasModifier = totalBonus > 0;
+          const baseModifier = getAbilityModifier(actualScore);
+          const effectiveModifier =
+            effectiveScore !== null ? getAbilityModifier(effectiveScore) : 0;
+          const tooltipText = getTooltipText(ability);
 
-            let cardStyle = componentStyles.abilityCard;
-            if (hasModifier) {
-              cardStyle = componentStyles.abilityCardWithModifier;
-            }
+          let cardStyle = componentStyles.abilityCard;
+          if (hasModifier) {
+            cardStyle = componentStyles.abilityCardWithModifier;
+          }
 
-            return (
+          return (
+            <div
+              key={ability}
+              style={{
+                ...cardStyle,
+                backgroundColor:
+                  actualScore !== null
+                    ? hasModifier
+                      ? cardStyle.backgroundColor
+                      : `${theme.success || "#10B981"}20`
+                    : theme.surface,
+                borderColor:
+                  actualScore !== null
+                    ? hasModifier
+                      ? cardStyle.borderColor
+                      : theme.success || "#10B981"
+                    : theme.border,
+              }}
+              title={tooltipText}
+            >
+              <div style={componentStyles.abilityName}>
+                {ability.charAt(0).toUpperCase() + ability.slice(1)}
+                {[
+                  { value: asiBonus, label: asiBonus },
+                  { value: featBonus, label: featBonus },
+                  { value: backgroundBonus, label: backgroundBonus },
+                  { value: houseBonus, label: houseBonus },
+                  { value: heritageBonus, label: heritageBonus },
+                ]
+                  .filter((mod) => mod.value > 0)
+                  .map((mod, index) => (
+                    <span key={index} style={componentStyles.modifierBonus}>
+                      +{mod.label}
+                    </span>
+                  ))}
+              </div>
+
               <div
-                key={ability}
-                style={{
-                  ...cardStyle,
-                  backgroundColor:
-                    actualScore !== null
-                      ? hasModifier
-                        ? cardStyle.backgroundColor
-                        : `${theme.success || "#10B981"}20`
-                      : theme.surface,
-                  borderColor:
-                    actualScore !== null
-                      ? hasModifier
-                        ? cardStyle.borderColor
-                        : theme.success || "#10B981"
-                      : theme.border,
-                }}
-                title={tooltipText}
+                style={
+                  effectiveScore !== null
+                    ? componentStyles.abilityModifier
+                    : {
+                        ...componentStyles.abilityModifier,
+                        color: theme.textSecondary,
+                      }
+                }
               >
-                <div style={componentStyles.abilityName}>
-                  {ability.charAt(0).toUpperCase() + ability.slice(1)}
-                  {asiBonus > 0 && (
-                    <span style={componentStyles.modifierBonus}>
-                      +{asiBonus}
-                    </span>
-                  )}
-                  {featBonus > 0 && (
-                    <span style={componentStyles.modifierBonus}>
-                      +{featBonus}
-                    </span>
-                  )}
-                  {backgroundBonus > 0 && (
-                    <span style={componentStyles.modifierBonus}>
-                      +{backgroundBonus}
-                    </span>
-                  )}
-                  {houseBonus > 0 && (
-                    <span style={componentStyles.modifierBonus}>
-                      +{houseBonus}
-                    </span>
-                  )}
-                  {heritageBonus > 0 && (
-                    <span style={componentStyles.modifierBonus}>
-                      +{heritageBonus}
-                    </span>
-                  )}
-                </div>
+                {effectiveScore !== null ? (
+                  <>
+                    {effectiveModifier >= 0 ? "+" : ""}
+                    {effectiveModifier}
+                    {hasModifier && baseModifier !== effectiveModifier && (
+                      <div
+                        style={{
+                          fontSize: "9px",
+                          color: "#8b5cf6",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {baseModifier >= 0 ? "+" : ""}
+                        {baseModifier} → {effectiveModifier >= 0 ? "+" : ""}
+                        {effectiveModifier}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  "--"
+                )}
+              </div>
 
-                <div
-                  style={
-                    effectiveScore !== null
-                      ? componentStyles.abilityModifier
-                      : {
-                          ...componentStyles.abilityModifier,
-                          color: theme.textSecondary,
-                        }
-                  }
-                >
-                  {effectiveScore !== null ? (
-                    <>
-                      {effectiveModifier >= 0 ? "+" : ""}
-                      {effectiveModifier}
-                      {hasModifier && baseModifier !== effectiveModifier && (
-                        <div
-                          style={{
-                            fontSize: "9px",
-                            color: "#8b5cf6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {baseModifier >= 0 ? "+" : ""}
-                          {baseModifier} → {effectiveModifier >= 0 ? "+" : ""}
-                          {effectiveModifier}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    "--"
-                  )}
-                </div>
+              <div>
+                {isManualMode ? (
+                  <div style={componentStyles.manualControls}>
+                    <div style={componentStyles.manualButtonRow}>
+                      <button
+                        onClick={() => handleManualScoreDecrement(ability)}
+                        disabled={actualScore <= 1}
+                        style={{
+                          ...componentStyles.manualButton,
+                          backgroundColor:
+                            actualScore <= 1 ? theme.border : "#EF4444",
+                          color:
+                            actualScore <= 1 ? theme.textSecondary : "white",
+                          cursor: actualScore <= 1 ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        -
+                      </button>
 
-                <div>
-                  {isManualMode ? (
-                    <div style={componentStyles.manualControls}>
-                      <div style={componentStyles.manualButtonRow}>
-                        <button
-                          onClick={() => handleManualScoreDecrement(ability)}
-                          disabled={actualScore <= 1}
-                          style={{
-                            ...componentStyles.manualButton,
-                            backgroundColor:
-                              actualScore <= 1 ? theme.border : "#EF4444",
-                            color:
-                              actualScore <= 1 ? theme.textSecondary : "white",
-                            cursor:
-                              actualScore <= 1 ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          -
-                        </button>
-
-                        <div style={componentStyles.scoreDisplay}>
-                          {actualScore}
-                        </div>
-
-                        <button
-                          onClick={() => handleManualScoreIncrement(ability)}
-                          disabled={actualScore >= 40}
-                          style={{
-                            ...componentStyles.manualButton,
-                            backgroundColor:
-                              actualScore >= 40 ? theme.border : "#10B981",
-                            color:
-                              actualScore >= 40 ? theme.textSecondary : "white",
-                            cursor:
-                              actualScore >= 40 ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          +
-                        </button>
+                      <div style={componentStyles.scoreDisplay}>
+                        {actualScore}
                       </div>
 
-                      {score !== null && hasModifier && (
-                        <div style={componentStyles.scoreBreakdown}>
-                          Base: {actualScore}
-                          {asiBonus > 0 && ` + ASI: ${asiBonus}`}
-                          {featBonus > 0 && ` + Feat: ${featBonus}`}
-                          {backgroundBonus > 0 && ` + Bg: ${backgroundBonus}`}
-                          {houseBonus > 0 && ` + House: ${houseBonus}`}
-                          {heritageBonus > 0 && ` + Heritage: ${heritageBonus}`}
-                          {` = ${effectiveScore}`}
-                        </div>
-                      )}
+                      <button
+                        onClick={() => handleManualScoreIncrement(ability)}
+                        disabled={actualScore >= 40}
+                        style={{
+                          ...componentStyles.manualButton,
+                          backgroundColor:
+                            actualScore >= 40 ? theme.border : "#10B981",
+                          color:
+                            actualScore >= 40 ? theme.textSecondary : "white",
+                          cursor: actualScore >= 40 ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
 
-                      {score !== null && (
+                    {score !== null && hasModifier && (
+                      <div style={componentStyles.scoreBreakdown}>
+                        Base: {actualScore}
+                        {formatModifierText({
+                          asiBonus,
+                          featBonus,
+                          backgroundBonus,
+                          houseBonus,
+                          heritageBonus,
+                        })}
+                        {` = ${effectiveScore}`}
+                      </div>
+                    )}
+
+                    {score !== null && (
+                      <button
+                        onClick={() => clearStat(ability)}
+                        style={componentStyles.trashButton}
+                      >
+                        <Trash size={16} />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {actualScore !== null ? (
+                      <>
+                        <div style={componentStyles.abilityScore}>
+                          {hasModifier ? (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  color: theme.textSecondary,
+                                }}
+                              >
+                                {actualScore}
+                                {formatModifierText({
+                                  asiBonus,
+                                  featBonus,
+                                  backgroundBonus,
+                                  houseBonus,
+                                  heritageBonus,
+                                })}
+                              </div>
+                              <div style={componentStyles.effectiveScore}>
+                                = {effectiveScore}
+                              </div>
+                            </div>
+                          ) : (
+                            actualScore
+                          )}
+                        </div>
                         <button
                           onClick={() => clearStat(ability)}
                           style={componentStyles.trashButton}
                         >
                           <Trash size={16} />
                         </button>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {actualScore !== null ? (
-                        <>
-                          <div style={componentStyles.abilityScore}>
-                            {hasModifier ? (
-                              <div>
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    color: theme.textSecondary,
-                                  }}
-                                >
-                                  {actualScore}
-                                  {asiBonus > 0 && ` + ${asiBonus}`}
-                                  {featBonus > 0 && ` + ${featBonus}`}
-                                  {backgroundBonus > 0 &&
-                                    ` + ${backgroundBonus}`}
-                                  {houseBonus > 0 && ` + ${houseBonus}`}
-                                  {heritageBonus > 0 && ` + ${heritageBonus}`}
-                                </div>
-                                <div style={componentStyles.effectiveScore}>
-                                  = {effectiveScore}
-                                </div>
-                              </div>
-                            ) : (
-                              actualScore
-                            )}
-                          </div>
-                          <button
-                            onClick={() => clearStat(ability)}
-                            style={componentStyles.trashButton}
-                          >
-                            <Trash size={16} />
-                          </button>
-                        </>
-                      ) : (
-                        <select
-                          value=""
-                          onChange={(e) =>
-                            assignStat(ability, parseInt(e.target.value))
-                          }
-                          style={componentStyles.assignSelect}
-                          disabled={availableStats.length === 0}
-                        >
-                          <option value="">
-                            {availableStats.length === 0
-                              ? "No stats available"
-                              : "Assign..."}
+                      </>
+                    ) : (
+                      <select
+                        value=""
+                        onChange={(e) =>
+                          assignStat(ability, parseInt(e.target.value))
+                        }
+                        style={componentStyles.assignSelect}
+                        disabled={availableStats.length === 0}
+                      >
+                        <option value="">
+                          {availableStats.length === 0
+                            ? "No stats available"
+                            : "Assign..."}
+                        </option>
+                        {availableStats.map((stat, index) => (
+                          <option key={index} value={stat}>
+                            {stat} ({getAbilityModifier(stat) >= 0 ? "+" : ""}
+                            {getAbilityModifier(stat)})
+                            {totalBonus > 0 &&
+                              ` → ${stat + totalBonus} (+${getAbilityModifier(
+                                stat + totalBonus
+                              )})`}
                           </option>
-                          {availableStats.map((stat, index) => (
-                            <option key={index} value={stat}>
-                              {stat} ({getAbilityModifier(stat) >= 0 ? "+" : ""}
-                              {getAbilityModifier(stat)})
-                              {totalBonus > 0 &&
-                                ` → ${stat + totalBonus} (+${getAbilityModifier(
-                                  stat + totalBonus
-                                )})`}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </>
-                  )}
-                </div>
+                        ))}
+                      </select>
+                    )}
+                  </>
+                )}
               </div>
-            );
-          }
-        )}
+            </div>
+          );
+        })}
       </div>
 
       {showModifiers &&
