@@ -3,6 +3,7 @@ import { Clover, Plus, Minus } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
 import { getDiscordWebhook } from "../../App/const";
+import { calculateFeatBenefits } from "../CharacterManager/utils/featBenefitsCalculator";
 
 const LuckPointButton = ({
   character,
@@ -25,25 +26,15 @@ const LuckPointButton = ({
     return 6;
   };
 
-  const hasLuckyFeat = () => {
-    return (
-      character?.selectedFeats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      ) ||
-      character?.feats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      ) ||
-      character?.standardFeats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      )
-    );
-  };
+  if (!character) return null;
 
-  if (!hasLuckyFeat()) {
+  // Use the comprehensive feat benefits calculator to check for luck points
+  const featBenefits = calculateFeatBenefits(character);
+  const maxLuckPoints = featBenefits.resources.luckPoints;
+
+  if (maxLuckPoints === 0) {
     return null;
   }
-
-  const maxLuckPoints = getProficiencyBonus(character?.level || 1);
   const currentLuckPoints = character?.luck ?? maxLuckPoints;
 
   const updateLuckPoints = async (newCurrent) => {
@@ -74,12 +65,6 @@ const LuckPointButton = ({
         return;
       }
 
-      await sendLuckPointDiscordMessage(
-        validatedCurrent,
-        maxLuckPoints,
-        newCurrent > currentLuckPoints ? "gained" : "spent"
-      );
-
       return validatedCurrent;
     } catch (error) {
       console.error("Error updating luck points:", error);
@@ -89,69 +74,27 @@ const LuckPointButton = ({
     }
   };
 
-  const sendLuckPointDiscordMessage = async (newPoints, maxPoints, action) => {
-    const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
-    if (!discordWebhookUrl) return;
-
-    const embed = {
-      title: `Luck Point ${action === "gained" ? "Restored" : "Spent"}`,
-      color: 0x065f46,
-      fields: [
-        {
-          name: "Luck Points",
-          value: `${newPoints}/${maxPoints}`,
-          inline: true,
-        },
-        {
-          name: "Status",
-          value: action === "gained" ? "🍀 Luck restored!" : "🎲 Luck spent!",
-          inline: true,
-        },
-      ],
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: `${character.name} - Lucky Feat`,
-      },
-    };
-
-    const message = {
-      embeds: [embed],
-    };
-
-    if (character?.imageUrl) {
-      message.username = character.name;
-      message.avatar_url = character.imageUrl;
-    } else if (character?.image_url) {
-      message.username = character.name;
-      message.avatar_url = character.image_url;
-    }
-
-    try {
-      await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(message),
-      });
-    } catch (discordError) {
-      console.error("Error sending Discord message:", discordError);
-    }
-  };
-
   const spendLuckPoint = async (reason = "Luck manipulation") => {
     if (currentLuckPoints <= 0) return;
 
     const newCurrent = await updateLuckPoints(currentLuckPoints - 1);
 
-    if (newCurrent !== undefined && rollLuckPoint) {
-      rollLuckPoint({
-        character,
-        pointsSpent: 1,
-        reason: reason,
-        pointsRemaining: newCurrent,
-        maxPoints: maxLuckPoints,
-        type: "spent",
-      });
+    if (newCurrent !== undefined) {
+      setCharacter((prev) => ({
+        ...prev,
+        luck: newCurrent,
+      }));
+
+      if (rollLuckPoint) {
+        rollLuckPoint({
+          character,
+          pointsSpent: 1,
+          reason: reason,
+          pointsRemaining: newCurrent,
+          maxPoints: maxLuckPoints,
+          type: "spent",
+        });
+      }
     }
     setShowModal(false);
   };
@@ -161,14 +104,11 @@ const LuckPointButton = ({
 
     const newCurrent = await updateLuckPoints(currentLuckPoints + 1);
 
-    if (newCurrent !== undefined && rollLuckPoint) {
-      rollLuckPoint({
-        character,
-        pointsRestored: 1,
-        pointsRemaining: newCurrent,
-        maxPoints: maxLuckPoints,
-        type: "restored",
-      });
+    if (newCurrent !== undefined) {
+      setCharacter((prev) => ({
+        ...prev,
+        luck: newCurrent,
+      }));
     }
   };
 
@@ -178,14 +118,11 @@ const LuckPointButton = ({
     const pointsRestored = maxLuckPoints - currentLuckPoints;
     const newCurrent = await updateLuckPoints(maxLuckPoints);
 
-    if (newCurrent !== undefined && rollLuckPoint) {
-      rollLuckPoint({
-        character,
-        pointsRestored: pointsRestored,
-        pointsRemaining: newCurrent,
-        maxPoints: maxLuckPoints,
-        type: "long_rest",
-      });
+    if (newCurrent !== undefined) {
+      setCharacter((prev) => ({
+        ...prev,
+        luck: newCurrent,
+      }));
     }
     setShowModal(false);
   };
@@ -284,119 +221,97 @@ const LuckPointButton = ({
           <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
                 marginBottom: "16px",
+                padding: "12px",
+                backgroundColor: theme.background,
+                borderRadius: "8px",
+                border: `1px solid ${theme.border}`,
               }}
             >
-              <Clover style={{ color: theme.primary }} size={20} />
-              <h3
-                style={{
-                  margin: 0,
-                  color: theme.text,
-                  fontSize: "18px",
-                  fontWeight: "700",
-                }}
-              >
-                Luck Points
-              </h3>
               <div
                 style={{
-                  marginLeft: "auto",
-                  padding: "4px 8px",
-                  backgroundColor: theme.primary + "20",
-                  color: theme.primary,
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "12px",
                 }}
               >
-                {currentLuckPoints}/{maxLuckPoints}
+                <Clover style={{ color: "#065f46" }} size={20} />
+                <h3
+                  style={{
+                    margin: 0,
+                    color: theme.text,
+                    fontSize: "18px",
+                    fontWeight: "700",
+                  }}
+                >
+                  Luck Points
+                </h3>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    padding: "4px 8px",
+                    backgroundColor: "#065f46",
+                    color: theme.text,
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  {currentLuckPoints}/{maxLuckPoints}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: theme.textSecondary,
+                }}
+              >
+                <strong>Lucky Feat:</strong> Spend luck points to gain advantage
+                on d20 rolls or impose disadvantage on attacks against you.
               </div>
             </div>
 
             <div
               style={{
-                fontSize: "14px",
-                color: theme.textSecondary,
-                marginBottom: "16px",
-                padding: "8px",
-                backgroundColor: theme.background,
-                borderRadius: "6px",
-                border: `1px solid ${theme.border}`,
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
               }}
             >
-              <strong>Lucky Feat:</strong> Spend luck points to gain advantage
-              on d20 rolls or impose disadvantage on attacks against you.
-            </div>
-
-            <div style={buttonGridStyle}>
               <button
                 style={{
                   ...modalButtonStyle,
                   backgroundColor:
-                    currentLuckPoints > 0 ? "#ef4444" : theme.surface,
+                    currentLuckPoints > 0 ? "#065f46" : theme.surface,
                   color: currentLuckPoints > 0 ? "white" : theme.textSecondary,
-                  cursor: currentLuckPoints > 0 ? "pointer" : "not-allowed",
+                  cursor:
+                    currentLuckPoints > 0
+                      ? isUpdating
+                        ? "wait"
+                        : "pointer"
+                      : "not-allowed",
+                  opacity: currentLuckPoints > 0 ? (isUpdating ? 0.7 : 1) : 0.6,
                 }}
                 onClick={() =>
                   spendLuckPoint("Advantage/disadvantage manipulation")
                 }
                 disabled={currentLuckPoints <= 0 || isUpdating}
               >
-                Spend Point
+                {isUpdating ? "Spending..." : "Spend Point"}
               </button>
-
               <button
                 style={{
                   ...modalButtonStyle,
-                  backgroundColor:
-                    currentLuckPoints < maxLuckPoints
-                      ? theme.primary
-                      : theme.surface,
-                  color:
-                    currentLuckPoints < maxLuckPoints
-                      ? "white"
-                      : theme.textSecondary,
-                  cursor:
-                    currentLuckPoints < maxLuckPoints
-                      ? "pointer"
-                      : "not-allowed",
-                }}
-                onClick={restoreLuckPoint}
-                disabled={currentLuckPoints >= maxLuckPoints || isUpdating}
-              >
-                +1 Point
-              </button>
-
-              <button
-                style={{
-                  ...modalButtonStyle,
-                  backgroundColor: "#065f46",
+                  backgroundColor: theme.error,
                   color: "white",
-                  cursor:
-                    currentLuckPoints < maxLuckPoints
-                      ? "pointer"
-                      : "not-allowed",
-                  opacity: currentLuckPoints < maxLuckPoints ? 1 : 0.6,
-                }}
-                onClick={restoreAllLuckPoints}
-                disabled={currentLuckPoints >= maxLuckPoints || isUpdating}
-              >
-                Long Rest
-              </button>
-
-              <button
-                style={{
-                  ...modalButtonStyle,
-                  backgroundColor: theme.surface,
-                  color: theme.text,
-                  border: `1px solid ${theme.border}`,
+                  border: "none",
                 }}
                 onClick={() => setShowModal(false)}
+                disabled={isUpdating}
               >
-                Close
+                Cancel
               </button>
             </div>
           </div>

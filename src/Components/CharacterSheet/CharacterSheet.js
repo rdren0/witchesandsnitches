@@ -34,6 +34,7 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import { calculateInitiativeWithFeats } from "../CharacterManager/utils/featBenefitsCalculator";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -291,12 +292,21 @@ const CharacterSheet = ({
   }, []);
 
   const getInitiativeModifier = useCallback(
-    (initiativeAbility, effectiveAbilityScores) => {
+    (initiativeAbility, effectiveAbilityScores, characterData) => {
+      let baseModifier;
       if (initiativeAbility === "intelligence") {
-        return Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
+        baseModifier =
+          Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
+      } else {
+        baseModifier =
+          Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
       }
 
-      return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
+      if (characterData) {
+        return calculateInitiativeWithFeats(characterData, baseModifier);
+      }
+
+      return baseModifier;
     },
     []
   );
@@ -559,7 +569,8 @@ const CharacterSheet = ({
           initiativeAbility: data.initiative_ability,
           initiativeModifier: getInitiativeModifier(
             data.initiative_ability,
-            effectiveAbilityScores
+            effectiveAbilityScores,
+            data
           ),
           innateHeritage: data.innate_heritage,
           inspiration: resources.inspiration ?? 0,
