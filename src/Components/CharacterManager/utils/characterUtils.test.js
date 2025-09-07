@@ -1,3 +1,5 @@
+/* eslint-disable jest/no-conditional-expect */
+/* eslint-disable jest/valid-title */
 import {
   calculateFeatModifiers,
   getAllSelectedFeats,

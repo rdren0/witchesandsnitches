@@ -483,7 +483,7 @@ const FeatureSelectorSection = ({
 
       return basicMatch || descriptionMatch;
     });
-  }, [character, maxFeats, featFilter]);
+  }, [character, maxFeats, featFilter, meetsPrerequisites]);
 
   const getHelpText = () => {
     if (characterLevel === 1) {
