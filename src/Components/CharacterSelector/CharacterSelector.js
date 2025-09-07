@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { User, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterSelectorStyles } from "../../styles/masterStyles";
+import { createCharacterSelectorStyles } from "./styles";
 
 export const CharacterSelector = ({
   user,

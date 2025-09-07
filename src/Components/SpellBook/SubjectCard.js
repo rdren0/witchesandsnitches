@@ -27,7 +27,7 @@ import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
-import { createSpellBookStyles } from "../../styles/masterStyles";
+import { createSpellBookStyles } from "./styles";
 import RestrictionModal from "./RestrictionModal";
 import { SpellBonusDiceModal } from "./SpellBonusDiceModal";
 

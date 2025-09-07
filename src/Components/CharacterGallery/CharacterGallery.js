@@ -17,7 +17,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getCharacterGalleryStyles } from "../../styles/masterStyles";
+import { getCharacterGalleryStyles } from "./styles";
 import { ALL_CHARACTERS } from "../../SharedData/charactersData";
 
 const DEFAULT_TAGS = [

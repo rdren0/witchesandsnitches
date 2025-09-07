@@ -264,9 +264,9 @@ export const sendDiscordLevelUpMessage = async ({
 
 export const ROLL_COLORS = {
   ability: 0x20b7b0,
-  initiative: 0x107319,
+  initiative: 0xb27424,
   skill: 0x6600cc,
-  spell: 0x3b82f6,
+  spell: 0xd1323d,
   hitdice: 0x9d4edd,
   damage: 0xef4444,
   heal: 0x10b981,
@@ -279,4 +279,5 @@ export const ROLL_COLORS = {
   magic_casting: 0x9d4edd,
   corruption: 0x1f2937,
   levelup: 0xffd700,
+  spellcastingCheck: 0x8b5cf6,
 };

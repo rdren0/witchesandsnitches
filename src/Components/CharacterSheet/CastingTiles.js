@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Wand2, Sparkles } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getAbilityScoresStyles } from "../../styles/masterStyles";
+import { getAbilityScoresStyles } from "../AbilityScores/styles";
 import { useRollModal, rollMagicCasting } from "../utils/diceRoller";
 import { formatModifier } from "./utils";
 

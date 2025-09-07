@@ -196,7 +196,10 @@ const CharacterSheet = ({
         rollType: "Spellcasting Ability Check",
         title: "Spellcasting Ability Check",
 
-        embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
+        embedColor: getRollResultColor(
+          rollResult,
+          ROLL_COLORS.spellcastingCheck
+        ),
         rollResult,
         fields: additionalFields,
         useCharacterAvatar: true,
@@ -265,7 +268,7 @@ const CharacterSheet = ({
         character,
         rollType: "Spell Attack Roll",
         title: `Spell Attack Roll`,
-        embedColor: getRollResultColor(rollResult, 0xff6c3a),
+        embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
         useCharacterAvatar: true,
@@ -317,8 +320,7 @@ const CharacterSheet = ({
       ...baseStyle,
       color: hpColor,
       backgroundColor:
-        currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}10`,
-      borderColor: hpColor,
+        currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}20`,
       transition: "all 0.2s ease",
       position: "relative",
       userSelect: "none",
@@ -1116,13 +1118,21 @@ const CharacterSheet = ({
         {character && !characterLoading && (
           <>
             <div style={styles.headerCard}>
-              <div style={styles.headerFlex}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "20px",
+                  marginBottom: "20px",
+                }}
+              >
                 <div
                   style={{
                     ...styles.avatar,
                     position: "relative",
                     cursor: !character.imageUrl ? "pointer" : "default",
                     transition: "all 0.2s ease",
+                    flexShrink: 0,
                   }}
                   onClick={handleAvatarClick}
                   title={
@@ -1205,157 +1215,188 @@ const CharacterSheet = ({
                     )}
                   </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h1
+                    style={{
+                      ...styles.characterName,
+                      marginBottom: "8px",
+                    }}
                   >
-                    <h1 style={styles.characterName}>{character.name}</h1>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "16px",
-                        justifyContent: "center",
-                        flexWrap: "wrap",
-                        marginBottom: "18px",
-                      }}
-                    >
-                      <InspirationTracker
-                        character={character}
-                        supabase={supabase}
-                        discordUserId={discordUserId}
-                        setCharacter={setCharacter}
-                        selectedCharacterId={selectedCharacter.id}
-                        isAdmin={adminMode}
-                      />
-                      <button
-                        style={{
-                          backgroundColor: "#9d4edd",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor:
-                            character.currentHitDice <= 0
-                              ? "not-allowed"
-                              : "pointer",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          opacity: character.currentHitDice <= 0 ? 0.6 : 1,
-                          transition: "all 0.2s ease",
-                          justifyContent: "center",
-                          width: "120px",
-                          height: "40px",
-                        }}
-                        onClick={handleShortRestClick}
-                        disabled={character.currentHitDice <= 0}
-                        title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
-                      >
-                        <Coffee size={16} />
-                        Short Rest
-                      </button>
-                      <button
-                        style={{
-                          backgroundColor: "#3b82f6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor: isLongResting ? "wait" : "pointer",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          opacity: isLongResting ? 0.7 : 1,
-                          transition: "all 0.2s ease",
-                          justifyContent: "center",
-                          width: "120px",
-                          height: "40px",
-                        }}
-                        onClick={handleLongRest}
-                        disabled={isLongResting}
-                        title="Restore all HP and hit dice with a long rest"
-                      >
-                        <Moon size={16} />
-                        {isLongResting ? "Resting..." : "Long Rest"}
-                      </button>
-                      <button
-                        style={{
-                          backgroundColor: "#10b981",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          transition: "all 0.2s ease",
-                          justifyContent: "center",
-                          width: "120px",
-                          height: "40px",
-                        }}
-                        onClick={() => setShowLevelUp(true)}
-                        title={`Level up ${character.name} to level ${
-                          (character.level || 1) + 1
-                        }`}
-                      >
-                        <TrendingUp size={16} />
-                        Level Up
-                      </button>
-                    </div>
-                  </div>
-                  <div style={styles.infoGrid}>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>House:</span> {character.house}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Level:</span> {character.level}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Year:</span> {character.level}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Class:</span>{" "}
-                      {character.castingStyle}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Spell Casting Ability:</span>{" "}
-                      {getSpellcastingAbility(character.castingStyle)}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Subclass:</span>{" "}
-                      {character.subclass || "None"}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Background:</span>{" "}
-                      {character.background}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Heritage:</span>{" "}
-                      {character.bloodStatus}
-                    </div>
-                    {character.gameSession && (
-                      <div style={styles.infoItem}>
-                        <span style={styles.label}>Game Session:</span>{" "}
-                        {character.gameSession}
-                      </div>
-                    )}
-                    {character.castingStyle === "Intellect Caster" && (
-                      <div style={styles.infoItem}>
-                        <span style={styles.label}>Initiative Ability:</span>{" "}
-                        {character.initiativeAbility === "intelligence"
-                          ? "Intelligence"
-                          : "Dexterity"}
-                      </div>
-                    )}
-                    <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
-                      <span style={styles.label}>Wand:</span> {character.wand}
-                    </div>
-                  </div>
+                    {character.name}
+                  </h1>
                 </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <InspirationTracker
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    setCharacter={setCharacter}
+                    selectedCharacterId={selectedCharacter.id}
+                    isAdmin={adminMode}
+                  />
+                  <button
+                    style={{
+                      backgroundColor: "#9d4edd",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor:
+                        character.currentHitDice <= 0
+                          ? "not-allowed"
+                          : "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+                      transition: "all 0.2s ease",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      height: "32px",
+                    }}
+                    onClick={handleShortRestClick}
+                    disabled={character.currentHitDice <= 0}
+                    title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
+                  >
+                    <Coffee size={14} />
+                    Short Rest
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: isLongResting ? "wait" : "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      opacity: isLongResting ? 0.7 : 1,
+                      transition: "all 0.2s ease",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      height: "32px",
+                    }}
+                    onClick={handleLongRest}
+                    disabled={isLongResting}
+                    title="Restore all HP and hit dice with a long rest"
+                  >
+                    <Moon size={14} />
+                    {isLongResting ? "Resting..." : "Long Rest"}
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      transition: "all 0.2s ease",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      height: "32px",
+                    }}
+                    onClick={() => setShowLevelUp(true)}
+                    title={`Level up ${character.name} to level ${
+                      (character.level || 1) + 1
+                    }`}
+                  >
+                    <TrendingUp size={14} />
+                    Level Up
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px 16px",
+                  fontSize: "14px",
+                  color: theme.textSecondary,
+                  marginBottom: "12px",
+                }}
+              >
+                {(() => {
+                  const allInfo = [];
+
+                  // Primary info
+                  allInfo.push(
+                    `Level ${character.level} ${character.castingStyle}`
+                  );
+
+                  if (character.house) {
+                    allInfo.push(
+                      `${character.house} (Year ${
+                        character.schoolYear || character.level
+                      })`
+                    );
+                  }
+
+                  if (character.subclass) {
+                    allInfo.push(`Subclass: ${character.subclass}`);
+                  }
+
+                  if (
+                    character.bloodStatus &&
+                    character.bloodStatus !== "Unknown"
+                  ) {
+                    allInfo.push(character.bloodStatus);
+                  }
+
+                  // Secondary info
+                  if (
+                    character.background &&
+                    character.background !== "Unknown"
+                  ) {
+                    allInfo.push(`Background: ${character.background}`);
+                  }
+
+                  if (character.wand && character.wand !== "Unknown wand") {
+                    allInfo.push(character.wand);
+                  }
+
+                  if (character.castingStyle === "Intellect Caster") {
+                    allInfo.push(
+                      `Initiative: ${
+                        character.initiativeAbility === "intelligence"
+                          ? "Intelligence"
+                          : "Dexterity"
+                      }`
+                    );
+                  }
+
+                  if (character.gameSession) {
+                    allInfo.push(`Session: ${character.gameSession}`);
+                  }
+
+                  return allInfo.map((info, index) => (
+                    <span key={index}>
+                      {index === 0 ? <strong>{info}</strong> : info}
+                      {index < allInfo.length - 1 && (
+                        <span style={{ marginLeft: "16px" }}>•</span>
+                      )}
+                    </span>
+                  ));
+                })()}
               </div>
 
               <div
@@ -1370,7 +1411,8 @@ const CharacterSheet = ({
                   style={{
                     ...getEnhancedHPStyle(character, {
                       ...styles.statCard,
-                      ...styles.statCardRed,
+                      backgroundColor: theme.background,
+                      border: `3px solid ${getHPColor(character)}`,
                       cursor: "pointer",
                     }),
                   }}
@@ -1398,7 +1440,6 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statLabel,
-                      ...styles.statLabelRed,
                       color: getHPColor(character),
                     }}
                   >
@@ -1453,7 +1494,13 @@ const CharacterSheet = ({
                     )}
                 </div>
                 <div
-                  style={{ ...styles.statCard, ...styles.statCardBrown }}
+                  style={{
+                    ...styles.statCard,
+                    backgroundColor: theme.background,
+                    border: "3px solid #b27424ff",
+                    cursor: isRolling ? "wait" : "pointer",
+                    transition: "all 0.2s ease",
+                  }}
                   onClick={() =>
                     !isRolling &&
                     rollInitiative({
@@ -1463,19 +1510,18 @@ const CharacterSheet = ({
                       characterModifiers,
                     })
                   }
+                  title={`Click to roll initiative: d20 + ${formatModifier(
+                    character.initiativeModifier
+                  )}`}
                 >
                   <Swords
                     className="w-6 h-6 text-green-600 mx-auto mb-1"
                     style={{ color: "#b27424ff" }}
                   />
-                  <div
-                    style={{ ...styles.statValue, ...styles.statValueBrown }}
-                  >
+                  <div style={{ ...styles.statValue, color: "#b27424ff" }}>
                     {formatModifier(character.initiativeModifier)}
                   </div>
-                  <div
-                    style={{ ...styles.statLabel, ...styles.statLabelBrown }}
-                  >
+                  <div style={{ ...styles.statLabel, color: "#b27424ff" }}>
                     Initiative
                   </div>
                 </div>
@@ -1483,8 +1529,9 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statCard,
+                      backgroundColor: theme.background,
+                      border: "3px solid #d1323dff",
                       cursor: isRolling ? "wait" : "pointer",
-                      borderColor: "#d1323dff",
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellAttack()}
@@ -1516,9 +1563,9 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statCard,
+                      backgroundColor: theme.background,
+                      border: "3px solid #8b5cf6",
                       cursor: isRolling ? "wait" : "pointer",
-                      borderColor: "#8b5cf6",
-
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
@@ -1546,7 +1593,7 @@ const CharacterSheet = ({
                     </div>
                     <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
                       {" "}
-                      Spellcasting Ability Check (
+                      Spellcasting Ability (
                       {getSpellcastingAbility(character.castingStyle)
                         ?.slice(0, 3)
                         .toUpperCase()}
@@ -1557,19 +1604,19 @@ const CharacterSheet = ({
                 <div
                   style={{
                     ...styles.statCard,
-                    ...styles.statCardBlue,
+                    backgroundColor: theme.background,
+                    border: `1px solid ${theme.border}`,
                     cursor: "default",
-                    border: "none",
                   }}
                 >
                   <Shield
                     className="w-6 h-6 text-blue-600 mx-auto mb-1"
                     style={{ color: "#3b82f6" }}
                   />
-                  <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
+                  <div style={{ ...styles.statValue, color: "#3b82f6" }}>
                     {character.armorClass}
                   </div>
-                  <div style={{ ...styles.statLabel, ...styles.statLabelBlue }}>
+                  <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
                     Armor Class
                   </div>
                 </div>
@@ -1577,29 +1624,29 @@ const CharacterSheet = ({
                 <div
                   style={{
                     ...styles.statCard,
-                    ...styles.statCardPurple,
+                    backgroundColor: theme.background,
+                    border: `1px solid ${theme.border}`,
                     cursor: "default",
-                    border: "none",
                   }}
                   title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
                 >
-                  <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
-                  <div
-                    style={{ ...styles.statValue, ...styles.statValuePurple }}
-                  >
+                  <Dices
+                    className="w-6 h-6 mx-auto mb-1"
+                    style={{ color: "white" }}
+                  />
+                  <div style={{ ...styles.statValue, color: "white" }}>
                     {character.currentHitDice}/{character.maxHitDice}
                   </div>
-                  <div
-                    style={{ ...styles.statLabel, ...styles.statLabelPurple }}
-                  >
+                  <div style={{ ...styles.statLabel, color: "white" }}>
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
                 <div
                   style={{
                     ...styles.statCard,
+                    backgroundColor: theme.background,
+                    border: `1px solid ${theme.border}`,
                     cursor: "default",
-                    border: "none",
                   }}
                   title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
                 >

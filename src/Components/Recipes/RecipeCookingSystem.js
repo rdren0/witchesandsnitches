@@ -18,7 +18,7 @@ import {
   recipeQualityDCs,
   recipeCategories,
 } from "../../SharedData/recipesData";
-import { createRecipesStyles } from "../../styles/masterStyles";
+import { createRecipesStyles } from "./styles";
 import { getDiscordWebhook } from "../../App/const";
 
 const RecipeCookingSystem = ({ character, user, supabase }) => {

@@ -12,7 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getInventoryStyles } from "../../styles/masterStyles";
+import { getInventoryStyles } from "./styles";
 
 import Bank from "../Bank/Bank";
 

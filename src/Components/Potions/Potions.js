@@ -17,7 +17,7 @@ import { useRollFunctions } from "../utils/diceRoller";
 
 import { useTheme } from "../../contexts/ThemeContext";
 import { potions, qualityDCs } from "../../SharedData/potionsData";
-import { createPotionsStyles } from "../../styles/masterStyles";
+import { createPotionsStyles } from "./styles";
 
 const PotionBrewingSystem = ({ character, supabase, user }) => {
   const { theme, selectedCharacter } = useTheme();

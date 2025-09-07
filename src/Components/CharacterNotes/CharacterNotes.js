@@ -18,7 +18,7 @@ import "@uiw/react-md-editor/markdown-editor.css";
 import { templates } from "./templates";
 
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterNotesStyles } from "../../styles/masterStyles";
+import { createCharacterNotesStyles } from "./styles";
 
 export const CharacterNotes = ({
   user,
