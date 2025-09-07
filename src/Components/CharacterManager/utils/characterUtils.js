@@ -10,8 +10,12 @@ import { subclasses } from "../../../SharedData/subclassesData";
 export const getAllSelectedFeats = (character) => {
   const selectedFeats = [];
 
-  if (character.level1ChoiceType === "feat" && character.standardFeats) {
+  if (character.standardFeats && Array.isArray(character.standardFeats)) {
     selectedFeats.push(...character.standardFeats);
+  }
+
+  if (character.standard_feats && Array.isArray(character.standard_feats)) {
+    selectedFeats.push(...character.standard_feats);
   }
 
   if (character.asiChoices) {
@@ -22,7 +26,15 @@ export const getAllSelectedFeats = (character) => {
     });
   }
 
-  return selectedFeats;
+  if (character.asi_choices) {
+    Object.values(character.asi_choices).forEach((choice) => {
+      if (choice.type === "feat" && choice.selectedFeat) {
+        selectedFeats.push(choice.selectedFeat);
+      }
+    });
+  }
+
+  return [...new Set(selectedFeats)];
 };
 
 export const handleASIChoiceChange = (character, level, choiceType) => {

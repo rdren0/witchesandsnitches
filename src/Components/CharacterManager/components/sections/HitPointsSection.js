@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { RefreshCw } from "lucide-react";
+import { calculateToughFeatHPBonus } from "../../utils/utils";
 
 const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
@@ -29,14 +30,16 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     const level = character.level || 1;
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
-    return level * (castingHpData.base + conMod);
+    const toughFeatBonus = calculateToughFeatHPBonus(character);
+    return level * (castingHpData.base + conMod) + toughFeatBonus;
   };
 
   const rollHp = () => {
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
     const rolled = Math.floor(Math.random() * castingHpData.base) + 1 + conMod;
-    const totalHp = Math.max(1, rolled * (character.level || 1));
+    const toughFeatBonus = calculateToughFeatHPBonus(character);
+    const totalHp = Math.max(1, rolled * (character.level || 1) + toughFeatBonus);
 
     setRolledHp(totalHp);
     onChange("hitPoints", totalHp);

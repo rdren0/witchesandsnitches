@@ -16,6 +16,7 @@ import { hpData } from "../../SharedData/data";
 import { checkFeatPrerequisites } from "../CharacterSheet/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllSelectedFeats } from "./utils/characterUtils";
+import { calculateToughFeatHPBonus } from "./utils/utils";
 
 const LevelUpModal = ({
   character,
@@ -139,6 +140,11 @@ const LevelUpModal = ({
     );
   };
 
+  const getToughFeatLevelUpBonus = () => {
+    const allSelectedFeats = getAllSelectedFeats(character);
+    return allSelectedFeats.includes("Tough") ? 2 : 0;
+  };
+
   const rollHitPoints = () => {
     const roller = new DiceRoller();
     const baseHitDie = getBaseHPIncrease();
@@ -146,7 +152,8 @@ const LevelUpModal = ({
     const rolledValue = result.total;
     const constitution = getAbilityScore("constitution");
     const conMod = Math.floor((constitution - 10) / 2);
-    const finalHP = Math.max(1, rolledValue + conMod);
+    const toughFeatBonus = getToughFeatLevelUpBonus();
+    const finalHP = Math.max(1, rolledValue + conMod + toughFeatBonus);
 
     setLevelUpData((prev) => ({
       ...prev,
@@ -162,7 +169,8 @@ const LevelUpModal = ({
     const averageRoll = Math.floor(baseHitDie / 2) + 1;
     const constitution = getAbilityScore("constitution");
     const conMod = Math.floor((constitution - 10) / 2);
-    const finalHP = Math.max(1, averageRoll + conMod);
+    const toughFeatBonus = getToughFeatLevelUpBonus();
+    const finalHP = Math.max(1, averageRoll + conMod + toughFeatBonus);
 
     setLevelUpData((prev) => ({
       ...prev,
@@ -667,6 +675,14 @@ const LevelUpModal = ({
           const currentFeats = [...(updatedCharacter.standard_feats || [])];
           if (!currentFeats.includes(selectedFeat.name)) {
             currentFeats.push(selectedFeat.name);
+
+            if (selectedFeat.name === "Tough") {
+              const retroactiveToughBonus = 2 * newLevel;
+              newFullHP += retroactiveToughBonus;
+
+              updatedCharacter.hit_points = newFullHP;
+              updatedCharacter.hitPoints = newFullHP;
+            }
           }
           updatedCharacter.standard_feats = currentFeats;
         }
@@ -772,7 +788,14 @@ const LevelUpModal = ({
                       color: theme.primary,
                     }}
                   >
-                    +{Math.max(1, Math.floor(baseHitDie / 2) + 1 + conMod)}
+                    +
+                    {Math.max(
+                      1,
+                      Math.floor(baseHitDie / 2) +
+                        1 +
+                        conMod +
+                        getToughFeatLevelUpBonus()
+                    )}
                   </div>
                 </div>
               </div>
@@ -847,8 +870,11 @@ const LevelUpModal = ({
                       color: theme.textSecondary,
                     }}
                   >
-                    Rolled: {levelUpData.rolledHP} + {conMod} (CON) = +
-                    {levelUpData.hitPointIncrease}
+                    Rolled: {levelUpData.rolledHP} + {conMod} (CON)
+                    {getToughFeatLevelUpBonus() > 0
+                      ? ` + ${getToughFeatLevelUpBonus()} (Tough)`
+                      : ""}{" "}
+                    = +{levelUpData.hitPointIncrease}
                   </div>
                 )}
               </div>
@@ -895,6 +921,9 @@ const LevelUpModal = ({
                       }}
                     >
                       Enter your own value
+                      {getToughFeatLevelUpBonus() > 0
+                        ? ` (includes +${getToughFeatLevelUpBonus()} from Tough feat)`
+                        : ""}
                     </p>
                     <input
                       type="number"
