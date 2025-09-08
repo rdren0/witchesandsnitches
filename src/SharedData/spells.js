@@ -1689,6 +1689,19 @@ export const spellsData = {
           description:
             "The next time you hit a creature with your Transfigured Armament during this spell's duration, your weapon flares with a bright light, and the attack deals an extra 3d8 radiant damage to the target. Additionally, the target must succeed on a Constitution saving throw or be blinded until the spell ends. A creature blinded by this spell makes another Constitution saving throw at the end of each of its turns. On a successful save, it is no longer blinded.",
         },
+        {
+          name: "Melofors",
+          class: ["Transfiguration"],
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "1 minute",
+          year: 4,
+          description:
+            "You conjure a pumpkin around a target's head, blinding and deafening it. Choose one creature that you can see within range to make a Wisdom saving throw. If it fails, the target is blinded and deafened for the duration. At the end of each of its turns, the target can make a Wisdom saving throw. On a success, the spell's effect ends for that target.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd.",
+        },
       ],
       "4th Level": [
         {
@@ -1715,19 +1728,6 @@ export const spellsData = {
           restriction: true,
           description:
             "This spell transforms a creature with at least 1 hit point that you can see within range into the form of a rabbit. An unwilling creature must make a Wisdom saving throw to avoid the effect. The transformation lasts for the duration, or until the target drops to 0 hit points or dies. The target's game statistics, including mental ability scores, are replaced by the statistics of a rabbit. It retains its alignment and personality. The HM has the creature's statistics. The target assumes the hit points of its new form. When it reverts to its normal form, the creature returns to the number of hit points it had before it transformed. If it reverts as a result of dropping to 0 hit points, any excess damage carries over to its normal form. As long as the excess damage doesn't reduce the creature's normal form to 0 hit points, it isn't knocked unconscious. The creature is limited in the actions it can perform by the nature of its new form, and it can't speak, cast spells, or take any other action that requires hands or speech. The target's gear melds into the new form. The creature can't activate, use, wield, or otherwise benefit from any of its equipment.",
-        },
-        {
-          name: "Melofors",
-          class: ["Transfiguration"],
-          level: "3rd Level",
-          castingTime: "1 action",
-          range: "60 feet",
-          duration: "1 minute",
-          year: 4,
-          description:
-            "You conjure a pumpkin around a target's head, blinding and deafening it. Choose one creature that you can see within range to make a Wisdom saving throw. If it fails, the target is blinded and deafened for the duration. At the end of each of its turns, the target can make a Wisdom saving throw. On a success, the spell's effect ends for that target.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd.",
         },
       ],
       "5th Level": [
