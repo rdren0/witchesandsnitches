@@ -594,11 +594,12 @@ const CharacterSubNavigation = () => {
                     style={{
                       backgroundColor: theme.primary || "#10b981",
                       color: "white",
-                      padding: "2px 6px",
+                      padding: "4px 6px",
                       borderRadius: "10px",
                       fontSize: "10px",
                       fontWeight: "700",
                       letterSpacing: "0.5px",
+                      lineHeight: "1",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
