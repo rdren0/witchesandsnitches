@@ -1674,6 +1674,19 @@ export const spellsData = {
           restriction: true,
           description: "Rabbit transformation",
         },
+        {
+          name: "Melofors",
+          class: ["Transfiguration"],
+          level: "3rd Level",
+          castingTime: "1 action",
+          range: "60 feet",
+          duration: "1 minute",
+          year: 4,
+          description:
+            "You conjure a pumpkin around a target's head, blinding and deafening it. Choose one creature that you can see within range to make a Wisdom saving throw. If it fails, the target is blinded and deafened for the duration. At the end of each of its turns, the target can make a Wisdom saving throw. On a success, the spell's effect ends for that target.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd.",
+        },
       ],
       "5th Level": [
         {
