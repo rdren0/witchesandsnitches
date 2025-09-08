@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { standardFeats } from "../../SharedData/standardFeatData";
-import { hpData } from "../../SharedData/data";
+import { hpData, SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
 import { checkFeatPrerequisites } from "../CharacterSheet/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllSelectedFeats } from "./utils/characterUtils";
+import { calculateToughFeatHPBonus } from "./utils/utils";
 
 const LevelUpModal = ({
   character,
@@ -139,6 +140,88 @@ const LevelUpModal = ({
     );
   };
 
+  const getToughFeatLevelUpBonus = () => {
+    const allSelectedFeats = getAllSelectedFeats(character);
+    return allSelectedFeats.includes("Tough") ? 2 : 0;
+  };
+
+  const updateSpellSlotsOnLevelUp = (character, newLevel) => {
+    const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
+      0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    const updatedSpellSlots = {};
+
+    for (let i = 1; i <= 9; i++) {
+      const maxKey = `maxSpellSlots${i}`;
+      const currentKey = `spellSlots${i}`;
+
+      const newMax = newMaxSlots[i - 1];
+      const currentSlots = character[currentKey] || 0;
+      const currentMax = character[maxKey] || 0;
+
+      updatedSpellSlots[maxKey] = newMax;
+
+      if (currentSlots > currentMax) {
+        const bonusSlots = currentSlots - currentMax;
+        updatedSpellSlots[currentKey] = newMax + bonusSlots;
+      } else {
+        updatedSpellSlots[currentKey] = newMax;
+      }
+    }
+
+    return updatedSpellSlots;
+  };
+
+  const updateSpellSlotResources = async (
+    character,
+    newLevel,
+    supabase,
+    discordUserId
+  ) => {
+    try {
+      const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ];
+
+      const updateData = {
+        character_id: character.id,
+        discord_user_id: discordUserId,
+        updated_at: new Date().toISOString(),
+      };
+
+      for (let i = 1; i <= 9; i++) {
+        const newMax = newMaxSlots[i - 1];
+        const currentSlots = character[`spellSlots${i}`] || 0;
+        const currentMax = character[`maxSpellSlots${i}`] || 0;
+
+        updateData[`max_spell_slots_${i}`] = newMax;
+
+        if (currentSlots > currentMax) {
+          const bonusSlots = currentSlots - currentMax;
+          updateData[`spell_slots_${i}`] = newMax + bonusSlots;
+        } else {
+          updateData[`spell_slots_${i}`] = newMax;
+        }
+      }
+
+      const { error } = await supabase
+        .from("character_resources")
+        .upsert(updateData, {
+          onConflict: "character_id,discord_user_id",
+        });
+
+      if (error) {
+        console.error("Error updating spell slot resources:", error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in updateSpellSlotResources:", error);
+      throw error;
+    }
+  };
+
   const rollHitPoints = () => {
     const roller = new DiceRoller();
     const baseHitDie = getBaseHPIncrease();
@@ -146,7 +229,8 @@ const LevelUpModal = ({
     const rolledValue = result.total;
     const constitution = getAbilityScore("constitution");
     const conMod = Math.floor((constitution - 10) / 2);
-    const finalHP = Math.max(1, rolledValue + conMod);
+    const toughFeatBonus = getToughFeatLevelUpBonus();
+    const finalHP = Math.max(1, rolledValue + conMod + toughFeatBonus);
 
     setLevelUpData((prev) => ({
       ...prev,
@@ -162,7 +246,8 @@ const LevelUpModal = ({
     const averageRoll = Math.floor(baseHitDie / 2) + 1;
     const constitution = getAbilityScore("constitution");
     const conMod = Math.floor((constitution - 10) / 2);
-    const finalHP = Math.max(1, averageRoll + conMod);
+    const toughFeatBonus = getToughFeatLevelUpBonus();
+    const finalHP = Math.max(1, averageRoll + conMod + toughFeatBonus);
 
     setLevelUpData((prev) => ({
       ...prev,
@@ -254,50 +339,58 @@ const LevelUpModal = ({
   };
 
   const getFeatChoicesNeeded = (feat) => {
-    if (!feat || !feat.modifiers) return [];
+    if (!feat || !feat.benefits) return [];
 
     const choicesNeeded = [];
 
-    feat.modifiers.abilityIncreases.forEach((increase, index) => {
+    if (feat.benefits.abilityScoreIncrease) {
+      const increase = feat.benefits.abilityScoreIncrease;
       if (increase.type === "choice") {
         choicesNeeded.push({
           type: "abilityChoice",
-          index,
+          index: 0,
           abilities: increase.abilities,
           amount: increase.amount,
-          id: `ability_${index}`,
+          id: `ability_0`,
         });
       } else if (increase.type === "custom") {
         choicesNeeded.push({
           type: "abilityCustom",
-          index,
+          index: 0,
           amount: increase.amount,
-          id: `ability_${index}`,
+          id: `ability_0`,
         });
       }
-    });
+    }
 
-    feat.modifiers.skillProficiencies.forEach((skill, index) => {
-      if (skill.type === "choice") {
-        choicesNeeded.push({
-          type: "skillChoice",
-          index,
-          count: skill.count,
-          id: `skill_${index}`,
-        });
-      }
-    });
+    if (
+      feat.benefits.skillProficiencies &&
+      Array.isArray(feat.benefits.skillProficiencies)
+    ) {
+      feat.benefits.skillProficiencies.forEach((skill, index) => {
+        if (skill && skill.type === "choice") {
+          choicesNeeded.push({
+            type: "skillChoice",
+            index,
+            count: skill.count,
+            id: `skill_${index}`,
+          });
+        }
+      });
+    }
 
-    feat.modifiers.expertise.forEach((expertise, index) => {
-      if (expertise.type === "choice") {
-        choicesNeeded.push({
-          type: "expertiseChoice",
-          index,
-          count: expertise.count,
-          id: `expertise_${index}`,
-        });
-      }
-    });
+    if (feat.benefits.expertise && Array.isArray(feat.benefits.expertise)) {
+      feat.benefits.expertise.forEach((expertise, index) => {
+        if (expertise && expertise.type === "choice") {
+          choicesNeeded.push({
+            type: "expertiseChoice",
+            index,
+            count: expertise.count,
+            id: `expertise_${index}`,
+          });
+        }
+      });
+    }
 
     return choicesNeeded;
   };
@@ -483,12 +576,51 @@ const LevelUpModal = ({
 
       let newFullHP = currentFullHP + levelUpData.hitPointIncrease;
 
+      const spellSlotUpdates = updateSpellSlotsOnLevelUp(character, newLevel);
+
       const updatedCharacter = {
         ...character,
         level: newLevel,
         hit_points: newFullHP,
         hitPoints: newFullHP,
+        image_url: character.image_url || character.imageUrl || null,
+        imageUrl: character.imageUrl || character.image_url || null,
+        ...spellSlotUpdates,
       };
+
+      if (isAsiLevel) {
+        const currentAsiChoices =
+          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {};
+
+        if (
+          levelUpData.asiChoice === "asi" &&
+          levelUpData.abilityIncreases.length > 0
+        ) {
+          currentAsiChoices[newLevel] = {
+            type: "asi",
+            abilityScoreIncreases: levelUpData.abilityIncreases.map(
+              (increase) => ({
+                ability: increase.ability,
+                increase: 1,
+                from: increase.from,
+                to: increase.to,
+              })
+            ),
+          };
+        } else if (
+          levelUpData.asiChoice === "feat" &&
+          levelUpData.selectedFeats.length > 0
+        ) {
+          currentAsiChoices[newLevel] = {
+            type: "feat",
+            selectedFeat: levelUpData.selectedFeats[0],
+            featChoices: levelUpData.featChoices || {},
+          };
+        }
+
+        updatedCharacter.asi_choices = currentAsiChoices;
+        updatedCharacter.asiChoices = currentAsiChoices;
+      }
 
       if (
         isAsiLevel &&
@@ -559,7 +691,7 @@ const LevelUpModal = ({
       ) {
         const selectedFeat = getSelectedFeat();
 
-        if (selectedFeat && selectedFeat.modifiers) {
+        if (selectedFeat && selectedFeat.benefits) {
           const newAbilityScores = {
             strength: getAbilityScore("strength"),
             dexterity: getAbilityScore("dexterity"),
@@ -575,22 +707,16 @@ const LevelUpModal = ({
             (getAbilityScore("constitution") - 10) / 2
           );
 
-          selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
+          if (selectedFeat.benefits.abilityScoreIncrease) {
+            const increase = selectedFeat.benefits.abilityScoreIncrease;
             let abilityToIncrease;
 
-            switch (increase.type) {
-              case "fixed":
-                abilityToIncrease = increase.ability;
-                break;
-              case "choice":
-              case "custom":
-                abilityToIncrease = levelUpData.featChoices[`ability_${index}`];
-                break;
-              case "spellcastingAbility":
-                abilityToIncrease = getSpellcastingAbility();
-                break;
-              default:
-                break;
+            if (increase.type === "choice" || increase.type === "custom") {
+              abilityToIncrease = levelUpData.featChoices[`ability_0`];
+            } else if (increase.ability) {
+              abilityToIncrease = increase.ability;
+            } else if (increase.type === "spellcastingAbility") {
+              abilityToIncrease = getSpellcastingAbility();
             }
 
             if (abilityToIncrease) {
@@ -598,10 +724,13 @@ const LevelUpModal = ({
                 constitutionChanged = true;
               }
               const currentScore = newAbilityScores[abilityToIncrease] || 10;
-              const newScore = Math.min(20, currentScore + increase.amount);
+              const newScore = Math.min(
+                20,
+                currentScore + increase.amount || 1
+              );
               newAbilityScores[abilityToIncrease] = newScore;
             }
-          });
+          }
 
           updatedCharacter.ability_scores = newAbilityScores;
           updatedCharacter.abilityScores = newAbilityScores;
@@ -625,52 +754,100 @@ const LevelUpModal = ({
           const currentSkills = [
             ...(updatedCharacter.skill_proficiencies || []),
           ];
-          selectedFeat.modifiers.skillProficiencies.forEach(
-            (skillMod, index) => {
-              if (skillMod.type === "choice") {
-                const selectedSkills =
-                  levelUpData.featChoices[`skill_${index}`] || [];
-                selectedSkills.forEach((skill) => {
-                  if (!currentSkills.includes(skill)) {
-                    currentSkills.push(skill);
-                  }
-                });
-              } else if (skillMod.type === "fixed") {
-                skillMod.skills.forEach((skill) => {
-                  if (!currentSkills.includes(skill)) {
-                    currentSkills.push(skill);
-                  }
-                });
+          if (
+            selectedFeat.benefits.skillProficiencies &&
+            Array.isArray(selectedFeat.benefits.skillProficiencies)
+          ) {
+            selectedFeat.benefits.skillProficiencies.forEach(
+              (skillMod, index) => {
+                if (skillMod && skillMod.type === "choice") {
+                  const selectedSkills =
+                    levelUpData.featChoices[`skill_${index}`] || [];
+                  selectedSkills.forEach((skill) => {
+                    if (!currentSkills.includes(skill)) {
+                      currentSkills.push(skill);
+                    }
+                  });
+                } else if (skillMod && skillMod.type === "fixed") {
+                  skillMod.skills.forEach((skill) => {
+                    if (!currentSkills.includes(skill)) {
+                      currentSkills.push(skill);
+                    }
+                  });
+                }
               }
-            }
-          );
+            );
+          }
           updatedCharacter.skill_proficiencies = currentSkills;
 
           const currentExpertise = [
             ...(updatedCharacter.skill_expertise || []),
           ];
-          selectedFeat.modifiers.expertise.forEach((expertiseMod, index) => {
-            if (expertiseMod.type === "choice") {
-              const selectedExpertise =
-                levelUpData.featChoices[`expertise_${index}`] || [];
-              selectedExpertise.forEach((skill) => {
-                if (!currentExpertise.includes(skill)) {
-                  currentExpertise.push(skill);
-                }
-              });
-            }
-          });
+          if (
+            selectedFeat.benefits.expertise &&
+            Array.isArray(selectedFeat.benefits.expertise)
+          ) {
+            selectedFeat.benefits.expertise.forEach((expertiseMod, index) => {
+              if (expertiseMod && expertiseMod.type === "choice") {
+                const selectedExpertise =
+                  levelUpData.featChoices[`expertise_${index}`] || [];
+                selectedExpertise.forEach((skill) => {
+                  if (!currentExpertise.includes(skill)) {
+                    currentExpertise.push(skill);
+                  }
+                });
+              }
+            });
+          }
           updatedCharacter.skill_expertise = currentExpertise;
 
           const currentFeats = [...(updatedCharacter.standard_feats || [])];
           if (!currentFeats.includes(selectedFeat.name)) {
             currentFeats.push(selectedFeat.name);
+
+            if (selectedFeat.name === "Tough") {
+              const retroactiveToughBonus = 2 * newLevel;
+              newFullHP += retroactiveToughBonus;
+
+              updatedCharacter.hit_points = newFullHP;
+              updatedCharacter.hitPoints = newFullHP;
+            }
           }
           updatedCharacter.standard_feats = currentFeats;
         }
       }
 
-      await onSave(updatedCharacter);
+      const levelUpDetails = {
+        oldLevel: currentLevel,
+        newLevel: newLevel,
+        hitPointIncrease: levelUpData.hitPointIncrease,
+        abilityIncreases:
+          levelUpData.asiChoice === "asi" ? levelUpData.abilityIncreases : [],
+        selectedFeat:
+          levelUpData.asiChoice === "feat" &&
+          levelUpData.selectedFeats.length > 0
+            ? levelUpData.selectedFeats[0]
+            : null,
+      };
+
+      try {
+        const discordUserId =
+          character.discord_user_id ||
+          character.ownerId ||
+          user?.user_metadata?.provider_id;
+        if (supabase && discordUserId) {
+          await updateSpellSlotResources(
+            updatedCharacter,
+            newLevel,
+            supabase,
+            discordUserId
+          );
+        }
+      } catch (spellSlotError) {
+        console.error("Error updating spell slot resources:", spellSlotError);
+      }
+
+      await onSave(updatedCharacter, levelUpDetails);
       setIsSaving(false);
     } catch (error) {
       console.error("Error during level up:", error);
@@ -757,7 +934,14 @@ const LevelUpModal = ({
                       color: theme.primary,
                     }}
                   >
-                    +{Math.max(1, Math.floor(baseHitDie / 2) + 1 + conMod)}
+                    +
+                    {Math.max(
+                      1,
+                      Math.floor(baseHitDie / 2) +
+                        1 +
+                        conMod +
+                        getToughFeatLevelUpBonus()
+                    )}
                   </div>
                 </div>
               </div>
@@ -832,8 +1016,11 @@ const LevelUpModal = ({
                       color: theme.textSecondary,
                     }}
                   >
-                    Rolled: {levelUpData.rolledHP} + {conMod} (CON) = +
-                    {levelUpData.hitPointIncrease}
+                    Rolled: {levelUpData.rolledHP} + {conMod} (CON)
+                    {getToughFeatLevelUpBonus() > 0
+                      ? ` + ${getToughFeatLevelUpBonus()} (Tough)`
+                      : ""}{" "}
+                    = +{levelUpData.hitPointIncrease}
                   </div>
                 )}
               </div>
@@ -880,6 +1067,9 @@ const LevelUpModal = ({
                       }}
                     >
                       Enter your own value
+                      {getToughFeatLevelUpBonus() > 0
+                        ? ` (includes +${getToughFeatLevelUpBonus()} from Tough feat)`
+                        : ""}
                     </p>
                     <input
                       type="number"

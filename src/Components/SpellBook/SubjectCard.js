@@ -27,7 +27,7 @@ import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions } from "../utils/diceRoller";
-import { createSpellBookStyles } from "../../styles/masterStyles";
+import { createSpellBookStyles } from "./styles";
 import RestrictionModal from "./RestrictionModal";
 import { SpellBonusDiceModal } from "./SpellBonusDiceModal";
 
@@ -1397,23 +1397,20 @@ export const SubjectCard = ({
     let baseDC = 8 + 2 * playerYear;
 
     const yearDifference = spellYear - playerYear;
-    if (yearDifference > 0) {
-      baseDC += 2 * playerYear;
-    } else if (yearDifference < 0) {
-      baseDC += yearDifference * 2;
-    }
+    baseDC += yearDifference * 2;
 
     const difficultSpells = [
       "Abscondi",
       "Pellucidi Pellis",
       "Sagittario",
       "Confringo",
-      "Devieto",
+      "Devicto",
       "Stupefy",
       "Petrificus Totalus",
       "Protego",
       "Protego Maxima",
       "Finite Incantatem",
+      "Confundo",
       "Bombarda",
       "Episkey",
       "Expelliarmus",

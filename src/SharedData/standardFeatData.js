@@ -504,8 +504,8 @@ export const standardFeats = [
     ],
     benefits: {
       abilityScoreIncrease: {
-        ability: "choice",
-        options: ["strength", "dexterity"],
+        type: "choice",
+        abilities: ["strength", "dexterity"],
         amount: 1,
       },
       skillProficiencies: [],
@@ -545,8 +545,8 @@ export const standardFeats = [
     ],
     benefits: {
       abilityScoreIncrease: {
-        ability: "choice",
-        options: ["strength", "dexterity"],
+        type: "choice",
+        abilities: ["strength", "dexterity"],
         amount: 1,
       },
       skillProficiencies: [],
@@ -630,8 +630,8 @@ export const standardFeats = [
     ],
     benefits: {
       abilityScoreIncrease: {
-        ability: "choice",
-        options: ["wisdom", "charisma"],
+        type: "choice",
+        abilities: ["wisdom", "charisma"],
         amount: 1,
       },
       skillProficiencies: [],
@@ -713,7 +713,7 @@ export const standardFeats = [
     ],
     benefits: {
       abilityScoreIncrease: {
-        abilities: ["intelligence"],
+        ability: "intelligence",
         amount: 1,
       },
       skillProficiencies: [],
@@ -815,8 +815,8 @@ export const standardFeats = [
     ],
     benefits: {
       abilityScoreIncrease: {
-        ability: "choice",
-        options: ["strength", "dexterity"],
+        type: "choice",
+        abilities: ["strength", "dexterity"],
         amount: 1,
       },
       skillProficiencies: [],
@@ -1084,7 +1084,9 @@ export const standardFeats = [
       resistances: [],
       immunities: [],
       speeds: {},
-      combatBonuses: {},
+      combatBonuses: {
+        poisonSaveAdvantage: true,
+      },
       spellcasting: {},
       specialAbilities: [
         {

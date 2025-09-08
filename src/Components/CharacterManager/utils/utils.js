@@ -7,12 +7,24 @@ import { hpData } from "../../../SharedData/data";
 export const getAllSelectedFeats = (character) => {
   const allFeats = [];
 
-  if (character.level1ChoiceType === "feat" && character.standardFeats) {
+  if (character.standardFeats && Array.isArray(character.standardFeats)) {
     allFeats.push(...character.standardFeats);
+  }
+
+  if (character.standard_feats && Array.isArray(character.standard_feats)) {
+    allFeats.push(...character.standard_feats);
   }
 
   if (character.asiChoices) {
     Object.values(character.asiChoices).forEach((choice) => {
+      if (choice.type === "feat" && choice.selectedFeat) {
+        allFeats.push(choice.selectedFeat);
+      }
+    });
+  }
+
+  if (character.asi_choices) {
+    Object.values(character.asi_choices).forEach((choice) => {
       if (choice.type === "feat" && choice.selectedFeat) {
         allFeats.push(choice.selectedFeat);
       }
@@ -176,6 +188,17 @@ export const getAvailableASILevels = (currentLevel) => {
   return ASI_LEVELS.filter((level) => level <= currentLevel);
 };
 
+export const calculateToughFeatHPBonus = (character) => {
+  const allSelectedFeats = getAllSelectedFeats(character);
+  const hasToughFeat = allSelectedFeats.includes("Tough");
+
+  if (!hasToughFeat) return 0;
+
+  const level = character.level || 1;
+
+  return 2 * level;
+};
+
 export const calculateHitPoints = ({ character }) => {
   if (!character.castingStyle) return 0;
 
@@ -188,8 +211,9 @@ export const calculateHitPoints = ({ character }) => {
 
   const baseHP = castingData.base + conMod;
   const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
+  const toughFeatBonus = calculateToughFeatHPBonus(character);
 
-  return Math.max(1, baseHP + additionalHP);
+  return Math.max(1, baseHP + additionalHP + toughFeatBonus);
 };
 
 export const getAvailableSkills = ({ character }) => {

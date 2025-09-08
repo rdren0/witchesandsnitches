@@ -1,3 +1,62 @@
+const calculateHitPoints = (
+  castingStyle,
+  constitution,
+  level = 1,
+  hasToughFeat = false
+) => {
+  if (!castingStyle) return 1;
+
+  const conModifier = Math.floor((constitution - 10) / 2);
+
+  const baseHitPoints = {
+    "Technique Caster": 6,
+    "Intellect Caster": 8,
+    "Vigor Caster": 12,
+    "Willpower Caster": 10,
+
+    Technique: 6,
+    Intellect: 8,
+    Vigor: 12,
+    Willpower: 10,
+  };
+
+  const base = baseHitPoints[castingStyle] || 8;
+  const hitPointsAtLevel1 = base + conModifier;
+
+  if (level > 1) {
+    const averageHitDiePerLevel = {
+      "Technique Caster": 4,
+      "Intellect Caster": 5,
+      "Vigor Caster": 8,
+      "Willpower Caster": 6,
+      Technique: 4,
+      Intellect: 5,
+      Vigor: 8,
+      Willpower: 6,
+    };
+
+    const avgPerLevel =
+      (averageHitDiePerLevel[castingStyle] || 5) + conModifier;
+    const additionalHP = (level - 1) * avgPerLevel;
+
+    let totalHP = hitPointsAtLevel1 + additionalHP;
+
+    if (hasToughFeat) {
+      totalHP += 2 * level;
+    }
+
+    return Math.max(1, totalHP);
+  }
+
+  let totalHP = hitPointsAtLevel1;
+
+  if (hasToughFeat) {
+    totalHP += 2;
+  }
+
+  return Math.max(1, totalHP);
+};
+
 export const transformCharacterForSave = (character) => {
   const skillProficiencies = Array.isArray(character.skillProficiencies)
     ? character.skillProficiencies
@@ -21,6 +80,20 @@ export const transformCharacterForSave = (character) => {
     });
   }
 
+  const hasToughFeat = allFeats.includes("Tough");
+
+  const constitution = character.abilityScores?.constitution || 8;
+  const level = character.level || 1;
+  const calculatedHitPoints = calculateHitPoints(
+    character.castingStyle,
+    constitution,
+    level,
+    hasToughFeat
+  );
+
+  const hitPoints =
+    character.hitPoints > 0 ? character.hitPoints : calculatedHitPoints;
+
   return {
     ability_scores: character.abilityScores || {
       strength: 8,
@@ -36,12 +109,12 @@ export const transformCharacterForSave = (character) => {
     casting_style: character.castingStyle,
     corruption_points: character.corruptionPoints || 0,
     current_hit_dice: character.level || 1,
-    current_hit_points: character.currentHitPoints || character.hitPoints || 0,
+    current_hit_points: character.currentHitPoints || hitPoints,
     discord_user_id: character.discordUserId || character.discord_user_id || "",
     feat_choices: character.featChoices || {},
     game_session: character.gameSession || "",
     heritage_choices: character.heritageChoices || {},
-    hit_points: character.hitPoints || 0,
+    hit_points: hitPoints,
     house_choices: character.houseChoices || {},
     house: character.house,
     image_url: character.imageUrl || character.image_url || null,

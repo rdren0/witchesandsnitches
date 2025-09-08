@@ -3419,6 +3419,106 @@ export const rollFlexibleDice = async ({
   }
 };
 
+export const rollLuckPoint = async ({
+  character,
+  pointsSpent,
+  pointsRestored,
+  reason,
+  pointsRemaining,
+  maxPoints,
+  type = "spent",
+}) => {
+  try {
+    const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+    if (!discordWebhookUrl) {
+      console.error("Discord webhook URL not configured");
+      return;
+    }
+
+    const characterName = character?.name || "Unknown Character";
+    const usedFor =
+      reason?.trim() ||
+      (type === "spent"
+        ? "Luck manipulation"
+        : type === "long_rest"
+        ? "Long rest recovery"
+        : "Luck point action");
+
+    let title, description;
+    const fields = [];
+
+    if (type === "long_rest") {
+      title = `🍀 ${characterName} recovered luck points!`;
+      description = `${characterName} recovered all luck points during a long rest.`;
+
+      if (pointsRestored > 0) {
+        fields.push({
+          name: "Points Recovered",
+          value: `+${pointsRestored}`,
+          inline: true,
+        });
+      }
+    } else {
+      title = `🍀 ${characterName} spent luck points!`;
+      description = `${characterName} spent luck points for: ${usedFor}`;
+
+      fields.push({
+        name: "Points Spent",
+        value: `-${pointsSpent}`,
+        inline: true,
+      });
+    }
+
+    fields.push({
+      name: "Remaining Points",
+      value: `${pointsRemaining}/${maxPoints}`,
+      inline: true,
+    });
+
+    const embed = {
+      title: title,
+      description: description,
+      color: ROLL_COLORS.levelup,
+      fields: fields,
+      footer: {
+        text: `${characterName} - Witches and Snitches`,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    if (character?.imageUrl) {
+      embed.thumbnail = {
+        url: character.imageUrl,
+      };
+    } else if (character?.image_url) {
+      embed.thumbnail = {
+        url: character.image_url,
+      };
+    }
+
+    const message = {
+      embeds: [embed],
+    };
+
+    const response = await fetch(discordWebhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(message),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending luck point Discord webhook:", error);
+    return false;
+  }
+};
+
 export const useRollFunctions = () => {
   const { showRollResult } = useRollModal();
   return {
@@ -3450,6 +3550,7 @@ export const useRollFunctions = () => {
       rollMagicCasting({ ...params, showRollResult }),
     rollFlexibleDice: (params) =>
       rollFlexibleDice({ ...params, showRollResult }),
+    rollLuckPoint: (params) => rollLuckPoint({ ...params, showRollResult }),
     rollMagicalTheoryCheck: (params) =>
       rollMagicalTheoryCheck({ ...params, showRollResult }),
   };

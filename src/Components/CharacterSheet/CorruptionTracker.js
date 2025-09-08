@@ -225,15 +225,35 @@ export const CorruptionTracker = ({
   });
 
   const getInputStyle = (disabled = false) => ({
-    ...styles.input,
+    padding: "8px 12px",
     backgroundColor: theme.surface,
     color: theme.text,
     border: `1px solid ${theme.border}`,
-    ...(disabled ? { opacity: 0.5 } : {}),
+    borderRadius: "6px",
+    fontSize: "14px",
+    transition: "all 0.2s ease",
+    outline: "none",
+    ...(disabled ? { opacity: 0.5, cursor: "not-allowed" } : {}),
+    "&:focus": {
+      borderColor: theme.primary,
+      boxShadow: `0 0 0 2px ${theme.primary}20`,
+    },
   });
 
   const getButtonStyle = (type = "default", disabled = false) => {
-    let baseStyle = { ...styles.button };
+    let baseStyle = {
+      padding: "10px 16px",
+      borderRadius: "6px",
+      fontSize: "14px",
+      fontWeight: "600",
+      border: "none",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+    };
 
     if (disabled) {
       return {
@@ -242,6 +262,7 @@ export const CorruptionTracker = ({
         color: theme.textSecondary,
         cursor: "not-allowed",
         opacity: 0.6,
+        border: `1px solid ${theme.border}`,
       };
     }
 
@@ -251,24 +272,36 @@ export const CorruptionTracker = ({
           ...baseStyle,
           backgroundColor: "#dc2626",
           color: "#ffffff",
+          "&:hover": {
+            backgroundColor: "#b91c1c",
+          },
         };
       case "success":
         return {
           ...baseStyle,
           backgroundColor: "#059669",
           color: "#ffffff",
+          "&:hover": {
+            backgroundColor: "#047857",
+          },
         };
       case "primary":
         return {
           ...baseStyle,
           backgroundColor: "#7c2d12",
           color: "#ffffff",
+          "&:hover": {
+            backgroundColor: "#9a3412",
+          },
         };
       default:
         return {
           ...baseStyle,
           backgroundColor: theme.primary,
           color: "#ffffff",
+          "&:hover": {
+            backgroundColor: theme.secondary,
+          },
         };
     }
   };
@@ -345,7 +378,14 @@ export const CorruptionTracker = ({
               questionable actions
             </div>
 
-            <div style={styles.inputGroup}>
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginBottom: "12px",
+                alignItems: "stretch",
+              }}
+            >
               <input
                 type="number"
                 min="1"
@@ -358,6 +398,7 @@ export const CorruptionTracker = ({
                 style={{
                   ...getInputStyle(isProcessing),
                   width: "80px",
+                  flexShrink: 0,
                 }}
               />
               <input
@@ -369,6 +410,7 @@ export const CorruptionTracker = ({
                 style={{
                   ...getInputStyle(isProcessing),
                   flex: 1,
+                  minWidth: 0,
                 }}
               />
             </div>
@@ -406,7 +448,14 @@ export const CorruptionTracker = ({
 
         {showRedeemSection && (
           <div style={getSubsectionStyle("#059669")}>
-            <div style={styles.inputGroup}>
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginBottom: "12px",
+                alignItems: "stretch",
+              }}
+            >
               <input
                 type="number"
                 min="1"
@@ -419,6 +468,7 @@ export const CorruptionTracker = ({
                 style={{
                   ...getInputStyle(isProcessing),
                   width: "80px",
+                  flexShrink: 0,
                 }}
               />
               <input
@@ -430,6 +480,7 @@ export const CorruptionTracker = ({
                 style={{
                   ...getInputStyle(isProcessing),
                   flex: 1,
+                  minWidth: 0,
                 }}
               />
             </div>

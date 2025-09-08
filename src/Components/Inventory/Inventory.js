@@ -12,7 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getInventoryStyles } from "../../styles/masterStyles";
+import { getInventoryStyles } from "./styles";
 
 import Bank from "../Bank/Bank";
 
@@ -346,24 +346,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </h1>
             <p style={styles.subtitle}>
               Manage your character's items, equipment, and possessions
-              {lastRefresh && (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color: theme.textSecondary,
-                    marginLeft: "8px",
-                    display: "block",
-                    marginTop: "4px",
-                  }}
-                >
-                  Last updated: {new Date(lastRefresh).toLocaleTimeString()}
-                  {isRefreshing && (
-                    <span style={{ color: theme.primary, marginLeft: "8px" }}>
-                      • Refreshing...
-                    </span>
-                  )}
-                </span>
-              )}
             </p>
           </div>
 

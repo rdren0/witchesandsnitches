@@ -52,8 +52,32 @@ const SpellSelector = ({
       const spellYear = spellData.year || 1;
 
       if (isResearch) {
-        const yearDifference = Math.max(0, spellYear - playerYear);
-        return 10 + yearDifference * 2;
+        let baseDC = 8 + 2 * playerYear;
+        const yearDifference = spellYear - playerYear;
+        baseDC += yearDifference * 2;
+
+        const difficultSpells = [
+          "Abscondi",
+          "Pellucidi Pellis",
+          "Sagittario",
+          "Confringo",
+          "Devicto",
+          "Stupefy",
+          "Petrificus Totalus",
+          "Protego",
+          "Protego Maxima",
+          "Finite Incantatem",
+          "Confundo",
+          "Bombarda",
+          "Episkey",
+          "Expelliarmus",
+          "Incarcerous",
+        ];
+        if (difficultSpells.includes(spellData.name)) {
+          baseDC += 3;
+        }
+
+        return Math.max(5, baseDC);
       } else {
         let baseDC = 8 + 2 * spellYear;
         if (spellYear > playerYear) {

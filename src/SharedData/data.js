@@ -1,5 +1,28 @@
 import { Brain, Heart, Shield, Zap } from "lucide-react";
 
+export const SPELL_SLOT_PROGRESSION = {
+  1: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+  2: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+  3: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+  4: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+  5: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+  6: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+  7: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+  8: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+  9: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+  10: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+  11: [4, 3, 3, 3, 2, 1, 0, 0, 0],
+  12: [4, 3, 3, 3, 2, 1, 0, 0, 0],
+  13: [4, 3, 3, 3, 2, 1, 1, 0, 0],
+  14: [4, 3, 3, 3, 2, 1, 1, 0, 0],
+  15: [4, 3, 3, 3, 2, 1, 1, 1, 0],
+  16: [4, 3, 3, 3, 2, 1, 1, 1, 0],
+  17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
+  18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
+  19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
+  20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
+};
+
 export const housesBySchool = {
   "Hogwarts School of Witchcraft and Wizardry": [
     "Gryffindor",
@@ -263,6 +286,20 @@ export const allSkills = [
   { name: "performance", displayName: "Performance", ability: "charisma" },
   { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
 ];
+
+export const abilities = [
+  { name: "strength", abbr: "STR", displayName: "Strength" },
+  { name: "dexterity", abbr: "DEX", displayName: "Dexterity" },
+  { name: "constitution", abbr: "CON", displayName: "Constitution" },
+  { name: "intelligence", abbr: "INT", displayName: "Intelligence" },
+  { name: "wisdom", abbr: "WIS", displayName: "Wisdom" },
+  { name: "charisma", abbr: "CHA", displayName: "Charisma" },
+];
+
+export const getAbilityAbbr = (ability) => {
+  const abilityObj = abilities.find((a) => a.name === ability);
+  return abilityObj?.abbr || ability.slice(0, 3).toUpperCase();
+};
 
 export const skillDescriptions = {
   acrobatics:

@@ -13,6 +13,7 @@ import {
   Level1ChoiceSection,
   SubclassSection,
   SkillsSection,
+  ToolsLanguagesSection,
   ASILevelChoices,
   MagicModifiersSection,
   NotesSection,
@@ -72,6 +73,7 @@ const CharacterForm = ({
       level1Choice: false,
       asiProgression: false,
       skills: false,
+      toolsLanguages: false,
       magicModifiers: false,
       notes: false,
     },
@@ -443,6 +445,21 @@ const CharacterForm = ({
           onChange={(field, value) => updateCharacter(field, value)}
           onCharacterUpdate={updateCharacterBulk}
           disabled={sectionLocks.skills}
+          mode={mode}
+        />
+      </FormSection>
+
+      <FormSection
+        title="Tool Proficiencies"
+        subtitle="Tool proficiencies"
+        isLocked={sectionLocks.toolsLanguages}
+        onToggleLock={canLock ? () => toggleSectionLock("toolsLanguages") : undefined}
+        lockable={canLock}
+      >
+        <ToolsLanguagesSection
+          character={character}
+          onChange={(field, value) => updateCharacter(field, value)}
+          disabled={sectionLocks.toolsLanguages}
           mode={mode}
         />
       </FormSection>

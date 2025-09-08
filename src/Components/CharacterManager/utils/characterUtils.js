@@ -6,12 +6,24 @@ import {
   subclassesData,
 } from "../../../SharedData";
 import { subclasses } from "../../../SharedData/subclassesData";
+import {
+  calculateFeatBenefits,
+  calculateInitiativeWithFeats,
+  calculateSpeedsWithFeats,
+  getHitPointsBonusFromFeats,
+} from "./featBenefitsCalculator";
 
 export const getAllSelectedFeats = (character) => {
+  if (!character) return [];
+  
   const selectedFeats = [];
 
-  if (character.level1ChoiceType === "feat" && character.standardFeats) {
+  if (character.standardFeats && Array.isArray(character.standardFeats)) {
     selectedFeats.push(...character.standardFeats);
+  }
+
+  if (character.standard_feats && Array.isArray(character.standard_feats)) {
+    selectedFeats.push(...character.standard_feats);
   }
 
   if (character.asiChoices) {
@@ -22,7 +34,15 @@ export const getAllSelectedFeats = (character) => {
     });
   }
 
-  return selectedFeats;
+  if (character.asi_choices) {
+    Object.values(character.asi_choices).forEach((choice) => {
+      if (choice.type === "feat" && choice.selectedFeat) {
+        selectedFeats.push(choice.selectedFeat);
+      }
+    });
+  }
+
+  return [...new Set(selectedFeats)];
 };
 
 export const handleASIChoiceChange = (character, level, choiceType) => {
@@ -434,6 +454,20 @@ export const getAllAbilityModifiers = (character) => {
 };
 
 export const calculateFeatModifiers = (character, featChoices = {}) => {
+  if (!character) {
+    return {
+      modifiers: {
+        strength: 0,
+        dexterity: 0,
+        constitution: 0,
+        intelligence: 0,
+        wisdom: 0,
+        charisma: 0,
+      },
+      featDetails: {}
+    };
+  }
+
   const modifiers = {
     strength: 0,
     dexterity: 0,
@@ -485,6 +519,9 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         abilityToIncrease = getSpellcastingAbility(character);
         break;
       default:
+        if (increase.ability && !increase.type) {
+          abilityToIncrease = increase.ability;
+        }
         break;
     }
 
@@ -862,4 +899,84 @@ export const detectIfASIAlreadyApplied = (character) => {
   }
 
   return false;
+};
+
+export const getCharacterBenefits = (character) => {
+  if (!character) return null;
+
+  const featBenefits = calculateFeatBenefits(character);
+
+  return {
+    feats: featBenefits,
+    combat: {
+      initiative: {
+        base: character.initiativeModifier || 0,
+        featBonus: featBenefits.combatBonuses.initiativeBonus,
+        total:
+          (character.initiativeModifier || 0) +
+          featBenefits.combatBonuses.initiativeBonus,
+      },
+      hitPoints: {
+        base: character.hitPoints || 0,
+        featBonus: getHitPointsBonusFromFeats(character),
+        total:
+          (character.hitPoints || 0) + getHitPointsBonusFromFeats(character),
+      },
+      passivePerception: {
+        base: 10 + Math.floor((character.wisdom - 10) / 2),
+        featBonus: featBenefits.combatBonuses.passivePerceptionBonus,
+        total:
+          10 +
+          Math.floor((character.wisdom - 10) / 2) +
+          featBenefits.combatBonuses.passivePerceptionBonus,
+      },
+    },
+    speeds: calculateSpeedsWithFeats(character, 30),
+    resources: {
+      luckPoints: featBenefits.resources.luckPoints,
+    },
+  };
+};
+
+export const checkSingleRequirement = (requirement, character) => {
+  if (!requirement || !character) return false;
+
+  switch (requirement.type) {
+    case 'level':
+      return (character.level || 1) >= requirement.value;
+      
+    case 'castingStyle':
+      return character.castingStyle === requirement.value;
+      
+    case 'innateHeritage':
+      return character.innateHeritage === requirement.value;
+      
+    case 'feat': {
+      const selectedFeats = getAllSelectedFeats(character);
+      return selectedFeats.includes(requirement.value);
+    }
+      
+    default:
+      return false;
+  }
+};
+
+export const checkFeatPrerequisites = (feat, character) => {
+  if (!feat || !character) return false;
+  
+  if (!feat.prerequisites) return true;
+  
+  if (feat.prerequisites.allOf) {
+    return feat.prerequisites.allOf.every(req => 
+      checkSingleRequirement(req, character)
+    );
+  }
+  
+  if (feat.prerequisites.anyOf) {
+    return feat.prerequisites.anyOf.some(req => 
+      checkSingleRequirement(req, character)
+    );
+  }
+  
+  return true;
 };

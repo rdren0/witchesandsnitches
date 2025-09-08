@@ -478,7 +478,7 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
                 gap: "6px",
               }}
             >
-              🥇 Galleons
+              🥇 G
             </span>
             <input
               type="number"
@@ -527,7 +527,7 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
                 gap: "6px",
               }}
             >
-              🥈 Sickles
+              🥈 S
             </span>
             <input
               type="number"
@@ -576,7 +576,7 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
                 gap: "6px",
               }}
             >
-              🥉 Knuts
+              🥉 K
             </span>
             <input
               type="number"

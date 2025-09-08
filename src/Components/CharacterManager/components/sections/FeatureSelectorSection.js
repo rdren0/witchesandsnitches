@@ -483,7 +483,7 @@ const FeatureSelectorSection = ({
 
       return basicMatch || descriptionMatch;
     });
-  }, [character, maxFeats, featFilter]);
+  }, [character, maxFeats, featFilter, meetsPrerequisites]);
 
   const getHelpText = () => {
     if (characterLevel === 1) {
@@ -698,7 +698,7 @@ const FeatureSelectorSection = ({
                               <label
                                 key={ability}
                                 style={{
-                                  ...enhancedStyles.choiceLabel,
+                                  ...enhancedStyles.featChoiceLabel,
                                   backgroundColor:
                                     currentChoice === ability
                                       ? `${theme.primary}20`
@@ -747,7 +747,7 @@ const FeatureSelectorSection = ({
                               <label
                                 key={skill}
                                 style={{
-                                  ...enhancedStyles.choiceLabel,
+                                  ...enhancedStyles.featChoiceLabel,
                                   backgroundColor:
                                     currentChoice === skill
                                       ? `${theme.success}20`
@@ -796,7 +796,7 @@ const FeatureSelectorSection = ({
                               <label
                                 key={tool}
                                 style={{
-                                  ...enhancedStyles.choiceLabel,
+                                  ...enhancedStyles.featChoiceLabel,
                                   backgroundColor:
                                     currentChoice === tool
                                       ? `${theme.warning}20`
@@ -845,7 +845,7 @@ const FeatureSelectorSection = ({
                               <label
                                 key={save}
                                 style={{
-                                  ...enhancedStyles.choiceLabel,
+                                  ...enhancedStyles.featChoiceLabel,
                                   backgroundColor:
                                     currentChoice === save
                                       ? `${theme.error}20`
@@ -1263,12 +1263,13 @@ const FeatureSelectorSection = ({
                                 const meetsSingle = (() => {
                                   switch (req.type?.toLowerCase()) {
                                     case "ability":
-                                    case "ability_score":
+                                    case "ability_score": {
                                       const abilityScore =
                                         character.abilityScores?.[
                                           req.value?.toLowerCase()
                                         ] || 0;
                                       return abilityScore >= (req.amount || 13);
+                                    }
                                     case "level":
                                       return (
                                         (character.level || 1) >=

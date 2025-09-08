@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, X, Filter } from "lucide-react";
 import { SubjectCard } from "./SubjectCard";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createThemedSpellBookStyles } from "../../styles/masterStyles";
+import { createSpellBookStyles, searchStyles } from "./styles";
 import { hasSubclassFeature } from "./utils";
 
 import { spellsData } from "../../SharedData/spells";
@@ -11,7 +11,7 @@ import CastingTiles from "../CharacterSheet/CastingTiles";
 
 const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const { theme } = useTheme();
-  const styles = createThemedSpellBookStyles(theme);
+  const styles = createSpellBookStyles(theme);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [error, setError] = useState(null);

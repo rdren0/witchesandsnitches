@@ -2,7 +2,7 @@ import React, { memo, useCallback } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import ActivityItem from "./ActivityItem";
 import NPCEncounterItem from "./NPCEncounterItem";
-import { getDowntimeStyles } from "../../styles/masterStyles";
+import { getDowntimeStyles } from "./styles";
 import {
   activityRequiresCheckTypeSelection,
   getSkillOptionsForCheck,

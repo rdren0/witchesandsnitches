@@ -27,10 +27,19 @@ import {
   sendDiscordRollWebhook,
   getRollResultColor,
   ROLL_COLORS,
+  sendDiscordLevelUpMessage,
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
+import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
+import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import {
+  backgroundsData,
+  subclassesData,
+  standardFeats,
+} from "../../SharedData";
+import { calculateInitiativeWithFeats } from "../CharacterManager/utils/featBenefitsCalculator";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -194,7 +203,10 @@ const CharacterSheet = ({
         rollType: "Spellcasting Ability Check",
         title: "Spellcasting Ability Check",
 
-        embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
+        embedColor: getRollResultColor(
+          rollResult,
+          ROLL_COLORS.spellcastingCheck
+        ),
         rollResult,
         fields: additionalFields,
         useCharacterAvatar: true,
@@ -263,7 +275,7 @@ const CharacterSheet = ({
         character,
         rollType: "Spell Attack Roll",
         title: `Spell Attack Roll`,
-        embedColor: getRollResultColor(rollResult, 0xff6c3a),
+        embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
         useCharacterAvatar: true,
@@ -285,12 +297,21 @@ const CharacterSheet = ({
   }, []);
 
   const getInitiativeModifier = useCallback(
-    (initiativeAbility, effectiveAbilityScores) => {
+    (initiativeAbility, effectiveAbilityScores, characterData) => {
+      let baseModifier;
       if (initiativeAbility === "intelligence") {
-        return Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
+        baseModifier =
+          Math.floor((effectiveAbilityScores.intelligence - 10) / 2) || 0;
+      } else {
+        baseModifier =
+          Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
       }
 
-      return Math.floor((effectiveAbilityScores.dexterity - 10) / 2) || 0;
+      if (characterData) {
+        return calculateInitiativeWithFeats(characterData, baseModifier);
+      }
+
+      return baseModifier;
     },
     []
   );
@@ -315,8 +336,7 @@ const CharacterSheet = ({
       ...baseStyle,
       color: hpColor,
       backgroundColor:
-        currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}10`,
-      borderColor: hpColor,
+        currentHP === maxHP ? baseStyle.backgroundColor : `${hpColor}20`,
       transition: "all 0.2s ease",
       position: "relative",
       userSelect: "none",
@@ -353,8 +373,82 @@ const CharacterSheet = ({
     return allFeats;
   }, []);
 
+  const getAutomaticSkillProficiencies = useCallback((characterData) => {
+    const automaticProficiencies = [];
+    const automaticExpertise = [];
+
+    if (characterData.background) {
+      const background = Object.values(backgroundsData).find(
+        (bg) => bg.name === characterData.background
+      );
+      if (background?.skillProficiencies) {
+        automaticProficiencies.push(...background.skillProficiencies);
+      }
+    }
+
+    if (characterData.subclass && characterData.subclass_choices) {
+      const subclassInfo = subclassesData[characterData.subclass];
+
+      if (subclassInfo?.benefits?.skillProficiencies) {
+        subclassInfo.benefits.skillProficiencies.forEach((prof) => {
+          if (prof.type === "fixed") {
+            automaticProficiencies.push(...prof.skills);
+          }
+        });
+      }
+
+      if (subclassInfo?.choices) {
+        Object.entries(characterData.subclass_choices).forEach(
+          ([level, choice]) => {
+            const levelData = subclassInfo.choices[level];
+            if (levelData?.options) {
+              const selectedOption = levelData.options.find(
+                (opt) => opt.name === choice
+              );
+              if (selectedOption?.benefits?.skillProficiencies) {
+                selectedOption.benefits.skillProficiencies.forEach((prof) => {
+                  if (prof.type === "fixed") {
+                    automaticProficiencies.push(...prof.skills);
+
+                    if (prof.expertise) {
+                      prof.skills.forEach((skill) => {
+                        if (
+                          automaticProficiencies.includes(skill) ||
+                          characterData.skill_proficiencies?.includes(skill)
+                        ) {
+                          automaticExpertise.push(skill);
+                        }
+                      });
+                    }
+                  }
+                });
+              }
+            }
+          }
+        );
+      }
+    }
+
+    if (characterData.standard_feats) {
+      characterData.standard_feats.forEach((featName) => {
+        const feat = standardFeats.find((f) => f.name === featName);
+        if (feat?.benefits?.skillProficiencies) {
+          feat.benefits.skillProficiencies.forEach((prof) => {
+            if (typeof prof === "string") {
+              automaticProficiencies.push(prof);
+            } else if (prof.type === "fixed") {
+              automaticProficiencies.push(...prof.skills);
+            }
+          });
+        }
+      });
+    }
+
+    return { automaticProficiencies, automaticExpertise };
+  }, []);
+
   const transformSkillData = useCallback(
-    (skillProficiencies = [], skillExpertise = []) => {
+    (skillProficiencies = [], skillExpertise = [], characterData = {}) => {
       const skillMap = {
         Athletics: "athletics",
         Acrobatics: "acrobatics",
@@ -370,6 +464,7 @@ const CharacterSheet = ({
         Medicine: "medicine",
         Perception: "perception",
         "Potion Making": "potionMaking",
+        "Potion-making": "potionMaking",
         Survival: "survival",
         Deception: "deception",
         Intimidation: "intimidation",
@@ -383,14 +478,24 @@ const CharacterSheet = ({
         skills[skill] = 0;
       });
 
-      skillProficiencies.forEach((skillName) => {
+      const { automaticProficiencies, automaticExpertise } =
+        getAutomaticSkillProficiencies(characterData);
+
+      const allProficiencies = [
+        ...skillProficiencies,
+        ...automaticProficiencies,
+      ];
+
+      allProficiencies.forEach((skillName) => {
         const mappedSkill = skillMap[skillName];
-        if (mappedSkill) {
+        if (mappedSkill && skills[mappedSkill] < 1) {
           skills[mappedSkill] = 1;
         }
       });
 
-      skillExpertise.forEach((skillName) => {
+      const allExpertise = [...skillExpertise, ...automaticExpertise];
+
+      allExpertise.forEach((skillName) => {
         const mappedSkill = skillMap[skillName];
         if (mappedSkill) {
           skills[mappedSkill] = 2;
@@ -399,7 +504,7 @@ const CharacterSheet = ({
 
       return skills;
     },
-    []
+    [getAutomaticSkillProficiencies]
   );
 
   const canModifyCharacter = (
@@ -456,7 +561,8 @@ const CharacterSheet = ({
             max_spell_slots_7,
             max_spell_slots_8,
             max_spell_slots_9,
-            inspiration
+            inspiration,
+            luck
           )
         `
           )
@@ -494,7 +600,8 @@ const CharacterSheet = ({
             max_spell_slots_7,
             max_spell_slots_8,
             max_spell_slots_9,
-            inspiration
+            inspiration,
+            luck
           )
         `
           )
@@ -552,10 +659,12 @@ const CharacterSheet = ({
           initiativeAbility: data.initiative_ability,
           initiativeModifier: getInitiativeModifier(
             data.initiative_ability,
-            effectiveAbilityScores
+            effectiveAbilityScores,
+            data
           ),
           innateHeritage: data.innate_heritage,
           inspiration: resources.inspiration ?? 0,
+          luck: resources.luck,
           intelligence: effectiveAbilityScores.intelligence || 10,
           level: data.level || 1,
           magicModifiers: data.magic_modifiers || {},
@@ -579,7 +688,8 @@ const CharacterSheet = ({
           skillProficiencies: data.skill_proficiencies || [],
           skills: transformSkillData(
             data.skill_proficiencies || [],
-            data.skill_expertise || []
+            data.skill_expertise || [],
+            data
           ),
           sorceryPoints: resources.sorcery_points || 0,
           speed: 30,
@@ -596,6 +706,7 @@ const CharacterSheet = ({
           strength: effectiveAbilityScores.strength || 10,
           subclass: data.subclass,
           subclassChoices: data.subclass_choices || {},
+          toolProficiencies: data.tool_proficiencies || [],
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,
@@ -666,12 +777,23 @@ const CharacterSheet = ({
       return;
     }
 
+    const hasLuckyFeat =
+      character?.selectedFeats?.some((feat) =>
+        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
+      ) ||
+      character?.feats?.some((feat) =>
+        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
+      ) ||
+      character?.standardFeats?.some((feat) =>
+        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
+      );
+
     const confirmed = window.confirm(
       `Take a long rest for ${
         character.name
       }?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}${
         hasSpellSlots ? "\n• All Spell Slots" : ""
-      }`
+      }${hasLuckyFeat ? "\n• All Luck Points" : ""}`
     );
     if (!confirmed) return;
 
@@ -699,28 +821,43 @@ const CharacterSheet = ({
         return;
       }
 
-      if (hasSpellSlots) {
-        const spellSlotUpdates = {
+      const getProficiencyBonus = (level) => {
+        if (level <= 4) return 2;
+        if (level <= 8) return 3;
+        if (level <= 12) return 4;
+        if (level <= 16) return 5;
+        return 6;
+      };
+
+      if (hasSpellSlots || hasLuckyFeat) {
+        const resourceUpdates = {
           character_id: character.id,
           discord_user_id: characterOwnerId,
           updated_at: new Date().toISOString(),
         };
 
-        [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((level) => {
-          const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
-          if (maxSlots > 0) {
-            spellSlotUpdates[`spell_slots_${level}`] = maxSlots;
-          }
-        });
+        if (hasSpellSlots) {
+          [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((level) => {
+            const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
+            if (maxSlots > 0) {
+              resourceUpdates[`spell_slots_${level}`] = maxSlots;
+            }
+          });
+        }
+
+        if (hasLuckyFeat) {
+          const maxLuckPoints = getProficiencyBonus(character?.level || 1);
+          resourceUpdates.luck = maxLuckPoints;
+        }
 
         const { error: resourcesError } = await supabase
           .from("character_resources")
-          .upsert(spellSlotUpdates, {
+          .upsert(resourceUpdates, {
             onConflict: "character_id,discord_user_id",
           });
 
         if (resourcesError) {
-          console.error("Error updating spell slots:", resourcesError);
+          console.error("Error updating resources:", resourcesError);
         }
       }
 
@@ -737,57 +874,39 @@ const CharacterSheet = ({
         } • ${character.name} is fully rested!`,
       });
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `Long Rest Complete`,
-          color: 0x3b82f6,
-          fields: [
-            {
-              name: "HP Restored",
-              value: `${hpRestored} HP`,
-              inline: true,
-            },
-            {
-              name: "Hit Dice Restored",
-              value: `${hitDiceRestored} × ${character.hitDie}`,
-              inline: true,
-            },
-            {
-              name: "Current Status",
-              value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice${
-                hasSpellSlots ? " • All spell slots restored" : ""
-              }`,
-              inline: false,
-            },
-          ],
-          description: "💤 **Fully rested and ready for adventure!**",
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Long Rest`,
-          },
-        };
+      const additionalFields = [
+        {
+          name: "HP Restored",
+          value: `${hpRestored} HP`,
+          inline: true,
+        },
+        {
+          name: "Hit Dice Restored",
+          value: `${hitDiceRestored} × ${character.hitDie}`,
+          inline: true,
+        },
+        {
+          name: "Current Status",
+          value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice${
+            hasSpellSlots ? " • All spell slots restored" : ""
+          }`,
+          inline: false,
+        },
+      ];
 
-        const message = {
-          embeds: [embed],
-        };
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Long Rest",
+        title: "Long Rest Complete",
+        embedColor: 0x3b82f6,
+        rollResult: null,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+        description: "💤 **Fully rested and ready for adventure!**",
+      });
 
-         if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        }else  if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
-
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      if (!success) {
+        console.error("Failed to send long rest to Discord");
       }
 
       await fetchCharacterDetails();
@@ -851,37 +970,31 @@ const CharacterSheet = ({
         return;
       }
 
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `${character.name} was fully healed!`,
-          color: 0x10b981,
-          fields: [
-            {
-              name: "HP Restored",
-              value: `${maxHP - currentHP} HP`,
-              inline: true,
-            },
-            {
-              name: "Current HP",
-              value: `${maxHP}/${maxHP} (Full Health)`,
-              inline: true,
-            },
-          ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Full Heal`,
-          },
-        };
+      const additionalFields = [
+        {
+          name: "HP Restored",
+          value: `${maxHP - currentHP} HP`,
+          inline: true,
+        },
+        {
+          name: "Current HP",
+          value: `${maxHP}/${maxHP} (Full Health)`,
+          inline: true,
+        },
+      ];
 
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] }),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Full Heal",
+        title: `${character.name} was fully healed!`,
+        embedColor: 0x10b981,
+        rollResult: null,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+
+      if (!success) {
+        console.error("Failed to send full heal to Discord");
       }
 
       await fetchCharacterDetails();
@@ -891,7 +1004,56 @@ const CharacterSheet = ({
     }
   };
 
-  const handleCharacterUpdated = async (updatedCharacter) => {
+  const updateSpellSlotResources = async (
+    character,
+    newLevel,
+    discordUserId
+  ) => {
+    try {
+      const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ];
+
+      const updateData = {
+        character_id: character.id,
+        discord_user_id: discordUserId,
+        updated_at: new Date().toISOString(),
+      };
+
+      for (let i = 1; i <= 9; i++) {
+        const newMax = newMaxSlots[i - 1];
+        const currentSlots = character[`spellSlots${i}`] || 0;
+        const currentMax = character[`maxSpellSlots${i}`] || 0;
+
+        updateData[`max_spell_slots_${i}`] = newMax;
+
+        if (currentSlots > currentMax) {
+          const bonusSlots = currentSlots - currentMax;
+          updateData[`spell_slots_${i}`] = newMax + bonusSlots;
+        } else {
+          updateData[`spell_slots_${i}`] = newMax;
+        }
+      }
+
+      const { error } = await supabase
+        .from("character_resources")
+        .upsert(updateData, {
+          onConflict: "character_id,discord_user_id",
+        });
+
+      if (error) {
+        console.error("Error updating spell slot resources:", error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in updateSpellSlotResources:", error);
+      throw error;
+    }
+  };
+
+  const handleCharacterUpdated = async (updatedCharacter, levelUpDetails) => {
     try {
       const characterOwnerId = character.discord_user_id || character.ownerId;
 
@@ -946,6 +1108,8 @@ const CharacterSheet = ({
           [],
         background_skills:
           character.backgroundSkills || character.background_skills || [],
+        image_url: character.image_url || character.imageUrl || null,
+        imageUrl: character.imageUrl || character.image_url || null,
       };
 
       const result = await characterService.updateCharacter(
@@ -953,6 +1117,44 @@ const CharacterSheet = ({
         characterToSave,
         characterOwnerId
       );
+
+      if (levelUpDetails) {
+        try {
+          await updateSpellSlotResources(
+            updatedCharacter,
+            levelUpDetails.newLevel,
+            characterOwnerId
+          );
+        } catch (spellSlotError) {
+          console.error("Error updating spell slot resources:", spellSlotError);
+        }
+      }
+
+      if (levelUpDetails) {
+        const {
+          oldLevel,
+          newLevel,
+          hitPointIncrease,
+          abilityIncreases,
+          selectedFeat,
+        } = levelUpDetails;
+
+        try {
+          await sendDiscordLevelUpMessage({
+            character: updatedCharacter,
+            oldLevel,
+            newLevel,
+            hitPointIncrease,
+            abilityIncreases,
+            selectedFeat,
+          });
+        } catch (discordError) {
+          console.error(
+            "Error sending Discord level-up message:",
+            discordError
+          );
+        }
+      }
 
       setShowLevelUp(false);
       await fetchCharacterDetails();
@@ -1049,13 +1251,21 @@ const CharacterSheet = ({
         {character && !characterLoading && (
           <>
             <div style={styles.headerCard}>
-              <div style={styles.headerFlex}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "20px",
+                  marginBottom: "20px",
+                }}
+              >
                 <div
                   style={{
                     ...styles.avatar,
                     position: "relative",
                     cursor: !character.imageUrl ? "pointer" : "default",
                     transition: "all 0.2s ease",
+                    flexShrink: 0,
                   }}
                   onClick={handleAvatarClick}
                   title={
@@ -1138,157 +1348,194 @@ const CharacterSheet = ({
                     )}
                   </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h1
+                    style={{
+                      ...styles.characterName,
+                      marginBottom: "8px",
+                    }}
                   >
-                    <h1 style={styles.characterName}>{character.name}</h1>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "16px",
-                        justifyContent: "center",
-                        flexWrap: "wrap",
-                        marginBottom: "18px",
-                      }}
-                    >
-                      <InspirationTracker
-                        character={character}
-                        supabase={supabase}
-                        discordUserId={discordUserId}
-                        setCharacter={setCharacter}
-                        selectedCharacterId={selectedCharacter.id}
-                        isAdmin={adminMode}
-                      />
-                      <button
-                        style={{
-                          backgroundColor: "#9d4edd",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor:
-                            character.currentHitDice <= 0
-                              ? "not-allowed"
-                              : "pointer",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          opacity: character.currentHitDice <= 0 ? 0.6 : 1,
-                          transition: "all 0.2s ease",
-                          justifyContent: "center",
-                          width: "120px",
-                          height: "40px",
-                        }}
-                        onClick={handleShortRestClick}
-                        disabled={character.currentHitDice <= 0}
-                        title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
-                      >
-                        <Coffee size={16} />
-                        Short Rest
-                      </button>
-                      <button
-                        style={{
-                          backgroundColor: "#3b82f6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor: isLongResting ? "wait" : "pointer",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          opacity: isLongResting ? 0.7 : 1,
-                          transition: "all 0.2s ease",
-                          justifyContent: "center",
-                          width: "120px",
-                          height: "40px",
-                        }}
-                        onClick={handleLongRest}
-                        disabled={isLongResting}
-                        title="Restore all HP and hit dice with a long rest"
-                      >
-                        <Moon size={16} />
-                        {isLongResting ? "Resting..." : "Long Rest"}
-                      </button>
-                      <button
-                        style={{
-                          backgroundColor: "#10b981",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          transition: "all 0.2s ease",
-                          justifyContent: "center",
-                          width: "120px",
-                          height: "40px",
-                        }}
-                        onClick={() => setShowLevelUp(true)}
-                        title={`Level up ${character.name} to level ${
-                          (character.level || 1) + 1
-                        }`}
-                      >
-                        <TrendingUp size={16} />
-                        Level Up
-                      </button>
-                    </div>
-                  </div>
-                  <div style={styles.infoGrid}>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>House:</span> {character.house}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Level:</span> {character.level}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Year:</span> {character.level}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Class:</span>{" "}
-                      {character.castingStyle}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Spell Casting Ability:</span>{" "}
-                      {getSpellcastingAbility(character.castingStyle)}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Subclass:</span>{" "}
-                      {character.subclass || "None"}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Background:</span>{" "}
-                      {character.background}
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.label}>Heritage:</span>{" "}
-                      {character.bloodStatus}
-                    </div>
-                    {character.gameSession && (
-                      <div style={styles.infoItem}>
-                        <span style={styles.label}>Game Session:</span>{" "}
-                        {character.gameSession}
-                      </div>
-                    )}
-                    {character.castingStyle === "Intellect Caster" && (
-                      <div style={styles.infoItem}>
-                        <span style={styles.label}>Initiative Ability:</span>{" "}
-                        {character.initiativeAbility === "intelligence"
-                          ? "Intelligence"
-                          : "Dexterity"}
-                      </div>
-                    )}
-                    <div style={{ ...styles.infoItem, gridColumn: "span 2" }}>
-                      <span style={styles.label}>Wand:</span> {character.wand}
-                    </div>
-                  </div>
+                    {character.name}
+                  </h1>
                 </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <InspirationTracker
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    setCharacter={setCharacter}
+                    selectedCharacterId={selectedCharacter.id}
+                    isAdmin={adminMode}
+                  />
+                  <LuckPointButton
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    setCharacter={setCharacter}
+                    selectedCharacterId={selectedCharacter.id}
+                    isAdmin={adminMode}
+                  />
+                  <button
+                    style={{
+                      backgroundColor: "#9d4edd",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor:
+                        character.currentHitDice <= 0
+                          ? "not-allowed"
+                          : "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+                      transition: "all 0.2s ease",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      height: "32px",
+                    }}
+                    onClick={handleShortRestClick}
+                    disabled={character.currentHitDice <= 0}
+                    title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
+                  >
+                    <Coffee size={14} />
+                    Short Rest
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: isLongResting ? "wait" : "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      opacity: isLongResting ? 0.7 : 1,
+                      transition: "all 0.2s ease",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      height: "32px",
+                    }}
+                    onClick={handleLongRest}
+                    disabled={isLongResting}
+                    title="Restore all HP and hit dice with a long rest"
+                  >
+                    <Moon size={14} />
+                    {isLongResting ? "Resting..." : "Long Rest"}
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      transition: "all 0.2s ease",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      height: "32px",
+                    }}
+                    onClick={() => setShowLevelUp(true)}
+                    title={`Level up ${character.name} to level ${
+                      (character.level || 1) + 1
+                    }`}
+                  >
+                    <TrendingUp size={14} />
+                    Level Up
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px 16px",
+                  fontSize: "14px",
+                  color: theme.textSecondary,
+                  marginBottom: "12px",
+                }}
+              >
+                {(() => {
+                  const allInfo = [];
+
+                  allInfo.push(
+                    `Level ${character.level} ${character.castingStyle}`
+                  );
+
+                  if (character.house) {
+                    allInfo.push(
+                      `${character.house} (Year ${
+                        character.schoolYear || character.level
+                      })`
+                    );
+                  }
+
+                  if (character.subclass) {
+                    allInfo.push(`Subclass: ${character.subclass}`);
+                  }
+
+                  if (
+                    character.bloodStatus &&
+                    character.bloodStatus !== "Unknown"
+                  ) {
+                    allInfo.push(character.bloodStatus);
+                  }
+
+                  if (
+                    character.background &&
+                    character.background !== "Unknown"
+                  ) {
+                    allInfo.push(`Background: ${character.background}`);
+                  }
+
+                  if (character.wand && character.wand !== "Unknown wand") {
+                    allInfo.push(character.wand);
+                  }
+
+                  if (character.castingStyle === "Intellect Caster") {
+                    allInfo.push(
+                      `Initiative: ${
+                        character.initiativeAbility === "intelligence"
+                          ? "Intelligence"
+                          : "Dexterity"
+                      }`
+                    );
+                  }
+
+                  if (character.gameSession) {
+                    allInfo.push(`Session: ${character.gameSession}`);
+                  }
+
+                  return allInfo.map((info, index) => (
+                    <span key={index}>
+                      {index === 0 ? <strong>{info}</strong> : info}
+                      {index < allInfo.length - 1 && (
+                        <span style={{ marginLeft: "16px" }}>•</span>
+                      )}
+                    </span>
+                  ));
+                })()}
               </div>
 
               <div
@@ -1303,7 +1550,8 @@ const CharacterSheet = ({
                   style={{
                     ...getEnhancedHPStyle(character, {
                       ...styles.statCard,
-                      ...styles.statCardRed,
+                      backgroundColor: theme.background,
+                      border: `3px solid ${getHPColor(character)}`,
                       cursor: "pointer",
                     }),
                   }}
@@ -1331,7 +1579,6 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statLabel,
-                      ...styles.statLabelRed,
                       color: getHPColor(character),
                     }}
                   >
@@ -1386,7 +1633,13 @@ const CharacterSheet = ({
                     )}
                 </div>
                 <div
-                  style={{ ...styles.statCard, ...styles.statCardBrown }}
+                  style={{
+                    ...styles.statCard,
+                    backgroundColor: theme.background,
+                    border: "3px solid #b27424ff",
+                    cursor: isRolling ? "wait" : "pointer",
+                    transition: "all 0.2s ease",
+                  }}
                   onClick={() =>
                     !isRolling &&
                     rollInitiative({
@@ -1396,19 +1649,18 @@ const CharacterSheet = ({
                       characterModifiers,
                     })
                   }
+                  title={`Click to roll initiative: d20 + ${formatModifier(
+                    character.initiativeModifier
+                  )}`}
                 >
                   <Swords
                     className="w-6 h-6 text-green-600 mx-auto mb-1"
                     style={{ color: "#b27424ff" }}
                   />
-                  <div
-                    style={{ ...styles.statValue, ...styles.statValueBrown }}
-                  >
+                  <div style={{ ...styles.statValue, color: "#b27424ff" }}>
                     {formatModifier(character.initiativeModifier)}
                   </div>
-                  <div
-                    style={{ ...styles.statLabel, ...styles.statLabelBrown }}
-                  >
+                  <div style={{ ...styles.statLabel, color: "#b27424ff" }}>
                     Initiative
                   </div>
                 </div>
@@ -1416,8 +1668,9 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statCard,
+                      backgroundColor: theme.background,
+                      border: "3px solid #d1323dff",
                       cursor: isRolling ? "wait" : "pointer",
-                      borderColor: "#d1323dff",
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellAttack()}
@@ -1449,9 +1702,9 @@ const CharacterSheet = ({
                   <div
                     style={{
                       ...styles.statCard,
+                      backgroundColor: theme.background,
+                      border: "3px solid #8b5cf6",
                       cursor: isRolling ? "wait" : "pointer",
-                      borderColor: "#8b5cf6",
-
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
@@ -1479,7 +1732,7 @@ const CharacterSheet = ({
                     </div>
                     <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
                       {" "}
-                      Spellcasting Ability Check (
+                      Spellcasting Ability (
                       {getSpellcastingAbility(character.castingStyle)
                         ?.slice(0, 3)
                         .toUpperCase()}
@@ -1490,19 +1743,19 @@ const CharacterSheet = ({
                 <div
                   style={{
                     ...styles.statCard,
-                    ...styles.statCardBlue,
+                    backgroundColor: theme.background,
+                    border: `1px solid ${theme.border}`,
                     cursor: "default",
-                    border: "none",
                   }}
                 >
                   <Shield
                     className="w-6 h-6 text-blue-600 mx-auto mb-1"
                     style={{ color: "#3b82f6" }}
                   />
-                  <div style={{ ...styles.statValue, ...styles.statValueBlue }}>
+                  <div style={{ ...styles.statValue, color: "#3b82f6" }}>
                     {character.armorClass}
                   </div>
-                  <div style={{ ...styles.statLabel, ...styles.statLabelBlue }}>
+                  <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
                     Armor Class
                   </div>
                 </div>
@@ -1510,29 +1763,29 @@ const CharacterSheet = ({
                 <div
                   style={{
                     ...styles.statCard,
-                    ...styles.statCardPurple,
+                    backgroundColor: theme.background,
+                    border: `1px solid ${theme.border}`,
                     cursor: "default",
-                    border: "none",
                   }}
                   title={`Hit Dice: ${character.hitDie}. Use Short Rest button to recover HP.`}
                 >
-                  <Dices className="w-6 h-6 text-purple-600 mx-auto mb-1" />
-                  <div
-                    style={{ ...styles.statValue, ...styles.statValuePurple }}
-                  >
+                  <Dices
+                    className="w-6 h-6 mx-auto mb-1"
+                    style={{ color: "white" }}
+                  />
+                  <div style={{ ...styles.statValue, color: "white" }}>
                     {character.currentHitDice}/{character.maxHitDice}
                   </div>
-                  <div
-                    style={{ ...styles.statLabel, ...styles.statLabelPurple }}
-                  >
+                  <div style={{ ...styles.statLabel, color: "white" }}>
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
                 <div
                   style={{
                     ...styles.statCard,
+                    backgroundColor: theme.background,
+                    border: `1px solid ${theme.border}`,
                     cursor: "default",
-                    border: "none",
                   }}
                   title="Your proficiency bonus - added to skills, saving throws, and attacks you're proficient with"
                 >

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { subclassesData } from "../../../../SharedData/subclassesData";
-import { createFeatStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 
 const SubclassSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
-  const styles = createFeatStyles(theme);
+  const styles = createBackgroundStyles(theme);
   const [expandedSubclasses, setExpandedSubclasses] = useState(new Set());
 
   const selectedSubclass = character?.subclass || "";
@@ -833,8 +833,9 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
         </div>
       )}
 
-      <div style={styles.featsContainer}>
-        {visibleSubclasses.map((subclass) => {
+      <div style={styles.availableElementsSection}>
+        <div style={styles.availableElementsContainer}>
+          {visibleSubclasses.map((subclass) => {
           const isSelected = selectedSubclass === subclass.name;
           const isExpanded = expandedSubclasses.has(subclass.name);
           const availableLevels = getAvailableLevels(subclass);
@@ -856,7 +857,7 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
           return (
             <div
               key={subclass.name}
-              style={isSelected ? styles.featCardSelected : styles.featCard}
+              style={styles.featCard}
             >
               <div style={styles.featHeader}>
                 <label style={styles.featLabelClickable}>
@@ -876,11 +877,7 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
                       transform: "scale(1.2)",
                     }}
                   />
-                  <span
-                    style={
-                      isSelected ? styles.featNameSelected : styles.featName
-                    }
-                  >
+                  <span style={styles.featName}>
                     {subclass.name}
                     {totalChoices > 0 && (
                       <span style={styles.availableChoicesIndicator}>
@@ -902,11 +899,7 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
                 )}
               </div>
 
-              <div
-                style={
-                  isSelected ? styles.featPreviewSelected : styles.featPreview
-                }
-              >
+              <div style={styles.featPreview}>
                 {subclass.description}
               </div>
 
@@ -943,6 +936,7 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
             </div>
           );
         })}
+        </div>
       </div>
 
       <div style={styles.helpText}>

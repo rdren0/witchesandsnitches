@@ -27,6 +27,7 @@ export const DEFAULT_CHARACTER = {
   heritage_choices: {},
   feat_choices: {},
   subclass_choices: {},
+  toolProficiencies: [],
 
   level1ChoiceType: "",
   name: "",

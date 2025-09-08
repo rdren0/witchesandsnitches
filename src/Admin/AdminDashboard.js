@@ -184,7 +184,8 @@ const AdminDashboard = ({ supabase }) => {
 
       const { data: downtimeSheets } = await supabase
         .from("character_downtime")
-        .select("review_status, is_draft");
+        .select("review_status, is_draft")
+        .eq("archived", false);
 
       const pendingReviewCount =
         downtimeSheets?.filter(
@@ -238,7 +239,10 @@ const AdminDashboard = ({ supabase }) => {
       label: "Downtime",
       icon: Calendar,
       component: <AdminDowntimeManager supabase={supabase} />,
-      badge: dashboardStats.downtimeSheets,
+      badge:
+        dashboardStats.downtimeSheets > 0
+          ? dashboardStats.downtimeSheets
+          : undefined,
     },
   ];
 
@@ -261,7 +265,7 @@ const AdminDashboard = ({ supabase }) => {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
-          const hasBadge = tab.badge && tab.badge > 0;
+          const hasBadge = tab.badge && Number(tab.badge) > 0;
 
           return (
             <button

@@ -116,7 +116,7 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        let query = supabase.from("character_downtime").select("*");
+        let query = supabase.from("character_downtime").select("*").eq("archived", false);
 
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);
@@ -152,7 +152,7 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        let query = supabase.from("character_downtime").select("*");
+        let query = supabase.from("character_downtime").select("*").eq("archived", false);
 
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);

@@ -1,4 +1,5 @@
 import { allSkills } from "../../SharedData/data";
+import { getPassiveSkillFeatBonus } from "../CharacterManager/utils/featBenefitsCalculator";
 
 export const getModifier = (score) => Math.floor((score - 10) / 2);
 export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
@@ -59,35 +60,10 @@ export const calculatePassiveSkill = (skillName, character) => {
   if (!character) return 10;
 
   const skillModifier = calculateModifier(skillName, character);
-
   let passiveValue = 10 + skillModifier;
 
-  const allFeats = getAllCharacterFeats(character);
-
-  allFeats.forEach((feat) => {
-    const cleanFeatName = feat.replace(/\s*\(Level \d+\)$/, "");
-
-    switch (cleanFeatName.toLowerCase()) {
-      case "observant":
-        if (skillName === "perception" || skillName === "investigation") {
-          passiveValue += 5;
-        }
-        break;
-      case "alert":
-        if (skillName === "perception") {
-        }
-        break;
-
-      case "keen mind":
-        if (skillName === "investigation") {
-        }
-        break;
-      case "silver tongue":
-        if (skillName === "deception") {
-        }
-        break;
-    }
-  });
+  const featBonus = getPassiveSkillFeatBonus(character, skillName);
+  passiveValue += featBonus;
 
   return passiveValue;
 };
@@ -121,32 +97,12 @@ export const getPassiveSkillBreakdown = (skillName, character) => {
   ];
 
   let total = baseValue;
-  const allFeats = getAllCharacterFeats(character);
 
-  allFeats.forEach((feat) => {
-    const cleanFeatName = feat.replace(/\s*\(Level \d+\)$/, "");
-
-    switch (cleanFeatName.toLowerCase()) {
-      case "observant":
-        if (skillName === "perception" || skillName === "investigation") {
-          breakdown.push({ source: "Observant Feat", value: 5 });
-          total += 5;
-        }
-        break;
-      case "alert":
-        if (skillName === "perception") {
-        }
-        break;
-      case "keen mind":
-        if (skillName === "investigation") {
-        }
-        break;
-      case "silver tongue":
-        if (skillName === "deception") {
-        }
-        break;
-    }
-  });
+  const featBonus = getPassiveSkillFeatBonus(character, skillName);
+  if (featBonus > 0) {
+    breakdown.push({ source: "Feat Bonuses", value: featBonus });
+    total += featBonus;
+  }
 
   return { total, breakdown };
 };
