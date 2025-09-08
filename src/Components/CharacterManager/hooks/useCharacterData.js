@@ -157,6 +157,7 @@ export const useCharacterData = (
         characterWithFinalScores
       );
 
+
       characterToSave.discord_user_id = effectiveUserId;
       characterToSave.base_ability_scores = baseScores;
       characterToSave.ability_modifiers = modifiers;

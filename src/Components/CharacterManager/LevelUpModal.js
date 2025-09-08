@@ -339,50 +339,58 @@ const LevelUpModal = ({
   };
 
   const getFeatChoicesNeeded = (feat) => {
-    if (!feat || !feat.modifiers) return [];
+    if (!feat || !feat.benefits) return [];
 
     const choicesNeeded = [];
 
-    feat.modifiers.abilityIncreases.forEach((increase, index) => {
+    if (feat.benefits.abilityScoreIncrease) {
+      const increase = feat.benefits.abilityScoreIncrease;
       if (increase.type === "choice") {
         choicesNeeded.push({
           type: "abilityChoice",
-          index,
+          index: 0,
           abilities: increase.abilities,
           amount: increase.amount,
-          id: `ability_${index}`,
+          id: `ability_0`,
         });
       } else if (increase.type === "custom") {
         choicesNeeded.push({
           type: "abilityCustom",
-          index,
+          index: 0,
           amount: increase.amount,
-          id: `ability_${index}`,
+          id: `ability_0`,
         });
       }
-    });
+    }
 
-    feat.modifiers.skillProficiencies.forEach((skill, index) => {
-      if (skill.type === "choice") {
-        choicesNeeded.push({
-          type: "skillChoice",
-          index,
-          count: skill.count,
-          id: `skill_${index}`,
-        });
-      }
-    });
+    if (
+      feat.benefits.skillProficiencies &&
+      Array.isArray(feat.benefits.skillProficiencies)
+    ) {
+      feat.benefits.skillProficiencies.forEach((skill, index) => {
+        if (skill && skill.type === "choice") {
+          choicesNeeded.push({
+            type: "skillChoice",
+            index,
+            count: skill.count,
+            id: `skill_${index}`,
+          });
+        }
+      });
+    }
 
-    feat.modifiers.expertise.forEach((expertise, index) => {
-      if (expertise.type === "choice") {
-        choicesNeeded.push({
-          type: "expertiseChoice",
-          index,
-          count: expertise.count,
-          id: `expertise_${index}`,
-        });
-      }
-    });
+    if (feat.benefits.expertise && Array.isArray(feat.benefits.expertise)) {
+      feat.benefits.expertise.forEach((expertise, index) => {
+        if (expertise && expertise.type === "choice") {
+          choicesNeeded.push({
+            type: "expertiseChoice",
+            index,
+            count: expertise.count,
+            id: `expertise_${index}`,
+          });
+        }
+      });
+    }
 
     return choicesNeeded;
   };
@@ -580,6 +588,40 @@ const LevelUpModal = ({
         ...spellSlotUpdates,
       };
 
+      if (isAsiLevel) {
+        const currentAsiChoices =
+          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {};
+
+        if (
+          levelUpData.asiChoice === "asi" &&
+          levelUpData.abilityIncreases.length > 0
+        ) {
+          currentAsiChoices[newLevel] = {
+            type: "asi",
+            abilityScoreIncreases: levelUpData.abilityIncreases.map(
+              (increase) => ({
+                ability: increase.ability,
+                increase: 1,
+                from: increase.from,
+                to: increase.to,
+              })
+            ),
+          };
+        } else if (
+          levelUpData.asiChoice === "feat" &&
+          levelUpData.selectedFeats.length > 0
+        ) {
+          currentAsiChoices[newLevel] = {
+            type: "feat",
+            selectedFeat: levelUpData.selectedFeats[0],
+            featChoices: levelUpData.featChoices || {},
+          };
+        }
+
+        updatedCharacter.asi_choices = currentAsiChoices;
+        updatedCharacter.asiChoices = currentAsiChoices;
+      }
+
       if (
         isAsiLevel &&
         levelUpData.asiChoice === "asi" &&
@@ -649,7 +691,7 @@ const LevelUpModal = ({
       ) {
         const selectedFeat = getSelectedFeat();
 
-        if (selectedFeat && selectedFeat.modifiers) {
+        if (selectedFeat && selectedFeat.benefits) {
           const newAbilityScores = {
             strength: getAbilityScore("strength"),
             dexterity: getAbilityScore("dexterity"),
@@ -665,22 +707,16 @@ const LevelUpModal = ({
             (getAbilityScore("constitution") - 10) / 2
           );
 
-          selectedFeat.modifiers.abilityIncreases.forEach((increase, index) => {
+          if (selectedFeat.benefits.abilityScoreIncrease) {
+            const increase = selectedFeat.benefits.abilityScoreIncrease;
             let abilityToIncrease;
 
-            switch (increase.type) {
-              case "fixed":
-                abilityToIncrease = increase.ability;
-                break;
-              case "choice":
-              case "custom":
-                abilityToIncrease = levelUpData.featChoices[`ability_${index}`];
-                break;
-              case "spellcastingAbility":
-                abilityToIncrease = getSpellcastingAbility();
-                break;
-              default:
-                break;
+            if (increase.type === "choice" || increase.type === "custom") {
+              abilityToIncrease = levelUpData.featChoices[`ability_0`];
+            } else if (increase.ability) {
+              abilityToIncrease = increase.ability;
+            } else if (increase.type === "spellcastingAbility") {
+              abilityToIncrease = getSpellcastingAbility();
             }
 
             if (abilityToIncrease) {
@@ -688,10 +724,13 @@ const LevelUpModal = ({
                 constitutionChanged = true;
               }
               const currentScore = newAbilityScores[abilityToIncrease] || 10;
-              const newScore = Math.min(20, currentScore + increase.amount);
+              const newScore = Math.min(
+                20,
+                currentScore + increase.amount || 1
+              );
               newAbilityScores[abilityToIncrease] = newScore;
             }
-          });
+          }
 
           updatedCharacter.ability_scores = newAbilityScores;
           updatedCharacter.abilityScores = newAbilityScores;
@@ -715,41 +754,51 @@ const LevelUpModal = ({
           const currentSkills = [
             ...(updatedCharacter.skill_proficiencies || []),
           ];
-          selectedFeat.modifiers.skillProficiencies.forEach(
-            (skillMod, index) => {
-              if (skillMod.type === "choice") {
-                const selectedSkills =
-                  levelUpData.featChoices[`skill_${index}`] || [];
-                selectedSkills.forEach((skill) => {
-                  if (!currentSkills.includes(skill)) {
-                    currentSkills.push(skill);
-                  }
-                });
-              } else if (skillMod.type === "fixed") {
-                skillMod.skills.forEach((skill) => {
-                  if (!currentSkills.includes(skill)) {
-                    currentSkills.push(skill);
-                  }
-                });
+          if (
+            selectedFeat.benefits.skillProficiencies &&
+            Array.isArray(selectedFeat.benefits.skillProficiencies)
+          ) {
+            selectedFeat.benefits.skillProficiencies.forEach(
+              (skillMod, index) => {
+                if (skillMod && skillMod.type === "choice") {
+                  const selectedSkills =
+                    levelUpData.featChoices[`skill_${index}`] || [];
+                  selectedSkills.forEach((skill) => {
+                    if (!currentSkills.includes(skill)) {
+                      currentSkills.push(skill);
+                    }
+                  });
+                } else if (skillMod && skillMod.type === "fixed") {
+                  skillMod.skills.forEach((skill) => {
+                    if (!currentSkills.includes(skill)) {
+                      currentSkills.push(skill);
+                    }
+                  });
+                }
               }
-            }
-          );
+            );
+          }
           updatedCharacter.skill_proficiencies = currentSkills;
 
           const currentExpertise = [
             ...(updatedCharacter.skill_expertise || []),
           ];
-          selectedFeat.modifiers.expertise.forEach((expertiseMod, index) => {
-            if (expertiseMod.type === "choice") {
-              const selectedExpertise =
-                levelUpData.featChoices[`expertise_${index}`] || [];
-              selectedExpertise.forEach((skill) => {
-                if (!currentExpertise.includes(skill)) {
-                  currentExpertise.push(skill);
-                }
-              });
-            }
-          });
+          if (
+            selectedFeat.benefits.expertise &&
+            Array.isArray(selectedFeat.benefits.expertise)
+          ) {
+            selectedFeat.benefits.expertise.forEach((expertiseMod, index) => {
+              if (expertiseMod && expertiseMod.type === "choice") {
+                const selectedExpertise =
+                  levelUpData.featChoices[`expertise_${index}`] || [];
+                selectedExpertise.forEach((skill) => {
+                  if (!currentExpertise.includes(skill)) {
+                    currentExpertise.push(skill);
+                  }
+                });
+              }
+            });
+          }
           updatedCharacter.skill_expertise = currentExpertise;
 
           const currentFeats = [...(updatedCharacter.standard_feats || [])];

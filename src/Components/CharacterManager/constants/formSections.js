@@ -56,12 +56,20 @@ export const FORM_SECTIONS = [
     order: 7,
   },
   {
+    id: "toolsLanguages",
+    title: "Tool Proficiencies",
+    subtitle: "Tool proficiencies",
+    required: false,
+    lockable: true,
+    order: 8,
+  },
+  {
     id: "magic",
     title: "Magic Modifiers",
     subtitle: "Spell attack bonus and save DC",
     required: false,
     lockable: true,
-    order: 8,
+    order: 9,
   },
 ];
 

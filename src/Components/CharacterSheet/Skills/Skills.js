@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Circle, Star, Dice6 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Circle,
+  Star,
+  Dice6,
+  Wrench,
+  Info,
+} from "lucide-react";
 import {
   calculatePassivePerception,
   calculatePassiveInvestigation,
@@ -13,6 +21,7 @@ import { MagicalTheoryModal } from "./MagicalTheoryModal";
 import { useRollFunctions } from "../../utils/diceRoller";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { allSkills, skillMap, skillDescriptions } from "../../../SharedData";
+import { backgroundsData } from "../../../SharedData/backgroundsData";
 
 export const Skills = ({
   character,
@@ -108,7 +117,7 @@ export const Skills = ({
       backgroundColor: theme.hover || `${theme.primary}05`,
     },
     cell: {
-      padding: "14px 16px",
+      padding: "8px 16px",
       fontSize: "14px",
       color: theme.text,
       borderBottom: `1px solid ${theme.border}`,
@@ -208,8 +217,11 @@ export const Skills = ({
     legendItems: {
       display: "flex",
       gap: "24px",
-      flexWrap: "wrap",
-      marginBottom: "12px",
+      flexWrap: "nowrap",
+      margin: "8px 0",
+      padding: "6px 16px",
+      justifyContent: "flex-start",
+      alignItems: "center",
     },
     legendItem: {
       display: "flex",
@@ -219,8 +231,8 @@ export const Skills = ({
       color: theme.textSecondary,
     },
     magicalTheoryNote: {
-      marginTop: "12px",
-      paddingTop: "12px",
+      margin: "8px 0",
+      padding: "6px 16px",
       borderTop: `1px solid ${theme.border}`,
       fontSize: "12px",
       color: theme.warning || "#f59e0b",
@@ -511,7 +523,7 @@ export const Skills = ({
 
   const getSkillTooltip = (skill) => {
     return {
-      title: `${skill.name}`,
+      title: `${skill.displayName}`,
       description: skillDescriptions[skill.name] || "Roll this skill check",
     };
   };
@@ -520,13 +532,33 @@ export const Skills = ({
     <>
       <div style={skillStyles.container}>
         <div style={skillStyles.header}>
-          <h2 style={skillStyles.title}>Skills</h2>
-          <div style={skillStyles.instructions}>
-            Click icons to cycle proficiency • Click skill names to roll dice
+          <h2 style={skillStyles.title}>Skills & Tool Proficiencies</h2>
+        </div>
+        <div style={skillStyles.legendItems}>
+          <div style={skillStyles.legendItem}>
+            <Circle
+              size={14}
+              fill="none"
+              stroke={theme.textSecondary}
+              strokeWidth={2}
+            />
+            <span>Not Proficient</span>
           </div>
-          <div style={skillStyles.rollHint}>
-            <Dice6 size={14} />
-            <span>Click any skill name to roll a skill check!</span>
+          <div style={skillStyles.legendItem}>
+            <Circle
+              size={14}
+              fill={theme.primary || "#3b82f6"}
+              stroke={theme.primary || "#3b82f6"}
+            />
+            <span>Proficient (+{character?.proficiencyBonus || 0})</span>
+          </div>
+          <div style={skillStyles.legendItem}>
+            <Star
+              size={14}
+              fill={theme.warning || "#f59e0b"}
+              stroke={theme.warning || "#f59e0b"}
+            />
+            <span>Expertise (+{(character?.proficiencyBonus || 0) * 2})</span>
           </div>
         </div>
 
@@ -696,6 +728,50 @@ export const Skills = ({
                               style={{ marginLeft: "4px" }}
                             />
                           )}
+                          {isMagicalTheory && (
+                            <div
+                              style={{
+                                position: "relative",
+                                marginLeft: "4px",
+                              }}
+                            >
+                              <Info
+                                size={12}
+                                color={theme.warning || "#f59e0b"}
+                                style={{ cursor: "help" }}
+                                onMouseEnter={(e) => {
+                                  const tooltip = e.currentTarget.nextSibling;
+                                  if (tooltip) tooltip.style.opacity = "1";
+                                }}
+                                onMouseLeave={(e) => {
+                                  const tooltip = e.currentTarget.nextSibling;
+                                  if (tooltip) tooltip.style.opacity = "0";
+                                }}
+                              />
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  left: "16px",
+                                  top: "-4px",
+                                  padding: "8px 12px",
+                                  backgroundColor: theme.background,
+                                  color: theme.text,
+                                  borderRadius: "6px",
+                                  fontSize: "12px",
+                                  whiteSpace: "nowrap",
+                                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                                  border: `1px solid ${theme.border}`,
+                                  opacity: "0",
+                                  pointerEvents: "none",
+                                  transition: "opacity 0.2s ease",
+                                  zIndex: 1000,
+                                }}
+                              >
+                                Roll this skill to potentially earn bonus dice
+                                (1d4 to 1d10) for spell attempts!
+                              </div>
+                            </div>
+                          )}
                           {passiveValue && (
                             <span style={skillStyles.passiveValue}>
                               (Passive: {passiveValue})
@@ -738,41 +814,90 @@ export const Skills = ({
           </div>
 
           <div style={skillStyles.legend}>
-            <div style={skillStyles.legendItems}>
-              <div style={skillStyles.legendItem}>
-                <Circle
-                  size={14}
-                  fill="none"
-                  stroke={theme.textSecondary}
-                  strokeWidth={2}
-                />
-                <span>Not Proficient</span>
-              </div>
-              <div style={skillStyles.legendItem}>
-                <Circle
-                  size={14}
-                  fill={theme.primary || "#3b82f6"}
-                  stroke={theme.primary || "#3b82f6"}
-                />
-                <span>Proficient (+{character?.proficiencyBonus || 0})</span>
-              </div>
-              <div style={skillStyles.legendItem}>
-                <Star
-                  size={14}
-                  fill={theme.warning || "#f59e0b"}
-                  stroke={theme.warning || "#f59e0b"}
-                />
-                <span>
-                  Expertise (+{(character?.proficiencyBonus || 0) * 2})
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "8px 12px",
+                backgroundColor: `${theme.surface}`,
+                border: `1px solid ${theme.border}`,
+                borderRadius: "6px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginBottom: "6px",
+                }}
+              >
+                <Wrench size={14} color={theme.text} />
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: theme.text,
+                  }}
+                >
+                  Tool Proficiencies
                 </span>
               </div>
-            </div>
-            <div style={skillStyles.magicalTheoryNote}>
-              <span>✨</span>
-              <span>
-                Magical Theory: Roll this skill to potentially earn bonus dice
-                (1d4 to 1d10) for spell attempts!
-              </span>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: theme.textSecondary,
+                  lineHeight: "1.3",
+                }}
+              >
+                {(() => {
+                  const backgroundTools = character.background
+                    ? Object.values(backgroundsData).find(
+                        (bg) => bg.name === character.background
+                      )?.toolProficiencies || []
+                    : [];
+
+                  const normalizedBackgroundTools = backgroundTools.map(
+                    (tool) => {
+                      if (tool === "Vehicle (Broomstick)") return "Broomstick";
+                      return tool;
+                    }
+                  );
+
+                  const characterTools = character.toolProficiencies || [];
+                  const allTools = [
+                    ...new Set([
+                      ...normalizedBackgroundTools,
+                      ...characterTools,
+                    ]),
+                  ];
+
+                  if (allTools.length === 0) {
+                    return <em>No tool proficiencies</em>;
+                  }
+
+                  return allTools.map((tool, index) => {
+                    const isFromBackground =
+                      normalizedBackgroundTools.includes(tool);
+                    return (
+                      <span key={tool} style={{ display: "inline-block" }}>
+                        {tool}
+                        {isFromBackground && (
+                          <span
+                            style={{
+                              fontSize: "9px",
+                              color: "#f59e0b",
+                              marginLeft: "2px",
+                            }}
+                          >
+                            (B)
+                          </span>
+                        )}
+                        {index < allTools.length - 1 ? ", " : ""}
+                      </span>
+                    );
+                  });
+                })()}
+              </div>
             </div>
           </div>
         </div>
