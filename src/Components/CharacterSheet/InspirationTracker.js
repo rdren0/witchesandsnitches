@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Star, X } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getDiscordWebhook } from "../../App/const";
+import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 
 const InspirationTracker = ({
   character,
@@ -49,48 +49,36 @@ const InspirationTracker = ({
         inspiration: newState,
       }));
 
-      const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
-      if (discordWebhookUrl) {
-        const embed = {
-          title: `Inspiration ${newState ? "Earned" : "Redeemed"}`,
-          color: newState ? 0x10b981 : 0xf59e0b,
+      try {
+        await sendDiscordRollWebhook({
+          character,
+          rollType: newState ? "Inspiration Earned" : "Inspiration Used",
+          title: newState ? "Inspiration Earned" : "Inspiration Used",
+          embedColor: newState ? 0x10b981 : 0xf59e0b,
+          description: newState
+            ? "✨ **Gained Inspiration!**\n\nYou now have inspiration to use on a future roll."
+            : "💡 **Used Inspiration!**\n\nYou gained advantage on your roll.",
           fields: [
             {
               name: "Status",
+              value: newState ? "Has Inspiration" : "No Inspiration",
+              inline: true,
+            },
+            {
+              name: "Effect",
               value: newState
-                ? "✨ Gained Inspiration!"
-                : "💡 Used Inspiration",
+                ? "Can be used for advantage on any d20 roll"
+                : "Provided advantage on one d20 roll",
               inline: true,
             },
           ],
-          timestamp: new Date().toISOString(),
-          footer: {
-            text: `${character.name} - Inspiration`,
-          },
-        };
-
-        const message = {
-          embeds: [embed],
-        };
-
-        if (character?.imageUrl) {
-          message.username = character.name;
-          message.avatar_url = character.imageUrl;
-        } else if (character?.image_url) {
-          message.username = character.name;
-          message.avatar_url = character.image_url;
-        }
-
-        try {
-          await fetch(discordWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(message),
-          });
-        } catch (discordError) {
-          console.error("Error sending to Discord:", discordError);
-        }
+          useCharacterAvatar: true,
+        });
+      } catch (discordError) {
+        console.error(
+          "Error sending inspiration update to Discord:",
+          discordError
+        );
       }
 
       setShowModal(false);

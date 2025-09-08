@@ -17,6 +17,7 @@ import CharacterSheetWrapper from "../Components/CharacterSheet/CharacterSheetWr
 import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
 import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
 import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
+import OtherPlayers from "../Components/OtherPlayers/OtherPlayers";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
@@ -509,6 +510,12 @@ const CharacterSubNavigation = () => {
     { path: "/character/recipes", label: "Recipes", key: "recipes" },
     { path: "/character/inventory", label: "Inventory", key: "inventory" },
     { path: "/character/gallery", label: "NPC Gallery", key: "gallery" },
+    {
+      path: "/character/players",
+      label: "Other Players",
+      key: "players",
+      isNew: true,
+    },
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
     { path: "/character/notes", label: "Notes", key: "notes" },
   ];
@@ -573,7 +580,34 @@ const CharacterSubNavigation = () => {
               }}
               onClick={() => navigateWithAdminMode(subtab.path)}
             >
-              {subtab.label}
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  justifyContent: "center",
+                }}
+              >
+                {subtab.label}
+                {subtab.isNew && (
+                  <span
+                    style={{
+                      backgroundColor: theme.primary || "#10b981",
+                      color: "white",
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      letterSpacing: "0.5px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    NEW
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}
@@ -1379,6 +1413,19 @@ function AppContent() {
                 <ProtectedRoute user={user}>
                   {characterSelector}
                   <CharacterGallery
+                    selectedCharacter={selectedCharacter}
+                    supabase={supabase}
+                    user={user}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/players"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <OtherPlayers
                     selectedCharacter={selectedCharacter}
                     supabase={supabase}
                     user={user}

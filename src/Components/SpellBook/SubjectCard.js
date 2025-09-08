@@ -1194,6 +1194,33 @@ export const SubjectCard = ({
             {isAttempting ? "Rolling..." : "Attempt"}
           </button>
         </td>
+        {showLevel && (
+          <td style={{ ...styles.tableCell, textAlign: "center" }}>
+            {hasArithmancticTag ? (
+              <span style={{ color: theme.success, fontWeight: "bold" }}>✓</span>
+            ) : (
+              <span style={styles.noCriticalText}>-</span>
+            )}
+          </td>
+        )}
+        {showLevel && (
+          <td style={{ ...styles.tableCell, textAlign: "center" }}>
+            {hasRunicTag ? (
+              <span style={{ color: theme.success, fontWeight: "bold" }}>✓</span>
+            ) : (
+              <span style={styles.noCriticalText}>-</span>
+            )}
+          </td>
+        )}
+        {showLevel && (
+          <td style={{ ...styles.tableCell, textAlign: "center" }}>
+            {isResearched ? (
+              <span style={{ color: theme.success, fontWeight: "bold" }}>✓</span>
+            ) : (
+              <span style={styles.noCriticalText}>-</span>
+            )}
+          </td>
+        )}
         <td style={{ ...styles.tableCellMenu, position: "relative" }}>
           <button
             onClick={(e) => {
@@ -1266,7 +1293,7 @@ export const SubjectCard = ({
     const descriptionRow =
       isDescriptionExpanded && spellObj.description ? (
         <tr key={`${spellName}-description`}>
-          <td colSpan="6" style={{ padding: "0", border: "none" }}>
+          <td colSpan={showLevel ? "9" : "6"} style={{ padding: "0", border: "none" }}>
             <div
               style={{
                 padding: "16px",

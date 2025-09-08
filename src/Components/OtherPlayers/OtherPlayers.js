@@ -1,50 +1,50 @@
 import { useState, useEffect } from "react";
 import {
   Users,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  GraduationCap,
+  User,
+  Home,
+  Briefcase,
+  BookOpen,
   Search,
   X,
+  Loader,
+  Edit3,
   Save,
   Heart,
   UserX,
-  User,
   AlertTriangle,
   Tag,
   Plus,
-  Edit3,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getCharacterGalleryStyles } from "./styles";
-import { ALL_CHARACTERS } from "../../SharedData/charactersData";
+import { getOtherPlayersStyles } from "./styles";
 
-const DEFAULT_TAGS = [
-  "Study Buddy",
+const DEFAULT_PC_TAGS = [
+  "Study Partner",
+  "Ally",
   "Rival",
-  "Crush",
-  "Quidditch Player",
-  "Prefect",
-  "Knows Secret",
+  "Friend",
+  "Teammate",
+  "Mentor",
+  "Protégé",
   "Trustworthy",
-  "Suspicious",
+  "Unreliable",
   "Helpful",
-  "Dangerous",
-  "????",
+  "Competitive",
+  "Mysterious",
 ];
 
 const RelationshipBadge = ({ relationship, theme }) => {
   const getRelationshipStyle = (rel) => {
     switch (rel) {
-      case "friend":
-        return { color: "#10b981", icon: Heart, label: "Friend" };
+      case "ally":
+        return { color: "#10b981", icon: Heart, label: "Ally" };
       case "enemy":
         return { color: "#ef4444", icon: UserX, label: "Enemy" };
       case "neutral":
         return { color: "#6b7280", icon: User, label: "Neutral" };
-      case "suspicious":
-        return { color: "#f59e0b", icon: AlertTriangle, label: "Suspicious" };
+      case "rival":
+        return { color: "#f59e0b", icon: AlertTriangle, label: "Rival" };
       default:
         return { color: theme.textSecondary, icon: User, label: "Unknown" };
     }
@@ -125,7 +125,7 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [customTag, setCustomTag] = useState("");
 
-  const availableTags = DEFAULT_TAGS.filter(
+  const availableTags = DEFAULT_PC_TAGS.filter(
     (tag) => !existingTags.includes(tag)
   );
 
@@ -234,49 +234,51 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
     </div>
   );
 };
-const CharacterCard = ({
+
+const PlayerCard = ({
   character,
   theme,
   styles,
-  selectedCharacter,
-  npcNote,
+  pcNote,
   onUpdateNote,
   supabase,
+  currentCharacterId,
   discordUserId,
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState(false);
-  const [noteText, setNoteText] = useState(npcNote?.notes || "");
+  const [noteText, setNoteText] = useState(pcNote?.notes || "");
   const [relationship, setRelationship] = useState(
-    npcNote?.relationship || "unknown"
+    pcNote?.relationship || "unknown"
   );
   const [lastInteraction, setLastInteraction] = useState(
-    npcNote?.last_interaction || ""
+    pcNote?.last_interaction || ""
   );
-  const [customTags, setCustomTags] = useState(npcNote?.custom_tags || []);
+  const [customTags, setCustomTags] = useState(pcNote?.custom_tags || []);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Update state when pcNote changes
   useEffect(() => {
-    if (npcNote) {
-      setNoteText(npcNote.notes || "");
-      setRelationship(npcNote.relationship || "unknown");
-      setLastInteraction(npcNote.last_interaction || "");
-      setCustomTags(npcNote.custom_tags || []);
+    if (pcNote) {
+      setNoteText(pcNote.notes || "");
+      setRelationship(pcNote.relationship || "unknown");
+      setLastInteraction(pcNote.last_interaction || "");
+      setCustomTags(pcNote.custom_tags || []);
     }
-  }, [npcNote]);
+  }, [pcNote]);
 
   const handleSaveNote = async () => {
-    if (!selectedCharacter || !discordUserId) return;
+    if (!currentCharacterId || !discordUserId) return;
 
     setIsSaving(true);
     try {
       const noteData = {
-        character_id: selectedCharacter.id,
+        character_id: currentCharacterId,
         discord_user_id: discordUserId,
-        npc_name: character.name,
-        npc_school: character.school,
-        npc_type: character.type,
+        pc_name: character.name,
+        pc_school: character.school,
+        pc_clan: character.house, // Using house as clan
         notes: noteText.trim(),
         relationship: relationship,
         last_interaction: lastInteraction.trim(),
@@ -285,9 +287,9 @@ const CharacterCard = ({
       };
 
       const { data, error } = await supabase
-        .from("character_npc_notes")
+        .from("character_pc_notes")
         .upsert(noteData, {
-          onConflict: "character_id,discord_user_id,npc_name",
+          onConflict: "character_id,discord_user_id,pc_name",
           ignoreDuplicates: false,
         })
         .select()
@@ -306,10 +308,10 @@ const CharacterCard = ({
   };
 
   const handleCancelEdit = () => {
-    setNoteText(npcNote?.notes || "");
-    setRelationship(npcNote?.relationship || "unknown");
-    setLastInteraction(npcNote?.last_interaction || "");
-    setCustomTags(npcNote?.custom_tags || []);
+    setNoteText(pcNote?.notes || "");
+    setRelationship(pcNote?.relationship || "unknown");
+    setLastInteraction(pcNote?.last_interaction || "");
+    setCustomTags(pcNote?.custom_tags || []);
     setIsEditingNote(false);
   };
 
@@ -324,16 +326,16 @@ const CharacterCard = ({
   };
 
   const hasNote =
-    npcNote &&
-    (npcNote.notes?.trim() ||
-      npcNote.relationship !== "unknown" ||
-      npcNote.last_interaction?.trim() ||
-      (npcNote.custom_tags && npcNote.custom_tags.length > 0));
+    pcNote &&
+    (pcNote.notes?.trim() ||
+      pcNote.relationship !== "unknown" ||
+      pcNote.last_interaction?.trim() ||
+      (pcNote.custom_tags && pcNote.custom_tags.length > 0));
 
   return (
-    <div style={styles.characterCard}>
+    <div style={styles.playerCard}>
       <div style={styles.imageContainer}>
-        {character.src && !imageError ? (
+        {character.image_url && !imageError ? (
           <div style={{ position: "relative", width: "100%", height: "100%" }}>
             {!imageLoaded && (
               <div
@@ -364,10 +366,10 @@ const CharacterCard = ({
               </div>
             )}
             <img
-              src={character.src}
+              src={character.image_url}
               alt={character.name}
               style={{
-                ...styles.characterImage,
+                ...styles.playerImage,
                 opacity: imageLoaded ? 1 : 0,
                 transition: "opacity 0.3s ease",
               }}
@@ -382,31 +384,42 @@ const CharacterCard = ({
           </div>
         ) : (
           <div style={styles.imagePlaceholder}>
-            <Users size={48} color={theme.textSecondary} />
+            <User size={48} color={theme.textSecondary} />
             <span style={styles.placeholderText}>No Image</span>
           </div>
         )}
       </div>
 
-      <div style={styles.characterInfo}>
-        <h3 style={styles.characterName}>{character.name}</h3>
-        <div
-          style={{
-            fontSize: "12px",
-            color: theme.textSecondary,
-            marginBottom: "8px",
-          }}
-        >
-          {character.school} • {character.type}
+      <div style={styles.playerInfo}>
+        <h3 style={styles.playerName}>{character.name}</h3>
+        <div style={styles.playerDetails}>
+          {character.house && (
+            <div style={styles.detailRow}>
+              <Home size={14} color={theme.primary} />
+              <span>{character.house}</span>
+            </div>
+          )}
+          {character.subclass && (
+            <div style={styles.detailRow}>
+              <BookOpen size={14} color={theme.primary} />
+              <span>{character.subclass}</span>
+            </div>
+          )}
+          {character.background && (
+            <div style={styles.detailRow}>
+              <Briefcase size={14} color={theme.primary} />
+              <span>{character.background}</span>
+            </div>
+          )}
         </div>
 
         {hasNote && !isEditingNote && (
-          <div style={{ marginBottom: "8px" }}>
+          <div style={{ marginTop: "8px", marginBottom: "8px" }}>
             <RelationshipBadge
-              relationship={npcNote.relationship}
+              relationship={pcNote.relationship}
               theme={theme}
             />
-            {npcNote.custom_tags && npcNote.custom_tags.length > 0 && (
+            {pcNote.custom_tags && pcNote.custom_tags.length > 0 && (
               <div
                 style={{
                   display: "flex",
@@ -415,7 +428,7 @@ const CharacterCard = ({
                   marginTop: "6px",
                 }}
               >
-                {npcNote.custom_tags.map((tag, index) => (
+                {pcNote.custom_tags.map((tag, index) => (
                   <CustomTag key={index} tag={tag} theme={theme} />
                 ))}
               </div>
@@ -423,45 +436,50 @@ const CharacterCard = ({
           </div>
         )}
 
-        <div style={{ marginTop: "8px" }}>
+        <div
+          style={{
+            marginTop: "12px",
+            borderTop: `1px solid ${theme.border}`,
+            paddingTop: "12px",
+          }}
+        >
           {!isEditingNote ? (
             <div>
               {hasNote ? (
-                <div style={{ marginBottom: "8px" }}>
-                  {npcNote.notes && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: theme.text,
-                        backgroundColor: theme.surface,
-                        padding: "6px",
-                        borderRadius: "4px",
-                        marginBottom: "4px",
-                        border: `1px solid ${theme.border}`,
-                      }}
-                    >
-                      {npcNote.notes}
-                    </div>
-                  )}
-                  {npcNote.last_interaction && (
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: theme.textSecondary,
-                        fontStyle: "italic",
-                      }}
-                    >
-                      Last seen: {npcNote.last_interaction}
-                    </div>
-                  )}
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: theme.text,
+                    backgroundColor: theme.surface,
+                    padding: "8px",
+                    borderRadius: "4px",
+                    marginBottom: "8px",
+                    border: `1px solid ${theme.border}`,
+                  }}
+                >
+                  {pcNote.notes}
                 </div>
-              ) : (
+              ) : null}
+              {pcNote?.last_interaction && (
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: theme.textSecondary,
+                    fontStyle: "italic",
+                    marginBottom: hasNote && pcNote.notes ? "0" : "8px",
+                  }}
+                >
+                  Last interaction: {pcNote.last_interaction}
+                </div>
+              )}
+              {!hasNote && (
                 <div
                   style={{
                     fontSize: "11px",
                     color: theme.textSecondary,
                     fontStyle: "italic",
                     marginBottom: "8px",
+                    textAlign: "center",
                   }}
                 >
                   No notes yet...
@@ -469,17 +487,17 @@ const CharacterCard = ({
               )}
               <button
                 onClick={() => {
-                  setNoteText(npcNote?.notes || "");
-                  setRelationship(npcNote?.relationship || "unknown");
-                  setLastInteraction(npcNote?.last_interaction || "");
-                  setCustomTags(npcNote?.custom_tags || []);
+                  setNoteText(pcNote?.notes || "");
+                  setRelationship(pcNote?.relationship || "unknown");
+                  setLastInteraction(pcNote?.last_interaction || "");
+                  setCustomTags(pcNote?.custom_tags || []);
                   setIsEditingNote(true);
                 }}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "4px",
-                  padding: "4px 8px",
+                  padding: "6px 10px",
                   fontSize: "11px",
                   backgroundColor: theme.primary,
                   color: "white",
@@ -495,7 +513,26 @@ const CharacterCard = ({
               </button>
             </div>
           ) : (
-            <div style={{ fontSize: "12px" }}>
+            <div>
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add notes about this player..."
+                style={{
+                  width: "100%",
+                  minHeight: "80px",
+                  padding: "6px",
+                  fontSize: "12px",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "4px",
+                  backgroundColor: theme.surface,
+                  color: theme.text,
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                  marginBottom: "8px",
+                }}
+              />
+
               <div style={{ marginBottom: "8px" }}>
                 <label
                   style={{
@@ -522,9 +559,9 @@ const CharacterCard = ({
                   }}
                 >
                   <option value="unknown">Unknown</option>
-                  <option value="friend">Friend</option>
+                  <option value="ally">Ally</option>
                   <option value="neutral">Neutral</option>
-                  <option value="suspicious">Suspicious</option>
+                  <option value="rival">Rival</option>
                   <option value="enemy">Enemy</option>
                 </select>
               </div>
@@ -576,44 +613,13 @@ const CharacterCard = ({
                     fontWeight: "500",
                   }}
                 >
-                  Notes:
-                </label>
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="What does your character know about this person?"
-                  style={{
-                    width: "100%",
-                    minHeight: "60px",
-                    padding: "4px",
-                    fontSize: "11px",
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "4px",
-                    backgroundColor: theme.surface,
-                    color: theme.text,
-                    resize: "vertical",
-                    fontFamily: "inherit",
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: "8px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "10px",
-                    color: theme.textSecondary,
-                    marginBottom: "2px",
-                    fontWeight: "500",
-                  }}
-                >
                   Last Interaction:
                 </label>
                 <input
                   type="text"
                   value={lastInteraction}
                   onChange={(e) => setLastInteraction(e.target.value)}
-                  placeholder="When/where did you last see them?"
+                  placeholder="When/where did you last interact?"
                   style={{
                     width: "100%",
                     padding: "4px",
@@ -636,7 +642,7 @@ const CharacterCard = ({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "4px",
-                    padding: "4px 8px",
+                    padding: "6px 10px",
                     fontSize: "11px",
                     backgroundColor: theme.success || "#10b981",
                     color: "white",
@@ -658,7 +664,7 @@ const CharacterCard = ({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "4px",
-                    padding: "4px 8px",
+                    padding: "6px 10px",
                     fontSize: "11px",
                     backgroundColor: theme.textSecondary,
                     color: "white",
@@ -680,167 +686,69 @@ const CharacterCard = ({
   );
 };
 
-const TypeSection = ({
-  type,
-  characters,
-  theme,
-  styles,
-  isExpanded,
-  onToggle,
-  selectedCharacter,
-  npcNotes,
-  onUpdateNote,
-  supabase,
-  discordUserId,
-}) => {
-  return (
-    <div style={styles.typeSection}>
-      <button
-        style={{
-          ...styles.typeHeader,
-          backgroundColor: isExpanded ? theme.primary + "10" : theme.surface,
-          borderColor: isExpanded ? theme.primary : theme.border,
-          marginLeft: "20px",
-        }}
-        onClick={onToggle}
-      >
-        <div style={styles.typeHeaderLeft}>
-          <Calendar size={18} color={theme.primary} />
-          <h3 style={styles.typeTitle}>{type}</h3>
-          <span style={styles.characterCount}>
-            ({characters.length} {type.toLowerCase()})
-          </span>
-        </div>
-        <div style={styles.typeHeaderRight}>
-          {isExpanded ? (
-            <ChevronUp size={18} color={theme.primary} />
-          ) : (
-            <ChevronDown size={18} color={theme.primary} />
-          )}
-        </div>
-      </button>
-
-      {isExpanded && (
-        <div style={{ ...styles.charactersGrid, marginLeft: "20px" }}>
-          {characters.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              theme={theme}
-              styles={styles}
-              selectedCharacter={selectedCharacter}
-              npcNote={npcNotes[character.name]}
-              onUpdateNote={onUpdateNote}
-              supabase={supabase}
-              discordUserId={discordUserId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SchoolSection = ({
-  school,
-  schoolData,
-  theme,
-  styles,
-  isSchoolExpanded,
-  onSchoolToggle,
-  expandedTypes,
-  onTypeToggle,
-  selectedCharacter,
-  npcNotes,
-  onUpdateNote,
-  supabase,
-  discordUserId,
-}) => {
-  const totalCharacters = Object.values(schoolData).reduce(
-    (sum, chars) => sum + chars.length,
-    0
-  );
-
-  return (
-    <div style={styles.schoolSection}>
-      <button
-        style={{
-          ...styles.schoolHeader,
-          backgroundColor: isSchoolExpanded
-            ? theme.primary + "15"
-            : theme.surface,
-          borderColor: isSchoolExpanded ? theme.primary : theme.border,
-        }}
-        onClick={onSchoolToggle}
-      >
-        <div style={styles.schoolHeaderLeft}>
-          <GraduationCap size={24} color={theme.primary} />
-          <h2 style={styles.schoolTitle}>{school}</h2>
-          <span style={styles.schoolCount}>
-            ({totalCharacters} total characters)
-          </span>
-        </div>
-        <div style={styles.schoolHeaderRight}>
-          {isSchoolExpanded ? (
-            <ChevronUp size={24} color={theme.primary} />
-          ) : (
-            <ChevronDown size={24} color={theme.primary} />
-          )}
-        </div>
-      </button>
-
-      {isSchoolExpanded && (
-        <div style={styles.schoolContent}>
-          {Object.entries(schoolData).map(([type, characters]) => (
-            <TypeSection
-              key={`${school}-${type}`}
-              type={type}
-              characters={characters}
-              theme={theme}
-              styles={styles}
-              isExpanded={expandedTypes.has(`${school}-${type}`)}
-              onToggle={() => onTypeToggle(`${school}-${type}`)}
-              selectedCharacter={selectedCharacter}
-              npcNotes={npcNotes}
-              onUpdateNote={onUpdateNote}
-              supabase={supabase}
-              discordUserId={discordUserId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export const CharacterGallery = ({
-  characters = ALL_CHARACTERS,
-  selectedCharacter,
-  supabase,
-  user,
-}) => {
+export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
   const { theme } = useTheme();
-  const [expandedSchools, setExpandedSchools] = useState(
-    new Set(["Ilvermorny"])
-  );
-  const [expandedTypes, setExpandedTypes] = useState(
-    new Set(["Ilvermorny-Classmate"])
-  );
+  const [otherPlayers, setOtherPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [npcNotes, setNpcNotes] = useState({});
+  const [error, setError] = useState(null);
+  const [pcNotes, setPcNotes] = useState({});
 
   const discordUserId = user?.user_metadata?.provider_id;
 
   useEffect(() => {
+    if (selectedCharacter?.gameSession && supabase) {
+      loadOtherPlayers();
+    }
+  }, [selectedCharacter?.id, selectedCharacter?.gameSession]);
+
+  useEffect(() => {
     if (selectedCharacter && discordUserId && supabase) {
-      loadNpcNotes();
+      loadPcNotes();
     }
   }, [selectedCharacter?.id, discordUserId]);
 
-  const loadNpcNotes = async () => {
+  const loadOtherPlayers = async () => {
+    if (!selectedCharacter?.gameSession) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log(
+        "Selected character gameSession:",
+        selectedCharacter.gameSession
+      );
+
+      // Get characters from the same game session, excluding current character
+      const { data: characters, error: fetchError } = await supabase
+        .from("characters")
+        .select("*")
+        .eq("active", true)
+        .eq("game_session", selectedCharacter.gameSession)
+        .neq("id", selectedCharacter.id)
+        .order("name", { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      console.log("Fetched characters from same session:", characters?.length);
+
+      setOtherPlayers(characters || []);
+    } catch (err) {
+      console.error("Error loading other players:", err);
+      setError("Failed to load other players. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPcNotes = async () => {
     try {
       const { data, error } = await supabase
-        .from("character_npc_notes")
+        .from("character_pc_notes")
         .select("*")
         .eq("character_id", selectedCharacter.id)
         .eq("discord_user_id", discordUserId);
@@ -849,20 +757,41 @@ export const CharacterGallery = ({
 
       const notesMap = {};
       data.forEach((note) => {
-        notesMap[note.npc_name] = note;
+        notesMap[note.pc_name] = note;
       });
-      setNpcNotes(notesMap);
+      setPcNotes(notesMap);
     } catch (error) {
-      console.error("Error loading NPC notes:", error);
+      console.error("Error loading PC notes:", error);
     }
   };
 
-  const updateNpcNote = (npcName, noteData) => {
-    setNpcNotes((prev) => ({
+  const updatePcNote = (pcName, noteData) => {
+    setPcNotes((prev) => ({
       ...prev,
-      [npcName]: noteData,
+      [pcName]: noteData,
     }));
   };
+
+  const filteredPlayers = otherPlayers.filter((player) => {
+    if (!searchTerm.trim()) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    const note = pcNotes[player.name];
+
+    return (
+      player.name?.toLowerCase().includes(searchLower) ||
+      player.house?.toLowerCase().includes(searchLower) ||
+      player.subclass?.toLowerCase().includes(searchLower) ||
+      player.background?.toLowerCase().includes(searchLower) ||
+      (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
+      (note?.relationship &&
+        note.relationship.toLowerCase().includes(searchLower)) ||
+      (note?.custom_tags &&
+        note.custom_tags.some((tag) => tag.toLowerCase().includes(searchLower)))
+    );
+  });
+
+  const styles = getOtherPlayersStyles(theme);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -878,189 +807,126 @@ export const CharacterGallery = ({
 
   if (!selectedCharacter) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "3rem",
-          textAlign: "center",
-          minHeight: "400px",
-          backgroundColor: theme.surface,
-          borderRadius: "12px",
-          border: `2px solid ${theme.border}`,
-          margin: "20px",
-        }}
-      >
+      <div style={styles.noCharacterContainer}>
         <Users size={64} color={theme.textSecondary} />
-        <h2
-          style={{
-            color: theme.text,
-            marginTop: "1rem",
-            marginBottom: "0.5rem",
-          }}
-        >
-          No Character Selected
-        </h2>
-        <p style={{ color: theme.textSecondary, maxWidth: "400px" }}>
-          Please select a character to view the NPC gallery. This will allow you
-          to track what your character knows about different NPCs and their
-          relationships.
+        <h2 style={styles.noCharacterTitle}>No Character Selected</h2>
+        <p style={styles.noCharacterText}>
+          Please select a character to view other players in your game session.
         </p>
       </div>
     );
   }
 
-  const charactersBySchool = characters.reduce((acc, character) => {
-    const school = character.school;
-    const type = character.type;
-
-    if (!acc[school]) {
-      acc[school] = {};
-    }
-    if (!acc[school][type]) {
-      acc[school][type] = [];
-    }
-    acc[school][type].push(character);
-    return acc;
-  }, {});
-
-  const searchResults = characters.filter((character) => {
-    if (!searchTerm.trim()) return false;
-
-    const searchLower = searchTerm.toLowerCase();
-    const note = npcNotes[character.name];
-
+  if (!selectedCharacter.gameSession) {
     return (
-      character.name.toLowerCase().includes(searchLower) ||
-      character.school.toLowerCase().includes(searchLower) ||
-      character.type.toLowerCase().includes(searchLower) ||
-      (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
-      (note?.relationship &&
-        note.relationship.toLowerCase().includes(searchLower)) ||
-      (note?.custom_tags &&
-        note.custom_tags.some((tag) => tag.toLowerCase().includes(searchLower)))
+      <div style={styles.noSessionContainer}>
+        <Users size={64} color={theme.textSecondary} />
+        <h2 style={styles.noSessionTitle}>No Game Session</h2>
+        <p style={styles.noSessionText}>
+          Your character is not assigned to a game session. Contact your DM to
+          be added to a session.
+        </p>
+      </div>
     );
-  });
+  }
 
-  const schoolKeys = Object.keys(charactersBySchool);
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <Loader
+          size={48}
+          color={theme.primary}
+          style={{ animation: "spin 1s linear infinite" }}
+        />
+        <p style={styles.loadingText}>Loading other players...</p>
+      </div>
+    );
+  }
 
-  const toggleSchool = (school) => {
-    const newExpanded = new Set(expandedSchools);
-    if (newExpanded.has(school)) {
-      newExpanded.delete(school);
-    } else {
-      newExpanded.add(school);
-    }
-    setExpandedSchools(newExpanded);
-  };
-
-  const toggleType = (typeId) => {
-    const newExpanded = new Set(expandedTypes);
-    if (newExpanded.has(typeId)) {
-      newExpanded.delete(typeId);
-    } else {
-      newExpanded.add(typeId);
-    }
-    setExpandedTypes(newExpanded);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm("");
-  };
-
-  const styles = getCharacterGalleryStyles(theme);
+  if (error) {
+    return (
+      <div style={styles.errorContainer}>
+        <X size={48} color={theme.error} />
+        <h2 style={styles.errorTitle}>Error</h2>
+        <p style={styles.errorText}>{error}</p>
+        <button onClick={loadOtherPlayers} style={styles.retryButton}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
-      <div style={styles.searchContainer}>
-        <div style={styles.searchInputContainer}>
-          <Search size={20} style={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder="Search NPCs by name, school, type, notes, or tags..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            style={{
-              ...styles.searchInput,
-              borderColor: searchTerm ? theme.primary : theme.border,
-            }}
-          />
-          {searchTerm && (
-            <button onClick={clearSearch} style={styles.clearButton}>
-              <X size={18} />
-            </button>
-          )}
-        </div>
+      <div style={styles.header}>
+        <h1 style={styles.title}>
+          Other Players in {selectedCharacter.gameSession}
+        </h1>
+        <p style={styles.subtitle}>
+          {filteredPlayers.length} player
+          {filteredPlayers.length !== 1 ? "s" : ""} in your session
+        </p>
       </div>
 
-      {searchTerm && (
-        <div style={styles.searchResults}>
-          <div style={styles.searchResultsHeader}>
-            <h2 style={styles.searchResultsTitle}>Search Results</h2>
-            <p style={styles.searchResultsCount}>
-              {searchResults.length} character
-              {searchResults.length !== 1 ? "s" : ""} found for "{searchTerm}"
-            </p>
-          </div>
-          <div style={styles.searchResultsContent}>
-            {searchResults.length > 0 ? (
-              <div style={styles.charactersGrid}>
-                {searchResults.map((character) => (
-                  <CharacterCard
-                    key={character.id}
-                    character={character}
-                    theme={theme}
-                    styles={styles}
-                    selectedCharacter={selectedCharacter}
-                    npcNote={npcNotes[character.name]}
-                    onUpdateNote={updateNpcNote}
-                    supabase={supabase}
-                    discordUserId={discordUserId}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div style={styles.noResults}>
-                <Search size={48} color={theme.textSecondary} />
-                <p>No characters found matching "{searchTerm}"</p>
-                <p style={{ fontSize: "14px", marginTop: "8px" }}>
-                  Try searching by name, school, character type, your notes, or
-                  custom tags.
-                </p>
-              </div>
+      {otherPlayers.length > 0 && (
+        <div style={styles.searchContainer}>
+          <div style={styles.searchInputContainer}>
+            <Search size={20} style={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Search players by name, house, subclass, background, notes, relationship, or tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                ...styles.searchInput,
+                borderColor: searchTerm ? theme.primary : theme.border,
+              }}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                style={styles.clearButton}
+              >
+                <X size={18} />
+              </button>
             )}
           </div>
         </div>
       )}
 
-      <div style={styles.schoolContainer}>
-        {schoolKeys.map((school) => (
-          <SchoolSection
-            key={school}
-            school={school}
-            schoolData={charactersBySchool[school]}
-            theme={theme}
-            styles={styles}
-            isSchoolExpanded={expandedSchools.has(school)}
-            onSchoolToggle={() => toggleSchool(school)}
-            expandedTypes={expandedTypes}
-            onTypeToggle={toggleType}
-            selectedCharacter={selectedCharacter}
-            npcNotes={npcNotes}
-            onUpdateNote={updateNpcNote}
-            supabase={supabase}
-            discordUserId={discordUserId}
-          />
-        ))}
-      </div>
+      {filteredPlayers.length > 0 ? (
+        <div style={styles.playersGrid}>
+          {filteredPlayers.map((player) => (
+            <PlayerCard
+              key={player.id}
+              character={player}
+              theme={theme}
+              styles={styles}
+              pcNote={pcNotes[player.name]}
+              onUpdateNote={updatePcNote}
+              supabase={supabase}
+              currentCharacterId={selectedCharacter.id}
+              discordUserId={discordUserId}
+            />
+          ))}
+        </div>
+      ) : otherPlayers.length > 0 ? (
+        <div style={styles.noResults}>
+          <Search size={48} color={theme.textSecondary} />
+          <p>No players found matching "{searchTerm}"</p>
+        </div>
+      ) : (
+        <div style={styles.emptyState}>
+          <Users size={64} color={theme.textSecondary} />
+          <h2 style={styles.emptyStateTitle}>No Other Players Yet</h2>
+          <p style={styles.emptyStateText}>
+            You're the first player in this session, or other players haven't
+            created their characters yet.
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default CharacterGallery;
+export default OtherPlayers;
