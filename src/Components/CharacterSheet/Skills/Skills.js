@@ -5,14 +5,11 @@ import {
   ChevronUp,
   Circle,
   Star,
-  Dice6,
   Wrench,
   Info,
   ChefHat,
   Zap,
   Telescope,
-  Flower,
-  TestTube,
   Wind,
   Hammer,
   Palette,
@@ -21,15 +18,21 @@ import {
   Gem,
   Beaker,
   Microscope,
+  Bubbles,
+  Skull,
+  Compass,
+  VenetianMask,
+  Sprout,
+  Key,
+  Piano,
+  Eye,
 } from "lucide-react";
 import {
   calculatePassivePerception,
   calculatePassiveInvestigation,
   calculatePassiveDeception,
-  calculateModifier,
   formatModifier,
   modifiers,
-  getPassiveSkillBreakdown,
 } from "../utils";
 import { MagicalTheoryModal } from "./MagicalTheoryModal";
 import { useRollFunctions } from "../../utils/diceRoller";
@@ -549,24 +552,52 @@ export const Skills = ({
 
     const tool = toolName.toLowerCase();
 
+    if (
+      tool.includes("potioneer") ||
+      tool.includes("alchemy") ||
+      tool.includes("potion")
+    ) {
+      return <Bubbles {...iconProps} />;
+    }
+
+    if (tool.includes("herbologist") || tool.includes("herb")) {
+      return <Sprout {...iconProps} />;
+    }
+
+    if (tool.includes("poisoner") || tool.includes("poison")) {
+      return <Skull {...iconProps} />;
+    }
+
+    if (tool.includes("navigator") || tool.includes("navigation")) {
+      return <Compass {...iconProps} />;
+    }
+
+    if (tool.includes("disguise")) {
+      return <VenetianMask {...iconProps} />;
+    }
+
+    if (tool.includes("thieves") || tool.includes("thieve")) {
+      return <Key {...iconProps} />;
+    }
+
+    if (
+      tool.includes("musical") ||
+      tool.includes("instrument") ||
+      tool.includes("music")
+    ) {
+      return <Piano {...iconProps} />;
+    }
+
+    if (tool.includes("divination") || tool.includes("divine")) {
+      return <Eye {...iconProps} />;
+    }
+
     if (tool.includes("cook") || tool.includes("utensils")) {
       return <ChefHat {...iconProps} />;
     }
 
     if (tool.includes("astronomer") || tool.includes("telescope")) {
       return <Telescope {...iconProps} />;
-    }
-
-    if (tool.includes("herbologist") || tool.includes("herb")) {
-      return <Flower {...iconProps} />;
-    }
-
-    if (
-      tool.includes("potioneer") ||
-      tool.includes("alchemy") ||
-      tool.includes("potion")
-    ) {
-      return <Beaker {...iconProps} />;
     }
 
     if (
@@ -637,6 +668,10 @@ export const Skills = ({
       return <Microscope {...iconProps} />;
     }
 
+    if (tool.includes("beaker") || tool.includes("alchemy")) {
+      return <Beaker {...iconProps} />;
+    }
+
     return <Wrench {...iconProps} />;
   };
 
@@ -698,7 +733,7 @@ export const Skills = ({
       }
     });
 
-    return uniqueTools;
+    return uniqueTools.sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const handleToolRoll = async () => {
@@ -1013,10 +1048,6 @@ export const Skills = ({
           {(() => {
             const allTools = getAllToolProficiencies();
 
-            if (allTools.length === 0) {
-              return null;
-            }
-
             return (
               <div style={{ marginTop: "20px" }}>
                 <div style={skillStyles.tableContainer}>
@@ -1040,107 +1071,99 @@ export const Skills = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {allTools.map((toolObj) => {
-                        const tool = toolObj.name;
-                        const source = toolObj.source;
-                        const sourceColor =
-                          source === "Background"
-                            ? theme.warning
-                            : source === "Subclass"
-                            ? theme.success
-                            : source === "Heritage"
-                            ? theme.info || theme.primary
-                            : source === "Feat"
-                            ? theme.purple || theme.primary
-                            : theme.primary;
-                        return (
-                          <tr
-                            key={tool}
-                            style={skillStyles.row}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                theme.hover || `${theme.primary}05`;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                theme.surface;
+                      {allTools.length === 0 ? (
+                        <tr style={skillStyles.row}>
+                          <td
+                            colSpan="4"
+                            style={{
+                              ...skillStyles.cell,
+                              textAlign: "center",
+                              padding: "20px",
+                              color: theme.textSecondary,
+                              fontStyle: "italic",
                             }}
                           >
-                            <td style={skillStyles.cell}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  color: sourceColor,
-                                }}
-                              >
-                                {getToolIcon(tool)}
-                              </div>
-                            </td>
-                            <td style={skillStyles.cell}>
-                              <span
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "500",
-                                  color: theme.textSecondary,
-                                }}
-                              >
-                                —
-                              </span>
-                            </td>
-                            <td style={skillStyles.cell}>
-                              <button
-                                onClick={() => {
-                                  setSelectedTool(tool);
-                                  setShowToolModal(true);
-                                }}
-                                style={{
-                                  ...skillStyles.skillButton,
-                                  color: sourceColor,
-                                  fontWeight: "600",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${theme.primary}10`;
-                                  e.currentTarget.style.color = theme.primary;
-                                  e.currentTarget.style.textDecoration =
-                                    "underline";
-                                  e.currentTarget.style.transform =
-                                    "translateX(2px)";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "transparent";
-                                  e.currentTarget.style.color = sourceColor;
-                                  e.currentTarget.style.textDecoration = "none";
-                                  e.currentTarget.style.transform =
-                                    "translateX(0)";
-                                }}
-                              >
-                                {tool}
+                            No tool proficiencies available
+                          </td>
+                        </tr>
+                      ) : (
+                        allTools.map((toolObj) => {
+                          const tool = toolObj.name;
+                          const source = toolObj.source;
+                          const toolColor = "#3b82f6";
+                          return (
+                            <tr
+                              key={tool}
+                              style={skillStyles.row}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  theme.hover || `${theme.primary}05`;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  theme.surface;
+                              }}
+                            >
+                              <td style={skillStyles.cell}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: toolColor,
+                                  }}
+                                >
+                                  {getToolIcon(tool)}
+                                </div>
+                              </td>
+                              <td style={skillStyles.cell}>
                                 <span
                                   style={{
-                                    fontSize: "10px",
-                                    color: sourceColor,
+                                    fontSize: "12px",
                                     fontWeight: "500",
-                                    marginLeft: "4px",
+                                    color: theme.textSecondary,
                                   }}
-                                ></span>
-                              </button>
-                            </td>
-                            <td style={skillStyles.cell}>
-                              <span
-                                style={{
-                                  ...skillStyles.bonusValue,
-                                  color: theme.success,
-                                }}
-                              >
-                                +{character?.proficiencyBonus || 0}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                >
+                                  —
+                                </span>
+                              </td>
+                              <td style={skillStyles.cell}>
+                                <button
+                                  onClick={() => {
+                                    setSelectedTool(tool);
+                                    setShowToolModal(true);
+                                  }}
+                                  style={{
+                                    ...skillStyles.skillButton,
+                                    color: toolColor,
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  {tool}
+                                  <span
+                                    style={{
+                                      fontSize: "10px",
+                                      color: toolColor,
+                                      fontWeight: "500",
+                                      marginLeft: "4px",
+                                    }}
+                                  ></span>
+                                </button>
+                              </td>
+                              <td style={skillStyles.cell}>
+                                <span
+                                  style={{
+                                    ...skillStyles.bonusValue,
+                                    color: "#3b82f6",
+                                  }}
+                                >
+                                  +{character?.proficiencyBonus || 0}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>

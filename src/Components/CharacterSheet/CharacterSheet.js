@@ -1771,12 +1771,12 @@ const CharacterSheet = ({
                 >
                   <Dices
                     className="w-6 h-6 mx-auto mb-1"
-                    style={{ color: "white" }}
+                    style={{ color: theme.text }}
                   />
-                  <div style={{ ...styles.statValue, color: "white" }}>
+                  <div style={{ ...styles.statValue, color: theme.text }}>
                     {character.currentHitDice}/{character.maxHitDice}
                   </div>
-                  <div style={{ ...styles.statLabel, color: "white" }}>
+                  <div style={{ ...styles.statLabel, color: theme.text }}>
                     Hit Dice ({character.hitDie})
                   </div>
                 </div>
