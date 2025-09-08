@@ -34,6 +34,11 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import {
+  backgroundsData,
+  subclassesData,
+  standardFeats,
+} from "../../SharedData";
 import { calculateInitiativeWithFeats } from "../CharacterManager/utils/featBenefitsCalculator";
 
 const hitDiceData = {
@@ -368,8 +373,82 @@ const CharacterSheet = ({
     return allFeats;
   }, []);
 
+  const getAutomaticSkillProficiencies = useCallback((characterData) => {
+    const automaticProficiencies = [];
+    const automaticExpertise = [];
+
+    if (characterData.background) {
+      const background = Object.values(backgroundsData).find(
+        (bg) => bg.name === characterData.background
+      );
+      if (background?.skillProficiencies) {
+        automaticProficiencies.push(...background.skillProficiencies);
+      }
+    }
+
+    if (characterData.subclass && characterData.subclass_choices) {
+      const subclassInfo = subclassesData[characterData.subclass];
+
+      if (subclassInfo?.benefits?.skillProficiencies) {
+        subclassInfo.benefits.skillProficiencies.forEach((prof) => {
+          if (prof.type === "fixed") {
+            automaticProficiencies.push(...prof.skills);
+          }
+        });
+      }
+
+      if (subclassInfo?.choices) {
+        Object.entries(characterData.subclass_choices).forEach(
+          ([level, choice]) => {
+            const levelData = subclassInfo.choices[level];
+            if (levelData?.options) {
+              const selectedOption = levelData.options.find(
+                (opt) => opt.name === choice
+              );
+              if (selectedOption?.benefits?.skillProficiencies) {
+                selectedOption.benefits.skillProficiencies.forEach((prof) => {
+                  if (prof.type === "fixed") {
+                    automaticProficiencies.push(...prof.skills);
+
+                    if (prof.expertise) {
+                      prof.skills.forEach((skill) => {
+                        if (
+                          automaticProficiencies.includes(skill) ||
+                          characterData.skill_proficiencies?.includes(skill)
+                        ) {
+                          automaticExpertise.push(skill);
+                        }
+                      });
+                    }
+                  }
+                });
+              }
+            }
+          }
+        );
+      }
+    }
+
+    if (characterData.standard_feats) {
+      characterData.standard_feats.forEach((featName) => {
+        const feat = standardFeats.find((f) => f.name === featName);
+        if (feat?.benefits?.skillProficiencies) {
+          feat.benefits.skillProficiencies.forEach((prof) => {
+            if (typeof prof === "string") {
+              automaticProficiencies.push(prof);
+            } else if (prof.type === "fixed") {
+              automaticProficiencies.push(...prof.skills);
+            }
+          });
+        }
+      });
+    }
+
+    return { automaticProficiencies, automaticExpertise };
+  }, []);
+
   const transformSkillData = useCallback(
-    (skillProficiencies = [], skillExpertise = []) => {
+    (skillProficiencies = [], skillExpertise = [], characterData = {}) => {
       const skillMap = {
         Athletics: "athletics",
         Acrobatics: "acrobatics",
@@ -385,6 +464,7 @@ const CharacterSheet = ({
         Medicine: "medicine",
         Perception: "perception",
         "Potion Making": "potionMaking",
+        "Potion-making": "potionMaking",
         Survival: "survival",
         Deception: "deception",
         Intimidation: "intimidation",
@@ -398,14 +478,24 @@ const CharacterSheet = ({
         skills[skill] = 0;
       });
 
-      skillProficiencies.forEach((skillName) => {
+      const { automaticProficiencies, automaticExpertise } =
+        getAutomaticSkillProficiencies(characterData);
+
+      const allProficiencies = [
+        ...skillProficiencies,
+        ...automaticProficiencies,
+      ];
+
+      allProficiencies.forEach((skillName) => {
         const mappedSkill = skillMap[skillName];
-        if (mappedSkill) {
+        if (mappedSkill && skills[mappedSkill] < 1) {
           skills[mappedSkill] = 1;
         }
       });
 
-      skillExpertise.forEach((skillName) => {
+      const allExpertise = [...skillExpertise, ...automaticExpertise];
+
+      allExpertise.forEach((skillName) => {
         const mappedSkill = skillMap[skillName];
         if (mappedSkill) {
           skills[mappedSkill] = 2;
@@ -414,7 +504,7 @@ const CharacterSheet = ({
 
       return skills;
     },
-    []
+    [getAutomaticSkillProficiencies]
   );
 
   const canModifyCharacter = (
@@ -598,7 +688,8 @@ const CharacterSheet = ({
           skillProficiencies: data.skill_proficiencies || [],
           skills: transformSkillData(
             data.skill_proficiencies || [],
-            data.skill_expertise || []
+            data.skill_expertise || [],
+            data
           ),
           sorceryPoints: resources.sorcery_points || 0,
           speed: 30,
@@ -615,6 +706,7 @@ const CharacterSheet = ({
           strength: effectiveAbilityScores.strength || 10,
           subclass: data.subclass,
           subclassChoices: data.subclass_choices || {},
+          toolProficiencies: data.tool_proficiencies || [],
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,

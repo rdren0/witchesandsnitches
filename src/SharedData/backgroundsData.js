@@ -291,7 +291,7 @@ export const backgroundsData = {
     preview:
       "An enthusiastic sports fan with competitive spirit and athletic knowledge",
     skillProficiencies: ["Acrobatics", "Athletics"],
-    toolProficiencies: ["Vehicle (Broomstick)"],
+    toolProficiencies: ["Broomstick"],
     features: [
       {
         name: "Superfan",

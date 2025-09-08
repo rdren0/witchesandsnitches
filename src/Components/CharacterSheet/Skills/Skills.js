@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -7,6 +8,19 @@ import {
   Dice6,
   Wrench,
   Info,
+  ChefHat,
+  Zap,
+  Telescope,
+  Flower,
+  TestTube,
+  Wind,
+  Hammer,
+  Palette,
+  Book,
+  Scroll,
+  Gem,
+  Beaker,
+  Microscope,
 } from "lucide-react";
 import {
   calculatePassivePerception,
@@ -20,8 +34,16 @@ import {
 import { MagicalTheoryModal } from "./MagicalTheoryModal";
 import { useRollFunctions } from "../../utils/diceRoller";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { allSkills, skillMap, skillDescriptions } from "../../../SharedData";
+import {
+  allSkills,
+  skillMap,
+  skillDescriptions,
+  abilities,
+  getAbilityAbbr,
+} from "../../../SharedData";
 import { backgroundsData } from "../../../SharedData/backgroundsData";
+import { subclassesData } from "../../../SharedData/subclassesData";
+import { standardFeats } from "../../../SharedData/standardFeatData";
 
 export const Skills = ({
   character,
@@ -39,6 +61,9 @@ export const Skills = ({
   const [pendingMagicalTheoryData, setPendingMagicalTheoryData] =
     useState(null);
   const [hoveredSkill, setHoveredSkill] = useState(null);
+  const [showToolModal, setShowToolModal] = useState(false);
+  const [selectedTool, setSelectedTool] = useState(null);
+  const [selectedAbility, setSelectedAbility] = useState("strength");
 
   const passivePerception = calculatePassivePerception(character);
   const passiveInvestigation = calculatePassiveInvestigation(character);
@@ -454,18 +479,6 @@ export const Skills = ({
     );
   };
 
-  const getAbilityAbbr = (ability) => {
-    const abbrevMap = {
-      strength: "STR",
-      dexterity: "DEX",
-      constitution: "CON",
-      intelligence: "INT",
-      wisdom: "WIS",
-      charisma: "CHA",
-    };
-    return abbrevMap[ability] || ability.slice(0, 3).toUpperCase();
-  };
-
   const getProficiencyIcon = (skillLevel) => {
     const iconProps = {
       size: 16,
@@ -526,6 +539,190 @@ export const Skills = ({
       title: `${skill.displayName}`,
       description: skillDescriptions[skill.name] || "Roll this skill check",
     };
+  };
+
+  const getToolIcon = (toolName) => {
+    const iconProps = {
+      size: 14,
+      strokeWidth: 2,
+    };
+
+    const tool = toolName.toLowerCase();
+
+    if (tool.includes("cook") || tool.includes("utensils")) {
+      return <ChefHat {...iconProps} />;
+    }
+
+    if (tool.includes("astronomer") || tool.includes("telescope")) {
+      return <Telescope {...iconProps} />;
+    }
+
+    if (tool.includes("herbologist") || tool.includes("herb")) {
+      return <Flower {...iconProps} />;
+    }
+
+    if (
+      tool.includes("potioneer") ||
+      tool.includes("alchemy") ||
+      tool.includes("potion")
+    ) {
+      return <Beaker {...iconProps} />;
+    }
+
+    if (
+      tool.includes("broomstick") ||
+      tool.includes("vehicle") ||
+      tool.includes("broom")
+    ) {
+      return <Wind {...iconProps} />;
+    }
+
+    if (
+      tool.includes("wand") ||
+      tool.includes("magical") ||
+      tool.includes("arcane")
+    ) {
+      return <Zap {...iconProps} />;
+    }
+
+    if (
+      tool.includes("book") ||
+      tool.includes("study") ||
+      tool.includes("research") ||
+      tool.includes("library")
+    ) {
+      return <Book {...iconProps} />;
+    }
+
+    if (
+      tool.includes("scroll") ||
+      tool.includes("scribal") ||
+      tool.includes("calligraphy") ||
+      tool.includes("writing")
+    ) {
+      return <Scroll {...iconProps} />;
+    }
+
+    if (
+      tool.includes("artisan") ||
+      tool.includes("craft") ||
+      tool.includes("paint") ||
+      tool.includes("art")
+    ) {
+      return <Palette {...iconProps} />;
+    }
+
+    if (
+      tool.includes("jewel") ||
+      tool.includes("gem") ||
+      tool.includes("precious")
+    ) {
+      return <Gem {...iconProps} />;
+    }
+
+    if (
+      tool.includes("smith") ||
+      tool.includes("forge") ||
+      tool.includes("metal") ||
+      tool.includes("hammer")
+    ) {
+      return <Hammer {...iconProps} />;
+    }
+
+    if (
+      tool.includes("microscope") ||
+      tool.includes("analysis") ||
+      tool.includes("investigation")
+    ) {
+      return <Microscope {...iconProps} />;
+    }
+
+    return <Wrench {...iconProps} />;
+  };
+
+  const getAllToolProficiencies = () => {
+    const allTools = [];
+
+    const backgroundTools = character.background
+      ? Object.values(backgroundsData).find(
+          (bg) => bg.name === character.background
+        )?.toolProficiencies || []
+      : [];
+
+    backgroundTools.forEach((tool) => {
+      allTools.push({ name: tool, source: "Background" });
+    });
+
+    const characterTools = character.toolProficiencies || [];
+    characterTools.forEach((tool) => {
+      allTools.push({ name: tool, source: "Character" });
+    });
+
+    if (character.subclass && character.subclassChoices) {
+      const subclassInfo = subclassesData[character.subclass];
+      if (subclassInfo?.choices) {
+        Object.entries(character.subclassChoices).forEach(([level, choice]) => {
+          const levelData = subclassInfo.choices[level];
+          if (levelData?.options) {
+            const selectedOption = levelData.options.find(
+              (opt) => opt.name === choice
+            );
+            if (selectedOption?.benefits?.toolProficiencies) {
+              selectedOption.benefits.toolProficiencies.forEach((tool) => {
+                allTools.push({ name: tool, source: "Subclass" });
+              });
+            }
+          }
+        });
+      }
+    }
+
+    if (character.standardFeats) {
+      character.standardFeats.forEach((featName) => {
+        const feat = standardFeats.find((f) => f.name === featName);
+        if (feat?.benefits?.toolProficiencies) {
+          feat.benefits.toolProficiencies.forEach((tool) => {
+            allTools.push({ name: tool, source: "Feat" });
+          });
+        }
+      });
+    }
+
+    const uniqueTools = [];
+    const seen = new Set();
+
+    allTools.forEach((tool) => {
+      if (!seen.has(tool.name)) {
+        seen.add(tool.name);
+        uniqueTools.push(tool);
+      }
+    });
+
+    return uniqueTools;
+  };
+
+  const handleToolRoll = async () => {
+    if (!selectedTool || !selectedAbility) return;
+
+    const abilityMod = modifiers(character)[selectedAbility];
+    const profBonus = character.proficiencyBonus || 0;
+    const totalBonus = abilityMod + profBonus;
+
+    const toolSkill = {
+      name: selectedTool.toLowerCase().replace(/\s+/g, ""),
+      displayName: selectedTool,
+      ability: selectedAbility,
+    };
+
+    await rollSkill({
+      skill: toolSkill,
+      abilityMod: totalBonus,
+      isRolling,
+      setIsRolling,
+      character,
+    });
+
+    setShowToolModal(false);
   };
 
   return (
@@ -813,93 +1010,143 @@ export const Skills = ({
             </table>
           </div>
 
-          <div style={skillStyles.legend}>
-            <div
-              style={{
-                marginTop: "12px",
-                padding: "8px 12px",
-                backgroundColor: `${theme.surface}`,
-                border: `1px solid ${theme.border}`,
-                borderRadius: "6px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  marginBottom: "6px",
-                }}
-              >
-                <Wrench size={14} color={theme.text} />
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: theme.text,
-                  }}
-                >
-                  Tool Proficiencies
-                </span>
-              </div>
-              <div
-                style={{
-                  fontSize: "11px",
-                  color: theme.textSecondary,
-                  lineHeight: "1.3",
-                }}
-              >
-                {(() => {
-                  const backgroundTools = character.background
-                    ? Object.values(backgroundsData).find(
-                        (bg) => bg.name === character.background
-                      )?.toolProficiencies || []
-                    : [];
+          {(() => {
+            const allTools = getAllToolProficiencies();
 
-                  const normalizedBackgroundTools = backgroundTools.map(
-                    (tool) => {
-                      if (tool === "Vehicle (Broomstick)") return "Broomstick";
-                      return tool;
-                    }
-                  );
+            if (allTools.length === 0) {
+              return null;
+            }
 
-                  const characterTools = character.toolProficiencies || [];
-                  const allTools = [
-                    ...new Set([
-                      ...normalizedBackgroundTools,
-                      ...characterTools,
-                    ]),
-                  ];
-
-                  if (allTools.length === 0) {
-                    return <em>No tool proficiencies</em>;
-                  }
-
-                  return allTools.map((tool, index) => {
-                    const isFromBackground =
-                      normalizedBackgroundTools.includes(tool);
-                    return (
-                      <span key={tool} style={{ display: "inline-block" }}>
-                        {tool}
-                        {isFromBackground && (
-                          <span
-                            style={{
-                              fontSize: "9px",
-                              color: "#f59e0b",
-                              marginLeft: "2px",
+            return (
+              <div style={{ marginTop: "20px" }}>
+                <div style={skillStyles.tableContainer}>
+                  <table style={skillStyles.table}>
+                    <thead>
+                      <tr style={skillStyles.headerRow}>
+                        <th style={skillStyles.headerCell}>
+                          <div style={skillStyles.sortableHeader}>PROF</div>
+                        </th>
+                        <th style={skillStyles.headerCell}>
+                          <div style={skillStyles.sortableHeader}>MOD</div>
+                        </th>
+                        <th style={skillStyles.headerCell}>
+                          <div style={skillStyles.sortableHeader}>
+                            TOOL PROFICIENCY
+                          </div>
+                        </th>
+                        <th style={skillStyles.headerCell}>
+                          <div style={skillStyles.sortableHeader}>BONUS</div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allTools.map((toolObj) => {
+                        const tool = toolObj.name;
+                        const source = toolObj.source;
+                        const sourceColor =
+                          source === "Background"
+                            ? theme.warning
+                            : source === "Subclass"
+                            ? theme.success
+                            : source === "Heritage"
+                            ? theme.info || theme.primary
+                            : source === "Feat"
+                            ? theme.purple || theme.primary
+                            : theme.primary;
+                        return (
+                          <tr
+                            key={tool}
+                            style={skillStyles.row}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                theme.hover || `${theme.primary}05`;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                theme.surface;
                             }}
                           >
-                            (B)
-                          </span>
-                        )}
-                        {index < allTools.length - 1 ? ", " : ""}
-                      </span>
-                    );
-                  });
-                })()}
+                            <td style={skillStyles.cell}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: sourceColor,
+                                }}
+                              >
+                                {getToolIcon(tool)}
+                              </div>
+                            </td>
+                            <td style={skillStyles.cell}>
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: "500",
+                                  color: theme.textSecondary,
+                                }}
+                              >
+                                —
+                              </span>
+                            </td>
+                            <td style={skillStyles.cell}>
+                              <button
+                                onClick={() => {
+                                  setSelectedTool(tool);
+                                  setShowToolModal(true);
+                                }}
+                                style={{
+                                  ...skillStyles.skillButton,
+                                  color: sourceColor,
+                                  fontWeight: "600",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${theme.primary}10`;
+                                  e.currentTarget.style.color = theme.primary;
+                                  e.currentTarget.style.textDecoration =
+                                    "underline";
+                                  e.currentTarget.style.transform =
+                                    "translateX(2px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "transparent";
+                                  e.currentTarget.style.color = sourceColor;
+                                  e.currentTarget.style.textDecoration = "none";
+                                  e.currentTarget.style.transform =
+                                    "translateX(0)";
+                                }}
+                              >
+                                {tool}
+                                <span
+                                  style={{
+                                    fontSize: "10px",
+                                    color: sourceColor,
+                                    fontWeight: "500",
+                                    marginLeft: "4px",
+                                  }}
+                                ></span>
+                              </button>
+                            </td>
+                            <td style={skillStyles.cell}>
+                              <span
+                                style={{
+                                  ...skillStyles.bonusValue,
+                                  color: theme.success,
+                                }}
+                              >
+                                +{character?.proficiencyBonus || 0}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -910,6 +1157,215 @@ export const Skills = ({
         character={character}
         theme={theme}
       />
+
+      {showToolModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setShowToolModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: "12px",
+              border: `2px solid ${theme.border}`,
+              padding: "24px",
+              maxWidth: "450px",
+              width: "90%",
+              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "16px",
+              }}
+            >
+              <div style={{ color: theme.primary }}>
+                {selectedTool &&
+                  React.cloneElement(getToolIcon(selectedTool), { size: 20 })}
+              </div>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: theme.text,
+                }}
+              >
+                {selectedTool}
+              </h3>
+            </div>
+
+            <div
+              style={{
+                fontSize: "14px",
+                color: theme.textSecondary,
+                lineHeight: "1.5",
+                marginBottom: "20px",
+              }}
+            >
+              Select which ability modifier to use for this tool check:
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: theme.text,
+                  marginBottom: "8px",
+                }}
+              >
+                Ability Modifier:
+              </label>
+
+              <select
+                value={selectedAbility}
+                onChange={(e) => setSelectedAbility(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "6px",
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                {abilities.map((ability) => {
+                  const abilityMod = modifiers(character)[ability.name] || 0;
+                  return (
+                    <option key={ability.name} value={ability.name}>
+                      {ability.displayName} ({ability.abbr}){" "}
+                      {formatModifier(abilityMod)}
+                    </option>
+                  );
+                })}
+              </select>
+
+              <div
+                style={{
+                  marginTop: "12px",
+                  padding: "12px",
+                  backgroundColor: `${theme.primary}10`,
+                  border: `1px solid ${theme.primary}30`,
+                  borderRadius: "6px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "14px",
+                    color: theme.text,
+                    fontWeight: "500",
+                  }}
+                >
+                  Total Modifier:
+                </span>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span
+                    style={{ fontSize: "12px", color: theme.textSecondary }}
+                  >
+                    {getAbilityAbbr(selectedAbility)}{" "}
+                    {formatModifier(modifiers(character)[selectedAbility] || 0)}{" "}
+                    + Prof {formatModifier(character?.proficiencyBonus || 0)} =
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "700",
+                      color: theme.primary,
+                    }}
+                  >
+                    {formatModifier(
+                      (modifiers(character)[selectedAbility] || 0) +
+                        (character?.proficiencyBonus || 0)
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setShowToolModal(false)}
+                style={{
+                  backgroundColor: "transparent",
+                  color: theme.textSecondary,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "6px",
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = `${theme.textSecondary}10`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleToolRoll}
+                disabled={isRolling}
+                style={{
+                  backgroundColor: theme.primary,
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: isRolling ? "not-allowed" : "pointer",
+                  opacity: isRolling ? 0.5 : 1,
+                  transition: "background-color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isRolling) {
+                    e.currentTarget.style.backgroundColor =
+                      theme.primaryDark || theme.primary;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.primary;
+                }}
+              >
+                {isRolling ? "Rolling..." : "Roll Check"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -287,6 +287,20 @@ export const allSkills = [
   { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
 ];
 
+export const abilities = [
+  { name: "strength", abbr: "STR", displayName: "Strength" },
+  { name: "dexterity", abbr: "DEX", displayName: "Dexterity" },
+  { name: "constitution", abbr: "CON", displayName: "Constitution" },
+  { name: "intelligence", abbr: "INT", displayName: "Intelligence" },
+  { name: "wisdom", abbr: "WIS", displayName: "Wisdom" },
+  { name: "charisma", abbr: "CHA", displayName: "Charisma" },
+];
+
+export const getAbilityAbbr = (ability) => {
+  const abilityObj = abilities.find((a) => a.name === ability);
+  return abilityObj?.abbr || ability.slice(0, 3).toUpperCase();
+};
+
 export const skillDescriptions = {
   acrobatics:
     "Balance, tumble, perform stunts, escape grapples, avoid falling damage",

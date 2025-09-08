@@ -1,7 +1,11 @@
 import React from "react";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { backgroundsData } from "../../../../SharedData/backgroundsData";
+import {
+  backgroundsData,
+  subclassesData,
+  standardFeats,
+} from "../../../../SharedData";
 
 const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
@@ -19,18 +23,55 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
         )?.toolProficiencies || []
       : [];
 
-    // Normalize tool names (e.g., "Vehicle (Broomstick)" -> "Broomstick")
-    const normalizedBackgroundTools = backgroundTools.map(tool => {
-      if (tool === "Vehicle (Broomstick)") return "Broomstick";
-      return tool;
-    });
+
+    const subclassTools = [];
+    if (character.subclass && character.subclassChoices) {
+      const subclassInfo = subclassesData[character.subclass];
+
+      if (subclassInfo?.benefits?.toolProficiencies) {
+        subclassTools.push(...subclassInfo.benefits.toolProficiencies);
+      }
+
+      if (subclassInfo?.choices) {
+        Object.entries(character.subclassChoices).forEach(([level, choice]) => {
+          const levelData = subclassInfo.choices[level];
+          if (levelData?.options) {
+            const selectedOption = levelData.options.find(
+              (opt) => opt.name === choice
+            );
+            if (selectedOption?.benefits?.toolProficiencies) {
+              subclassTools.push(...selectedOption.benefits.toolProficiencies);
+            }
+          }
+        });
+      }
+    }
+
+    const featTools = [];
+    if (character.standardFeats) {
+      character.standardFeats.forEach((featName) => {
+        const feat = standardFeats.find((f) => f.name === featName);
+        if (feat?.benefits?.toolProficiencies) {
+          featTools.push(...feat.benefits.toolProficiencies);
+        }
+      });
+    }
 
     const characterTools = character.toolProficiencies || [];
 
+    const automaticTools = [
+      ...backgroundTools,
+      ...subclassTools,
+      ...featTools,
+    ];
+
     return {
-      background: normalizedBackgroundTools,
+      background: backgroundTools,
+      subclass: subclassTools,
+      feat: featTools,
       character: characterTools,
-      all: [...new Set([...normalizedBackgroundTools, ...characterTools])],
+      automatic: [...new Set(automaticTools)],
+      all: [...new Set([...automaticTools, ...characterTools])],
     };
   };
 
@@ -55,9 +96,9 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
 
     const currentTools = character.toolProficiencies || [];
     const isCurrentlySelected = currentTools.includes(tool);
-    const isFromBackground = toolData.background.includes(tool);
+    const isAutomatic = toolData.automatic.includes(tool);
 
-    if (isFromBackground) return;
+    if (isAutomatic) return;
 
     if (isCurrentlySelected) {
       const newTools = currentTools.filter((t) => t !== tool);
@@ -67,7 +108,6 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
       onChange("toolProficiencies", newTools);
     }
   };
-
 
   const ProficiencyBox = ({
     item,
@@ -85,6 +125,20 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
             borderColor: "#f59e0b",
             textColor: "#f59e0b",
             label: "B",
+          };
+        case "subclass":
+          return {
+            backgroundColor: "#10b98120",
+            borderColor: "#10b981",
+            textColor: "#10b981",
+            label: "S",
+          };
+        case "feat":
+          return {
+            backgroundColor: "#8b5cf620",
+            borderColor: "#8b5cf6",
+            textColor: "#8b5cf6",
+            label: "F",
           };
         default:
           return {
@@ -230,20 +284,20 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
             Tool Proficiencies ({toolData.all.length} total)
           </h3>
 
-          {toolData.background.length > 0 && (
+          {toolData.automatic.length > 0 && (
             <div style={{ marginBottom: "16px" }}>
               <h4
                 style={{
                   fontSize: "16px",
                   fontWeight: "600",
-                  color: "#f59e0b",
+                  color: theme.primary,
                   marginBottom: "8px",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
                 }}
               >
-                Background Tools (Automatic)
+                Automatic Tool Proficiencies
               </h4>
               <div
                 style={{
@@ -253,25 +307,53 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
                   marginBottom: "8px",
                 }}
               >
-                {toolData.background.map((tool) => (
-                  <ProficiencyBox
-                    key={`bg-tool-${tool}`}
-                    item={tool}
-                    isSelected={true}
-                    isAutomatic={true}
-                    sourceType="background"
-                    canToggle={false}
-                  />
-                ))}
+                {toolData.automatic.map((tool) => {
+                  let sourceType = null;
+                  if (toolData.background.includes(tool))
+                    sourceType = "background";
+                  else if (toolData.subclass.includes(tool))
+                    sourceType = "subclass";
+                  else if (toolData.feat.includes(tool)) sourceType = "feat";
+
+                  return (
+                    <ProficiencyBox
+                      key={`auto-tool-${tool}`}
+                      item={tool}
+                      isSelected={true}
+                      isAutomatic={true}
+                      sourceType={sourceType}
+                      canToggle={false}
+                    />
+                  );
+                })}
               </div>
               <div
                 style={{
                   fontSize: "12px",
                   color: theme.textSecondary,
                   fontStyle: "italic",
+                  display: "flex",
+                  gap: "16px",
+                  alignItems: "center",
+                  marginTop: "8px",
                 }}
               >
-                These tools are automatically granted by your background choice.
+                <span>Automatic from:</span>
+                {toolData.background.length > 0 && (
+                  <span style={{ color: "#f59e0b" }}>
+                    <strong>B</strong> = Background
+                  </span>
+                )}
+                {toolData.subclass.length > 0 && (
+                  <span style={{ color: "#10b981" }}>
+                    <strong>S</strong> = Subclass
+                  </span>
+                )}
+                {toolData.feat.length > 0 && (
+                  <span style={{ color: "#8b5cf6" }}>
+                    <strong>F</strong> = Feat
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -298,17 +380,26 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
             >
               {availableTools.map((tool) => {
                 const isSelected = toolData.all.includes(tool);
-                const isFromBackground = toolData.background.includes(tool);
+                const isAutomatic = toolData.automatic.includes(tool);
+
+                let sourceType = null;
+                if (isAutomatic) {
+                  if (toolData.background.includes(tool))
+                    sourceType = "background";
+                  else if (toolData.subclass.includes(tool))
+                    sourceType = "subclass";
+                  else if (toolData.feat.includes(tool)) sourceType = "feat";
+                }
 
                 return (
                   <ProficiencyBox
                     key={`tool-${tool}`}
                     item={tool}
                     isSelected={isSelected}
-                    isAutomatic={isFromBackground}
-                    sourceType={isFromBackground ? "background" : null}
+                    isAutomatic={isAutomatic}
+                    sourceType={sourceType}
                     onToggle={() => handleToolToggle(tool)}
-                    canToggle={!isFromBackground}
+                    canToggle={!isAutomatic}
                   />
                 );
               })}
@@ -324,8 +415,9 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
             fontStyle: "italic",
           }}
         >
-          Select additional tool proficiencies for your character.
-          Tools from your background are automatically included.
+          Select additional tool proficiencies for your character. Tools from
+          your background, subclass, and feats are automatically included and
+          cannot be removed.
         </div>
       </div>
     </div>
