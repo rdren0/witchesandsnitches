@@ -239,7 +239,10 @@ const AdminDashboard = ({ supabase }) => {
       label: "Downtime",
       icon: Calendar,
       component: <AdminDowntimeManager supabase={supabase} />,
-      badge: dashboardStats.downtimeSheets,
+      badge:
+        dashboardStats.downtimeSheets > 0
+          ? dashboardStats.downtimeSheets
+          : undefined,
     },
   ];
 
@@ -262,7 +265,7 @@ const AdminDashboard = ({ supabase }) => {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
-          const hasBadge = tab.badge && tab.badge > 0;
+          const hasBadge = tab.badge && Number(tab.badge) > 0;
 
           return (
             <button
