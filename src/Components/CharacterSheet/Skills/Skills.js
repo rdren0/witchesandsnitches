@@ -219,8 +219,8 @@ export const Skills = ({
       gap: "24px",
       flexWrap: "nowrap",
       margin: "8px 0",
-      padding: "6px 16px",
-      justifyContent: "flex-start",
+      padding: "6px 0",
+      justifyContent: "center",
       alignItems: "center",
     },
     legendItem: {
