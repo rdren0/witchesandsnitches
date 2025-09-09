@@ -5,6 +5,7 @@ import {
   Home,
   Briefcase,
   BookOpen,
+  Zap,
   Search,
   X,
   Loader,
@@ -399,6 +400,12 @@ const PlayerCard = ({
               <span>{character.house}</span>
             </div>
           )}
+          {character.casting_style && (
+            <div style={styles.detailRow}>
+              <Zap size={14} color={theme.primary} />
+              <span>{character.casting_style}</span>
+            </div>
+          )}
           {character.subclass && (
             <div style={styles.detailRow}>
               <BookOpen size={14} color={theme.primary} />
@@ -781,6 +788,7 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
     return (
       player.name?.toLowerCase().includes(searchLower) ||
       player.house?.toLowerCase().includes(searchLower) ||
+      player.casting_style?.toLowerCase().includes(searchLower) ||
       player.subclass?.toLowerCase().includes(searchLower) ||
       player.background?.toLowerCase().includes(searchLower) ||
       (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
@@ -874,7 +882,7 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
             <Search size={20} style={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Search players by name, house, subclass, background, notes, relationship, or tags..."
+              placeholder="Search players by name, house, casting style, subclass, background, notes, relationship, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{

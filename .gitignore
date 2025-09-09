@@ -26,4 +26,4 @@ yarn-error.log*
 .env
 
 # Claude Code settings
-.claude/settings.local.json
+*settings.local.json

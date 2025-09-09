@@ -95,10 +95,30 @@ export const castingStyleData = {
       "Stealth",
     ],
     keyFeatures: [
-      "Exploit Weakness: Deal extra damage once per turn using spell slots",
-      "Spell Deflection: Redirect spells back at enemies",
-      "Technical Metamagics: Bouncing, Maximized, and Seeking spell options",
-      "Sorcerous Restoration: Regain sorcery points on short rest at level 20",
+      {
+        name: "Exploit Weakness",
+        level: 1,
+        description:
+          "Starting at 1st level, your technical prowess with spells and dueling has led you to notice others weaknesses. Once per turn, when you hit a creature with an attack, you can expend one spell slot to deal extra damage to the target, in addition to the spell's regular damage. The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8. The damage is always the same type of damage that the triggering spell inflicted.",
+      },
+      {
+        name: "Spell Deflection",
+        level: 3,
+        description:
+          "At 3rd level, when you are the target of a spell or included in the area of a spell, you can deflect the spell as a reaction. The spell must be on your list of known spells and you spend a number of sorcery points equal to twice that spell's level. Upon deflection, you automatically succeed on your saving throw against the spell and you can direct the spell's effect to a creature within 10 feet of you, if desired. If the spell does not have a saving throw, it has no effect on you. If a creature was also targeted by the spell or included in the area of the spell, you cannot redirect the spell to that creature.",
+      },
+      {
+        name: "Technical Metamagics",
+        level: 3,
+        description:
+          "You may add the following Metamagic options to the list of Metamagics you can choose from as you level up as a technique caster. Bouncing Spell: When a creature succeeds at a saving throw against a single-target spell you cast, you can spend 2 Sorcery Points to have the spell bounce, targeting another creature of your choice within 30 ft. of the original target without spending another spell slot or taking an additional action. Maximized Spell: When you roll damage for a leveled spell, you can spend a number of Sorcery Points equal to twice the spell's level to deal maximum damage to one target of the spell. Maximized spell can not be applied to Exploit Weakness damage. Seeking Spell: If you make an attack roll for a spell and miss, you can spend 2 Sorcery Points to reroll the d20, and you must use the new roll. You can use Seeking Spell even if you have already used a different Metamagic option during the casting of the spell.",
+      },
+      {
+        name: "Sorcerous Restoration",
+        level: 20,
+        description:
+          "When you reach 20th level, you regain 4 expended sorcery points whenever you finish a short rest.",
+      },
     ],
     description:
       "Masters of precision and technique, these casters excel at exploiting weaknesses and deflecting magical attacks.",
@@ -125,12 +145,42 @@ export const castingStyleData = {
       "Survival",
     ],
     keyFeatures: [
-      "Double Check Notes: Retry failed spells once per long rest",
-      "Ritual Casting: Cast ritual spells without expending spell slots",
-      "Tactical Wit: Use INT for initiative and gain defensive bonuses",
-      "Sharp Senses: Enhanced AC calculation",
-      "Diverse Studies: Gain school of magic features at level 3",
-      "Arcane Recovery: Recover spell slots on short rest at level 20",
+      {
+        name: "Double Check Notes",
+        level: 1,
+        description:
+          "Once per long rest, you may use a Bonus Action to check over your notes when you fail to cast a spell correctly. When you do so, you may gain an extra attempt to cast the spell you failed.",
+      },
+      {
+        name: "Ritual Casting",
+        level: 1,
+        description:
+          "Your ability to recall information allows you to freely cast spells, as long as you have enough time to stop and focus. At 1st level, you can cast a spell as a ritual if that spell has the ritual tag and you know the spell. A ritual version of a spell takes only 1 minute longer to cast than normal. It also doesn't expend a spell slot, which means the ritual version of a spell can't be cast at a higher level.",
+      },
+      {
+        name: "Tactical Wit",
+        level: 3,
+        description:
+          "Your keen ability to assess tactical situations allows you to act quickly in battle. When calculating your Initiative you may use your Intelligence modifier rather than Dexterity (Whichever is higher). Additionally, you have learned to weave your magic to fortify yourself against harm. When you are hit by an attack or you fail a saving throw, you can use your reaction to gain a +2 bonus to your AC against that attack or a +4 bonus to that saving throw. When you use this feature, you can't cast spells other than cantrips until the end of your next turn.",
+      },
+      {
+        name: "Sharp Senses",
+        level: 1,
+        description:
+          "Your ability to avoid incoming spells is superior to your peers. Your AC equals 11 + your Dexterity modifier",
+      },
+      {
+        name: "Diverse Studies",
+        level: 3,
+        description:
+          "At 3rd level, you gain two level 1 features of your chosen School of Magic.",
+      },
+      {
+        name: "Arcane Recovery",
+        level: 20,
+        description:
+          "When you reach 20th level, you have learned to regain some of your magical energy by studying in your free time. Whenever you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than 10, and none of the slots can be 6th level or higher.",
+      },
     ],
     description:
       "Scholarly spellcasters who rely on knowledge and preparation, with superior tactical awareness and ritual casting.",
@@ -156,11 +206,36 @@ export const castingStyleData = {
       "Performance",
     ],
     keyFeatures: [
-      "Easy Target: Lower AC but massive hit points",
-      "Rated E for Everyone: Enhanced unarmed strikes (1d6 + STR)",
-      "Metamagic: Rage: Enter a magical rage with resistances and bonuses",
-      "Relentless Rage: Stay conscious when dropped to 0 HP while raging",
-      "Vigorous Perfection: +4 Constitution at level 20 (max 24)",
+      {
+        name: "Easy Target",
+        level: 1,
+        description:
+          "Your large, strong body makes you easy to see and easy to hit. Your AC equals 8 + your Dexterity Modifier",
+      },
+      {
+        name: "Rated E for Everyone",
+        level: 1,
+        description:
+          "Your unarmed strikes deal damage equal to 1d6 + your Strength mod.",
+      },
+      {
+        name: "Metamagic: Rage",
+        level: 3,
+        description:
+          "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain the following benefits when you aren't wearing armor:",
+      },
+      {
+        name: "Relentless Rage",
+        level: 11,
+        description:
+          "Starting at 11th level, your rage can keep you fighting despite grievous wounds. If you drop to 0 hit points while you're raging and don't die outright, you can make a DC 15 Constitution saving throw. If you succeed, you drop to 1 hit point instead. Each time you use this feature after the first, the DC increases by 5. When you finish a short or long rest, the DC resets to 15.",
+      },
+      {
+        name: "Vigorous Perfection",
+        level: 20,
+        description:
+          "At 20th level, your Constitution score increases by 4. Your maximum for this score is now 24.",
+      },
     ],
     description:
       "Physical powerhouses who channel magic through raw vitality, combining spellcasting with brutal melee combat.",
@@ -186,10 +261,30 @@ export const castingStyleData = {
       "Survival",
     ],
     keyFeatures: [
-      "Sorcerous Resilience: Natural magical protection (13 + DEX AC)",
-      "Fierce Spell: Cast spells at higher levels using sorcery points",
-      "Resistant Spell: Make spells harder to counter or deflect",
-      "Signature Spells: Cast two 3rd-level spells without spell slots at level 20",
+      {
+        name: "Sorcerous Resilience",
+        level: 1,
+        description:
+          "The accidental magic in your early childhood never stopped protecting you. Your AC equals 15 + your Dexterity modifier.",
+      },
+      {
+        name: "Metamagic: Fierce Spell",
+        level: 3,
+        description:
+          "At 3rd level, when you cast a spell, you can spend 2 sorcery points to cast that spell as if it were cast using a spell slot one level higher than its original level, or 4 sorcery points to cast that spell two levels higher. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+      },
+      {
+        name: "Metamagic: Resistant Spell",
+        level: 3,
+        description:
+          "At 3rd level, when you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+      },
+      {
+        name: "Signature Spells",
+        level: 20,
+        description:
+          "When you reach 20th level, you gain mastery over two powerful spells and can cast them with little effort. Choose two of your known 3rd-level spells as your signature spells. You can cast each of them once at 3rd level without expending a spell slot. When you do so, you can't do so again until you finish a short or long rest.",
+      },
     ],
     description:
       "Charismatic casters who rely on force of personality and natural magical talent, with strong defensive capabilities.",

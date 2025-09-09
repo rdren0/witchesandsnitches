@@ -39,11 +39,20 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     const conMod = Math.floor((con - 10) / 2);
     const rolled = Math.floor(Math.random() * castingHpData.base) + 1 + conMod;
     const toughFeatBonus = calculateToughFeatHPBonus(character);
-    const totalHp = Math.max(1, rolled * (character.level || 1) + toughFeatBonus);
+    const totalHp = Math.max(
+      1,
+      rolled * (character.level || 1) + toughFeatBonus
+    );
 
     setRolledHp(totalHp);
     onChange("hitPoints", totalHp);
-    onChange("currentHitPoints", totalHp);
+
+    if (
+      character.currentHitPoints === undefined ||
+      character.currentHitPoints === null
+    ) {
+      onChange("currentHitPoints", totalHp);
+    }
   };
 
   const hpStyles = {
@@ -248,9 +257,17 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
               type="number"
               min="1"
               value={character.hitPoints || ""}
-              onChange={(e) =>
-                onChange("hitPoints", parseInt(e.target.value) || 1)
-              }
+              onChange={(e) => {
+                const newMaxHp = parseInt(e.target.value) || 1;
+                onChange("hitPoints", newMaxHp);
+
+                if (
+                  character.currentHitPoints === undefined ||
+                  character.currentHitPoints === null
+                ) {
+                  onChange("currentHitPoints", newMaxHp);
+                }
+              }}
               placeholder="--"
               style={{
                 ...hpStyles.hpInput,

@@ -28,10 +28,103 @@ const CharacterSheetModals = ({
   const rollHitDice = async () => {
     if (
       !character ||
-      selectedHitDiceCount <= 0 ||
+      selectedHitDiceCount < 0 ||
       selectedHitDiceCount > character.currentHitDice
     ) {
       return;
+    }
+
+    if (selectedHitDiceCount === 0 || character.currentHitDice === 0) {
+      setIsRollingHitDice(true);
+      try {
+        setShowHitDiceModal(false);
+
+        const characterOwnerId = character.discord_user_id || character.ownerId;
+
+        const hasLuckyFeat = character?.feats?.includes("Lucky") || false;
+        const getProficiencyBonus = (level) => {
+          if (level <= 4) return 2;
+          if (level <= 8) return 3;
+          if (level <= 12) return 4;
+          if (level <= 16) return 5;
+          return 6;
+        };
+
+        if (hasLuckyFeat) {
+          const resourceUpdates = {
+            character_id: character.id,
+            discord_user_id: characterOwnerId,
+            updated_at: new Date().toISOString(),
+            luck: getProficiencyBonus(character?.level || 1),
+          };
+
+          const { error: resourcesError } = await supabase
+            .from("character_resources")
+            .upsert(resourceUpdates, {
+              onConflict: "character_id,discord_user_id",
+            });
+
+          if (resourcesError) {
+            console.error("Error updating resources:", resourcesError);
+          }
+        }
+
+        showRollResult({
+          title: `Short Rest Complete`,
+          rollValue: 0,
+          modifier: 0,
+          total: 0,
+          isCriticalSuccess: false,
+          isCriticalFailure: false,
+          type: "shortrest",
+          character: character,
+          description: `${character.name} has taken a short rest${
+            hasLuckyFeat ? " • Luck points restored" : ""
+          } • No healing received`,
+        });
+
+        const additionalFields = [
+          {
+            name: "Rest Type",
+            value: "Short Rest (1 hour)",
+            inline: true,
+          },
+          {
+            name: "Hit Dice Used",
+            value: "0",
+            inline: true,
+          },
+          {
+            name: "Benefits",
+            value: hasLuckyFeat
+              ? "Luck points restored"
+              : "Class features refreshed",
+            inline: false,
+          },
+        ];
+
+        const success = await sendDiscordRollWebhook({
+          character,
+          rollType: "Short Rest",
+          title: "Short Rest Complete",
+          embedColor: 0x10b981,
+          rollResult: null, // No roll details for short rest without dice
+          fields: additionalFields,
+          useCharacterAvatar: true,
+          description: "☕ **Short rest completed - refreshed and ready!**",
+        });
+
+        if (!success) {
+          console.error("Failed to send short rest to Discord");
+        }
+
+        return;
+      } catch (error) {
+        console.error("Error taking short rest:", error);
+        alert("Error taking short rest. Please try again.");
+      } finally {
+        setIsRollingHitDice(false);
+      }
     }
 
     setIsRollingHitDice(true);
@@ -395,75 +488,77 @@ const CharacterSheetModals = ({
               </div>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "16px",
-                margin: "20px 0",
-              }}
-            >
-              <button
-                style={{
-                  padding: "8px",
-                  border: theme.border,
-                  backgroundColor: theme.background,
-                  color: theme.primary,
-                  borderRadius: "6px",
-                  cursor: selectedHitDiceCount <= 1 ? "not-allowed" : "pointer",
-                  opacity: selectedHitDiceCount <= 1 ? 0.5 : 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onClick={() =>
-                  setSelectedHitDiceCount(Math.max(1, selectedHitDiceCount - 1))
-                }
-                disabled={selectedHitDiceCount <= 1}
-              >
-                <Minus size={16} />
-              </button>
-
+            {character.currentHitDice > 0 && (
               <div
                 style={{
-                  fontSize: "24px",
-                  fontWeight: "600",
-                  minWidth: "40px",
-                  textAlign: "center",
-                  color: theme.text,
-                }}
-              >
-                {selectedHitDiceCount}
-              </div>
-
-              <button
-                style={{
-                  padding: "8px",
-                  border: theme.border,
-                  backgroundColor: theme.background,
-                  color: theme.primary,
-                  borderRadius: "6px",
-                  cursor:
-                    selectedHitDiceCount >= character.currentHitDice
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity:
-                    selectedHitDiceCount >= character.currentHitDice ? 0.5 : 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  gap: "16px",
+                  margin: "20px 0",
                 }}
-                onClick={() =>
-                  setSelectedHitDiceCount(
-                    Math.min(character.currentHitDice, selectedHitDiceCount + 1)
-                  )
-                }
-                disabled={selectedHitDiceCount >= character.currentHitDice}
               >
-                <Plus size={16} />
-              </button>
-            </div>
+                <button
+                  style={{
+                    padding: "8px",
+                    border: theme.border,
+                    backgroundColor: theme.background,
+                    color: theme.primary,
+                    borderRadius: "6px",
+                    cursor: selectedHitDiceCount <= 0 ? "not-allowed" : "pointer",
+                    opacity: selectedHitDiceCount <= 0 ? 0.5 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onClick={() =>
+                    setSelectedHitDiceCount(Math.max(0, selectedHitDiceCount - 1))
+                  }
+                  disabled={selectedHitDiceCount <= 0}
+                >
+                  <Minus size={16} />
+                </button>
+
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontWeight: "600",
+                    minWidth: "40px",
+                    textAlign: "center",
+                    color: theme.text,
+                  }}
+                >
+                  {selectedHitDiceCount}
+                </div>
+
+                <button
+                  style={{
+                    padding: "8px",
+                    border: theme.border,
+                    backgroundColor: theme.background,
+                    color: theme.primary,
+                    borderRadius: "6px",
+                    cursor:
+                      selectedHitDiceCount >= character.currentHitDice
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity:
+                      selectedHitDiceCount >= character.currentHitDice ? 0.5 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onClick={() =>
+                    setSelectedHitDiceCount(
+                      Math.min(character.currentHitDice, selectedHitDiceCount + 1)
+                    )
+                  }
+                  disabled={selectedHitDiceCount >= character.currentHitDice}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            )}
 
             <div
               style={{
@@ -473,8 +568,18 @@ const CharacterSheetModals = ({
                 color: theme.textSecondary,
               }}
             >
-              Rolling {selectedHitDiceCount} × {character.hitDie} +{" "}
-              {formatModifier(characterModifiers.constitution)} each
+              {character.currentHitDice === 0 || selectedHitDiceCount === 0 ? (
+                character.currentHitDice === 0 ? (
+                  "Short rest - no hit dice available for healing"
+                ) : (
+                  "Rest without healing - no hit dice will be used"
+                )
+              ) : (
+                <>
+                  Rolling {selectedHitDiceCount} × {character.hitDie} +{" "}
+                  {formatModifier(characterModifiers.constitution)} each
+                </>
+              )}
             </div>
 
             <div
@@ -503,7 +608,11 @@ const CharacterSheetModals = ({
                 disabled={isRollingHitDice}
               >
                 <Dices size={16} />
-                {isRollingHitDice ? "Rolling..." : "Roll Hit Dice"}
+                {isRollingHitDice
+                  ? "Resting..."
+                  : character.currentHitDice === 0 || selectedHitDiceCount === 0
+                  ? "Take Short Rest"
+                  : "Roll Hit Dice"}
               </button>
               <button
                 style={{

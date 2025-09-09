@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { standardFeats } from "../../SharedData/standardFeatData";
-import { hpData, SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import {
+  hpData,
+  SPELL_SLOT_PROGRESSION,
+  SORCERY_POINT_PROGRESSION,
+} from "../../SharedData/data";
 import { checkFeatPrerequisites } from "../CharacterSheet/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAllSelectedFeats } from "./utils/characterUtils";
@@ -41,6 +45,7 @@ const LevelUpModal = ({
     manualHP: 0,
     asiChoice: "asi",
     featChoices: {},
+    advanceSchoolYear: false,
   });
 
   const getAbilityScore = (abilityName) => {
@@ -218,6 +223,41 @@ const LevelUpModal = ({
       return true;
     } catch (error) {
       console.error("Error in updateSpellSlotResources:", error);
+      throw error;
+    }
+  };
+
+  const updateSorceryPointResources = async (
+    character,
+    newLevel,
+    supabase,
+    discordUserId
+  ) => {
+    try {
+      const newMaxSorceryPoints = SORCERY_POINT_PROGRESSION[newLevel] || 0;
+
+      const updateData = {
+        character_id: character.id,
+        discord_user_id: discordUserId,
+        max_sorcery_points: newMaxSorceryPoints,
+        sorcery_points: newMaxSorceryPoints,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("character_resources")
+        .upsert(updateData, {
+          onConflict: "character_id,discord_user_id",
+        });
+
+      if (error) {
+        console.error("Error updating sorcery point resources:", error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in updateSorceryPointResources:", error);
       throw error;
     }
   };
@@ -577,6 +617,7 @@ const LevelUpModal = ({
       let newFullHP = currentFullHP + levelUpData.hitPointIncrease;
 
       const spellSlotUpdates = updateSpellSlotsOnLevelUp(character, newLevel);
+      const newMaxSorceryPoints = SORCERY_POINT_PROGRESSION[newLevel] || 0;
 
       const updatedCharacter = {
         ...character,
@@ -585,8 +626,18 @@ const LevelUpModal = ({
         hitPoints: newFullHP,
         image_url: character.image_url || character.imageUrl || null,
         imageUrl: character.imageUrl || character.image_url || null,
+        sorceryPoints: newMaxSorceryPoints,
+        maxSorceryPoints: newMaxSorceryPoints,
         ...spellSlotUpdates,
       };
+
+      if (levelUpData.advanceSchoolYear) {
+        const currentSchoolYear =
+          character.schoolYear || character.school_year || 1;
+        const newSchoolYear = Math.min(currentSchoolYear + 1, 7);
+        updatedCharacter.schoolYear = newSchoolYear;
+        updatedCharacter.school_year = newSchoolYear;
+      }
 
       if (isAsiLevel) {
         const currentAsiChoices =
@@ -842,9 +893,15 @@ const LevelUpModal = ({
             supabase,
             discordUserId
           );
+          await updateSorceryPointResources(
+            updatedCharacter,
+            newLevel,
+            supabase,
+            discordUserId
+          );
         }
-      } catch (spellSlotError) {
-        console.error("Error updating spell slot resources:", spellSlotError);
+      } catch (resourceError) {
+        console.error("Error updating character resources:", resourceError);
       }
 
       await onSave(updatedCharacter, levelUpDetails);
@@ -1104,6 +1161,75 @@ const LevelUpModal = ({
                       : 0}
                   </div>
                 </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "32px",
+                  padding: "20px",
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "12px",
+                  backgroundColor: theme.surface,
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 16px 0",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: theme.text,
+                  }}
+                >
+                  School Year Advancement
+                </h4>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={levelUpData.advanceSchoolYear}
+                    onChange={(e) =>
+                      setLevelUpData((prev) => ({
+                        ...prev,
+                        advanceSchoolYear: e.target.checked,
+                      }))
+                    }
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      accentColor: theme.primary,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: theme.text,
+                    }}
+                  >
+                    Advance to next school year
+                    {character.schoolYear || character.school_year
+                      ? ` (Currently Year ${
+                          character.schoolYear || character.school_year
+                        })`
+                      : " (Currently Year 1)"}
+                  </span>
+                </label>
+                <p
+                  style={{
+                    margin: "8px 0 0 28px",
+                    fontSize: "12px",
+                    color: theme.textSecondary,
+                    fontStyle: "italic",
+                  }}
+                >
+                  Only check this if your character has progressed to a new
+                  academic year at their magical school
+                </p>
               </div>
             </div>
           </div>
