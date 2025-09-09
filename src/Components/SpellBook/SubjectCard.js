@@ -21,12 +21,19 @@ import {
   Filter,
   Brain,
   Eye as WisdomIcon,
+  Target,
 } from "lucide-react";
 
 import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useRollFunctions } from "../utils/diceRoller";
+import { useRollFunctions, useRollModal } from "../utils/diceRoller";
+import {
+  sendDiscordRollWebhook,
+  getRollResultColor,
+  ROLL_COLORS,
+} from "../utils/discordWebhook";
+import { formatModifier } from "../CharacterSheet/utils";
 import { createSpellBookStyles } from "./styles";
 import RestrictionModal from "./RestrictionModal";
 import { SpellBonusDiceModal } from "./SpellBonusDiceModal";
@@ -290,6 +297,57 @@ const getAdditionalStyles = (theme) => ({
     cursor: "not-allowed",
     opacity: 0.6,
   },
+  spellAttackButton: {
+    backgroundColor: "#d1323d",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "6px 12px",
+    fontSize: "12px",
+    fontWeight: "500",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  savingThrowButton: {
+    backgroundColor: "#3B82F6",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "6px 12px",
+    fontSize: "12px",
+    fontWeight: "500",
+    cursor: "default",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  damageButton: {
+    backgroundColor: "#dc2626",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "6px 8px",
+    fontSize: "11px",
+    fontWeight: "500",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "3px",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+    marginLeft: "4px",
+  },
+  buttonContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+  },
   menuButton: {
     padding: "6px",
     border: "none",
@@ -495,7 +553,211 @@ export const SubjectCard = ({
     attemptRunesSpell,
     rollResearch,
   } = useRollFunctions();
+  const { showRollResult } = useRollModal();
   const { theme } = useTheme();
+
+  const getSpellcastingAbility = (castingStyle) => {
+    const spellcastingAbilityMap = {
+      "Willpower Caster": "Charisma",
+      "Technique Caster": "Wisdom",
+      "Intellect Caster": "Intelligence",
+      "Vigor Caster": "Constitution",
+      Willpower: "Charisma",
+      Technique: "Wisdom",
+      Intellect: "Intelligence",
+      Vigor: "Constitution",
+    };
+    return spellcastingAbilityMap[castingStyle] || null;
+  };
+
+  const getSpellcastingAbilityModifier = (character) => {
+    const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
+    if (!spellcastingAbility) return 0;
+
+    const abilityKey = spellcastingAbility.toLowerCase();
+    const abilityScore = character[abilityKey] || 10;
+    return Math.floor((abilityScore - 10) / 2);
+  };
+
+  const extractDamageInfo = (spellDescription, spellName) => {
+    if (!spellDescription) return null;
+
+    const damageRegex = /(\d+d\d+(?:\s*\+\s*\d+)?)\s+(\w+)\s+damage/gi;
+    const matches = [...spellDescription.matchAll(damageRegex)];
+
+    if (matches.length === 0) return null;
+
+    const match = matches[0];
+    return {
+      dice: match[1],
+      type: match[2],
+    };
+  };
+
+  const extractSavingThrowInfo = (spellDescription) => {
+    if (!spellDescription) return null;
+
+    const savingThrowRegex =
+      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+saving\s+throw/gi;
+    const matches = [...spellDescription.matchAll(savingThrowRegex)];
+
+    if (matches.length === 0) return null;
+
+    const match = matches[0];
+    return {
+      ability: match[1],
+    };
+  };
+
+  const getSpellSaveDC = (character) => {
+    if (!character) return 8;
+
+    const spellcastingModifier = getSpellcastingAbilityModifier(character);
+    return 8 + character.proficiencyBonus + spellcastingModifier;
+  };
+
+  const handleSpellAttack = async (spellName) => {
+    if (!selectedCharacter) return;
+
+    const spellcastingAbility = getSpellcastingAbility(
+      selectedCharacter.castingStyle
+    );
+    if (!spellcastingAbility) return;
+
+    try {
+      const spellcastingModifier =
+        getSpellcastingAbilityModifier(selectedCharacter);
+      const totalModifier =
+        selectedCharacter.proficiencyBonus + spellcastingModifier;
+
+      const rollValue = Math.floor(Math.random() * 20) + 1;
+      const total = rollValue + totalModifier;
+
+      const isCriticalSuccess = rollValue === 20;
+      const isCriticalFailure = rollValue === 1;
+
+      const rollResult = {
+        d20Roll: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+      };
+
+      showRollResult({
+        title: `${spellName} - Spell Attack`,
+        rollValue: rollValue,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess: isCriticalSuccess,
+        isCriticalFailure: isCriticalFailure,
+        character: selectedCharacter,
+        type: "spellattack",
+        description: `d20 + ${selectedCharacter.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+      });
+
+      const additionalFields = [
+        {
+          name: "Spell",
+          value: spellName,
+          inline: true,
+        },
+        {
+          name: "Modifiers",
+          value: `Prof: +${
+            selectedCharacter.proficiencyBonus
+          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}`,
+          inline: true,
+        },
+      ];
+
+      await sendDiscordRollWebhook({
+        character: selectedCharacter,
+        rollType: "Spell Attack Roll",
+        title: `${spellName} - Spell Attack`,
+        embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
+        rollResult,
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+    } catch (error) {
+      console.error("Error rolling spell attack:", error);
+    }
+  };
+
+  const handleDamageRoll = async (spellName, damageInfo) => {
+    if (!selectedCharacter || !damageInfo) return;
+
+    try {
+      const diceMatch = damageInfo.dice.match(/(\d+)d(\d+)(?:\+(\d+))?/);
+      if (!diceMatch) return;
+
+      const numDice = parseInt(diceMatch[1]);
+      const diceSize = parseInt(diceMatch[2]);
+      const bonus = parseInt(diceMatch[3]) || 0;
+
+      let total = bonus;
+      const rolls = [];
+      for (let i = 0; i < numDice; i++) {
+        const roll = Math.floor(Math.random() * diceSize) + 1;
+        rolls.push(roll);
+        total += roll;
+      }
+
+      showRollResult({
+        title: `${spellName} - Damage Roll`,
+        rollValue: rolls.reduce((sum, roll) => sum + roll, 0),
+        modifier: bonus,
+        total: total,
+        character: selectedCharacter,
+        type: "damage",
+        description: `${damageInfo.dice} ${damageInfo.type} damage = ${total}`,
+        individualDiceResults: rolls,
+        diceQuantity: numDice,
+        diceType: diceSize,
+      });
+
+      const additionalFields = [
+        {
+          name: "Spell",
+          value: spellName,
+          inline: true,
+        },
+        {
+          name: "Damage Type",
+          value:
+            damageInfo.type.charAt(0).toUpperCase() + damageInfo.type.slice(1),
+          inline: true,
+        },
+        {
+          name: "Dice Rolled",
+          value: rolls.join(", ") + (bonus > 0 ? ` + ${bonus}` : ""),
+          inline: true,
+        },
+      ];
+
+      await sendDiscordRollWebhook({
+        character: selectedCharacter,
+        rollType: "Damage Roll",
+        title: `${spellName} - ${
+          damageInfo.type.charAt(0).toUpperCase() + damageInfo.type.slice(1)
+        } Damage`,
+        embedColor: 0xef4444,
+        rollResult: {
+          d20Roll: rolls.reduce((sum, roll) => sum + roll, 0),
+          rollValue: rolls.reduce((sum, roll) => sum + roll, 0),
+          modifier: bonus,
+          total: total,
+          isCriticalSuccess: false,
+          isCriticalFailure: false,
+        },
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+    } catch (error) {
+      console.error("Error rolling damage:", error);
+    }
+  };
 
   const [restrictionModal, setRestrictionModal] = useState({
     isOpen: false,
@@ -1180,24 +1442,100 @@ export const SubjectCard = ({
           )}
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() => handleSpellAttempt(spellName, subject)}
-            disabled={isAttempting || isMastered || !selectedCharacter}
-            style={{
-              ...styles.attemptButton,
-              ...(isMastered || isAttempting || !selectedCharacter
-                ? styles.attemptButtonDisabled
-                : {}),
-            }}
-          >
-            <Dice6 size={14} />
-            {isAttempting ? "Rolling..." : "Attempt"}
-          </button>
+          {isMastered ? (
+            <div style={styles.buttonContainer}>
+              {(() => {
+                const spellData = getSpellData(spellName);
+                const savingThrowInfo = extractSavingThrowInfo(
+                  spellData?.description
+                );
+                const damageInfo = extractDamageInfo(
+                  spellData?.description,
+                  spellName
+                );
+
+                if (savingThrowInfo) {
+                  return (
+                    <button
+                      disabled={true}
+                      style={{
+                        ...styles.savingThrowButton,
+                      }}
+                    >
+                      <Shield size={14} />
+                      {`${savingThrowInfo.ability} Save DC ${getSpellSaveDC(
+                        selectedCharacter
+                      )}`}
+                    </button>
+                  );
+                } else {
+                  return (
+                    <button
+                      onClick={() => handleSpellAttack(spellName)}
+                      disabled={isAttempting || !selectedCharacter}
+                      style={{
+                        ...styles.spellAttackButton,
+                        ...(isAttempting || !selectedCharacter
+                          ? styles.attemptButtonDisabled
+                          : {}),
+                      }}
+                    >
+                      <Target size={14} />
+                      {isAttempting
+                        ? "Rolling..."
+                        : `Spell Attack ${formatModifier(
+                            selectedCharacter.proficiencyBonus +
+                              getSpellcastingAbilityModifier(selectedCharacter)
+                          )}`}
+                    </button>
+                  );
+                }
+              })()}
+              {(() => {
+                const spellData = getSpellData(spellName);
+                const damageInfo = extractDamageInfo(
+                  spellData?.description,
+                  spellName
+                );
+                return damageInfo ? (
+                  <button
+                    onClick={() => handleDamageRoll(spellName, damageInfo)}
+                    disabled={isAttempting || !selectedCharacter}
+                    style={{
+                      ...styles.damageButton,
+                      ...(isAttempting || !selectedCharacter
+                        ? styles.attemptButtonDisabled
+                        : {}),
+                    }}
+                  >
+                    <Dice6 size={12} />
+                    {damageInfo.dice}
+                  </button>
+                ) : null;
+              })()}
+            </div>
+          ) : (
+            <button
+              onClick={() => handleSpellAttempt(spellName, subject)}
+              disabled={isAttempting || !selectedCharacter}
+              style={{
+                ...styles.attemptButton,
+                ...(isAttempting || !selectedCharacter
+                  ? styles.attemptButtonDisabled
+                  : {}),
+              }}
+            >
+              <Dice6 size={14} />
+              {isAttempting ? "Rolling..." : "Attempt"}
+            </button>
+          )}
         </td>
         {showLevel && (
           <td style={{ ...styles.tableCell, textAlign: "center" }}>
             {hasArithmancticTag ? (
-              <span style={{ color: theme.success, fontWeight: "bold" }}>✓</span>
+              <span style={{ color: theme.success, fontWeight: "bold" }}>
+                ✓
+              </span>
             ) : (
               <span style={styles.noCriticalText}>-</span>
             )}
@@ -1206,7 +1544,9 @@ export const SubjectCard = ({
         {showLevel && (
           <td style={{ ...styles.tableCell, textAlign: "center" }}>
             {hasRunicTag ? (
-              <span style={{ color: theme.success, fontWeight: "bold" }}>✓</span>
+              <span style={{ color: theme.success, fontWeight: "bold" }}>
+                ✓
+              </span>
             ) : (
               <span style={styles.noCriticalText}>-</span>
             )}
@@ -1215,7 +1555,9 @@ export const SubjectCard = ({
         {showLevel && (
           <td style={{ ...styles.tableCell, textAlign: "center" }}>
             {isResearched ? (
-              <span style={{ color: theme.success, fontWeight: "bold" }}>✓</span>
+              <span style={{ color: theme.success, fontWeight: "bold" }}>
+                ✓
+              </span>
             ) : (
               <span style={styles.noCriticalText}>-</span>
             )}
@@ -1293,7 +1635,10 @@ export const SubjectCard = ({
     const descriptionRow =
       isDescriptionExpanded && spellObj.description ? (
         <tr key={`${spellName}-description`}>
-          <td colSpan={showLevel ? "9" : "6"} style={{ padding: "0", border: "none" }}>
+          <td
+            colSpan={showLevel ? "9" : "6"}
+            style={{ padding: "0", border: "none" }}
+          >
             <div
               style={{
                 padding: "16px",

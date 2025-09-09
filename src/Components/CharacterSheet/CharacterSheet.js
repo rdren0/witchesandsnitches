@@ -918,6 +918,7 @@ const CharacterSheet = ({
     }
   };
 
+
   const handleDamageClick = () => {
     if (!character) return;
     setDamageAmount(0);
@@ -1391,24 +1392,21 @@ const CharacterSheet = ({
                       color: "white",
                       border: "none",
                       borderRadius: "6px",
-                      cursor:
-                        character.currentHitDice <= 0
-                          ? "not-allowed"
-                          : "pointer",
+                      cursor: "pointer",
                       fontSize: "12px",
                       fontWeight: "600",
                       display: "flex",
                       alignItems: "center",
                       gap: "4px",
-                      opacity: character.currentHitDice <= 0 ? 0.6 : 1,
+                      opacity: 1,
                       transition: "all 0.2s ease",
                       justifyContent: "center",
                       padding: "8px 12px",
                       height: "32px",
                     }}
                     onClick={handleShortRestClick}
-                    disabled={character.currentHitDice <= 0}
-                    title={`Use hit dice to recover HP during a short rest (${character.currentHitDice} dice available)`}
+                    disabled={false}
+                    title="Take a short rest - choose how many hit dice to use (0 to rest without healing)"
                   >
                     <Coffee size={14} />
                     Short Rest
@@ -1433,7 +1431,7 @@ const CharacterSheet = ({
                     }}
                     onClick={handleLongRest}
                     disabled={isLongResting}
-                    title="Restore all HP and hit dice with a long rest"
+                    title="Take a long rest - automatically restores all HP, hit dice, and spell slots"
                   >
                     <Moon size={14} />
                     {isLongResting ? "Resting..." : "Long Rest"}

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronRight,
   Dna,
+  Zap,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -17,6 +18,7 @@ import { subclassesData } from "../../SharedData/subclassesData";
 import { backgroundsData } from "../../SharedData/backgroundsData";
 import { heritageDescriptions } from "../../SharedData/heritageData";
 import { standardFeats } from "../../SharedData/standardFeatData";
+import { castingStyleData } from "../../SharedData/data";
 
 const CharacterFeatsDisplay = ({
   character,
@@ -32,26 +34,32 @@ const CharacterFeatsDisplay = ({
 
   const organizedFeatures = useMemo(() => {
     const sections = {
+      castingStyle: {
+        title: "Casting Style",
+        icon: Zap,
+        color: "#8B5CF6",
+        features: [],
+      },
       house: {
-        title: "House Features",
+        title: "House",
         icon: Home,
         color: "#DC2626",
         features: [],
       },
       subclass: {
-        title: "Subclass Features",
+        title: "Subclass",
         icon: Scroll,
         color: "#7C3AED",
         features: [],
       },
       background: {
-        title: "Background Features",
+        title: "Background",
         icon: BookOpen,
         color: "#059669",
         features: [],
       },
       innateHeritage: {
-        title: "Innate Heritage Features",
+        title: "Innate Heritage",
         icon: Dna,
         color: "#935b35ff",
         features: [],
@@ -669,6 +677,25 @@ const CharacterFeatsDisplay = ({
       });
     }
 
+    if (character.castingStyle && castingStyleData[character.castingStyle]) {
+      const styleData = castingStyleData[character.castingStyle];
+
+      if (styleData.keyFeatures && styleData.keyFeatures.length > 0) {
+        styleData.keyFeatures.forEach((feature) => {
+          if (feature.level && character.level >= feature.level) {
+            sections.castingStyle.features.push({
+              name: feature.name,
+              type: "Casting Style Feature",
+              source: character.castingStyle,
+              level: feature.level,
+              description: feature.description,
+              details: [],
+            });
+          }
+        });
+      }
+    }
+
     Object.keys(sections).forEach((sectionKey) => {
       sections[sectionKey].features.sort((a, b) => {
         const levelA = a.level === null ? Infinity : a.level;
@@ -700,6 +727,10 @@ const CharacterFeatsDisplay = ({
             if (type === "Heritage Feature") return 3;
             if (type === "Heritage Skills") return 4;
             return 5;
+          } else if (section === "castingStyle") {
+            if (type === "Casting Style") return 0;
+            if (type === "Casting Style Feature") return 1;
+            return 2;
           }
           return 0;
         };
@@ -871,7 +902,10 @@ const CharacterFeatsDisplay = ({
     },
     featureCard: {
       padding: "16px",
-      borderBottom: `1px solid ${theme.border}`,
+      margin: "8px",
+      backgroundColor: theme.surface,
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
       transition: "all 0.2s ease",
     },
     featureHeader: {
@@ -1004,87 +1038,100 @@ const CharacterFeatsDisplay = ({
       </div>
 
       {Object.keys(filteredSections).length > 0 ? (
-        Object.entries(filteredSections).map(([sectionKey, section]) => {
-          const Icon = section.icon;
-          const isExpanded = expandedSections.has(sectionKey);
+        [
+          "castingStyle",
+          "house",
+          "subclass",
+          "background",
+          "innateHeritage",
+          "feats",
+        ]
+          .filter((sectionKey) => filteredSections[sectionKey])
+          .map((sectionKey) => {
+            const section = filteredSections[sectionKey];
+            const Icon = section.icon;
+            const isExpanded = expandedSections.has(sectionKey);
 
-          return (
-            <div key={sectionKey} style={styles.section}>
-              <div
-                style={styles.sectionHeader}
-                onClick={() => toggleSection(sectionKey)}
-              >
-                <div style={styles.sectionTitle}>
-                  <Icon size={20} style={{ color: section.color }} />
-                  {section.title}
-                  <div
-                    style={{
-                      ...styles.sectionCount,
-                      backgroundColor: section.color,
-                    }}
-                  >
-                    {section.features.length}
+            return (
+              <div key={sectionKey} style={styles.section}>
+                <div
+                  style={styles.sectionHeader}
+                  onClick={() => toggleSection(sectionKey)}
+                >
+                  <div style={styles.sectionTitle}>
+                    <Icon size={20} style={{ color: section.color }} />
+                    {section.title}
+                    <div
+                      style={{
+                        ...styles.sectionCount,
+                        backgroundColor: section.color,
+                      }}
+                    >
+                      {section.features.length}
+                    </div>
                   </div>
+                  {isExpanded ? (
+                    <ChevronDown size={20} />
+                  ) : (
+                    <ChevronRight size={20} />
+                  )}
                 </div>
-                {isExpanded ? (
-                  <ChevronDown size={20} />
-                ) : (
-                  <ChevronRight size={20} />
+
+                {isExpanded && (
+                  <div style={styles.featuresContainer}>
+                    {section.features.map((feature, index) => (
+                      <div key={index} style={styles.featureCard}>
+                        <div style={styles.featureHeader}>
+                          <h3 style={styles.featureName}>
+                            {feature.name}
+                            {feature.level && (
+                              <span style={styles.levelBadge}>
+                                Level {feature.level}
+                              </span>
+                            )}
+                          </h3>
+                          <div
+                            style={{
+                              ...styles.featureType,
+                              backgroundColor: section.color,
+                            }}
+                          >
+                            {feature.type}
+                          </div>
+                        </div>
+                        {feature.description && (
+                          <div style={styles.featureDescription}>
+                            {feature.description}
+                          </div>
+                        )}
+
+                        {feature.details && feature.details.length > 0 && (
+                          <div style={styles.featureDetails}>
+                            {Array.isArray(feature.details) ? (
+                              <ul style={styles.detailsList}>
+                                {feature.details.map((detail, detailIndex) => (
+                                  <li
+                                    key={detailIndex}
+                                    style={styles.detailItem}
+                                  >
+                                    {detail}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div style={styles.detailItem}>
+                                {feature.details}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-
-              {isExpanded && (
-                <div style={styles.featuresContainer}>
-                  {section.features.map((feature, index) => (
-                    <div key={index} style={styles.featureCard}>
-                      <div style={styles.featureHeader}>
-                        <h3 style={styles.featureName}>
-                          {feature.name}
-                          {feature.level && (
-                            <span style={styles.levelBadge}>
-                              Level {feature.level}
-                            </span>
-                          )}
-                        </h3>
-                        <div
-                          style={{
-                            ...styles.featureType,
-                            backgroundColor: section.color,
-                          }}
-                        >
-                          {feature.type}
-                        </div>
-                      </div>
-                      {feature.description && (
-                        <div style={styles.featureDescription}>
-                          {feature.description}
-                        </div>
-                      )}
-
-                      {feature.details && feature.details.length > 0 && (
-                        <div style={styles.featureDetails}>
-                          {Array.isArray(feature.details) ? (
-                            <ul style={styles.detailsList}>
-                              {feature.details.map((detail, detailIndex) => (
-                                <li key={detailIndex} style={styles.detailItem}>
-                                  {detail}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div style={styles.detailItem}>
-                              {feature.details}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })
+            );
+          })
       ) : (
         <div style={styles.emptyState}>
           <Search size={48} style={styles.emptyIcon} />
