@@ -509,7 +509,7 @@ const CharacterSubNavigation = () => {
     { path: "/character/potions", label: "Potions", key: "potions" },
     { path: "/character/recipes", label: "Recipes", key: "recipes" },
     { path: "/character/inventory", label: "Inventory", key: "inventory" },
-    { path: "/character/gallery", label: "NPC Gallery", key: "gallery" },
+    { path: "/character/gallery", label: "NPC Gallery", key: "gallery", isUpdated: true },
     {
       path: "/character/players",
       label: "Other Players",
@@ -606,6 +606,25 @@ const CharacterSubNavigation = () => {
                     }}
                   >
                     NEW
+                  </span>
+                )}
+                {subtab.isUpdated && (
+                  <span
+                    style={{
+                      backgroundColor: "#f59e0b",
+                      color: "white",
+                      padding: "4px 6px",
+                      borderRadius: "10px",
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      letterSpacing: "0.5px",
+                      lineHeight: "1",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    UPDATED
                   </span>
                 )}
               </span>
