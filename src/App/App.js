@@ -439,7 +439,7 @@ const Navigation = ({ characters }) => {
                 padding: "12px 20px",
                 border: "none",
                 borderRadius: "8px",
-                fontSize: "14px",
+                fontSize: "16px",
                 fontWeight: "500",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
