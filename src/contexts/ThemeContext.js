@@ -244,6 +244,145 @@ const HOUSE_THEMES = {
   },
 };
 
+const COLORBLIND_THEMES = {
+  "protanopia-light": {
+    primary: "#0066CC",
+    secondary: "#FF6600",
+    accent: "#3399FF",
+    background: "#F5F5F5",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#FF6600",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #0066CC 0%, #FF6600 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#0066CC",
+    sidebarBackground: "#F5F5F5",
+  },
+  "protanopia-dark": {
+    primary: "#3399FF",
+    secondary: "#FF9933",
+    accent: "#66AAFF",
+    background: "#1A1A1A",
+    surface: "#2A2A2A",
+    text: "#F5F5F5",
+    textSecondary: "#CCCCCC",
+    border: "#3A3A3A",
+    success: "#10B981",
+    warning: "#FF9933",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #3399FF 0%, #FF9933 100%)",
+    cardBackground: "#2A2A2A",
+    headerBackground: "#1A1A1A",
+    sidebarBackground: "#2A2A2A",
+  },
+  "deuteranopia-light": {
+    primary: "#0066CC",
+    secondary: "#FFCC00",
+    accent: "#3399FF",
+    background: "#F5F5F5",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#FFCC00",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #0066CC 0%, #FFCC00 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#0066CC",
+    sidebarBackground: "#F5F5F5",
+  },
+  "deuteranopia-dark": {
+    primary: "#3399FF",
+    secondary: "#FFDD33",
+    accent: "#66AAFF",
+    background: "#1A1A1A",
+    surface: "#2A2A2A",
+    text: "#F5F5F5",
+    textSecondary: "#CCCCCC",
+    border: "#3A3A3A",
+    success: "#10B981",
+    warning: "#FFDD33",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #3399FF 0%, #FFDD33 100%)",
+    cardBackground: "#2A2A2A",
+    headerBackground: "#1A1A1A",
+    sidebarBackground: "#2A2A2A",
+  },
+  "tritanopia-light": {
+    primary: "#CC0066",
+    secondary: "#FF6600",
+    accent: "#FF3399",
+    background: "#F5F5F5",
+    surface: "#FFFFFF",
+    text: "#1F2937",
+    textSecondary: "#6B7280",
+    border: "#E5E7EB",
+    success: "#10B981",
+    warning: "#FF6600",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #CC0066 0%, #FF6600 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#CC0066",
+    sidebarBackground: "#F5F5F5",
+  },
+  "tritanopia-dark": {
+    primary: "#FF3399",
+    secondary: "#FF9933",
+    accent: "#FF66BB",
+    background: "#1A1A1A",
+    surface: "#2A2A2A",
+    text: "#F5F5F5",
+    textSecondary: "#CCCCCC",
+    border: "#3A3A3A",
+    success: "#10B981",
+    warning: "#FF9933",
+    error: "#EF4444",
+    gradient: "linear-gradient(135deg, #FF3399 0%, #FF9933 100%)",
+    cardBackground: "#2A2A2A",
+    headerBackground: "#1A1A1A",
+    sidebarBackground: "#2A2A2A",
+  },
+  "high-contrast-light": {
+    primary: "#000000",
+    secondary: "#333333",
+    accent: "#666666",
+    background: "#FFFFFF",
+    surface: "#FFFFFF",
+    text: "#000000",
+    textSecondary: "#333333",
+    border: "#000000",
+    success: "#000000",
+    warning: "#000000",
+    error: "#000000",
+    gradient: "linear-gradient(135deg, #000000 0%, #333333 100%)",
+    cardBackground: "#FFFFFF",
+    headerBackground: "#FFFFFF",
+    sidebarBackground: "#FFFFFF",
+  },
+  "high-contrast-dark": {
+    primary: "#FFFFFF",
+    secondary: "#CCCCCC",
+    accent: "#999999",
+    background: "#000000",
+    surface: "#000000",
+    text: "#FFFFFF",
+    textSecondary: "#CCCCCC",
+    border: "#FFFFFF",
+    success: "#FFFFFF",
+    warning: "#FFFFFF",
+    error: "#FFFFFF",
+    gradient: "linear-gradient(135deg, #FFFFFF 0%, #CCCCCC 100%)",
+    cardBackground: "#000000",
+    headerBackground: "#000000",
+    sidebarBackground: "#000000",
+  },
+};
+
 const THEMES = {
   light: {
     primary: "#6366F1",
@@ -298,18 +437,28 @@ export const ThemeProvider = ({ children }) => {
   const [themeMode, setThemeMode] = useState("light");
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [themeHouse, setThemeHouse] = useState("Gryffindor");
+  const [selectedColorblindType, setSelectedColorblindType] =
+    useState("protanopia-light");
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("app-theme");
     const savedHouse = localStorage.getItem("app-theme-house");
+    const savedColorblindType = localStorage.getItem("app-colorblind-type");
 
-    if (savedTheme && ["light", "dark", "house"].includes(savedTheme)) {
+    if (
+      savedTheme &&
+      ["light", "dark", "house", "colorblind"].includes(savedTheme)
+    ) {
       setThemeMode(savedTheme);
     }
 
     if (savedHouse && HOUSE_THEMES[savedHouse]) {
       setThemeHouse(savedHouse);
+    }
+
+    if (savedColorblindType) {
+      setSelectedColorblindType(savedColorblindType);
     }
 
     setIsInitialized(true);
@@ -323,6 +472,11 @@ export const ThemeProvider = ({ children }) => {
   const setThemeHouseWithPersistence = (newHouse) => {
     setThemeHouse(newHouse);
     localStorage.setItem("app-theme-house", newHouse);
+  };
+
+  const setSelectedColorblindTypeWithPersistence = (newType) => {
+    setSelectedColorblindType(newType);
+    localStorage.setItem("app-colorblind-type", newType);
   };
 
   const updateSelectedCharacterFromExternal = (character) => {
@@ -341,9 +495,18 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [themeHouse, isInitialized]);
 
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("app-colorblind-type", selectedColorblindType);
+    }
+  }, [selectedColorblindType, isInitialized]);
+
   const getCurrentTheme = () => {
     if (themeMode === "house") {
       return HOUSE_THEMES[themeHouse] || THEMES.light;
+    }
+    if (themeMode === "colorblind") {
+      return COLORBLIND_THEMES[selectedColorblindType] || THEMES.light;
     }
     return THEMES[themeMode] || THEMES.light;
   };
@@ -358,10 +521,13 @@ export const ThemeProvider = ({ children }) => {
     setSelectedCharacter: () => {},
     themeHouse,
     setThemeHouse: setThemeHouseWithPersistence,
+    selectedColorblindType,
+    setSelectedColorblindType: setSelectedColorblindTypeWithPersistence,
     updateSelectedCharacterFromExternal,
     availableHouses: Object.keys(HOUSE_THEMES),
     HOUSE_THEMES,
     THEMES,
+    COLORBLIND_THEMES,
     SCHOOL_CATEGORIES,
     isInitialized,
   };
@@ -401,10 +567,13 @@ export const useTheme = () => {
       setSelectedCharacter: () => {},
       themeHouse: "Gryffindor",
       setThemeHouse: () => {},
+      selectedColorblindType: "protanopia-light",
+      setSelectedColorblindType: () => {},
       updateSelectedCharacterFromExternal: () => {},
       availableHouses: [],
       HOUSE_THEMES: {},
       THEMES: { light: DEFAULT_THEME },
+      COLORBLIND_THEMES: {},
       SCHOOL_CATEGORIES: {},
       isInitialized: true,
     };

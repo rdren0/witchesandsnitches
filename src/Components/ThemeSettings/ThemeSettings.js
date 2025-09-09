@@ -7,6 +7,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -17,8 +18,11 @@ const ThemeSettings = () => {
     theme,
     themeHouse,
     setThemeHouse,
+    selectedColorblindType,
+    setSelectedColorblindType,
     HOUSE_THEMES,
     THEMES,
+    COLORBLIND_THEMES,
     SCHOOL_CATEGORIES,
   } = useTheme();
 
@@ -27,6 +31,36 @@ const ThemeSettings = () => {
     "Ilvermorny Houses": false,
     "International Schools": false,
   });
+
+  const getColorblindDescription = (id) => {
+    const descriptions = {
+      "protanopia-light": "Red-blind friendly - light theme",
+      "protanopia-dark": "Red-blind friendly - dark theme",
+      "deuteranopia-light": "Green-blind friendly - light theme",
+      "deuteranopia-dark": "Green-blind friendly - dark theme",
+      "tritanopia-light": "Blue-blind friendly - light theme",
+      "tritanopia-dark": "Blue-blind friendly - dark theme",
+      "high-contrast-light": "Maximum contrast - light theme",
+      "high-contrast-dark": "Maximum contrast - dark theme",
+    };
+    return descriptions[id] || "Accessibility theme";
+  };
+
+  const colorblindOptions = Object.entries(COLORBLIND_THEMES || {}).map(
+    ([id, themeConfig]) => ({
+      id,
+      name: id
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" "),
+      description: getColorblindDescription(id),
+      colors: {
+        primary: themeConfig.primary,
+        secondary: themeConfig.secondary,
+        background: themeConfig.background,
+      },
+    })
+  );
 
   const toggleCategory = (category) => {
     setExpandedCategories((prev) => ({
@@ -48,6 +82,21 @@ const ThemeSettings = () => {
         surface: "#FFFFFF",
         text: "#1F2937",
       },
+    },
+    {
+      id: "colorblind",
+      name: "Color Blind Friendly",
+      description:
+        "High contrast themes designed for color vision accessibility",
+      icon: Eye,
+      preview: THEMES?.light || {
+        primary: "#1F2937",
+        secondary: "#374151",
+        background: "#F9FAFB",
+        surface: "#FFFFFF",
+        text: "#111827",
+      },
+      disabled: false,
     },
     {
       id: "dark",
@@ -112,6 +161,12 @@ const ThemeSettings = () => {
     headerContent: {
       position: "relative",
       zIndex: 2,
+      color:
+        theme.surface === theme.text
+          ? theme.background === "#FFFFFF"
+            ? "#000000"
+            : "#FFFFFF"
+          : theme.text,
     },
     headerOverlay: {
       position: "absolute",
@@ -131,11 +186,11 @@ const ThemeSettings = () => {
     title: {
       fontSize: "32px",
       fontWeight: "bold",
-      color: theme.text,
+      color: "inherit",
       margin: 0,
     },
     subtitle: {
-      color: theme.text,
+      color: "inherit",
       fontSize: "18px",
       margin: "8px 0 0 0",
       lineHeight: "1.5",
@@ -406,22 +461,6 @@ const ThemeSettings = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <div style={styles.headerOverlay} />
-        <div style={styles.headerContent}>
-          <div style={styles.headerIcon}>
-            <Palette size={40} color={theme.text} />
-            <div>
-              <h1 style={styles.title}>Theme Settings</h1>
-              <p style={styles.subtitle}>
-                Customize your magical interface experience with beautiful
-                themes
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>
           <Palette size={20} />
@@ -500,6 +539,113 @@ const ThemeSettings = () => {
             );
           })}
         </div>
+
+        {themeMode === "colorblind" && (
+          <div style={styles.section}>
+            <h2 style={styles.sectionTitle}>
+              <Eye size={20} />
+              Choose Colorblind Accessibility Type
+            </h2>
+
+            <div style={styles.schoolGrid}>
+              {colorblindOptions.map((option) => {
+                const isActive = selectedColorblindType === option.id;
+
+                return (
+                  <div
+                    key={option.id}
+                    style={{
+                      ...styles.schoolCard,
+                      ...(isActive ? styles.schoolCardActive : {}),
+                    }}
+                    onClick={() => setSelectedColorblindType(option.id)}
+                  >
+                    <div style={styles.schoolName}>{option.name}</div>
+                    <div style={styles.schoolColors}>
+                      <div
+                        style={{
+                          ...styles.schoolColorSwatch,
+                          backgroundColor: option.colors.primary,
+                        }}
+                      />
+                      <div
+                        style={{
+                          ...styles.schoolColorSwatch,
+                          backgroundColor: option.colors.secondary,
+                        }}
+                      />
+                      <div
+                        style={{
+                          ...styles.schoolColorSwatch,
+                          backgroundColor: option.colors.background,
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        ...styles.schoolPreview,
+                        fontSize: "11px",
+                        lineHeight: "1.3",
+                      }}
+                    >
+                      {option.description}
+                    </div>
+                    <div style={{ ...styles.schoolPreview, marginTop: "8px" }}>
+                      {isActive ? "Currently Active" : "Click to Apply"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {selectedColorblindType && themeMode === "colorblind" && (
+              <div style={styles.currentSelection}>
+                <div style={styles.currentSelectionTitle}>
+                  Current Accessibility Theme
+                </div>
+                <div style={styles.currentSelectionContent}>
+                  <div style={styles.currentSelectionColors}>
+                    <div
+                      style={{
+                        ...styles.colorSwatch,
+                        width: "24px",
+                        height: "24px",
+                        backgroundColor: theme.primary,
+                      }}
+                    />
+                    <div
+                      style={{
+                        ...styles.colorSwatch,
+                        width: "24px",
+                        height: "24px",
+                        backgroundColor: theme.secondary,
+                      }}
+                    />
+                    <div
+                      style={{
+                        ...styles.colorSwatch,
+                        width: "24px",
+                        height: "24px",
+                        backgroundColor: theme.background,
+                      }}
+                    />
+                  </div>
+                  <div style={styles.currentSelectionText}>
+                    <strong>
+                      {selectedColorblindType
+                        .split("-")
+                        .map(
+                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(" ")}
+                    </strong>{" "}
+                    accessibility theme is currently active
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {themeMode === "house" && (
           <div style={styles.section}>
