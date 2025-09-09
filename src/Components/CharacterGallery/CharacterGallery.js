@@ -234,6 +234,317 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
     </div>
   );
 };
+const ConnectionManager = ({
+  connections,
+  onAddConnection,
+  onRemoveConnection,
+  theme,
+  characters,
+}) => {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState("");
+  const [characterSearch, setCharacterSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [relationshipType, setRelationshipType] = useState("");
+  const [description, setDescription] = useState("");
+
+  const relationshipTypes = [
+    "Sibling",
+    "Parent",
+    "Child",
+    "Friend",
+    "Rival",
+    "Romantic Interest",
+    "Mentor",
+    "Student",
+    "Colleague",
+    "Enemy",
+    "Ally",
+    "Acquaintance",
+    "Other",
+  ];
+
+  const filteredCharacters = characters
+    ? characters
+        .filter(
+          (char) =>
+            char.name.toLowerCase().includes(characterSearch.toLowerCase()) &&
+            !connections.some((conn) => conn.character_name === char.name)
+        )
+        .slice(0, 10)
+    : [];
+
+  const handleAddConnection = () => {
+    if (selectedCharacter && relationshipType) {
+      onAddConnection({
+        character_name: selectedCharacter,
+        relationship_type: relationshipType,
+        description: description,
+      });
+      setSelectedCharacter("");
+      setCharacterSearch("");
+      setRelationshipType("");
+      setDescription("");
+      setShowAddForm(false);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleCharacterSelect = (characterName) => {
+    setSelectedCharacter(characterName);
+    setCharacterSearch(characterName);
+    setShowSuggestions(false);
+  };
+
+  return (
+    <div style={{ marginBottom: "8px" }}>
+      <label
+        style={{
+          display: "block",
+          fontSize: "10px",
+          color: theme.textSecondary,
+          marginBottom: "4px",
+          fontWeight: "500",
+        }}
+      >
+        Character Connections:
+      </label>
+
+      {connections.length > 0 && (
+        <div style={{ marginBottom: "8px" }}>
+          {connections.map((connection, index) => (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "4px 6px",
+                backgroundColor: theme.surface,
+                border: `1px solid ${theme.border}`,
+                borderRadius: "4px",
+                marginBottom: "4px",
+                fontSize: "11px",
+              }}
+            >
+              <div>
+                <strong>{connection.character_name}</strong>
+                <span style={{ color: theme.textSecondary }}>
+                  {" "}
+                  • {connection.relationship_type}
+                </span>
+                {connection.description && (
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      color: theme.textSecondary,
+                      marginTop: "2px",
+                    }}
+                  >
+                    {connection.description}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => onRemoveConnection(index)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: theme.error || "#ef4444",
+                  cursor: "pointer",
+                  padding: "2px",
+                }}
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!showAddForm ? (
+        <button
+          onClick={() => setShowAddForm(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "4px 8px",
+            fontSize: "11px",
+            backgroundColor: theme.surface,
+            color: theme.textSecondary,
+            border: `1px dashed ${theme.border}`,
+            borderRadius: "4px",
+            cursor: "pointer",
+            width: "100%",
+            justifyContent: "center",
+          }}
+        >
+          <Plus size={12} />
+          Add Connection
+        </button>
+      ) : (
+        <div
+          style={{
+            padding: "8px",
+            backgroundColor: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: "4px",
+          }}
+        >
+          <div style={{ marginBottom: "6px", position: "relative" }}>
+            <input
+              type="text"
+              placeholder="Search for character..."
+              value={characterSearch}
+              onChange={(e) => {
+                setCharacterSearch(e.target.value);
+                setShowSuggestions(e.target.value.length > 0);
+                setSelectedCharacter("");
+              }}
+              onFocus={() => setShowSuggestions(characterSearch.length > 0)}
+              style={{
+                width: "100%",
+                padding: "4px",
+                fontSize: "11px",
+                border: `1px solid ${theme.border}`,
+                borderRadius: "4px",
+                backgroundColor: theme.background,
+                color: theme.text,
+                marginBottom: "4px",
+              }}
+            />
+            {showSuggestions && filteredCharacters.length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  backgroundColor: theme.surface,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "4px",
+                  boxShadow: `0 2px 8px ${theme.textSecondary}20`,
+                  zIndex: 1000,
+                  maxHeight: "150px",
+                  overflowY: "auto",
+                }}
+              >
+                {filteredCharacters.map((character) => (
+                  <button
+                    key={character.id}
+                    onClick={() => handleCharacterSelect(character.name)}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "6px 8px",
+                      fontSize: "11px",
+                      backgroundColor: "transparent",
+                      color: theme.text,
+                      border: "none",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      borderBottom: `1px solid ${theme.border}`,
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = theme.primary + "20")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor = "transparent")
+                    }
+                  >
+                    <div>
+                      <strong>{character.name}</strong>
+                      <div
+                        style={{ fontSize: "10px", color: theme.textSecondary }}
+                      >
+                        {character.school} • {character.type}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <select
+              value={relationshipType}
+              onChange={(e) => setRelationshipType(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "4px",
+                fontSize: "11px",
+                border: `1px solid ${theme.border}`,
+                borderRadius: "4px",
+                backgroundColor: theme.background,
+                color: theme.text,
+                marginBottom: "4px",
+              }}
+            >
+              <option value="">Select relationship type...</option>
+              {relationshipTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Description (optional)..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "4px",
+                fontSize: "11px",
+                border: `1px solid ${theme.border}`,
+                borderRadius: "4px",
+                backgroundColor: theme.background,
+                color: theme.text,
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: "4px" }}>
+            <button
+              onClick={handleAddConnection}
+              disabled={!selectedCharacter || !relationshipType}
+              style={{
+                flex: 1,
+                padding: "4px 8px",
+                fontSize: "11px",
+                backgroundColor: theme.primary,
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor:
+                  selectedCharacter && relationshipType
+                    ? "pointer"
+                    : "not-allowed",
+                opacity: selectedCharacter && relationshipType ? 1 : 0.5,
+              }}
+            >
+              Add
+            </button>
+            <button
+              onClick={() => setShowAddForm(false)}
+              style={{
+                flex: 1,
+                padding: "4px 8px",
+                fontSize: "11px",
+                backgroundColor: theme.textSecondary,
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CharacterCard = ({
   character,
   theme,
@@ -243,6 +554,7 @@ const CharacterCard = ({
   onUpdateNote,
   supabase,
   discordUserId,
+  characters,
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -255,6 +567,7 @@ const CharacterCard = ({
     npcNote?.last_interaction || ""
   );
   const [customTags, setCustomTags] = useState(npcNote?.custom_tags || []);
+  const [connections, setConnections] = useState(npcNote?.connections || []);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -263,6 +576,7 @@ const CharacterCard = ({
       setRelationship(npcNote.relationship || "unknown");
       setLastInteraction(npcNote.last_interaction || "");
       setCustomTags(npcNote.custom_tags || []);
+      setConnections(npcNote.connections || []);
     }
   }, [npcNote]);
 
@@ -281,6 +595,7 @@ const CharacterCard = ({
         relationship: relationship,
         last_interaction: lastInteraction.trim(),
         custom_tags: customTags,
+        connections: connections,
         updated_at: new Date().toISOString(),
       };
 
@@ -310,6 +625,7 @@ const CharacterCard = ({
     setRelationship(npcNote?.relationship || "unknown");
     setLastInteraction(npcNote?.last_interaction || "");
     setCustomTags(npcNote?.custom_tags || []);
+    setConnections(npcNote?.connections || []);
     setIsEditingNote(false);
   };
 
@@ -323,12 +639,26 @@ const CharacterCard = ({
     setCustomTags(customTags.filter((tag) => tag !== tagToRemove));
   };
 
+  const handleAddConnection = (connectionData) => {
+    const newConnection = {
+      character_name: connectionData.character_name,
+      relationship_type: connectionData.relationship_type,
+      description: connectionData.description || "",
+    };
+    setConnections([...connections, newConnection]);
+  };
+
+  const handleRemoveConnection = (index) => {
+    setConnections(connections.filter((_, i) => i !== index));
+  };
+
   const hasNote =
     npcNote &&
     (npcNote.notes?.trim() ||
       npcNote.relationship !== "unknown" ||
       npcNote.last_interaction?.trim() ||
-      (npcNote.custom_tags && npcNote.custom_tags.length > 0));
+      (npcNote.custom_tags && npcNote.custom_tags.length > 0) ||
+      (npcNote.connections && npcNote.connections.length > 0));
 
   return (
     <div style={styles.characterCard}>
@@ -392,7 +722,7 @@ const CharacterCard = ({
         <h3 style={styles.characterName}>{character.name}</h3>
         <div
           style={{
-            fontSize: "12px",
+            fontSize: "14px",
             color: theme.textSecondary,
             marginBottom: "8px",
           }}
@@ -417,6 +747,42 @@ const CharacterCard = ({
               >
                 {npcNote.custom_tags.map((tag, index) => (
                   <CustomTag key={index} tag={tag} theme={theme} />
+                ))}
+              </div>
+            )}
+            {npcNote.connections && npcNote.connections.length > 0 && (
+              <div style={{ marginTop: "6px" }}>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    color: theme.textSecondary,
+                    marginBottom: "4px",
+                    fontWeight: "600",
+                  }}
+                >
+                  CONNECTIONS:
+                </div>
+                {npcNote.connections.map((connection, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "inline-block",
+                      backgroundColor: theme.primary + "15",
+                      border: `1px solid ${theme.primary}40`,
+                      borderRadius: "8px",
+                      padding: "2px 6px",
+                      fontSize: "10px",
+                      color: theme.primary,
+                      marginRight: "4px",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    <strong>{connection.character_name}</strong>
+                    <span style={{ opacity: 0.8 }}>
+                      {" "}
+                      • {connection.relationship_type}
+                    </span>
+                  </div>
                 ))}
               </div>
             )}
@@ -473,6 +839,7 @@ const CharacterCard = ({
                   setRelationship(npcNote?.relationship || "unknown");
                   setLastInteraction(npcNote?.last_interaction || "");
                   setCustomTags(npcNote?.custom_tags || []);
+                  setConnections(npcNote?.connections || []);
                   setIsEditingNote(true);
                 }}
                 style={{
@@ -565,6 +932,14 @@ const CharacterCard = ({
                   theme={theme}
                 />
               </div>
+
+              <ConnectionManager
+                connections={connections}
+                onAddConnection={handleAddConnection}
+                onRemoveConnection={handleRemoveConnection}
+                theme={theme}
+                characters={characters}
+              />
 
               <div style={{ marginBottom: "8px" }}>
                 <label
@@ -692,6 +1067,7 @@ const TypeSection = ({
   onUpdateNote,
   supabase,
   discordUserId,
+  allCharacters,
 }) => {
   return (
     <div style={styles.typeSection}>
@@ -733,6 +1109,7 @@ const TypeSection = ({
               onUpdateNote={onUpdateNote}
               supabase={supabase}
               discordUserId={discordUserId}
+              characters={allCharacters}
             />
           ))}
         </div>
@@ -755,6 +1132,7 @@ const SchoolSection = ({
   onUpdateNote,
   supabase,
   discordUserId,
+  allCharacters,
 }) => {
   const totalCharacters = Object.values(schoolData).reduce(
     (sum, chars) => sum + chars.length,
@@ -805,6 +1183,7 @@ const SchoolSection = ({
               onUpdateNote={onUpdateNote}
               supabase={supabase}
               discordUserId={discordUserId}
+              allCharacters={allCharacters}
             />
           ))}
         </div>
@@ -824,34 +1203,34 @@ export const CharacterGallery = ({
     if (!selectedCharacter?.gameSession) {
       return new Set();
     }
-    
+
     const gameSession = selectedCharacter.gameSession.toLowerCase();
     const autoOpenSchools = new Set();
-    
+
     if (gameSession.includes("haunting")) {
       autoOpenSchools.add("Ilvermorny");
     }
     if (gameSession.includes("knights")) {
       autoOpenSchools.add("Hogwarts");
     }
-    
+
     return autoOpenSchools;
   });
   const [expandedTypes, setExpandedTypes] = useState(() => {
     if (!selectedCharacter?.gameSession) {
       return new Set();
     }
-    
+
     const gameSession = selectedCharacter.gameSession.toLowerCase();
     const autoOpenTypes = new Set();
-    
+
     if (gameSession.includes("haunting")) {
       autoOpenTypes.add("Ilvermorny-Classmate");
     }
     if (gameSession.includes("knights")) {
       autoOpenTypes.add("Hogwarts-Classmate");
     }
-    
+
     return autoOpenTypes;
   });
   const [searchTerm, setSearchTerm] = useState("");
@@ -859,19 +1238,18 @@ export const CharacterGallery = ({
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  // Update expanded sections when character changes
   useEffect(() => {
     if (!selectedCharacter?.gameSession) {
       setExpandedSchools(new Set());
       setExpandedTypes(new Set());
       return;
     }
-    
+
     const gameSession = selectedCharacter.gameSession.toLowerCase();
     console.log("Game session:", gameSession);
     const autoOpenSchools = new Set();
     const autoOpenTypes = new Set();
-    
+
     if (gameSession.includes("haunting")) {
       console.log("Opening Ilvermorny sections");
       autoOpenSchools.add("Ilvermorny");
@@ -882,7 +1260,7 @@ export const CharacterGallery = ({
       autoOpenSchools.add("Hogwarts");
       autoOpenTypes.add("Hogwarts-Classmate");
     }
-    
+
     console.log("Auto-open schools:", autoOpenSchools);
     console.log("Auto-open types:", autoOpenTypes);
     setExpandedSchools(autoOpenSchools);
@@ -1080,6 +1458,7 @@ export const CharacterGallery = ({
                     onUpdateNote={updateNpcNote}
                     supabase={supabase}
                     discordUserId={discordUserId}
+                    characters={characters}
                   />
                 ))}
               </div>
@@ -1114,6 +1493,7 @@ export const CharacterGallery = ({
             onUpdateNote={updateNpcNote}
             supabase={supabase}
             discordUserId={discordUserId}
+            allCharacters={characters}
           />
         ))}
       </div>

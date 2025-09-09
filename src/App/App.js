@@ -509,7 +509,12 @@ const CharacterSubNavigation = () => {
     { path: "/character/potions", label: "Potions", key: "potions" },
     { path: "/character/recipes", label: "Recipes", key: "recipes" },
     { path: "/character/inventory", label: "Inventory", key: "inventory" },
-    { path: "/character/gallery", label: "NPC Gallery", key: "gallery", isUpdated: true },
+    {
+      path: "/character/gallery",
+      label: "NPC Gallery",
+      key: "gallery",
+      isUpdated: true,
+    },
     {
       path: "/character/players",
       label: "Other Players",
