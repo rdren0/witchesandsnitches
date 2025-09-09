@@ -172,7 +172,7 @@ export const createCharacterGalleryStyles = (theme) => ({
     gap: "16px",
   },
   schoolTitle: {
-    fontSize: "24px",
+    fontSize: "26px",
     fontWeight: "bold",
     color: theme.text,
     margin: 0,
@@ -211,13 +211,13 @@ export const createCharacterGalleryStyles = (theme) => ({
     gap: "12px",
   },
   typeTitle: {
-    fontSize: "18px",
+    fontSize: "20px",
     fontWeight: "600",
     color: theme.text,
     margin: 0,
   },
   characterCount: {
-    fontSize: "12px",
+    fontSize: "14px",
     color: theme.textSecondary,
     fontWeight: "normal",
   },
@@ -270,14 +270,14 @@ export const createCharacterGalleryStyles = (theme) => ({
     color: theme.textSecondary,
   },
   placeholderText: {
-    fontSize: "12px",
+    fontSize: "14px",
     marginTop: "8px",
   },
   characterInfo: {
     padding: "16px",
   },
   characterName: {
-    fontSize: "16px",
+    fontSize: "18px",
     fontWeight: "600",
     color: theme.text,
     margin: "0 0 8px 0",
