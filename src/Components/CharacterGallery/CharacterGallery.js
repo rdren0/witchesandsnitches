@@ -820,16 +820,74 @@ export const CharacterGallery = ({
   user,
 }) => {
   const { theme } = useTheme();
-  const [expandedSchools, setExpandedSchools] = useState(
-    new Set(["Ilvermorny"])
-  );
-  const [expandedTypes, setExpandedTypes] = useState(
-    new Set(["Ilvermorny-Classmate"])
-  );
+  const [expandedSchools, setExpandedSchools] = useState(() => {
+    if (!selectedCharacter?.gameSession) {
+      return new Set();
+    }
+    
+    const gameSession = selectedCharacter.gameSession.toLowerCase();
+    const autoOpenSchools = new Set();
+    
+    if (gameSession.includes("haunting")) {
+      autoOpenSchools.add("Ilvermorny");
+    }
+    if (gameSession.includes("knights")) {
+      autoOpenSchools.add("Hogwarts");
+    }
+    
+    return autoOpenSchools;
+  });
+  const [expandedTypes, setExpandedTypes] = useState(() => {
+    if (!selectedCharacter?.gameSession) {
+      return new Set();
+    }
+    
+    const gameSession = selectedCharacter.gameSession.toLowerCase();
+    const autoOpenTypes = new Set();
+    
+    if (gameSession.includes("haunting")) {
+      autoOpenTypes.add("Ilvermorny-Classmate");
+    }
+    if (gameSession.includes("knights")) {
+      autoOpenTypes.add("Hogwarts-Classmate");
+    }
+    
+    return autoOpenTypes;
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [npcNotes, setNpcNotes] = useState({});
 
   const discordUserId = user?.user_metadata?.provider_id;
+
+  // Update expanded sections when character changes
+  useEffect(() => {
+    if (!selectedCharacter?.gameSession) {
+      setExpandedSchools(new Set());
+      setExpandedTypes(new Set());
+      return;
+    }
+    
+    const gameSession = selectedCharacter.gameSession.toLowerCase();
+    console.log("Game session:", gameSession);
+    const autoOpenSchools = new Set();
+    const autoOpenTypes = new Set();
+    
+    if (gameSession.includes("haunting")) {
+      console.log("Opening Ilvermorny sections");
+      autoOpenSchools.add("Ilvermorny");
+      autoOpenTypes.add("Ilvermorny-Classmate");
+    }
+    if (gameSession.includes("knights")) {
+      console.log("Opening Hogwarts sections");
+      autoOpenSchools.add("Hogwarts");
+      autoOpenTypes.add("Hogwarts-Classmate");
+    }
+    
+    console.log("Auto-open schools:", autoOpenSchools);
+    console.log("Auto-open types:", autoOpenTypes);
+    setExpandedSchools(autoOpenSchools);
+    setExpandedTypes(autoOpenTypes);
+  }, [selectedCharacter?.gameSession]);
 
   useEffect(() => {
     if (selectedCharacter && discordUserId && supabase) {

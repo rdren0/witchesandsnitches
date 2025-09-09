@@ -4,7 +4,10 @@ import SorceryPointTracker from "./SorceryPointTracker";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
-import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import {
+  SPELL_SLOT_PROGRESSION,
+  SORCERY_POINT_PROGRESSION,
+} from "../../SharedData/data";
 
 const SpellSlotTracker = ({
   character,
@@ -179,6 +182,84 @@ const SpellSlotTracker = ({
     ]
   );
 
+  const updateSorceryPointsOnLevelUp = useCallback(
+    async (characterLevel) => {
+      if (
+        !character ||
+        isUpdating ||
+        !characterLevel ||
+        characterLevel < 1 ||
+        characterLevel > 20
+      )
+        return;
+
+      const maxSorceryPoints = SORCERY_POINT_PROGRESSION[characterLevel];
+      if (maxSorceryPoints === undefined) {
+        console.error(
+          "Invalid character level for sorcery points:",
+          characterLevel
+        );
+        return;
+      }
+
+      setIsUpdating(true);
+
+      try {
+        const updateData = {
+          character_id: selectedCharacterId,
+          discord_user_id: discordUserId,
+          max_sorcery_points: maxSorceryPoints,
+          updated_at: new Date().toISOString(),
+        };
+
+        const currentSorceryPoints = character?.sorceryPoints;
+        if (
+          currentSorceryPoints === undefined ||
+          currentSorceryPoints === null ||
+          currentSorceryPoints < maxSorceryPoints
+        ) {
+          updateData.sorcery_points = maxSorceryPoints;
+        }
+
+        const { error } = await supabase
+          .from("character_resources")
+          .upsert(updateData, {
+            onConflict: "character_id,discord_user_id",
+          });
+
+        if (error) {
+          console.error("Error updating sorcery points:", error);
+          return;
+        }
+
+        const newCharacterState = { ...character };
+        newCharacterState.maxSorceryPoints = maxSorceryPoints;
+
+        if (
+          currentSorceryPoints === undefined ||
+          currentSorceryPoints === null ||
+          currentSorceryPoints < maxSorceryPoints
+        ) {
+          newCharacterState.sorceryPoints = maxSorceryPoints;
+        }
+
+        setCharacter(newCharacterState);
+      } catch (error) {
+        console.error("Error updating sorcery points:", error);
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [
+      character,
+      isUpdating,
+      selectedCharacterId,
+      discordUserId,
+      supabase,
+      setCharacter,
+    ]
+  );
+
   useEffect(() => {
     if (
       character?.level &&
@@ -186,9 +267,15 @@ const SpellSlotTracker = ({
       character.level !== lastKnownLevel
     ) {
       updateMaxSpellSlotsOnLevelUp(character.level);
+      updateSorceryPointsOnLevelUp(character.level);
     }
     setLastKnownLevel(character?.level);
-  }, [character?.level, lastKnownLevel]);
+  }, [
+    character?.level,
+    lastKnownLevel,
+    updateMaxSpellSlotsOnLevelUp,
+    updateSorceryPointsOnLevelUp,
+  ]);
 
   useEffect(() => {
     const autoSetupSpellSlots = async () => {
@@ -210,6 +297,36 @@ const SpellSlotTracker = ({
     character,
     isUpdating,
     setupStandardSpellSlots,
+  ]);
+
+  useEffect(() => {
+    const autoSetupSorceryPoints = async () => {
+      if (!character || !character.level || isUpdating) return;
+
+      const hasSorceryPoints =
+        character.maxSorceryPoints !== undefined &&
+        character.maxSorceryPoints !== null &&
+        character.maxSorceryPoints > 0;
+
+      if (!hasSorceryPoints) {
+        const maxSorceryPoints = SORCERY_POINT_PROGRESSION[character.level];
+
+        if (maxSorceryPoints !== undefined && maxSorceryPoints >= 0) {
+          console.log(
+            `Setting up sorcery points for character level ${character.level}: ${maxSorceryPoints} points`
+          );
+          await updateSorceryPointsOnLevelUp(character.level);
+        }
+      }
+    };
+
+    autoSetupSorceryPoints();
+  }, [
+    character?.level,
+    selectedCharacterId,
+    character?.maxSorceryPoints,
+    isUpdating,
+    updateSorceryPointsOnLevelUp,
   ]);
 
   const getSpellSlotData = () => {

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Sparkles, Zap, PlusIcon, MinusIcon } from "lucide-react";
+import { Sparkles, Zap, PlusIcon, MinusIcon, Settings } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
+import { SORCERY_POINT_PROGRESSION } from "../../SharedData/data";
 
 const SorceryPointTracker = ({
   character,
@@ -114,6 +115,48 @@ const SorceryPointTracker = ({
   const openSorceryModal = (action) => {
     setSorceryModalData({ action, amount: 1 });
     setShowSorceryModal(true);
+  };
+
+  const setupSorceryPoints = async () => {
+    if (!character || isUpdating) return;
+    
+    setIsUpdating(true);
+    
+    try {
+      const characterLevel = character.level || 1;
+      const maxPoints = SORCERY_POINT_PROGRESSION[characterLevel] || 0;
+      
+      const { error } = await supabase.from("character_resources").upsert(
+        {
+          character_id: selectedCharacterId,
+          discord_user_id: discordUserId,
+          sorcery_points: maxPoints,
+          max_sorcery_points: maxPoints,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "character_id,discord_user_id",
+        }
+      );
+
+      if (error) {
+        console.error("Error setting up sorcery points:", error);
+        alert("Failed to setup sorcery points");
+        return;
+      }
+
+      setCharacter((prev) => ({
+        ...prev,
+        sorceryPoints: maxPoints,
+        maxSorceryPoints: maxPoints,
+      }));
+      
+      console.log(`Sorcery points set up: ${maxPoints} for level ${characterLevel}`);
+    } catch (error) {
+      console.error("Error setting up sorcery points:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const styles = {
@@ -267,41 +310,74 @@ const SorceryPointTracker = ({
           Sorcery Points
         </div>
 
-        <div style={styles.sorceryGrid}>
-          <div style={styles.slotItem} onClick={() => openSorceryModal("use")}>
-            <div style={styles.slotLevel}>Available</div>
-            <div
+        {maxSorceryPoints === 0 && character?.level >= 2 ? (
+          <div style={{ padding: "20px", textAlign: "center" }}>
+            <p style={{ color: theme.textSecondary, marginBottom: "16px" }}>
+              Sorcery points not initialized for this character.
+            </p>
+            <button
               style={{
-                ...styles.slotDisplay,
-                color: getSorceryPointColor(),
+                padding: "10px 20px",
+                backgroundColor: theme.primary,
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
               }}
+              onClick={setupSorceryPoints}
+              disabled={isUpdating}
             >
-              {currentSorceryPoints}
-            </div>
-            <div style={styles.slotButtons}>
-              <button
-                style={{ ...styles.slotButton, ...styles.addSlotButton }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openSorceryModal("add");
+              <Settings size={16} />
+              {isUpdating ? "Setting up..." : "Setup Sorcery Points"}
+            </button>
+          </div>
+        ) : character?.level < 2 ? (
+          <div style={{ padding: "20px", textAlign: "center" }}>
+            <p style={{ color: theme.textSecondary }}>
+              Sorcery points become available at level 2 (Font of Magic)
+            </p>
+          </div>
+        ) : (
+          <div style={styles.sorceryGrid}>
+            <div style={styles.slotItem} onClick={() => openSorceryModal("use")}>
+              <div style={styles.slotLevel}>Available</div>
+              <div
+                style={{
+                  ...styles.slotDisplay,
+                  color: getSorceryPointColor(),
                 }}
-                disabled={isUpdating}
               >
-                <PlusIcon size={12} />
-              </button>
-              <button
-                style={{ ...styles.slotButton, ...styles.useSlotButton }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openSorceryModal("use");
-                }}
-                disabled={isUpdating || currentSorceryPoints === 0}
-              >
-                <MinusIcon size={12} />
-              </button>
+                {currentSorceryPoints}/{maxSorceryPoints}
+              </div>
+              <div style={styles.slotButtons}>
+                <button
+                  style={{ ...styles.slotButton, ...styles.addSlotButton }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSorceryModal("add");
+                  }}
+                  disabled={isUpdating}
+                >
+                  <PlusIcon size={12} />
+                </button>
+                <button
+                  style={{ ...styles.slotButton, ...styles.useSlotButton }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSorceryModal("use");
+                  }}
+                  disabled={isUpdating || currentSorceryPoints === 0}
+                >
+                  <MinusIcon size={12} />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {showSorceryModal && (

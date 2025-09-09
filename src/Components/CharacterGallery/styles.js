@@ -249,6 +249,10 @@ export const createCharacterGalleryStyles = (theme) => ({
     height: "300px",
     width: "300px",
     overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "auto",
   },
   characterImage: {
     width: "100%",
@@ -282,4 +286,5 @@ export const createCharacterGalleryStyles = (theme) => ({
 });
 
 // Helper function for backward compatibility
-export const getCharacterGalleryStyles = (theme) => createCharacterGalleryStyles(theme);
+export const getCharacterGalleryStyles = (theme) =>
+  createCharacterGalleryStyles(theme);
