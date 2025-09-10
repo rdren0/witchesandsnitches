@@ -1380,7 +1380,16 @@ export const CharacterGallery = ({
     );
   });
 
-  const schoolKeys = Object.keys(charactersBySchool);
+  const schoolKeys = Object.keys(charactersBySchool).sort((a, b) => {
+    const order = { Ilvermorny: 1, Hogwarts: 2, Jaguaras: 3 };
+    const aOrder = order[a] || 999;
+    const bOrder = order[b] || 999;
+
+    if (aOrder !== bOrder) {
+      return aOrder - bOrder;
+    }
+    return a.localeCompare(b);
+  });
 
   const toggleSchool = (school) => {
     const newExpanded = new Set(expandedSchools);

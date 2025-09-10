@@ -627,13 +627,21 @@ export const SubjectCard = ({
     try {
       const spellcastingModifier =
         getSpellcastingAbilityModifier(selectedCharacter);
+
+      const hasPinpointAccuracy =
+        selectedCharacter.standardFeats?.includes("Pinpoint Accuracy") ||
+        selectedCharacter.standard_feats?.includes("Pinpoint Accuracy");
+
       const totalModifier =
-        selectedCharacter.proficiencyBonus + spellcastingModifier;
+        selectedCharacter.proficiencyBonus +
+        spellcastingModifier +
+        (hasPinpointAccuracy ? 1 : 0);
 
       const rollValue = Math.floor(Math.random() * 20) + 1;
       const total = rollValue + totalModifier;
 
-      const isCriticalSuccess = rollValue === 20;
+      const critThreshold = hasPinpointAccuracy ? 19 : 20;
+      const isCriticalSuccess = rollValue >= critThreshold;
       const isCriticalFailure = rollValue === 1;
 
       const rollResult = {
@@ -1080,14 +1088,28 @@ export const SubjectCard = ({
           <thead style={styles.tableHeader}>
             <tr>
               <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
-              <th style={styles.tableHeaderCell}>Spell Name</th>
-              <th style={styles.tableHeaderCell}>Successful Attempts</th>
-              <th style={styles.tableHeaderCellCenter}>Critical</th>
-              <th style={styles.tableHeaderCellCenter}>Attempt</th>
-              <th style={styles.tableHeaderCellCenter}>Arithmancy</th>
-              <th style={styles.tableHeaderCellCenter}>Runes</th>
-              <th style={styles.tableHeaderCellCenter}>Research</th>
-              <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
+              <th style={{ ...styles.tableHeaderCell, width: "20%" }}>
+                Spell Name
+              </th>
+              <th style={{ ...styles.tableHeaderCell, width: "12%" }}>
+                Successful Attempts
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "5%" }}>
+                Critical
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "22%" }}>
+                Attempt
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "8%" }}>
+                Arithmancy
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "8%" }}>
+                Runes
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "8%" }}>
+                Research
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "2rem" }}>
                 Menu
               </th>
             </tr>
@@ -1483,10 +1505,10 @@ export const SubjectCard = ({
                       <Target size={14} />
                       {isAttempting
                         ? "Rolling..."
-                        : `Spell Attack ${formatModifier(
+                        : `Spell Attack (${formatModifier(
                             selectedCharacter.proficiencyBonus +
                               getSpellcastingAbilityModifier(selectedCharacter)
-                          )}`}
+                          )})`}
                     </button>
                   );
                 }
@@ -2164,11 +2186,19 @@ export const SubjectCard = ({
             <thead style={styles.tableHeader}>
               <tr>
                 <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
-                <th style={styles.tableHeaderCell}>Spell Name</th>
-                <th style={styles.tableHeaderCell}>Successful Attempts</th>
-                <th style={styles.tableHeaderCellCenter}>Critical</th>
-                <th style={styles.tableHeaderCellCenter}>Attempt</th>
-                <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
+                <th style={{ ...styles.tableHeaderCell, width: "30%" }}>
+                  Spell Name
+                </th>
+                <th style={{ ...styles.tableHeaderCell, width: "20%" }}>
+                  Successful Attempts
+                </th>
+                <th style={{ ...styles.tableHeaderCellCenter, width: "7%" }}>
+                  Critical
+                </th>
+                <th style={{ ...styles.tableHeaderCellCenter, width: "25%" }}>
+                  Attempt
+                </th>
+                <th style={{ ...styles.tableHeaderCellCenter, width: "2rem" }}>
                   Menu
                 </th>
               </tr>

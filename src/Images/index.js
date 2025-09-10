@@ -122,6 +122,21 @@ import OKelly from "./HogwartsStudents/Upperclassmen/Orflaith_Kelly_1.png";
 import RSkeeter from "./HogwartsStudents/Upperclassmen/Rita_Skeeter_1.jpg";
 import SCarrow from "./HogwartsStudents/Upperclassmen/Sinclair_Carrow_1.png";
 
+// Jaguars
+import AMelillan from "./Jaguars/Antu_Melillan.png";
+import ANordstrom from "./Jaguars/Astrid_Nordstrom.png";
+import CHalim from "./Jaguars/Cairo_Halim.png";
+import CGuaitiao from "./Jaguars/Caonabo_Guaitiao.png";
+import EWalker from "./Jaguars/Emma_Walker.png";
+import EBabajide from "./Jaguars/Eniola_Babajide.png";
+import IChihiro from "./Jaguars/Ito_Chihiro.png";
+import IBalam from "./Jaguars/Ixchel_Balam.png";
+import JBennett from "./Jaguars/Jackson_Bennett.png";
+import LHexsmith from "./Jaguars/Louise_Hexsmith.png";
+import NAlbany from "./Jaguars/Neiro_Albany.png";
+import PParkinson from "./Jaguars/Pierre_Parkinson.png";
+import PAbramov from "./Jaguars/Pyotr_Abramov.png";
+
 // Hogwarts Teachers
 import Hagrid from "./HogwartsTeachers/Hagrid.png";
 import Hooch from "./HogwartsTeachers/Madame_Hooch.png";
@@ -261,6 +276,21 @@ export {
   OKelly,
   RSkeeter,
   SCarrow,
+
+  // Jaguars
+  AMelillan,
+  ANordstrom,
+  CHalim,
+  CGuaitiao,
+  EWalker,
+  EBabajide,
+  IChihiro,
+  IBalam,
+  JBennett,
+  LHexsmith,
+  NAlbany,
+  PParkinson,
+  PAbramov,
 
   // Hogwarts Teachers
   Hagrid,

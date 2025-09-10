@@ -6,13 +6,13 @@ export const gameSessionOptions = [
   "Tuesday - Haunting",
   "Wednesday - Haunting",
   "Thursday - Knights",
+  "Thursday - Jaguaras",
   "Friday - Knights",
   "Friday - Haunting",
   "Saturday - Haunting",
   "Saturday - Knights AM",
   "Saturday - Knights PM",
   "DEVELOPMENT",
-  "Jaguaras",
 ];
 
 export const DISCORD_WEBHOOKS = {
@@ -24,6 +24,7 @@ export const DISCORD_WEBHOOKS = {
   "Wednesday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
   "Thursday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_KNIGHTS,
+  "Thursday - Jaguaras": process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_KNIGHTS,
   "Friday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_KNIGHTS,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
   "Saturday - Haunting":
