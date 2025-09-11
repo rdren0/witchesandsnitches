@@ -202,7 +202,7 @@ const CastingStyleCard = ({
               >
                 {data.keyFeatures.map((feature, index) => (
                   <li key={index} style={{ marginBottom: "4px" }}>
-                    {feature}
+                    <strong>{feature.name}</strong> (Level {feature.level}): {feature.description}
                   </li>
                 ))}
               </ul>
