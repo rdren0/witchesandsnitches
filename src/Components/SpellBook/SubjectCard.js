@@ -1381,7 +1381,7 @@ export const SubjectCard = ({
                     borderRadius: "10px",
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
-                    backgroundColor: theme.warning || "#f59e0b",
+                    backgroundColor: "#8b4513",
                     color: "white",
                   }}
                 >
