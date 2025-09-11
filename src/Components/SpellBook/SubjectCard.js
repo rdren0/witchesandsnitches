@@ -1442,93 +1442,19 @@ export const SubjectCard = ({
           )}
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          {isMastered ? (
-            <div style={styles.buttonContainer}>
-              {(() => {
-                const spellData = getSpellData(spellName);
-                const savingThrowInfo = extractSavingThrowInfo(
-                  spellData?.description
-                );
-                const damageInfo = extractDamageInfo(
-                  spellData?.description,
-                  spellName
-                );
-
-                if (savingThrowInfo) {
-                  return (
-                    <button
-                      disabled={true}
-                      style={{
-                        ...styles.savingThrowButton,
-                      }}
-                    >
-                      <Shield size={14} />
-                      {`${savingThrowInfo.ability} Save DC ${getSpellSaveDC(
-                        selectedCharacter
-                      )}`}
-                    </button>
-                  );
-                } else {
-                  return (
-                    <button
-                      onClick={() => handleSpellAttack(spellName)}
-                      disabled={isAttempting || !selectedCharacter}
-                      style={{
-                        ...styles.spellAttackButton,
-                        ...(isAttempting || !selectedCharacter
-                          ? styles.attemptButtonDisabled
-                          : {}),
-                      }}
-                    >
-                      <Target size={14} />
-                      {isAttempting
-                        ? "Rolling..."
-                        : `Spell Attack ${formatModifier(
-                            selectedCharacter.proficiencyBonus +
-                              getSpellcastingAbilityModifier(selectedCharacter)
-                          )}`}
-                    </button>
-                  );
-                }
-              })()}
-              {(() => {
-                const spellData = getSpellData(spellName);
-                const damageInfo = extractDamageInfo(
-                  spellData?.description,
-                  spellName
-                );
-                return damageInfo ? (
-                  <button
-                    onClick={() => handleDamageRoll(spellName, damageInfo)}
-                    disabled={isAttempting || !selectedCharacter}
-                    style={{
-                      ...styles.damageButton,
-                      ...(isAttempting || !selectedCharacter
-                        ? styles.attemptButtonDisabled
-                        : {}),
-                    }}
-                  >
-                    <Dice6 size={12} />
-                    {damageInfo.dice}
-                  </button>
-                ) : null;
-              })()}
-            </div>
-          ) : (
-            <button
-              onClick={() => handleSpellAttempt(spellName, subject)}
-              disabled={isAttempting || !selectedCharacter}
-              style={{
-                ...styles.attemptButton,
-                ...(isAttempting || !selectedCharacter
-                  ? styles.attemptButtonDisabled
-                  : {}),
-              }}
-            >
-              <Dice6 size={14} />
-              {isAttempting ? "Rolling..." : "Attempt"}
-            </button>
-          )}
+          <button
+            onClick={() => handleSpellAttempt(spellName, subject)}
+            disabled={isAttempting || !selectedCharacter || isMastered}
+            style={{
+              ...styles.attemptButton,
+              ...(isAttempting || !selectedCharacter || isMastered
+                ? styles.attemptButtonDisabled
+                : {}),
+            }}
+          >
+            <Dice6 size={14} />
+            {isMastered ? "Mastered" : isAttempting ? "Rolling..." : "Attempt"}
+          </button>
         </td>
         {showLevel && (
           <td style={{ ...styles.tableCell, textAlign: "center" }}>
