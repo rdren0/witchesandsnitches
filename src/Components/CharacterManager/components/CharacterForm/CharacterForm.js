@@ -57,28 +57,11 @@ const CharacterForm = ({
   } = useCharacterData(characterId, userId, adminMode, isUserAdmin);
 
   const {
-    sectionLocks,
-    toggleSectionLock,
-    lockAllSections,
-    unlockAllSections,
-    canLock,
-  } = useFormSections(
-    {
-      basicInfo: false,
-      abilityScores: false,
-      hitPoints: false,
-      house: false,
-      subclass: false,
-      background: false,
-      level1Choice: false,
-      asiProgression: false,
-      skills: false,
-      toolsLanguages: false,
-      magicModifiers: false,
-      notes: false,
-    },
-    mode
-  );
+    expandedSections,
+    toggleSectionExpansion,
+    getSectionConfig,
+    sections,
+  } = useFormSections();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -109,12 +92,6 @@ const CharacterForm = ({
       window.removeEventListener("resize", handleScroll);
     };
   }, [isSticky]);
-
-  useEffect(() => {
-    if (mode === "edit" && character && character.id && !loading) {
-      lockAllSections();
-    }
-  }, [mode, character, loading, lockAllSections]);
 
   const handleASIChoiceChange = (level, choiceType) => {
     const updatedCharacter = utilsHandleASIChoiceChange(
@@ -238,32 +215,6 @@ const CharacterForm = ({
         </div>
 
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          {canLock && !isSticky && (
-            <>
-              <button
-                onClick={unlockAllSections}
-                style={{
-                  ...styles.button,
-                  ...styles.buttonSecondary,
-                  ...styles.buttonSmall,
-                }}
-              >
-                Unlock All
-              </button>
-
-              <button
-                onClick={lockAllSections}
-                style={{
-                  ...styles.button,
-                  ...styles.buttonSecondary,
-                  ...styles.buttonSmall,
-                }}
-              >
-                Lock All
-              </button>
-            </>
-          )}
-
           {hasChanges && (
             <button
               onClick={handleReset}
@@ -328,17 +279,11 @@ const CharacterForm = ({
       <FormSection
         title="Basic Information"
         subtitle="Character name, level, and core details"
-        isLocked={sectionLocks.basicInfo}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("basicInfo") : undefined
-        }
-        lockable={canLock}
       >
         <BasicInfoSection
           character={character}
           onChange={updateCharacter}
           mode={mode}
-          disabled={sectionLocks.basicInfo}
           supabase={supabase}
         />
       </FormSection>
@@ -346,41 +291,28 @@ const CharacterForm = ({
       <FormSection
         title="House & School"
         subtitle="Choose your magical house and school affiliation"
-        isLocked={sectionLocks.house}
-        onToggleLock={canLock ? () => toggleSectionLock("house") : undefined}
-        lockable={canLock}
       >
         <HouseSection
           character={character}
           onChange={updateCharacter}
           mode={mode}
-          disabled={sectionLocks.house}
         />
       </FormSection>
 
       <FormSection
         title="Subclass"
         subtitle="Specialized training and advanced features"
-        isLocked={sectionLocks.subclass}
-        onToggleLock={canLock ? () => toggleSectionLock("subclass") : undefined}
-        lockable={canLock}
       >
         <SubclassSection
           character={character}
           onChange={updateCharacter}
           mode={mode}
-          disabled={sectionLocks.subclass}
         />
       </FormSection>
 
       <FormSection
         title="Background"
         subtitle="Character background and starting proficiencies"
-        isLocked={sectionLocks.background}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("background") : undefined
-        }
-        lockable={canLock}
       >
         <BackgroundSection
           value={character.background}
@@ -390,7 +322,6 @@ const CharacterForm = ({
           onCharacterUpdate={(updatedCharacter) =>
             updateCharacterBulk(updatedCharacter)
           }
-          disabled={sectionLocks.background}
           character={character}
           mode={mode}
         />
@@ -399,17 +330,11 @@ const CharacterForm = ({
       <FormSection
         title="Level 1 Choice"
         subtitle="Choose either an Innate Heritage or a Standard Feat"
-        isLocked={sectionLocks.level1Choice}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("level1Choice") : undefined
-        }
-        lockable={canLock}
       >
         <Level1ChoiceSection
           character={character}
           onChange={(field, value) => updateCharacter(field, value)}
           onCharacterUpdate={updateCharacterBulk}
-          disabled={sectionLocks.level1Choice}
           mode={mode}
         />
       </FormSection>
@@ -420,11 +345,6 @@ const CharacterForm = ({
           subtitle={`Level ${
             character.level > 1 ? "4+" : ""
           } Ability Score Improvements and Feat choices`}
-          isLocked={sectionLocks.asiProgression}
-          onToggleLock={
-            canLock ? () => toggleSectionLock("asiProgression") : undefined
-          }
-          lockable={canLock}
         >
           <ASILevelChoices
             character={character}
@@ -433,7 +353,6 @@ const CharacterForm = ({
             onASIChoiceChange={handleASIChoiceChange}
             onASIFeatChange={handleASIFeatChange}
             onASIAbilityChange={handleASIAbilityChange}
-            disabled={sectionLocks.asiProgression}
             mode={mode}
           />
         </FormSection>
@@ -442,32 +361,19 @@ const CharacterForm = ({
       <FormSection
         title="Skills & Proficiencies"
         subtitle="Skill proficiencies and expertise"
-        isLocked={sectionLocks.skills}
-        onToggleLock={canLock ? () => toggleSectionLock("skills") : undefined}
-        lockable={canLock}
       >
         <SkillsSection
           character={character}
           onChange={(field, value) => updateCharacter(field, value)}
           onCharacterUpdate={updateCharacterBulk}
-          disabled={sectionLocks.skills}
           mode={mode}
         />
       </FormSection>
 
-      <FormSection
-        title="Tool Proficiencies"
-        subtitle="Tool proficiencies"
-        isLocked={sectionLocks.toolsLanguages}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("toolsLanguages") : undefined
-        }
-        lockable={canLock}
-      >
+      <FormSection title="Tool Proficiencies" subtitle="Tool proficiencies">
         <ToolsLanguagesSection
           character={character}
           onChange={(field, value) => updateCharacter(field, value)}
-          disabled={sectionLocks.toolsLanguages}
           mode={mode}
         />
       </FormSection>
@@ -475,17 +381,11 @@ const CharacterForm = ({
       <FormSection
         title="Ability Scores"
         subtitle="Set your character's base ability scores"
-        isLocked={sectionLocks.abilityScores}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("abilityScores") : undefined
-        }
-        lockable={canLock}
       >
         <AbilityScoresSection
           character={character}
           onChange={updateCharacter}
           onCharacterUpdate={updateCharacterBulk}
-          disabled={sectionLocks.abilityScores}
           mode={mode}
           featChoices={getAllSelectedFeats(character)}
           houseChoices={character.houseChoices || character.house_choices}
@@ -497,46 +397,24 @@ const CharacterForm = ({
       <FormSection
         title="Hit Points"
         subtitle="Calculate your character's hit points based on casting style and constitution"
-        isLocked={sectionLocks.hitPoints}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("hitPoints") : undefined
-        }
-        lockable={canLock}
       >
-        <HitPointsSection
-          character={character}
-          onChange={updateCharacter}
-          disabled={sectionLocks.hitPoints}
-        />
+        <HitPointsSection character={character} onChange={updateCharacter} />
       </FormSection>
 
       <FormSection
         title="Magic Modifiers & Wand"
         subtitle="Wand bonuses and character wand information"
-        isLocked={sectionLocks.magicModifiers}
-        onToggleLock={
-          canLock ? () => toggleSectionLock("magicModifiers") : undefined
-        }
-        lockable={canLock}
       >
         <MagicModifiersSection
           character={character}
           onChange={updateCharacter}
-          disabled={sectionLocks.magicModifiers}
         />
       </FormSection>
       <FormSection
         title="Character Notes"
         subtitle="Additional notes, character flaws, backstory etc"
-        isLocked={sectionLocks.notes}
-        onToggleLock={canLock ? () => toggleSectionLock("notes") : undefined}
-        lockable={canLock}
       >
-        <NotesSection
-          character={character}
-          onChange={updateCharacter}
-          disabled={sectionLocks.notes}
-        />
+        <NotesSection character={character} onChange={updateCharacter} />
       </FormSection>
     </div>
   );
