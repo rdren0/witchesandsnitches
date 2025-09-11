@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { spellsData } from "../../SharedData/spells";
+import { getAbilityAbbr } from "../../SharedData/data";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
@@ -298,7 +299,7 @@ const getAdditionalStyles = (theme) => ({
     opacity: 0.6,
   },
   spellAttackButton: {
-    backgroundColor: "#d1323d",
+    backgroundColor: "#dc2626",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -313,7 +314,7 @@ const getAdditionalStyles = (theme) => ({
     fontFamily: "inherit",
   },
   savingThrowButton: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#ea580c",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -1484,10 +1485,9 @@ export const SubjectCard = ({
                         ...styles.savingThrowButton,
                       }}
                     >
-                      <Shield size={14} />
-                      {`${savingThrowInfo.ability} Save DC ${getSpellSaveDC(
-                        selectedCharacter
-                      )}`}
+                      {`${getAbilityAbbr(
+                        savingThrowInfo.ability
+                      )} Save DC ${getSpellSaveDC(selectedCharacter)}`}
                     </button>
                   );
                 } else {
@@ -1502,7 +1502,6 @@ export const SubjectCard = ({
                           : {}),
                       }}
                     >
-                      <Target size={14} />
                       {isAttempting
                         ? "Rolling..."
                         : `Spell Attack (${formatModifier(
@@ -1530,8 +1529,7 @@ export const SubjectCard = ({
                         : {}),
                     }}
                   >
-                    <Dice6 size={12} />
-                    {damageInfo.dice}
+                    Damage {damageInfo.dice}
                   </button>
                 ) : null;
               })()}
