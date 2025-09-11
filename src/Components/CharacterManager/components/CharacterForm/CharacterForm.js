@@ -93,12 +93,6 @@ const CharacterForm = ({
     };
   }, [isSticky]);
 
-  useEffect(() => {
-    if (mode === "edit" && character && character.id && !loading) {
-      lockAllSections();
-    }
-  }, [mode, character, loading, lockAllSections]);
-
   const handleASIChoiceChange = (level, choiceType) => {
     const updatedCharacter = utilsHandleASIChoiceChange(
       character,
