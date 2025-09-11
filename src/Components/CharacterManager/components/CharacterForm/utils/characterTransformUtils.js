@@ -109,7 +109,7 @@ export const transformCharacterForSave = (character) => {
     casting_style: character.castingStyle,
     corruption_points: character.corruptionPoints || 0,
     current_hit_dice: character.level || 1,
-    current_hit_points: character.currentHitPoints !== undefined && character.currentHitPoints !== null ? character.currentHitPoints : hitPoints,
+    current_hit_points: character.currentHitPoints ?? hitPoints,
     discord_user_id: character.discordUserId || character.discord_user_id || "",
     feat_choices: character.featChoices || {},
     game_session: character.gameSession || "",
@@ -141,14 +141,16 @@ export const transformCharacterFromDB = (dbCharacter) => {
   if (!dbCharacter) return null;
 
   return {
-    abilityScores: dbCharacter.ability_scores || {
-      strength: 8,
-      dexterity: 8,
-      constitution: 8,
-      intelligence: 8,
-      wisdom: 8,
-      charisma: 8,
-    },
+    abilityScores: dbCharacter.base_ability_scores
+      ? dbCharacter.base_ability_scores
+      : dbCharacter.ability_scores || {
+          strength: 8,
+          dexterity: 8,
+          constitution: 8,
+          intelligence: 8,
+          wisdom: 8,
+          charisma: 8,
+        },
     asiChoices: dbCharacter.asi_choices || {},
     background: dbCharacter.background,
     baseAbilityScores: dbCharacter.base_ability_scores || null,
@@ -156,7 +158,7 @@ export const transformCharacterFromDB = (dbCharacter) => {
     corruptionPoints: dbCharacter.corruption_points || 0,
     createdAt: dbCharacter.created_at,
     currentHitDice: dbCharacter.current_hit_dice || 1,
-    currentHitPoints: dbCharacter.current_hit_points !== undefined && dbCharacter.current_hit_points !== null ? dbCharacter.current_hit_points : 0,
+    currentHitPoints: dbCharacter.current_hit_points ?? 0,
     discordUserId: dbCharacter.discord_user_id || "",
     featChoices: dbCharacter.feat_choices || {},
     gameSession: dbCharacter.game_session || "",

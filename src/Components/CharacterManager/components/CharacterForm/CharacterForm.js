@@ -110,6 +110,12 @@ const CharacterForm = ({
     };
   }, [isSticky]);
 
+  useEffect(() => {
+    if (mode === "edit" && character && character.id && !loading) {
+      lockAllSections();
+    }
+  }, [mode, character, loading, lockAllSections]);
+
   const handleASIChoiceChange = (level, choiceType) => {
     const updatedCharacter = utilsHandleASIChoiceChange(
       character,
@@ -453,7 +459,9 @@ const CharacterForm = ({
         title="Tool Proficiencies"
         subtitle="Tool proficiencies"
         isLocked={sectionLocks.toolsLanguages}
-        onToggleLock={canLock ? () => toggleSectionLock("toolsLanguages") : undefined}
+        onToggleLock={
+          canLock ? () => toggleSectionLock("toolsLanguages") : undefined
+        }
         lockable={canLock}
       >
         <ToolsLanguagesSection

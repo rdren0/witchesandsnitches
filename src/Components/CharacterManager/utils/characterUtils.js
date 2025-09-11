@@ -15,7 +15,7 @@ import {
 
 export const getAllSelectedFeats = (character) => {
   if (!character) return [];
-  
+
   const selectedFeats = [];
 
   if (character.standardFeats && Array.isArray(character.standardFeats)) {
@@ -464,7 +464,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         wisdom: 0,
         charisma: 0,
       },
-      featDetails: {}
+      featDetails: {},
     };
   }
 
@@ -603,7 +603,20 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
 
   const houseBonuses = houseFeatures[character.house];
 
-  if (houseBonuses.fixed) {
+  const hasBaseScores = character.baseAbilityScores && character.ability_scores;
+  let fixedBonusesAlreadyApplied = false;
+
+  if (hasBaseScores && houseBonuses.fixed) {
+    fixedBonusesAlreadyApplied = houseBonuses.fixed.every((ability) => {
+      const baseScore = character.baseAbilityScores[ability] || 8;
+      const currentScore = character.ability_scores[ability] || 8;
+      const expectedDifference = currentScore - baseScore;
+
+      return expectedDifference >= 1;
+    });
+  }
+
+  if (houseBonuses.fixed && !fixedBonusesAlreadyApplied) {
     houseBonuses.fixed.forEach((ability) => {
       if (modifiers.hasOwnProperty(ability)) {
         modifiers[ability] += 1;
@@ -625,17 +638,31 @@ export const calculateHouseModifiers = (character, houseChoices = {}) => {
     const chosenAbility = houseChoices[character.house].abilityChoice;
 
     if (modifiers.hasOwnProperty(chosenAbility)) {
-      modifiers[chosenAbility] += 1;
+      let choiceBonusAlreadyApplied = false;
 
-      if (!houseDetails[chosenAbility]) {
-        houseDetails[chosenAbility] = [];
+      if (hasBaseScores) {
+        const baseScore = character.baseAbilityScores[chosenAbility] || 8;
+        const currentScore = character.ability_scores[chosenAbility] || 8;
+        const isFixedAbility = houseBonuses.fixed?.includes(chosenAbility);
+        const expectedMinDifference = isFixedAbility ? 2 : 1;
+
+        choiceBonusAlreadyApplied =
+          currentScore - baseScore >= expectedMinDifference;
       }
-      houseDetails[chosenAbility].push({
-        source: "house",
-        houseName: character.house,
-        type: "choice",
-        amount: 1,
-      });
+
+      if (!choiceBonusAlreadyApplied) {
+        modifiers[chosenAbility] += 1;
+
+        if (!houseDetails[chosenAbility]) {
+          houseDetails[chosenAbility] = [];
+        }
+        houseDetails[chosenAbility].push({
+          source: "house",
+          houseName: character.house,
+          type: "choice",
+          amount: 1,
+        });
+      }
     }
   }
 
@@ -874,10 +901,6 @@ export const detectIfASIAlreadyApplied = (character) => {
     return true;
   }
 
-  if (character.baseAbilityScores) {
-    return true;
-  }
-
   if (character.ability_scores && character.abilityScores) {
     const oldScores = Object.values(character.ability_scores);
     const newScores = Object.values(character.abilityScores).filter(
@@ -942,20 +965,20 @@ export const checkSingleRequirement = (requirement, character) => {
   if (!requirement || !character) return false;
 
   switch (requirement.type) {
-    case 'level':
+    case "level":
       return (character.level || 1) >= requirement.value;
-      
-    case 'castingStyle':
+
+    case "castingStyle":
       return character.castingStyle === requirement.value;
-      
-    case 'innateHeritage':
+
+    case "innateHeritage":
       return character.innateHeritage === requirement.value;
-      
-    case 'feat': {
+
+    case "feat": {
       const selectedFeats = getAllSelectedFeats(character);
       return selectedFeats.includes(requirement.value);
     }
-      
+
     default:
       return false;
   }
@@ -963,20 +986,20 @@ export const checkSingleRequirement = (requirement, character) => {
 
 export const checkFeatPrerequisites = (feat, character) => {
   if (!feat || !character) return false;
-  
+
   if (!feat.prerequisites) return true;
-  
+
   if (feat.prerequisites.allOf) {
-    return feat.prerequisites.allOf.every(req => 
+    return feat.prerequisites.allOf.every((req) =>
       checkSingleRequirement(req, character)
     );
   }
-  
+
   if (feat.prerequisites.anyOf) {
-    return feat.prerequisites.anyOf.some(req => 
+    return feat.prerequisites.anyOf.some((req) =>
       checkSingleRequirement(req, character)
     );
   }
-  
+
   return true;
 };

@@ -572,7 +572,17 @@ export const subclassesData = {
         level: 1,
         name: "Scientific Studies",
         description:
-          "At 1st level, you choose a specialization that defines your approach to transfiguration magic - focusing on biological knowledge, elemental mastery, or magical weaponry.",
+          "At 1st level, you gain Anatomy Textbook and one of the following features.",
+        benefits: {
+          specialAbilities: [
+            {
+              name: "Anatomy Textbook",
+              type: "spell enhancement",
+              description:
+                "When casting a Transfiguration spell that normally requires a higher-level slot to affect a living creature, you can instead use a slot one level lower than normal. In addition, when you cast Vera Verto, it can automatically target creatures one size larger than normally allowed for the slot level used.",
+            },
+          ],
+        },
         choices: [],
       },
       {
@@ -581,30 +591,16 @@ export const subclassesData = {
         description: "Choose your initial specialization approach.",
         choices: [
           {
-            name: "Anatomy Textbook",
+            name: "Animagus Transformation",
             description:
-              "Your knowledge of creature anatomy makes transfigurations easier. Cast Transfiguration spells involving living creatures using a spell slot one level lower than normally required.",
+              "You can use your action to magically assume the shape of your animagus form. You can use this feature twice. You regain expended uses when you finish a short or long rest.",
             benefits: {
               specialAbilities: [
                 {
-                  name: "Anatomical Knowledge",
-                  type: "spell enhancement",
-                  description:
-                    "Cast creature Transfiguration spells at -1 spell slot level",
-                },
-              ],
-            },
-          },
-          {
-            name: "Intuitive Conversion",
-            description:
-              "Conceptualizing transfigurations comes easily to you. When you cast Vera Verto, it automatically affects targets one size larger than specified by the spell slot level.",
-            benefits: {
-              specialAbilities: [
-                {
-                  name: "Enhanced Vera Verto",
-                  type: "spell enhancement",
-                  description: "Vera Verto affects targets one size larger",
+                  name: "Animagus Form",
+                  type: "transformation",
+                  uses: "2 per short rest",
+                  description: "Transform into chosen animal form",
                 },
               ],
             },
@@ -612,15 +608,15 @@ export const subclassesData = {
           {
             name: "Elementalist",
             description:
-              "Your study of Alchemy gives insights into elemental nature. Choose: Elemental spells cast one level higher, OR deal extra elemental damage (scaling 1d4 to 5d4) plus gain 10-foot fly speed when casting spells.",
+              "Your study of Alchemy has given you insights in the nature of elements. You can choose one of the following Effects: Any spell that involves only fire, water, earth, or air is automatically cast one level higher than the consumed spell slot, not exceeding the highest available level of spell slots you have. OR Any time you cast a spell that deals acid, cold, fire, lightning, or thunder damage, you deal an additional 1d4 damage. The damage die increases to 2d4 at 5th Level, 3d4 at 9th level, 4d4 at 13th level and 5d4 at 17th level. Additionally, you can use a bonus action on your turn to cause whirling gusts of elemental air to briefly surround you, immediately before or after you cast a spell of 1st level or higher. Doing so allows you to fly up to 10 feet without provoking opportunity attacks.",
             benefits: {
               specialAbilities: [
                 {
-                  name: "Elemental Mastery",
+                  name: "Elemental Enhancement",
                   type: "choice",
                   options: [
-                    "Elemental spells cast at +1 level",
-                    "Extra elemental damage (1d4-5d4) + 10ft fly speed when casting",
+                    "Elemental spells (fire/water/earth/air only) cast at +1 level",
+                    "Extra elemental damage (1d4-5d4 scaling) + 10ft bonus action flight",
                   ],
                 },
               ],
@@ -629,7 +625,7 @@ export const subclassesData = {
           {
             name: "Transfigured Armament",
             description:
-              "When casting Vera Verto, transfigure your wand into any melee weapon (magical damage, various weapon types available). Gain Extra Attack at 6th level (2 attacks), 11th level (3 attacks), 17th level (4 attacks).",
+              "When you cast Vera Verto, you may transfigure your wand into the form of any singular melee weapon of your choosing. Your Transfigured Armament uses your Strength ability for attack and damage rolls. The damage dealt is considered magical for the purposes of overcoming resistance to damage from non-magical attacks.",
             benefits: {
               weaponProficiencies: ["All melee weapons (when transfigured)"],
               specialAbilities: [
@@ -637,16 +633,7 @@ export const subclassesData = {
                   name: "Wand Weaponry",
                   type: "spell enhancement",
                   description:
-                    "Transform wand into melee weapon with Vera Verto",
-                },
-                {
-                  name: "Extra Attack",
-                  type: "combat",
-                  scaling: {
-                    6: "2 attacks",
-                    11: "3 attacks",
-                    17: "4 attacks",
-                  },
+                    "Transform wand into melee weapon with Vera Verto (uses Strength, magical damage)",
                 },
               ],
             },
@@ -679,19 +666,25 @@ export const subclassesData = {
           "Choose: Animagus Transformation (shapechanging ability), Elemental Casting (spell list + damage aura), or Rune-Etched Weapon (spellcasting through weapons - requires Transfigured Armament).",
         choices: [
           {
-            name: "Animagus Transformation",
+            name: "Arcane Attacks",
             description:
-              "Transform into animal form twice per short rest. Choose Combat Form (Medium/Large predators) or Evasion Form (Tiny/Small/Medium discrete animals) with different stat blocks.",
+              "Animagus Transformation Required. You can attack twice, instead of once, whenever you take the Attack action on your turn. Additionally, your attacks in your form count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage. The number of attacks increases to three at 18th level.",
+            requirements: ["Animagus Transformation"],
             benefits: {
               specialAbilities: [
                 {
-                  name: "Animagus",
-                  type: "transformation",
-                  uses: "2 per short rest",
-                  forms: [
-                    "Combat Form (Medium/Large predator)",
-                    "Evasion Form (Tiny/Small/Medium)",
-                  ],
+                  name: "Extra Attack",
+                  type: "combat",
+                  description: "2 attacks per turn (3 at 18th level)",
+                  scaling: {
+                    6: "2 attacks",
+                    18: "3 attacks",
+                  },
+                },
+                {
+                  name: "Magical Attacks",
+                  type: "passive",
+                  description: "Animagus attacks count as magical",
                 },
               ],
             },
@@ -699,16 +692,18 @@ export const subclassesData = {
           {
             name: "Elemental Casting",
             description:
-              "Gain Elemental Casting spell list. When casting elemental damage spells, creatures within 10 feet take half your level in elemental damage. Proficiency bonus uses per long rest.",
+              "Elementalist Required. You gain access to the Elemental Casting spell list. Additionally, whenever you start casting a spell of 1st level or higher that deals acid, cold, fire, lightning, or thunder damage, magic erupts from you. This eruption causes creatures of your choice that you can see within 10 feet of you to take acid, cold, fire, lightning, or thunder damage (choose each time this ability activates) equal to half your level. This damage can activate once per turn. You can do this a number of times equal to your proficiency bonus per long rest.",
+            requirements: ["Elementalist"],
             benefits: {
               spellList: "Elemental Casting",
               specialAbilities: [
                 {
-                  name: "Elemental Aura",
+                  name: "Elemental Eruption",
                   type: "passive",
-                  damage: "half level",
+                  damage: "half level elemental",
                   range: "10 feet",
                   uses: "proficiency bonus per long rest",
+                  trigger: "When casting elemental damage spell",
                 },
               ],
             },
@@ -716,19 +711,28 @@ export const subclassesData = {
           {
             name: "Rune-Etched Weapon",
             description:
-              "Requires Transfigured Armament. Use spellcasting modifier for weapon attacks. Cast 30-foot spells as touch through weapon. Cast locked spells through weapon as spell blade.",
+              "Transfigured Armament Required. Your understanding of your wand as both spellcasting implement and as a transfigured armament allows you to wield it as both with increased accuracy and effectiveness. You use your spell casting ability modifier instead of your strength modifier for attack rolls and damage rolls with your Transfigured Armament. As an action, you may expend 2 sorcery points to cast a spell with a regular range of 30 feet and cast it as a touch spell, if the spell has the possibility of targeting more than 1 creature, it can be used to affect 1 creature. If you have access to the Quickened Spell metamagic, you may instead cast this spell as a bonus action immediately after successfully hitting a target with your transfigured armament, using the result of the melee weapon attack roll to hit with the touch spell attack roll as well. Additionally, you can cast any locked in spells through your Transfigured Armament as if it were a spell blade.",
             requirements: ["Transfigured Armament"],
             benefits: {
               specialAbilities: [
                 {
-                  name: "Magical Weapon",
+                  name: "Enhanced Weapon Combat",
                   type: "combat enhancement",
-                  description: "Use spellcasting modifier for weapon attacks",
+                  description:
+                    "Use spellcasting modifier for weapon attacks and damage",
                 },
                 {
-                  name: "Spell Conduit",
+                  name: "Touch Spell Conversion",
                   type: "spell enhancement",
-                  description: "Cast 30ft spells as touch through weapon",
+                  cost: "2 sorcery points",
+                  description: "Convert 30ft spells to touch through weapon",
+                },
+                {
+                  name: "Quickened Touch Casting",
+                  type: "bonus action",
+                  requirement: "Quickened Spell metamagic",
+                  description:
+                    "Cast touch spell after weapon hit using same attack roll",
                 },
                 {
                   name: "Spell Blade",
@@ -744,26 +748,34 @@ export const subclassesData = {
         level: 8,
         name: "Magic Weaponry (Optional ASI)",
         description:
-          "I Cast Smack - Requires Transfigured Armament. Gain Valiant spell list and cast through weapon. Choose fighting style: Archery, Sightless Swordsman, Defensive, Fencer, Deep Cuts, Thrown Armament, or Dual Wielding.",
-        requirements: ["Transfigured Armament"],
-        benefits: {
-          spellList: "Valiant",
-          fightingStyles: [
-            {
-              type: "choice",
-              options: [
-                "Archery",
-                "Sightless Swordsman",
-                "Defensive",
-                "Fencer",
-                "Deep Cuts",
-                "Thrown Armament",
-                "Dual Wielding",
+          "You can optionally take this feature in place of an Ability score Improvement or Feat.",
+        choices: [
+          {
+            name: "I Cast Smack",
+            description:
+              "Transfigured Armament Required. You gain access to the Valiant spell list, and can cast any Cantrips or Valiant spells through your Transfigured Armament in place of a wand. Additionally, you can choose one of the following: Archery (gain ability to turn weapon into ranged weapon 80/320, +2 to ranged attack rolls) OR Sightless Swordsman (blindsight 10 feet, see invisible creatures unless hidden).",
+            requirements: ["Transfigured Armament"],
+            benefits: {
+              spellList: "Valiant",
+              specialAbilities: [
+                {
+                  name: "Weapon Spellcasting",
+                  type: "spell enhancement",
+                  description:
+                    "Cast Valiant spells through Transfigured Armament",
+                },
+                {
+                  name: "Combat Specialization",
+                  type: "choice",
+                  options: [
+                    "Archery: Ranged weapon (80/320), +2 ranged attack bonus",
+                    "Sightless Swordsman: Blindsight 10ft, see invisible",
+                  ],
+                },
               ],
             },
-          ],
-        },
-        choices: [],
+          },
+        ],
       },
       {
         level: 9,
@@ -872,9 +884,25 @@ export const subclassesData = {
             },
           },
           {
+            name: "Beast Caster",
+            description:
+              "Animagus Transformation Required. While in your animagus form you gain the ability to cast locked in cantrips as a bonus action. All cantrips cast this way have a range of 10 feet and cannot gain the benefits of Sorcerer or Casting Style features.",
+            requirements: ["Animagus Transformation"],
+            benefits: {
+              specialAbilities: [
+                {
+                  name: "Animagus Spellcasting",
+                  type: "bonus action",
+                  description:
+                    "Cast locked-in cantrips in animal form (10ft range)",
+                },
+              ],
+            },
+          },
+          {
             name: "Power Strike",
             description:
-              "Requires Rune-Etched Weapon or I Cast Smack. When casting cantrip as action, make weapon attack as bonus action. Weapon attacks crit on 19-20.",
+              "Rune-Etched Weapon or I Cast Smack Required. When you use your action to cast a cantrip, you can make one weapon attack as a bonus action. Additionally, your weapon attacks score a critical hit on a roll of 19 or 20.",
             requirements: ["Rune-Etched Weapon", "I Cast Smack"],
             benefits: {
               specialAbilities: [
@@ -902,13 +930,13 @@ export const subclassesData = {
           {
             name: "Durable Constructs",
             description:
-              "Transfigured/conjured living constructs gain additional HP equal to your level and deal +1d6 damage.",
+              "You imbue your constructs of creatures with a more potent magic. Your transfigured or conjured living constructs gain temporary hit points equal to your level, deal an additional 1d6 of damage, and can support three times as much weight as their mundane equivalents.",
             benefits: {
               specialAbilities: [
                 {
                   name: "Reinforced Constructs",
                   type: "passive",
-                  bonus: "Level HP + 1d6 damage to constructs",
+                  bonus: "Level temp HP + 1d6 damage + 3x weight capacity",
                 },
               ],
             },
@@ -7027,6 +7055,302 @@ export const subclassesData = {
                   damage: "Healing modifier necrotic (min 1)",
                   bonus: "Double if affected by your abilities",
                   special: "Bypasses necrotic resistance",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  },
+  Alchemy: {
+    name: "Alchemy",
+    description:
+      "Masters of alchemical transformation, potion brewing, and metallurgical arts with three distinct paths: Simple Elixir creation, Spagyrics plant magic, and Smith's armor enhancement.",
+    higherLevelFeatures: [
+      {
+        level: 1,
+        name: "Alchemical Focus",
+        description:
+          "At 1st level choose one of the following features that defines your approach to alchemy.",
+        choices: [
+          {
+            name: "Simple Elixir",
+            description:
+              "You gain proficiency in potion making, alchemist's supplies, and potion making kits. Whenever you finish a long rest, you can magically produce a simple elixir in an empty phial you touch. Roll on the table for the elixir's effect, which is triggered when someone drinks the elixir. As a bonus action, a creature can drink the elixir or administer it to a creature. You can create additional elixirs by expending a spell slot of 1st level or higher for each one. When you reach certain levels, you can make more elixirs at the end of a long rest: two at 6th level and three at 15th level.",
+            benefits: {
+              proficiencies: [
+                "Potion making",
+                "Alchemist's supplies",
+                "Potion making kits",
+              ],
+              specialAbilities: [
+                {
+                  name: "Daily Elixir Creation",
+                  type: "long rest",
+                  description:
+                    "Create 1 elixir per long rest (2 at 6th, 3 at 15th level)",
+                  elixirTable: [
+                    "Healing: Regains 2d4 + Potions modifier hit points",
+                    "Swiftness: +10 feet walking speed for 1 hour",
+                    "Resilience: +1 AC for 10 minutes",
+                    "Boldness: +1d4 to attack rolls and saves for 1 minute",
+                    "Flight: 10 feet flying speed for 10 minutes",
+                    "Transformation: Alter Self spell effects for 10 minutes",
+                  ],
+                },
+                {
+                  name: "Spell Slot Elixirs",
+                  type: "action",
+                  description:
+                    "Expend spell slots to create additional elixirs",
+                },
+              ],
+            },
+          },
+          {
+            name: "Spagyricist",
+            description:
+              "Your alchemical knowledge veers towards the rarer form of Spagyrics, focusing on plants. You gain proficiency in Medicine, Herbology and Herbology kits. Additionally, your study of herbs and their properties has caused you to learn how to mix their innate magic with yours. As a bonus action, you can touch a creature that has less than its full hit points and heal or harm them. The die rolled increases as you level up: 1d6 at 5th level, 1d8 at 11th level, and 1d10 at 17th level.",
+            benefits: {
+              proficiencies: ["Medicine", "Herbology", "Herbology kits"],
+              specialAbilities: [
+                {
+                  name: "Herbal Alchemy",
+                  type: "bonus action",
+                  uses: "Proficiency bonus per long rest",
+                  healing:
+                    "1d4 + Medicine/Herbology modifier (whichever is higher)",
+                  damage: "1d4 + Medicine/Herbology modifier necrotic",
+                  scaling: {
+                    5: "1d6",
+                    11: "1d8",
+                    17: "1d10",
+                  },
+                },
+              ],
+            },
+          },
+          {
+            name: "The Smith",
+            description:
+              "Your metallurgical pursuits have led to you making armor a conduit for your magic. You gain proficiency with heavy armor and smith's tools, and gain a set of alchemical armor with an AC of 17. Additionally, you learn how to use your artisan's tools as a spellcasting focus in place of a wand. Whenever you use your tool to cast a spell that either deals damage or heals a creature you gain a bonus to the damage or healing equal to your intelligence modifier (minimum of +1).",
+            benefits: {
+              proficiencies: ["Heavy armor", "Smith's tools"],
+              equipment: ["Alchemical armor (AC 17)"],
+              specialAbilities: [
+                {
+                  name: "Tool Focus",
+                  type: "passive",
+                  description:
+                    "Use artisan's tools as spellcasting focus instead of wand",
+                },
+                {
+                  name: "Enhanced Magic",
+                  type: "passive",
+                  description:
+                    "Add Intelligence modifier to damage/healing when using tool focus",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        level: 9,
+        name: "Alchemist Stone",
+        description:
+          "At 9th level you can spend 8 hours creating an Alchemist's stone that stores transfiguration magic. You can benefit from the stone yourself or give it to another creature. When you create the stone, choose the benefit from the available options. Each time you cast a transfiguration spell of 1st level or higher you can change the effect of your stone if the stone is on your person.",
+        benefits: {
+          specialAbilities: [
+            {
+              name: "Alchemist's Stone",
+              type: "item creation",
+              duration: "8 hours to create",
+              options: [
+                "Darkvision out to 60 feet",
+                "Speed increase of 10 feet while unencumbered",
+                "Proficiency in one saving throw",
+                "Resistance to acid, cold, fire, lightning, or thunder damage",
+              ],
+              special: "Change effect when casting transfiguration spells",
+            },
+          ],
+        },
+        choices: [],
+      },
+      {
+        level: 10,
+        name: "Triaprima",
+        description:
+          "At 10th level choose one of the following features based on your 1st level choice.",
+        choices: [
+          {
+            name: "Powerful Elixir",
+            description:
+              "Simple Elixir Required. You gain expertise in potion making, alchemist's supplies, or potion making kits. Whenever a creature drinks an elixir or potion you created, the creature gains temporary hit points equal to 2d6 + your Potions modifier (minimum of 1 temporary hit point) or takes additional acid damage equal to the same amount. You can cast Reparifors without expending a spell slot, provided you use alchemist's supplies as the spellcasting focus. You can do so a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a long rest.",
+            requirements: ["Simple Elixir"],
+            benefits: {
+              expertise: [
+                "Potion making",
+                "Alchemist's supplies",
+                "Potion making kits",
+              ],
+              specialAbilities: [
+                {
+                  name: "Enhanced Potions",
+                  type: "passive",
+                  description:
+                    "Potions grant 2d6 + Potions modifier temp HP or bonus acid damage",
+                },
+                {
+                  name: "Free Reparifors",
+                  type: "spell",
+                  uses: "Wisdom modifier per long rest",
+                  focus: "Alchemist's supplies required",
+                },
+              ],
+            },
+          },
+          {
+            name: "Swift Hands",
+            description:
+              "Spagyricist Required. You gain proficiency in sleight of hand. Your ability to add herbal alchemy to your magic doubles. Whenever you use your bonus action to heal or harm with Spagyrics, you can do so twice.",
+            requirements: ["Spagyricist"],
+            benefits: {
+              proficiencies: ["Sleight of hand"],
+              specialAbilities: [
+                {
+                  name: "Double Spagyrics",
+                  type: "bonus action enhancement",
+                  description: "Use Herbal Alchemy twice per bonus action",
+                },
+              ],
+            },
+          },
+          {
+            name: "Bewitched Weaponry",
+            description:
+              "The Smith Required. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 fire or radiant damage to the target. When you reach 14th level, the extra damage increases to 2d8. Additionally, you gain resistance to fire and radiant damage.",
+            requirements: ["The Smith"],
+            benefits: {
+              resistances: ["fire", "radiant"],
+              specialAbilities: [
+                {
+                  name: "Elemental Weapon",
+                  type: "weapon enhancement",
+                  damage: "1d8 fire or radiant",
+                  scaling: {
+                    14: "2d8",
+                  },
+                  frequency: "Once per turn",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        level: 14,
+        name: "Chemistry and Metallurgy",
+        description: "At 14th level choose one of the following features.",
+        choices: [
+          {
+            name: "Chemist",
+            description:
+              "Spagyricist or Simple Elixir Required. You have been exposed to so many chemicals that they pose little risk to you, and you can use them to quickly end certain ailments. You gain resistance to acid damage and poison damage, and you are now immune to the poisoned condition. You can cast Animatem and Brackium Emendo without expending a spell slot, and without having to have the spell mastered, provided you use alchemist's supplies as the spellcasting focus. Once you cast either spell with this feature, you can't cast that spell with it again until you finish a long rest.",
+            requirements: ["Spagyricist", "Simple Elixir"],
+            benefits: {
+              resistances: ["acid", "poison"],
+              immunities: ["poisoned condition"],
+              specialAbilities: [
+                {
+                  name: "Chemical Immunity",
+                  type: "passive",
+                  description: "Resistance to acid/poison, immune to poisoned",
+                },
+                {
+                  name: "Healing Mastery",
+                  type: "spell",
+                  spells: ["Animatem", "Brackium Emendo"],
+                  uses: "1 per spell per long rest",
+                  focus: "Alchemist's supplies required",
+                },
+              ],
+            },
+          },
+          {
+            name: "Master Blacksmith",
+            description:
+              "The Smith Required. When a Huge or smaller creature you can see ends its turn within 30 feet of you, you can use your reaction to magically force it to make a Strength saving throw against your spell save DC. On a failed save, you pull the creature up to 25 feet directly to an unoccupied space. If you pull the target to a space within 5 feet of you, you can make a melee weapon attack against it as part of this reaction. You can use this reaction a number of times equal to your proficiency bonus, and you regain all expended uses of it when you finish a long rest.",
+            requirements: ["The Smith"],
+            benefits: {
+              specialAbilities: [
+                {
+                  name: "Magnetic Pull",
+                  type: "reaction",
+                  range: "30 feet",
+                  save: "Strength vs spell save DC",
+                  effect:
+                    "Pull creature 25 feet, bonus attack if within 5 feet",
+                  uses: "Proficiency bonus per long rest",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        level: 18,
+        name: "Everlasting Life",
+        description: "At 18th level choose one of the following features.",
+        choices: [
+          {
+            name: "True Alchemist",
+            description:
+              "Your lifelong study of Flamel's and Dumbledore's writings has finally come to fruition. You can create a Philosopher's Stone, turning any metal into gold and producing the Elixir of Life. You cannot die of natural causes, you age at a slower rate, and you cannot be aged magically. After reaching the age of 25, for every 10 years that pass, your body ages only 1 year. Only one Philosopher's Stone may exist at one time. Additionally, you cannot be paralyzed, petrified, poisoned, stunned, incapacitated, or rendered unconscious by magical means.",
+            benefits: {
+              immunities: [
+                "natural death",
+                "magical aging",
+                "paralyzed (magical)",
+                "petrified (magical)",
+                "poisoned (magical)",
+                "stunned (magical)",
+                "incapacitated (magical)",
+                "unconscious (magical)",
+              ],
+              specialAbilities: [
+                {
+                  name: "Philosopher's Stone",
+                  type: "legendary item creation",
+                  description:
+                    "Create unique Philosopher's Stone - transmute metals to gold, produce Elixir of Life",
+                },
+                {
+                  name: "Ageless",
+                  type: "passive",
+                  description: "Age 1 year for every 10 years after age 25",
+                },
+              ],
+            },
+          },
+          {
+            name: "Heart of the Smith",
+            description:
+              "The Smith Required. You gain immunity to fire and radiant damage. While wearing heavy armor, you have resistance to bludgeoning, piercing, and slashing damage, and immunity to those types of damage if they are nonmagical.",
+            requirements: ["The Smith"],
+            benefits: {
+              immunities: ["fire", "radiant"],
+              conditionalResistances: [
+                {
+                  condition: "wearing heavy armor",
+                  resistances: ["bludgeoning", "piercing", "slashing"],
+                  immunities: [
+                    "nonmagical bludgeoning",
+                    "nonmagical piercing",
+                    "nonmagical slashing",
+                  ],
                 },
               ],
             },
