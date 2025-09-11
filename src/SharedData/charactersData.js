@@ -1057,7 +1057,7 @@ export const ALL_CHARACTERS = [
   },
   {
     id: 167,
-    name: "Astrid Nordstrom",
+    name: "Astrid Nordström",
     type: "Competitor",
     school: "Jaguaras",
     originalSchool: "Durmstrang",

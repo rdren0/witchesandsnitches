@@ -576,7 +576,8 @@ export const SubjectCard = ({
     if (!spellcastingAbility) return 0;
 
     const abilityKey = spellcastingAbility.toLowerCase();
-    const abilityScore = character[abilityKey] || 10;
+    const abilityScore =
+      character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -595,11 +596,19 @@ export const SubjectCard = ({
     };
   };
 
+  const extractSpellAttackInfo = (spellDescription) => {
+    if (!spellDescription) return null;
+
+    const spellAttackRegex =
+      /(ranged\s+spell\s+attack|spell\s+attack\s+against)/gi;
+    return spellAttackRegex.test(spellDescription);
+  };
+
   const extractSavingThrowInfo = (spellDescription) => {
     if (!spellDescription) return null;
 
     const savingThrowRegex =
-      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+saving\s+throw/gi;
+      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+(saving\s+throw|check\s+against\s+your\s+spell\s+save\s+DC)/gi;
     const matches = [...spellDescription.matchAll(savingThrowRegex)];
 
     if (matches.length === 0) return null;
@@ -1469,6 +1478,9 @@ export const SubjectCard = ({
             <div style={styles.buttonContainer}>
               {(() => {
                 const spellData = getSpellData(spellName);
+                const isSpellAttack = extractSpellAttackInfo(
+                  spellData?.description
+                );
                 const savingThrowInfo = extractSavingThrowInfo(
                   spellData?.description
                 );
@@ -1477,20 +1489,7 @@ export const SubjectCard = ({
                   spellName
                 );
 
-                if (savingThrowInfo) {
-                  return (
-                    <button
-                      disabled={true}
-                      style={{
-                        ...styles.savingThrowButton,
-                      }}
-                    >
-                      {`${getAbilityAbbr(
-                        savingThrowInfo.ability
-                      )} Save DC ${getSpellSaveDC(selectedCharacter)}`}
-                    </button>
-                  );
-                } else {
+                if (isSpellAttack) {
                   return (
                     <button
                       onClick={() => handleSpellAttack(spellName)}
@@ -1510,6 +1509,21 @@ export const SubjectCard = ({
                           )})`}
                     </button>
                   );
+                } else if (savingThrowInfo) {
+                  return (
+                    <button
+                      disabled={true}
+                      style={{
+                        ...styles.savingThrowButton,
+                      }}
+                    >
+                      {`${getAbilityAbbr(
+                        savingThrowInfo.ability
+                      )} Save DC ${getSpellSaveDC(selectedCharacter)}`}
+                    </button>
+                  );
+                } else {
+                  return null;
                 }
               })()}
               {(() => {
