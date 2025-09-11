@@ -1228,7 +1228,7 @@ const FeatureSelectorSection = ({
                             marginTop: "4px",
                           }}
                         >
-                          {feat.prerequisites.anyOf.map((req, index) => {
+                          {feat.prerequisites?.anyOf?.map((req, index) => {
                             const meetsSingle = checkRequirement(req);
 
                             return (
