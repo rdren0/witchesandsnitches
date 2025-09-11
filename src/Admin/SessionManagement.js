@@ -10,7 +10,7 @@ import {
   Star,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { gameSessionOptions } from "../App/const";
+import { gameSessionGroups } from "../App/const";
 
 const SessionManagement = ({ supabase }) => {
   const { theme } = useTheme();
@@ -547,7 +547,38 @@ const SessionManagement = ({ supabase }) => {
             style={styles.select}
           >
             <option value="all">All Sessions</option>
-            {gameSessionOptions.map((session) => (
+
+            <optgroup label="Haunting Sessions">
+              {gameSessionGroups.haunting.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            <optgroup label="Knights Sessions">
+              {gameSessionGroups.knights.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            <optgroup label="Other Sessions">
+              {gameSessionGroups.other.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            {gameSessionGroups.development.map((session) => (
               <option key={session} value={session}>
                 {session}
               </option>
