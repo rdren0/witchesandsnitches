@@ -1,4 +1,5 @@
 export const gameSessionOptions = [
+  "One-Shot",
   "Sunday - Knights",
   "Sunday - Haunting",
   "Monday - Haunting",
@@ -16,6 +17,7 @@ export const gameSessionOptions = [
 ];
 
 export const DISCORD_WEBHOOKS = {
+  "One-Shot": process.env.REACT_APP_DISCORD_WEBHOOK_ONE_SHOT,
   "Sunday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_SUNDAY_KNIGHTS,
   "Sunday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_SUNDAY_HAUNTING,
   "Monday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_MONDAY_HAUNTING,
@@ -24,7 +26,8 @@ export const DISCORD_WEBHOOKS = {
   "Wednesday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
   "Thursday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_KNIGHTS,
-  "Thursday - Jaguaras": process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_KNIGHTS,
+  "Thursday - Jaguaras":
+    process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_JAGUARAS,
   "Friday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_KNIGHTS,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
   "Saturday - Haunting":
