@@ -27,7 +27,15 @@ export const useAdmin = () => {
 };
 
 export const AdminProvider = ({ children, user }) => {
-  const [adminMode, setAdminModeState] = useState(false);
+  const [adminMode, setAdminModeState] = useState(() => {
+    try {
+      const savedAdminMode = sessionStorage.getItem("adminMode");
+      return savedAdminMode === "true";
+    } catch (error) {
+      console.warn("Failed to read admin mode from session storage:", error);
+      return false;
+    }
+  });
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
 
@@ -59,6 +67,15 @@ export const AdminProvider = ({ children, user }) => {
         if (!adminStatus) {
           setAdminModeState(false);
 
+          try {
+            sessionStorage.removeItem("adminMode");
+          } catch (error) {
+            console.warn(
+              "Failed to clear admin mode from session storage:",
+              error
+            );
+          }
+
           if (setSearchParams && typeof setSearchParams === "function") {
             try {
               const newParams = new URLSearchParams(searchParams);
@@ -73,6 +90,15 @@ export const AdminProvider = ({ children, user }) => {
         console.error("Error checking admin status:", error);
         setIsUserAdmin(false);
         setAdminModeState(false);
+
+        try {
+          sessionStorage.removeItem("adminMode");
+        } catch (storageError) {
+          console.warn(
+            "Failed to clear admin mode from session storage:",
+            storageError
+          );
+        }
       }
     };
 
@@ -111,6 +137,16 @@ export const AdminProvider = ({ children, user }) => {
 
       setAdminModeState(isActive);
 
+      try {
+        if (isActive) {
+          sessionStorage.setItem("adminMode", "true");
+        } else {
+          sessionStorage.removeItem("adminMode");
+        }
+      } catch (error) {
+        console.warn("Failed to save admin mode to session storage:", error);
+      }
+
       if (setSearchParams && typeof setSearchParams === "function") {
         try {
           const newParams = new URLSearchParams(searchParams);
@@ -133,6 +169,22 @@ export const AdminProvider = ({ children, user }) => {
       setAdminMode(false);
     }
   }, [isUserAdmin, adminMode, setAdminMode]);
+
+  useEffect(() => {
+    if (isUserAdmin && !adminMode) {
+      try {
+        const savedAdminMode = sessionStorage.getItem("adminMode");
+        if (savedAdminMode === "true") {
+          setAdminModeState(true);
+        }
+      } catch (error) {
+        console.warn(
+          "Failed to restore admin mode from session storage:",
+          error
+        );
+      }
+    }
+  }, [isUserAdmin, adminMode]);
 
   const loadAllUsers = async () => {
     if (!isUserAdmin) {
