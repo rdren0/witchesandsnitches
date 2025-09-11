@@ -216,13 +216,13 @@ export const castingStyleData = {
         name: "Rated E for Everyone",
         level: 1,
         description:
-          "Your unarmed strikes deal damage equal to 1d6 + your Strength mod.",
+          "Your unarmed strikes deal damage equal to 1d6 + your Strength mod. This damage increases by 1d6 when you reach certain levels: 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
       },
       {
         name: "Metamagic: Rage",
         level: 3,
         description:
-          "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain the following benefits when you aren't wearing armor:",
+          "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain the following benefits when you aren't wearing armor: You have advantage on Strength checks and Strength saving throws. You have resistance to bludgeoning, piercing, slashing and fire damage. You can't cast spells with an area of effect (cube, line, sphere, or cone) or concentrate or dedicate on spells while raging. When you make an unarmed strike, using strength, you gain a +2 bonus to the damage roll. This damage increases to +3 at 10th level, and +4 at 16th level. Your rage lasts for 1 minute. It ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action.",
       },
       {
         name: "Relentless Rage",
@@ -247,7 +247,7 @@ export const castingStyleData = {
     hitPointsAtFirst: "10 + CON modifier",
     hitPointsPerLevel: "1d10 (or 6) + CON modifier",
     spellcastingAbility: "Charisma",
-    baseAC: "13 + DEX modifier",
+    baseAC: "15 + DEX modifier",
     savingThrows: ["Constitution", "Charisma"],
     skills: [
       "Athletics",
