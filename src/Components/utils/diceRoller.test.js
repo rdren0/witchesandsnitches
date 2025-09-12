@@ -820,19 +820,6 @@ describe("RollModal Components and Functions", () => {
           "Please select a character first!"
         );
       });
-
-      it.skip("should return early if no discord webhook URL", async () => {
-        const { getDiscordWebhook } = require("../../App/const");
-        getDiscordWebhook.mockReturnValue(null);
-        console.error = jest.fn();
-
-        const result = await attemptSpell(spellParams);
-
-        expect(result).toBeUndefined();
-        expect(console.error).toHaveBeenCalledWith(
-          "Discord webhook URL not configured"
-        );
-      });
     });
 
     describe("rollBrewPotion", () => {

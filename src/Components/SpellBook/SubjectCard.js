@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { spellsData } from "../../SharedData/spells";
+import { getAbilityAbbr } from "../../SharedData/data";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
@@ -291,6 +292,8 @@ const getAdditionalStyles = (theme) => ({
     gap: "4px",
     transition: "all 0.2s ease",
     fontFamily: "inherit",
+    minWidth: "120px",
+    justifyContent: "center",
   },
   attemptButtonDisabled: {
     backgroundColor: theme.textSecondary || "#6b7280",
@@ -298,7 +301,7 @@ const getAdditionalStyles = (theme) => ({
     opacity: 0.6,
   },
   spellAttackButton: {
-    backgroundColor: "#d1323d",
+    backgroundColor: "#dc2626",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -313,7 +316,7 @@ const getAdditionalStyles = (theme) => ({
     fontFamily: "inherit",
   },
   savingThrowButton: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#ea580c",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -575,7 +578,8 @@ export const SubjectCard = ({
     if (!spellcastingAbility) return 0;
 
     const abilityKey = spellcastingAbility.toLowerCase();
-    const abilityScore = character[abilityKey] || 10;
+    const abilityScore =
+      character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -594,18 +598,35 @@ export const SubjectCard = ({
     };
   };
 
+  const extractSpellAttackInfo = (spellDescription) => {
+    if (!spellDescription) return null;
+
+    const spellAttackRegex =
+      /(ranged\s+spell\s+attack|spell\s+attack\s+against)/gi;
+    return spellAttackRegex.test(spellDescription);
+  };
+
   const extractSavingThrowInfo = (spellDescription) => {
     if (!spellDescription) return null;
 
     const savingThrowRegex =
-      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+saving\s+throw/gi;
+      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+(saving\s+throw|check\s+against\s+your\s+spell\s+save\s+DC)/gi;
     const matches = [...spellDescription.matchAll(savingThrowRegex)];
 
     if (matches.length === 0) return null;
 
     const match = matches[0];
+    const abilityAbbreviations = {
+      Strength: "STR",
+      Dexterity: "DEX",
+      Constitution: "CON",
+      Intelligence: "INT",
+      Wisdom: "WIS",
+      Charisma: "CHA",
+    };
     return {
       ability: match[1],
+      abilityAbbr: abilityAbbreviations[match[1]] || match[1],
     };
   };
 
@@ -627,13 +648,21 @@ export const SubjectCard = ({
     try {
       const spellcastingModifier =
         getSpellcastingAbilityModifier(selectedCharacter);
+
+      const hasPinpointAccuracy =
+        selectedCharacter.standardFeats?.includes("Pinpoint Accuracy") ||
+        selectedCharacter.standard_feats?.includes("Pinpoint Accuracy");
+
       const totalModifier =
-        selectedCharacter.proficiencyBonus + spellcastingModifier;
+        selectedCharacter.proficiencyBonus +
+        spellcastingModifier +
+        (hasPinpointAccuracy ? 1 : 0);
 
       const rollValue = Math.floor(Math.random() * 20) + 1;
       const total = rollValue + totalModifier;
 
-      const isCriticalSuccess = rollValue === 20;
+      const critThreshold = hasPinpointAccuracy ? 19 : 20;
+      const isCriticalSuccess = rollValue >= critThreshold;
       const isCriticalFailure = rollValue === 1;
 
       const rollResult = {
@@ -1080,14 +1109,28 @@ export const SubjectCard = ({
           <thead style={styles.tableHeader}>
             <tr>
               <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
-              <th style={styles.tableHeaderCell}>Spell Name</th>
-              <th style={styles.tableHeaderCell}>Successful Attempts</th>
-              <th style={styles.tableHeaderCellCenter}>Critical</th>
-              <th style={styles.tableHeaderCellCenter}>Attempt</th>
-              <th style={styles.tableHeaderCellCenter}>Arithmancy</th>
-              <th style={styles.tableHeaderCellCenter}>Runes</th>
-              <th style={styles.tableHeaderCellCenter}>Research</th>
-              <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
+              <th style={{ ...styles.tableHeaderCell, width: "20%" }}>
+                Spell Name
+              </th>
+              <th style={{ ...styles.tableHeaderCell, width: "12%" }}>
+                Successful Attempts
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "5%" }}>
+                Critical
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "22%" }}>
+                Attempt
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "8%" }}>
+                Arithmancy
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "8%" }}>
+                Runes
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "8%" }}>
+                Research
+              </th>
+              <th style={{ ...styles.tableHeaderCellCenter, width: "2rem" }}>
                 Menu
               </th>
             </tr>
@@ -1358,7 +1401,7 @@ export const SubjectCard = ({
                     borderRadius: "10px",
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
-                    backgroundColor: theme.warning || "#f59e0b",
+                    backgroundColor: "#8b4513",
                     color: "white",
                   }}
                 >
@@ -1442,19 +1485,95 @@ export const SubjectCard = ({
           )}
         </td>
         <td style={{ ...styles.tableCell, textAlign: "center" }}>
-          <button
-            onClick={() => handleSpellAttempt(spellName, subject)}
-            disabled={isAttempting || !selectedCharacter || isMastered}
-            style={{
-              ...styles.attemptButton,
-              ...(isAttempting || !selectedCharacter || isMastered
-                ? styles.attemptButtonDisabled
-                : {}),
-            }}
-          >
-            <Dice6 size={14} />
-            {isMastered ? "Mastered" : isAttempting ? "Rolling..." : "Attempt"}
-          </button>
+          {isMastered ? (
+            <div style={styles.buttonContainer}>
+              {(() => {
+                const spellData = getSpellData(spellName);
+                const isSpellAttack = extractSpellAttackInfo(
+                  spellData?.description
+                );
+                const savingThrowInfo = extractSavingThrowInfo(
+                  spellData?.description
+                );
+                const damageInfo = extractDamageInfo(
+                  spellData?.description,
+                  spellName
+                );
+
+                if (isSpellAttack) {
+                  return (
+                    <button
+                      onClick={() => handleSpellAttack(spellName)}
+                      disabled={isAttempting || !selectedCharacter}
+                      style={{
+                        ...styles.spellAttackButton,
+                        ...(isAttempting || !selectedCharacter
+                          ? styles.attemptButtonDisabled
+                          : {}),
+                      }}
+                    >
+                      {isAttempting
+                        ? "Rolling..."
+                        : `Spell Attack (${formatModifier(
+                            selectedCharacter.proficiencyBonus +
+                              getSpellcastingAbilityModifier(selectedCharacter)
+                          )})`}
+                    </button>
+                  );
+                } else if (savingThrowInfo) {
+                  return (
+                    <button
+                      disabled={true}
+                      style={{
+                        ...styles.savingThrowButton,
+                      }}
+                    >
+                      {`${getAbilityAbbr(
+                        savingThrowInfo.ability
+                      )} Save DC ${getSpellSaveDC(selectedCharacter)}`}
+                    </button>
+                  );
+                } else {
+                  return null;
+                }
+              })()}
+              {(() => {
+                const spellData = getSpellData(spellName);
+                const damageInfo = extractDamageInfo(
+                  spellData?.description,
+                  spellName
+                );
+                return damageInfo ? (
+                  <button
+                    onClick={() => handleDamageRoll(spellName, damageInfo)}
+                    disabled={isAttempting || !selectedCharacter}
+                    style={{
+                      ...styles.damageButton,
+                      ...(isAttempting || !selectedCharacter
+                        ? styles.attemptButtonDisabled
+                        : {}),
+                    }}
+                  >
+                    Damage {damageInfo.dice}
+                  </button>
+                ) : null;
+              })()}
+            </div>
+          ) : (
+            <button
+              onClick={() => handleSpellAttempt(spellName, subject)}
+              disabled={isAttempting || !selectedCharacter}
+              style={{
+                ...styles.attemptButton,
+                ...(isAttempting || !selectedCharacter
+                  ? styles.attemptButtonDisabled
+                  : {}),
+              }}
+            >
+              <Dice6 size={14} />
+              {isAttempting ? "Rolling..." : "Attempt"}
+            </button>
+          )}
         </td>
         {showLevel && (
           <td style={{ ...styles.tableCell, textAlign: "center" }}>
@@ -2090,11 +2209,19 @@ export const SubjectCard = ({
             <thead style={styles.tableHeader}>
               <tr>
                 <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
-                <th style={styles.tableHeaderCell}>Spell Name</th>
-                <th style={styles.tableHeaderCell}>Successful Attempts</th>
-                <th style={styles.tableHeaderCellCenter}>Critical</th>
-                <th style={styles.tableHeaderCellCenter}>Attempt</th>
-                <th style={{ ...styles.tableHeaderCellCenter, width: "3rem" }}>
+                <th style={{ ...styles.tableHeaderCell, width: "30%" }}>
+                  Spell Name
+                </th>
+                <th style={{ ...styles.tableHeaderCell, width: "20%" }}>
+                  Successful Attempts
+                </th>
+                <th style={{ ...styles.tableHeaderCellCenter, width: "7%" }}>
+                  Critical
+                </th>
+                <th style={{ ...styles.tableHeaderCellCenter, width: "25%" }}>
+                  Attempt
+                </th>
+                <th style={{ ...styles.tableHeaderCellCenter, width: "2rem" }}>
                   Menu
                 </th>
               </tr>

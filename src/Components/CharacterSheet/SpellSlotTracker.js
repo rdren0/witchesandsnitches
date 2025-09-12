@@ -312,9 +312,6 @@ const SpellSlotTracker = ({
         const maxSorceryPoints = SORCERY_POINT_PROGRESSION[character.level];
 
         if (maxSorceryPoints !== undefined && maxSorceryPoints >= 0) {
-          console.log(
-            `Setting up sorcery points for character level ${character.level}: ${maxSorceryPoints} points`
-          );
           await updateSorceryPointsOnLevelUp(character.level);
         }
       }

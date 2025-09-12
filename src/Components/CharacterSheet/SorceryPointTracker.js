@@ -119,13 +119,13 @@ const SorceryPointTracker = ({
 
   const setupSorceryPoints = async () => {
     if (!character || isUpdating) return;
-    
+
     setIsUpdating(true);
-    
+
     try {
       const characterLevel = character.level || 1;
       const maxPoints = SORCERY_POINT_PROGRESSION[characterLevel] || 0;
-      
+
       const { error } = await supabase.from("character_resources").upsert(
         {
           character_id: selectedCharacterId,
@@ -150,8 +150,6 @@ const SorceryPointTracker = ({
         sorceryPoints: maxPoints,
         maxSorceryPoints: maxPoints,
       }));
-      
-      console.log(`Sorcery points set up: ${maxPoints} for level ${characterLevel}`);
     } catch (error) {
       console.error("Error setting up sorcery points:", error);
     } finally {
@@ -343,7 +341,10 @@ const SorceryPointTracker = ({
           </div>
         ) : (
           <div style={styles.sorceryGrid}>
-            <div style={styles.slotItem} onClick={() => openSorceryModal("use")}>
+            <div
+              style={styles.slotItem}
+              onClick={() => openSorceryModal("use")}
+            >
               <div style={styles.slotLevel}>Available</div>
               <div
                 style={{

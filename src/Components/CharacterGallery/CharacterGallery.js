@@ -1213,6 +1213,9 @@ export const CharacterGallery = ({
     if (gameSession.includes("knights")) {
       autoOpenSchools.add("Hogwarts");
     }
+    if (gameSession.includes("jaguaras")) {
+      autoOpenSchools.add("Jaguaras");
+    }
 
     return autoOpenSchools;
   });
@@ -1230,6 +1233,9 @@ export const CharacterGallery = ({
     if (gameSession.includes("knights")) {
       autoOpenTypes.add("Hogwarts-Classmate");
     }
+    if (gameSession.includes("jaguaras")) {
+      autoOpenTypes.add("Jaguaras-Competitor");
+    }
 
     return autoOpenTypes;
   });
@@ -1246,23 +1252,22 @@ export const CharacterGallery = ({
     }
 
     const gameSession = selectedCharacter.gameSession.toLowerCase();
-    console.log("Game session:", gameSession);
     const autoOpenSchools = new Set();
     const autoOpenTypes = new Set();
 
     if (gameSession.includes("haunting")) {
-      console.log("Opening Ilvermorny sections");
       autoOpenSchools.add("Ilvermorny");
       autoOpenTypes.add("Ilvermorny-Classmate");
     }
     if (gameSession.includes("knights")) {
-      console.log("Opening Hogwarts sections");
       autoOpenSchools.add("Hogwarts");
       autoOpenTypes.add("Hogwarts-Classmate");
     }
+    if (gameSession.includes("jaguaras")) {
+      autoOpenSchools.add("Jaguaras");
+      autoOpenTypes.add("Jaguaras-Competitor");
+    }
 
-    console.log("Auto-open schools:", autoOpenSchools);
-    console.log("Auto-open types:", autoOpenTypes);
     setExpandedSchools(autoOpenSchools);
     setExpandedTypes(autoOpenTypes);
   }, [selectedCharacter?.gameSession]);
@@ -1380,7 +1385,16 @@ export const CharacterGallery = ({
     );
   });
 
-  const schoolKeys = Object.keys(charactersBySchool);
+  const schoolKeys = Object.keys(charactersBySchool).sort((a, b) => {
+    const order = { Ilvermorny: 1, Hogwarts: 2, Jaguaras: 3 };
+    const aOrder = order[a] || 999;
+    const bOrder = order[b] || 999;
+
+    if (aOrder !== bOrder) {
+      return aOrder - bOrder;
+    }
+    return a.localeCompare(b);
+  });
 
   const toggleSchool = (school) => {
     const newExpanded = new Set(expandedSchools);

@@ -28,6 +28,7 @@ export const DEFAULT_CHARACTER = {
   feat_choices: {},
   subclass_choices: {},
   toolProficiencies: [],
+  metamagic: [],
 
   level1ChoiceType: "",
   name: "",

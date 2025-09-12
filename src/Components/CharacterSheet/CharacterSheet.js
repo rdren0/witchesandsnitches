@@ -710,6 +710,7 @@ const CharacterSheet = ({
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,
+          metamagicChoices: data.metamagic_choices || {},
         };
 
         setCharacter(transformedCharacter);

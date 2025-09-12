@@ -13,7 +13,6 @@ export const useCharacterData = (
   adminMode = false,
   isUserAdmin = false
 ) => {
-  console.log({ characterId, userId, adminMode, isUserAdmin });
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
   const [originalCharacter, setOriginalCharacter] = useState(DEFAULT_CHARACTER);
   const [loading, setLoading] = useState(false);
@@ -156,7 +155,6 @@ export const useCharacterData = (
       const characterToSave = transformCharacterForSave(
         characterWithFinalScores
       );
-
 
       characterToSave.discord_user_id = effectiveUserId;
       characterToSave.base_ability_scores = baseScores;

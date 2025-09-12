@@ -850,7 +850,7 @@ export const HeritageSection = ({
                       : enhancedStyles.featPreview
                   }
                 >
-                  {heritageData?.description || "No preview available."}
+                  Heritage details and choices will appear when expanded.
                 </div>
 
                 {isSelected && (
@@ -1083,6 +1083,20 @@ export const HeritageSection = ({
                                 style={{ fontSize: "12px", color: "#3b82f6" }}
                               >
                                 Poison resistance
+                              </li>
+                            )}
+                            {heritageData.modifiers.other.feyRest && (
+                              <li
+                                style={{ fontSize: "12px", color: "#3b82f6" }}
+                              >
+                                Fey Rest (4 hours instead of 8 for long rest)
+                              </li>
+                            )}
+                            {heritageData.modifiers.other.feyTraits && (
+                              <li
+                                style={{ fontSize: "12px", color: "#3b82f6" }}
+                              >
+                                Fey Traits (physical manifestations of heritage)
                               </li>
                             )}
                           </ul>

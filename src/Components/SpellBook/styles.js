@@ -585,7 +585,7 @@ export const createSpellBookStyles = (theme) => ({
   },
 
   researchButton: {
-    backgroundColor: theme.warning || "#f59e0b",
+    backgroundColor: "#8b4513",
     color: "white",
     border: "none",
     borderRadius: "6px",
@@ -623,12 +623,12 @@ export const createSpellBookStyles = (theme) => ({
     borderRadius: "10px",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
-    backgroundColor: theme.warning || "#f59e0b",
+    backgroundColor: "#8b4513",
     color: "white",
   },
   tableRowResearched: {
-    backgroundColor: (theme.warning || "#f59e0b") + "10",
-    borderLeft: `3px solid ${theme.warning || "#f59e0b"}`,
+    backgroundColor: "#8b451310",
+    borderLeft: `3px solid #8b4513`,
   },
   tableRowFailed: {
     backgroundColor: (theme.error || "#ef4444") + "05",
@@ -739,14 +739,14 @@ export const createSpellBookStyles = (theme) => ({
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    color: theme.warning || "#f59e0b",
+    color: "#8b4513",
     fontFamily: "inherit",
     transition: "background-color 0.2s ease",
   },
 
   searchHighlight: {
-    backgroundColor: (theme.warning || "#f59e0b") + "40",
-    color: theme.warning || "#f59e0b",
+    backgroundColor: "#8b451340",
+    color: "#8b4513",
     fontWeight: "bold",
     padding: "1px 2px",
     borderRadius: "2px",

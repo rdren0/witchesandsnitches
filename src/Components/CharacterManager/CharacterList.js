@@ -16,6 +16,7 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../styles/masterStyles";
 import { characterService } from "../../services/characterService";
+import { gameSessionGroups } from "../../App/const";
 
 const CharacterList = ({
   user,
@@ -55,9 +56,33 @@ const CharacterList = ({
           (sessionCounts[char.gameSession] || 0) + 1;
       }
     });
-    return Object.entries(sessionCounts)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([session, count]) => ({ session, count }));
+
+    const grouped = {
+      haunting: [],
+      knights: [],
+      other: [],
+      development: [],
+    };
+
+    Object.entries(sessionCounts).forEach(([session, count]) => {
+      const sessionData = { session, count };
+      if (gameSessionGroups.haunting.includes(session)) {
+        grouped.haunting.push(sessionData);
+      } else if (gameSessionGroups.knights.includes(session)) {
+        grouped.knights.push(sessionData);
+      } else if (gameSessionGroups.development.includes(session)) {
+        grouped.development.push(sessionData);
+      } else {
+        grouped.other.push(sessionData);
+      }
+    });
+
+    grouped.haunting.sort((a, b) => a.session.localeCompare(b.session));
+    grouped.knights.sort((a, b) => a.session.localeCompare(b.session));
+    grouped.other.sort((a, b) => a.session.localeCompare(b.session));
+    grouped.development.sort((a, b) => a.session.localeCompare(b.session));
+
+    return grouped;
   };
 
   const availableGameSessions = getAvailableGameSessions();
@@ -141,11 +166,16 @@ const CharacterList = ({
   }, [loadCharacters, refreshTrigger]);
 
   useEffect(() => {
-    if (
-      filterValue &&
-      !availableGameSessions.some(({ session }) => session === filterValue)
-    ) {
-      setFilterValue("");
+    if (filterValue) {
+      const allSessions = [
+        ...availableGameSessions.haunting,
+        ...availableGameSessions.knights,
+        ...availableGameSessions.other,
+        ...availableGameSessions.development,
+      ];
+      if (!allSessions.some(({ session }) => session === filterValue)) {
+        setFilterValue("");
+      }
     }
   }, [availableGameSessions, filterValue]);
 
@@ -524,22 +554,81 @@ const CharacterList = ({
               fontSize: "14px",
               minWidth: "250px",
             }}
-            disabled={availableGameSessions.length === 0}
+            disabled={
+              availableGameSessions.haunting.length === 0 &&
+              availableGameSessions.knights.length === 0 &&
+              availableGameSessions.other.length === 0 &&
+              availableGameSessions.development.length === 0
+            }
           >
             <option value="">
               All Sessions{" "}
               {savedCharacters.length > 0 && `(${savedCharacters.length})`}
             </option>
-            {availableGameSessions.map(({ session, count }) => (
-              <option key={session} value={session}>
-                {session} ({count})
-              </option>
-            ))}
-            {availableGameSessions.length === 0 && (
-              <option value="" disabled>
-                No sessions available
-              </option>
+
+            {availableGameSessions.haunting.length > 0 && (
+              <optgroup label="Haunting Sessions">
+                {availableGameSessions.haunting.map(({ session, count }) => (
+                  <option key={session} value={session}>
+                    {session} ({count})
+                  </option>
+                ))}
+              </optgroup>
             )}
+
+            {availableGameSessions.haunting.length > 0 &&
+              (availableGameSessions.knights.length > 0 ||
+                availableGameSessions.other.length > 0 ||
+                availableGameSessions.development.length > 0) && (
+                <option disabled>──────────</option>
+              )}
+
+            {availableGameSessions.knights.length > 0 && (
+              <optgroup label="Knights Sessions">
+                {availableGameSessions.knights.map(({ session, count }) => (
+                  <option key={session} value={session}>
+                    {session} ({count})
+                  </option>
+                ))}
+              </optgroup>
+            )}
+
+            {availableGameSessions.knights.length > 0 &&
+              (availableGameSessions.other.length > 0 ||
+                availableGameSessions.development.length > 0) && (
+                <option disabled>──────────</option>
+              )}
+
+            {availableGameSessions.other.length > 0 && (
+              <optgroup label="Other Sessions">
+                {availableGameSessions.other.map(({ session, count }) => (
+                  <option key={session} value={session}>
+                    {session} ({count})
+                  </option>
+                ))}
+              </optgroup>
+            )}
+
+            {availableGameSessions.other.length > 0 &&
+              availableGameSessions.development.length > 0 && (
+                <option disabled>──────────</option>
+              )}
+
+            {availableGameSessions.development.length > 0 &&
+              availableGameSessions.development.map(({ session, count }) => (
+                <option key={session} value={session}>
+                  {session} ({count})
+                </option>
+              ))}
+
+            {availableGameSessions.haunting.length === 0 &&
+              availableGameSessions.knights.length === 0 &&
+              availableGameSessions.other.length === 0 &&
+              availableGameSessions.development.length === 0 && (
+                <option value="" disabled>
+                  No sessions available
+                </option>
+              )}
           </select>
 
           <select

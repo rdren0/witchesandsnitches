@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getOtherPlayersStyles } from "./styles";
+import { ALL_CHARACTERS } from "../../SharedData/charactersData";
 
 const DEFAULT_PC_TAGS = [
   "Study Partner",
@@ -259,7 +260,6 @@ const PlayerCard = ({
   const [customTags, setCustomTags] = useState(pcNote?.custom_tags || []);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Update state when pcNote changes
   useEffect(() => {
     if (pcNote) {
       setNoteText(pcNote.notes || "");
@@ -279,7 +279,7 @@ const PlayerCard = ({
         discord_user_id: discordUserId,
         pc_name: character.name,
         pc_school: character.school,
-        pc_clan: character.house, // Using house as clan
+        pc_clan: character.house,
         notes: noteText.trim(),
         relationship: relationship,
         last_interaction: lastInteraction.trim(),
@@ -703,6 +703,8 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
 
   const discordUserId = user?.user_metadata?.provider_id;
 
+  const npcNames = new Set(ALL_CHARACTERS.map((npc) => npc.name));
+
   useEffect(() => {
     if (selectedCharacter?.gameSession && supabase) {
       loadOtherPlayers();
@@ -725,12 +727,6 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
       setLoading(true);
       setError(null);
 
-      console.log(
-        "Selected character gameSession:",
-        selectedCharacter.gameSession
-      );
-
-      // Get characters from the same game session, excluding current character
       const { data: characters, error: fetchError } = await supabase
         .from("characters")
         .select("*")
@@ -740,8 +736,6 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
         .order("name", { ascending: true });
 
       if (fetchError) throw fetchError;
-
-      console.log("Fetched characters from same session:", characters?.length);
 
       setOtherPlayers(characters || []);
     } catch (err) {
@@ -779,25 +773,31 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
     }));
   };
 
-  const filteredPlayers = otherPlayers.filter((player) => {
-    if (!searchTerm.trim()) return true;
+  const filteredPlayers = otherPlayers
+    .filter((player) => {
+      return !npcNames.has(player.name);
+    })
+    .filter((player) => {
+      if (!searchTerm.trim()) return true;
 
-    const searchLower = searchTerm.toLowerCase();
-    const note = pcNotes[player.name];
+      const searchLower = searchTerm.toLowerCase();
+      const note = pcNotes[player.name];
 
-    return (
-      player.name?.toLowerCase().includes(searchLower) ||
-      player.house?.toLowerCase().includes(searchLower) ||
-      player.casting_style?.toLowerCase().includes(searchLower) ||
-      player.subclass?.toLowerCase().includes(searchLower) ||
-      player.background?.toLowerCase().includes(searchLower) ||
-      (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
-      (note?.relationship &&
-        note.relationship.toLowerCase().includes(searchLower)) ||
-      (note?.custom_tags &&
-        note.custom_tags.some((tag) => tag.toLowerCase().includes(searchLower)))
-    );
-  });
+      return (
+        player.name?.toLowerCase().includes(searchLower) ||
+        player.house?.toLowerCase().includes(searchLower) ||
+        player.casting_style?.toLowerCase().includes(searchLower) ||
+        player.subclass?.toLowerCase().includes(searchLower) ||
+        player.background?.toLowerCase().includes(searchLower) ||
+        (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
+        (note?.relationship &&
+          note.relationship.toLowerCase().includes(searchLower)) ||
+        (note?.custom_tags &&
+          note.custom_tags.some((tag) =>
+            tag.toLowerCase().includes(searchLower)
+          ))
+      );
+    });
 
   const styles = getOtherPlayersStyles(theme);
 

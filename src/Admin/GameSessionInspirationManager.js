@@ -7,9 +7,10 @@ import {
   Loader,
   AlertCircle,
   RefreshCw,
+  User,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { getDiscordWebhook, gameSessionOptions } from "../App/const";
+import { getDiscordWebhook, gameSessionGroups } from "../App/const";
 
 const GameSessionInspirationManager = ({ supabase }) => {
   const { theme } = useTheme();
@@ -130,6 +131,31 @@ const GameSessionInspirationManager = ({ supabase }) => {
       justifyContent: "space-between",
       alignItems: "center",
       marginBottom: "12px",
+    },
+    characterInfo: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+    },
+    avatar: {
+      width: "40px",
+      height: "40px",
+      borderRadius: "50%",
+      overflow: "hidden",
+      backgroundColor: theme.surface,
+      border: `2px solid ${theme.border}`,
+      flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    },
+    characterDetails: {
+      flex: 1,
     },
     characterName: {
       fontSize: "16px",
@@ -327,7 +353,8 @@ const GameSessionInspirationManager = ({ supabase }) => {
           game_session,
           discord_user_id,
           active,
-          archived_at
+          archived_at,
+          image_url
         `
         )
         .eq("active", true)
@@ -438,8 +465,15 @@ const GameSessionInspirationManager = ({ supabase }) => {
             return priorityA - priorityB;
           }
 
-          const indexA = gameSessionOptions.indexOf(a.name);
-          const indexB = gameSessionOptions.indexOf(b.name);
+          const allSessionsOrdered = [
+            ...gameSessionGroups.haunting,
+            ...gameSessionGroups.knights,
+            ...gameSessionGroups.other,
+            ...gameSessionGroups.development,
+          ];
+
+          const indexA = allSessionsOrdered.indexOf(a.name);
+          const indexB = allSessionsOrdered.indexOf(b.name);
 
           if (indexA === -1) return 1;
           if (indexB === -1) return -1;
@@ -633,7 +667,38 @@ const GameSessionInspirationManager = ({ supabase }) => {
             style={styles.select}
           >
             <option value="all">All Sessions</option>
-            {gameSessionOptions.map((session) => (
+
+            <optgroup label="Haunting Sessions">
+              {gameSessionGroups.haunting.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            <optgroup label="Knights Sessions">
+              {gameSessionGroups.knights.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            <optgroup label="Other Sessions">
+              {gameSessionGroups.other.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            {gameSessionGroups.development.map((session) => (
               <option key={session} value={session}>
                 {session}
               </option>
@@ -687,7 +752,38 @@ const GameSessionInspirationManager = ({ supabase }) => {
                   return (
                     <div key={character.id} style={styles.characterCard}>
                       <div style={styles.characterHeader}>
-                        <h3 style={styles.characterName}>{character.name}</h3>
+                        <div style={styles.characterInfo}>
+                          <div style={styles.avatar}>
+                            {character.image_url ? (
+                              <img
+                                src={character.image_url}
+                                alt={character.name}
+                                style={styles.avatarImage}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  if (e.target.nextSibling) {
+                                    e.target.nextSibling.style.display = "flex";
+                                  }
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              style={{
+                                display: character.image_url ? "none" : "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: "100%",
+                                height: "100%",
+                                color: theme.textSecondary,
+                              }}
+                            >
+                              <User size={20} />
+                            </div>
+                          </div>
+                          <div style={styles.characterDetails}>
+                            <h3 style={styles.characterName}>{character.name}</h3>
+                          </div>
+                        </div>
                         <span style={styles.characterLevel}>
                           Level {character.level}
                         </span>

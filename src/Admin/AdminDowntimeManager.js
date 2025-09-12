@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { Trash2, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
 import AdminDowntimeReviewForm from "./AdminDowntimeReviewForm";
-import { gameSessionOptions } from "../App/const";
+import { gameSessionGroups } from "../App/const";
 
 const AdminDowntimeManager = ({ supabase }) => {
   const { theme } = useTheme();
@@ -599,7 +599,38 @@ const AdminDowntimeManager = ({ supabase }) => {
               onChange={(e) => setSelectedGameSession(e.target.value)}
             >
               <option value="">All Sessions</option>
-              {gameSessionOptions.map((session) => (
+
+              <optgroup label="Haunting Sessions">
+                {gameSessionGroups.haunting.map((session) => (
+                  <option key={session} value={session}>
+                    {session}
+                  </option>
+                ))}
+              </optgroup>
+
+              <option disabled>──────────</option>
+
+              <optgroup label="Knights Sessions">
+                {gameSessionGroups.knights.map((session) => (
+                  <option key={session} value={session}>
+                    {session}
+                  </option>
+                ))}
+              </optgroup>
+
+              <option disabled>──────────</option>
+
+              <optgroup label="Other Sessions">
+                {gameSessionGroups.other.map((session) => (
+                  <option key={session} value={session}>
+                    {session}
+                  </option>
+                ))}
+              </optgroup>
+
+              <option disabled>──────────</option>
+
+              {gameSessionGroups.development.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
