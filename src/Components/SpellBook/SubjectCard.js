@@ -292,6 +292,8 @@ const getAdditionalStyles = (theme) => ({
     gap: "4px",
     transition: "all 0.2s ease",
     fontFamily: "inherit",
+    minWidth: "120px",
+    justifyContent: "center",
   },
   attemptButtonDisabled: {
     backgroundColor: theme.textSecondary || "#6b7280",
@@ -614,8 +616,17 @@ export const SubjectCard = ({
     if (matches.length === 0) return null;
 
     const match = matches[0];
+    const abilityAbbreviations = {
+      Strength: "STR",
+      Dexterity: "DEX",
+      Constitution: "CON",
+      Intelligence: "INT",
+      Wisdom: "WIS",
+      Charisma: "CHA",
+    };
     return {
       ability: match[1],
+      abilityAbbr: abilityAbbreviations[match[1]] || match[1],
     };
   };
 

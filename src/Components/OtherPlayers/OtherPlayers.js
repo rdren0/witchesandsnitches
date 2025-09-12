@@ -727,11 +727,6 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
       setLoading(true);
       setError(null);
 
-      console.log(
-        "Selected character gameSession:",
-        selectedCharacter.gameSession
-      );
-
       const { data: characters, error: fetchError } = await supabase
         .from("characters")
         .select("*")
@@ -741,8 +736,6 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
         .order("name", { ascending: true });
 
       if (fetchError) throw fetchError;
-
-      console.log("Fetched characters from same session:", characters?.length);
 
       setOtherPlayers(characters || []);
     } catch (err) {

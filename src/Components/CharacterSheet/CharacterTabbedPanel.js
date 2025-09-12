@@ -17,6 +17,7 @@ import SpellSlotTracker from "./SpellSlotTracker";
 import SorceryPointTracker from "./SorceryPointTracker";
 import CorruptionTracker from "./CorruptionTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
+import MetaMagicDisplay from "./MetaMagicDisplay";
 
 const CharacterTabbedPanel = ({
   supabase,
@@ -133,6 +134,9 @@ const CharacterTabbedPanel = ({
             discordUserId={discordUserId}
             setCharacter={setCharacter}
             selectedCharacterId={selectedCharacter.id}
+          />
+          <MetaMagicDisplay
+            character={selectedCharacter}
           />
         </>
       ),

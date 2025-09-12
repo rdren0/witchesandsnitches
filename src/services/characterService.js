@@ -436,6 +436,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         wand_type: characterData.wand_type,
         image_url: characterData.image_url || characterData.imageUrl || null,
         base_ability_scores: characterData.base_ability_scores,
+        metamagic_choices: characterData.metamagic_choices,
       })
       .select()
       .single();
@@ -505,6 +506,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         updated_at: new Date().toISOString(),
         wand_type: characterData.wand_type,
         base_ability_scores: characterData.base_ability_scores,
+        metamagic_choices: characterData.metamagic_choices,
       })
       .eq("id", characterId)
       .eq("discord_user_id", discordUserId)
@@ -560,6 +562,7 @@ const updateCharacterAsAdmin = async (characterId, characterData) => {
         wand_type: characterData.wand_type,
         base_ability_scores: characterData.base_ability_scores,
         discord_user_id: characterData.discord_user_id,
+        metamagic_choices: characterData.metamagic_choices,
       })
       .eq("id", characterId)
       .eq("active", true)

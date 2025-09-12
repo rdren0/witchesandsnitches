@@ -981,6 +981,7 @@ function AppContent() {
           healing: 0,
           jinxesHexesCurses: 0,
         },
+        metamagicChoices: char.metamagic_choices || {},
 
         discord_user_id: char.discord_user_id,
         ownerInfo: char.discord_users

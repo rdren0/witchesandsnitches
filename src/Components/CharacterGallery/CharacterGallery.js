@@ -1252,28 +1252,22 @@ export const CharacterGallery = ({
     }
 
     const gameSession = selectedCharacter.gameSession.toLowerCase();
-    console.log("Game session:", gameSession);
     const autoOpenSchools = new Set();
     const autoOpenTypes = new Set();
 
     if (gameSession.includes("haunting")) {
-      console.log("Opening Ilvermorny sections");
       autoOpenSchools.add("Ilvermorny");
       autoOpenTypes.add("Ilvermorny-Classmate");
     }
     if (gameSession.includes("knights")) {
-      console.log("Opening Hogwarts sections");
       autoOpenSchools.add("Hogwarts");
       autoOpenTypes.add("Hogwarts-Classmate");
     }
     if (gameSession.includes("jaguaras")) {
-      console.log("Opening Jaguaras sections");
       autoOpenSchools.add("Jaguaras");
       autoOpenTypes.add("Jaguaras-Competitor");
     }
 
-    console.log("Auto-open schools:", autoOpenSchools);
-    console.log("Auto-open types:", autoOpenTypes);
     setExpandedSchools(autoOpenSchools);
     setExpandedTypes(autoOpenTypes);
   }, [selectedCharacter?.gameSession]);

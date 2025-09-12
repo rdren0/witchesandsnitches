@@ -16,6 +16,7 @@ import {
   ToolsLanguagesSection,
   ASILevelChoices,
   MagicModifiersSection,
+  MetaMagicSection,
   NotesSection,
   BasicInfoSection,
 } from "../sections";
@@ -250,8 +251,8 @@ const CharacterForm = ({
               style={{
                 ...styles.button,
                 ...styles.buttonPrimary,
-                opacity: loading || !hasChanges ? 0.6 : 1,
-                backgroundColor: theme.warning,
+                opacity: loading ? 0.6 : 1,
+                backgroundColor: "#d97706",
               }}
             >
               <X size={16} />
@@ -357,6 +358,12 @@ const CharacterForm = ({
           />
         </FormSection>
       )}
+      <FormSection
+        title="Metamagic"
+        subtitle="Select metamagic options available to your character"
+      >
+        <MetaMagicSection character={character} onChange={updateCharacter} />
+      </FormSection>
 
       <FormSection
         title="Skills & Proficiencies"
