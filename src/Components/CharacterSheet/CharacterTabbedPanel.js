@@ -157,6 +157,8 @@ const CharacterTabbedPanel = ({
           selectedCharacterId={selectedCharacter.id}
           characters={characters}
           isEmbedded={true}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
         />
       ),
     },

@@ -980,14 +980,21 @@ const CharacterSheet = ({
         description: `${healingAmount} HP restored • ${character.name} is at full health!`,
       });
 
-      const { error } = await supabase
+      const characterOwnerId = character.discord_user_id || character.ownerId;
+
+      let query = supabase
         .from("characters")
         .update({
           current_hit_points: maxHP,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", character.id)
-        .eq("discord_user_id", discordUserId);
+        .eq("id", character.id);
+
+      if (!(adminMode && isUserAdmin)) {
+        query = query.eq("discord_user_id", discordUserId);
+      }
+
+      const { error } = await query;
 
       if (error) {
         console.error("Error updating character:", error);
@@ -1933,6 +1940,8 @@ const CharacterSheet = ({
           setDamageAmount={setDamageAmount}
           isApplyingDamage={isApplyingDamage}
           setIsApplyingDamage={setIsApplyingDamage}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
         />
 
         {showLevelUp && character && (
