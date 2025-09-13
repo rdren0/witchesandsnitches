@@ -9,7 +9,15 @@ import { spellsData } from "../../SharedData/spells";
 import { useCallback } from "react";
 import CastingTiles from "../CharacterSheet/CastingTiles";
 
-const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
+const SpellBook = ({
+  supabase,
+  user,
+  selectedCharacter,
+  characters,
+  adminMode = false,
+  isUserAdmin = false,
+  discordUserId,
+}) => {
   const { theme } = useTheme();
   const styles = createSpellBookStyles(theme);
   const [expandedSections, setExpandedSections] = useState({});
@@ -27,9 +35,19 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
   const [classFilter, setClassFilter] = useState("all");
 
   const loadSpellProgress = useCallback(async () => {
-    if (!selectedCharacter || !user?.user_metadata?.provider_id) return;
+    if (!selectedCharacter) return;
 
-    const characterOwnerDiscordId = user.user_metadata.provider_id;
+    let characterOwnerDiscordId;
+
+    if (adminMode && isUserAdmin) {
+      characterOwnerDiscordId =
+        selectedCharacter.discord_user_id || selectedCharacter.ownerId;
+    } else {
+      characterOwnerDiscordId =
+        user?.user_metadata?.provider_id || discordUserId;
+    }
+
+    if (!characterOwnerDiscordId) return;
 
     try {
       const { data, error } = await supabase
@@ -90,13 +108,18 @@ const SpellBook = ({ supabase, user, selectedCharacter, characters }) => {
     } catch (error) {
       console.error("Error loading spell progress:", error);
     }
-  }, [selectedCharacter, user, supabase]);
+  }, [
+    selectedCharacter,
+    user,
+    supabase,
+    adminMode,
+    isUserAdmin,
+    discordUserId,
+  ]);
 
   useEffect(() => {
     loadSpellProgress();
   }, [loadSpellProgress]);
-
-  const discordUserId = user?.user_metadata?.provider_id;
 
   const attemptFilterOptions = [
     { value: "all", label: "All Spells" },
