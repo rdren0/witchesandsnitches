@@ -478,11 +478,23 @@ const CharacterFeatsDisplay = ({
       });
 
       if (heritageData.benefits && Array.isArray(heritageData.benefits)) {
+        const featuresWithChoices =
+          heritageData.features
+            ?.filter(
+              (feature) =>
+                feature.isChoice &&
+                character.heritageChoices?.[heritageName]?.[feature.name]
+            )
+            ?.map((feature) => feature.name) || [];
+
         const validBenefits = heritageData.benefits.filter(
           (benefit) =>
             !benefit.includes("Choose one of") &&
             !benefit.startsWith("Option") &&
-            !benefit.startsWith("Ability Score Increase")
+            !benefit.startsWith("Ability Score Increase") &&
+            !featuresWithChoices.some((featureName) =>
+              benefit.includes(`${featureName}:`)
+            )
         );
 
         validBenefits.forEach((benefit) => {
@@ -512,6 +524,10 @@ const CharacterFeatsDisplay = ({
       if (character.heritageChoices?.[heritageName]) {
         Object.entries(character.heritageChoices[heritageName]).forEach(
           ([featureName, choiceName]) => {
+            if (featureName === "Ability Score Choice") {
+              return;
+            }
+
             const feature = heritageData.features?.find(
               (f) => f.name === featureName
             );
