@@ -24,6 +24,8 @@ const CharacterSheetModals = ({
   setDamageAmount,
   isApplyingDamage,
   setIsApplyingDamage,
+  adminMode = false,
+  isUserAdmin = false,
 }) => {
   const rollHitDice = async () => {
     if (
@@ -108,7 +110,7 @@ const CharacterSheetModals = ({
           rollType: "Short Rest",
           title: "Short Rest Complete",
           embedColor: 0x10b981,
-          rollResult: null, // No roll details for short rest without dice
+          rollResult: null,
           fields: additionalFields,
           useCharacterAvatar: true,
           description: "☕ **Short rest completed - refreshed and ready!**",
@@ -164,15 +166,22 @@ const CharacterSheetModals = ({
         } dice remaining`,
       });
 
-      const { error } = await supabase
+      const characterOwnerId = character.discord_user_id || character.ownerId;
+
+      let query = supabase
         .from("characters")
         .update({
           current_hit_points: newCurrentHP,
           current_hit_dice: newHitDiceCount,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", character.id)
-        .eq("discord_user_id", discordUserId);
+        .eq("id", character.id);
+
+      if (!(adminMode && isUserAdmin)) {
+        query = query.eq("discord_user_id", discordUserId);
+      }
+
+      const { error } = await query;
 
       if (error) {
         console.error("Error updating character:", error);
@@ -283,14 +292,21 @@ const CharacterSheetModals = ({
         description: resultDescription,
       });
 
-      const { error } = await supabase
+      const characterOwnerId = character.discord_user_id || character.ownerId;
+
+      let query = supabase
         .from("characters")
         .update({
           current_hit_points: newCurrentHP,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", character.id)
-        .eq("discord_user_id", discordUserId);
+        .eq("id", character.id);
+
+      if (!(adminMode && isUserAdmin)) {
+        query = query.eq("discord_user_id", discordUserId);
+      }
+
+      const { error } = await query;
 
       if (error) {
         console.error("Error updating character:", error);
@@ -505,14 +521,17 @@ const CharacterSheetModals = ({
                     backgroundColor: theme.background,
                     color: theme.primary,
                     borderRadius: "6px",
-                    cursor: selectedHitDiceCount <= 0 ? "not-allowed" : "pointer",
+                    cursor:
+                      selectedHitDiceCount <= 0 ? "not-allowed" : "pointer",
                     opacity: selectedHitDiceCount <= 0 ? 0.5 : 1,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                   onClick={() =>
-                    setSelectedHitDiceCount(Math.max(0, selectedHitDiceCount - 1))
+                    setSelectedHitDiceCount(
+                      Math.max(0, selectedHitDiceCount - 1)
+                    )
                   }
                   disabled={selectedHitDiceCount <= 0}
                 >
@@ -543,14 +562,19 @@ const CharacterSheetModals = ({
                         ? "not-allowed"
                         : "pointer",
                     opacity:
-                      selectedHitDiceCount >= character.currentHitDice ? 0.5 : 1,
+                      selectedHitDiceCount >= character.currentHitDice
+                        ? 0.5
+                        : 1,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                   onClick={() =>
                     setSelectedHitDiceCount(
-                      Math.min(character.currentHitDice, selectedHitDiceCount + 1)
+                      Math.min(
+                        character.currentHitDice,
+                        selectedHitDiceCount + 1
+                      )
                     )
                   }
                   disabled={selectedHitDiceCount >= character.currentHitDice}
