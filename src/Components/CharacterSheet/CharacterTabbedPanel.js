@@ -28,6 +28,7 @@ const CharacterTabbedPanel = ({
   discordUserId,
   adminMode,
   isUserAdmin,
+  onNavigateToCharacterManagement,
 }) => {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("spellbook");
@@ -137,6 +138,7 @@ const CharacterTabbedPanel = ({
           />
           <MetaMagicDisplay
             character={selectedCharacter}
+            onNavigateToCharacterManagement={onNavigateToCharacterManagement}
           />
         </>
       ),

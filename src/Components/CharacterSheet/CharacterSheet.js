@@ -40,6 +40,7 @@ import {
   standardFeats,
 } from "../../SharedData";
 import { calculateInitiativeWithFeats } from "../CharacterManager/utils/featBenefitsCalculator";
+import { calculateHeritageModifiers } from "../CharacterManager/utils/utils";
 
 const hitDiceData = {
   Willpower: "d10",
@@ -344,8 +345,9 @@ const CharacterSheet = ({
   };
 
   const calculateEffectiveAbilityScores = useCallback(
-    (baseScores, asiChoices) => {
+    (baseScores, asiChoices, character = {}, heritageChoices = {}) => {
       const effectiveScores = { ...baseScores };
+
       Object.entries(asiChoices).forEach(([level, choice]) => {
         if (choice.type === "asi" && choice.abilityScoreIncreases) {
           choice.abilityScoreIncreases.forEach((increase) => {
@@ -356,6 +358,24 @@ const CharacterSheet = ({
           });
         }
       });
+
+      if (
+        character.innate_heritage &&
+        Object.keys(heritageChoices).length > 0
+      ) {
+        const { modifiers: heritageModifiers } = calculateHeritageModifiers(
+          { ...character, innateHeritage: character.innate_heritage },
+          heritageChoices
+        );
+
+        Object.keys(heritageModifiers).forEach((ability) => {
+          if (effectiveScores[ability] !== undefined) {
+            effectiveScores[ability] =
+              (effectiveScores[ability] || 10) + heritageModifiers[ability];
+          }
+        });
+      }
+
       return effectiveScores;
     },
     []
@@ -618,9 +638,12 @@ const CharacterSheet = ({
       if (data) {
         const baseAbilityScores = data.ability_scores || {};
         const asiChoices = {};
+        const heritageChoices = data.heritage_choices || {};
         const effectiveAbilityScores = calculateEffectiveAbilityScores(
           baseAbilityScores,
-          asiChoices
+          asiChoices,
+          data,
+          heritageChoices
         );
 
         const allFeats = getAllCharacterFeats(
@@ -631,7 +654,7 @@ const CharacterSheet = ({
         const resources = data.character_resources?.[0] || {};
 
         const transformedCharacter = {
-          abilityScores: data.ability_scores,
+          abilityScores: effectiveAbilityScores,
           allFeats: allFeats,
           armorClass:
             getBaseArmorClass(data.casting_style) +
@@ -711,6 +734,7 @@ const CharacterSheet = ({
           wandType: data.wand_type,
           wisdom: effectiveAbilityScores.wisdom || 10,
           metamagicChoices: data.metamagic_choices || {},
+          heritageChoices: heritageChoices,
         };
 
         setCharacter(transformedCharacter);
@@ -918,7 +942,6 @@ const CharacterSheet = ({
       setIsLongResting(false);
     }
   };
-
 
   const handleDamageClick = () => {
     if (!character) return;
@@ -1881,6 +1904,9 @@ const CharacterSheet = ({
                 discordUserId={discordUserId}
                 adminMode={adminMode}
                 isUserAdmin={isUserAdmin}
+                onNavigateToCharacterManagement={
+                  onNavigateToCharacterManagement
+                }
               />
             </div>
           </>

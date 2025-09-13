@@ -164,11 +164,64 @@ export const heritageDescriptions = {
             name: "Wisdom +1",
             description: "Increase your Wisdom by 1",
             abilityChoice: "wisdom",
+            amount: 1,
           },
           {
             name: "Charisma +1",
             description: "Increase your Charisma by 1",
             abilityChoice: "charisma",
+            amount: 1,
+          },
+        ],
+      },
+      {
+        name: "Fey Traits",
+        description:
+          "Select your fey trait manifestations (choose as many or few as desired, or roll randomly)",
+        isChoice: true,
+        isMultiSelect: true,
+        hasRandomRoll: true,
+        rollDie: 8,
+        options: [
+          {
+            name: "Elongated Ears",
+            description:
+              "Your ears are noticeably pointed and elongated, marking your fey heritage.",
+          },
+          {
+            name: "Iridescent Eyes",
+            description:
+              "Your eyes shimmer with otherworldly colors that shift in different lighting.",
+          },
+          {
+            name: "Illusory Rest Companions",
+            description:
+              "Small illusory creatures appear around you during rest periods, providing comfort.",
+          },
+          {
+            name: "Flowers in Hair",
+            description:
+              "Small flowers and leaves naturally grow in or appear woven through your hair.",
+          },
+          {
+            name: "Seasonal Hair Colors",
+            description:
+              "Your hair color changes subtly with the seasons or your emotional state.",
+          },
+          {
+            name: "Ethereal Voice",
+            description:
+              "Your voice carries a musical, otherworldly quality that seems to echo slightly.",
+          },
+          {
+            name: "Glimmering Skin",
+            description:
+              "Your skin has a faint, barely perceptible shimmer in moonlight or magical lighting.",
+          },
+          {
+            name: "Nature's Mark",
+            description:
+              "You bear natural markings like vine-like patterns, leaf shapes, or flower motifs on your skin.",
           },
         ],
       },

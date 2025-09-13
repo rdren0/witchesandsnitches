@@ -148,16 +148,12 @@ const AbilityScoresSection = ({
   const featChoices = getFeatChoices();
   const houseChoices = character.house_choices || character.houseChoices || {};
   const heritageChoices =
-    character.heritage_choices || character.heritageChoices || {};
+    character.heritage_choices &&
+    Object.keys(character.heritage_choices).length > 0
+      ? character.heritage_choices
+      : character.heritageChoices || {};
 
-  const {
-    totalModifiers: baseTotalModifiers,
-    allDetails: baseAllDetails,
-    featModifiers,
-    backgroundModifiers,
-    houseModifiers,
-    heritageModifiers,
-  } = showModifiers
+  const calculatedModifiers = showModifiers
     ? calculateTotalModifiers(
         character,
         featChoices,
@@ -207,6 +203,15 @@ const AbilityScoresSection = ({
           charisma: 0,
         },
       };
+
+  const {
+    totalModifiers: baseTotalModifiers,
+    allDetails: baseAllDetails,
+    featModifiers,
+    backgroundModifiers,
+    houseModifiers,
+    heritageModifiers,
+  } = calculatedModifiers;
 
   const asiModifiers = calculateASIModifiers();
   const totalModifiers = {};

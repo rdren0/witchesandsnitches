@@ -5,24 +5,12 @@ import {
   heritageDescriptions,
   innateHeritages,
 } from "../../../../SharedData/heritageData";
+import {
+  checkForSkillProficiencies,
+  applyHeritageProficiencies,
+  removeHeritageProficiencies,
+} from "../../utils/utils";
 
-const checkForSkillProficiencies = (item) => {
-  const skills = [];
-
-  if (item.skillProficiencies) {
-    skills.push(...item.skillProficiencies);
-  }
-
-  if (item.data?.skillProficiencies) {
-    skills.push(...item.data.skillProficiencies);
-  }
-
-  if (item.properties?.skillProficiencies) {
-    skills.push(...item.properties.skillProficiencies);
-  }
-
-  return skills;
-};
 
 const checkForAbilityChoices = (item) => {
   const abilities = [];
@@ -67,76 +55,6 @@ const formatHeritageBenefits = (heritageData) => {
   return benefits;
 };
 
-const applyHeritageProficiencies = (
-  character,
-  heritageName,
-  heritageChoices = {}
-) => {
-  if (!heritageName || !heritageDescriptions[heritageName]) {
-    return {
-      ...character,
-      innateHeritage: "",
-      skillProficiencies: removeHeritageProficiencies(
-        character.skillProficiencies || [],
-        character.innateHeritage
-      ),
-      innateHeritageSkills: [],
-    };
-  }
-
-  const heritage = heritageDescriptions[heritageName];
-  const currentSkillProficiencies = character.skillProficiencies || [];
-
-  const cleanedSkillProficiencies = removeHeritageProficiencies(
-    currentSkillProficiencies,
-    character.innateHeritage
-  );
-
-  const newHeritageSkills = checkForSkillProficiencies(heritage);
-
-  const choiceSkills = [];
-  if (heritage.features && heritageChoices[heritageName]) {
-    heritage.features.forEach((feature) => {
-      if (feature.isChoice && feature.options) {
-        const selectedChoiceName = heritageChoices[heritageName][feature.name];
-        const selectedChoice = feature.options.find(
-          (opt) => opt.name === selectedChoiceName
-        );
-
-        if (selectedChoice) {
-          const choiceSkillProfs = checkForSkillProficiencies(selectedChoice);
-          choiceSkills.push(...choiceSkillProfs);
-        }
-      }
-    });
-  }
-
-  const allHeritageSkills = [...newHeritageSkills, ...choiceSkills];
-  const newSkillProficiencies = [
-    ...cleanedSkillProficiencies,
-    ...allHeritageSkills,
-  ];
-
-  return {
-    ...character,
-    innateHeritage: heritageName,
-    skillProficiencies: [...new Set(newSkillProficiencies)],
-    innateHeritageSkills: allHeritageSkills,
-  };
-};
-
-const removeHeritageProficiencies = (currentProficiencies, heritageName) => {
-  if (!heritageName || !heritageDescriptions[heritageName]) {
-    return currentProficiencies;
-  }
-
-  const heritage = heritageDescriptions[heritageName];
-  const heritageSkills = checkForSkillProficiencies(heritage);
-
-  return currentProficiencies.filter(
-    (skill) => !heritageSkills.includes(skill)
-  );
-};
 
 const HeritageChoiceSelector = ({
   heritage,
@@ -155,11 +73,23 @@ const HeritageChoiceSelector = ({
 
   if (choiceFeatures.length === 0) return null;
 
-  const handleChoiceChange = (featureName, choiceName) => {
-    onHeritageChoiceSelect(heritage, featureName, choiceName);
+  const handleChoiceChange = (featureName, choiceName, feature) => {
+    if (feature.isMultiSelect) {
+      const currentSelections = heritageChoices[heritage]?.[featureName] || [];
+      const newSelections = currentSelections.includes(choiceName)
+        ? currentSelections.filter(selection => selection !== choiceName)
+        : [...currentSelections, choiceName];
+      onHeritageChoiceSelect(heritage, featureName, newSelections);
+    } else {
+      onHeritageChoiceSelect(heritage, featureName, choiceName);
+    }
   };
 
-  const isChoiceSelected = (featureName, choiceName) => {
+  const isChoiceSelected = (featureName, choiceName, feature) => {
+    if (feature.isMultiSelect) {
+      const selections = heritageChoices[heritage]?.[featureName] || [];
+      return selections.includes(choiceName);
+    }
     return heritageChoices[heritage]?.[featureName] === choiceName;
   };
 
@@ -175,18 +105,19 @@ const HeritageChoiceSelector = ({
             {feature.options.map((option, optionIndex) => {
               const isOptionSelected = isChoiceSelected(
                 feature.name,
-                option.name
+                option.name,
+                feature
               );
               return (
                 <div key={optionIndex} style={styles.choiceOption}>
                   <label style={styles.choiceLabel}>
                     <input
-                      type="radio"
-                      name={`${heritage}_${feature.name}`}
+                      type={feature.isMultiSelect ? "checkbox" : "radio"}
+                      name={feature.isMultiSelect ? `${heritage}_${feature.name}_${option.name}` : `${heritage}_${feature.name}`}
                       value={option.name}
                       checked={isOptionSelected}
                       onChange={(e) =>
-                        handleChoiceChange(feature.name, e.target.value)
+                        handleChoiceChange(feature.name, e.target.value, feature)
                       }
                       style={styles.choiceRadio}
                     />
@@ -236,7 +167,7 @@ const HeritageChoiceSelector = ({
               );
             })}
 
-            {!currentChoice && (
+            {!currentChoice && !feature.isMultiSelect && (
               <div style={styles.choiceRequired}>
                 ⚠️ Please select an option for {feature.name}
               </div>
@@ -511,7 +442,16 @@ const InnateHeritageSection = ({
   };
 
   const handleHeritageChoiceSelect = (heritage, featureName, choiceName) => {
-    if (!onHeritageChoicesChange) return;
+    console.log("DEBUG InnateHeritage: handleHeritageChoiceSelect called with:", {
+      heritage,
+      featureName,
+      choiceName
+    });
+    
+    if (!onHeritageChoicesChange) {
+      console.log("DEBUG InnateHeritage: No onHeritageChoicesChange function");
+      return;
+    }
 
     const newChoices = {
       ...heritageChoices,
@@ -521,6 +461,7 @@ const InnateHeritageSection = ({
       },
     };
 
+    console.log("DEBUG InnateHeritage: Calling onHeritageChoicesChange with:", newChoices);
     onHeritageChoicesChange(newChoices);
 
     const updatedCharacter = applyHeritageProficiencies(
@@ -567,9 +508,13 @@ const InnateHeritageSection = ({
     const choiceFeatures = heritageData.features.filter(
       (feature) => feature.isChoice
     );
-    const missingChoices = choiceFeatures.filter(
-      (feature) => !heritageChoices[character.innateHeritage]?.[feature.name]
-    );
+    const missingChoices = choiceFeatures.filter((feature) => {
+      const choice = heritageChoices[character.innateHeritage]?.[feature.name];
+      if (feature.isMultiSelect) {
+        return false;
+      }
+      return !choice;
+    });
 
     return {
       total: choiceFeatures.length,

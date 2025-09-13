@@ -3,7 +3,6 @@ export { default as AbilityScoresSection } from "./AbilityScoresSection";
 export { default as HitPointsSection } from "./HitPointsSection";
 export { default as BackgroundSection } from "./BackgroundSection";
 export { default as HouseSection } from "./HouseSection";
-export { default as HeritageSection } from "./HeritageSection";
 export { default as SubclassSection } from "./SubclassSection";
 export { default as Level1ChoiceSection } from "./Level1ChoiceSection";
 export { default as SkillsSection } from "./Skills/SkillsSection";

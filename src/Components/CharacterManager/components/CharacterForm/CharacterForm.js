@@ -37,6 +37,7 @@ const CharacterForm = ({
   supabase,
   adminMode = false,
   isUserAdmin = false,
+  initialSection = null,
 }) => {
   const { theme } = useTheme();
   const styles = createBaseStyles(theme);
@@ -93,6 +94,25 @@ const CharacterForm = ({
       window.removeEventListener("resize", handleScroll);
     };
   }, [isSticky]);
+
+  useEffect(() => {
+    if (initialSection && character) {
+      const timer = setTimeout(() => {
+        const sectionElement = document.getElementById(
+          `section-${initialSection}`
+        );
+        if (sectionElement) {
+          sectionElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+            inline: "nearest",
+          });
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [initialSection, character]);
 
   const handleASIChoiceChange = (level, choiceType) => {
     const updatedCharacter = utilsHandleASIChoiceChange(
@@ -280,6 +300,7 @@ const CharacterForm = ({
       <FormSection
         title="Basic Information"
         subtitle="Character name, level, and core details"
+        id="section-basic-info"
       >
         <BasicInfoSection
           character={character}
@@ -292,6 +313,7 @@ const CharacterForm = ({
       <FormSection
         title="House & School"
         subtitle="Choose your magical house and school affiliation"
+        id="section-house"
       >
         <HouseSection
           character={character}
@@ -303,6 +325,7 @@ const CharacterForm = ({
       <FormSection
         title="Subclass"
         subtitle="Specialized training and advanced features"
+        id="section-subclass"
       >
         <SubclassSection
           character={character}
@@ -314,6 +337,7 @@ const CharacterForm = ({
       <FormSection
         title="Background"
         subtitle="Character background and starting proficiencies"
+        id="section-background"
       >
         <BackgroundSection
           value={character.background}
@@ -331,6 +355,7 @@ const CharacterForm = ({
       <FormSection
         title="Level 1 Choice"
         subtitle="Choose either an Innate Heritage or a Standard Feat"
+        id="section-level1-choice"
       >
         <Level1ChoiceSection
           character={character}
@@ -346,6 +371,7 @@ const CharacterForm = ({
           subtitle={`Level ${
             character.level > 1 ? "4+" : ""
           } Ability Score Improvements and Feat choices`}
+          id="section-asi-feats"
         >
           <ASILevelChoices
             character={character}
@@ -361,6 +387,7 @@ const CharacterForm = ({
       <FormSection
         title="Metamagic"
         subtitle="Select metamagic options available to your character"
+        id="section-metamagic"
       >
         <MetaMagicSection character={character} onChange={updateCharacter} />
       </FormSection>
@@ -368,6 +395,7 @@ const CharacterForm = ({
       <FormSection
         title="Skills & Proficiencies"
         subtitle="Skill proficiencies and expertise"
+        id="section-skills"
       >
         <SkillsSection
           character={character}
@@ -377,7 +405,7 @@ const CharacterForm = ({
         />
       </FormSection>
 
-      <FormSection title="Tool Proficiencies" subtitle="Tool proficiencies">
+      <FormSection title="Tool Proficiencies" subtitle="Tool proficiencies" id="section-tools">
         <ToolsLanguagesSection
           character={character}
           onChange={(field, value) => updateCharacter(field, value)}
@@ -388,6 +416,7 @@ const CharacterForm = ({
       <FormSection
         title="Ability Scores"
         subtitle="Set your character's base ability scores"
+        id="section-ability-scores"
       >
         <AbilityScoresSection
           character={character}
@@ -404,6 +433,7 @@ const CharacterForm = ({
       <FormSection
         title="Hit Points"
         subtitle="Calculate your character's hit points based on casting style and constitution"
+        id="section-hit-points"
       >
         <HitPointsSection character={character} onChange={updateCharacter} />
       </FormSection>
@@ -411,6 +441,7 @@ const CharacterForm = ({
       <FormSection
         title="Magic Modifiers & Wand"
         subtitle="Wand bonuses and character wand information"
+        id="section-magic-modifiers"
       >
         <MagicModifiersSection
           character={character}
@@ -420,6 +451,7 @@ const CharacterForm = ({
       <FormSection
         title="Character Notes"
         subtitle="Additional notes, character flaws, backstory etc"
+        id="section-notes"
       >
         <NotesSection character={character} onChange={updateCharacter} />
       </FormSection>

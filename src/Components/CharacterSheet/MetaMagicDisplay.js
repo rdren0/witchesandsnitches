@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Settings } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const METAMAGIC_DATA = {
@@ -53,7 +53,7 @@ const METAMAGIC_DATA = {
   },
 };
 
-const MetaMagicDisplay = ({ character }) => {
+const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
   const { theme } = useTheme();
 
   const getMetaMagicChoices = (character) => {
@@ -92,6 +92,26 @@ const MetaMagicDisplay = ({ character }) => {
   };
 
   const metaMagics = getMetaMagicChoices(character);
+
+  const getMaxMetaMagicOptions = (level) => {
+    if (level >= 10) return 4;
+    if (level >= 6) return 3;
+    if (level >= 3) return 2;
+    if (level >= 1) return 1;
+    return 0;
+  };
+
+  const qualifiesForMetaMagic = character?.level >= 3;
+  const maxOptions = getMaxMetaMagicOptions(character?.level || 1);
+  const hasSelectedMetaMagic = metaMagics && metaMagics.length > 0;
+  const shouldShowMissingNotification =
+    qualifiesForMetaMagic && !hasSelectedMetaMagic;
+
+  const handleNavigateToCharacterManager = () => {
+    if (onNavigateToCharacterManagement && character?.id) {
+      onNavigateToCharacterManagement(character.id, "metamagic");
+    }
+  };
 
   const styles = {
     container: {
@@ -167,6 +187,39 @@ const MetaMagicDisplay = ({ character }) => {
     icon: {
       color: theme.primary,
     },
+    missingNotification: {
+      backgroundColor: `${theme.warning}15`,
+      border: `2px solid ${theme.warning}`,
+      borderRadius: "8px",
+      padding: "16px",
+      marginBottom: "16px",
+      textAlign: "center",
+    },
+    notificationText: {
+      fontSize: "14px",
+      fontWeight: "600",
+      color: theme.warning,
+      marginBottom: "12px",
+    },
+    managerButton: {
+      backgroundColor: theme.primary,
+      color: theme.surface,
+      border: "none",
+      borderRadius: "6px",
+      padding: "10px 16px",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      margin: "0 auto",
+      transition: "all 0.2s ease",
+      "&:hover": {
+        backgroundColor: theme.secondary,
+        transform: "translateY(-1px)",
+      },
+    },
   };
 
   return (
@@ -175,6 +228,29 @@ const MetaMagicDisplay = ({ character }) => {
         <Sparkles size={20} style={styles.icon} />
         <h3 style={styles.title}>Metamagic Options</h3>
       </div>
+
+      {shouldShowMissingNotification && (
+        <div style={styles.missingNotification}>
+          <div style={styles.notificationText}>
+            You have not selected a metamagic perk
+          </div>
+          <button
+            style={styles.managerButton}
+            onClick={handleNavigateToCharacterManager}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = theme.secondary;
+              e.target.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = theme.primary;
+              e.target.style.transform = "translateY(0)";
+            }}
+          >
+            <Settings size={16} />
+            Go to Character Manager
+          </button>
+        </div>
+      )}
 
       {metaMagics && metaMagics.length > 0 ? (
         <div style={styles.metaMagicList}>
@@ -185,9 +261,7 @@ const MetaMagicDisplay = ({ character }) => {
                 <span style={styles.metaMagicName}>{metaMagic.name}</span>
                 <span style={styles.metaMagicCost}>{metaMagic.cost}</span>
               </div>
-              <div style={styles.metaMagicPreview}>
-                {metaMagic.preview}
-              </div>
+              <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
               <div style={styles.metaMagicDescription}>
                 {metaMagic.description}
               </div>
