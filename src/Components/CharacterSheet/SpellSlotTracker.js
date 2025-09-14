@@ -564,7 +564,7 @@ const SpellSlotTracker = ({
   const maxSorceryPoints = character?.maxSorceryPoints || 0;
 
   const getSorceryPointColor = (current, max) => {
-    if (max === 0) return "#a855f7";
+    if (max === 0) return "#6b7280";
     const percentage = current / max;
     if (percentage >= 0.75) return "#10b981";
     if (percentage >= 0.5) return "#3b82f6";
@@ -991,7 +991,7 @@ const SpellSlotTracker = ({
       <div
         style={{
           ...styles.slotDisplay,
-          color: theme.success,
+          color: getSorceryPointColor(currentSorceryPoints, maxSorceryPoints),
         }}
       >
         {currentSorceryPoints}/{maxSorceryPoints}
