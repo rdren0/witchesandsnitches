@@ -8,7 +8,10 @@ import MetaMagicDisplay from "./MetaMagicDisplay";
 jest.mock("./MetaMagicDisplay", () => {
   const React = require("react");
 
-  return function MockMetaMagicDisplay({ character, onNavigateToCharacterManagement }) {
+  return function MockMetaMagicDisplay({
+    character,
+    onNavigateToCharacterManagement,
+  }) {
     const getMetaMagicChoices = (character) => {
       let metaMagicNames = [];
 
@@ -396,8 +399,8 @@ describe("MetaMagicDisplay", () => {
 
     render(
       <TestWrapper>
-        <MetaMagicDisplay 
-          character={character} 
+        <MetaMagicDisplay
+          character={character}
           onNavigateToCharacterManagement={mockNavigate}
         />
       </TestWrapper>

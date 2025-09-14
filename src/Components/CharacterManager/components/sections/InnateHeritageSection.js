@@ -11,7 +11,6 @@ import {
   removeHeritageProficiencies,
 } from "../../utils/utils";
 
-
 const checkForAbilityChoices = (item) => {
   const abilities = [];
 
@@ -55,7 +54,6 @@ const formatHeritageBenefits = (heritageData) => {
   return benefits;
 };
 
-
 const HeritageChoiceSelector = ({
   heritage,
   heritageData,
@@ -77,7 +75,7 @@ const HeritageChoiceSelector = ({
     if (feature.isMultiSelect) {
       const currentSelections = heritageChoices[heritage]?.[featureName] || [];
       const newSelections = currentSelections.includes(choiceName)
-        ? currentSelections.filter(selection => selection !== choiceName)
+        ? currentSelections.filter((selection) => selection !== choiceName)
         : [...currentSelections, choiceName];
       onHeritageChoiceSelect(heritage, featureName, newSelections);
     } else {
@@ -113,11 +111,19 @@ const HeritageChoiceSelector = ({
                   <label style={styles.choiceLabel}>
                     <input
                       type={feature.isMultiSelect ? "checkbox" : "radio"}
-                      name={feature.isMultiSelect ? `${heritage}_${feature.name}_${option.name}` : `${heritage}_${feature.name}`}
+                      name={
+                        feature.isMultiSelect
+                          ? `${heritage}_${feature.name}_${option.name}`
+                          : `${heritage}_${feature.name}`
+                      }
                       value={option.name}
                       checked={isOptionSelected}
                       onChange={(e) =>
-                        handleChoiceChange(feature.name, e.target.value, feature)
+                        handleChoiceChange(
+                          feature.name,
+                          e.target.value,
+                          feature
+                        )
                       }
                       style={styles.choiceRadio}
                     />
@@ -442,17 +448,6 @@ const InnateHeritageSection = ({
   };
 
   const handleHeritageChoiceSelect = (heritage, featureName, choiceName) => {
-    console.log("DEBUG InnateHeritage: handleHeritageChoiceSelect called with:", {
-      heritage,
-      featureName,
-      choiceName
-    });
-    
-    if (!onHeritageChoicesChange) {
-      console.log("DEBUG InnateHeritage: No onHeritageChoicesChange function");
-      return;
-    }
-
     const newChoices = {
       ...heritageChoices,
       [heritage]: {
@@ -461,7 +456,6 @@ const InnateHeritageSection = ({
       },
     };
 
-    console.log("DEBUG InnateHeritage: Calling onHeritageChoicesChange with:", newChoices);
     onHeritageChoicesChange(newChoices);
 
     const updatedCharacter = applyHeritageProficiencies(
