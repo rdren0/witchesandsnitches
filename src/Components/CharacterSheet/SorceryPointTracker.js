@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Sparkles, Zap, PlusIcon, MinusIcon, Settings } from "lucide-react";
+import {
+  Sparkles,
+  Zap,
+  PlusIcon,
+  MinusIcon,
+  Settings,
+  Edit3,
+} from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
 import { SORCERY_POINT_PROGRESSION } from "../../SharedData/data";
@@ -30,16 +37,19 @@ const SorceryPointTracker = ({
     return "#ef4444";
   };
 
-  const handleSorceryPointChange = async (change, action) => {
+  const handleSorceryPointChange = async (
+    change,
+    action,
+    isDirectSet = false
+  ) => {
     if (!character || isUpdating) return;
 
     setIsUpdating(true);
 
     try {
-      const newSorceryPoints = Math.max(
-        0,
-        Math.min(maxSorceryPoints || 999, currentSorceryPoints + change)
-      );
+      const newSorceryPoints = isDirectSet
+        ? Math.max(0, change)
+        : Math.max(0, currentSorceryPoints + change);
 
       const { error } = await supabase.from("character_resources").upsert(
         {
@@ -73,8 +83,10 @@ const SorceryPointTracker = ({
           color: change > 0 ? 0x10b981 : 0xf59e0b,
           fields: [
             {
-              name: "Change",
-              value: `${change > 0 ? "+" : ""}${change} Sorcery Points`,
+              name: isDirectSet ? "Set To" : "Change",
+              value: isDirectSet
+                ? `${change} Sorcery Points`
+                : `${change > 0 ? "+" : ""}${change} Sorcery Points`,
               inline: true,
             },
             {
@@ -113,19 +125,22 @@ const SorceryPointTracker = ({
   };
 
   const openSorceryModal = (action) => {
-    setSorceryModalData({ action, amount: 1 });
+    setSorceryModalData({
+      action,
+      amount: action === "set" ? currentSorceryPoints : 1,
+    });
     setShowSorceryModal(true);
   };
 
   const setupSorceryPoints = async () => {
     if (!character || isUpdating) return;
-    
+
     setIsUpdating(true);
-    
+
     try {
       const characterLevel = character.level || 1;
       const maxPoints = SORCERY_POINT_PROGRESSION[characterLevel] || 0;
-      
+
       const { error } = await supabase.from("character_resources").upsert(
         {
           character_id: selectedCharacterId,
@@ -150,8 +165,10 @@ const SorceryPointTracker = ({
         sorceryPoints: maxPoints,
         maxSorceryPoints: maxPoints,
       }));
-      
-      console.log(`Sorcery points set up: ${maxPoints} for level ${characterLevel}`);
+
+      console.log(
+        `Sorcery points set up: ${maxPoints} for level ${characterLevel}`
+      );
     } catch (error) {
       console.error("Error setting up sorcery points:", error);
     } finally {
@@ -343,7 +360,10 @@ const SorceryPointTracker = ({
           </div>
         ) : (
           <div style={styles.sorceryGrid}>
-            <div style={styles.slotItem} onClick={() => openSorceryModal("use")}>
+            <div
+              style={styles.slotItem}
+              onClick={() => openSorceryModal("use")}
+            >
               <div style={styles.slotLevel}>Available</div>
               <div
                 style={{
@@ -374,6 +394,21 @@ const SorceryPointTracker = ({
                 >
                   <MinusIcon size={12} />
                 </button>
+                <button
+                  style={{
+                    ...styles.slotButton,
+                    backgroundColor: "#8b5cf6",
+                    color: "white",
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSorceryModal("set");
+                  }}
+                  disabled={isUpdating}
+                  title="Set exact value"
+                >
+                  <Edit3 size={12} />
+                </button>
               </div>
             </div>
           </div>
@@ -389,27 +424,40 @@ const SorceryPointTracker = ({
                 style={{
                   marginRight: "8px",
                   color:
-                    sorceryModalData.action === "add" ? "#10b981" : "#f59e0b",
+                    sorceryModalData.action === "add"
+                      ? "#10b981"
+                      : sorceryModalData.action === "set"
+                      ? "#8b5cf6"
+                      : "#f59e0b",
                 }}
               />
-              {sorceryModalData.action === "add" ? "Add" : "Use"} Sorcery Points
+              {sorceryModalData.action === "add"
+                ? "Add"
+                : sorceryModalData.action === "set"
+                ? "Set"
+                : "Use"}{" "}
+              Sorcery Points
             </div>
 
             <div style={styles.inputGroup}>
               <label style={styles.label}>
-                Points to {sorceryModalData.action === "add" ? "Add" : "Use"}:
+                {sorceryModalData.action === "set"
+                  ? "Set sorcery points to:"
+                  : `Points to ${
+                      sorceryModalData.action === "add" ? "Add" : "Use"
+                    }:`}
               </label>
               <input
                 type="number"
-                min="1"
-                max={
-                  sorceryModalData.action === "add" ? 20 : currentSorceryPoints
-                }
+                min={sorceryModalData.action === "set" ? "0" : "1"}
                 value={sorceryModalData.amount}
                 onChange={(e) =>
                   setSorceryModalData((prev) => ({
                     ...prev,
-                    amount: Math.max(1, parseInt(e.target.value) || 1),
+                    amount:
+                      sorceryModalData.action === "set"
+                        ? Math.max(0, parseInt(e.target.value) || 0)
+                        : Math.max(1, parseInt(e.target.value) || 1),
                   }))
                 }
                 style={styles.input}
@@ -426,22 +474,34 @@ const SorceryPointTracker = ({
               </button>
               <button
                 style={{ ...styles.modalButton, ...styles.confirmButton }}
-                onClick={() =>
-                  handleSorceryPointChange(
-                    sorceryModalData.action === "add"
-                      ? sorceryModalData.amount
-                      : -sorceryModalData.amount,
-                    sorceryModalData.action === "add"
-                      ? "Sorcery Points Added"
-                      : "Sorcery Points Used"
-                  )
-                }
+                onClick={() => {
+                  if (sorceryModalData.action === "set") {
+                    handleSorceryPointChange(
+                      sorceryModalData.amount,
+                      "Sorcery Points Set",
+                      true
+                    );
+                  } else {
+                    handleSorceryPointChange(
+                      sorceryModalData.action === "add"
+                        ? sorceryModalData.amount
+                        : -sorceryModalData.amount,
+                      sorceryModalData.action === "add"
+                        ? "Sorcery Points Added"
+                        : "Sorcery Points Used"
+                    );
+                  }
+                }}
                 disabled={isUpdating}
               >
                 {isUpdating
                   ? sorceryModalData.action === "add"
                     ? "Adding..."
+                    : sorceryModalData.action === "set"
+                    ? "Setting..."
                     : "Using..."
+                  : sorceryModalData.action === "set"
+                  ? `Set to ${sorceryModalData.amount}`
                   : `${sorceryModalData.action === "add" ? "Add" : "Use"} ${
                       sorceryModalData.amount
                     }`}
