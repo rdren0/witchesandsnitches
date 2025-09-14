@@ -236,11 +236,23 @@ const LevelUpModal = ({
     try {
       const newMaxSorceryPoints = SORCERY_POINT_PROGRESSION[newLevel] || 0;
 
+      const { data: currentResources } = await supabase
+        .from("character_resources")
+        .select("sorcery_points")
+        .eq("character_id", character.id)
+        .eq("discord_user_id", discordUserId)
+        .single();
+
+      const currentSorceryPoints =
+        currentResources?.sorcery_points ||
+        character.sorceryPoints ||
+        newMaxSorceryPoints;
+
       const updateData = {
         character_id: character.id,
         discord_user_id: discordUserId,
         max_sorcery_points: newMaxSorceryPoints,
-        sorcery_points: newMaxSorceryPoints,
+        sorcery_points: currentSorceryPoints,
         updated_at: new Date().toISOString(),
       };
 
@@ -619,6 +631,8 @@ const LevelUpModal = ({
       const spellSlotUpdates = updateSpellSlotsOnLevelUp(character, newLevel);
       const newMaxSorceryPoints = SORCERY_POINT_PROGRESSION[newLevel] || 0;
 
+      const currentSorceryPoints = character.sorceryPoints || 0;
+
       const updatedCharacter = {
         ...character,
         level: newLevel,
@@ -626,7 +640,7 @@ const LevelUpModal = ({
         hitPoints: newFullHP,
         image_url: character.image_url || character.imageUrl || null,
         imageUrl: character.imageUrl || character.image_url || null,
-        sorceryPoints: newMaxSorceryPoints,
+        sorceryPoints: currentSorceryPoints,
         maxSorceryPoints: newMaxSorceryPoints,
         ...spellSlotUpdates,
       };
