@@ -18,15 +18,17 @@ const SorceryPointTracker = ({
   setCharacter,
   selectedCharacterId,
 }) => {
+  const currentSorceryPoints = character?.sorceryPoints || 0;
+  const maxSorceryPoints = character?.maxSorceryPoints || 0;
   const [isUpdating, setIsUpdating] = useState(false);
   const [showSorceryModal, setShowSorceryModal] = useState(false);
   const [sorceryModalData, setSorceryModalData] = useState({
     action: "use",
     amount: 1,
+    currentValue: currentSorceryPoints,
+    maxValue: maxSorceryPoints,
   });
   const { theme } = useTheme();
-  const currentSorceryPoints = character?.sorceryPoints || 0;
-  const maxSorceryPoints = character?.maxSorceryPoints || 0;
 
   const getSorceryPointColor = () => {
     if (maxSorceryPoints === 0) return "#a855f7";
@@ -40,7 +42,8 @@ const SorceryPointTracker = ({
   const handleSorceryPointChange = async (
     change,
     action,
-    isDirectSet = false
+    isDirectSet = false,
+    newMaxSorceryPoints = null
   ) => {
     if (!character || isUpdating) return;
 
@@ -51,12 +54,17 @@ const SorceryPointTracker = ({
         ? Math.max(0, change)
         : Math.max(0, currentSorceryPoints + change);
 
+      const finalMaxSorceryPoints =
+        newMaxSorceryPoints !== null
+          ? Math.max(0, newMaxSorceryPoints)
+          : maxSorceryPoints;
+
       const { error } = await supabase.from("character_resources").upsert(
         {
           character_id: selectedCharacterId,
           discord_user_id: discordUserId,
           sorcery_points: newSorceryPoints,
-          max_sorcery_points: maxSorceryPoints,
+          max_sorcery_points: finalMaxSorceryPoints,
           updated_at: new Date().toISOString(),
         },
         {
@@ -73,6 +81,7 @@ const SorceryPointTracker = ({
       setCharacter((prev) => ({
         ...prev,
         sorceryPoints: newSorceryPoints,
+        maxSorceryPoints: finalMaxSorceryPoints,
       }));
 
       const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
@@ -92,7 +101,7 @@ const SorceryPointTracker = ({
             {
               name: "Current Total",
               value: `${newSorceryPoints}${
-                maxSorceryPoints > 0 ? `/${maxSorceryPoints}` : ""
+                finalMaxSorceryPoints > 0 ? `/${finalMaxSorceryPoints}` : ""
               } Sorcery Points`,
               inline: true,
             },
@@ -128,6 +137,8 @@ const SorceryPointTracker = ({
     setSorceryModalData({
       action,
       amount: action === "set" ? currentSorceryPoints : 1,
+      currentValue: currentSorceryPoints,
+      maxValue: maxSorceryPoints,
     });
     setShowSorceryModal(true);
   };
@@ -402,10 +413,10 @@ const SorceryPointTracker = ({
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    openSorceryModal("set");
+                    openSorceryModal("edit");
                   }}
                   disabled={isUpdating}
-                  title="Set exact value"
+                  title="Edit current and maximum values"
                 >
                   <Edit3 size={12} />
                 </button>
@@ -426,44 +437,76 @@ const SorceryPointTracker = ({
                   color:
                     sorceryModalData.action === "add"
                       ? "#10b981"
-                      : sorceryModalData.action === "set"
+                      : sorceryModalData.action === "edit"
                       ? "#8b5cf6"
                       : "#f59e0b",
                 }}
               />
               {sorceryModalData.action === "add"
                 ? "Add"
-                : sorceryModalData.action === "set"
-                ? "Set"
+                : sorceryModalData.action === "edit"
+                ? "Edit"
                 : "Use"}{" "}
               Sorcery Points
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>
-                {sorceryModalData.action === "set"
-                  ? "Set sorcery points to:"
-                  : `Points to ${
-                      sorceryModalData.action === "add" ? "Add" : "Use"
-                    }:`}
-              </label>
-              <input
-                type="number"
-                min={sorceryModalData.action === "set" ? "0" : "1"}
-                value={sorceryModalData.amount}
-                onChange={(e) =>
-                  setSorceryModalData((prev) => ({
-                    ...prev,
-                    amount:
-                      sorceryModalData.action === "set"
-                        ? Math.max(0, parseInt(e.target.value) || 0)
-                        : Math.max(1, parseInt(e.target.value) || 1),
-                  }))
-                }
-                style={styles.input}
-                autoFocus
-              />
-            </div>
+            {sorceryModalData.action === "edit" ? (
+              <div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Current Sorcery Points:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={sorceryModalData.currentValue}
+                    onChange={(e) =>
+                      setSorceryModalData((prev) => ({
+                        ...prev,
+                        currentValue: Math.max(
+                          0,
+                          parseInt(e.target.value) || 0
+                        ),
+                      }))
+                    }
+                    style={styles.input}
+                    autoFocus
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Maximum Sorcery Points:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={sorceryModalData.maxValue}
+                    onChange={(e) =>
+                      setSorceryModalData((prev) => ({
+                        ...prev,
+                        maxValue: Math.max(0, parseInt(e.target.value) || 0),
+                      }))
+                    }
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>
+                  Points to {sorceryModalData.action === "add" ? "Add" : "Use"}:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={sorceryModalData.amount}
+                  onChange={(e) =>
+                    setSorceryModalData((prev) => ({
+                      ...prev,
+                      amount: Math.max(1, parseInt(e.target.value) || 1),
+                    }))
+                  }
+                  style={styles.input}
+                  autoFocus
+                />
+              </div>
+            )}
 
             <div style={styles.modalButtons}>
               <button
@@ -475,11 +518,12 @@ const SorceryPointTracker = ({
               <button
                 style={{ ...styles.modalButton, ...styles.confirmButton }}
                 onClick={() => {
-                  if (sorceryModalData.action === "set") {
+                  if (sorceryModalData.action === "edit") {
                     handleSorceryPointChange(
-                      sorceryModalData.amount,
-                      "Sorcery Points Set",
-                      true
+                      sorceryModalData.currentValue,
+                      "Sorcery Points Updated",
+                      true,
+                      sorceryModalData.maxValue
                     );
                   } else {
                     handleSorceryPointChange(
@@ -497,11 +541,11 @@ const SorceryPointTracker = ({
                 {isUpdating
                   ? sorceryModalData.action === "add"
                     ? "Adding..."
-                    : sorceryModalData.action === "set"
-                    ? "Setting..."
+                    : sorceryModalData.action === "edit"
+                    ? "Updating..."
                     : "Using..."
-                  : sorceryModalData.action === "set"
-                  ? `Set to ${sorceryModalData.amount}`
+                  : sorceryModalData.action === "edit"
+                  ? `Update (${sorceryModalData.currentValue}/${sorceryModalData.maxValue})`
                   : `${sorceryModalData.action === "add" ? "Add" : "Use"} ${
                       sorceryModalData.amount
                     }`}
