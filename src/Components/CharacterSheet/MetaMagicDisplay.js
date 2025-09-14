@@ -94,11 +94,7 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
   const metaMagics = getMetaMagicChoices(character);
 
   const getMaxMetaMagicOptions = (level) => {
-    if (level >= 10) return 4;
-    if (level >= 6) return 3;
-    if (level >= 3) return 2;
-    if (level >= 1) return 1;
-    return 0;
+    return Object.keys(METAMAGIC_DATA).length; // Allow selection of all available options
   };
 
   const qualifiesForMetaMagic = character?.level >= 3;

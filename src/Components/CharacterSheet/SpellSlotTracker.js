@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, BookOpen, PlusIcon, MinusIcon } from "lucide-react";
-import SorceryPointTracker from "./SorceryPointTracker";
+import {
+  Plus,
+  BookOpen,
+  PlusIcon,
+  MinusIcon,
+  Sparkles,
+  Edit3,
+} from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
@@ -21,10 +27,17 @@ const SpellSlotTracker = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showSorceryModal, setShowSorceryModal] = useState(false);
   const [modalData, setModalData] = useState({
     level: 1,
     action: "use",
     amount: 1,
+  });
+  const [sorceryModalData, setSorceryModalData] = useState({
+    action: "use",
+    amount: 1,
+    currentValue: 0,
+    maxValue: 0,
   });
 
   const setupStandardSpellSlots = useCallback(
@@ -514,6 +527,105 @@ const SpellSlotTracker = ({
     setShowCustomModal(true);
   };
 
+  const currentSorceryPoints = character?.sorceryPoints || 0;
+  const maxSorceryPoints = character?.maxSorceryPoints || 0;
+
+  const getSorceryPointColor = (current, max) => {
+    if (max === 0) return "#a855f7";
+    const percentage = current / max;
+    if (percentage >= 0.75) return "#10b981";
+    if (percentage >= 0.5) return "#3b82f6";
+    if (percentage >= 0.25) return "#f59e0b";
+    return "#ef4444";
+  };
+
+  const handleSorceryPointChange = async (
+    change,
+    action,
+    isDirectSet = false,
+    newMaxSorceryPoints = null
+  ) => {
+    if (!character || isUpdating) return;
+
+    setIsUpdating(true);
+
+    try {
+      const newSorceryPoints = isDirectSet
+        ? Math.max(0, change)
+        : Math.max(0, currentSorceryPoints + change);
+
+      const finalMaxSorceryPoints =
+        newMaxSorceryPoints !== null
+          ? Math.max(0, newMaxSorceryPoints)
+          : maxSorceryPoints;
+
+      const { error } = await supabase.from("character_resources").upsert(
+        {
+          character_id: selectedCharacterId,
+          discord_user_id: discordUserId,
+          sorcery_points: newSorceryPoints,
+          max_sorcery_points: finalMaxSorceryPoints,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "character_id,discord_user_id",
+        }
+      );
+
+      if (error) {
+        console.error("Error updating sorcery points:", error);
+        return;
+      }
+
+      setCharacter((prev) => ({
+        ...prev,
+        sorceryPoints: newSorceryPoints,
+        maxSorceryPoints: finalMaxSorceryPoints,
+      }));
+
+      const success = await sendDiscordRollWebhook({
+        character,
+        rollType: "Sorcery Points",
+        title: action,
+        embedColor: change > 0 ? 0x10b981 : 0xf59e0b,
+        rollResult: null,
+        fields: [
+          {
+            name: isDirectSet ? "Set To" : "Change",
+            value: isDirectSet
+              ? `${change} Sorcery Points`
+              : `${change > 0 ? "+" : ""}${change} Sorcery Points`,
+            inline: true,
+          },
+          {
+            name: "Current Total",
+            value: `${newSorceryPoints}${
+              finalMaxSorceryPoints > 0 ? `/${finalMaxSorceryPoints}` : ""
+            } Sorcery Points`,
+            inline: true,
+          },
+        ],
+        useCharacterAvatar: true,
+      });
+
+      setShowSorceryModal(false);
+    } catch (error) {
+      console.error("Error updating sorcery points:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const openSorceryModal = (action) => {
+    setSorceryModalData({
+      action,
+      amount: action === "set" ? currentSorceryPoints : 1,
+      currentValue: currentSorceryPoints,
+      maxValue: maxSorceryPoints,
+    });
+    setShowSorceryModal(true);
+  };
+
   const styles = {
     container: {
       backgroundColor: theme.surface,
@@ -523,6 +635,7 @@ const SpellSlotTracker = ({
       minHeight: "200px",
       display: "flex",
       flexDirection: "column",
+      width: "100%",
     },
     header: {
       display: "flex",
@@ -558,11 +671,10 @@ const SpellSlotTracker = ({
       marginBottom: "20px",
     },
     slotsGrid: {
-      display: "flex",
-      flexWrap: "wrap",
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
       gap: "12px",
       maxWidth: "100%",
-      alignItems: "stretch",
     },
     slotItem: {
       backgroundColor: theme.background,
@@ -572,10 +684,11 @@ const SpellSlotTracker = ({
       textAlign: "center",
       position: "relative",
       cursor: "pointer",
-      flex: "1 1 calc(20% - 9.6px)",
-      minWidth: "120px",
-      maxWidth: "23%",
       boxSizing: "border-box",
+      minHeight: "100px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
     },
     slotLevel: {
       fontSize: "14px",
@@ -592,6 +705,7 @@ const SpellSlotTracker = ({
       display: "flex",
       gap: "4px",
       justifyContent: "center",
+      marginTop: "auto",
     },
     slotButton: {
       padding: "2px 6px",
@@ -685,10 +799,9 @@ const SpellSlotTracker = ({
     },
     resourcesContainer: {
       display: "flex",
-      flexDirection: "row",
+      flexDirection: "column",
       gap: "20px",
-      alignItems: "flex-start",
-      flexWrap: "wrap",
+      width: "100%",
     },
   };
 
@@ -713,18 +826,10 @@ const SpellSlotTracker = ({
             )}
           </div>
         </div>
-
-        <SorceryPointTracker
-          character={character}
-          supabase={supabase}
-          discordUserId={discordUserId}
-          setCharacter={setCharacter}
-          selectedCharacterId={selectedCharacterId}
-        />
       </div>
     );
   }
-  const spellAndSorceryTiles = spellSlots.map(({ level, current, max }) => (
+  const spellSlotTiles = spellSlots.map(({ level, current, max }) => (
     <div
       key={level}
       style={styles.slotItem}
@@ -764,6 +869,80 @@ const SpellSlotTracker = ({
     </div>
   ));
 
+  const sorceryPointsTile = (maxSorceryPoints > 0 || character?.level >= 2) && (
+    <div
+      key="sorcery-points"
+      style={{
+        ...styles.slotItem,
+        border: `3px solid ${theme.primary}`,
+        backgroundColor: theme.surface,
+      }}
+      onClick={() => openSorceryModal("use")}
+    >
+      <div
+        style={{
+          ...styles.slotLevel,
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          justifyContent: "center",
+          color: theme.primary,
+          fontWeight: "600",
+        }}
+      >
+        <Sparkles size={14} />
+        Sorcery Points
+      </div>
+      <div
+        style={{
+          ...styles.slotDisplay,
+          color: theme.success,
+        }}
+      >
+        {currentSorceryPoints}/{maxSorceryPoints}
+      </div>
+      <div style={styles.slotButtons}>
+        <button
+          style={{ ...styles.slotButton, ...styles.addSlotButton }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openSorceryModal("add");
+          }}
+          disabled={isUpdating}
+        >
+          <PlusIcon size={12} />
+        </button>
+        <button
+          style={{ ...styles.slotButton, ...styles.useSlotButton }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openSorceryModal("use");
+          }}
+          disabled={isUpdating || currentSorceryPoints === 0}
+        >
+          <MinusIcon size={12} />
+        </button>
+        <button
+          style={{
+            ...styles.slotButton,
+            backgroundColor: "#8b5cf6",
+            color: "white",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openSorceryModal("edit");
+          }}
+          disabled={isUpdating}
+          title="Edit current and maximum values"
+        >
+          <Edit3 size={12} />
+        </button>
+      </div>
+    </div>
+  );
+
+  const allTiles = [...spellSlotTiles, sorceryPointsTile].filter(Boolean);
+
   return (
     <div style={styles.resourcesContainer}>
       <div style={styles.container}>
@@ -784,7 +963,7 @@ const SpellSlotTracker = ({
           </div>
         </div>
 
-        <div style={styles.slotsGrid}>{spellAndSorceryTiles}</div>
+        <div style={styles.slotsGrid}>{allTiles}</div>
 
         {showCustomModal && (
           <div style={styles.modal} onClick={() => setShowCustomModal(false)}>
@@ -948,6 +1127,131 @@ const SpellSlotTracker = ({
                       : "Using..."
                     : `${modalData.action === "add" ? "Add" : "Use"} ${
                         modalData.amount
+                      }`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showSorceryModal && (
+          <div style={styles.modal} onClick={() => setShowSorceryModal(false)}>
+            <div
+              style={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.modalHeader}>
+                <Sparkles
+                  size={20}
+                  style={{ marginRight: "8px", color: "#a855f7" }}
+                />
+                {sorceryModalData.action === "add"
+                  ? "Add"
+                  : sorceryModalData.action === "edit"
+                  ? "Edit"
+                  : "Use"}{" "}
+                Sorcery Points
+              </div>
+
+              {sorceryModalData.action === "edit" ? (
+                <div>
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Current Sorcery Points:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={sorceryModalData.currentValue}
+                      onChange={(e) =>
+                        setSorceryModalData((prev) => ({
+                          ...prev,
+                          currentValue: Math.max(
+                            0,
+                            parseInt(e.target.value) || 0
+                          ),
+                        }))
+                      }
+                      style={styles.input}
+                      autoFocus
+                    />
+                  </div>
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Maximum Sorcery Points:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={sorceryModalData.maxValue}
+                      onChange={(e) =>
+                        setSorceryModalData((prev) => ({
+                          ...prev,
+                          maxValue: Math.max(0, parseInt(e.target.value) || 0),
+                        }))
+                      }
+                      style={styles.input}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>
+                    Points to{" "}
+                    {sorceryModalData.action === "add" ? "Add" : "Use"}:
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={sorceryModalData.amount}
+                    onChange={(e) =>
+                      setSorceryModalData((prev) => ({
+                        ...prev,
+                        amount: Math.max(1, parseInt(e.target.value) || 1),
+                      }))
+                    }
+                    style={styles.input}
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              <div style={styles.modalButtons}>
+                <button
+                  style={{ ...styles.modalButton, ...styles.cancelButton }}
+                  onClick={() => setShowSorceryModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  style={{ ...styles.modalButton, ...styles.confirmButton }}
+                  onClick={() => {
+                    if (sorceryModalData.action === "edit") {
+                      handleSorceryPointChange(
+                        sorceryModalData.currentValue,
+                        "Sorcery Points Updated",
+                        true,
+                        sorceryModalData.maxValue
+                      );
+                    } else {
+                      handleSorceryPointChange(
+                        sorceryModalData.action === "add"
+                          ? sorceryModalData.amount
+                          : -sorceryModalData.amount,
+                        sorceryModalData.action === "add"
+                          ? "Sorcery Points Added"
+                          : "Sorcery Points Used"
+                      );
+                    }
+                  }}
+                  disabled={isUpdating}
+                >
+                  {isUpdating
+                    ? sorceryModalData.action === "add"
+                      ? "Adding..."
+                      : sorceryModalData.action === "edit"
+                      ? "Updating..."
+                      : "Using..."
+                    : sorceryModalData.action === "edit"
+                    ? `Update (${sorceryModalData.currentValue}/${sorceryModalData.maxValue})`
+                    : `${sorceryModalData.action === "add" ? "Add" : "Use"} ${
+                        sorceryModalData.amount
                       }`}
                 </button>
               </div>

@@ -96,15 +96,12 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
   const currentMetaMagics = getMetaMagicChoices(character);
 
   const getMaxMetaMagicOptions = (level) => {
-    if (level >= 10) return 4;
-    if (level >= 6) return 3;
-    if (level >= 3) return 2;
-    return 1;
+    return AVAILABLE_METAMAGICS.length; // Allow selection of all available options
   };
 
   const maxOptions = getMaxMetaMagicOptions(character?.level || 1);
   const selectedCount = currentMetaMagics.length;
-  const canSelectMore = selectedCount < maxOptions;
+  const canSelectMore = true; // Always allow more selections
 
   const handleMetaMagicToggle = (metaMagicName) => {
     const isSelected = currentMetaMagics.includes(metaMagicName);
@@ -114,10 +111,8 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
       updatedMetaMagics = currentMetaMagics.filter(
         (mm) => mm !== metaMagicName
       );
-    } else if (canSelectMore) {
-      updatedMetaMagics = [...currentMetaMagics, metaMagicName];
     } else {
-      return;
+      updatedMetaMagics = [...currentMetaMagics, metaMagicName];
     }
 
     const metamagicChoices = {};
@@ -178,10 +173,10 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
             style={{
               fontSize: "14px",
               fontWeight: "600",
-              color: selectedCount >= maxOptions ? theme.error : theme.primary,
+              color: theme.primary,
             }}
           >
-            {selectedCount} / {maxOptions}
+            {selectedCount} selected
           </span>
         </div>
         <div
@@ -190,20 +185,13 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
             color: theme.textSecondary,
           }}
         >
-          Level {character?.level || 1} characters can choose up to {maxOptions}{" "}
-          metamagic option{maxOptions !== 1 ? "s" : ""}
+          Select as many Metamagic options as allowed by the rulebook{" "}
         </div>
       </div>
 
       {/* Selected Metamagics */}
       {selectedMetaMagics.length > 0 && (
         <div style={styles.selectedElementsSection}>
-          <div style={styles.selectedSectionHeader}>
-            <span style={styles.selectedSectionTitle}>
-              Selected Metamagic Options
-            </span>
-          </div>
-
           {selectedMetaMagics.map((metaMagic) => {
             return (
               <div key={metaMagic.name} style={styles.selectedElementCard}>
@@ -271,24 +259,12 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
           <div style={styles.availableSectionHeader}>
             <span style={styles.availableSectionTitle}>
               Available Metamagic Options
-              {!canSelectMore && (
-                <span
-                  style={{
-                    marginLeft: "8px",
-                    fontSize: "12px",
-                    color: theme.error,
-                    fontWeight: "normal",
-                  }}
-                >
-                  (Maximum reached)
-                </span>
-              )}
             </span>
           </div>
 
           <div style={styles.availableElementsContainer}>
             {availableMetaMagics.map((metaMagic) => {
-              const isDisabled = disabled || !canSelectMore;
+              const isDisabled = disabled;
 
               return (
                 <div key={metaMagic.name} style={styles.featCard}>

@@ -14,7 +14,6 @@ import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import SpellSlotTracker from "./SpellSlotTracker";
-import SorceryPointTracker from "./SorceryPointTracker";
 import CorruptionTracker from "./CorruptionTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
@@ -122,14 +121,6 @@ const CharacterTabbedPanel = ({
       component: (
         <>
           <SpellSlotTracker
-            character={selectedCharacter}
-            supabase={supabase}
-            discordUserId={discordUserId}
-            setCharacter={setCharacter}
-            selectedCharacterId={selectedCharacter.id}
-          />
-          <SorceryPointTracker
-            key="sorcery-points"
             character={selectedCharacter}
             supabase={supabase}
             discordUserId={discordUserId}
