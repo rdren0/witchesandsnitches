@@ -435,7 +435,14 @@ const SpellSlotTracker = ({
     }
   };
 
-  const handleSpellSlotChange = async (level, change, action) => {
+  const handleSpellSlotChange = async (
+    level,
+    change,
+    action,
+    isEdit = false,
+    newMaxSlots = null,
+    newCurrentSlots = null
+  ) => {
     if (!character || isUpdating) return;
 
     setIsUpdating(true);
@@ -444,14 +451,24 @@ const SpellSlotTracker = ({
       const currentSlots = character?.[`spellSlots${level}`] || 0;
       const maxSlots = character?.[`maxSpellSlots${level}`] || 0;
 
-      const newSlots = Math.max(0, currentSlots + change);
-
-      const updateData = {
+      let updateData = {
         character_id: selectedCharacterId,
         discord_user_id: discordUserId,
-        [`spell_slots_${level}`]: newSlots,
         updated_at: new Date().toISOString(),
       };
+
+      let newSlots = currentSlots;
+      let finalMaxSlots = maxSlots;
+
+      if (isEdit) {
+        finalMaxSlots = Math.max(0, newMaxSlots);
+        newSlots = Math.max(0, Math.min(newCurrentSlots, finalMaxSlots));
+        updateData[`max_spell_slots_${level}`] = finalMaxSlots;
+        updateData[`spell_slots_${level}`] = newSlots;
+      } else {
+        newSlots = Math.max(0, currentSlots + change);
+        updateData[`spell_slots_${level}`] = newSlots;
+      }
 
       const { error } = await supabase
         .from("character_resources")
@@ -465,10 +482,14 @@ const SpellSlotTracker = ({
         return;
       }
 
-      setCharacter((prev) => ({
-        ...prev,
+      const newCharacterState = {
+        ...character,
         [`spellSlots${level}`]: newSlots,
-      }));
+      };
+      if (isEdit) {
+        newCharacterState[`maxSpellSlots${level}`] = finalMaxSlots;
+      }
+      setCharacter(newCharacterState);
 
       const additionalFields = [
         {
@@ -477,15 +498,17 @@ const SpellSlotTracker = ({
           inline: true,
         },
         {
-          name: "Change",
-          value: `${change > 0 ? "+" : ""}${change} Slot${
-            Math.abs(change) !== 1 ? "s" : ""
-          }`,
+          name: isEdit ? "Slots Updated" : "Change",
+          value: isEdit
+            ? `Set to ${newSlots}/${finalMaxSlots}`
+            : `${change > 0 ? "+" : ""}${change} Slot${
+                Math.abs(change) !== 1 ? "s" : ""
+              }`,
           inline: true,
         },
         {
           name: "Current Total",
-          value: `${newSlots}/${maxSlots} Slots`,
+          value: `${newSlots}/${finalMaxSlots} Slots`,
           inline: true,
         },
       ];
@@ -494,7 +517,7 @@ const SpellSlotTracker = ({
         character,
         rollType: "Spell Slots",
         title: action,
-        embedColor: change > 0 ? 0x10b981 : 0x3b82f6,
+        embedColor: isEdit ? 0x8b5cf6 : change > 0 ? 0x10b981 : 0x3b82f6,
         rollResult: null,
         fields: additionalFields,
         useCharacterAvatar: true,
@@ -514,7 +537,17 @@ const SpellSlotTracker = ({
   };
 
   const openModal = (level, action) => {
-    setModalData({ level, action, amount: 1 });
+    if (action === "edit") {
+      setModalData({
+        level,
+        action,
+        amount: 1,
+        currentMax: character?.[`maxSpellSlots${level}`] || 0,
+        currentSlots: character?.[`spellSlots${level}`] || 0,
+      });
+    } else {
+      setModalData({ level, action, amount: 1 });
+    }
     setShowModal(true);
   };
 
@@ -802,6 +835,7 @@ const SpellSlotTracker = ({
       flexDirection: "column",
       gap: "20px",
       width: "100%",
+      marginBottom: "20px",
     },
   };
 
@@ -835,7 +869,38 @@ const SpellSlotTracker = ({
       style={styles.slotItem}
       onClick={() => openModal(level, "use")}
     >
-      <div style={styles.slotLevel}>Level {level}</div>
+      <button
+        style={{
+          position: "absolute",
+          top: "8px",
+          right: "8px",
+          backgroundColor: "#8b5cf6",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          width: "24px",
+          height: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          fontSize: "10px",
+          opacity: 0.8,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          openModal(level, "edit");
+        }}
+        disabled={isUpdating}
+        title="Edit max spell slots for this level"
+        onMouseEnter={(e) => (e.target.style.opacity = "1")}
+        onMouseLeave={(e) => (e.target.style.opacity = "0.8")}
+      >
+        <Edit3 size={12} />
+      </button>
+      <div style={{ ...styles.slotLevel, marginRight: "32px" }}>
+        Level {level}
+      </div>
       <div
         style={{
           ...styles.slotDisplay,
@@ -851,7 +916,7 @@ const SpellSlotTracker = ({
             e.stopPropagation();
             openModal(level, "add");
           }}
-          disabled={isUpdating || current >= max}
+          disabled={isUpdating}
         >
           <PlusIcon size={12} />
         </button>
@@ -879,6 +944,35 @@ const SpellSlotTracker = ({
       }}
       onClick={() => openSorceryModal("use")}
     >
+      <button
+        style={{
+          position: "absolute",
+          top: "8px",
+          right: "8px",
+          backgroundColor: "#8b5cf6",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          width: "24px",
+          height: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          fontSize: "10px",
+          opacity: 0.8,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          openSorceryModal("edit");
+        }}
+        disabled={isUpdating}
+        title="Edit current and maximum values"
+        onMouseEnter={(e) => (e.target.style.opacity = "1")}
+        onMouseLeave={(e) => (e.target.style.opacity = "0.8")}
+      >
+        <Edit3 size={12} />
+      </button>
       <div
         style={{
           ...styles.slotLevel,
@@ -888,6 +982,7 @@ const SpellSlotTracker = ({
           justifyContent: "center",
           color: theme.primary,
           fontWeight: "600",
+          marginRight: "32px",
         }}
       >
         <Sparkles size={14} />
@@ -922,21 +1017,6 @@ const SpellSlotTracker = ({
         >
           <MinusIcon size={12} />
         </button>
-        <button
-          style={{
-            ...styles.slotButton,
-            backgroundColor: "#8b5cf6",
-            color: "white",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            openSorceryModal("edit");
-          }}
-          disabled={isUpdating}
-          title="Edit current and maximum values"
-        >
-          <Edit3 size={12} />
-        </button>
       </div>
     </div>
   );
@@ -950,16 +1030,6 @@ const SpellSlotTracker = ({
           <div style={styles.headerTitle}>
             <BookOpen size={20} />
             Spell Slots
-          </div>
-          <div style={styles.headerButtons}>
-            <button
-              style={styles.addButton}
-              onClick={openCustomModal}
-              disabled={isUpdating}
-            >
-              <Plus size={12} />
-              Configure
-            </button>
           </div>
         </div>
 
@@ -1067,37 +1137,87 @@ const SpellSlotTracker = ({
               <div style={styles.modalHeader}>
                 <BookOpen
                   size={20}
-                  style={{ marginRight: "8px", color: "#3b82f6" }}
+                  style={{
+                    marginRight: "8px",
+                    color: modalData.action === "edit" ? "#8b5cf6" : "#3b82f6",
+                  }}
                 />
-                {modalData.action === "add" ? "Add" : "Use"} Level{" "}
-                {modalData.level} Spell Slot
+                {modalData.action === "add"
+                  ? "Add"
+                  : modalData.action === "edit"
+                  ? "Edit"
+                  : "Use"}{" "}
+                Level {modalData.level} Spell Slot
+                {modalData.action === "edit" ? "s" : ""}
               </div>
 
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  Slots to {modalData.action === "add" ? "Add" : "Use"}:
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max={
-                    modalData.action === "add"
-                      ? spellSlots.find((s) => s.level === modalData.level)
-                          ?.max || 1
-                      : spellSlots.find((s) => s.level === modalData.level)
-                          ?.current || 1
-                  }
-                  value={modalData.amount}
-                  onChange={(e) =>
-                    setModalData((prev) => ({
-                      ...prev,
-                      amount: Math.max(1, parseInt(e.target.value) || 1),
-                    }))
-                  }
-                  style={styles.input}
-                  autoFocus
-                />
-              </div>
+              {modalData.action === "edit" ? (
+                <div>
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Current Spell Slots:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={modalData.currentSlots}
+                      onChange={(e) =>
+                        setModalData((prev) => ({
+                          ...prev,
+                          currentSlots: Math.max(
+                            0,
+                            parseInt(e.target.value) || 0
+                          ),
+                        }))
+                      }
+                      style={styles.input}
+                      autoFocus
+                    />
+                  </div>
+                  <div style={styles.inputGroup}>
+                    <label style={styles.label}>Maximum Spell Slots:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      value={modalData.currentMax}
+                      onChange={(e) =>
+                        setModalData((prev) => ({
+                          ...prev,
+                          currentMax: Math.max(
+                            0,
+                            parseInt(e.target.value) || 0
+                          ),
+                        }))
+                      }
+                      style={styles.input}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>
+                    Slots to {modalData.action === "add" ? "Add" : "Use"}:
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={
+                      modalData.action === "add"
+                        ? 20 // Allow adding up to 20 slots regardless of current max
+                        : spellSlots.find((s) => s.level === modalData.level)
+                            ?.current || 1
+                    }
+                    value={modalData.amount}
+                    onChange={(e) =>
+                      setModalData((prev) => ({
+                        ...prev,
+                        amount: Math.max(1, parseInt(e.target.value) || 1),
+                      }))
+                    }
+                    style={styles.input}
+                    autoFocus
+                  />
+                </div>
+              )}
 
               <div style={styles.modalButtons}>
                 <button
@@ -1108,23 +1228,38 @@ const SpellSlotTracker = ({
                 </button>
                 <button
                   style={{ ...styles.modalButton, ...styles.confirmButton }}
-                  onClick={() =>
-                    handleSpellSlotChange(
-                      modalData.level,
-                      modalData.action === "add"
-                        ? modalData.amount
-                        : -modalData.amount,
-                      modalData.action === "add"
-                        ? "Spell Slot Added"
-                        : "Spell Slot Used"
-                    )
-                  }
+                  onClick={() => {
+                    if (modalData.action === "edit") {
+                      handleSpellSlotChange(
+                        modalData.level,
+                        0,
+                        "Spell Slots Updated",
+                        true,
+                        modalData.currentMax,
+                        modalData.currentSlots
+                      );
+                    } else {
+                      handleSpellSlotChange(
+                        modalData.level,
+                        modalData.action === "add"
+                          ? modalData.amount
+                          : -modalData.amount,
+                        modalData.action === "add"
+                          ? "Spell Slot Added"
+                          : "Spell Slot Used"
+                      );
+                    }
+                  }}
                   disabled={isUpdating}
                 >
                   {isUpdating
                     ? modalData.action === "add"
                       ? "Adding..."
+                      : modalData.action === "edit"
+                      ? "Updating..."
                       : "Using..."
+                    : modalData.action === "edit"
+                    ? `Set to ${modalData.currentSlots}/${modalData.currentMax}`
                     : `${modalData.action === "add" ? "Add" : "Use"} ${
                         modalData.amount
                       }`}

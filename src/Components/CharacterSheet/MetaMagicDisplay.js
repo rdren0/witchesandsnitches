@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Settings } from "lucide-react";
+import { Sparkles, Settings, CircleSmall } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const METAMAGIC_DATA = {
@@ -253,7 +253,7 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
           {metaMagics.map((metaMagic, index) => (
             <div key={index} style={styles.metaMagicItem}>
               <div style={styles.metaMagicHeader}>
-                <Sparkles size={16} style={styles.icon} />
+                <CircleSmall size={16} style={styles.icon} />
                 <span style={styles.metaMagicName}>{metaMagic.name}</span>
                 <span style={styles.metaMagicCost}>{metaMagic.cost}</span>
               </div>
