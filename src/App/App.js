@@ -1359,6 +1359,9 @@ function AppContent() {
                     supabase={supabase}
                     selectedCharacter={selectedCharacter}
                     characters={characters}
+                    discordUserId={user?.user_metadata?.provider_id}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
                   />
                 </ProtectedRoute>
               }
