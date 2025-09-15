@@ -361,7 +361,7 @@ describe("CharacterSheet Feat Integration Tests", () => {
         </ThemeWrapper>
       );
 
-      expect(screen.getByText("House Features")).toBeInTheDocument();
+      expect(screen.getByText("House")).toBeInTheDocument();
       expect(screen.getAllByText("0").length).toBeGreaterThan(0);
     });
   });

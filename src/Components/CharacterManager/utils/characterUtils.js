@@ -680,13 +680,18 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   };
 
   const heritageDetails = {};
+  const otherBenefits = {};
 
   if (!character.innateHeritage) {
-    return { modifiers, heritageDetails };
+    return { modifiers, heritageDetails, otherBenefits };
   }
 
   const heritage = heritageDescriptions[character.innateHeritage];
-  if (!heritage) return { modifiers, heritageDetails };
+  if (!heritage) return { modifiers, heritageDetails, otherBenefits };
+
+  if (heritage.modifiers && heritage.modifiers.other) {
+    Object.assign(otherBenefits, heritage.modifiers.other);
+  }
 
   const abilityIncreases = checkForModifiers(heritage, "abilityIncreases");
 
@@ -757,12 +762,16 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
               });
             }
           });
+
+          if (selectedChoice.other) {
+            Object.assign(otherBenefits, selectedChoice.other);
+          }
         }
       }
     });
   }
 
-  return { modifiers, heritageDetails };
+  return { modifiers, heritageDetails, otherBenefits };
 };
 
 export const getSpellcastingAbility = (character) => {
@@ -891,6 +900,7 @@ export const calculateTotalModifiers = (
     backgroundModifiers: backgroundResult.modifiers,
     houseModifiers: houseResult.modifiers,
     heritageModifiers: heritageResult.modifiers,
+    heritageOtherBenefits: heritageResult.otherBenefits,
     asiModifiers: asiResult.modifiers,
     _asiAlreadyApplied: asiAlreadyApplied,
   };

@@ -12,6 +12,7 @@ const FormSection = ({
   onToggleExpansion,
   className = "",
   headerActions = null,
+  id,
 }) => {
   const { theme } = useTheme();
   const styles = createBaseStyles(theme);
@@ -23,7 +24,7 @@ const FormSection = ({
   };
 
   return (
-    <div className={className} style={styles.section}>
+    <div id={id} className={className} style={styles.section}>
       <div style={styles.sectionHeader}>
         <div style={{ flex: 1 }}>
           <h3 style={styles.sectionTitle}>{title}</h3>

@@ -1,5 +1,5 @@
 import React from "react";
-import { gameSessionOptions } from "../../../../../App/const";
+import { gameSessionGroups } from "../../../../../App/const";
 import { useTheme } from "../../../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../../../styles/masterStyles";
 import OptimizedImageUpload from "./OptimizedImageUpload";
@@ -104,7 +104,38 @@ const BasicInfoSection = ({
           disabled={disabled}
         >
           <option value="">Select Game Session...</option>
-          {gameSessionOptions.map((session) => (
+
+          <optgroup label="Haunting Sessions">
+            {gameSessionGroups.haunting.map((session) => (
+              <option key={session} value={session}>
+                {session}
+              </option>
+            ))}
+          </optgroup>
+
+          <option disabled>──────────</option>
+
+          <optgroup label="Knights Sessions">
+            {gameSessionGroups.knights.map((session) => (
+              <option key={session} value={session}>
+                {session}
+              </option>
+            ))}
+          </optgroup>
+
+          <option disabled>──────────</option>
+
+          <optgroup label="Other Sessions">
+            {gameSessionGroups.other.map((session) => (
+              <option key={session} value={session}>
+                {session}
+              </option>
+            ))}
+          </optgroup>
+
+          <option disabled>──────────</option>
+
+          {gameSessionGroups.development.map((session) => (
             <option key={session} value={session}>
               {session}
             </option>

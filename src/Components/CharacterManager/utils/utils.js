@@ -458,7 +458,9 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   }
 
   const heritage = heritageDescriptions[character.innateHeritage];
-  if (!heritage) return { modifiers, heritageDetails };
+  if (!heritage) {
+    return { modifiers, heritageDetails };
+  }
 
   const abilityIncreases = checkForModifiers(heritage, "abilityIncreases");
 
@@ -484,52 +486,63 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   if (heritage.features && heritageChoices[character.innateHeritage]) {
     heritage.features.forEach((feature) => {
       if (feature.isChoice && feature.options) {
-        const selectedChoiceName =
+        const selectedChoiceData =
           heritageChoices[character.innateHeritage][feature.name];
-        const selectedChoice = feature.options.find(
-          (opt) => opt.name === selectedChoiceName
-        );
 
-        if (selectedChoice) {
-          const abilityChoices = checkForAbilityChoices(selectedChoice);
+        const selectedChoiceNames = feature.isMultiSelect
+          ? Array.isArray(selectedChoiceData)
+            ? selectedChoiceData
+            : []
+          : selectedChoiceData
+          ? [selectedChoiceData]
+          : [];
 
-          abilityChoices.forEach(({ ability, amount }) => {
-            if (modifiers.hasOwnProperty(ability)) {
-              modifiers[ability] += amount;
-
-              if (!heritageDetails[ability]) {
-                heritageDetails[ability] = [];
-              }
-              heritageDetails[ability].push({
-                source: "heritage",
-                heritageName: character.innateHeritage,
-                type: "choice",
-                amount: amount,
-              });
-            }
-          });
-
-          const choiceAbilityIncreases = checkForModifiers(
-            selectedChoice,
-            "abilityIncreases"
+        selectedChoiceNames.forEach((selectedChoiceName) => {
+          const selectedChoice = feature.options.find(
+            (opt) => opt.name === selectedChoiceName
           );
 
-          choiceAbilityIncreases.forEach((increase) => {
-            if (modifiers.hasOwnProperty(increase.ability)) {
-              modifiers[increase.ability] += increase.amount;
+          if (selectedChoice) {
+            const abilityChoices = checkForAbilityChoices(selectedChoice);
 
-              if (!heritageDetails[increase.ability]) {
-                heritageDetails[increase.ability] = [];
+            abilityChoices.forEach(({ ability, amount }) => {
+              if (modifiers.hasOwnProperty(ability)) {
+                modifiers[ability] += amount;
+
+                if (!heritageDetails[ability]) {
+                  heritageDetails[ability] = [];
+                }
+                heritageDetails[ability].push({
+                  source: "heritage",
+                  heritageName: character.innateHeritage,
+                  type: "choice",
+                  amount: amount,
+                });
               }
-              heritageDetails[increase.ability].push({
-                source: "heritage",
-                heritageName: character.innateHeritage,
-                type: "choice",
-                amount: increase.amount,
-              });
-            }
-          });
-        }
+            });
+
+            const choiceAbilityIncreases = checkForModifiers(
+              selectedChoice,
+              "abilityIncreases"
+            );
+
+            choiceAbilityIncreases.forEach((increase) => {
+              if (modifiers.hasOwnProperty(increase.ability)) {
+                modifiers[increase.ability] += increase.amount;
+
+                if (!heritageDetails[increase.ability]) {
+                  heritageDetails[increase.ability] = [];
+                }
+                heritageDetails[increase.ability].push({
+                  source: "heritage",
+                  heritageName: character.innateHeritage,
+                  type: "choice",
+                  amount: increase.amount,
+                });
+              }
+            });
+          }
+        });
       }
     });
   }
@@ -693,4 +706,96 @@ export const detectIfASIAlreadyApplied = (character) => {
   }
 
   return false;
+};
+
+export const checkForSkillProficiencies = (item) => {
+  const skills = [];
+
+  if (item.skillProficiencies) {
+    skills.push(...item.skillProficiencies);
+  }
+
+  if (item.data?.skillProficiencies) {
+    skills.push(...item.data.skillProficiencies);
+  }
+
+  if (item.properties?.skillProficiencies) {
+    skills.push(...item.properties.skillProficiencies);
+  }
+
+  return skills;
+};
+
+export const removeHeritageProficiencies = (
+  currentProficiencies,
+  heritageName
+) => {
+  if (!heritageName || !heritageDescriptions[heritageName]) {
+    return currentProficiencies;
+  }
+
+  const heritage = heritageDescriptions[heritageName];
+  const heritageSkills = checkForSkillProficiencies(heritage);
+
+  return currentProficiencies.filter(
+    (skill) => !heritageSkills.includes(skill)
+  );
+};
+
+export const applyHeritageProficiencies = (
+  character,
+  heritageName,
+  heritageChoices = {}
+) => {
+  if (!heritageName || !heritageDescriptions[heritageName]) {
+    return {
+      ...character,
+      innateHeritage: "",
+      skillProficiencies: removeHeritageProficiencies(
+        character.skillProficiencies || [],
+        character.innateHeritage
+      ),
+      innateHeritageSkills: [],
+    };
+  }
+
+  const heritage = heritageDescriptions[heritageName];
+  const currentSkillProficiencies = character.skillProficiencies || [];
+
+  const cleanedSkillProficiencies = removeHeritageProficiencies(
+    currentSkillProficiencies,
+    character.innateHeritage
+  );
+
+  const newHeritageSkills = checkForSkillProficiencies(heritage);
+
+  const choiceSkills = [];
+  if (heritage.features && heritageChoices[heritageName]) {
+    heritage.features.forEach((feature) => {
+      if (feature.isChoice && feature.options) {
+        const selectedChoiceName = heritageChoices[heritageName][feature.name];
+        const selectedChoice = feature.options.find(
+          (opt) => opt.name === selectedChoiceName
+        );
+
+        if (selectedChoice) {
+          const choiceSkillProfs = checkForSkillProficiencies(selectedChoice);
+          choiceSkills.push(...choiceSkillProfs);
+        }
+      }
+    });
+  }
+
+  const allHeritageSkills = [...newHeritageSkills, ...choiceSkills];
+  const newSkillProficiencies = [
+    ...cleanedSkillProficiencies,
+    ...allHeritageSkills,
+  ];
+
+  return {
+    ...character,
+    innateHeritage: heritageName,
+    skillProficiencies: [...new Set(newSkillProficiencies)],
+    innateHeritageSkills: allHeritageSkills,
+  };
 };
