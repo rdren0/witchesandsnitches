@@ -15,6 +15,7 @@ const FeatureSelectorSection = ({
   isLevel1Choice = false,
   characterLevel = 1,
   disabled = false,
+  contextLevel = null,
 }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
@@ -259,8 +260,16 @@ const FeatureSelectorSection = ({
       (save) => typeof save === "object" && save.type === "choice"
     );
 
+    const hasSpecialChoices = feat.benefits.specialAbilities?.some(
+      (ability) => ability.type === "choice" && ability.options
+    );
+
     return (
-      hasAbilityChoice || hasSkillChoices || hasToolChoices || hasSaveChoices
+      hasAbilityChoice ||
+      hasSkillChoices ||
+      hasToolChoices ||
+      hasSaveChoices ||
+      hasSpecialChoices
     );
   };
 
@@ -326,64 +335,192 @@ const FeatureSelectorSection = ({
       }));
   };
 
+  const getFeatSpecialChoices = (feat) => {
+    if (!feat?.benefits?.specialAbilities) return [];
+
+    return feat.benefits.specialAbilities
+      .filter((ability) => ability.type === "choice" && ability.options)
+      .map((choice, index) => ({
+        ...choice,
+        index,
+        id: `special_${index}`,
+      }));
+  };
+
+  const getSelectedElementTypes = (
+    character,
+    featName,
+    excludeCurrentLevel = false
+  ) => {
+    const featChoices = character.featChoices || {};
+    const selectedTypes = [];
+
+    Object.keys(featChoices).forEach((key) => {
+      if (key.startsWith(`${featName}_`) && key.includes("_special_")) {
+        if (
+          excludeCurrentLevel &&
+          contextLevel &&
+          key.includes(`_level${contextLevel}_`)
+        ) {
+          return;
+        }
+
+        const value = featChoices[key];
+        if (value && !selectedTypes.includes(value)) {
+          selectedTypes.push(value);
+        }
+      }
+    });
+
+    if (excludeCurrentLevel && contextLevel) {
+      Object.keys(featChoices).forEach((key) => {
+        if (key === `${featName}_special_0` && !key.includes("_level")) {
+          const value = featChoices[key];
+          if (value && !selectedTypes.includes(value)) {
+            selectedTypes.push(value);
+          }
+        }
+      });
+    }
+
+    return selectedTypes;
+  };
+
+  const getCurrentInstanceKey = (featName, character) => {
+    const feat = standardFeats.find((f) => f.name === featName);
+    if (!feat?.repeatable) return featName;
+
+    return contextLevel ? `${featName}_level${contextLevel}` : featName;
+  };
+
+  const canSelectFeat = (feat, character) => {
+    if (!feat.repeatable) {
+      const allSelectedFeats = getAllSelectedFeats(character);
+      return !allSelectedFeats.includes(feat.name);
+    }
+
+    if (feat.name === "Elemental Adept") {
+      const selectedElements = getSelectedElementTypes(character, feat.name);
+      const availableElements = [
+        "Acid",
+        "Cold",
+        "Fire",
+        "Lightning",
+        "Thunder",
+      ];
+      return selectedElements.length < availableElements.length;
+    }
+
+    return true;
+  };
+
   const handleFeatToggle = (featName) => {
     setCharacter((prev) => {
       const currentFeats = prev.standardFeats || [];
       const currentChoices = prev.featChoices || {};
+      const feat = standardFeats.find((f) => f.name === featName);
 
       let newFeats, newChoices;
 
       if (currentFeats.includes(featName)) {
-        newFeats = currentFeats.filter((f) => f !== featName);
-        newChoices = { ...currentChoices };
+        if (!feat?.repeatable) {
+          newFeats = currentFeats.filter((f) => f !== featName);
+          newChoices = { ...currentChoices };
 
-        Object.keys(newChoices).forEach((key) => {
-          if (key.startsWith(`${featName}_`)) {
-            delete newChoices[key];
+          Object.keys(newChoices).forEach((key) => {
+            if (key.startsWith(`${featName}_`)) {
+              delete newChoices[key];
+            }
+          });
+
+          setExpandedFeats((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(featName);
+            return newSet;
+          });
+        } else {
+          const lastIndex = currentFeats.lastIndexOf(featName);
+          newFeats = [
+            ...currentFeats.slice(0, lastIndex),
+            ...currentFeats.slice(lastIndex + 1),
+          ];
+          newChoices = { ...currentChoices };
+
+          const levelKey = contextLevel
+            ? `${featName}_level${contextLevel}`
+            : featName;
+          Object.keys(newChoices).forEach((key) => {
+            if (key.startsWith(`${levelKey}_`)) {
+              delete newChoices[key];
+            }
+          });
+
+          if (!newFeats.includes(featName)) {
+            setExpandedFeats((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(featName);
+              return newSet;
+            });
           }
-        });
-
-        setExpandedFeats((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(featName);
-          return newSet;
-        });
+        }
       } else {
         newFeats = [...currentFeats, featName];
         newChoices = { ...currentChoices };
 
-        const feat = standardFeats.find((f) => f.name === featName);
         if (featHasChoices(feat)) {
+          const keyPrefix =
+            feat?.repeatable && contextLevel
+              ? `${featName}_level${contextLevel}`
+              : featName;
+
           const abilityChoices = getFeatAbilityChoices(feat);
           if (abilityChoices.length > 0) {
-            const choiceKey = `${featName}_abilityChoice`;
-            if (!newChoices[choiceKey]) {
-              newChoices[choiceKey] = abilityChoices[0];
-              newChoices[`${featName}_ability_0`] = abilityChoices[0];
-            }
+            const choiceKey = `${keyPrefix}_abilityChoice`;
+            newChoices[choiceKey] = abilityChoices[0];
+            newChoices[`${keyPrefix}_ability_0`] = abilityChoices[0];
           }
 
           const skillChoices = getFeatSkillChoices(feat);
           skillChoices.forEach((choice) => {
-            const choiceKey = `${featName}_skill_${choice.index}`;
-            if (!newChoices[choiceKey] && choice.skills?.length > 0) {
+            const choiceKey = `${keyPrefix}_skill_${choice.index}`;
+            if (choice.skills?.length > 0) {
               newChoices[choiceKey] = choice.skills[0];
             }
           });
 
           const toolChoices = getFeatToolChoices(feat);
           toolChoices.forEach((choice) => {
-            const choiceKey = `${featName}_tool_${choice.index}`;
-            if (!newChoices[choiceKey] && choice.tools?.length > 0) {
+            const choiceKey = `${keyPrefix}_tool_${choice.index}`;
+            if (choice.tools?.length > 0) {
               newChoices[choiceKey] = choice.tools[0];
             }
           });
 
           const saveChoices = getFeatSaveChoices(feat);
           saveChoices.forEach((choice) => {
-            const choiceKey = `${featName}_save_${choice.index}`;
-            if (!newChoices[choiceKey] && choice.saves?.length > 0) {
+            const choiceKey = `${keyPrefix}_save_${choice.index}`;
+            if (choice.saves?.length > 0) {
               newChoices[choiceKey] = choice.saves[0];
+            }
+          });
+
+          const specialChoices = getFeatSpecialChoices(feat);
+          specialChoices.forEach((choice) => {
+            const choiceKey = `${keyPrefix}_special_${choice.index}`;
+            if (choice.options?.length > 0) {
+              if (feat.name === "Elemental Adept") {
+                const selectedElements = getSelectedElementTypes(
+                  prev,
+                  featName,
+                  true
+                );
+                const availableElement = choice.options.find(
+                  (option) => !selectedElements.includes(option)
+                );
+                newChoices[choiceKey] = availableElement || choice.options[0];
+              } else {
+                newChoices[choiceKey] = choice.options[0];
+              }
             }
           });
         }
@@ -456,6 +593,12 @@ const FeatureSelectorSection = ({
     let availableFeats = standardFeats.filter((feat) => {
       if (currentStandardFeats.includes(feat.name)) {
         return true;
+      }
+
+      if (feat.repeatable) {
+        return (
+          canSelectFeat(feat, character) && meetsPrerequisites(feat, character)
+        );
       }
 
       if (allSelectedFeats.includes(feat.name)) {
@@ -614,6 +757,7 @@ const FeatureSelectorSection = ({
             const isSelected = selectedFeats.includes(feat.name);
             const isExpanded = expandedFeats.has(feat.name);
             const hasChoices = featHasChoices(feat);
+            const canSelect = canSelectFeat(feat, character);
 
             const abilityChoices = getFeatAbilityChoices(feat);
             const skillChoices = getFeatSkillChoices(feat);
@@ -660,6 +804,17 @@ const FeatureSelectorSection = ({
                       }
                     >
                       {feat.name}
+                      {feat.repeatable && (
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: theme.textSecondary,
+                            marginLeft: "4px",
+                          }}
+                        >
+                          (Repeatable)
+                        </span>
+                      )}
                     </span>
                   </label>
                   <button
@@ -691,7 +846,11 @@ const FeatureSelectorSection = ({
                         </div>
                         <div style={enhancedStyles.choiceGroup}>
                           {abilityChoices.map((ability) => {
-                            const choiceKey = `${feat.name}_abilityChoice`;
+                            const instanceKey = getCurrentInstanceKey(
+                              feat.name,
+                              character
+                            );
+                            const choiceKey = `${instanceKey}_abilityChoice`;
                             const currentChoice = featChoices[choiceKey];
 
                             return (
@@ -711,7 +870,7 @@ const FeatureSelectorSection = ({
                               >
                                 <input
                                   type="radio"
-                                  name={`${feat.name}_ability_choice`}
+                                  name={`${instanceKey}_ability_choice`}
                                   value={ability}
                                   checked={currentChoice === ability}
                                   onChange={(e) =>
@@ -878,24 +1037,201 @@ const FeatureSelectorSection = ({
                         </div>
                       </div>
                     ))}
+
+                    {getFeatSpecialChoices(feat).map((choice) => {
+                      const instanceKey = getCurrentInstanceKey(
+                        feat.name,
+                        character
+                      );
+                      const choiceKey = `${instanceKey}_special_${choice.index}`;
+                      const currentChoice = featChoices[choiceKey];
+
+                      return (
+                        <div
+                          key={choice.id}
+                          style={enhancedStyles.choiceSection}
+                        >
+                          <div style={enhancedStyles.choiceSectionTitle}>
+                            {choice.name === "Energy Mastery"
+                              ? "Choose energy type:"
+                              : `Choose ${choice.name}:`}
+                          </div>
+                          <div style={enhancedStyles.choiceGroup}>
+                            {choice.options?.map((option) => {
+                              const currentInstanceKey = getCurrentInstanceKey(
+                                feat.name,
+                                character
+                              );
+
+                              const otherLevelElements = [];
+                              const elementToLevelMap = {};
+
+                              Object.keys(character.featChoices || {}).forEach(
+                                (key) => {
+                                  if (
+                                    key.startsWith(`${feat.name}_`) &&
+                                    key.includes("_special_") &&
+                                    !key.startsWith(`${currentInstanceKey}_`)
+                                  ) {
+                                    const value = character.featChoices[key];
+                                    if (
+                                      value &&
+                                      !otherLevelElements.includes(value)
+                                    ) {
+                                      otherLevelElements.push(value);
+
+                                      const levelMatch =
+                                        key.match(/_level(\d+)_/);
+                                      elementToLevelMap[value] = levelMatch
+                                        ? levelMatch[1]
+                                        : "Unknown";
+                                    }
+                                  }
+                                }
+                              );
+
+                              Object.keys(character.featChoices || {}).forEach(
+                                (key) => {
+                                  if (
+                                    key === `${feat.name}_special_0` &&
+                                    !key.includes("_level")
+                                  ) {
+                                    const value = character.featChoices[key];
+                                    if (
+                                      value &&
+                                      !otherLevelElements.includes(value)
+                                    ) {
+                                      otherLevelElements.push(value);
+                                      elementToLevelMap[value] = "1";
+                                    }
+                                  }
+                                }
+                              );
+
+                              if (character.asiChoices) {
+                                Object.entries(character.asiChoices).forEach(
+                                  ([level, choice]) => {
+                                    if (
+                                      contextLevel &&
+                                      parseInt(level) === parseInt(contextLevel)
+                                    ) {
+                                      return;
+                                    }
+
+                                    if (
+                                      choice.type === "feat" &&
+                                      choice.selectedFeat === feat.name &&
+                                      choice.featChoices
+                                    ) {
+                                      Object.keys(choice.featChoices).forEach(
+                                        (choiceKey) => {
+                                          if (choiceKey.includes("_special_")) {
+                                            const value =
+                                              choice.featChoices[choiceKey];
+                                            if (
+                                              value &&
+                                              !otherLevelElements.includes(
+                                                value
+                                              )
+                                            ) {
+                                              otherLevelElements.push(value);
+                                              elementToLevelMap[value] = level;
+                                            }
+                                          }
+                                        }
+                                      );
+                                    }
+                                  }
+                                );
+                              }
+
+                              const isAlreadySelected =
+                                feat.name === "Elemental Adept" &&
+                                otherLevelElements.includes(option);
+
+                              return (
+                                <label
+                                  key={option}
+                                  style={{
+                                    ...enhancedStyles.featChoiceLabel,
+                                    backgroundColor:
+                                      currentChoice === option
+                                        ? `${theme.primary}20`
+                                        : theme.surface,
+                                    borderColor:
+                                      currentChoice === option
+                                        ? theme.primary
+                                        : theme.border,
+                                    opacity: isAlreadySelected ? 0.5 : 1,
+                                  }}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`${instanceKey}_special_${choice.index}`}
+                                    value={option}
+                                    checked={currentChoice === option}
+                                    onChange={(e) =>
+                                      handleFeatChoiceChange(
+                                        feat.name,
+                                        choiceKey,
+                                        e.target.value
+                                      )
+                                    }
+                                    style={enhancedStyles.choiceRadio}
+                                    disabled={disabled || isAlreadySelected}
+                                  />
+                                  <span>{option}</span>
+                                  {isAlreadySelected && (
+                                    <span
+                                      style={{
+                                        fontSize: "10px",
+                                        color: theme.textSecondary,
+                                        marginLeft: "4px",
+                                      }}
+                                    >
+                                      (selected at level{" "}
+                                      {elementToLevelMap[option]})
+                                    </span>
+                                  )}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
                 {isExpanded && (
                   <div style={enhancedStyles.featDescription}>
                     <div style={{ marginBottom: "16px" }}>
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          lineHeight: "1.5",
-                          color: theme.text,
-                          margin: "0 0 12px 0",
-                        }}
-                      >
-                        {Array.isArray(feat.description)
-                          ? feat.description.join(" ")
-                          : feat.description}
-                      </p>
+                      {Array.isArray(feat.description) ? (
+                        feat.description.map((desc, index) => (
+                          <p
+                            key={index}
+                            style={{
+                              fontSize: "14px",
+                              lineHeight: "1.5",
+                              color: theme.text,
+                              margin: "0 0 12px 0",
+                            }}
+                          >
+                            {desc}
+                          </p>
+                        ))
+                      ) : (
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            lineHeight: "1.5",
+                            color: theme.text,
+                            margin: "0 0 12px 0",
+                          }}
+                        >
+                          {feat.description}
+                        </p>
+                      )}
                     </div>
                     {feat.benefits && (
                       <div style={{ marginTop: "12px" }}>

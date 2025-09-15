@@ -78,20 +78,25 @@ export const handleASIFeatChange = (
   featChoices = {}
 ) => {
   if (featName) {
-    const currentSelectedFeats = getAllSelectedFeats(character);
-    const currentLevelChoice = character.asiChoices?.[level];
+    const { standardFeats } = require("../../../SharedData/standardFeatData");
+    const feat = standardFeats.find((f) => f.name === featName);
 
-    const otherFeats = currentSelectedFeats.filter((feat) => {
-      return !(
-        currentLevelChoice?.type === "feat" &&
-        currentLevelChoice?.selectedFeat === feat
-      );
-    });
+    if (!feat?.repeatable) {
+      const currentSelectedFeats = getAllSelectedFeats(character);
+      const currentLevelChoice = character.asiChoices?.[level];
 
-    if (otherFeats.includes(featName)) {
-      throw new Error(
-        `You have already selected "${featName}". Each feat can only be selected once.`
-      );
+      const otherFeats = currentSelectedFeats.filter((feat) => {
+        return !(
+          currentLevelChoice?.type === "feat" &&
+          currentLevelChoice?.selectedFeat === feat
+        );
+      });
+
+      if (otherFeats.includes(featName)) {
+        throw new Error(
+          `You have already selected "${featName}". This feat can only be selected once.`
+        );
+      }
     }
   }
 
@@ -149,7 +154,7 @@ export const validateFeatSelections = (character) => {
       duplicates: [...new Set(duplicates)],
       message: `Duplicate feats detected: ${[...new Set(duplicates)].join(
         ", "
-      )}. Each feat can only be selected once.`,
+      )}. This feat can only be selected once.`,
     };
   }
 
