@@ -7,7 +7,7 @@ export const gameSessionOptions = [
   "Tuesday - Haunting",
   "Wednesday - Haunting",
   "Thursday - Knights",
-  "Jaguaras",
+  "Thursday - Jaguaras",
   "Friday - Knights",
   "Friday - Haunting",
   "Saturday - Haunting",
@@ -33,7 +33,7 @@ export const gameSessionGroups = {
     "Saturday - Knights AM",
     "Saturday - Knights PM",
   ],
-  other: ["One-Shot", "Jaguaras"],
+  other: ["One-Shot", "Thursday - Jaguaras"],
   development: ["DEVELOPMENT"],
 };
 
@@ -47,7 +47,8 @@ export const DISCORD_WEBHOOKS = {
   "Wednesday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
   "Thursday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_KNIGHTS,
-  Jaguaras: process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_JAGUARAS,
+  "Thursday - Jaguaras":
+    process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_JAGUARAS,
   "Friday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_KNIGHTS,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
   "Saturday - Haunting":
@@ -60,10 +61,17 @@ export const DISCORD_WEBHOOKS = {
   FALLBACK: process.env.REACT_APP_DISCORD_WEBHOOK_FALLBACK,
 };
 
-export const getDiscordWebhook = (gameSession) =>
-  gameSession
+export const getDiscordWebhook = (gameSession) => {
+  console.log({ gameSession });
+  console.log(
+    gameSession
+      ? DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK
+      : DISCORD_WEBHOOKS.FALLBACK
+  );
+  return gameSession
     ? DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK
     : DISCORD_WEBHOOKS.FALLBACK;
+};
 
 export const LOCAL_HOST = "http://localhost:3000";
 export const WEBSITE = "https://witchesandsnitches.com";
