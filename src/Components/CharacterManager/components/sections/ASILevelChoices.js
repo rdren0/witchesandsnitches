@@ -444,6 +444,7 @@ const FeatSelectionSection = ({
       isLevel1Choice={false}
       characterLevel={character.level}
       disabled={disabled}
+      contextLevel={level}
     />
   );
 };

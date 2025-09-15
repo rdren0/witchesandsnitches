@@ -177,7 +177,7 @@ export const validateFeatSelections = ({ character, setError }) => {
     setError(
       `Duplicate feats detected: ${duplicates.join(
         ", "
-      )}. Each feat can only be selected once.`
+      )}. This feat can only be selected once.`
     );
     return false;
   }

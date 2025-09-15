@@ -1182,6 +1182,8 @@ export const Skills = ({
         onClose={handleMagicalTheoryModalClose}
         onConfirm={handleMagicalTheoryModalConfirm}
         character={character}
+        supabase={supabase}
+        discordUserId={discordUserId}
         theme={theme}
       />
 
