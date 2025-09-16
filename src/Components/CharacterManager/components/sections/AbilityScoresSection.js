@@ -146,9 +146,10 @@ const AbilityScoresSection = ({
   };
 
   const featChoices = getFeatChoices();
-  const houseChoices = character.houseChoices && Object.keys(character.houseChoices).length > 0
-    ? character.houseChoices
-    : character.house_choices || {};
+  const houseChoices =
+    character.houseChoices && Object.keys(character.houseChoices).length > 0
+      ? character.houseChoices
+      : character.house_choices || {};
   const heritageChoices =
     character.heritage_choices &&
     Object.keys(character.heritage_choices).length > 0
@@ -569,7 +570,7 @@ const AbilityScoresSection = ({
         setRolledAssignments({ ...character.abilityScores });
       }
     }
-  }, [mode, character.abilityScores]);
+  }, [mode, character.abilityScores, rolledAssignments]);
 
   const componentStyles = {
     container: {
