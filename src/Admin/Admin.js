@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { characterService } from '../services/characterService';
+import React, { useState, useEffect } from "react";
+import { characterService } from "../services/characterService";
 
 const AdminPanel = () => {
   const [archivedCharacters, setArchivedCharacters] = useState([]);
