@@ -874,7 +874,7 @@ export const standardFeats = [
       immunities: [],
       speeds: {},
       combatBonuses: {
-        advantageConditions: ["Pack tactics with allies within 5 feet"],
+        advantageConditions: ["Pack tactics with allies within 5 feet", "Perception checks that rely on smell"],
       },
       spellcasting: {},
       specialAbilities: [

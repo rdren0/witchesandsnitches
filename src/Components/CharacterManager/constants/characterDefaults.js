@@ -24,6 +24,7 @@ export const DEFAULT_CHARACTER = {
   game_session: "",
   asi_choices: {},
   house_choices: {},
+  houseChoices: {},
   heritage_choices: {},
   feat_choices: {},
   subclass_choices: {},

@@ -109,7 +109,6 @@ const SpellSlotTracker = ({
     [
       character,
       isUpdating,
-      SPELL_SLOT_PROGRESSION,
       selectedCharacterId,
       discordUserId,
       supabase,
@@ -187,7 +186,6 @@ const SpellSlotTracker = ({
     [
       character,
       isUpdating,
-      SPELL_SLOT_PROGRESSION,
       selectedCharacterId,
       discordUserId,
       supabase,
@@ -335,6 +333,7 @@ const SpellSlotTracker = ({
     character?.level,
     selectedCharacterId,
     character?.maxSorceryPoints,
+    character,
     isUpdating,
     updateSorceryPointsOnLevelUp,
   ]);
@@ -1030,6 +1029,17 @@ const SpellSlotTracker = ({
           <div style={styles.headerTitle}>
             <BookOpen size={20} />
             Spell Slots
+          </div>
+          <div style={styles.headerButtons}>
+            <button
+              style={styles.addButton}
+              onClick={openCustomModal}
+              disabled={isUpdating}
+              title="Configure maximum spell slots for each level"
+            >
+              <Edit3 size={16} />
+              Configure
+            </button>
           </div>
         </div>
 

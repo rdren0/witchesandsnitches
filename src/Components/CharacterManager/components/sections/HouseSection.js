@@ -100,6 +100,22 @@ const HouseAbilityChoice = ({
   styles,
   disabled = false,
 }) => {
+  const [renderKey, setRenderKey] = React.useState(0);
+  const radioRefs = React.useRef({});
+
+  React.useEffect(() => {
+    setRenderKey((prev) => prev + 1);
+  }, [houseChoices, house]);
+
+  React.useEffect(() => {
+    const currentChoice = houseChoices?.[house]?.abilityChoice || "";
+    Object.entries(radioRefs.current).forEach(([ability, ref]) => {
+      if (ref) {
+        ref.checked = ability === currentChoice;
+      }
+    });
+  }, [houseChoices, house, renderKey]);
+
   if (!house || !houseFeatures[house]) return null;
 
   const handleAbilityChoice = (ability) => {
@@ -151,6 +167,9 @@ const HouseAbilityChoice = ({
               }}
             >
               <input
+                ref={(ref) => {
+                  if (ref) radioRefs.current[ability] = ref;
+                }}
                 type="radio"
                 name={`${house}_ability_choice`}
                 value={ability}
@@ -161,6 +180,7 @@ const HouseAbilityChoice = ({
                   accentColor: "#10b981",
                 }}
                 disabled={disabled}
+                key={`${renderKey}-${ability}`}
               />
               <span
                 style={{
@@ -713,6 +733,10 @@ const HouseSection = ({
 
                         {actualSelectedHouse === house && (
                           <HouseAbilityChoice
+                            key={`${house}-${
+                              actualHouseChoices?.[house]?.abilityChoice ||
+                              "none"
+                            }`}
                             house={house}
                             houseChoices={actualHouseChoices}
                             onHouseChoiceSelect={actualOnHouseChoiceSelect}

@@ -523,6 +523,27 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
       case "spellcasting_ability":
         abilityToIncrease = getSpellcastingAbility(character);
         break;
+      case "multiple":
+        if (increase.increases && Array.isArray(increase.increases)) {
+          increase.increases.forEach((abilityIncrease) => {
+            if (
+              abilityIncrease.ability &&
+              abilityIncrease.amount &&
+              modifiers.hasOwnProperty(abilityIncrease.ability)
+            ) {
+              modifiers[abilityIncrease.ability] += abilityIncrease.amount;
+
+              if (!featDetails[abilityIncrease.ability]) {
+                featDetails[abilityIncrease.ability] = [];
+              }
+              featDetails[abilityIncrease.ability].push({
+                source: featName,
+                amount: abilityIncrease.amount,
+              });
+            }
+          });
+        }
+        return;
       default:
         if (increase.ability && !increase.type) {
           abilityToIncrease = increase.ability;
