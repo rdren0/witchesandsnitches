@@ -1,3 +1,6 @@
+import React, { useState, useEffect } from 'react';
+import { characterService } from '../services/characterService';
+
 const AdminPanel = () => {
   const [archivedCharacters, setArchivedCharacters] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -88,3 +91,5 @@ const AdminPanel = () => {
     </div>
   );
 };
+
+export default AdminPanel;

@@ -109,7 +109,6 @@ const SpellSlotTracker = ({
     [
       character,
       isUpdating,
-      SPELL_SLOT_PROGRESSION,
       selectedCharacterId,
       discordUserId,
       supabase,
@@ -187,7 +186,6 @@ const SpellSlotTracker = ({
     [
       character,
       isUpdating,
-      SPELL_SLOT_PROGRESSION,
       selectedCharacterId,
       discordUserId,
       supabase,
@@ -335,6 +333,7 @@ const SpellSlotTracker = ({
     character?.level,
     selectedCharacterId,
     character?.maxSorceryPoints,
+    character,
     isUpdating,
     updateSorceryPointsOnLevelUp,
   ]);
