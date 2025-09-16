@@ -1031,6 +1031,17 @@ const SpellSlotTracker = ({
             <BookOpen size={20} />
             Spell Slots
           </div>
+          <div style={styles.headerButtons}>
+            <button
+              style={styles.addButton}
+              onClick={openCustomModal}
+              disabled={isUpdating}
+              title="Configure maximum spell slots for each level"
+            >
+              <Edit3 size={16} />
+              Configure
+            </button>
+          </div>
         </div>
 
         <div style={styles.slotsGrid}>{allTiles}</div>
