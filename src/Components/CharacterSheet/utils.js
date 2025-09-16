@@ -4,38 +4,17 @@ import { calculateTotalModifiers } from "../CharacterManager/utils/characterUtil
 
 export const getModifier = (score) => Math.floor((score - 10) / 2);
 export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
-export const modifiers = (character) => {
-  if (!character) return {};
-
-  const houseChoices = character.houseChoices || character.house_choices || {};
-  const featChoices = character.featChoices || character.feat_choices || {};
-  const heritageChoices =
-    character.heritageChoices || character.heritage_choices || {};
-
-  const { totalModifiers } = calculateTotalModifiers(
-    character,
-    featChoices,
-    houseChoices,
-    heritageChoices
-  );
-
-  console.log("🧮 modifiers() function called:", {
-    characterHouse: character.house,
-    characterHouseChoices: character.houseChoices,
-    character_house_choices: character.house_choices,
-    totalModifiers: totalModifiers,
-    intelligenceModifier: totalModifiers.intelligence,
-  });
-
-  return {
-    strength: totalModifiers.strength,
-    dexterity: totalModifiers.dexterity,
-    constitution: totalModifiers.constitution,
-    intelligence: totalModifiers.intelligence,
-    wisdom: totalModifiers.wisdom,
-    charisma: totalModifiers.charisma,
-  };
-};
+export const modifiers = (character) =>
+  character
+    ? {
+        strength: getModifier(character.strength),
+        dexterity: getModifier(character.dexterity),
+        constitution: getModifier(character.constitution),
+        intelligence: getModifier(character.intelligence),
+        wisdom: getModifier(character.wisdom),
+        charisma: getModifier(character.charisma),
+      }
+    : {};
 
 const getAllCharacterFeats = (character) => {
   const allFeats = [...(character.standardFeats || [])];
