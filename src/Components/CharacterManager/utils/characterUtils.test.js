@@ -1,7 +1,7 @@
-/* eslint-disable jest/no-conditional-expect */
-/* eslint-disable jest/valid-title */
 import {
   calculateFeatModifiers,
+  calculateHouseModifiers,
+  calculateTotalModifiers,
   getAllSelectedFeats,
   checkSingleRequirement,
   checkFeatPrerequisites,
@@ -157,6 +157,132 @@ describe("Character Utils - Feat Integration Tests", () => {
       const { modifiers } = calculateFeatModifiers(character);
 
       expect(modifiers.intelligence).toBe(2);
+    });
+
+    it("should handle multiple ability score increases (like Lycanthropy)", () => {
+      const character = createTestCharacter({
+        standardFeats: ["Lycanthropy"],
+      });
+
+      const { modifiers } = calculateFeatModifiers(character);
+
+      expect(modifiers.strength).toBe(1);
+      expect(modifiers.constitution).toBe(1);
+      expect(modifiers.dexterity).toBe(0);
+      expect(modifiers.intelligence).toBe(0);
+    });
+  });
+
+  describe("calculateHouseModifiers", () => {
+    it("should calculate fixed house bonuses (Slytherin)", () => {
+      const character = createTestCharacter({
+        house: "Slytherin",
+      });
+
+      const { modifiers, houseDetails } = calculateHouseModifiers(character);
+
+      expect(modifiers.dexterity).toBe(1);
+      expect(modifiers.charisma).toBe(1);
+      expect(modifiers.intelligence).toBe(0);
+      expect(houseDetails.dexterity).toBeDefined();
+      expect(houseDetails.charisma).toBeDefined();
+    });
+
+    it("should handle house ability choice (Slytherin + Intelligence choice)", () => {
+      const character = createTestCharacter({
+        house: "Slytherin",
+      });
+
+      const houseChoices = {
+        Slytherin: {
+          abilityChoice: "intelligence",
+        },
+      };
+
+      const { modifiers, houseDetails } = calculateHouseModifiers(
+        character,
+        houseChoices
+      );
+
+      expect(modifiers.dexterity).toBe(1);
+      expect(modifiers.charisma).toBe(1);
+      expect(modifiers.intelligence).toBe(1);
+      expect(houseDetails.intelligence).toBeDefined();
+      expect(houseDetails.intelligence[0].type).toBe("choice");
+    });
+
+    it("should handle house choice in total modifiers calculation", () => {
+      const character = createTestCharacter({
+        house: "Slytherin",
+        houseChoices: {
+          Slytherin: {
+            abilityChoice: "intelligence",
+          },
+        },
+      });
+
+      const houseChoices = character.houseChoices;
+      const { modifiers: houseModifiers } = calculateHouseModifiers(
+        character,
+        houseChoices
+      );
+
+      const { totalModifiers } = calculateTotalModifiers(
+        character,
+        {},
+        houseChoices
+      );
+
+      expect(houseModifiers.dexterity).toBe(1);
+      expect(houseModifiers.charisma).toBe(1);
+      expect(houseModifiers.intelligence).toBe(1);
+
+      expect(totalModifiers.dexterity).toBe(1);
+      expect(totalModifiers.charisma).toBe(1);
+      expect(totalModifiers.intelligence).toBe(1);
+      expect(totalModifiers.strength).toBe(0);
+    });
+  });
+
+  describe("parseFeatSkills", () => {
+    it("should parse skill proficiencies from Vampirism feat", () => {
+      const character = createTestCharacter({
+        standardFeats: ["Vampirism"],
+      });
+
+      const {
+        parseFeatSkills,
+      } = require("../components/sections/Skills/skillsUtils");
+      const featSkills = parseFeatSkills(character);
+
+      expect(featSkills).toContain("persuasion");
+    });
+  });
+
+  describe("parseBackgroundSkills", () => {
+    it("should parse skill proficiencies from background", () => {
+      const character = createTestCharacter({
+        background: "Activist",
+      });
+
+      const {
+        parseBackgroundSkills,
+      } = require("../components/sections/Skills/skillsUtils");
+      const backgroundSkills = parseBackgroundSkills(character);
+
+      expect(backgroundSkills).toContain("persuasion");
+      expect(backgroundSkills).toContain("historyOfMagic");
+    });
+
+    it("should return empty array for character without background", () => {
+      const character = createTestCharacter({});
+
+      const {
+        parseBackgroundSkills,
+      } = require("../components/sections/Skills/skillsUtils");
+      const backgroundSkills = parseBackgroundSkills(character);
+
+      expect(backgroundSkills).toEqual([]);
     });
   });
 
@@ -318,11 +444,10 @@ describe("Feat Data Integrity Tests", () => {
           const asi = feat.benefits.abilityScoreIncrease;
           if (!asi) return;
 
-          expect(asi.amount).toBeDefined();
-          expect(typeof asi.amount).toBe("number");
-          expect(asi.amount).toBeGreaterThan(0);
-
           if (asi.type === "choice") {
+            expect(asi.amount).toBeDefined();
+            expect(typeof asi.amount).toBe("number");
+            expect(asi.amount).toBeGreaterThan(0);
             expect(asi.abilities).toBeDefined();
             expect(Array.isArray(asi.abilities)).toBe(true);
             expect(asi.abilities.length).toBeGreaterThan(0);
@@ -342,12 +467,41 @@ describe("Feat Data Integrity Tests", () => {
           }
 
           if (asi.type === "spellcasting_ability") {
+            expect(asi.amount).toBeDefined();
+            expect(typeof asi.amount).toBe("number");
+            expect(asi.amount).toBeGreaterThan(0);
             expect(asi.ability).not.toBeDefined();
             expect(asi.abilities).not.toBeDefined();
             return;
           }
 
+          if (asi.type === "multiple") {
+            expect(asi.increases).toBeDefined();
+            expect(Array.isArray(asi.increases)).toBe(true);
+            expect(asi.increases.length).toBeGreaterThan(0);
+
+            const validAbilities = [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma",
+            ];
+            asi.increases.forEach((increase) => {
+              expect(increase.ability).toBeDefined();
+              expect(increase.amount).toBeDefined();
+              expect(typeof increase.amount).toBe("number");
+              expect(increase.amount).toBeGreaterThan(0);
+              expect(validAbilities).toContain(increase.ability);
+            });
+            return;
+          }
+
           if (!asi.type) {
+            expect(asi.amount).toBeDefined();
+            expect(typeof asi.amount).toBe("number");
+            expect(asi.amount).toBeGreaterThan(0);
             expect(asi.ability).toBeDefined();
             const validAbilities = [
               "strength",
@@ -432,6 +586,7 @@ describe("Feat Data Integrity Tests", () => {
               "resource",
               "choice",
               "metamagic",
+              "curse",
             ];
             expect(validTypes).toContain(ability.type);
           });

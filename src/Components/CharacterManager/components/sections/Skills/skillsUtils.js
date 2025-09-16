@@ -1,4 +1,6 @@
-import { standardFeats } from "../../../../../SharedData";
+import { standardFeats, skillMap } from "../../../../../SharedData";
+import { backgroundsData } from "../../../../../SharedData/backgroundsData";
+import { calculateTotalModifiers } from "../../../utils/characterUtils";
 
 export const skillsByCastingStyle = {
   "Willpower Caster": [
@@ -107,6 +109,37 @@ export const hasSkillExpertise = (character, skill) => {
   return expertiseSkills.includes(skill);
 };
 
+const convertSkillDisplayNameToInternalName = (displayName) => {
+  const reverseSkillMap = Object.entries(skillMap).reduce(
+    (acc, [key, value]) => {
+      acc[value] = key;
+      return acc;
+    },
+    {}
+  );
+
+  return reverseSkillMap[displayName] || displayName.toLowerCase();
+};
+
+export const parseBackgroundSkills = (character) => {
+  const backgroundSkills = [];
+
+  if (!character.background) return backgroundSkills;
+
+  const background = Object.values(backgroundsData).find(
+    (bg) => bg.name === character.background
+  );
+
+  if (background?.skillProficiencies) {
+    const convertedSkills = background.skillProficiencies.map(
+      convertSkillDisplayNameToInternalName
+    );
+    backgroundSkills.push(...convertedSkills);
+  }
+
+  return backgroundSkills;
+};
+
 export const parseFeatSkills = (character) => {
   const featSkills = [];
   const featChoices = character.featChoices || {};
@@ -129,6 +162,8 @@ export const parseFeatSkills = (character) => {
         if (selectedSkill) {
           featSkills.push(selectedSkill);
         }
+      } else if (typeof skillProf === "object" && skillProf.skill) {
+        featSkills.push(skillProf.skill);
       } else if (typeof skillProf === "string") {
         featSkills.push(skillProf);
       }
@@ -189,7 +224,12 @@ export const organizeSkillsBySource = (character) => {
   const availableCastingSkills = getAvailableSkillsForCastingStyle(
     character.castingStyle
   );
-  const backgroundSkills = character.backgroundSkills || [];
+
+  const backgroundSkills =
+    character.backgroundSkills?.length > 0
+      ? character.backgroundSkills
+      : parseBackgroundSkills(character);
+
   const innateHeritageSkills = character.innateHeritageSkills || [];
   const featSkills = parseFeatSkills(character);
 
@@ -280,7 +320,19 @@ export const isSkillAutomatic = (character, skill) => {
 
 export const calculateSkillModifier = (character, skill) => {
   const ability = SKILL_ABILITY_MAP[skill] || "intelligence";
-  const abilityScore = character.ability_scores?.[ability] || 10;
+
+  const houseChoices = character.houseChoices || character.house_choices || {};
+  const featChoices = character.featChoices || character.feat_choices || {};
+  const heritageChoices =
+    character.heritageChoices || character.heritage_choices || {};
+
+  const { totalAbilityScores } = calculateTotalModifiers(
+    character,
+    featChoices,
+    houseChoices,
+    heritageChoices
+  );
+  const abilityScore = totalAbilityScores[ability] || 10;
   const abilityMod = Math.floor((abilityScore - 10) / 2);
   const profBonus = Math.ceil((character.level || 1) / 4) + 1;
 

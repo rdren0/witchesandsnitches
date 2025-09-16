@@ -146,7 +146,9 @@ const AbilityScoresSection = ({
   };
 
   const featChoices = getFeatChoices();
-  const houseChoices = character.house_choices || character.houseChoices || {};
+  const houseChoices = character.houseChoices && Object.keys(character.houseChoices).length > 0
+    ? character.houseChoices
+    : character.house_choices || {};
   const heritageChoices =
     character.heritage_choices &&
     Object.keys(character.heritage_choices).length > 0
