@@ -1,6 +1,5 @@
 import { allSkills } from "../../SharedData/data";
 import { getPassiveSkillFeatBonus } from "../CharacterManager/utils/featBenefitsCalculator";
-import { calculateTotalModifiers } from "../CharacterManager/utils/characterUtils";
 
 export const getModifier = (score) => Math.floor((score - 10) / 2);
 export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);

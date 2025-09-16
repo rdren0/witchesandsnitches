@@ -440,18 +440,10 @@ describe("Feat Data Integrity Tests", () => {
           expect(feat.benefits).toBeDefined();
         });
 
-        it("should have valid ability score increase structure", () => {
+        it("should have valid ability score increase structure when present", () => {
           const asi = feat.benefits.abilityScoreIncrease;
-          if (!asi) return;
 
-          if (asi.type === "choice") {
-            expect(asi.amount).toBeDefined();
-            expect(typeof asi.amount).toBe("number");
-            expect(asi.amount).toBeGreaterThan(0);
-            expect(asi.abilities).toBeDefined();
-            expect(Array.isArray(asi.abilities)).toBe(true);
-            expect(asi.abilities.length).toBeGreaterThan(0);
-
+          if (asi) {
             const validAbilities = [
               "strength",
               "dexterity",
@@ -460,136 +452,149 @@ describe("Feat Data Integrity Tests", () => {
               "wisdom",
               "charisma",
             ];
-            asi.abilities.forEach((ability) => {
-              expect(validAbilities).toContain(ability);
-            });
-            return;
-          }
 
-          if (asi.type === "spellcasting_ability") {
-            expect(asi.amount).toBeDefined();
-            expect(typeof asi.amount).toBe("number");
-            expect(asi.amount).toBeGreaterThan(0);
-            expect(asi.ability).not.toBeDefined();
-            expect(asi.abilities).not.toBeDefined();
-            return;
-          }
+            switch (asi.type) {
+              case "choice":
+                expect(asi.amount).toBeDefined();
+                expect(typeof asi.amount).toBe("number");
+                expect(asi.amount).toBeGreaterThan(0);
+                expect(asi.abilities).toBeDefined();
+                expect(Array.isArray(asi.abilities)).toBe(true);
+                expect(asi.abilities.length).toBeGreaterThan(0);
+                asi.abilities.forEach((ability) => {
+                  expect(validAbilities).toContain(ability);
+                });
+                break;
 
-          if (asi.type === "multiple") {
-            expect(asi.increases).toBeDefined();
-            expect(Array.isArray(asi.increases)).toBe(true);
-            expect(asi.increases.length).toBeGreaterThan(0);
+              case "spellcasting_ability":
+                expect(asi.amount).toBeDefined();
+                expect(typeof asi.amount).toBe("number");
+                expect(asi.amount).toBeGreaterThan(0);
+                expect(asi.ability).not.toBeDefined();
+                expect(asi.abilities).not.toBeDefined();
+                break;
 
-            const validAbilities = [
-              "strength",
-              "dexterity",
-              "constitution",
-              "intelligence",
-              "wisdom",
-              "charisma",
-            ];
-            asi.increases.forEach((increase) => {
-              expect(increase.ability).toBeDefined();
-              expect(increase.amount).toBeDefined();
-              expect(typeof increase.amount).toBe("number");
-              expect(increase.amount).toBeGreaterThan(0);
-              expect(validAbilities).toContain(increase.ability);
-            });
-            return;
-          }
+              case "multiple":
+                expect(asi.increases).toBeDefined();
+                expect(Array.isArray(asi.increases)).toBe(true);
+                expect(asi.increases.length).toBeGreaterThan(0);
+                asi.increases.forEach((increase) => {
+                  expect(increase.ability).toBeDefined();
+                  expect(increase.amount).toBeDefined();
+                  expect(typeof increase.amount).toBe("number");
+                  expect(increase.amount).toBeGreaterThan(0);
+                  expect(validAbilities).toContain(increase.ability);
+                });
+                break;
 
-          if (!asi.type) {
-            expect(asi.amount).toBeDefined();
-            expect(typeof asi.amount).toBe("number");
-            expect(asi.amount).toBeGreaterThan(0);
-            expect(asi.ability).toBeDefined();
-            const validAbilities = [
-              "strength",
-              "dexterity",
-              "constitution",
-              "intelligence",
-              "wisdom",
-              "charisma",
-            ];
-            expect(validAbilities).toContain(asi.ability);
+              default:
+                expect(asi.amount).toBeDefined();
+                expect(typeof asi.amount).toBe("number");
+                expect(asi.amount).toBeGreaterThan(0);
+                expect(asi.ability).toBeDefined();
+                expect(validAbilities).toContain(asi.ability);
+                break;
+            }
           }
         });
 
-        it("should have valid combat bonuses structure", () => {
+        it("should have valid combat bonuses structure when present", () => {
           const cb = feat.benefits.combatBonuses;
-          if (!cb) return;
 
-          Object.entries(cb).forEach(([key, value]) => {
-            expect(value).toBeDefined();
-            expect(value).not.toBe("");
+          if (cb) {
+            Object.entries(cb).forEach(([key, value]) => {
+              expect(value).toBeDefined();
+              expect(value).not.toBe("");
 
-            if (key.includes("Bonus") || key.includes("Range")) {
-              expect(typeof value).toBe("number");
-              expect(value).toBeGreaterThan(0);
-            } else if (key.includes("Advantage") || key.includes("Immunity")) {
-              expect(typeof value).toBe("boolean");
-            }
-          });
-        });
-
-        it("should have valid speeds structure", () => {
-          const speeds = feat.benefits.speeds;
-          if (!speeds) return;
-
-          Object.entries(speeds).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-              if (typeof value === "object" && value.bonus) {
-                expect(typeof value.bonus).toBe("number");
-                expect(value.bonus).toBeGreaterThan(0);
-              } else if (typeof value === "string") {
-                expect(["equal_to_walking"].includes(value)).toBe(true);
-              } else if (typeof value === "number") {
+              if (key.includes("Bonus") || key.includes("Range")) {
+                expect(typeof value).toBe("number");
                 expect(value).toBeGreaterThan(0);
+              } else if (
+                key.includes("Advantage") ||
+                key.includes("Immunity")
+              ) {
+                expect(typeof value).toBe("boolean");
               }
-            }
-          });
+            });
+          } else {
+            expect(cb).toBeUndefined();
+          }
         });
 
-        it("should have valid arrays for resistances and immunities", () => {
-          if (feat.benefits.resistances) {
-            expect(Array.isArray(feat.benefits.resistances)).toBe(true);
-            feat.benefits.resistances.forEach((resistance) => {
+        it("should have valid speeds structure when present", () => {
+          const speeds = feat.benefits.speeds;
+
+          if (speeds) {
+            Object.entries(speeds).forEach(([key, value]) => {
+              if (value !== null && value !== undefined) {
+                if (typeof value === "object" && value.bonus) {
+                  expect(typeof value.bonus).toBe("number");
+                  expect(value.bonus).toBeGreaterThan(0);
+                } else if (typeof value === "string") {
+                  expect(["equal_to_walking"].includes(value)).toBe(true);
+                } else if (typeof value === "number") {
+                  expect(value).toBeGreaterThan(0);
+                }
+              }
+            });
+          } else {
+            expect(speeds).toBeUndefined();
+          }
+        });
+
+        it("should have valid arrays for resistances and immunities when present", () => {
+          const resistances = feat.benefits.resistances;
+          const immunities = feat.benefits.immunities;
+
+          if (resistances) {
+            expect(Array.isArray(resistances)).toBe(true);
+            resistances.forEach((resistance) => {
               expect(typeof resistance).toBe("string");
               expect(resistance.length).toBeGreaterThan(0);
             });
           }
 
-          if (feat.benefits.immunities) {
-            expect(Array.isArray(feat.benefits.immunities)).toBe(true);
-            feat.benefits.immunities.forEach((immunity) => {
+          if (immunities) {
+            expect(Array.isArray(immunities)).toBe(true);
+            immunities.forEach((immunity) => {
               expect(typeof immunity).toBe("string");
               expect(immunity.length).toBeGreaterThan(0);
             });
           }
+
+          if (resistances !== undefined) {
+            expect(resistances).not.toBeNull();
+          }
+          if (immunities !== undefined) {
+            expect(immunities).not.toBeNull();
+          }
         });
 
-        it("should have valid special abilities structure", () => {
+        it("should have valid special abilities structure when present", () => {
           const specialAbilities = feat.benefits.specialAbilities;
-          if (!specialAbilities) return;
 
-          expect(Array.isArray(specialAbilities)).toBe(true);
-          specialAbilities.forEach((ability) => {
-            expect(ability.name).toBeDefined();
-            expect(ability.type).toBeDefined();
+          if (specialAbilities) {
+            expect(Array.isArray(specialAbilities)).toBe(true);
+            specialAbilities.forEach((ability) => {
+              expect(ability.name).toBeDefined();
+              expect(ability.type).toBeDefined();
 
-            const validTypes = [
-              "passive",
-              "active",
-              "reaction",
-              "bonus_action",
-              "trigger",
-              "resource",
-              "choice",
-              "metamagic",
-              "curse",
-            ];
-            expect(validTypes).toContain(ability.type);
-          });
+              const validTypes = [
+                "passive",
+                "active",
+                "reaction",
+                "bonus_action",
+                "trigger",
+                "resource",
+                "choice",
+                "metamagic",
+                "curse",
+              ];
+              expect(validTypes).toContain(ability.type);
+            });
+          } else {
+            expect(specialAbilities).toBeUndefined();
+          }
         });
 
         it("should have consistent description and benefits", () => {
