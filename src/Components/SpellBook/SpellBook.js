@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Search, X, Filter } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, X, Filter, ChevronDown } from "lucide-react";
 import { SubjectCard } from "./SubjectCard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createSpellBookStyles, searchStyles } from "./styles";
@@ -30,9 +30,14 @@ const SpellBook = ({
   const [arithmancticTags, setArithmancticTags] = useState({});
   const [runicTags, setRunicTags] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [attemptFilter, setAttemptFilter] = useState("all");
+  const [selectedAttemptFilters, setSelectedAttemptFilters] = useState([]);
   const [yearFilter, setYearFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
+  const [selectedLevels, setSelectedLevels] = useState([]);
+  const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
+  const [isAttemptDropdownOpen, setIsAttemptDropdownOpen] = useState(false);
+  const levelDropdownRef = useRef(null);
+  const attemptDropdownRef = useRef(null);
 
   const loadSpellProgress = useCallback(async () => {
     if (!selectedCharacter) return;
@@ -122,10 +127,9 @@ const SpellBook = ({
   }, [loadSpellProgress]);
 
   const attemptFilterOptions = [
-    { value: "all", label: "All Spells" },
     { value: "unattempted", label: "Unattempted" },
     { value: "attempted", label: "Attempted" },
-    { value: "mastered", label: "Mastered (2+ successes)" },
+    { value: "mastered", label: "Mastered" },
     { value: "failed", label: "Failed" },
     { value: "researched", label: "Researched" },
   ];
@@ -168,6 +172,26 @@ const SpellBook = ({
     return yearArray;
   }, [getAvailableSpellsData]);
 
+  const getAvailableLevels = useCallback(() => {
+    const availableSpells = getAvailableSpellsData();
+    const levels = new Set();
+
+    Object.entries(availableSpells).forEach(([, subject]) => {
+      Object.keys(subject.levels).forEach((level) => {
+        levels.add(level);
+      });
+    });
+
+    const levelArray = Array.from(levels).sort((a, b) => {
+      if (a === "Cantrips") return -1;
+      if (b === "Cantrips") return 1;
+      const aNum = parseInt(a.match(/(\d+)/)?.[1] || "0");
+      const bNum = parseInt(b.match(/(\d+)/)?.[1] || "0");
+      return aNum - bNum;
+    });
+    return levelArray;
+  }, [getAvailableSpellsData]);
+
   const classFilterOptions = [
     { value: "all", label: "All Classes" },
     ...getAvailableClasses().map((className) => ({
@@ -186,6 +210,14 @@ const SpellBook = ({
     })),
   ];
 
+  const levelFilterOptions = [
+    { value: "all", label: "All Levels" },
+    ...getAvailableLevels().map((level) => ({
+      value: level,
+      label: level,
+    })),
+  ];
+
   useEffect(() => {
     setSpellAttempts({});
     setCriticalSuccesses({});
@@ -193,8 +225,10 @@ const SpellBook = ({
     setResearchedSpells({});
     setArithmancticTags({});
     setRunicTags({});
+    setSelectedAttemptFilters([]);
     setYearFilter("all");
     setClassFilter("all");
+    setSelectedLevels([]);
   }, [selectedCharacter?.id]);
 
   const getSpellAttemptStatus = useCallback(
@@ -205,10 +239,12 @@ const SpellBook = ({
       const isResearched = researchedSpells[spellName];
       const hasAnyAttempt = successfulAttempts > 0 || hasFailed;
 
+      const isMastered = successfulAttempts >= 2;
+
       return {
         isUnattempted: !hasAnyAttempt && !isResearched,
-        isAttempted: hasAnyAttempt,
-        isMastered: successfulAttempts >= 2,
+        isAttempted: hasAnyAttempt && !isMastered,
+        isMastered: isMastered,
         hasFailed: hasFailed,
         isResearched: isResearched,
         successfulAttempts,
@@ -351,7 +387,32 @@ const SpellBook = ({
       filteredData = yearFilteredData;
     }
 
-    if (attemptFilter !== "all") {
+    if (selectedLevels.length > 0) {
+      const levelFilteredData = {};
+
+      Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
+        const filteredLevels = {};
+        let hasMatchingSpells = false;
+
+        Object.entries(subjectData.levels).forEach(([level, spells]) => {
+          if (selectedLevels.includes(level)) {
+            filteredLevels[level] = spells;
+            hasMatchingSpells = true;
+          }
+        });
+
+        if (hasMatchingSpells) {
+          levelFilteredData[subjectName] = {
+            ...subjectData,
+            levels: filteredLevels,
+          };
+        }
+      });
+
+      filteredData = levelFilteredData;
+    }
+
+    if (selectedAttemptFilters.length > 0) {
       const finalFilteredData = {};
 
       Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
@@ -362,20 +423,22 @@ const SpellBook = ({
           const filteredSpells = spells.filter((spell) => {
             const status = getSpellAttemptStatus(spell.name);
 
-            switch (attemptFilter) {
-              case "unattempted":
-                return status.isUnattempted;
-              case "attempted":
-                return status.isAttempted;
-              case "mastered":
-                return status.isMastered;
-              case "failed":
-                return status.hasFailed;
-              case "researched":
-                return status.isResearched;
-              default:
-                return true;
-            }
+            return selectedAttemptFilters.some((filter) => {
+              switch (filter) {
+                case "unattempted":
+                  return status.isUnattempted;
+                case "attempted":
+                  return status.isAttempted;
+                case "mastered":
+                  return status.isMastered;
+                case "failed":
+                  return status.hasFailed;
+                case "researched":
+                  return status.isResearched;
+                default:
+                  return false;
+              }
+            });
           });
 
           if (filteredSpells.length > 0) {
@@ -398,9 +461,10 @@ const SpellBook = ({
     return filteredData;
   }, [
     searchTerm,
-    attemptFilter,
+    selectedAttemptFilters,
     yearFilter,
     classFilter,
+    selectedLevels,
     getAvailableSpellsData,
     arithmancticTags,
     runicTags,
@@ -423,9 +487,28 @@ const SpellBook = ({
   };
 
   const getTotalMastered = () => {
-    return Object.keys(spellAttempts).filter((spellName) => {
-      const attempts = spellAttempts[spellName] || {};
-      return Object.values(attempts).filter(Boolean).length >= 2;
+    const allSpellNames = new Set([
+      ...Object.keys(spellAttempts),
+      ...Object.keys(failedAttempts),
+      ...Object.keys(researchedSpells),
+    ]);
+
+    return Array.from(allSpellNames).filter((spellName) => {
+      const status = getSpellAttemptStatus(spellName);
+      return status.isMastered;
+    }).length;
+  };
+
+  const getTotalAttempted = () => {
+    const allSpellNames = new Set([
+      ...Object.keys(spellAttempts),
+      ...Object.keys(failedAttempts),
+      ...Object.keys(researchedSpells),
+    ]);
+
+    return Array.from(allSpellNames).filter((spellName) => {
+      const status = getSpellAttemptStatus(spellName);
+      return status.isAttempted;
     }).length;
   };
 
@@ -470,6 +553,7 @@ const SpellBook = ({
   const totalSpells = getTotalSpells();
   const totalFilteredSpells = getTotalSpells(filteredSpellsData);
   const totalMastered = getTotalMastered();
+  const totalAttempted = getTotalAttempted();
   const totalResearched = getTotalResearched();
   const totalFailed = getTotalFailed();
   const totalEnhanced = getTotalEnhanced();
@@ -480,9 +564,85 @@ const SpellBook = ({
 
   const clearFilters = () => {
     setSearchTerm("");
-    setAttemptFilter("all");
+    setSelectedAttemptFilters([]);
     setYearFilter("all");
     setClassFilter("all");
+    setSelectedLevels([]);
+    setIsLevelDropdownOpen(false);
+    setIsAttemptDropdownOpen(false);
+  };
+
+  const handleLevelToggle = (level) => {
+    setSelectedLevels((prev) => {
+      if (prev.includes(level)) {
+        return prev.filter((l) => l !== level);
+      } else {
+        return [...prev, level];
+      }
+    });
+  };
+
+  const handleAttemptFilterToggle = (filter) => {
+    setSelectedAttemptFilters((prev) => {
+      if (prev.includes(filter)) {
+        return prev.filter((f) => f !== filter);
+      } else {
+        return [...prev, filter];
+      }
+    });
+  };
+
+  const selectAllLevels = () => {
+    setSelectedLevels(getAvailableLevels());
+  };
+
+  const deselectAllLevels = () => {
+    setSelectedLevels([]);
+  };
+
+  const selectAllAttemptFilters = () => {
+    setSelectedAttemptFilters(
+      attemptFilterOptions.map((option) => option.value)
+    );
+  };
+
+  const deselectAllAttemptFilters = () => {
+    setSelectedAttemptFilters([]);
+  };
+
+  const toggleLevelDropdown = () => {
+    setIsLevelDropdownOpen(!isLevelDropdownOpen);
+  };
+
+  const toggleAttemptDropdown = () => {
+    setIsAttemptDropdownOpen(!isAttemptDropdownOpen);
+  };
+
+  const getLevelDropdownLabel = () => {
+    if (selectedLevels.length === 0) {
+      return "All Levels";
+    } else if (selectedLevels.length === 1) {
+      return selectedLevels[0];
+    } else if (selectedLevels.length === getAvailableLevels().length) {
+      return "All Levels";
+    } else {
+      return `${selectedLevels.length} Levels`;
+    }
+  };
+
+  const getAttemptDropdownLabel = () => {
+    if (selectedAttemptFilters.length === 0) {
+      return "All Spells";
+    } else if (selectedAttemptFilters.length === 1) {
+      const option = attemptFilterOptions.find(
+        (opt) => opt.value === selectedAttemptFilters[0]
+      );
+      return option ? option.label : selectedAttemptFilters[0];
+    } else if (selectedAttemptFilters.length === attemptFilterOptions.length) {
+      return "All Spells";
+    } else {
+      return `${selectedAttemptFilters.length} Filters`;
+    }
   };
 
   useEffect(() => {
@@ -495,6 +655,28 @@ const SpellBook = ({
       setExpandedSubjects(newExpandedSubjects);
     }
   }, [searchTerm, getFilteredSpellsData]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        levelDropdownRef.current &&
+        !levelDropdownRef.current.contains(event.target)
+      ) {
+        setIsLevelDropdownOpen(false);
+      }
+      if (
+        attemptDropdownRef.current &&
+        !attemptDropdownRef.current.contains(event.target)
+      ) {
+        setIsAttemptDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   if (!user || !discordUserId) {
     return (
@@ -599,26 +781,383 @@ const SpellBook = ({
             }}
           >
             <Filter size={16} color={theme.textSecondary} />
-            <select
-              value={attemptFilter}
-              onChange={(e) => setAttemptFilter(e.target.value)}
+            <div
+              ref={attemptDropdownRef}
               style={{
-                padding: "6px 12px",
-                borderRadius: "6px",
-                border: `1px solid ${theme.border}`,
-                backgroundColor: theme.background,
-                color: theme.text,
-                fontSize: "14px",
-                minWidth: "150px",
+                position: "relative",
+                minWidth: "240px",
               }}
             >
-              {attemptFilterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              <div
+                onClick={toggleAttemptDropdown}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  minHeight: "20px",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    flex: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {selectedAttemptFilters.length === 0 ? (
+                    <span style={{ color: theme.textSecondary }}>
+                      All Spells
+                    </span>
+                  ) : (
+                    selectedAttemptFilters.map((filter) => {
+                      const option = attemptFilterOptions.find(
+                        (opt) => opt.value === filter
+                      );
+                      return (
+                        <div
+                          key={filter}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            backgroundColor: theme.primary || "#6366f1",
+                            color: "white",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          <span>{option ? option.label : filter}</span>
+                          <X
+                            size={12}
+                            style={{ cursor: "pointer" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAttemptFilterToggle(filter);
+                            }}
+                          />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <ChevronDown
+                  size={16}
+                  style={{
+                    color: theme.textSecondary,
+                    transform: isAttemptDropdownOpen
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s ease",
+                  }}
+                />
+              </div>
+
+              {isAttemptDropdownOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    backgroundColor: theme.surface || theme.background,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    marginTop: "2px",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderBottom: `1px solid ${theme.border}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      Filter by Status
+                    </span>
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      <button
+                        onClick={deselectAllAttemptFilters}
+                        style={{
+                          padding: "2px 6px",
+                          fontSize: "10px",
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: "4px",
+                          backgroundColor: "transparent",
+                          color: theme.primary,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "4px" }}>
+                    {attemptFilterOptions.map((option) => (
+                      <div
+                        key={option.value}
+                        onClick={() => handleAttemptFilterToggle(option.value)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 12px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          color: theme.text,
+                          backgroundColor: "transparent",
+                          transition: "background-color 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor =
+                            theme.background || "#f8fafc";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAttemptFilters.includes(
+                            option.value
+                          )}
+                          onChange={() => {}}
+                          style={{
+                            accentColor: theme.primary,
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "14px",
+                color: theme.textSecondary,
+                fontWeight: "500",
+              }}
+            >
+              Level:
+            </span>
+            <div
+              ref={levelDropdownRef}
+              style={{
+                position: "relative",
+                minWidth: "240px",
+              }}
+            >
+              <div
+                onClick={toggleLevelDropdown}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  minHeight: "20px",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    flex: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {selectedLevels.length === 0 ? (
+                    <span style={{ color: theme.textSecondary }}>
+                      All Levels
+                    </span>
+                  ) : (
+                    selectedLevels.map((level) => (
+                      <div
+                        key={level}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          backgroundColor: theme.primary || "#6366f1",
+                          color: "white",
+                          padding: "2px 8px",
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                          fontWeight: "500",
+                        }}
+                      >
+                        <span>{level}</span>
+                        <X
+                          size={12}
+                          style={{ cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLevelToggle(level);
+                          }}
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+                <ChevronDown
+                  size={16}
+                  style={{
+                    color: theme.textSecondary,
+                    transform: isLevelDropdownOpen
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s ease",
+                  }}
+                />
+              </div>
+
+              {isLevelDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    backgroundColor: theme.surface || theme.background,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    marginTop: "2px",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderBottom: `1px solid ${theme.border}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      Select Levels
+                    </span>
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      <button
+                        onClick={deselectAllLevels}
+                        style={{
+                          padding: "2px 6px",
+                          fontSize: "10px",
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: "4px",
+                          backgroundColor: "transparent",
+                          color: theme.primary,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "4px" }}>
+                    {getAvailableLevels().map((level) => (
+                      <div
+                        key={level}
+                        onClick={() => handleLevelToggle(level)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 12px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          color: theme.text,
+                          backgroundColor: "transparent",
+                          transition: "background-color 0.15s ease",
+                          ":hover": {
+                            backgroundColor: theme.background,
+                          },
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor =
+                            theme.background || "#f8fafc";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLevels.includes(level)}
+                          onChange={() => {}}
+                          style={{
+                            accentColor: theme.primary,
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <span>{level}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div
             style={{
               display: "flex",
@@ -694,9 +1233,10 @@ const SpellBook = ({
           </div>
 
           {(searchTerm ||
-            attemptFilter !== "all" ||
+            selectedAttemptFilters.length > 0 ||
             yearFilter !== "all" ||
-            classFilter !== "all") && (
+            classFilter !== "all" ||
+            selectedLevels.length > 0) && (
             <button
               onClick={clearFilters}
               style={{
@@ -720,21 +1260,25 @@ const SpellBook = ({
         </div>
 
         {(searchTerm ||
-          attemptFilter !== "all" ||
+          selectedAttemptFilters.length > 0 ||
           yearFilter !== "all" ||
-          classFilter !== "all") && (
+          classFilter !== "all" ||
+          selectedLevels.length > 0) && (
           <div style={styles.searchResults}>
             Showing {totalFilteredSpells} of {totalSpells} spells
             {searchTerm && <span> • Search: "{searchTerm}"</span>}
-            {attemptFilter !== "all" && (
+            {selectedAttemptFilters.length > 0 && (
               <span>
                 {" "}
-                • Filter:{" "}
-                {
-                  attemptFilterOptions.find(
-                    (opt) => opt.value === attemptFilter
-                  )?.label
-                }
+                • Status:{" "}
+                {selectedAttemptFilters
+                  .map((filter) => {
+                    const option = attemptFilterOptions.find(
+                      (opt) => opt.value === filter
+                    );
+                    return option ? option.label : filter;
+                  })
+                  .join(", ")}
               </span>
             )}
             {classFilter !== "all" && (
@@ -757,6 +1301,9 @@ const SpellBook = ({
                 }
               </span>
             )}
+            {selectedLevels.length > 0 && (
+              <span> • Levels: {selectedLevels.join(", ")}</span>
+            )}
             {totalFilteredSpells < totalSpells && (
               <span style={styles.searchResultsHint}>
                 {" "}
@@ -770,27 +1317,15 @@ const SpellBook = ({
       <div style={styles.statsContainer}>
         <span style={styles.statItem}>
           <span
-            style={{ ...styles.statDot, backgroundColor: "#60a5fa" }}
-          ></span>
-          {searchTerm ||
-          attemptFilter !== "all" ||
-          yearFilter !== "all" ||
-          classFilter !== "all"
-            ? totalFilteredSpells
-            : totalSpells}{" "}
-          {searchTerm ||
-          attemptFilter !== "all" ||
-          yearFilter !== "all" ||
-          classFilter !== "all"
-            ? "Found"
-            : "Total"}{" "}
-          Spells
-        </span>
-        <span style={styles.statItem}>
-          <span
             style={{ ...styles.statDot, backgroundColor: "#34d399" }}
           ></span>
           {totalMastered} Mastered
+        </span>
+        <span style={styles.statItem}>
+          <span
+            style={{ ...styles.statDot, backgroundColor: "#f59e0b" }}
+          ></span>
+          {totalAttempted} Attempted
         </span>
         <span style={styles.statItem}>
           <span
@@ -830,9 +1365,10 @@ const SpellBook = ({
       </div>
 
       {(searchTerm ||
-        attemptFilter !== "all" ||
+        selectedAttemptFilters.length > 0 ||
         yearFilter !== "all" ||
-        classFilter !== "all") &&
+        classFilter !== "all" ||
+        selectedLevels.length > 0) &&
         Object.keys(filteredSpellsData).length === 0 && (
           <div style={styles.noResultsContainer}>
             <div style={styles.noResultsIcon}>🔍</div>
@@ -845,16 +1381,19 @@ const SpellBook = ({
                   Search term: "<strong>{searchTerm}</strong>"
                 </>
               )}
-              {attemptFilter !== "all" && (
+              {selectedAttemptFilters.length > 0 && (
                 <>
                   <br />
-                  Attempt filter:{" "}
+                  Status filters:{" "}
                   <strong>
-                    {
-                      attemptFilterOptions.find(
-                        (opt) => opt.value === attemptFilter
-                      )?.label
-                    }
+                    {selectedAttemptFilters
+                      .map((filter) => {
+                        const option = attemptFilterOptions.find(
+                          (opt) => opt.value === filter
+                        );
+                        return option ? option.label : filter;
+                      })
+                      .join(", ")}
                   </strong>
                 </>
               )}
@@ -881,6 +1420,12 @@ const SpellBook = ({
                         ?.label
                     }
                   </strong>
+                </>
+              )}
+              {selectedLevels.length > 0 && (
+                <>
+                  <br />
+                  Level filters: <strong>{selectedLevels.join(", ")}</strong>
                 </>
               )}
               <br />
@@ -928,6 +1473,8 @@ const SpellBook = ({
               supabase={supabase}
               user={user}
               globalSearchTerm={searchTerm}
+              selectedLevels={selectedLevels}
+              selectedAttemptFilters={selectedAttemptFilters}
               onSpellProgressUpdate={loadSpellProgress}
             />
           )
