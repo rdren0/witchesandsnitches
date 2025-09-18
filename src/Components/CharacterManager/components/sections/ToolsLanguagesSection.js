@@ -23,13 +23,27 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
         )?.toolProficiencies || []
       : [];
 
-
     const subclassTools = [];
     if (character.subclass && character.subclassChoices) {
       const subclassInfo = subclassesData[character.subclass];
 
       if (subclassInfo?.benefits?.toolProficiencies) {
         subclassTools.push(...subclassInfo.benefits.toolProficiencies);
+      }
+
+      if (subclassInfo?.benefits?.vehicleProficiencies) {
+        subclassTools.push(...subclassInfo.benefits.vehicleProficiencies);
+      }
+
+      if (subclassInfo?.higherLevelFeatures) {
+        subclassInfo.higherLevelFeatures.forEach((feature) => {
+          if (feature.benefits?.toolProficiencies) {
+            subclassTools.push(...feature.benefits.toolProficiencies);
+          }
+          if (feature.benefits?.vehicleProficiencies) {
+            subclassTools.push(...feature.benefits.vehicleProficiencies);
+          }
+        });
       }
 
       if (subclassInfo?.choices) {
@@ -41,6 +55,11 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
             );
             if (selectedOption?.benefits?.toolProficiencies) {
               subclassTools.push(...selectedOption.benefits.toolProficiencies);
+            }
+            if (selectedOption?.benefits?.vehicleProficiencies) {
+              subclassTools.push(
+                ...selectedOption.benefits.vehicleProficiencies
+              );
             }
           }
         });
@@ -59,11 +78,7 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
 
     const characterTools = character.toolProficiencies || [];
 
-    const automaticTools = [
-      ...backgroundTools,
-      ...subclassTools,
-      ...featTools,
-    ];
+    const automaticTools = [...backgroundTools, ...subclassTools, ...featTools];
 
     return {
       background: backgroundTools,
@@ -326,34 +341,6 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
                     />
                   );
                 })}
-              </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: theme.textSecondary,
-                  fontStyle: "italic",
-                  display: "flex",
-                  gap: "16px",
-                  alignItems: "center",
-                  marginTop: "8px",
-                }}
-              >
-                <span>Automatic from:</span>
-                {toolData.background.length > 0 && (
-                  <span style={{ color: "#f59e0b" }}>
-                    <strong>B</strong> = Background
-                  </span>
-                )}
-                {toolData.subclass.length > 0 && (
-                  <span style={{ color: "#10b981" }}>
-                    <strong>S</strong> = Subclass
-                  </span>
-                )}
-                {toolData.feat.length > 0 && (
-                  <span style={{ color: "#8b5cf6" }}>
-                    <strong>F</strong> = Feat
-                  </span>
-                )}
               </div>
             </div>
           )}
