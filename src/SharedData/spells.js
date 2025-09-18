@@ -109,6 +109,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Instantaneous",
           year: 2,
+          checkType: "none",
           description:
             "A target object is pulled directly to the caster as if carried by an invisible hand. The object is selected by pointing at it with a wand or by naming it, Accio broom. An object heavier than 20 pounds may not be summoned.",
           higherLevels:
@@ -388,6 +389,15 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Instantaneous",
           year: 2,
+          checkType: "savingThrow",
+          savingThrow: {
+            ability: "dexterity",
+            effect: "halfDamage",
+          },
+          damage: {
+            dice: "4d4",
+            type: "slashing",
+          },
           description:
             "An object is precisely torn or cut, as if a magical blade extended from the tip of your wand. This spell was not designed to be used on creatures and only makes very shallow cuts. Choose a target you can see within range that fits within a 5-foot cube. If the target is a creature, it must make a Dexterity saving throw. It takes 4d4 slashing damage on a failed save or half as much damage on a successful one. This is the counterspell to incarcerous, immediately ending that spell's effects.",
           higherLevels:
@@ -413,6 +423,15 @@ export const spellsData = {
           range: "60 Feet",
           duration: "1 Hour",
           year: 1,
+          checkType: "savingThrow",
+          savingThrow: {
+            ability: "constitution",
+            effect: "halfDamage",
+          },
+          damage: {
+            dice: "3d8",
+            type: "cold",
+          },
           description:
             "You freeze an area of water that you can see within range and that fits within a 5-foot cube. The area becomes difficult terrain for the duration. Each Medium or smaller creature that is covered, submerged or partially submerged in the affected water has its speed halved and must make a Constitution saving throw. On a failed save, a creature takes 3d8 cold damage, or half as much damage on a successful one.",
           higherLevels:
@@ -552,6 +571,8 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Instantaneous",
           year: 3,
+          checkType: "spellAttack",
+          attackType: "ranged",
           description:
             "Famous for being the spell that finally defeated Voldemort in the Second Wizarding War, this spell can harmlessly end duels by disarming a wizard of his wand. Make a ranged spell attack against a being within range. On a hit, you disarm the target, forcing it to drop one item of your choice that it's holding. The object lands 10 feet away from it in a random direction.",
           higherLevels:
@@ -692,6 +713,8 @@ export const spellsData = {
           range: "60 Feet",
           duration: "10 Minutes",
           year: 3,
+          checkType: "spellAttack",
+          attackType: "ranged",
           description:
             "This charm is the most common dueling spell in the wizarding world, harmlessly ending a duel between two wizards. Make a ranged spell attack against a being within range. On a hit, the target falls unconscious for the duration, or until they are revived with rennervate.",
           higherLevels:
@@ -1015,6 +1038,12 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Instantaneous",
           year: 2,
+          checkType: "spellAttack",
+          attackType: "ranged",
+          damage: {
+            dice: "1d4",
+            type: "psychic",
+          },
           description:
             "Outbreaks of this jinx is a common occurrence when students get in fights, resulting in grotesque pimples covering the victims face. Make a ranged spell attack against a being within range. On a hit, it takes 1d4 psychic damage and has disadvantage on the next attack roll it makes before the end of its next turn. Additionally, it has disadvantage on the next Charisma ability check it makes.",
           higherLevels:
@@ -1226,6 +1255,15 @@ export const spellsData = {
           range: "90 feet",
           duration: "Instantaneous",
           year: 5,
+          checkType: "savingThrow",
+          savingThrow: {
+            ability: "dexterity",
+            effect: "halfDamage",
+          },
+          damage: {
+            dice: "8d6",
+            type: "fire",
+          },
           description:
             "A tiny ball of fire flashes from your wand to a point you choose within range and then explodes into a fiery blast on impact. Each creature in a 10-foot-radius sphere centered on that point must make a Dexterity saving throw. A target takes 8d6 fire damage on a failed save, or half as much damage on a successful one. The fire spreads around corners. It ignites flammable objects in the area that aren't worn or carried.",
           higherLevels:
@@ -1344,6 +1382,11 @@ export const spellsData = {
           range: "60 feet",
           duration: "Concentration, up to 1 minute",
           year: 6,
+          checkType: "savingThrow",
+          savingThrow: {
+            ability: "wisdom",
+            effect: "negates",
+          },
           description:
             "You attempt to beguile a humanoid that you can see within range. It must succeed on a Wisdom saving throw or be charmed by you for the duration. If you or creatures that are friendly to you are fighting it, it has advantage on the saving throw. While the target is charmed, you have a telepathic link with it as long as the two of you are on the same plane of existence. You can use this telepathic link to issue commands to the creature while you are conscious (no action required), which it does its best to obey. You can specify a simple and general course of action, such as 'Attack that creature,' 'Run over there,' or 'Fetch that object.' If the creature completes the order and doesn't receive further direction from you, it defends and preserves itself to the best of its ability. You can use your action to take total and precise control of the target. Until the end of your next turn, the creature takes only the actions you choose, and doesn't do anything that you don't allow it to do. During this time, you can also cause the creature to use a reaction, but this requires you to use your own reaction as well. Each time the target takes damage, it makes a new Wisdom saving throw against the spell. If the saving throw succeeds, the spell ends.",
         },

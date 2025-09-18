@@ -697,27 +697,27 @@ export const heritageDescriptions = {
           {
             name: "Astronomer's Tools",
             description: "Gain proficiency with Astronomer's Tools",
-            toolProficiencies: ["Astronomer's Tools"],
+            toolProficiencies: ["Astronomer's tools"],
           },
           {
             name: "Herbologist's Tools",
             description: "Gain proficiency with Herbologist's Tools",
-            toolProficiencies: ["Herbologist's Tools"],
+            toolProficiencies: ["Herbologist's tools"],
           },
           {
             name: "Potioneer's Kit",
             description: "Gain proficiency with Potioneer's Kit",
-            toolProficiencies: ["Potioneer's Kit"],
+            toolProficiencies: ["Potioneer's kit"],
           },
           {
             name: "Vehicle (Broomstick)",
             description: "Gain proficiency with Vehicle (Broomstick)",
-            toolProficiencies: ["Vehicle (Broomstick)"],
+            toolProficiencies: ["Broomstick"],
           },
           {
             name: "Diviner's Kit",
             description: "Gain proficiency with Diviner's Kit",
-            toolProficiencies: ["Diviner's Kit"],
+            toolProficiencies: ["Diviner's kit"],
           },
         ],
       },

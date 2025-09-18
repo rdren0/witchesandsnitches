@@ -545,6 +545,8 @@ export const SubjectCard = ({
   subjectName,
   supabase,
   globalSearchTerm = "",
+  selectedLevels = [],
+  selectedAttemptFilters = [],
   onSpellProgressUpdate,
 }) => {
   const {
@@ -1943,10 +1945,63 @@ export const SubjectCard = ({
   };
 
   const toggleSubject = (subjectName) => {
-    setExpandedSubjects((prev) => ({
-      ...prev,
-      [subjectName]: !prev[subjectName],
-    }));
+    setExpandedSubjects((prev) => {
+      const newExpanded = {
+        ...prev,
+        [subjectName]: !prev[subjectName],
+      };
+
+      if (!prev[subjectName]) {
+        const newExpandedSections = {};
+
+        const hasLevelFilters = selectedLevels.length > 0;
+        const hasAttemptFilters = selectedAttemptFilters.length > 0;
+        const hasAnyFilters = hasLevelFilters || hasAttemptFilters;
+
+        if (hasAnyFilters) {
+          Object.entries(subjectData.levels).forEach(([level, spells]) => {
+            let shouldExpand = false;
+
+            if (hasLevelFilters) {
+              shouldExpand = selectedLevels.includes(level);
+            } else {
+              shouldExpand = true;
+            }
+
+            if (shouldExpand && hasAttemptFilters) {
+              shouldExpand = levelHasMatchingSpells(level, spells);
+            }
+
+            if (shouldExpand) {
+              const sectionKey = `${subjectName}-${level}`;
+              newExpandedSections[sectionKey] = true;
+            }
+          });
+        } else {
+          Object.keys(subjectData.levels).forEach((level) => {
+            const sectionKey = `${subjectName}-${level}`;
+            newExpandedSections[sectionKey] = true;
+          });
+        }
+
+        setExpandedSections((prevSections) => ({
+          ...prevSections,
+          ...newExpandedSections,
+        }));
+      } else if (prev[subjectName]) {
+        const sectionsToCollapse = {};
+        Object.keys(subjectData.levels).forEach((level) => {
+          const sectionKey = `${subjectName}-${level}`;
+          sectionsToCollapse[sectionKey] = false;
+        });
+        setExpandedSections((prevSections) => ({
+          ...prevSections,
+          ...sectionsToCollapse,
+        }));
+      }
+
+      return newExpanded;
+    });
   };
 
   const toggleSection = (sectionKey) => {
@@ -1959,6 +2014,51 @@ export const SubjectCard = ({
   const getSuccessfulAttempts = (spellName) => {
     const attempts = spellAttempts[spellName] || {};
     return Object.values(attempts).filter(Boolean).length;
+  };
+
+  const getSpellAttemptStatus = (spellName) => {
+    const attempts = spellAttempts[spellName] || {};
+    const successfulAttempts = Object.values(attempts).filter(Boolean).length;
+    const hasFailed = failedAttempts[spellName];
+    const isResearched = researchedSpells[spellName];
+    const hasAnyAttempt = successfulAttempts > 0 || hasFailed;
+    const isMastered = successfulAttempts >= 2;
+
+    return {
+      isUnattempted: !hasAnyAttempt && !isResearched,
+      isAttempted: hasAnyAttempt && !isMastered,
+      isMastered: isMastered,
+      hasFailed: hasFailed,
+      isResearched: isResearched,
+      successfulAttempts,
+    };
+  };
+
+  const levelHasMatchingSpells = (level, spells) => {
+    if (selectedAttemptFilters.length === 0) {
+      return true;
+    }
+
+    return spells.some((spell) => {
+      const status = getSpellAttemptStatus(spell.name);
+
+      return selectedAttemptFilters.some((filter) => {
+        switch (filter) {
+          case "unattempted":
+            return status.isUnattempted;
+          case "attempted":
+            return status.isAttempted;
+          case "mastered":
+            return status.isMastered;
+          case "failed":
+            return status.hasFailed;
+          case "researched":
+            return status.isResearched;
+          default:
+            return false;
+        }
+      });
+    });
   };
 
   const highlightSearchTerm = (text) => {
@@ -2044,9 +2144,7 @@ export const SubjectCard = ({
         ? Math.round((masteredCount / filteredSpells.length) * 100)
         : 0;
 
-    const hasStatusFilter = searchFilter !== "all";
-
-    if (filteredSpells.length === 0 && hasStatusFilter) {
+    if (filteredSpells.length === 0) {
       return null;
     }
 
@@ -2064,7 +2162,7 @@ export const SubjectCard = ({
             )}
             <span>
               {level} ({filteredSpells.length} spells
-              {hasStatusFilter && filteredSpells.length !== spells.length
+              {searchFilter !== "all" && filteredSpells.length !== spells.length
                 ? ` of ${spells.length}`
                 : ""}
               )

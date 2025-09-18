@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Settings, CircleSmall } from "lucide-react";
+import { Sparkles, Settings, CircleSmall, CircleDashed } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const METAMAGIC_DATA = {
@@ -51,6 +51,55 @@ const METAMAGIC_DATA = {
       "When you cast a spell that targets only one creature and doesn't have a range of self, you can target a second creature in range with the same spell. The cost equals the spell's level (1 sorcery point for cantrips).",
     preview: "Target a second creature with single-target spells",
   },
+
+  "Fierce Spell": {
+    cost: "2/4 sorcery points",
+    description:
+      "When you cast a spell, you can spend 2 sorcery points to cast that spell as if it were cast using a spell slot one level higher than its original level, or 4 sorcery points to cast that spell two levels higher. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+    preview: "Cast spells at higher levels",
+    castingStyle: "Willpower Caster",
+  },
+  "Resistant Spell": {
+    cost: "1 sorcery point per level",
+    description:
+      "When you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+    preview: "Make spells more resistant to dispelling",
+    castingStyle: "Willpower Caster",
+  },
+  "Bouncing Spell": {
+    cost: "2 sorcery points",
+    description:
+      "When a creature succeeds at a saving throw against a single-target spell you cast, you can spend 2 Sorcery Points to have the spell bounce, targeting another creature of your choice within 30 ft. of the original target without spending another spell slot or taking an additional action.",
+    preview: "Redirect spells that miss to new targets",
+    castingStyle: "Technique Caster",
+  },
+  "Maximized Spell": {
+    cost: "2x spell level sorcery points",
+    description:
+      "When you roll damage for a leveled spell, you can spend a number of Sorcery Points equal to twice the spell's level to deal maximum damage to one target of the spell. Maximized spell can not be applied to Exploit Weakness damage.",
+    preview: "Deal maximum damage with spells",
+    castingStyle: "Technique Caster",
+  },
+  "Seeking Spell": {
+    cost: "2 sorcery points",
+    description:
+      "If you make an attack roll for a spell and miss, you can spend 2 Sorcery Points to reroll the d20, and you must use the new roll. You can use Seeking Spell even if you have already used a different Metamagic option during the casting of the spell.",
+    preview: "Reroll missed spell attacks",
+    castingStyle: "Technique Caster",
+  },
+  Rage: {
+    cost: "5 sorcery points",
+    description:
+      "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain advantage on Strength checks and saves, resistance to bludgeoning, piercing, slashing and fire damage, and +2 to unarmed strike damage (+3 at 10th level, +4 at 16th level). You can't cast area effect spells or concentrate while raging. Your rage lasts for 1 minute.",
+    preview: "Enter a primal rage for combat bonuses",
+    castingStyle: "Vigor Caster",
+  },
+};
+
+const CASTING_STYLE_METAMAGICS = {
+  "Willpower Caster": ["Fierce Spell", "Resistant Spell"],
+  "Technique Caster": ["Bouncing Spell", "Maximized Spell", "Seeking Spell"],
+  "Vigor Caster": ["Rage"],
 };
 
 const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
@@ -88,20 +137,38 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
       description:
         METAMAGIC_DATA[name]?.description || "No description available",
       preview: METAMAGIC_DATA[name]?.preview || "No preview available",
+      isSelected: true,
     }));
   };
 
-  const metaMagics = getMetaMagicChoices(character);
+  const getAutomaticMetaMagics = (character) => {
+    const castingStyle = character?.castingStyle;
+    const level = character?.level || 1;
 
-  const getMaxMetaMagicOptions = (level) => {
-    return Object.keys(METAMAGIC_DATA).length; // Allow selection of all available options
+    if (castingStyle && CASTING_STYLE_METAMAGICS[castingStyle] && level >= 3) {
+      return CASTING_STYLE_METAMAGICS[castingStyle].map((name) => ({
+        name,
+        ...METAMAGIC_DATA[name],
+        cost: METAMAGIC_DATA[name]?.cost || "Unknown cost",
+        description:
+          METAMAGIC_DATA[name]?.description || "No description available",
+        preview: METAMAGIC_DATA[name]?.preview || "No preview available",
+        isAutomatic: true,
+        castingStyle: castingStyle,
+      }));
+    }
+
+    return [];
   };
 
+  const selectedMetaMagics = getMetaMagicChoices(character);
+  const automaticMetaMagics = getAutomaticMetaMagics(character);
+
   const qualifiesForMetaMagic = character?.level >= 3;
-  const maxOptions = getMaxMetaMagicOptions(character?.level || 1);
-  const hasSelectedMetaMagic = metaMagics && metaMagics.length > 0;
+  const hasAnyMetaMagic =
+    selectedMetaMagics.length > 0 || automaticMetaMagics.length > 0;
   const shouldShowMissingNotification =
-    qualifiesForMetaMagic && !hasSelectedMetaMagic;
+    qualifiesForMetaMagic && selectedMetaMagics.length === 0;
 
   const handleNavigateToCharacterManager = () => {
     if (onNavigateToCharacterManagement && character?.id) {
@@ -225,8 +292,68 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
         <h3 style={styles.title}>Metamagic Options</h3>
       </div>
 
+      {automaticMetaMagics.length > 0 && (
+        <>
+          <div
+            style={{
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#8b5cf6",
+              marginBottom: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            {character?.castingStyle}
+          </div>
+          <div style={styles.metaMagicList}>
+            {automaticMetaMagics.map((metaMagic, index) => (
+              <div
+                key={`auto-${index}`}
+                style={{
+                  ...styles.metaMagicItem,
+                  border: `1px solid #8b5cf6`,
+                  backgroundColor: theme.background,
+                }}
+              >
+                <div style={styles.metaMagicHeader}>
+                  <span style={styles.metaMagicName}>{metaMagic.name}</span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "600",
+                      color: "#8b5cf6",
+                      backgroundColor: "#8b5cf625",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      marginRight: "8px",
+                    }}
+                  >
+                    Granted at level 3
+                  </span>
+                  <span
+                    style={{
+                      ...styles.metaMagicCost,
+                      backgroundColor: "#8b5cf625",
+                      color: "#8b5cf6",
+                    }}
+                  >
+                    {metaMagic.cost}
+                  </span>
+                </div>
+                <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
+                <div style={styles.metaMagicDescription}>
+                  {metaMagic.description}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       {shouldShowMissingNotification && (
-        <div style={styles.missingNotification}>
+        <div style={{ ...styles.missingNotification, marginTop: "16px" }}>
           <div style={styles.notificationText}>
             You have not selected a metamagic perk
           </div>
@@ -248,23 +375,43 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
         </div>
       )}
 
-      {metaMagics && metaMagics.length > 0 ? (
-        <div style={styles.metaMagicList}>
-          {metaMagics.map((metaMagic, index) => (
-            <div key={index} style={styles.metaMagicItem}>
-              <div style={styles.metaMagicHeader}>
-                <CircleSmall size={16} style={styles.icon} />
-                <span style={styles.metaMagicName}>{metaMagic.name}</span>
-                <span style={styles.metaMagicCost}>{metaMagic.cost}</span>
-              </div>
-              <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
-              <div style={styles.metaMagicDescription}>
-                {metaMagic.description}
-              </div>
+      {selectedMetaMagics.length > 0 && (
+        <>
+          {automaticMetaMagics.length > 0 && (
+            <div
+              style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: theme.primary,
+                marginTop: "16px",
+                marginBottom: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Granted by Level Progression
             </div>
-          ))}
-        </div>
-      ) : (
+          )}
+          <div style={styles.metaMagicList}>
+            {selectedMetaMagics.map((metaMagic, index) => (
+              <div key={`selected-${index}`} style={styles.metaMagicItem}>
+                <div style={styles.metaMagicHeader}>
+                  <CircleSmall size={16} style={styles.icon} />
+                  <span style={styles.metaMagicName}>{metaMagic.name}</span>
+                  <span style={styles.metaMagicCost}>{metaMagic.cost}</span>
+                </div>
+                <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
+                <div style={styles.metaMagicDescription}>
+                  {metaMagic.description}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!hasAnyMetaMagic && (
         <div style={styles.emptyState}>No metamagic options available</div>
       )}
     </div>

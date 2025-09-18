@@ -6,7 +6,6 @@ export const standardFeats = [
       "You have the wild and unpredictable energy of accidental magic. As a Free Action, You can choose to enhance a spell you cast. Roll a d20, and on a roll of 5 or lower, you must roll on the magic surge table for a random effect. On a roll of 15 or higher, your spell's effects are amplified. This might result in increased damage, increased conditions, an expanded area of effect, or additional targets affected by the spell, according to DM's discretion.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -72,6 +71,7 @@ export const standardFeats = [
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
+      toolProficiencies: ["Broomstick"],
       resistances: [],
       immunities: [],
       speeds: {},
@@ -99,7 +99,6 @@ export const standardFeats = [
       "Other creatures don't gain advantage on attack rolls against you as a result of being unseen by you.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -182,7 +181,6 @@ export const standardFeats = [
       "You've learned to feel magic and recognize styles of spells and curses. Using concentration, you sense the presence of magic within 30 feet of you. If you sense magic in this way, you can use your action to see a faint aura around any visible creature or object in the area that bears magic, and you learn the associated spell's school of magic, if any. This ability can penetrate most barriers, but is blocked by 1 foot of stone, 1 inch of common metal, or 3 feet of wood or dirt.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -358,7 +356,6 @@ export const standardFeats = [
       "When you cast a spell that restores hit points, you may spend a number of sorcery points up to your proficiency bonus. For each sorcery point spent in this way, maximize the amount healed per die involved. Ex: Two sorcery points on Episkey = 8 + spellcasting modifier hp restored.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -549,7 +546,6 @@ export const standardFeats = [
       "Before you make a melee attack with a heavy weapon that you are proficient with, you can choose to take a -5 penalty to the attack roll. If the attack hits, you add +10 to the attack's damage.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -780,7 +776,6 @@ export const standardFeats = [
         },
       ],
     },
-    prerequisites: {},
   },
   {
     name: "Linguist",
@@ -825,7 +820,6 @@ export const standardFeats = [
       "Disadvantage: When a creature rolls a d20 for an attack roll against you, you can spend 1 Luck Point to impose Disadvantage on that roll.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -900,7 +894,6 @@ export const standardFeats = [
       "In addition, choose one 1st level spell to learn from that same school of magic. Using this feat, you can cast the spell once at its lowest level, and you must finish a long rest before you can cast it in this way again.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -970,7 +963,6 @@ export const standardFeats = [
       "You gain 2 sorcery points to spend on Metamagic (these points are added to any sorcery points you have from another source but can be used only on Metamagic). You regain all spent sorcery points when you finish a long rest.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -995,7 +987,6 @@ export const standardFeats = [
       "When you make a melee attack against a creature, you don't provoke opportunity attacks from that creature for the rest of the turn, whether you hit or not.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1072,7 +1063,6 @@ export const standardFeats = [
       "You must choose to use this metamagic before seeing the result of the spell attack or saving throw roll.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1135,7 +1125,6 @@ export const standardFeats = [
       "Veritaserum will not work on you, unless you allow it.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1164,7 +1153,6 @@ export const standardFeats = [
       "Your keen eye and refined techniques grant you additional accuracy with your projectile spells. When making a spell attack for a +1 to Spell Attack rolls.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1191,7 +1179,6 @@ export const standardFeats = [
       "While you are wielding a glaive or halberd, other creatures provoke an opportunity attack from you when they enter the reach you have with that weapon.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1230,6 +1217,7 @@ export const standardFeats = [
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
+      toolProficiencies: ["Potioneer's kit"],
       resistances: [],
       immunities: [],
       speeds: {},
@@ -1346,7 +1334,6 @@ export const standardFeats = [
       "You've trained to deal particularly damaging strikes. Once per turn when you hit a target with an attack, you can roll the damage dice twice and use either roll against the target.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1375,7 +1362,6 @@ export const standardFeats = [
       "When a creature within 5 feet of you makes an attack against a target other than you (and that target doesn't have this feat), you can use your reaction to make a melee weapon attack against the attacking creature.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1404,7 +1390,6 @@ export const standardFeats = [
       "Before you make an attack with a ranged weapon that you are proficient with, you can choose to take a -5 penalty to the attack roll. If that attack hits, you add +10 to the attack's damage.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1431,7 +1416,6 @@ export const standardFeats = [
       "Repeatable. You can take this feat more than once.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [{ type: "choice", count: 3 }],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1474,7 +1458,6 @@ export const standardFeats = [
       "You lock in one cantrip that requires an attack roll. You can choose this cantrip from any spell list.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1524,7 +1507,6 @@ export const standardFeats = [
       "Your skill with wandless magic has expanded. You can cast any locked in spells wandlessly.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1587,7 +1569,6 @@ export const standardFeats = [
       "Push: When you hit a creature with an Unarmed Strike as part of the Attack action on your turn, you can deal damage to the target and also push it 5 feet away from you. You can use this benefit only once per turn.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1615,7 +1596,6 @@ export const standardFeats = [
       "Your Hit Point maximum increases by an amount equal to twice your character level when you gain this feat. Whenever you gain a character level thereafter, your Hit Point maximum increases by an additional 2 Hit Points.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1641,7 +1621,6 @@ export const standardFeats = [
       "You cannot expend a higher level spell slot when casting in this way.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1683,7 +1662,6 @@ export const standardFeats = [
       "Instead of food and water, you must drink animal, human or magical being blood to sustain yourself.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [{ skill: "persuasion", stat: "charisma" }],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1758,7 +1736,6 @@ export const standardFeats = [
       "The feathers used for this attack take time to regrow. If you use this ability, you cannot fly until the end of your next turn.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],
@@ -1794,7 +1771,6 @@ export const standardFeats = [
       "As an action, you utilize your Siren Song to charm a number of beings up to your proficiency bonus within a 30 foot radius, or one being within a 60ft radius. The being(s) must make a Wisdom saving throw against your spell save DC or become charmed for 1 minute. The being may remake the saving throw at the end of its turn.",
     ],
     benefits: {
-      abilityScoreIncrease: null,
       skillProficiencies: [],
       expertise: [],
       savingThrowProficiencies: [],

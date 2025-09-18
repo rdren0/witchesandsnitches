@@ -1466,7 +1466,7 @@ export const subclassesData = {
         description:
           "At 1st level, you gain a Diviner's Kit and proficiency with it. Add half proficiency bonus to Initiative and cannot be surprised while conscious. Choose a specialization that defines your approach to divination magic.",
         benefits: {
-          toolProficiencies: ["Diviner's Kit"],
+          toolProficiencies: ["Diviner's kit"],
           combatBonuses: {
             initiative: "half proficiency bonus",
           },
@@ -2679,7 +2679,7 @@ export const subclassesData = {
               "You gain a well-loved heirloom potions textbook filled with ancestral notes. Gain Potions Kit, proficiency in Potions Kit and Potion-Making, and access to 3 additional common potion recipes. Add Intelligence modifier to Potion Making (Wisdom) checks. Learn 2 Uncommon recipes at 6th level, 1 Rare at 10th, 1 Very Rare at 14th.",
             benefits: {
               equipment: ["Heirloom potions textbook", "Potions Kit"],
-              toolProficiencies: ["Potions Kit"],
+              toolProficiencies: ["Potioneer's kit"],
               skillProficiencies: [
                 {
                   type: "fixed",
@@ -2711,7 +2711,7 @@ export const subclassesData = {
               "Gain Herbology Kit, proficiency in Herbology Kit and Herbology skill, and cast Orchideous wordlessly/wandlessly at will. Add Wisdom to Herbology (Intelligence) checks. Gain portable greenhouse and two plant companions (one utility, one combat). Combat plant adds 1d8 piercing damage once per turn. Symbiotic Connection grants Herbology modifier to initiative and +10 feet speed with difficult terrain immunity during combat.",
             benefits: {
               equipment: ["Herbology Kit", "Portable greenhouse"],
-              toolProficiencies: ["Herbology Kit"],
+              toolProficiencies: ["Herbologist's tools"],
               skillProficiencies: [
                 {
                   type: "fixed",
@@ -4719,7 +4719,7 @@ export const subclassesData = {
         description:
           "At 1st level, you gain a Diviner's Kit and proficiency in using it. Choose one approach to dark divination that defines your grim abilities.",
         benefits: {
-          toolProficiencies: ["Diviner's Kit"],
+          toolProficiencies: ["Diviner's kit"],
         },
         choices: [],
       },
@@ -5042,7 +5042,7 @@ export const subclassesData = {
         description:
           "At 1st level, you gain proficiency with Astronomer's tools, access to the Astronomic Spell list, and proficiency in either Perception or Insight. Choose one approach to celestial magic.",
         benefits: {
-          toolProficiencies: ["Astronomer's Tools"],
+          toolProficiencies: ["Astronomer's tools"],
           spellList: "Astronomic",
           skillProficiencies: [
             {
@@ -5951,7 +5951,7 @@ export const subclassesData = {
         description:
           "At 1st level, you gain Vehicles (Broomstick) proficiency (expertise if already proficient). Summon magical broom as bonus action. Choose your primary Quidditch position specialty.",
         benefits: {
-          vehicleProficiencies: ["Broomstick (expertise if proficient)"],
+          vehicleProficiencies: ["Broomstick"],
           specialAbilities: [
             {
               name: "Summon Broom",

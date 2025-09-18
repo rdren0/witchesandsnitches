@@ -62,6 +62,69 @@ const AVAILABLE_METAMAGICS = [
   },
 ];
 
+const CASTING_STYLE_METAMAGICS = {
+  "Willpower Caster": [
+    {
+      name: "Fierce Spell",
+      cost: "2/4 sorcery points",
+      description:
+        "When you cast a spell, you can spend 2 sorcery points to cast that spell as if it were cast using a spell slot one level higher than its original level, or 4 sorcery points to cast that spell two levels higher. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+      preview: "Cast spells at higher levels",
+      requiredLevel: 3,
+      castingStyle: "Willpower Caster",
+    },
+    {
+      name: "Resistant Spell",
+      cost: "1 sorcery point per level",
+      description:
+        "When you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+      preview: "Make spells more resistant to dispelling",
+      requiredLevel: 3,
+      castingStyle: "Willpower Caster",
+    },
+  ],
+  "Technique Caster": [
+    {
+      name: "Bouncing Spell",
+      cost: "2 sorcery points",
+      description:
+        "When a creature succeeds at a saving throw against a single-target spell you cast, you can spend 2 Sorcery Points to have the spell bounce, targeting another creature of your choice within 30 ft. of the original target without spending another spell slot or taking an additional action.",
+      preview: "Redirect spells that miss to new targets",
+      requiredLevel: 3,
+      castingStyle: "Technique Caster",
+    },
+    {
+      name: "Maximized Spell",
+      cost: "2x spell level sorcery points",
+      description:
+        "When you roll damage for a leveled spell, you can spend a number of Sorcery Points equal to twice the spell's level to deal maximum damage to one target of the spell. Maximized spell can not be applied to Exploit Weakness damage.",
+      preview: "Deal maximum damage with spells",
+      requiredLevel: 3,
+      castingStyle: "Technique Caster",
+    },
+    {
+      name: "Seeking Spell",
+      cost: "2 sorcery points",
+      description:
+        "If you make an attack roll for a spell and miss, you can spend 2 Sorcery Points to reroll the d20, and you must use the new roll. You can use Seeking Spell even if you have already used a different Metamagic option during the casting of the spell.",
+      preview: "Reroll missed spell attacks",
+      requiredLevel: 3,
+      castingStyle: "Technique Caster",
+    },
+  ],
+  "Vigor Caster": [
+    {
+      name: "Rage",
+      cost: "5 sorcery points",
+      description:
+        "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain advantage on Strength checks and saves, resistance to bludgeoning, piercing, slashing and fire damage, and +2 to unarmed strike damage (+3 at 10th level, +4 at 16th level). You can't cast area effect spells or concentrate while raging. Your rage lasts for 1 minute.",
+      preview: "Enter a primal rage for combat bonuses",
+      requiredLevel: 3,
+      castingStyle: "Vigor Caster",
+    },
+  ],
+};
+
 const MetaMagicSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
@@ -95,13 +158,26 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
 
   const currentMetaMagics = getMetaMagicChoices(character);
 
-  const getMaxMetaMagicOptions = (level) => {
-    return AVAILABLE_METAMAGICS.length; // Allow selection of all available options
+  const getAvailableMetaMagics = (character) => {
+    return [...AVAILABLE_METAMAGICS];
   };
 
-  const maxOptions = getMaxMetaMagicOptions(character?.level || 1);
+  const getAutomaticMetaMagics = (character) => {
+    const castingStyle = character?.castingStyle;
+    const level = character?.level || 1;
+
+    if (castingStyle && CASTING_STYLE_METAMAGICS[castingStyle]) {
+      return CASTING_STYLE_METAMAGICS[castingStyle].filter(
+        (mm) => level >= (mm.requiredLevel || 1)
+      );
+    }
+
+    return [];
+  };
+
+  const allAvailableMetaMagics = getAvailableMetaMagics(character);
+  const automaticMetaMagics = getAutomaticMetaMagics(character);
   const selectedCount = currentMetaMagics.length;
-  const canSelectMore = true; // Always allow more selections
 
   const handleMetaMagicToggle = (metaMagicName) => {
     const isSelected = currentMetaMagics.includes(metaMagicName);
@@ -123,17 +199,16 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
     onChange("metamagicChoices", metamagicChoices);
   };
 
-  const selectedMetaMagics = AVAILABLE_METAMAGICS.filter((mm) =>
+  const selectedMetaMagics = allAvailableMetaMagics.filter((mm) =>
     currentMetaMagics.includes(mm.name)
   );
 
-  const availableMetaMagics = AVAILABLE_METAMAGICS.filter(
+  const availableMetaMagics = allAvailableMetaMagics.filter(
     (mm) => !currentMetaMagics.includes(mm.name)
   );
 
   return (
     <div style={styles.sectionContainer}>
-      {/* Header with slot information */}
       <div
         style={{
           padding: "12px 16px",
@@ -177,6 +252,8 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
             }}
           >
             {selectedCount} selected
+            {automaticMetaMagics.length > 0 &&
+              ` + ${automaticMetaMagics.length} automatic`}
           </span>
         </div>
         <div
@@ -189,9 +266,95 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
         </div>
       </div>
 
-      {/* Selected Metamagics */}
+      {automaticMetaMagics.length > 0 && (
+        <div style={styles.selectedElementsSection}>
+          <div
+            style={{
+              ...styles.availableSectionHeader,
+              backgroundColor: "#8b5cf615",
+              border: `1px solid #8b5cf6`,
+              marginBottom: "12px",
+            }}
+          >
+            <span style={{ ...styles.availableSectionTitle, color: "#8b5cf6" }}>
+              Automatic Metamagics (from {character?.castingStyle})
+            </span>
+          </div>
+          {automaticMetaMagics.map((metaMagic) => {
+            return (
+              <div
+                key={metaMagic.name}
+                style={{
+                  ...styles.selectedElementCard,
+                  border: `2px solid #8b5cf6`,
+                  backgroundColor: "#8b5cf615",
+                }}
+              >
+                <div style={styles.featHeader}>
+                  <div
+                    style={{ ...styles.featLabelClickable, cursor: "default" }}
+                  >
+                    <span style={styles.featNameSelected}>
+                      {metaMagic.name}
+                      <span
+                        style={{
+                          marginLeft: "8px",
+                          fontSize: "10px",
+                          fontWeight: "600",
+                          color: "#8b5cf6",
+                          backgroundColor: "#8b5cf625",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        Granted at level {metaMagic.requiredLevel || 3}
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: "8px",
+                          fontSize: "12px",
+                          fontWeight: "500",
+                          color: "#8b5cf6",
+                          backgroundColor: "#8b5cf625",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {metaMagic.cost}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <div style={styles.featPreviewSelected}>
+                  {metaMagic.preview}
+                </div>
+
+                <div style={styles.featDescriptionSelected}>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: "1.5",
+                      margin: "0",
+                      color: theme.text,
+                    }}
+                  >
+                    {metaMagic.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {selectedMetaMagics.length > 0 && (
         <div style={styles.selectedElementsSection}>
+          <div style={styles.availableSectionHeader}>
+            <span style={styles.availableSectionTitle}>
+              Selected Metamagics
+            </span>
+          </div>
           {selectedMetaMagics.map((metaMagic) => {
             return (
               <div key={metaMagic.name} style={styles.selectedElementCard}>
@@ -253,7 +416,6 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
         </div>
       )}
 
-      {/* Available Metamagics */}
       {availableMetaMagics.length > 0 && (
         <div style={styles.availableElementsSection}>
           <div style={styles.availableSectionHeader}>
@@ -348,7 +510,6 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
         </div>
       )}
 
-      {/* No options available message */}
       {availableMetaMagics.length === 0 && selectedMetaMagics.length === 0 && (
         <div
           style={{
