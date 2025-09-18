@@ -286,13 +286,22 @@ describe("Comprehensive Feat Data Validation", () => {
 
       const asi = feat.benefits.abilityScoreIncrease;
       if (asi) {
-        expect(asi.amount).toBeDefined();
+        if (asi.type === "multiple") {
+          expect(asi.increases).toBeDefined();
+          expect(Array.isArray(asi.increases)).toBe(true);
+          asi.increases.forEach((increase) => {
+            expect(increase.ability).toBeDefined();
+            expect(increase.amount).toBeDefined();
+          });
+        } else {
+          expect(asi.amount).toBeDefined();
 
-        if (asi.type === "choice") {
-          expect(asi.abilities).toBeDefined();
-          expect(Array.isArray(asi.abilities)).toBe(true);
-        } else if (!asi.type) {
-          expect(asi.ability).toBeDefined();
+          if (asi.type === "choice") {
+            expect(asi.abilities).toBeDefined();
+            expect(Array.isArray(asi.abilities)).toBe(true);
+          } else if (!asi.type) {
+            expect(asi.ability).toBeDefined();
+          }
         }
       }
 
