@@ -9,7 +9,26 @@ const AbilityScores = ({ character }) => {
   const { theme } = useTheme();
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
-  const characterModifiers = modifiers(character);
+
+  const finalAbilityScores = {
+    strength: character.ability_scores?.strength || character.strength || 10,
+    dexterity: character.ability_scores?.dexterity || character.dexterity || 10,
+    constitution:
+      character.ability_scores?.constitution || character.constitution || 10,
+    intelligence:
+      character.ability_scores?.intelligence || character.intelligence || 10,
+    wisdom: character.ability_scores?.wisdom || character.wisdom || 10,
+    charisma: character.ability_scores?.charisma || character.charisma || 10,
+  };
+
+  const characterModifiers = {
+    strength: Math.floor((finalAbilityScores.strength - 10) / 2),
+    dexterity: Math.floor((finalAbilityScores.dexterity - 10) / 2),
+    constitution: Math.floor((finalAbilityScores.constitution - 10) / 2),
+    intelligence: Math.floor((finalAbilityScores.intelligence - 10) / 2),
+    wisdom: Math.floor((finalAbilityScores.wisdom - 10) / 2),
+    charisma: Math.floor((finalAbilityScores.charisma - 10) / 2),
+  };
 
   const getSavingThrowProficiencies = (castingStyle) => {
     const proficiencyMap = {
@@ -87,7 +106,9 @@ const AbilityScores = ({ character }) => {
               <div style={styles.abilityModifier}>
                 {formatModifier(characterModifiers[ability.key])}
               </div>
-              <div style={styles.abilityScore}>{character[ability.key]}</div>
+              <div style={styles.abilityScore}>
+                {finalAbilityScores[ability.key]}
+              </div>
             </div>
 
             <button

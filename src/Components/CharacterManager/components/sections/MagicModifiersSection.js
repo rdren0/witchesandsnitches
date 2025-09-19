@@ -30,7 +30,11 @@ const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
     const finalValue = isNaN(numValue) ? 0 : numValue;
 
     const updatedModifiers = {
-      ...magicModifiers,
+      divinations: magicModifiers.divinations,
+      transfiguration: magicModifiers.transfiguration,
+      charms: magicModifiers.charms,
+      healing: magicModifiers.healing,
+      jinxesHexesCurses: magicModifiers.jinxesHexesCurses,
       [key]: finalValue,
     };
 
@@ -153,17 +157,15 @@ const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
                     ...prev,
                     [key]: value,
                   }));
+
+                  handleMagicModifierChange(key, value);
                 }}
                 onBlur={() => {
-                  const tempValue = magicModifierTempValues[key];
-                  if (tempValue !== undefined) {
-                    handleMagicModifierChange(key, tempValue);
-                    setMagicModifierTempValues((prev) => {
-                      const newState = { ...prev };
-                      delete newState[key];
-                      return newState;
-                    });
-                  }
+                  setMagicModifierTempValues((prev) => {
+                    const newState = { ...prev };
+                    delete newState[key];
+                    return newState;
+                  });
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -203,14 +205,14 @@ const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
             }
             onChange={(e) => {
               if (!disabled) {
-                setWandInfoTempValue(e.target.value);
+                const value = e.target.value;
+                setWandInfoTempValue(value);
+
+                handleWandInfoChange(value);
               }
             }}
             onBlur={() => {
-              if (wandInfoTempValue !== "") {
-                handleWandInfoChange(wandInfoTempValue);
-                setWandInfoTempValue("");
-              }
+              setWandInfoTempValue("");
             }}
             onFocus={(e) => {
               if (!disabled) {

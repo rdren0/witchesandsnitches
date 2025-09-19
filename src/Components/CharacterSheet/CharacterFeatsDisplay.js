@@ -237,166 +237,204 @@ const CharacterFeatsDisplay = ({
         details: [],
       });
 
-      if (character.subclassChoices && subclassData) {
+      if (subclassData) {
         const featuresByLevel = parseAllFeaturesByLevel(subclassData);
 
-        Object.entries(character.subclassChoices).forEach(([level, choice]) => {
-          let choiceName, subChoiceName;
-
-          if (typeof choice === "string") {
-            choiceName = choice;
-          } else if (typeof choice === "object") {
-            if (choice.mainChoice) {
-              choiceName = choice.mainChoice;
-              subChoiceName = choice.subChoice;
-            } else {
-              choiceName =
-                choice.name ||
-                choice.selectedChoice ||
-                choice.choice ||
-                String(choice);
-            }
-          }
-
-          let selectedOption = null;
-          let fullDescription = null;
-
-          const levelData = featuresByLevel[level];
-          if (levelData && levelData.choices) {
-            selectedOption = levelData.choices.find(
-              (opt) => opt.name === choiceName
-            );
-
-            if (selectedOption) {
-              if (
-                selectedOption.hasNestedChoices &&
-                selectedOption.nestedChoices &&
-                subChoiceName
-              ) {
-                const nestedOption = selectedOption.nestedChoices.find(
-                  (nested) => nested.name === subChoiceName
-                );
-                if (nestedOption) {
-                  fullDescription = nestedOption.description;
-                }
+        if (subclassData.higherLevelFeatures) {
+          subclassData.higherLevelFeatures.forEach((feature) => {
+            if (feature.level <= character.level) {
+              if (feature.choices && feature.choices.length > 0) {
+                sections.subclass.features.push({
+                  name: feature.name,
+                  type: "Subclass Choice Options",
+                  source: character.subclass,
+                  level: feature.level,
+                  description: feature.description,
+                  details: feature.choices.map(
+                    (choice) => `${choice.name}: ${choice.description}`
+                  ),
+                });
               } else {
-                fullDescription = selectedOption.description;
+                sections.subclass.features.push({
+                  name: feature.name,
+                  type: "Automatic Subclass Feature",
+                  source: character.subclass,
+                  level: feature.level,
+                  description: feature.description,
+                  details: [],
+                });
               }
             }
-          }
+          });
+        }
 
-          const hasSpecialAbilities =
-            selectedOption?.benefits?.specialAbilities?.length > 0;
+        if (character.subclassChoices) {
+          Object.entries(character.subclassChoices).forEach(
+            ([level, choice]) => {
+              let choiceName, subChoiceName;
 
-          if (!hasSpecialAbilities) {
-            const featureName = subChoiceName
-              ? `${choiceName}: ${subChoiceName}`
-              : choiceName;
+              if (typeof choice === "string") {
+                choiceName = choice;
+              } else if (typeof choice === "object") {
+                if (choice.mainChoice) {
+                  choiceName = choice.mainChoice;
+                  subChoiceName = choice.subChoice;
+                } else {
+                  choiceName =
+                    choice.name ||
+                    choice.selectedChoice ||
+                    choice.choice ||
+                    String(choice);
+                }
+              }
 
-            sections.subclass.features.push({
-              name: `${featureName} (Selected)`,
-              type: "Selected Subclass Choice",
-              source: character.subclass,
-              level: parseInt(level) || null,
-              description:
-                fullDescription ||
-                `Your selected specialization from level ${level}`,
-              details: fullDescription
-                ? [fullDescription]
-                : [`Selected at level ${level}: ${featureName}`],
-            });
-          }
+              let selectedOption = null;
+              let fullDescription = null;
 
-          if (selectedOption && selectedOption.benefits) {
-            const benefits = selectedOption.benefits;
+              const levelData = featuresByLevel[level];
+              if (levelData && levelData.choices) {
+                selectedOption = levelData.choices.find(
+                  (opt) => opt.name === choiceName
+                );
 
-            if (benefits.immunities && benefits.immunities.length > 0) {
-              sections.subclass.features.push({
-                name: `${choiceName} - Immunities`,
-                type: "Choice Benefit",
-                source: character.subclass,
-                level: parseInt(level) || null,
-                description: `Immunities gained from ${choiceName}`,
-                details: benefits.immunities.map((immunity) =>
-                  typeof immunity === "object"
-                    ? JSON.stringify(immunity)
-                    : `Immune to ${immunity}`
-                ),
-              });
-            }
-
-            if (
-              benefits.specialAbilities &&
-              benefits.specialAbilities.length > 0
-            ) {
-              benefits.specialAbilities.forEach((ability) => {
-                const abilityDetails = [];
-
-                if (ability.type) abilityDetails.push(`Type: ${ability.type}`);
-                if (ability.duration)
-                  abilityDetails.push(`Duration: ${ability.duration}`);
-                if (ability.tempHP)
-                  abilityDetails.push(`Temporary HP: ${ability.tempHP}`);
-                if (ability.save) abilityDetails.push(`Save: ${ability.save}`);
-                if (ability.uses) abilityDetails.push(`Uses: ${ability.uses}`);
-                if (ability.damage)
-                  abilityDetails.push(`Damage: ${ability.damage}`);
-                if (ability.range)
-                  abilityDetails.push(`Range: ${ability.range}`);
-                if (ability.effect)
-                  abilityDetails.push(`Effect: ${ability.effect}`);
-
-                if (ability.bonus) {
-                  if (typeof ability.bonus === "object") {
-                    abilityDetails.push(
-                      `Bonus: ${JSON.stringify(ability.bonus)}`
+                if (selectedOption) {
+                  if (
+                    selectedOption.hasNestedChoices &&
+                    selectedOption.nestedChoices &&
+                    subChoiceName
+                  ) {
+                    const nestedOption = selectedOption.nestedChoices.find(
+                      (nested) => nested.name === subChoiceName
                     );
+                    if (nestedOption) {
+                      fullDescription = nestedOption.description;
+                    }
                   } else {
-                    abilityDetails.push(`Bonus: ${ability.bonus}`);
+                    fullDescription = selectedOption.description;
                   }
                 }
+              }
+
+              const hasSpecialAbilities =
+                selectedOption?.benefits?.specialAbilities?.length > 0;
+
+              if (!hasSpecialAbilities) {
+                const featureName = subChoiceName
+                  ? `${choiceName}: ${subChoiceName}`
+                  : choiceName;
 
                 sections.subclass.features.push({
-                  name: ability.name || `${choiceName} - Special Ability`,
-                  type: "Special Ability",
+                  name: `${featureName} (Selected)`,
+                  type: "Selected Subclass Choice",
                   source: character.subclass,
                   level: parseInt(level) || null,
                   description:
-                    ability.description || `Special ability from ${choiceName}`,
-                  details: abilityDetails,
+                    fullDescription ||
+                    `Your selected specialization from level ${level}`,
+                  details: fullDescription
+                    ? [fullDescription]
+                    : [`Selected at level ${level}: ${featureName}`],
                 });
-              });
-            }
+              }
 
-            if (benefits.resistances && benefits.resistances.length > 0) {
-              sections.subclass.features.push({
-                name: `${choiceName} - Resistances`,
-                type: "Choice Benefit",
-                source: character.subclass,
-                level: parseInt(level) || null,
-                description: `Damage resistances gained from ${choiceName}`,
-                details: benefits.resistances.map((res) =>
-                  typeof res === "object"
-                    ? JSON.stringify(res)
-                    : `Resistance to ${res} damage`
-                ),
-              });
-            }
+              if (selectedOption && selectedOption.benefits) {
+                const benefits = selectedOption.benefits;
 
-            if (benefits.languages && benefits.languages.length > 0) {
-              sections.subclass.features.push({
-                name: `${choiceName} - Languages`,
-                type: "Choice Benefit",
-                source: character.subclass,
-                level: parseInt(level) || null,
-                description: `Languages gained from ${choiceName}`,
-                details: benefits.languages.map((lang) =>
-                  typeof lang === "object" ? JSON.stringify(lang) : String(lang)
-                ),
-              });
+                if (benefits.immunities && benefits.immunities.length > 0) {
+                  sections.subclass.features.push({
+                    name: `${choiceName} - Immunities`,
+                    type: "Choice Benefit",
+                    source: character.subclass,
+                    level: parseInt(level) || null,
+                    description: `Immunities gained from ${choiceName}`,
+                    details: benefits.immunities.map((immunity) =>
+                      typeof immunity === "object"
+                        ? JSON.stringify(immunity)
+                        : `Immune to ${immunity}`
+                    ),
+                  });
+                }
+
+                if (
+                  benefits.specialAbilities &&
+                  benefits.specialAbilities.length > 0
+                ) {
+                  benefits.specialAbilities.forEach((ability) => {
+                    const abilityDetails = [];
+
+                    if (ability.type)
+                      abilityDetails.push(`Type: ${ability.type}`);
+                    if (ability.duration)
+                      abilityDetails.push(`Duration: ${ability.duration}`);
+                    if (ability.tempHP)
+                      abilityDetails.push(`Temporary HP: ${ability.tempHP}`);
+                    if (ability.save)
+                      abilityDetails.push(`Save: ${ability.save}`);
+                    if (ability.uses)
+                      abilityDetails.push(`Uses: ${ability.uses}`);
+                    if (ability.damage)
+                      abilityDetails.push(`Damage: ${ability.damage}`);
+                    if (ability.range)
+                      abilityDetails.push(`Range: ${ability.range}`);
+                    if (ability.effect)
+                      abilityDetails.push(`Effect: ${ability.effect}`);
+
+                    if (ability.bonus) {
+                      if (typeof ability.bonus === "object") {
+                        abilityDetails.push(
+                          `Bonus: ${JSON.stringify(ability.bonus)}`
+                        );
+                      } else {
+                        abilityDetails.push(`Bonus: ${ability.bonus}`);
+                      }
+                    }
+
+                    sections.subclass.features.push({
+                      name: ability.name || `${choiceName} - Special Ability`,
+                      type: "Special Ability",
+                      source: character.subclass,
+                      level: parseInt(level) || null,
+                      description:
+                        ability.description ||
+                        `Special ability from ${choiceName}`,
+                      details: abilityDetails,
+                    });
+                  });
+                }
+
+                if (benefits.resistances && benefits.resistances.length > 0) {
+                  sections.subclass.features.push({
+                    name: `${choiceName} - Resistances`,
+                    type: "Choice Benefit",
+                    source: character.subclass,
+                    level: parseInt(level) || null,
+                    description: `Damage resistances gained from ${choiceName}`,
+                    details: benefits.resistances.map((res) =>
+                      typeof res === "object"
+                        ? JSON.stringify(res)
+                        : `Resistance to ${res} damage`
+                    ),
+                  });
+                }
+
+                if (benefits.languages && benefits.languages.length > 0) {
+                  sections.subclass.features.push({
+                    name: `${choiceName} - Languages`,
+                    type: "Choice Benefit",
+                    source: character.subclass,
+                    level: parseInt(level) || null,
+                    description: `Languages gained from ${choiceName}`,
+                    details: benefits.languages.map((lang) =>
+                      typeof lang === "object"
+                        ? JSON.stringify(lang)
+                        : String(lang)
+                    ),
+                  });
+                }
+              }
             }
-          }
-        });
+          );
+        }
       }
     }
 
@@ -967,13 +1005,21 @@ const CharacterFeatsDisplay = ({
     },
     detailsList: {
       margin: 0,
-      paddingLeft: "20px",
-      color: theme.textSecondary,
+      padding: 0,
+      listStyle: "none",
+      display: "flex",
+      flexDirection: "column",
+      gap: "8px",
     },
     detailItem: {
       fontSize: "12px",
       lineHeight: "1.4",
-      marginBottom: "4px",
+      padding: "8px 12px",
+      backgroundColor: theme.background,
+      border: `1px solid ${theme.border}`,
+      borderRadius: "6px",
+      color: theme.text,
+      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
     },
     levelBadge: {
       backgroundColor: theme.primary,
@@ -1124,16 +1170,16 @@ const CharacterFeatsDisplay = ({
                         {feature.details && feature.details.length > 0 && (
                           <div style={styles.featureDetails}>
                             {Array.isArray(feature.details) ? (
-                              <ul style={styles.detailsList}>
+                              <div style={styles.detailsList}>
                                 {feature.details.map((detail, detailIndex) => (
-                                  <li
+                                  <div
                                     key={detailIndex}
                                     style={styles.detailItem}
                                   >
                                     {detail}
-                                  </li>
+                                  </div>
                                 ))}
-                              </ul>
+                              </div>
                             ) : (
                               <div style={styles.detailItem}>
                                 {feature.details}

@@ -3,17 +3,30 @@ import { getPassiveSkillFeatBonus } from "../CharacterManager/utils/featBenefits
 
 export const getModifier = (score) => Math.floor((score - 10) / 2);
 export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
-export const modifiers = (character) =>
-  character
-    ? {
-        strength: getModifier(character.strength),
-        dexterity: getModifier(character.dexterity),
-        constitution: getModifier(character.constitution),
-        intelligence: getModifier(character.intelligence),
-        wisdom: getModifier(character.wisdom),
-        charisma: getModifier(character.charisma),
-      }
-    : {};
+export const modifiers = (character) => {
+  if (!character) return {};
+
+  return {
+    strength: getModifier(
+      character.ability_scores?.strength || character.strength || 10
+    ),
+    dexterity: getModifier(
+      character.ability_scores?.dexterity || character.dexterity || 10
+    ),
+    constitution: getModifier(
+      character.ability_scores?.constitution || character.constitution || 10
+    ),
+    intelligence: getModifier(
+      character.ability_scores?.intelligence || character.intelligence || 10
+    ),
+    wisdom: getModifier(
+      character.ability_scores?.wisdom || character.wisdom || 10
+    ),
+    charisma: getModifier(
+      character.ability_scores?.charisma || character.charisma || 10
+    ),
+  };
+};
 
 const getAllCharacterFeats = (character) => {
   const allFeats = [...(character.standardFeats || [])];
@@ -38,7 +51,8 @@ export const calculateModifier = (skillName, character) => {
     return 0;
   }
 
-  const abilityScore = character[skill.ability] || 10;
+  const abilityScore =
+    character.ability_scores?.[skill.ability] || character[skill.ability] || 10;
   const abilityMod = Math.floor((abilityScore - 10) / 2);
 
   const skillLevel = character.skills?.[skillName] || 0;

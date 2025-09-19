@@ -1,3 +1,5 @@
+import { hpData } from "../../../../../SharedData/data";
+
 const calculateHitPoints = (
   castingStyle,
   constitution,
@@ -8,50 +10,20 @@ const calculateHitPoints = (
 
   const conModifier = Math.floor((constitution - 10) / 2);
 
-  const baseHitPoints = {
-    "Technique Caster": 6,
-    "Intellect Caster": 8,
-    "Vigor Caster": 12,
-    "Willpower Caster": 10,
+  const castingData = hpData[castingStyle];
+  if (!castingData) return 1;
 
-    Technique: 6,
-    Intellect: 8,
-    Vigor: 12,
-    Willpower: 10,
-  };
-
-  const base = baseHitPoints[castingStyle] || 8;
-  const hitPointsAtLevel1 = base + conModifier;
-
-  if (level > 1) {
-    const averageHitDiePerLevel = {
-      "Technique Caster": 4,
-      "Intellect Caster": 5,
-      "Vigor Caster": 8,
-      "Willpower Caster": 6,
-      Technique: 4,
-      Intellect: 5,
-      Vigor: 8,
-      Willpower: 6,
-    };
-
-    const avgPerLevel =
-      (averageHitDiePerLevel[castingStyle] || 5) + conModifier;
-    const additionalHP = (level - 1) * avgPerLevel;
-
-    let totalHP = hitPointsAtLevel1 + additionalHP;
-
-    if (hasToughFeat) {
-      totalHP += 2 * level;
-    }
-
-    return Math.max(1, totalHP);
-  }
+  const hitPointsAtLevel1 = castingData.base + conModifier;
 
   let totalHP = hitPointsAtLevel1;
 
+  if (level > 1) {
+    const additionalHP = (level - 1) * (castingData.avgPerLevel + conModifier);
+    totalHP += additionalHP;
+  }
+
   if (hasToughFeat) {
-    totalHP += 2;
+    totalHP += 2 * level;
   }
 
   return Math.max(1, totalHP);

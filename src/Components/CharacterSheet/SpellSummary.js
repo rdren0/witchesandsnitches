@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { BookOpen, Zap, Target, ChevronDown, ChevronUp } from "lucide-react";
 import { spellsData } from "../../SharedData/spells";
@@ -22,71 +22,81 @@ const SpellSummary = ({
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSpells, setExpandedSpells] = useState({});
 
-  const loadSpellProgress = useCallback(async () => {
+  useEffect(() => {
     if (!character || !supabase) return;
 
-    setIsLoading(true);
-    try {
-      let characterOwnerDiscordId;
+    const loadSpellProgress = async () => {
+      setIsLoading(true);
+      try {
+        let characterOwnerDiscordId;
 
-      if (adminMode && isUserAdmin) {
-        characterOwnerDiscordId =
-          character.discord_user_id || character.ownerId;
-      } else {
-        characterOwnerDiscordId =
-          user?.user_metadata?.provider_id || discordUserId;
+        if (adminMode && isUserAdmin) {
+          characterOwnerDiscordId =
+            character.discord_user_id || character.ownerId;
+        } else {
+          characterOwnerDiscordId =
+            user?.user_metadata?.provider_id || discordUserId;
+        }
+
+        const { data, error } = await supabase
+          .from("spell_progress_summary")
+          .select("*")
+          .eq("character_id", character.id)
+          .eq("discord_user_id", characterOwnerDiscordId)
+          .or("has_natural_twenty.eq.true,successful_attempts.gt.0");
+        if (error) {
+          console.error("Error fetching spell progress:", error);
+          return;
+        }
+
+        const newSpellAttempts = {};
+        const newCriticalSuccesses = {};
+        const newFailedAttempts = {};
+        const newResearchedSpells = {};
+        const newArithmancticTags = {};
+        const newRunicTags = {};
+
+        // Handle empty data gracefully
+        if (data && data.length > 0) {
+          data.forEach((spell) => {
+            const spellName = spell.spell_name;
+
+            if (spell.successful_attempts > 0) {
+              newSpellAttempts[spellName] = {
+                1: true,
+                2: spell.successful_attempts >= 2,
+              };
+            }
+
+            if (spell.has_natural_twenty) {
+              newCriticalSuccesses[spellName] = true;
+            }
+
+            if (spell.has_failed_attempt) {
+              newFailedAttempts[spellName] = true;
+            }
+          });
+        }
+
+        setSpellAttempts(newSpellAttempts);
+        setCriticalSuccesses(newCriticalSuccesses);
+        setFailedAttempts(newFailedAttempts);
+      } catch (error) {
+        console.error("Error loading spell progress:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      const { data, error } = await supabase
-        .from("spell_progress_summary")
-        .select("*")
-        .eq("character_id", character.id)
-        .eq("discord_user_id", characterOwnerDiscordId)
-        .or("has_natural_twenty.eq.true,successful_attempts.gt.0");
-      if (error) {
-        console.error("Error fetching spell progress:", error);
-        return;
-      }
-
-      const newSpellAttempts = {};
-      const newCriticalSuccesses = {};
-      const newFailedAttempts = {};
-      const newResearchedSpells = {};
-      const newArithmancticTags = {};
-      const newRunicTags = {};
-
-      data.forEach((spell) => {
-        const spellName = spell.spell_name;
-
-        if (spell.successful_attempts > 0) {
-          newSpellAttempts[spellName] = {
-            1: true,
-            2: spell.successful_attempts >= 2,
-          };
-        }
-
-        if (spell.has_natural_twenty) {
-          newCriticalSuccesses[spellName] = true;
-        }
-
-        if (spell.has_failed_attempt) {
-          newFailedAttempts[spellName] = true;
-        }
-      });
-
-      setSpellAttempts(newSpellAttempts);
-      setCriticalSuccesses(newCriticalSuccesses);
-      setFailedAttempts(newFailedAttempts);
-    } catch (error) {
-      console.error("Error loading spell progress:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [character, user, supabase, adminMode, isUserAdmin, discordUserId]);
-
-  useEffect(() => {
     loadSpellProgress();
-  }, [loadSpellProgress]);
+  }, [
+    character?.id,
+    supabase,
+    adminMode,
+    isUserAdmin,
+    discordUserId,
+    user?.user_metadata?.provider_id,
+  ]);
 
   const toggleSpellExpansion = (spellName) => {
     setExpandedSpells((prev) => ({
@@ -95,7 +105,7 @@ const SpellSummary = ({
     }));
   };
 
-  const getSpellStats = () => {
+  const spellStats = useMemo(() => {
     const stats = {
       mastered: [],
       attempted: [],
@@ -139,9 +149,7 @@ const SpellSummary = ({
       }
     });
     return stats;
-  };
-
-  const spellStats = getSpellStats();
+  }, [spellAttempts, isLoading]);
 
   const styles = {
     container: {

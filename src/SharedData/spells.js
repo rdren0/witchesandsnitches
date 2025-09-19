@@ -783,9 +783,9 @@ export const spellsData = {
           range: "90 feet",
           duration: "Instantaneous",
           year: 5,
-
+          tags: ["Defensive"],
           description:
-            "Whenever you cast this spell on an active defensive spell within range that improves a creature's AC or grants it temporary hit points, each creature affected by the targeted spell gains temporary hit points equal to twice your caster level + your spellcasting ability modifier. When the targeted spell ends or an affected creature is no longer affected by it, the creature loses any remaining temporary hit points from this spell.",
+            "Whenever you cast this spell on an active defensive spell within range that improves a creature's AC or grants it temporary hit points, each creature affected by the targeted spell gains temporary hit points equal to twice your caster level + your spellcasting ability modifier. When the targeted spell ends or an affected creature is no longer affected by it, the creature loses any remaining temporary hit points from this spell. If you are maintaining concentration or dedication on a defensive spell, this spell can uniquely be cast on that active defensive spell without ending that spell or breaking your concentration or dedication.",
         },
         {
           name: "Fortissimum",
@@ -873,18 +873,6 @@ export const spellsData = {
             "The Confundus Charm is a particularly powerful charm that leaves anything confused, forgetful, and impressionable, often causing people to wander off absent-mindedly. If the target is an object you can see within range that operates or functions on its own, it will operate erratically, malfunction, or completely shut down. If the target is a creature you can see within range, it must succeed on a Wisdom saving throw when you cast this spell or be affected by it.",
           higherLevels:
             "When you cast this spell using a spell slot of 5th level or higher, you can target one additional target for each slot level above 4th.",
-        },
-
-        {
-          name: "Fianto Duri",
-          class: ["Charms"],
-          level: "3rd Level",
-          castingTime: "1 action",
-          range: "90 feet",
-          duration: "Instantaneous",
-          year: 5,
-          description:
-            "Whenever you cast this spell on an active defensive spell within range that improves a creature's AC or grants it temporary hit points, each creature affected by the targeted spell gains temporary hit points equal to twice your caster level + your spellcasting ability modifier. When the targeted spell ends or an affected creature is no longer affected by it, the creature loses any remaining temporary hit points from this spell.",
         },
 
         {

@@ -63,6 +63,8 @@ export const useCharacterData = (
           ...transformedCharacter,
         };
 
+        finalCharacter._originalHitPoints = loadedCharacter.hit_points;
+
         setCharacter(finalCharacter);
         setOriginalCharacter(finalCharacter);
       }
@@ -100,7 +102,13 @@ export const useCharacterData = (
   }, []);
 
   const resetCharacter = useCallback(() => {
-    setCharacter(originalCharacter);
+    const resetChar = { ...originalCharacter };
+
+    if (resetChar._originalHitPoints !== undefined) {
+      resetChar.hitPoints = resetChar._originalHitPoints;
+    }
+
+    setCharacter(resetChar);
     setError(null);
   }, [originalCharacter]);
 
@@ -193,6 +201,8 @@ export const useCharacterData = (
           ...character,
           ...transformedResult,
         };
+
+        savedCharacter._originalHitPoints = result.hit_points;
 
         setCharacter(savedCharacter);
         setOriginalCharacter(savedCharacter);

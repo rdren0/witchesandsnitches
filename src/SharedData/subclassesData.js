@@ -4487,7 +4487,7 @@ export const subclassesData = {
           {
             name: "Rebuking Promise",
             description:
-              "You can use your Channel Divinity to castigate unworldly beings. As an action, you speak seething words and each Ghost, Ghoul, Poltergeist, Inferi, Undead or other dark creature within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
+              "You can use your Defender's Promise to castigate unworldly beings. As an action, you speak seething words and each Ghost, Ghoul, Poltergeist, Inferi, Undead or other dark creature within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage.",
             benefits: {
               specialAbilities: [
                 {

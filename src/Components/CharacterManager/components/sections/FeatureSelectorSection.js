@@ -20,7 +20,10 @@ const FeatureSelectorSection = ({
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
 
-  const selectedFeats = character.standardFeats || [];
+  const selectedFeats =
+    character._editingASILevel && !isLevel1Choice
+      ? (character.standardFeats || []).filter((feat) => feat)
+      : character.standardFeats || [];
   const featChoices = character.featChoices || {};
 
   const enhancedStyles = {
@@ -395,6 +398,9 @@ const FeatureSelectorSection = ({
 
   const canSelectFeat = (feat, character) => {
     if (!feat.repeatable) {
+      if (character._editingASILevel && !isLevel1Choice) {
+        return true;
+      }
       const allSelectedFeats = getAllSelectedFeats(character);
       return !allSelectedFeats.includes(feat.name);
     }
@@ -581,7 +587,10 @@ const FeatureSelectorSection = ({
   };
 
   const filteredFeats = useMemo(() => {
-    const allSelectedFeats = getAllSelectedFeats(character);
+    const allSelectedFeats =
+      character._editingASILevel && !isLevel1Choice
+        ? []
+        : getAllSelectedFeats(character);
     const currentStandardFeats = character.standardFeats || [];
 
     if (currentStandardFeats.length >= maxFeats) {
@@ -599,6 +608,10 @@ const FeatureSelectorSection = ({
         return (
           canSelectFeat(feat, character) && meetsPrerequisites(feat, character)
         );
+      }
+
+      if (character._editingASILevel && !isLevel1Choice) {
+        return meetsPrerequisites(feat, character);
       }
 
       if (allSelectedFeats.includes(feat.name)) {
