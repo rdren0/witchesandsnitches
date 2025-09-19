@@ -34,6 +34,7 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import { getAllAbilityModifiers } from "../CharacterManager/utils/characterUtils";
 import {
   backgroundsData,
   subclassesData,
@@ -344,43 +345,6 @@ const CharacterSheet = ({
     };
   };
 
-  const calculateEffectiveAbilityScores = useCallback(
-    (baseScores, asiChoices, character = {}, heritageChoices = {}) => {
-      const effectiveScores = { ...baseScores };
-
-      Object.entries(asiChoices).forEach(([level, choice]) => {
-        if (choice.type === "asi" && choice.abilityScoreIncreases) {
-          choice.abilityScoreIncreases.forEach((increase) => {
-            if (effectiveScores[increase.ability] !== undefined) {
-              effectiveScores[increase.ability] =
-                (effectiveScores[increase.ability] || 10) + 1;
-            }
-          });
-        }
-      });
-
-      if (
-        character.innate_heritage &&
-        Object.keys(heritageChoices).length > 0
-      ) {
-        const { modifiers: heritageModifiers } = calculateHeritageModifiers(
-          { ...character, innateHeritage: character.innate_heritage },
-          heritageChoices
-        );
-
-        Object.keys(heritageModifiers).forEach((ability) => {
-          if (effectiveScores[ability] !== undefined) {
-            effectiveScores[ability] =
-              (effectiveScores[ability] || 10) + heritageModifiers[ability];
-          }
-        });
-      }
-
-      return effectiveScores;
-    },
-    []
-  );
-
   const getAllCharacterFeats = useCallback((standardFeats, asiChoices) => {
     const allFeats = [...standardFeats];
 
@@ -636,19 +600,31 @@ const CharacterSheet = ({
       if (error) throw error;
 
       if (data) {
-        const baseAbilityScores = data.ability_scores || {};
-        const asiChoices = {};
+        const baseAbilityScores =
+          data.base_ability_scores || data.ability_scores || {};
         const heritageChoices = data.heritage_choices || {};
-        const effectiveAbilityScores = calculateEffectiveAbilityScores(
-          baseAbilityScores,
-          asiChoices,
-          data,
-          heritageChoices
-        );
+
+        const allModifiers = getAllAbilityModifiers(data);
+
+        const effectiveAbilityScores = {
+          strength:
+            (baseAbilityScores.strength || 8) + (allModifiers.strength || 0),
+          dexterity:
+            (baseAbilityScores.dexterity || 8) + (allModifiers.dexterity || 0),
+          constitution:
+            (baseAbilityScores.constitution || 8) +
+            (allModifiers.constitution || 0),
+          intelligence:
+            (baseAbilityScores.intelligence || 8) +
+            (allModifiers.intelligence || 0),
+          wisdom: (baseAbilityScores.wisdom || 8) + (allModifiers.wisdom || 0),
+          charisma:
+            (baseAbilityScores.charisma || 8) + (allModifiers.charisma || 0),
+        };
 
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],
-          asiChoices
+          data.asi_choices || {}
         );
 
         const resources = data.character_resources?.[0] || {};
@@ -659,7 +635,7 @@ const CharacterSheet = ({
           armorClass:
             getBaseArmorClass(data.casting_style) +
             getArmorClassModifier(effectiveAbilityScores),
-          asiChoices: asiChoices,
+          asiChoices: data.asi_choices || {},
           background: data.background || "Unknown",
           baseAbilityScores: baseAbilityScores,
           bloodStatus: data.innate_heritage || "Unknown",
@@ -751,7 +727,6 @@ const CharacterSheet = ({
     adminMode,
     isUserAdmin,
     discordUserId,
-    calculateEffectiveAbilityScores,
     getAllCharacterFeats,
     getBaseArmorClass,
     getArmorClassModifier,
