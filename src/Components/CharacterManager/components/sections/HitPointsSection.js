@@ -3,6 +3,7 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { RefreshCw } from "lucide-react";
 import { calculateToughFeatHPBonus } from "../../utils/utils";
+import { hpData } from "../../../../SharedData/data";
 
 const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
@@ -31,7 +32,15 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
     const toughFeatBonus = calculateToughFeatHPBonus(character);
-    return level * (castingHpData.base + conMod) + toughFeatBonus;
+
+    const castingData = hpData[character.castingStyle];
+    if (!castingData) return 1;
+
+    const baseHP = castingData.base + conMod;
+
+    const additionalHP = (level - 1) * (castingData.avgPerLevel + conMod);
+
+    return Math.max(1, baseHP + additionalHP + toughFeatBonus);
   };
 
   const rollHp = () => {
@@ -313,8 +322,9 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             {!isHpManualMode && rolledHp === null && (
               <div style={hpStyles.calculationRow}>
                 <span style={{ color: theme.textSecondary, fontSize: "14px" }}>
-                  = ({castingHpData.base} + {conMod}) × {character.level || 1} ={" "}
-                  {calculateHitPoints({ character })}
+                  = {castingHpData.base} + {conMod} + ({character.level - 1} × (
+                  {hpData[character.castingStyle]?.avgPerLevel || 0} + {conMod}
+                  )) = {calculateHitPoints({ character })}
                 </span>
               </div>
             )}
@@ -384,11 +394,13 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             ? "Enter your hit points manually, or switch back to automatic calculation"
             : rolledHp !== null
             ? "Hit points were rolled manually. Use 'Roll for Hit Points' to roll again, or switch to manual entry"
-            : `Hit points calculated automatically: ${
+            : `Hit points calculated automatically: Level 1: ${
                 character.castingStyle
-              } (${castingHpData.hitDie}) + Constitution modifier (${
+              } base (${castingHpData.base}) + Con mod (${
                 conMod >= 0 ? "+" : ""
-              }${conMod}) × Level ${character.level || 1}`}
+              }${conMod}), Levels 2+: avg per level (${
+                hpData[character.castingStyle]?.avgPerLevel || 0
+              }) + Con mod per level`}
         </div>
       </div>
     </div>

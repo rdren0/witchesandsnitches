@@ -400,11 +400,7 @@ const FeatSelectionSection = ({
 
     featChoices: choice.featChoices || {},
 
-    asiChoices: Object.fromEntries(
-      Object.entries(character.asiChoices || {}).filter(
-        ([lvl]) => parseInt(lvl) !== level
-      )
-    ),
+    asiChoices: {},
 
     _editingASILevel: level,
   };
