@@ -21,7 +21,7 @@ const CastingStyleCard = ({
         marginBottom: "12px",
         backgroundColor: isSelected ? `${data.color}10` : theme.background,
         cursor: "pointer",
-        width: "84vw",
+        width: "100%",
         transition: "all 0.2s ease",
         boxShadow: isSelected
           ? `0 4px 12px ${data.color}20`
@@ -202,7 +202,8 @@ const CastingStyleCard = ({
               >
                 {data.keyFeatures.map((feature, index) => (
                   <li key={index} style={{ marginBottom: "4px" }}>
-                    <strong>{feature.name}</strong> (Level {feature.level}): {feature.description}
+                    <strong>{feature.name}</strong> (Level {feature.level}):{" "}
+                    {feature.description}
                   </li>
                 ))}
               </ul>
@@ -260,6 +261,8 @@ export const EnhancedCastingStyleSelector = ({
 
   const handleCardSelect = (styleName) => {
     onStyleChange(styleName);
+
+    setExpandedCard(styleName);
   };
 
   const handleToggleExpand = (styleName) => {
@@ -267,7 +270,7 @@ export const EnhancedCastingStyleSelector = ({
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "800px" }}>
+    <div style={{ width: "100%" }}>
       <div style={{ marginBottom: "16px" }}>
         <label
           style={{
@@ -317,7 +320,7 @@ export const EnhancedCastingStyleSelector = ({
             border: `1px solid ${theme.primary}`,
             borderRadius: "8px",
             color: theme.primary,
-            width: "84vw",
+            width: "100%",
           }}
         >
           <div
