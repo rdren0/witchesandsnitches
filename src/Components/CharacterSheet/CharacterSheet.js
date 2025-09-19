@@ -148,7 +148,8 @@ const CharacterSheet = ({
     if (!spellcastingAbility) return 0;
 
     const abilityKey = spellcastingAbility.toLowerCase();
-    const abilityScore = character[abilityKey] || 10;
+    const abilityScore =
+      character.ability_scores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -320,7 +321,7 @@ const CharacterSheet = ({
 
   const getHPColor = (character) => {
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const percentage = currentHP / maxHP;
 
     if (percentage <= 0.25) return "#EF4444";
@@ -331,7 +332,7 @@ const CharacterSheet = ({
 
   const getEnhancedHPStyle = (character, baseStyle) => {
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const hpColor = getHPColor(character);
 
     return {
@@ -604,23 +605,16 @@ const CharacterSheet = ({
           data.base_ability_scores || data.ability_scores || {};
         const heritageChoices = data.heritage_choices || {};
 
-        const allModifiers = getAllAbilityModifiers(data);
-
         const effectiveAbilityScores = {
-          strength:
-            (baseAbilityScores.strength || 8) + (allModifiers.strength || 0),
-          dexterity:
-            (baseAbilityScores.dexterity || 8) + (allModifiers.dexterity || 0),
-          constitution:
-            (baseAbilityScores.constitution || 8) +
-            (allModifiers.constitution || 0),
-          intelligence:
-            (baseAbilityScores.intelligence || 8) +
-            (allModifiers.intelligence || 0),
-          wisdom: (baseAbilityScores.wisdom || 8) + (allModifiers.wisdom || 0),
-          charisma:
-            (baseAbilityScores.charisma || 8) + (allModifiers.charisma || 0),
+          strength: data.ability_scores?.strength || 10,
+          dexterity: data.ability_scores?.dexterity || 10,
+          constitution: data.ability_scores?.constitution || 10,
+          intelligence: data.ability_scores?.intelligence || 10,
+          wisdom: data.ability_scores?.wisdom || 10,
+          charisma: data.ability_scores?.charisma || 10,
         };
+        console.log({ data });
+        console.log({ effectiveAbilityScores });
 
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],
@@ -650,6 +644,7 @@ const CharacterSheet = ({
           gameSession: data.game_session || "",
           hitDie: getHitDie(data.casting_style),
           hitPoints: data.hit_points || 1,
+          maxHitPoints: data.hit_points || 1,
           house: data.house,
           houseChoices: data.house_choices || {},
           id: data.id,
@@ -712,7 +707,6 @@ const CharacterSheet = ({
           metamagicChoices: data.metamagic_choices || {},
           heritageChoices: heritageChoices,
         };
-
         setCharacter(transformedCharacter);
       }
     } catch (err) {
@@ -764,7 +758,7 @@ const CharacterSheet = ({
     }
 
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const currentHitDice = character.currentHitDice;
     const maxHitDice = character.maxHitDice;
 
@@ -928,7 +922,7 @@ const CharacterSheet = ({
     if (!character) return;
 
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
 
     if (currentHP >= maxHP) {
       alert("Character is already at full health!");

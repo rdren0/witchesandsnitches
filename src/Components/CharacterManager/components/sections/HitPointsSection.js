@@ -44,14 +44,19 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
   };
 
   const rollHp = () => {
+    const level = character.level || 1;
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
-    const rolled = Math.floor(Math.random() * castingHpData.base) + 1 + conMod;
     const toughFeatBonus = calculateToughFeatHPBonus(character);
-    const totalHp = Math.max(
-      1,
-      rolled * (character.level || 1) + toughFeatBonus
-    );
+
+    let totalHp = castingHpData.base + conMod;
+
+    for (let i = 2; i <= level; i++) {
+      const rolled = Math.floor(Math.random() * castingHpData.base) + 1;
+      totalHp += rolled + conMod;
+    }
+
+    totalHp = Math.max(1, totalHp + toughFeatBonus);
 
     setRolledHp(totalHp);
     onChange("hitPoints", totalHp);

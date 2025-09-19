@@ -140,6 +140,96 @@ export const getAvailableASILevels = (currentLevel) => {
   return ASI_LEVELS.filter((level) => level <= currentLevel);
 };
 
+export const calculateFinalAbilityScores = (character) => {
+  const abilities = [
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
+  ];
+
+  const finalScores = {};
+
+  const featChoices = { ...character.featChoices };
+  const asiChoices = character.asiChoices || character.asi_choices;
+  if (asiChoices) {
+    Object.values(asiChoices).forEach((choice) => {
+      if (choice.type === "feat" && choice.featChoices) {
+        Object.assign(featChoices, choice.featChoices);
+      }
+    });
+  }
+
+  const houseChoices = character.house_choices || character.houseChoices || {};
+  const heritageChoices =
+    character.heritage_choices || character.heritageChoices || {};
+
+  const { totalModifiers } = calculateTotalModifiers(
+    character,
+    featChoices,
+    houseChoices,
+    heritageChoices
+  );
+
+  abilities.forEach((ability) => {
+    let baseScore;
+    if (
+      character.base_ability_scores &&
+      character.base_ability_scores[ability] !== undefined
+    ) {
+      baseScore = character.base_ability_scores[ability];
+    } else {
+      baseScore =
+        character.abilityScores?.[ability] || character[ability] || 10;
+    }
+
+    let finalScore = baseScore;
+
+    if (totalModifiers[ability]) {
+      finalScore += totalModifiers[ability];
+    }
+
+    if (asiChoices) {
+      Object.values(asiChoices).forEach((choice) => {
+        if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+          choice.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability === ability && increase.increase) {
+              finalScore += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    if (ability === "wisdom" && character.name === "Stanley Yelnats Shunpike") {
+      console.log(`Wisdom calculation for ${character.name}:`);
+      console.log(`- Base score: ${baseScore}`);
+      console.log(`- Non-ASI modifiers: ${totalModifiers[ability] || 0}`);
+      const asiIncrease = asiChoices
+        ? Object.values(asiChoices).reduce((sum, choice) => {
+            if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+              return (
+                sum +
+                choice.abilityScoreIncreases
+                  .filter((inc) => inc.ability === ability)
+                  .reduce((s, inc) => s + inc.increase, 0)
+              );
+            }
+            return sum;
+          }, 0)
+        : 0;
+      console.log(`- ASI increases: ${asiIncrease}`);
+      console.log(`- Final score: ${finalScore}`);
+    }
+
+    finalScores[ability] = finalScore;
+  });
+
+  return finalScores;
+};
+
 export const validateFeatSelections = (character) => {
   const allSelectedFeats = getAllSelectedFeats(character);
   const uniqueFeats = [...new Set(allSelectedFeats)];

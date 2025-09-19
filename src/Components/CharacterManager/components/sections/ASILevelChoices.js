@@ -253,16 +253,27 @@ const AbilityScoreIncrementSection = ({
   const handleAbilityIncrement = (ability) => {
     if (disabled) return;
 
-    const existingIncrease = currentIncreases.find(
+    const abilityIncreases = currentIncreases.filter(
       (inc) => inc.ability === ability
     );
+    const totalIncreases = currentIncreases.length;
 
-    if (existingIncrease) {
+    if (abilityIncreases.length === 2) {
       const newIncreases = currentIncreases.filter(
         (inc) => inc.ability !== ability
       );
       onAbilityChange(level, newIncreases);
-    } else if (currentIncreases.length < 2) {
+    } else if (abilityIncreases.length === 1) {
+      if (totalIncreases < 2) {
+        const newIncreases = [...currentIncreases, { ability, increase: 1 }];
+        onAbilityChange(level, newIncreases);
+      } else {
+        const newIncreases = currentIncreases.filter(
+          (inc) => inc.ability !== ability
+        );
+        onAbilityChange(level, newIncreases);
+      }
+    } else if (totalIncreases < 2) {
       const newIncreases = [...currentIncreases, { ability, increase: 1 }];
       onAbilityChange(level, newIncreases);
     }
@@ -276,21 +287,26 @@ const AbilityScoreIncrementSection = ({
   };
 
   const abilityCardStyle = (ability) => {
-    const isSelected = currentIncreases.some((inc) => inc.ability === ability);
-    const canSelect = !isSelected && currentIncreases.length < 2;
+    const abilityIncreases = currentIncreases.filter(
+      (inc) => inc.ability === ability
+    );
+    const increaseCount = abilityIncreases.length;
+    const totalIncreases = currentIncreases.length;
+    const canSelect = totalIncreases < 2 || increaseCount > 0;
 
     return {
       padding: "12px 16px",
-      border: `2px solid ${isSelected ? theme.success : theme.border}`,
+      border: `2px solid ${increaseCount > 0 ? theme.success : theme.border}`,
       borderRadius: "8px",
-      backgroundColor: isSelected ? `${theme.success}15` : theme.surface,
-      cursor: disabled
-        ? "not-allowed"
-        : canSelect || isSelected
-        ? "pointer"
-        : "not-allowed",
+      backgroundColor:
+        increaseCount === 2
+          ? `${theme.success}25`
+          : increaseCount === 1
+          ? `${theme.success}15`
+          : theme.surface,
+      cursor: disabled ? "not-allowed" : canSelect ? "pointer" : "not-allowed",
       transition: "all 0.2s ease",
-      opacity: disabled ? 0.6 : canSelect || isSelected ? 1 : 0.4,
+      opacity: disabled ? 0.6 : canSelect ? 1 : 0.4,
       textAlign: "center",
     };
   };
@@ -298,7 +314,8 @@ const AbilityScoreIncrementSection = ({
   return (
     <div>
       <div style={styles.helpText}>
-        Select two different abilities to increase by +1 each (total +2).
+        Select abilities to increase (total +2). You can increase one ability by
+        +2 or two different abilities by +1 each.
         {currentIncreases.length > 0 && (
           <span style={{ color: theme.success, marginLeft: "8px" }}>
             ({currentIncreases.length}/2 selected)
@@ -308,9 +325,11 @@ const AbilityScoreIncrementSection = ({
 
       <div style={abilityGridStyle}>
         {abilities.map((ability) => {
-          const isSelected = currentIncreases.some(
+          const abilityIncreases = currentIncreases.filter(
             (inc) => inc.ability === ability
           );
+          const increaseCount = abilityIncreases.length;
+          const totalIncrease = increaseCount;
           const currentScore = character.abilityScores?.[ability] || 10;
 
           return (
@@ -322,7 +341,7 @@ const AbilityScoreIncrementSection = ({
               <div
                 style={{
                   fontWeight: "600",
-                  color: isSelected ? theme.success : theme.text,
+                  color: increaseCount > 0 ? theme.success : theme.text,
                   textTransform: "capitalize",
                   fontSize: "14px",
                 }}
@@ -336,9 +355,9 @@ const AbilityScoreIncrementSection = ({
                   marginTop: "4px",
                 }}
               >
-                {currentScore} → {currentScore + (isSelected ? 1 : 0)}
+                {currentScore} → {currentScore + totalIncrease}
               </div>
-              {isSelected && (
+              {increaseCount > 0 && (
                 <div
                   style={{
                     fontSize: "12px",
@@ -347,7 +366,7 @@ const AbilityScoreIncrementSection = ({
                     marginTop: "4px",
                   }}
                 >
-                  +1 ✓
+                  +{totalIncrease} ✓
                 </div>
               )}
             </div>
@@ -369,13 +388,23 @@ const AbilityScoreIncrementSection = ({
             textAlign: "center",
           }}
         >
-          ✓ Ability Score Improvement Complete: +1{" "}
-          {currentIncreases
-            .map(
-              (inc) =>
-                inc.ability.charAt(0).toUpperCase() + inc.ability.slice(1)
-            )
-            .join(", +1 ")}
+          {(() => {
+            const abilityGroups = currentIncreases.reduce((acc, inc) => {
+              acc[inc.ability] = (acc[inc.ability] || 0) + 1;
+              return acc;
+            }, {});
+
+            const displayText = Object.entries(abilityGroups)
+              .map(
+                ([ability, count]) =>
+                  `+${count} ${
+                    ability.charAt(0).toUpperCase() + ability.slice(1)
+                  }`
+              )
+              .join(", ");
+
+            return `✓ Ability Score Improvement Complete: ${displayText}`;
+          })()}
         </div>
       )}
     </div>
