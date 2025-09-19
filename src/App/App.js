@@ -11,7 +11,7 @@ import {
 import { Edit3, Check, X, User, Palette, Shield, Key } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { characterService } from "../services/characterService";
-import SpellBook from "../Components/SpellBook/Spellbook";
+import SpellBook from "../Components/SpellBook/SpellBook";
 
 import CharacterSheetWrapper from "../Components/CharacterSheet/CharacterSheetWrapper";
 import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
