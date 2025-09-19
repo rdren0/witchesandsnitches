@@ -94,7 +94,7 @@ export const SpellBonusDiceModal = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1001,
+        zIndex: 9999,
         padding: "20px",
         animation: "fadeIn 0.2s ease-out",
       }}

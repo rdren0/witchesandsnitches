@@ -92,57 +92,76 @@ const BasicInfoSection = ({
       </div>
 
       <div style={styles.fieldContainer}>
-        <label style={styles.label}>Game Session</label>
-        <select
-          value={character.gameSession || ""}
-          onChange={(e) => handleInputChange("gameSession", e.target.value)}
+        <div
           style={{
-            ...styles.select,
+            background: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: "8px",
+            padding: "16px",
+            marginBottom: "16px",
+            backgroundColor: theme.background,
             opacity: disabled ? 0.6 : 1,
             pointerEvents: disabled ? "none" : "auto",
           }}
-          disabled={disabled}
         >
-          <option value="">Select Game Session...</option>
+          <label style={styles.label}>Game Session</label>
+          <select
+            value={character.gameSession || ""}
+            onChange={(e) => handleInputChange("gameSession", e.target.value)}
+            style={{
+              ...styles.select,
+              width: "100%",
+            }}
+            disabled={disabled}
+          >
+            <option value="">Select Game Session...</option>
 
-          <optgroup label="Haunting Sessions">
-            {gameSessionGroups.haunting.map((session) => (
+            <optgroup label="Haunting Sessions">
+              {gameSessionGroups.haunting.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            <optgroup label="Knights Sessions">
+              {gameSessionGroups.knights.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            <optgroup label="Other Sessions">
+              {gameSessionGroups.other.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </optgroup>
+
+            <option disabled>──────────</option>
+
+            {gameSessionGroups.development.map((session) => (
               <option key={session} value={session}>
                 {session}
               </option>
             ))}
-          </optgroup>
-
-          <option disabled>──────────</option>
-
-          <optgroup label="Knights Sessions">
-            {gameSessionGroups.knights.map((session) => (
-              <option key={session} value={session}>
-                {session}
-              </option>
-            ))}
-          </optgroup>
-
-          <option disabled>──────────</option>
-
-          <optgroup label="Other Sessions">
-            {gameSessionGroups.other.map((session) => (
-              <option key={session} value={session}>
-                {session}
-              </option>
-            ))}
-          </optgroup>
-
-          <option disabled>──────────</option>
-
-          {gameSessionGroups.development.map((session) => (
-            <option key={session} value={session}>
-              {session}
-            </option>
-          ))}
-        </select>
-        <div style={styles.helpText}>
-          Select which game session your character will join.
+          </select>
+          <div
+            style={{
+              ...styles.helpText,
+              fontSize: "12px",
+              color: theme.textSecondary,
+              marginTop: "4px",
+            }}
+          >
+            Choose which campaign group your character will join
+          </div>
         </div>
       </div>
 
