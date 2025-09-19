@@ -1287,6 +1287,7 @@ export const rollAbility = async ({
     const hasProficiency = false;
 
     const diceResult = rollDice(character, ability.key, hasProficiency);
+
     const d20Roll = diceResult.originalRoll;
     const adjustedRoll = diceResult.total;
     const abilityMod = characterModifiers[ability.key];
