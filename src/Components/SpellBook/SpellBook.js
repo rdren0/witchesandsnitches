@@ -243,9 +243,9 @@ const SpellBook = ({
 
       return {
         isUnattempted: !hasAnyAttempt && !isResearched,
-        isAttempted: hasAnyAttempt && !isMastered,
+        isAttempted: successfulAttempts > 0 && !isMastered,
         isMastered: isMastered,
-        hasFailed: hasFailed,
+        hasFailed: hasFailed && successfulAttempts === 0,
         isResearched: isResearched,
         successfulAttempts,
       };
@@ -519,9 +519,16 @@ const SpellBook = ({
   };
 
   const getTotalFailed = () => {
-    return Object.keys(failedAttempts).filter(
-      (spellName) => failedAttempts[spellName]
-    ).length;
+    const allSpellNames = new Set([
+      ...Object.keys(spellAttempts),
+      ...Object.keys(failedAttempts),
+      ...Object.keys(researchedSpells),
+    ]);
+
+    return Array.from(allSpellNames).filter((spellName) => {
+      const status = getSpellAttemptStatus(spellName);
+      return status.hasFailed;
+    }).length;
   };
 
   const getTotalEnhanced = () => {
