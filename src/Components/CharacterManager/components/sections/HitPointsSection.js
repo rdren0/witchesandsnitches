@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { RefreshCw } from "lucide-react";
@@ -11,6 +11,16 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
 
   const [isHpManualMode, setIsHpManualMode] = useState(false);
   const [rolledHp, setRolledHp] = useState(null);
+
+  useEffect(() => {
+    if (
+      character._originalHitPoints !== undefined &&
+      character.hitPoints === character._originalHitPoints
+    ) {
+      setRolledHp(null);
+      setIsHpManualMode(false);
+    }
+  }, [character.hitPoints, character._originalHitPoints]);
 
   const getCastingStyleHpData = (castingStyle) => {
     const hpData = {
