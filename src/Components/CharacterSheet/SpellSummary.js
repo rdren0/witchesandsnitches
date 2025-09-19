@@ -272,7 +272,7 @@ const SpellSummary = ({
         <div style={styles.headerLeft}>
           <div style={styles.headerTitle}>
             <BookOpen size={16} />
-            Spell Progress
+            Unlocked Spells
           </div>
           <div style={styles.statsRow}>
             <div style={styles.stat}>
