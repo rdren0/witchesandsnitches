@@ -9,7 +9,7 @@ import {
   Award,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import SpellBook from "../SpellBook/SpellBook";
+import SpellBook from "../SpellBook/Spellbook";
 import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
