@@ -17,6 +17,7 @@ import SpellSlotTracker from "./SpellSlotTracker";
 import CorruptionTracker from "./CorruptionTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
+import SpellSummary from "./SpellSummary";
 
 const CharacterTabbedPanel = ({
   supabase,
@@ -105,13 +106,19 @@ const CharacterTabbedPanel = ({
       label: "Dice Roller",
       icon: Dices,
       component: (
-        <>
+        <div
+          style={{
+            backgroundColor: theme.background,
+            padding: "16px",
+            height: "100%",
+          }}
+        >
           <FlexibleDiceRoller
             title="Custom Roll"
             description={`Rolling for ${selectedCharacter.name}`}
             character={selectedCharacter}
           />
-        </>
+        </div>
       ),
     },
     {
@@ -119,7 +126,21 @@ const CharacterTabbedPanel = ({
       label: "Spell & Sorcery",
       icon: Wand,
       component: (
-        <>
+        <div
+          style={{
+            backgroundColor: theme.background,
+            padding: "16px",
+            height: "100%",
+          }}
+        >
+          <SpellSummary
+            character={selectedCharacter}
+            supabase={supabase}
+            user={user}
+            discordUserId={discordUserId}
+            adminMode={adminMode}
+            isUserAdmin={isUserAdmin}
+          />
           <SpellSlotTracker
             character={selectedCharacter}
             supabase={supabase}
@@ -131,7 +152,7 @@ const CharacterTabbedPanel = ({
             character={selectedCharacter}
             onNavigateToCharacterManagement={onNavigateToCharacterManagement}
           />
-        </>
+        </div>
       ),
     },
     {
@@ -139,18 +160,26 @@ const CharacterTabbedPanel = ({
       label: "Spellbook",
       icon: BookOpen,
       component: (
-        <SpellBook
-          supabase={supabase}
-          user={user}
-          discordUserId={discordUserId}
-          selectedCharacter={selectedCharacter}
-          setCharacter={setCharacter}
-          selectedCharacterId={selectedCharacter.id}
-          characters={characters}
-          isEmbedded={true}
-          adminMode={adminMode}
-          isUserAdmin={isUserAdmin}
-        />
+        <div
+          style={{
+            backgroundColor: theme.background,
+            padding: "16px",
+            height: "100%",
+          }}
+        >
+          <SpellBook
+            supabase={supabase}
+            user={user}
+            discordUserId={discordUserId}
+            selectedCharacter={selectedCharacter}
+            setCharacter={setCharacter}
+            selectedCharacterId={selectedCharacter.id}
+            characters={characters}
+            isEmbedded={true}
+            adminMode={adminMode}
+            isUserAdmin={isUserAdmin}
+          />
+        </div>
       ),
     },
     {
