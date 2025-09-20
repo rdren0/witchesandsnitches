@@ -140,6 +140,96 @@ export const getAvailableASILevels = (currentLevel) => {
   return ASI_LEVELS.filter((level) => level <= currentLevel);
 };
 
+export const calculateFinalAbilityScores = (character) => {
+  const abilities = [
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
+  ];
+
+  const finalScores = {};
+
+  const featChoices = { ...character.featChoices };
+  const asiChoices = character.asiChoices || character.asi_choices;
+  if (asiChoices) {
+    Object.values(asiChoices).forEach((choice) => {
+      if (choice.type === "feat" && choice.featChoices) {
+        Object.assign(featChoices, choice.featChoices);
+      }
+    });
+  }
+
+  const houseChoices = character.house_choices || character.houseChoices || {};
+  const heritageChoices =
+    character.heritage_choices || character.heritageChoices || {};
+
+  const { totalModifiers } = calculateTotalModifiers(
+    character,
+    featChoices,
+    houseChoices,
+    heritageChoices
+  );
+
+  abilities.forEach((ability) => {
+    let baseScore;
+    if (
+      character.base_ability_scores &&
+      character.base_ability_scores[ability] !== undefined
+    ) {
+      baseScore = character.base_ability_scores[ability];
+    } else {
+      baseScore =
+        character.abilityScores?.[ability] || character[ability] || 10;
+    }
+
+    let finalScore = baseScore;
+
+    if (totalModifiers[ability]) {
+      finalScore += totalModifiers[ability];
+    }
+
+    if (asiChoices) {
+      Object.values(asiChoices).forEach((choice) => {
+        if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+          choice.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability === ability && increase.increase) {
+              finalScore += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    if (ability === "wisdom" && character.name === "Stanley Yelnats Shunpike") {
+      console.log(`Wisdom calculation for ${character.name}:`);
+      console.log(`- Base score: ${baseScore}`);
+      console.log(`- Non-ASI modifiers: ${totalModifiers[ability] || 0}`);
+      const asiIncrease = asiChoices
+        ? Object.values(asiChoices).reduce((sum, choice) => {
+            if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+              return (
+                sum +
+                choice.abilityScoreIncreases
+                  .filter((inc) => inc.ability === ability)
+                  .reduce((s, inc) => s + inc.increase, 0)
+              );
+            }
+            return sum;
+          }, 0)
+        : 0;
+      console.log(`- ASI increases: ${asiIncrease}`);
+      console.log(`- Final score: ${finalScore}`);
+    }
+
+    finalScores[ability] = finalScore;
+  });
+
+  return finalScores;
+};
+
 export const validateFeatSelections = (character) => {
   const allSelectedFeats = getAllSelectedFeats(character);
   const uniqueFeats = [...new Set(allSelectedFeats)];
@@ -385,8 +475,9 @@ export const getAllAbilityModifiers = (character) => {
   };
 
   const featChoices = { ...character.featChoices };
-  if (character.asiChoices) {
-    Object.values(character.asiChoices).forEach((choice) => {
+  const asiChoices = character.asiChoices || character.asi_choices;
+  if (asiChoices) {
+    Object.values(asiChoices).forEach((choice) => {
       if (choice.type === "feat" && choice.featChoices) {
         Object.assign(featChoices, choice.featChoices);
       }
@@ -408,8 +499,8 @@ export const getAllAbilityModifiers = (character) => {
     modifiers[ability] = totalModifiers[ability] || 0;
   });
 
-  if (character.asiChoices) {
-    Object.entries(character.asiChoices).forEach(([level, choice]) => {
+  if (asiChoices) {
+    Object.entries(asiChoices).forEach(([level, choice]) => {
       if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
         choice.abilityScoreIncreases.forEach((increase) => {
           if (increase.ability && increase.increase) {
@@ -708,11 +799,13 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
   const heritageDetails = {};
   const otherBenefits = {};
 
-  if (!character.innateHeritage) {
+  const innateHeritage = character.innateHeritage || character.innate_heritage;
+
+  if (!innateHeritage) {
     return { modifiers, heritageDetails, otherBenefits };
   }
 
-  const heritage = heritageDescriptions[character.innateHeritage];
+  const heritage = heritageDescriptions[innateHeritage];
   if (!heritage) return { modifiers, heritageDetails, otherBenefits };
 
   if (heritage.modifiers && heritage.modifiers.other) {
@@ -733,18 +826,18 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
       }
       heritageDetails[increase.ability].push({
         source: "heritage",
-        heritageName: character.innateHeritage,
+        heritageName: innateHeritage,
         type: "fixed",
         amount: increase.amount,
       });
     }
   });
 
-  if (heritage.features && heritageChoices[character.innateHeritage]) {
+  if (heritage.features && heritageChoices[innateHeritage]) {
     heritage.features.forEach((feature) => {
       if (feature.isChoice && feature.options) {
         const selectedChoiceName =
-          heritageChoices[character.innateHeritage][feature.name];
+          heritageChoices[innateHeritage][feature.name];
         const selectedChoice = feature.options.find(
           (opt) => opt.name === selectedChoiceName
         );
@@ -761,7 +854,7 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
               }
               heritageDetails[ability].push({
                 source: "heritage",
-                heritageName: character.innateHeritage,
+                heritageName: innateHeritage,
                 type: "choice",
                 amount: amount,
               });
@@ -782,7 +875,7 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
               }
               heritageDetails[increase.ability].push({
                 source: "heritage",
-                heritageName: character.innateHeritage,
+                heritageName: innateHeritage,
                 type: "choice",
                 amount: increase.amount,
               });
@@ -816,9 +909,10 @@ export const calculateASIModifiers = (character) => {
 
   const bonusDetails = {};
 
-  if (!character.asiChoices) return { modifiers, bonusDetails };
+  const asiChoices = character.asiChoices || character.asi_choices;
+  if (!asiChoices) return { modifiers, bonusDetails };
 
-  Object.entries(character.asiChoices).forEach(([level, choice]) => {
+  Object.entries(asiChoices).forEach(([level, choice]) => {
     if (choice.type === "asi" && choice.abilityScoreIncreases) {
       choice.abilityScoreIncreases.forEach((increase) => {
         if (increase.ability && increase.increase) {
@@ -950,8 +1044,9 @@ export const detectIfASIAlreadyApplied = (character) => {
     if (
       oldAllEights &&
       newAverage > 10 &&
-      character.asiChoices &&
-      Object.keys(character.asiChoices).length > 0
+      (character.asiChoices || character.asi_choices) &&
+      Object.keys(character.asiChoices || character.asi_choices || {}).length >
+        0
     ) {
       return true;
     }
@@ -1008,7 +1103,10 @@ export const checkSingleRequirement = (requirement, character) => {
       return character.castingStyle === requirement.value;
 
     case "innateHeritage":
-      return character.innateHeritage === requirement.value;
+      return (
+        (character.innateHeritage || character.innate_heritage) ===
+        requirement.value
+      );
 
     case "feat": {
       const selectedFeats = getAllSelectedFeats(character);

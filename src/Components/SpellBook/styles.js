@@ -454,7 +454,7 @@ export const createSpellBookStyles = (theme) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 2000,
+    zIndex: 9999,
   },
   modalContent: {
     backgroundColor: theme.surface,

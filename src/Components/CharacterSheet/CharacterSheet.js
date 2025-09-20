@@ -34,6 +34,7 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import { getAllAbilityModifiers, calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
 import {
   backgroundsData,
   subclassesData,
@@ -147,7 +148,8 @@ const CharacterSheet = ({
     if (!spellcastingAbility) return 0;
 
     const abilityKey = spellcastingAbility.toLowerCase();
-    const abilityScore = character[abilityKey] || 10;
+    const abilityScore =
+      character.ability_scores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -319,7 +321,7 @@ const CharacterSheet = ({
 
   const getHPColor = (character) => {
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const percentage = currentHP / maxHP;
 
     if (percentage <= 0.25) return "#EF4444";
@@ -330,7 +332,7 @@ const CharacterSheet = ({
 
   const getEnhancedHPStyle = (character, baseStyle) => {
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const hpColor = getHPColor(character);
 
     return {
@@ -343,43 +345,6 @@ const CharacterSheet = ({
       userSelect: "none",
     };
   };
-
-  const calculateEffectiveAbilityScores = useCallback(
-    (baseScores, asiChoices, character = {}, heritageChoices = {}) => {
-      const effectiveScores = { ...baseScores };
-
-      Object.entries(asiChoices).forEach(([level, choice]) => {
-        if (choice.type === "asi" && choice.abilityScoreIncreases) {
-          choice.abilityScoreIncreases.forEach((increase) => {
-            if (effectiveScores[increase.ability] !== undefined) {
-              effectiveScores[increase.ability] =
-                (effectiveScores[increase.ability] || 10) + 1;
-            }
-          });
-        }
-      });
-
-      if (
-        character.innate_heritage &&
-        Object.keys(heritageChoices).length > 0
-      ) {
-        const { modifiers: heritageModifiers } = calculateHeritageModifiers(
-          { ...character, innateHeritage: character.innate_heritage },
-          heritageChoices
-        );
-
-        Object.keys(heritageModifiers).forEach((ability) => {
-          if (effectiveScores[ability] !== undefined) {
-            effectiveScores[ability] =
-              (effectiveScores[ability] || 10) + heritageModifiers[ability];
-          }
-        });
-      }
-
-      return effectiveScores;
-    },
-    []
-  );
 
   const getAllCharacterFeats = useCallback((standardFeats, asiChoices) => {
     const allFeats = [...standardFeats];
@@ -636,19 +601,17 @@ const CharacterSheet = ({
       if (error) throw error;
 
       if (data) {
-        const baseAbilityScores = data.ability_scores || {};
-        const asiChoices = {};
+        const baseAbilityScores =
+          data.base_ability_scores || data.ability_scores || {};
         const heritageChoices = data.heritage_choices || {};
-        const effectiveAbilityScores = calculateEffectiveAbilityScores(
-          baseAbilityScores,
-          asiChoices,
-          data,
-          heritageChoices
-        );
+
+        const effectiveAbilityScores = calculateFinalAbilityScores(data);
+        console.log({ data });
+        console.log({ effectiveAbilityScores });
 
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],
-          asiChoices
+          data.asi_choices || {}
         );
 
         const resources = data.character_resources?.[0] || {};
@@ -659,7 +622,7 @@ const CharacterSheet = ({
           armorClass:
             getBaseArmorClass(data.casting_style) +
             getArmorClassModifier(effectiveAbilityScores),
-          asiChoices: asiChoices,
+          asiChoices: data.asi_choices || {},
           background: data.background || "Unknown",
           baseAbilityScores: baseAbilityScores,
           bloodStatus: data.innate_heritage || "Unknown",
@@ -674,6 +637,7 @@ const CharacterSheet = ({
           gameSession: data.game_session || "",
           hitDie: getHitDie(data.casting_style),
           hitPoints: data.hit_points || 1,
+          maxHitPoints: data.hit_points || 1,
           house: data.house,
           houseChoices: data.house_choices || {},
           id: data.id,
@@ -736,7 +700,6 @@ const CharacterSheet = ({
           metamagicChoices: data.metamagic_choices || {},
           heritageChoices: heritageChoices,
         };
-
         setCharacter(transformedCharacter);
       }
     } catch (err) {
@@ -751,7 +714,6 @@ const CharacterSheet = ({
     adminMode,
     isUserAdmin,
     discordUserId,
-    calculateEffectiveAbilityScores,
     getAllCharacterFeats,
     getBaseArmorClass,
     getArmorClassModifier,
@@ -789,7 +751,7 @@ const CharacterSheet = ({
     }
 
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
     const currentHitDice = character.currentHitDice;
     const maxHitDice = character.maxHitDice;
 
@@ -953,7 +915,7 @@ const CharacterSheet = ({
     if (!character) return;
 
     const currentHP = character.currentHitPoints ?? character.hitPoints;
-    const maxHP = character.maxHitPoints || character.hitPoints;
+    const maxHP = character.maxHitPoints ?? character.hitPoints;
 
     if (currentHP >= maxHP) {
       alert("Character is already at full health!");
