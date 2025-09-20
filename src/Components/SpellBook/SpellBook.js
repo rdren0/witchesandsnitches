@@ -292,7 +292,6 @@ const SpellBook = ({
               spell.class?.some((cls) =>
                 cls.toLowerCase().includes(lowerSearchTerm)
               ) ||
-              level.toLowerCase().includes(lowerSearchTerm) ||
               subjectName.toLowerCase().includes(lowerSearchTerm) ||
               spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
               spell.range?.toLowerCase().includes(lowerSearchTerm) ||
