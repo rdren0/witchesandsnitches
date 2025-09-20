@@ -34,7 +34,7 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
-import { getAllAbilityModifiers } from "../CharacterManager/utils/characterUtils";
+import { getAllAbilityModifiers, calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
 import {
   backgroundsData,
   subclassesData,
@@ -605,14 +605,7 @@ const CharacterSheet = ({
           data.base_ability_scores || data.ability_scores || {};
         const heritageChoices = data.heritage_choices || {};
 
-        const effectiveAbilityScores = {
-          strength: data.ability_scores?.strength || 10,
-          dexterity: data.ability_scores?.dexterity || 10,
-          constitution: data.ability_scores?.constitution || 10,
-          intelligence: data.ability_scores?.intelligence || 10,
-          wisdom: data.ability_scores?.wisdom || 10,
-          charisma: data.ability_scores?.charisma || 10,
-        };
+        const effectiveAbilityScores = calculateFinalAbilityScores(data);
         console.log({ data });
         console.log({ effectiveAbilityScores });
 

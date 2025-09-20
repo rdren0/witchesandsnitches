@@ -1419,6 +1419,7 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/character/downtime"
               element={
