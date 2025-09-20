@@ -3,6 +3,7 @@ import { formatModifier, modifiers } from "../CharacterSheet/utils";
 import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "./styles";
+import { calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
 
 const AbilityScores = ({ character }) => {
   const { rollAbility, rollSavingThrow } = useRollFunctions();
@@ -10,16 +11,8 @@ const AbilityScores = ({ character }) => {
   const styles = getAbilityScoresStyles(theme);
   const [isRolling, setIsRolling] = useState(false);
 
-  const finalAbilityScores = {
-    strength: character.ability_scores?.strength || character.strength || 10,
-    dexterity: character.ability_scores?.dexterity || character.dexterity || 10,
-    constitution:
-      character.ability_scores?.constitution || character.constitution || 10,
-    intelligence:
-      character.ability_scores?.intelligence || character.intelligence || 10,
-    wisdom: character.ability_scores?.wisdom || character.wisdom || 10,
-    charisma: character.ability_scores?.charisma || character.charisma || 10,
-  };
+  const finalAbilityScores =
+    character.abilityScores || calculateFinalAbilityScores(character);
 
   const characterModifiers = {
     strength: Math.floor((finalAbilityScores.strength - 10) / 2),
