@@ -166,7 +166,7 @@ export const calculateFinalAbilityScores = (character) => {
   const heritageChoices =
     character.heritage_choices || character.heritageChoices || {};
 
-  const { totalModifiers } = calculateTotalModifiers(
+  const { totalModifiers, _asiAlreadyApplied } = calculateTotalModifiers(
     character,
     featChoices,
     houseChoices,
@@ -187,8 +187,16 @@ export const calculateFinalAbilityScores = (character) => {
 
     let finalScore = baseScore;
 
-    if (totalModifiers[ability]) {
-      finalScore += totalModifiers[ability];
+    const { totalModifiers: nonASIModifiers } =
+      calculateTotalModifiersExcludingASI(
+        character,
+        featChoices,
+        houseChoices,
+        heritageChoices
+      );
+
+    if (nonASIModifiers[ability]) {
+      finalScore += nonASIModifiers[ability];
     }
 
     if (asiChoices) {
@@ -201,27 +209,6 @@ export const calculateFinalAbilityScores = (character) => {
           });
         }
       });
-    }
-
-    if (ability === "wisdom" && character.name === "Stanley Yelnats Shunpike") {
-      console.log(`Wisdom calculation for ${character.name}:`);
-      console.log(`- Base score: ${baseScore}`);
-      console.log(`- Non-ASI modifiers: ${totalModifiers[ability] || 0}`);
-      const asiIncrease = asiChoices
-        ? Object.values(asiChoices).reduce((sum, choice) => {
-            if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
-              return (
-                sum +
-                choice.abilityScoreIncreases
-                  .filter((inc) => inc.ability === ability)
-                  .reduce((s, inc) => s + inc.increase, 0)
-              );
-            }
-            return sum;
-          }, 0)
-        : 0;
-      console.log(`- ASI increases: ${asiIncrease}`);
-      console.log(`- Final score: ${finalScore}`);
     }
 
     finalScores[ability] = finalScore;
@@ -933,6 +920,92 @@ export const calculateASIModifiers = (character) => {
   return { modifiers, bonusDetails };
 };
 
+export const calculateTotalModifiersExcludingASI = (
+  character,
+  featChoices = {},
+  houseChoices = {},
+  heritageChoices = {}
+) => {
+  const featResult = calculateFeatModifiers(character, featChoices);
+  const backgroundResult = calculateBackgroundModifiers(character);
+  const houseResult = calculateHouseModifiers(character, houseChoices);
+  const heritageResult = calculateHeritageModifiers(character, heritageChoices);
+
+  const asiResult = {
+    modifiers: {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    },
+    bonusDetails: {},
+  };
+
+  const totalModifiers = {
+    strength:
+      featResult.modifiers.strength +
+      backgroundResult.modifiers.strength +
+      houseResult.modifiers.strength +
+      heritageResult.modifiers.strength +
+      asiResult.modifiers.strength,
+    dexterity:
+      featResult.modifiers.dexterity +
+      backgroundResult.modifiers.dexterity +
+      houseResult.modifiers.dexterity +
+      heritageResult.modifiers.dexterity +
+      asiResult.modifiers.dexterity,
+    constitution:
+      featResult.modifiers.constitution +
+      backgroundResult.modifiers.constitution +
+      houseResult.modifiers.constitution +
+      heritageResult.modifiers.constitution +
+      asiResult.modifiers.constitution,
+    intelligence:
+      featResult.modifiers.intelligence +
+      backgroundResult.modifiers.intelligence +
+      houseResult.modifiers.intelligence +
+      heritageResult.modifiers.intelligence +
+      asiResult.modifiers.intelligence,
+    wisdom:
+      featResult.modifiers.wisdom +
+      backgroundResult.modifiers.wisdom +
+      houseResult.modifiers.wisdom +
+      heritageResult.modifiers.wisdom +
+      asiResult.modifiers.wisdom,
+    charisma:
+      featResult.modifiers.charisma +
+      backgroundResult.modifiers.charisma +
+      houseResult.modifiers.charisma +
+      heritageResult.modifiers.charisma +
+      asiResult.modifiers.charisma,
+  };
+
+  const allDetails = {};
+  Object.keys(totalModifiers).forEach((ability) => {
+    allDetails[ability] = [
+      ...(featResult.featDetails[ability] || []),
+      ...(backgroundResult.backgroundDetails[ability] || []),
+      ...(houseResult.houseDetails[ability] || []),
+      ...(heritageResult.heritageDetails[ability] || []),
+      ...(asiResult.bonusDetails[ability] || []),
+    ];
+  });
+
+  return {
+    totalModifiers,
+    allDetails,
+    featModifiers: featResult.modifiers,
+    backgroundModifiers: backgroundResult.modifiers,
+    houseModifiers: houseResult.modifiers,
+    heritageModifiers: heritageResult.modifiers,
+    heritageOtherBenefits: heritageResult.otherBenefits,
+    asiModifiers: asiResult.modifiers,
+    _asiAlreadyApplied: true,
+  };
+};
+
 export const calculateTotalModifiers = (
   character,
   featChoices = {},
@@ -1029,6 +1102,26 @@ export const calculateTotalModifiers = (
 export const detectIfASIAlreadyApplied = (character) => {
   if (character._asiApplied || character.asiApplied) {
     return true;
+  }
+
+  if (character.base_ability_scores && character.ability_scores) {
+    const asiChoices = character.asiChoices || character.asi_choices;
+    if (asiChoices) {
+      for (const [level, choice] of Object.entries(asiChoices)) {
+        if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
+          for (const increase of choice.abilityScoreIncreases) {
+            const baseScore =
+              character.base_ability_scores[increase.ability] || 0;
+            const currentScore =
+              character.ability_scores[increase.ability] || 0;
+
+            if (currentScore > baseScore) {
+              return true;
+            }
+          }
+        }
+      }
+    }
   }
 
   if (character.ability_scores && character.abilityScores) {
