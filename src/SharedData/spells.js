@@ -67,6 +67,18 @@ export const cardTitles = {
   "Grim-4th Level": false,
   "Grim-6th Level": false,
   "Grim-9th Level": false,
+  "Justice-Cantrips": false,
+  "Justice-1st Level": false,
+  "Justice-2nd Level": false,
+  "Justice-4th Level": false,
+  "Justice-8th Level": false,
+  "Justice-9th Level": false,
+  "Gravetouched-Cantrips": false,
+  "Gravetouched-1st Level": false,
+  "Gravetouched-2nd Level": false,
+  "Gravetouched-3rd Level": false,
+  "Gravetouched-5th Level": false,
+  "Gravetouched-8th Level": false,
 };
 
 export const getModifierForCombinedSchool = (schoolString) => {
@@ -128,7 +140,7 @@ export const spellsData = {
         },
         {
           name: "Carpe Retractum",
-          class: ["Charms"],
+          class: ["Defene Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
@@ -309,7 +321,7 @@ export const spellsData = {
         },
         {
           name: "Spongify",
-          class: ["Charms"],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime:
             "1 action or reaction, which you take when a collision occurs within 30 feet",
@@ -321,7 +333,7 @@ export const spellsData = {
         },
         {
           name: "Periculum/Verdimillious",
-          class: ["Charms"],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self",
@@ -369,7 +381,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Arresto Momentum",
-          class: ["Charms"],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime:
             "1 reaction, which you take when you or a creature within 60 feet of you falls",
@@ -565,7 +577,7 @@ export const spellsData = {
         },
         {
           name: "Expelliarmus",
-          class: ["Charms"],
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -593,7 +605,7 @@ export const spellsData = {
         },
         {
           name: "Fumos",
-          class: ["Charms"],
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "Self (15 foot cube)",
@@ -671,7 +683,7 @@ export const spellsData = {
         },
         {
           name: "Protego Maxima",
-          class: ["Charms"],
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
           castingTime:
             "1 action or reaction, which you take when you are hit by an attack",
@@ -708,6 +720,7 @@ export const spellsData = {
         },
         {
           name: "Stupefy",
+          class: ["Defense Against the Dark Arts"],
           level: "2nd Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -740,7 +753,7 @@ export const spellsData = {
           name: "Depulso",
           level: "3rd Level",
           castingTime: "Action",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           range: "60 Feet",
           duration: "Instantaneous",
           year: 4,
@@ -960,6 +973,7 @@ export const spellsData = {
       "7th Level": [
         {
           name: "Herbarifors",
+          class: ["Defese Against the Dark Arts"],
           level: "7th Level",
           castingTime: null,
           range: null,
@@ -1562,18 +1576,6 @@ export const spellsData = {
             "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 2d6 for each slot level above 2nd.",
         },
         {
-          name: "Irus Ictus",
-          class: ["Transfiguration"],
-          level: "1st Level",
-          castingTime: "Bonus Action",
-          range: "Self",
-          duration: "Concentration, up to 1 minute",
-          year: 2,
-          restriction: true,
-          description:
-            "The next time you hit with your Transfigured Armament during this spell's duration, your attack deals an extra 1d6 psychic damage. Additionally, if the target is a creature, it must make a Wisdom saving throw or be frightened of you until the spell ends. As an action, the creature can make a Wisdom check against your spell save DC to steel its resolve and end this spell.",
-        },
-        {
           name: "Obscuro",
           class: ["Transfiguration"],
           level: "1st Level",
@@ -1592,6 +1594,7 @@ export const spellsData = {
           range: "150 feet",
           duration: "Instantaneous",
           year: 4,
+          tags: ["Dark"],
           description:
             "A conjured arrow streaks toward a designated target. Make a ranged spell attack against a target within range. On a hit, the target takes piercing damage equal to 1d8 + your spellcasting ability modifier.",
           higherLevels:
@@ -1650,6 +1653,7 @@ export const spellsData = {
           range: "30 feet",
           duration: "Instantaneous",
           year: 4,
+          tags: ["Dark"],
           description:
             "You conjure a venomous snake from thin air. A pit viper appears in an unoccupied space that you can see within range. Roll initiative for the summoned creature, which has its own turns. Although the pit viper won't willingly attack the caster, you cannot control the actions or targets of the pit viper. It is possible for the pit viper to be turned against you through magical means.",
           higherLevels:
@@ -1696,18 +1700,6 @@ export const spellsData = {
             "You create a long, snaking whip of fire from the tip of your wand, lashing out and coiling around a creature in range. Make a melee spell attack against the target. On a hit, the creature takes 4d10 fire damage and is grappled for the duration. As an action, the target can make a Strength or Dexterity saving throw to end the spell's effects. On each of your following turns spent maintaining dedication, the whip tightens and you deal 4d10 fire damage to the target automatically. If the creature is Large or smaller, you can use a bonus action to pull the creature up to 10 feet closer to you.",
           higherLevels:
             "When you cast this spell using a spell slot of 4th level or higher, the initial damage and subsequent turn damage increases by 1d10 for each slot level above 3rd.",
-        },
-        {
-          name: "Inanus Ictus",
-          class: ["Transfiguration"],
-          level: "3rd Level",
-          castingTime: "Bonus Action",
-          range: "Self",
-          duration: "Concentration, up to 1 minute",
-          year: 5,
-          restriction: true,
-          description:
-            "The next time you hit a creature with your Transfigured Armament during this spell's duration, your weapon flares with a bright light, and the attack deals an extra 3d8 radiant damage to the target. Additionally, the target must succeed on a Constitution saving throw or be blinded until the spell ends. A creature blinded by this spell makes another Constitution saving throw at the end of each of its turns. On a successful save, it is no longer blinded.",
         },
         {
           name: "Melofors",
@@ -1800,6 +1792,7 @@ export const spellsData = {
           range: "60 feet",
           duration: "Concentration, up to 1 minute",
           year: 7,
+          tags: ["Dark"],
           description:
             "You create a ringed wall of fire within range up to 20 feet in diameter, 20 feet high, and 10 feet thick choosing whether it's touching the ground or in the air. The wall is opaque and lasts for the duration. When the wall appears, each creature within its area must make a Dexterity saving throw. On a failed save, a creature takes 4d8 fire damage, or half as much damage on a successful save. A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there. As an action, you can send a tendril of flames lashing out at any point within 60 feet of the center of the ring. Each creature within 5 feet of that point must make a Dexterity saving throw. A creature takes 4d8 fire damage on a failed save, or half as much damage on a successful one. A creature in the area of the wall and fiery burst is affected only once. The spell damages objects in the area and ignites flammable objects that aren't being worn or carried.",
           higherLevels:
@@ -2516,7 +2509,7 @@ export const spellsData = {
         },
         {
           name: "Rennervate",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "1 Round",
           range: "10 Feet",
@@ -2538,7 +2531,7 @@ export const spellsData = {
         },
         {
           name: "Ferula",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "1 action",
           range: "30 feet",
@@ -2608,7 +2601,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Brackium Emendo",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "4th Level",
           castingTime: "1 action",
           range: "Touch",
@@ -2648,7 +2641,7 @@ export const spellsData = {
         },
         {
           name: "Vulnera Sanentur",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "6th Level",
           castingTime: "1 action",
           range: "Touch",
@@ -3533,6 +3526,266 @@ export const spellsData = {
       ],
     },
   },
+  Justice: {
+    hasRestriction: false,
+    icon: "Shield",
+    color: "#FFD700",
+    description: "Protective and righteous magic",
+    levels: {
+      Cantrips: [
+        {
+          name: "Virtus",
+          class: ["Justice"],
+          level: "Cantrip",
+          castingTime: "Bonus Action",
+          range: "Touch",
+          duration: "1 Round",
+          school: "Healing",
+          description:
+            "You touch one creature, imbuing it with vitality. If the target has at least 1 hit point, it gains a number of temporary hit points equal to 1d4 + your spellcasting ability modifier. The temporary hit points are lost when the spell ends.",
+        },
+        {
+          name: "Lumos Ruptis",
+          class: ["Justice"],
+          level: "Cantrip",
+          castingTime: "Action",
+          range: "5 Feet",
+          duration: "Instantaneous",
+          school: "Charms",
+          description:
+            "You raise your hand, and burning radiance erupts from it. Each creature of your choice that you can see within 5 feet of you must succeed on a Constitution saving throw or take 1d6 radiant damage.",
+          higherLevels:
+            "The spell's damage increases by 1d6 when you reach 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Increpa",
+          class: ["Justice"],
+          level: "1st Level",
+          castingTime: "Reaction",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          school: "Charms",
+          description:
+            "You point your finger, and the creature that damaged you is momentarily surrounded by divine radiance. The creature must make a Dexterity saving throw. It takes 2d10 radiant damage on a failed save, or half as much damage on a successful one. If the creature is undead, they take 3d10 radiant damage.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 for each slot level above 1st.",
+        },
+        {
+          name: "Protego Fidelia",
+          class: ["Justice"],
+          level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 10 minutes",
+          school: "Charms",
+          tags: ["Defensive"],
+          description:
+            "A shimmering field appears and surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.",
+        },
+        {
+          name: "Tholus",
+          class: ["Justice"],
+          level: "1st Level",
+          castingTime: "Bonus Action",
+          range: "30 Feet",
+          duration: "1 Minute",
+          school: "Charms",
+          tags: ["Defensive"],
+          description:
+            "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell must first make a Wisdom saving throw. On a failed save, the creature must choose a new target or lose the attack or spell. This spell doesn't protect the warded creature from area effects, such as the explosion of a fireball. If the warded creature makes an attack, casts a spell that affects an enemy, or deals damage to another creature, this spell ends.",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Iuvo",
+          class: ["Justice"],
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "30 Feet",
+          duration: "8 Hours",
+          school: "Healing",
+          description:
+            "Your spell bolsters your allies with toughness and resolve. Choose up to three creatures within range. Each target's hit point maximum and current hit points increase by 5 for the duration.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, a target's hit points increase by an additional 5 for each slot level above 2nd.",
+        },
+      ],
+      "4th Level": [
+        {
+          name: "Expello",
+          class: ["Justice"],
+          level: "4th Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 minute",
+          school: "Charm",
+          description:
+            "You attempt to force one creature that you can see within range to apparate away. The target must succeed on a Charisma saving throw or be banished. While banished, the target is incapacitated. The target remains there until the spell ends, at which point the target reappears in the space it left or in the nearest unoccupied space if that space is occupied.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 5th level or higher, you can target one additional creature for each slot level above 4th.",
+        },
+        {
+          name: "Ostium",
+          class: ["Justice"],
+          level: "4th Level",
+          castingTime: "Action",
+          range: "120 Feet",
+          duration: "Instantaneous",
+          school: "Transfiguration",
+          description:
+            "You teleport yourself from your current location to any other spot within range. You arrive at exactly the spot desired. It can be a place you can see, one you can visualize, or one you can describe by stating distance and direction, such as '100 feet straight downward' or 'upward to the northwest at a 45-degree angle, 60 feet'. You can bring along objects as long as their weight doesn't exceed what you can carry. You can also bring one willing creature of your size or smaller who is carrying gear up to its carrying capacity. The creature must be within 5 feet of you when you cast this spell. If you would arrive in a place already occupied by an object or a creature, you and any creature traveling with you each take 4d6 force damage, and the spell fails to teleport you.",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Nulla Magica",
+          class: ["Justice"],
+          level: "8th Level",
+          castingTime: "Action",
+          range: "Self (10 Foot Radius Sphere)",
+          duration: "Concentration, up to 1 hour",
+          school: "Charms",
+          description:
+            "A 10-foot-radius invisible sphere of antimagic surrounds you. This area is divorced from magical energy. Within the sphere, spells can't be cast, summoned creatures disappear, and even magic items become mundane. Until the spell ends, the sphere moves with you, centered on you. Spells and other magical effects, are suppressed in the sphere and can't protrude into it. A slot expended to cast a suppressed spell is consumed. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration. Targeted Effects: Spells and other magical effects that target a creature or an object in the sphere have no effect on that target. Areas of Magic: The area of another spell or magical effect, such as confringo, can't extend into the sphere. If the sphere overlaps an area of magic, the part of the area that is covered by the sphere is suppressed. Spells: Any active spell or other magical effect on a creature or an object in the sphere is suppressed while the creature or object is in it. Magic Items: The properties and powers of magic items are suppressed in the sphere. Magical Travel: Apparition and Portkeys fail to work in the sphere, whether the sphere is the destination or the departure point for such magical travel. Creatures and Objects: A creature or object summoned or created by magic temporarily winks out of existence in the sphere. Dispel Magic: Spells and magical effects such as Finite Incantatem have no effect on the sphere.",
+        },
+      ],
+      "9th Level": [
+        {
+          name: "Incarcerous Maxima",
+          class: ["Justice"],
+          level: "9th Level",
+          castingTime: "1 Minute",
+          range: "30 Feet",
+          duration: "Until Dispelled",
+          school: "Transfiguration",
+          description:
+            "You create a magical restraint to hold a creature that you can see within range. The target must succeed on a Wisdom saving throw or be bound by the spell; if it succeeds, it is immune to this spell if you cast it again. While affected by this spell, the creature doesn't need to breathe, eat, or drink, and it doesn't age. Divination spells can't locate or perceive the target. During the casting of the spell, you can specify a condition that will cause the spell to end and release the target. The condition can be as specific or as elaborate as you choose, but the DM must agree that the condition is reasonable and has a likelihood of coming to pass. A Finite Incantatem spell can end the spell only if it is cast as a 9th-level spell, targeting the prison. When you cast the spell, you choose one of the following forms of imprisonment. Burial: The target is entombed far beneath the earth in a sphere of magical force that is just large enough to contain the target. Nothing can pass through the sphere, nor can any creature apparate to get into or out of it. Chaining: Heavy chains, firmly rooted in the ground, hold the target in place. The target is restrained until the spell ends, and it can't move or be moved by any means until then. Minimus Containment: The target shrinks to a height of 1 inch and is imprisoned inside a gemstone or similar object. Light can pass through the gemstone normally (allowing the target to see out and other creatures to see in), but nothing else can pass through, even by means of Apparition. The gemstone can't be cut or broken while the spell remains in effect. Slumber: The target falls asleep and can't be awoken.",
+        },
+      ],
+    },
+  },
+  Gravetouched: {
+    hasRestriction: false,
+    icon: "Skull",
+    color: "#8B0000",
+    description: "Dark healing and necromantic magic",
+    levels: {
+      Cantrips: [
+        {
+          name: "Umbrus Notatem",
+          class: ["Gravetouched"],
+          level: "Cantrip",
+          castingTime: "Bonus Action",
+          range: "30 Feet",
+          duration: "1 Round",
+          school: "Jinxes, Hexes, Curses",
+          tags: ["Dark"],
+          description:
+            "You brand a willing creature with a mark of shadow. Until the end of its next turn, the target's movement speed increases by 5 feet, and its next attack deals an additional 2d4 necrotic damage. The effect ends early if the attack hits. If the target casts a spell that incorporates this additional damage, that spell gains the Dark tag for the purpose of effects, resistances, and synergies.",
+        },
+      ],
+      "1st Level": [
+        {
+          name: "Ictus Vitalus",
+          class: ["Gravetouched"],
+          level: "1st Level",
+          castingTime: "Action",
+          range: "Self",
+          duration: "1 Hour",
+          school: "Healing",
+          description:
+            "Bolstering yourself with a necromantic facsimile of life, you gain 1d4 + 4 temporary hit points for the duration.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, you gain 5 additional temporary hit points for each slot level above 1st.",
+        },
+      ],
+      "2nd Level": [
+        {
+          name: "Destruunt",
+          class: ["Gravetouched"],
+          level: "2nd Level",
+          castingTime:
+            "1 reaction, when you see a creature cast a Healing spell",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          school: "Healing",
+          description:
+            "You lash out with a thread of dark magic that severs the connection between body and life. When a creature within range attempts to cast a Healing spell, you can use your reaction to disrupt the flow of healing energy. The spell is halted, and no hit points or other effects are restored. The target still expends the spell slot and sorcery points used. If the healing spell is of 3rd level or higher, the caster must succeed on a Intelligence saving throw (DC equals 10 + the level of the spell) or the spell fails.",
+        },
+        {
+          name: "Quo Flora",
+          class: ["Gravetouched"],
+          level: "2nd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Instantaneous",
+          school: "Healing",
+          tags: ["Dark"],
+          description:
+            "You invoke both death and life upon a 10-foot-radius sphere centered on a point within range. Each creature of your choice in that area must make a Constitution saving throw, taking 2d6 necrotic damage on a failed save, or half as much damage on a successful one. Nonmagical vegetation in that area withers. In addition, one creature of your choice in that area can spend and roll one of its unspent Hit Dice and regain a number of hit points equal to the roll plus your spellcasting ability modifier.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot above 2nd, and the number of Hit Dice that can be spent and added to the healing roll increases by one for each slot above 2nd.",
+        },
+      ],
+      "3rd Level": [
+        {
+          name: "Gehennus Conjurus",
+          class: ["Gravetouched"],
+          level: "3rd Level",
+          castingTime: "Action",
+          range: "60 Feet",
+          duration: "Concentration, up to 1 hour",
+          school: "Transfiguration",
+          tags: ["Dark"],
+          description:
+            "You utter foul words, summoning an Inferius from the land of the dead. You choose the unoccupied spaces you can see within range where they appear. A summoned Inferi disappears when it drops to 0 hit points or when the spell ends. The Inferi are hostile to all creatures, including you. Roll initiative for the summoned Inferi which has its own turn(s). The Inferi pursue and attack the nearest non-Inferi to the best of their ability. As part of casting the spell, you can form a magical circle on the ground that is large enough to encompass your space. While the spell lasts, the summoned Inferi can't cross the circle or harm it, and they can't target anyone within it.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 6th or 7th level, you summon an Inferi Swarm. If you cast it using a spell slot of 8th or 9th level, you summon an Inferi Horde.",
+        },
+        {
+          name: "Mortus Oratio",
+          class: ["Gravetouched"],
+          level: "3rd Level",
+          castingTime: "Action",
+          range: "10 Feet",
+          duration: "10 Minutes",
+          school: "Charms",
+          description:
+            "You grant the semblance of life and intelligence to a corpse of your choice within range, allowing it to answer the questions you pose. The corpse must still have a mouth and can't be undead. The spell fails if the corpse was the target of this spell within the last 10 days. Until the spell ends, you can ask the corpse up to five questions. The corpse knows only what it knew in life, including the languages it knew. Answers are usually brief, cryptic, or repetitive, and the corpse is under no compulsion to offer a truthful answer if you are hostile to it or it recognizes you as an enemy. This spell doesn't return the creature's soul to its body, only its animating spirit. Thus, the corpse can't learn new information, doesn't comprehend anything that has happened since it died, and can't speculate about future events.",
+        },
+      ],
+      "5th Level": [
+        {
+          name: "Morbus",
+          class: ["Gravetouched"],
+          level: "5th Level",
+          castingTime: "Action",
+          range: "Touch",
+          duration: "7 Days",
+          school: "Healing",
+          tags: ["Dark"],
+          description:
+            "Your touch inflicts disease. Make a melee spell attack against a creature within your reach. On a hit, the target is poisoned. At the end of each of the poisoned target's turns, the target must make a Constitution saving throw. If the target succeeds on three of these saves, it is no longer poisoned, and the spell ends. If the target fails three of these saves, the target is no longer poisoned, but choose one of the diseases below. The target is subjected to the chosen disease for the spell's duration. Since this spell induces a natural disease in its target, any effect that removes a disease or otherwise ameliorates a disease's effects apply to it. Blinding Sickness: Pain grips the creature's mind, and its eyes turn milky white. The creature has disadvantage on Wisdom checks and Wisdom saving throws and is blinded. Filth Fever: A raging fever sweeps through the creature's body. The creature has disadvantage on Strength checks, Strength saving throws, and attack rolls that use Strength. Flesh Rot: The creature's flesh decays. The creature has disadvantage on Charisma checks and vulnerability to all damage. Mindfire: The creature's mind becomes feverish. The creature has disadvantage on Intelligence checks and Intelligence saving throws, and the creature behaves as if under the effects of the confusion spell during combat. Seizure: The creature is overcome with shaking. The creature has disadvantage on Dexterity checks, Dexterity saving throws, and attack rolls that use Dexterity. Slimy Doom: The creature begins to bleed uncontrollably. The creature has disadvantage on Constitution checks and Constitution saving throws. In addition, whenever the creature takes damage, it is stunned until the end of its next turn.",
+        },
+      ],
+      "8th Level": [
+        {
+          name: "Pati",
+          class: ["Gravetouched"],
+          level: "8th Level",
+          castingTime: "Action",
+          range: "150 Feet",
+          duration: "Instantaneous",
+          school: "Healing",
+          tags: ["Dark"],
+          description:
+            "You draw the moisture from every creature in a 30-foot cube centered on a point you choose within range. Each creature in that area must make a Constitution saving throw. Constructs and undead aren't affected, and plants and aquatic creatures make this saving throw with disadvantage. A creature takes 12d8 necrotic damage on a failed save, or half as much damage on a successful one. Nonmagical plants in the area that aren't creatures, such as trees and shrubs, wither and die instantly.",
+        },
+      ],
+    },
+  },
 };
 
 export const INDIVIDUAL_SPELL_MODIFIERS = {
@@ -3627,4 +3880,6 @@ export const CATEGORY_DEFAULT_MAPPINGS = {
   Grim: SUBJECT_TO_MODIFIER_MAP.divinations,
   Elemental: SUBJECT_TO_MODIFIER_MAP.transfiguration,
   "Defense Against the Dark Arts": SUBJECT_TO_MODIFIER_MAP.jhc,
+  Justice: SUBJECT_TO_MODIFIER_MAP.healing,
+  Gravetouched: SUBJECT_TO_MODIFIER_MAP.healing,
 };

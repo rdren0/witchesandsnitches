@@ -134,7 +134,7 @@ const getAdditionalStyles = (theme) => ({
   sectionToggle: {
     width: "100%",
     padding: "16px 20px",
-    backgroundColor: "transparent",
+    backgroundColor: theme.background || "#f8fafc",
     border: "none",
     display: "flex",
     alignItems: "center",
@@ -143,7 +143,8 @@ const getAdditionalStyles = (theme) => ({
     transition: "background-color 0.2s ease",
     color: theme.text || "#1f2937",
     fontSize: "16px",
-    fontWeight: "500",
+    fontWeight: "600",
+    borderBottom: `2px solid ${theme.border || "#e5e7eb"}`,
   },
   sectionLeft: {
     display: "flex",
