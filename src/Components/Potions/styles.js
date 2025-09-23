@@ -490,6 +490,42 @@ export const createPotionsStyles = (theme) => ({
     borderRadius: "4px",
     textAlign: "center",
   },
+
+  expandSection: {
+    borderTop: `1px solid ${theme.border}`,
+    marginTop: "12px",
+    paddingTop: "8px",
+  },
+
+  expandButton: {
+    background: "none",
+    border: "none",
+    color: theme.primary,
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "4px 0",
+    transition: "opacity 0.2s ease",
+    fontFamily: "inherit",
+  },
+
+  longDescription: {
+    marginTop: "8px",
+    padding: "12px",
+    backgroundColor: theme.background,
+    borderRadius: "6px",
+    border: `1px solid ${theme.border}`,
+  },
+
+  longDescriptionText: {
+    fontSize: "14px",
+    lineHeight: "1.5",
+    color: theme.text,
+    margin: "0",
+  },
 });
 
 // Helper function for backward compatibility
