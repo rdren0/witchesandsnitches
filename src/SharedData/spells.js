@@ -140,7 +140,7 @@ export const spellsData = {
         },
         {
           name: "Carpe Retractum",
-          class: ["Defene Against the Dark Arts"],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "Action",
           range: "60 Feet",
