@@ -973,7 +973,7 @@ export const spellsData = {
       "7th Level": [
         {
           name: "Herbarifors",
-          class: ["Defese Against the Dark Arts"],
+          class: ["Defense Against the Dark Arts"],
           level: "7th Level",
           castingTime: null,
           range: null,
