@@ -34,7 +34,10 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
-import { getAllAbilityModifiers, calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
+import {
+  getAllAbilityModifiers,
+  calculateFinalAbilityScores,
+} from "../CharacterManager/utils/characterUtils";
 import {
   backgroundsData,
   subclassesData,
@@ -45,9 +48,13 @@ import { calculateHeritageModifiers } from "../CharacterManager/utils/utils";
 
 const hitDiceData = {
   Willpower: "d10",
+  "Willpower Caster": "d10",
   Technique: "d6",
+  "Technique Caster": "d6",
   Intellect: "d8",
+  "Intellect Caster": "d8",
   Vigor: "d12",
+  "Vigor Caster": "d12",
   default: "d8",
 };
 
@@ -606,8 +613,6 @@ const CharacterSheet = ({
         const heritageChoices = data.heritage_choices || {};
 
         const effectiveAbilityScores = calculateFinalAbilityScores(data);
-        console.log({ data });
-        console.log({ effectiveAbilityScores });
 
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],
