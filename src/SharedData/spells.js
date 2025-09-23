@@ -2693,7 +2693,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "30 Feet",
           duration: "24 Hours",
-          year: null,
+          year: 2,
           restriction: true,
           description: "Befriends beasts and creatures",
         },
