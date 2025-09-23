@@ -1,3 +1,5 @@
+import { backgroundsData } from "../../SharedData";
+
 export const createSpellBookStyles = (theme) => ({
   searchInputContainer: {
     position: "relative",
@@ -457,7 +459,7 @@ export const createSpellBookStyles = (theme) => ({
     zIndex: 9999,
   },
   modalContent: {
-    backgroundColor: theme.surface,
+    backgroundColor: theme.background,
     padding: "24px",
     borderRadius: "12px",
     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -474,6 +476,72 @@ export const createSpellBookStyles = (theme) => ({
     margin: "0 0 16px 0",
     fontSize: "14px",
     color: theme.textSecondary,
+  },
+  modalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "20px",
+  },
+  modalCloseButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "8px",
+    borderRadius: "6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: theme.textSecondary,
+    transition: "all 0.2s ease",
+  },
+  modalBody: {
+    padding: "0",
+  },
+  modalDescription: {
+    fontSize: "14px",
+    color: theme.textSecondary,
+    marginBottom: "20px",
+    lineHeight: "1.5",
+  },
+  alternateButtonsGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: "12px",
+  },
+  alternateButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "16px",
+    backgroundColor: theme.surface,
+    border: `2px solid ${theme.border}`,
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    fontSize: "14px",
+    fontFamily: "inherit",
+  },
+  alternateButtonContent: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: "4px",
+    flex: 1,
+  },
+  alternateButtonTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  alternateButtonSubtitle: {
+    fontSize: "12px",
+    color: theme.textSecondary,
+  },
+  alternateButtonModifier: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    color: theme.success || "#10b981",
   },
   descriptionRowCell: {
     padding: "0",
@@ -636,6 +704,7 @@ export const createSpellBookStyles = (theme) => ({
   },
   modalField: {
     marginBottom: "16px",
+    backgroundColor: theme.surface,
   },
   modalLabel: {
     display: "block",
@@ -650,7 +719,7 @@ export const createSpellBookStyles = (theme) => ({
     border: `2px solid ${theme.border}`,
     borderRadius: "6px",
     fontSize: "14px",
-    backgroundColor: theme.surface,
+    backgroundColor: theme.background,
     color: theme.text,
     fontFamily: "inherit",
     boxSizing: "border-box",

@@ -338,7 +338,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "Self",
           duration: "Instantaneous",
-          year: 2,
+          year: 1,
           description:
             "This spell sends red (periculum) or green (verdimillious) sparks shooting from the casters wand for signaling purposes. It may also appear as a flare, traveling a desired distance before exploding in light and hovering in the air.",
         },
@@ -1600,6 +1600,19 @@ export const spellsData = {
           higherLevels:
             "When you cast this spell using a spell slot of 2nd level or higher, you conjure one additional arrow for each slot level above 1st. You can direct the arrows at the same target or at different ones. Make a separate attack roll for each arrow.",
         },
+        {
+          name: "Nebulus",
+          class: ["Transfiguration"],
+          level: "1st Level",
+          castingTime: "1 action",
+          range: "120 feet",
+          duration: "Concentration, up to 1 hour",
+          year: 3,
+          description:
+            "You create a 20-foot-radius sphere of fog centered on a point within range. The sphere spreads around corners, and its area is heavily obscured. It lasts for the duration or until a wind of moderate or greater speed (at least 10 miles per hour) disperses it.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 2nd level or higher, the radius of the fog increases by 20 feet for each slot level above 1st.",
+        },
       ],
       "2nd Level": [
         {
@@ -1713,19 +1726,6 @@ export const spellsData = {
             "You conjure a pumpkin around a target's head, blinding and deafening it. Choose one creature that you can see within range to make a Wisdom saving throw. If it fails, the target is blinded and deafened for the duration. At the end of each of its turns, the target can make a Wisdom saving throw. On a success, the spell's effect ends for that target.",
           higherLevels:
             "When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd.",
-        },
-        {
-          name: "Nebulus",
-          class: ["Transfiguration"],
-          level: "3rd Level",
-          castingTime: "1 action",
-          range: "120 feet",
-          duration: "Concentration, up to 1 hour",
-          year: 3,
-          description:
-            "You create a 20-foot-radius sphere of fog centered on a point within range. The sphere spreads around corners, and its area is heavily obscured. It lasts for the duration or until a wind of moderate or greater speed (at least 10 miles per hour) disperses it.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 2nd level or higher, the radius of the fog increases by 20 feet for each slot level above 1st.",
         },
       ],
       "4th Level": [
@@ -2477,7 +2477,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Clario Maxima",
-          class: [],
+          class: ["Transfiguration"],
           level: "5th Level",
           castingTime: "Bonus Action",
           range: "Touch",
@@ -2521,7 +2521,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Episkey",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "bonus action",
           range: "10 feet",
@@ -2541,7 +2541,7 @@ export const spellsData = {
         },
         {
           name: "Reparifors",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "1 action",
           range: "Touch",

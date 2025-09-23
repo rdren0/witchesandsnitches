@@ -4,17 +4,20 @@ export const potions = {
       name: "Blemish Blitzer",
       rarity: "common",
       description: "Removes acne and blemishes from face when applied",
+      longDescription: "This magical skincare solution instantly clears away facial blemishes, acne, and minor skin imperfections when applied topically. The potion works by magically purifying the skin's surface and temporarily enhancing natural healing processes. Effects last for 24 hours, during which the skin maintains a healthy, clear appearance. Commonly used by students before important social events or presentations.",
     },
     {
       name: "Babbling Beverage",
       rarity: "common",
       description: "Makes words come out as gibberish for 1 minute",
+      longDescription: "A mischievous potion that scrambles the drinker's speech centers, causing all spoken words to emerge as incomprehensible gibberish for exactly one minute. The effect does not impair the drinker's ability to understand others or think clearly, only their speech output. Often used as a prank or to prevent someone from revealing secrets. The victim remains fully aware of their condition but cannot control the garbled speech. Popular among students for disrupting classes or embarrassing rivals.",
     },
     {
       name: "Cupid Crystals",
       rarity: "common",
       description:
         "Love potion - target becomes infatuated with next being seen",
+      longDescription: "These shimmering pink crystals dissolve in any liquid to create a powerful infatuation potion. When consumed, the drinker becomes intensely attracted to the first sentient being they see after drinking. The effect lasts for 1 hour and manifests as romantic obsession, causing the victim to follow, compliment, and attempt to impress their target. The artificial attraction feels completely real to the victim. Highly regulated at most magical schools due to ethical concerns and potential for misuse.",
     },
     {
       name: "Doxycide",

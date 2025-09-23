@@ -12,6 +12,8 @@ import {
   FlaskRound,
   ArrowRight,
   Plus,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useRollFunctions } from "../utils/diceRoller";
 
@@ -30,6 +32,19 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   const [brewingInProgress, setBrewingInProgress] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedCards, setExpandedCards] = useState(new Set());
+
+  const toggleCardExpansion = (potionKey) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(potionKey)) {
+        newSet.delete(potionKey);
+      } else {
+        newSet.add(potionKey);
+      }
+      return newSet;
+    });
+  };
 
   const [healingSkillChoice, setHealingSkillChoice] =
     useState("wisdomPotionMaking");
@@ -741,36 +756,75 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           <h2 style={styles.cardTitle}>Select Potion to Brew</h2>
 
           <div style={styles.potionList}>
-            {filteredPotions.map((potion, index) => (
-              <div
-                key={`${potion.year}-${index}`}
-                onClick={() => setSelectedPotion(potion)}
-                style={{
-                  ...styles.potionItem,
-                  ...(selectedPotion?.name === potion.name
-                    ? styles.potionItemSelected
-                    : {}),
-                }}
-              >
-                <div style={styles.potionHeader}>
-                  <h3 style={styles.potionName}>{potion.name}</h3>
-                  <div style={styles.potionMeta}>
-                    <span style={styles.potionYear}>Year {potion.year}</span>
-                    <span
-                      style={{
-                        ...styles.rarityBadge,
-                        backgroundColor:
-                          styles.rarityColors[potion.rarity] ||
-                          styles.rarityColors.common,
-                      }}
-                    >
-                      {potion.rarity}
-                    </span>
+            {filteredPotions.map((potion, index) => {
+              const potionKey = `${potion.year}-${index}`;
+              const isExpanded = expandedCards.has(potionKey);
+
+              return (
+                <div
+                  key={potionKey}
+                  style={{
+                    ...styles.potionItem,
+                    ...(selectedPotion?.name === potion.name
+                      ? styles.potionItemSelected
+                      : {}),
+                  }}
+                >
+                  <div
+                    onClick={() => setSelectedPotion(potion)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div style={styles.potionHeader}>
+                      <h3 style={styles.potionName}>{potion.name}</h3>
+                      <div style={styles.potionMeta}>
+                        <span style={styles.potionYear}>Year {potion.year}</span>
+                        <span
+                          style={{
+                            ...styles.rarityBadge,
+                            backgroundColor:
+                              styles.rarityColors[potion.rarity] ||
+                              styles.rarityColors.common,
+                          }}
+                        >
+                          {potion.rarity}
+                        </span>
+                      </div>
+                    </div>
+                    <p style={styles.potionDescription}>{potion.description}</p>
                   </div>
+
+                  {potion.longDescription && (
+                    <div style={styles.expandSection}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCardExpansion(potionKey);
+                        }}
+                        style={styles.expandButton}
+                      >
+                        {isExpanded ? (
+                          <>
+                            <ChevronUp size={16} />
+                            Show Less
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown size={16} />
+                            Show More
+                          </>
+                        )}
+                      </button>
+
+                      {isExpanded && (
+                        <div style={styles.longDescription}>
+                          <p style={styles.longDescriptionText}>{potion.longDescription}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <p style={styles.potionDescription}>{potion.description}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

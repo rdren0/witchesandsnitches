@@ -1123,6 +1123,14 @@ export const SubjectCard = ({
             <button
               onClick={() => setAlternateAttemptsModal(null)}
               style={styles.modalCloseButton}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.background;
+                e.currentTarget.style.color = theme.error || "#ef4444";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = theme.textSecondary;
+              }}
             >
               <X size={20} />
             </button>
@@ -1139,7 +1147,28 @@ export const SubjectCard = ({
                   handleAlternateCasting(spellName, subject, "arithmancy")
                 }
                 disabled={isAttempting || isMastered || !selectedCharacter}
-                style={styles.alternateButton}
+                style={{
+                  ...styles.alternateButton,
+                  opacity:
+                    isAttempting || isMastered || !selectedCharacter ? 0.5 : 1,
+                  cursor:
+                    isAttempting || isMastered || !selectedCharacter
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isAttempting && !isMastered && selectedCharacter) {
+                    e.currentTarget.style.backgroundColor = theme.background;
+                    e.currentTarget.style.borderColor =
+                      theme.primary || "#3b82f6";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isAttempting && !isMastered && selectedCharacter) {
+                    e.currentTarget.style.backgroundColor = theme.surface;
+                    e.currentTarget.style.borderColor = theme.border;
+                  }
+                }}
               >
                 <Brain size={20} />
                 <div style={styles.alternateButtonContent}>
@@ -1147,12 +1176,12 @@ export const SubjectCard = ({
                   <div style={styles.alternateButtonSubtitle}>
                     Intelligence + Wand modifier
                   </div>
-                  <div style={styles.alternateButtonModifier}>
-                    +
-                    {Math.floor(
-                      (selectedCharacter?.abilityScores?.intelligence - 10) / 2
-                    ) || 0}
-                  </div>
+                </div>
+                <div style={styles.alternateButtonModifier}>
+                  +
+                  {Math.floor(
+                    (selectedCharacter?.abilityScores?.intelligence - 10) / 2
+                  ) || 0}
                 </div>
               </button>
 
@@ -1161,7 +1190,28 @@ export const SubjectCard = ({
                   handleAlternateCasting(spellName, subject, "runes")
                 }
                 disabled={isAttempting || isMastered || !selectedCharacter}
-                style={styles.alternateButton}
+                style={{
+                  ...styles.alternateButton,
+                  opacity:
+                    isAttempting || isMastered || !selectedCharacter ? 0.5 : 1,
+                  cursor:
+                    isAttempting || isMastered || !selectedCharacter
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isAttempting && !isMastered && selectedCharacter) {
+                    e.currentTarget.style.backgroundColor = theme.background;
+                    e.currentTarget.style.borderColor =
+                      theme.primary || "#3b82f6";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isAttempting && !isMastered && selectedCharacter) {
+                    e.currentTarget.style.backgroundColor = theme.surface;
+                    e.currentTarget.style.borderColor = theme.border;
+                  }
+                }}
               >
                 <WisdomIcon size={20} />
                 <div style={styles.alternateButtonContent}>
@@ -1169,12 +1219,12 @@ export const SubjectCard = ({
                   <div style={styles.alternateButtonSubtitle}>
                     Wisdom + Wand modifier
                   </div>
-                  <div style={styles.alternateButtonModifier}>
-                    +
-                    {Math.floor(
-                      (selectedCharacter?.abilityScores?.wisdom - 10) / 2
-                    ) || 0}
-                  </div>
+                </div>
+                <div style={styles.alternateButtonModifier}>
+                  +
+                  {Math.floor(
+                    (selectedCharacter?.abilityScores?.wisdom - 10) / 2
+                  ) || 0}
                 </div>
               </button>
 
@@ -1190,7 +1240,50 @@ export const SubjectCard = ({
                   isAttempting ||
                   !findSpellData(spellName).year
                 }
-                style={styles.alternateButton}
+                style={{
+                  ...styles.alternateButton,
+                  opacity:
+                    isResearched ||
+                    isMastered ||
+                    !selectedCharacter ||
+                    isAttempting ||
+                    !findSpellData(spellName).year
+                      ? 0.5
+                      : 1,
+                  cursor:
+                    isResearched ||
+                    isMastered ||
+                    !selectedCharacter ||
+                    isAttempting ||
+                    !findSpellData(spellName).year
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  if (
+                    !isResearched &&
+                    !isMastered &&
+                    selectedCharacter &&
+                    !isAttempting &&
+                    findSpellData(spellName).year
+                  ) {
+                    e.currentTarget.style.backgroundColor = theme.background;
+                    e.currentTarget.style.borderColor =
+                      theme.primary || "#3b82f6";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (
+                    !isResearched &&
+                    !isMastered &&
+                    selectedCharacter &&
+                    !isAttempting &&
+                    findSpellData(spellName).year
+                  ) {
+                    e.currentTarget.style.backgroundColor = theme.surface;
+                    e.currentTarget.style.borderColor = theme.border;
+                  }
+                }}
               >
                 <BookOpen size={20} />
                 <div style={styles.alternateButtonContent}>
@@ -1198,6 +1291,24 @@ export const SubjectCard = ({
                   <div style={styles.alternateButtonSubtitle}>
                     History of Magic Check
                   </div>
+                </div>
+                <div style={styles.alternateButtonModifier}>
+                  +
+                  {(() => {
+                    let modifier = getSpellModifier(
+                      spellName,
+                      subjectName,
+                      selectedCharacter
+                    );
+                    if (hasSubclassFeature(selectedCharacter, "Researcher")) {
+                      const wisdomModifier = Math.floor(
+                        (selectedCharacter?.abilityScores?.wisdom - 10) / 2
+                      );
+                      const researcherBonus = Math.floor(wisdomModifier / 2);
+                      modifier += researcherBonus;
+                    }
+                    return modifier;
+                  })()}
                 </div>
               </button>
             </div>
@@ -2091,24 +2202,180 @@ export const SubjectCard = ({
 
   if (activeSearchTerm && activeSearchTerm.trim() !== "") {
     return (
-      <div key={subjectName} style={styles.subjectCard}>
-        <div
-          style={{
-            ...styles.subjectHeader,
-            borderLeftColor: subjectData.color,
-            borderLeftWidth: "4px",
-            borderLeftStyle: "solid",
-          }}
-        >
-          <div style={styles.subjectTitleContainer}>
-            <Icon size={24} color={subjectData.color} />
-            <h2 style={{ ...styles.subjectTitle, color: subjectData.color }}>
-              {subjectName} - Search Results
-            </h2>
+      <>
+        <div key={subjectName} style={styles.subjectCard}>
+          <div
+            style={{
+              ...styles.subjectHeader,
+              borderLeftColor: subjectData.color,
+              borderLeftWidth: "4px",
+              borderLeftStyle: "solid",
+            }}
+          >
+            <div style={styles.subjectTitleContainer}>
+              <Icon size={24} color={subjectData.color} />
+              <h2 style={{ ...styles.subjectTitle, color: subjectData.color }}>
+                {subjectName} - Search Results
+              </h2>
+            </div>
           </div>
+          {renderSearchResults()}
         </div>
-        {renderSearchResults()}
-      </div>
+
+        {editingSpell && (
+          <div style={styles.editModal}>
+            <div style={styles.editModalContent}>
+              <h3 style={styles.editModalTitle}>
+                Edit Spell Progress: {editingSpell}
+              </h3>
+
+              <div style={styles.editFormGroup}>
+                <label style={styles.editFormLabel}>Successful Attempts:</label>
+                <select
+                  value={editFormData.successfulAttempts}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      successfulAttempts: parseInt(e.target.value),
+                    }))
+                  }
+                  style={styles.editFormSelect}
+                >
+                  <option value={0}>0</option>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                </select>
+              </div>
+
+              <div style={styles.editFormGroup}>
+                <label style={styles.editFormCheckboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={editFormData.hasCriticalSuccess}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        hasCriticalSuccess: e.target.checked,
+                      }))
+                    }
+                    style={styles.editFormCheckbox}
+                  />
+                  Critical Success (Natural 20)
+                </label>
+              </div>
+
+              <div style={styles.editFormGroup}>
+                <label style={styles.editFormCheckboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={editFormData.hasFailedAttempt}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        hasFailedAttempt: e.target.checked,
+                      }))
+                    }
+                    style={styles.editFormCheckbox}
+                  />
+                  Has Failed Attempt
+                </label>
+              </div>
+
+              <div style={styles.editFormGroup}>
+                <label style={styles.editFormCheckboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={editFormData.researched}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        researched: e.target.checked,
+                      }))
+                    }
+                    style={styles.editFormCheckbox}
+                  />
+                  Researched
+                </label>
+              </div>
+
+              <div style={styles.editFormGroup}>
+                <label style={styles.editFormCheckboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={editFormData.hasArithmancticTag}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        hasArithmancticTag: e.target.checked,
+                      }))
+                    }
+                    style={styles.editFormCheckbox}
+                  />
+                  Has Arithmantic Tag
+                </label>
+              </div>
+
+              <div style={styles.editFormGroup}>
+                <label style={styles.editFormCheckboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={editFormData.hasRunicTag}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        hasRunicTag: e.target.checked,
+                      }))
+                    }
+                    style={styles.editFormCheckbox}
+                  />
+                  Has Runic Tag
+                </label>
+              </div>
+
+              <div style={styles.editFormActions}>
+                <button onClick={saveEdit} style={styles.editFormSaveButton}>
+                  <Check size={16} />
+                  Save
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  style={styles.editFormCancelButton}
+                >
+                  <X size={16} />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {alternateAttemptsModal && (
+          <AlternateAttemptsModal
+            spellName={alternateAttemptsModal}
+            spellObj={findSpellData(alternateAttemptsModal)}
+            subject={subjectName}
+          />
+        )}
+
+        <RestrictionModal
+          spellName={restrictionModal.spellName}
+          isOpen={restrictionModal.isOpen}
+          onConfirm={restrictionModal.onConfirm}
+          onCancel={handleRestrictionCancel}
+          theme={theme}
+        />
+        <SpellBonusDiceModal
+          isOpen={bonusDiceModalState.isOpen}
+          onClose={bonusDiceModalState.props.onClose}
+          onConfirm={bonusDiceModalState.props.onConfirm}
+          availableDice={bonusDiceModalState.props.availableDice}
+          spellName={bonusDiceModalState.props.spellName}
+          originalRoll={bonusDiceModalState.props.originalRoll}
+          originalModifier={bonusDiceModalState.props.originalModifier}
+          originalTotal={bonusDiceModalState.props.originalTotal}
+          targetDC={bonusDiceModalState.props.targetDC}
+        />
+      </>
     );
   }
 
