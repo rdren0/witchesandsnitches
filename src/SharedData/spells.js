@@ -2668,7 +2668,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "30 Feet",
           duration: "Instantaneous",
-          year: 6,
+          year: 1,
           restriction: true,
           description: "Insect control or summoning spell",
         },
