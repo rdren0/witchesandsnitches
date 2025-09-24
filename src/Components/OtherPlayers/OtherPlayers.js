@@ -19,7 +19,10 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getOtherPlayersStyles } from "./styles";
-import { shouldFilterFromOtherPlayers, shouldShowNPCBadge } from "../../utils/characterFiltering";
+import {
+  shouldFilterFromOtherPlayers,
+  shouldShowNPCBadge,
+} from "../../utils/characterFiltering";
 
 const DEFAULT_PC_TAGS = [
   "Study Partner",
@@ -801,27 +804,39 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
   const filteredPlayers = otherPlayers
     .filter((player) => {
       // Filter out characters that match Jaguaras NPC names (unless they're exceptions)
-      return !shouldFilterFromOtherPlayers(player.name, selectedCharacter.gameSession);
+      return !shouldFilterFromOtherPlayers(
+        player.name,
+        selectedCharacter.gameSession
+      );
     })
     .filter((player) => {
       if (!searchTerm.trim()) return true;
 
-    const searchLower = searchTerm.toLowerCase();
-    const note = pcNotes[player.name];
+      const searchLower = searchTerm.toLowerCase();
+      const note = pcNotes[player.name];
 
-    return (
-      player.name?.toLowerCase().includes(searchLower) ||
-      player.house?.toLowerCase().includes(searchLower) ||
-      player.casting_style?.toLowerCase().includes(searchLower) ||
-      player.subclass?.toLowerCase().includes(searchLower) ||
-      player.background?.toLowerCase().includes(searchLower) ||
-      (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
-      (note?.relationship &&
-        note.relationship.toLowerCase().includes(searchLower)) ||
-      (note?.custom_tags &&
-        note.custom_tags.some((tag) => tag.toLowerCase().includes(searchLower)))
-    );
-  });
+      return (
+        player.name?.toLowerCase().includes(searchLower) ||
+        player.house?.toLowerCase().includes(searchLower) ||
+        player.casting_style?.toLowerCase().includes(searchLower) ||
+        player.subclass?.toLowerCase().includes(searchLower) ||
+        player.background?.toLowerCase().includes(searchLower) ||
+        (note?.notes && note.notes.toLowerCase().includes(searchLower)) ||
+        (note?.relationship &&
+          note.relationship.toLowerCase().includes(searchLower)) ||
+        (note?.custom_tags &&
+          note.custom_tags.some((tag) =>
+            tag.toLowerCase().includes(searchLower)
+          ))
+      );
+    })
+    .sort((a, b) => {
+      const firstNameA = a.name?.split(" ")[0] || "";
+      const firstNameB = b.name?.split(" ")[0] || "";
+      return firstNameA.localeCompare(firstNameB, undefined, {
+        sensitivity: "base",
+      });
+    });
 
   const styles = getOtherPlayersStyles(theme);
 
