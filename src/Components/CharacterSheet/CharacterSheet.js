@@ -704,6 +704,7 @@ const CharacterSheet = ({
           wisdom: effectiveAbilityScores.wisdom || 10,
           metamagicChoices: data.metamagic_choices || {},
           heritageChoices: heritageChoices,
+          castingStyleChoices: data.casting_style_choices || {},
         };
         setCharacter(transformedCharacter);
       }

@@ -733,18 +733,43 @@ const CharacterFeatsDisplay = ({
 
     if (character.castingStyle && castingStyleData[character.castingStyle]) {
       const styleData = castingStyleData[character.castingStyle];
+      const castingChoices =
+        character.casting_style_choices || character.castingStyleChoices;
 
       if (styleData.keyFeatures && styleData.keyFeatures.length > 0) {
         styleData.keyFeatures.forEach((feature) => {
           if (feature.level && character.level >= feature.level) {
-            sections.castingStyle.features.push({
-              name: feature.name,
-              type: "Casting Style Feature",
-              source: character.castingStyle,
-              level: feature.level,
-              description: feature.description,
-              details: [],
-            });
+            if (
+              feature.name === "Black Magic Specialization" &&
+              castingChoices?.blackMagicSpecialization
+            ) {
+              const chosenOption = feature.choices?.find(
+                (choice) =>
+                  choice.name === castingChoices.blackMagicSpecialization
+              );
+              sections.castingStyle.features.push({
+                name: "Black Magic Specialization",
+                type: "Casting Style Feature",
+                source: character.castingStyle,
+                level: feature.level,
+                description: `Your chosen black magic specialization enhances your combat abilities in specific situations.`,
+                details: [
+                  `Specialization: ${castingChoices.blackMagicSpecialization} Magic`,
+                  chosenOption
+                    ? chosenOption.description
+                    : "Your chosen black magic specialization.",
+                ].filter(Boolean),
+              });
+            } else {
+              sections.castingStyle.features.push({
+                name: feature.name,
+                type: "Casting Style Feature",
+                source: character.castingStyle,
+                level: feature.level,
+                description: feature.description,
+                details: [],
+              });
+            }
           }
         });
       }
