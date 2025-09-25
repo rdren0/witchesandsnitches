@@ -71,6 +71,14 @@ export const FORM_SECTIONS = [
     lockable: true,
     order: 9,
   },
+  {
+    id: "castingStyleChoices",
+    title: "Casting Style Features",
+    subtitle: "Level-based casting style feature choices",
+    required: false,
+    lockable: true,
+    order: 10,
+  },
 ];
 
 export const FORM_MODES = {

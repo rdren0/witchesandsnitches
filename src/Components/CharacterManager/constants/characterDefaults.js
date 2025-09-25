@@ -28,6 +28,7 @@ export const DEFAULT_CHARACTER = {
   heritage_choices: {},
   feat_choices: {},
   subclass_choices: {},
+  castingStyleChoices: {},
   toolProficiencies: [],
   metamagic: [],
 
