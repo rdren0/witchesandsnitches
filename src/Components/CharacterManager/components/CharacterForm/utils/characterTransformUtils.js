@@ -38,9 +38,11 @@ export const transformCharacterForSave = (character) => {
     ? character.skillExpertise
     : [];
 
+  const level1Feats = [];
   const allFeats = [];
 
   if (character.level1ChoiceType === "feat" && character.standardFeats) {
+    level1Feats.push(...character.standardFeats);
     allFeats.push(...character.standardFeats);
   }
 
@@ -79,6 +81,7 @@ export const transformCharacterForSave = (character) => {
     background: character.background,
     base_ability_scores: character.baseAbilityScores || null,
     casting_style: character.castingStyle,
+    casting_style_choices: character.castingStyleChoices || {},
     corruption_points: character.corruptionPoints || 0,
     current_hit_dice: character.level || 1,
     current_hit_points: character.currentHitPoints ?? hitPoints,
@@ -101,7 +104,7 @@ export const transformCharacterForSave = (character) => {
     school_year: character.schoolYear || 1,
     skill_expertise: skillExpertise,
     skill_proficiencies: skillProficiencies,
-    standard_feats: allFeats,
+    standard_feats: level1Feats,
     subclass_choices: character.subclassChoices || {},
     subclass: character.subclass,
     tool_proficiencies: character.toolProficiencies || [],
@@ -128,6 +131,7 @@ export const transformCharacterFromDB = (dbCharacter) => {
     background: dbCharacter.background,
     baseAbilityScores: dbCharacter.base_ability_scores || null,
     castingStyle: dbCharacter.casting_style,
+    castingStyleChoices: dbCharacter.casting_style_choices || {},
     corruptionPoints: dbCharacter.corruption_points || 0,
     createdAt: dbCharacter.created_at,
     currentHitDice: dbCharacter.current_hit_dice || 1,
@@ -155,7 +159,13 @@ export const transformCharacterFromDB = (dbCharacter) => {
     skillProficiencies: dbCharacter.skill_proficiencies || [],
     standardFeats: (() => {
       if (dbCharacter.standard_feats && dbCharacter.standard_feats.length > 0) {
-        return dbCharacter.standard_feats;
+        const uniqueFeats = [...new Set(dbCharacter.standard_feats)];
+
+        if (dbCharacter.level1_choice_type === "feat") {
+          return uniqueFeats.length > 0 ? [uniqueFeats[0]] : [];
+        }
+
+        return [];
       }
 
       if (

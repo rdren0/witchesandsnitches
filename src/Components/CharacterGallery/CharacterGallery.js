@@ -19,6 +19,7 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "./styles";
 import { ALL_CHARACTERS } from "../../SharedData/charactersData";
+import { filterNPCGalleryCharacters } from "../../utils/characterFiltering";
 
 const DEFAULT_TAGS = [
   "Study Buddy",
@@ -730,6 +731,34 @@ const CharacterCard = ({
           {character.school} • {character.type}
         </div>
 
+        {character.type === "Faculty" && character.subjects && (
+          <div
+            style={{
+              fontSize: "12px",
+              color: theme.primary,
+              marginBottom: "8px",
+              fontWeight: "500",
+              padding: "4px 8px",
+              backgroundColor: theme.primary + "10",
+              borderRadius: "4px",
+              border: `1px solid ${theme.primary}20`,
+            }}
+          >
+            <strong>Subject(s):</strong>
+            {character.subjects.includes("/") ? (
+              <ul style={{ margin: "4px 0 0 0", paddingLeft: "16px" }}>
+                {character.subjects.split("/").map((subject, index) => (
+                  <li key={index} style={{ marginBottom: "2px" }}>
+                    {subject.trim()}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span> {character.subjects}</span>
+            )}
+          </div>
+        )}
+
         {hasNote && !isEditingNote && (
           <div style={{ marginBottom: "8px" }}>
             <RelationshipBadge
@@ -1353,7 +1382,12 @@ export const CharacterGallery = ({
     );
   }
 
-  const charactersBySchool = characters.reduce((acc, character) => {
+  const filteredCharacters = filterNPCGalleryCharacters(
+    characters,
+    selectedCharacter?.gameSession
+  );
+
+  const charactersBySchool = filteredCharacters.reduce((acc, character) => {
     const school = character.school;
     const type = character.type;
 
@@ -1367,7 +1401,7 @@ export const CharacterGallery = ({
     return acc;
   }, {});
 
-  const searchResults = characters.filter((character) => {
+  const searchResults = filteredCharacters.filter((character) => {
     if (!searchTerm.trim()) return false;
 
     const searchLower = searchTerm.toLowerCase();

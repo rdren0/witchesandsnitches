@@ -410,6 +410,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
+        casting_style_choices: characterData.casting_style_choices || {},
         current_hit_dice: characterData.level,
         current_hit_points: characterData.hit_points,
         discord_user_id: discordUserId,
@@ -473,6 +474,7 @@ const saveCharacter = async (characterData, discordUserId) => {
 
 const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
+
     const { data: updatedCharacter, error: characterError } = await supabase
       .from("characters")
       .update({
@@ -480,6 +482,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
+        casting_style_choices: characterData.casting_style_choices || {},
         current_hit_dice: characterData.level,
         current_hit_points: characterData.hit_points,
         game_session: characterData.game_session,
@@ -537,6 +540,7 @@ const updateCharacterAsAdmin = async (characterId, characterData) => {
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
+        casting_style_choices: characterData.casting_style_choices || {},
         current_hit_dice: characterData.level,
         current_hit_points: characterData.hit_points,
         game_session: characterData.game_session,

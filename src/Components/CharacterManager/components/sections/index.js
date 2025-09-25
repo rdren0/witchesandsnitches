@@ -10,4 +10,5 @@ export { default as ToolsLanguagesSection } from "./ToolsLanguagesSection";
 export { default as ASILevelChoices } from "./ASILevelChoices";
 export { default as MagicModifiersSection } from "./MagicModifiersSection";
 export { default as MetaMagicSection } from "./MetaMagicSection";
+export { default as CastingStyleChoicesSection } from "./CastingStyleChoicesSection";
 export { default as NotesSection } from "./NotesSection";

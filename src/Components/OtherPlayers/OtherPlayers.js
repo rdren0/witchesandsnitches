@@ -19,7 +19,10 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getOtherPlayersStyles } from "./styles";
-import { ALL_CHARACTERS } from "../../SharedData/charactersData";
+import {
+  shouldFilterFromOtherPlayers,
+  shouldShowNPCBadge,
+} from "../../utils/characterFiltering";
 
 const DEFAULT_PC_TAGS = [
   "Study Partner",
@@ -237,6 +240,27 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
   );
 };
 
+const NPCBadge = ({ theme }) => (
+  <span
+    style={{
+      backgroundColor: "#ef4444",
+      color: "white",
+      fontSize: "10px",
+      fontWeight: "600",
+      padding: "2px 6px",
+      borderRadius: "4px",
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+      marginLeft: "8px",
+      verticalAlign: "top",
+      display: "inline-block",
+    }}
+  >
+    NPC
+  </span>
+);
+
 const PlayerCard = ({
   character,
   theme,
@@ -246,6 +270,7 @@ const PlayerCard = ({
   supabase,
   currentCharacterId,
   discordUserId,
+  gameSession,
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -333,6 +358,8 @@ const PlayerCard = ({
       pcNote.last_interaction?.trim() ||
       (pcNote.custom_tags && pcNote.custom_tags.length > 0));
 
+  const showNPCBadge = shouldShowNPCBadge(character.name, gameSession);
+
   return (
     <div style={styles.playerCard}>
       <div style={styles.imageContainer}>
@@ -392,7 +419,10 @@ const PlayerCard = ({
       </div>
 
       <div style={styles.playerInfo}>
-        <h3 style={styles.playerName}>{character.name}</h3>
+        <h3 style={styles.playerName}>
+          {character.name}
+          {showNPCBadge && <NPCBadge theme={theme} />}
+        </h3>
         <div style={styles.playerDetails}>
           {character.house && (
             <div style={styles.detailRow}>
@@ -703,8 +733,6 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
 
   const discordUserId = user?.user_metadata?.provider_id;
 
-  const npcNames = new Set(ALL_CHARACTERS.map((npc) => npc.name));
-
   useEffect(() => {
     if (selectedCharacter?.gameSession && supabase) {
       loadOtherPlayers();
@@ -775,7 +803,11 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
 
   const filteredPlayers = otherPlayers
     .filter((player) => {
-      return !npcNames.has(player.name);
+      // Filter out characters that match Jaguaras NPC names (unless they're exceptions)
+      return !shouldFilterFromOtherPlayers(
+        player.name,
+        selectedCharacter.gameSession
+      );
     })
     .filter((player) => {
       if (!searchTerm.trim()) return true;
@@ -797,6 +829,13 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
             tag.toLowerCase().includes(searchLower)
           ))
       );
+    })
+    .sort((a, b) => {
+      const firstNameA = a.name?.split(" ")[0] || "";
+      const firstNameB = b.name?.split(" ")[0] || "";
+      return firstNameA.localeCompare(firstNameB, undefined, {
+        sensitivity: "base",
+      });
     });
 
   const styles = getOtherPlayersStyles(theme);
@@ -915,6 +954,7 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
               supabase={supabase}
               currentCharacterId={selectedCharacter.id}
               discordUserId={discordUserId}
+              gameSession={selectedCharacter.gameSession}
             />
           ))}
         </div>

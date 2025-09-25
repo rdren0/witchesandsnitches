@@ -159,19 +159,21 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
   const currentMetaMagics = getMetaMagicChoices(character);
 
   const getAvailableMetaMagics = (character) => {
-    return [...AVAILABLE_METAMAGICS];
-  };
-
-  const getAutomaticMetaMagics = (character) => {
+    const baseMetaMagics = [...AVAILABLE_METAMAGICS];
     const castingStyle = character?.castingStyle;
     const level = character?.level || 1;
 
     if (castingStyle && CASTING_STYLE_METAMAGICS[castingStyle]) {
-      return CASTING_STYLE_METAMAGICS[castingStyle].filter(
-        (mm) => level >= (mm.requiredLevel || 1)
-      );
+      const castingStyleMetaMagics = CASTING_STYLE_METAMAGICS[
+        castingStyle
+      ].filter((mm) => level >= (mm.requiredLevel || 1));
+      baseMetaMagics.push(...castingStyleMetaMagics);
     }
 
+    return baseMetaMagics;
+  };
+
+  const getAutomaticMetaMagics = (character) => {
     return [];
   };
 

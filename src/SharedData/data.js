@@ -46,6 +46,29 @@ export const SORCERY_POINT_PROGRESSION = {
   20: 20,
 };
 
+export const BLACK_MAGIC_PROGRESSION = {
+  1: "1d6",
+  2: "1d6",
+  3: "2d6",
+  4: "2d6",
+  5: "3d6",
+  6: "3d6",
+  7: "4d6",
+  8: "4d6",
+  9: "5d6",
+  10: "5d6",
+  11: "6d6",
+  12: "6d6",
+  13: "7d6",
+  14: "7d6",
+  15: "8d6",
+  16: "8d6",
+  17: "9d6",
+  18: "9d6",
+  19: "10d6",
+  20: "10d6",
+};
+
 export const housesBySchool = {
   "Hogwarts School of Witchcraft and Wizardry": [
     "Gryffindor",
@@ -268,6 +291,18 @@ export const castingStyleData = {
           "The accidental magic in your early childhood never stopped protecting you. Your AC equals 15 + your Dexterity modifier.",
       },
       {
+        name: "Reckless Magic",
+        level: 1,
+        description:
+          "You can throw aside all concern for defense to attack with fierce desperation. When you make your first attack on your turn, you can decide to attack recklessly. Doing so gives you advantage on spell attack rolls during this turn, but attack rolls against you have advantage until your next turn.",
+      },
+      {
+        name: "Black Magic",
+        level: 1,
+        description:
+          "Once per turn, you can deal an extra 1d6 damage to one creature you hit with a cantrip if you have advantage on the attack roll. You don't need advantage if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll. Your Black Magic damage increases to 2d6 at 3rd level, 3d6 at 5th level, 4d6 at 7th, 5d6 at 9th, 6d6 at 11th, 7d6 at 13th, 8d6 at 15th, 9d6 at 17th, and 10d6 at 19th level.",
+      },
+      {
         name: "Metamagic: Fierce Spell",
         level: 3,
         description:
@@ -278,6 +313,40 @@ export const castingStyleData = {
         level: 3,
         description:
           "At 3rd level, when you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+      },
+      {
+        name: "Black Magic Specialization",
+        level: 5,
+        description:
+          "At 5th level, you may choose one of the following options to enhance your Black Magic: Ambush (advantage on attacks against creatures that haven't acted), Gambit (Black Magic works when within 5 feet with no other enemies nearby), Grudge (advantage against creatures that damaged you), Pique (advantage when at half hit points or less), or Hubris (advantage against creatures with fewer hit points than you).",
+        isChoice: true,
+        choices: [
+          {
+            name: "Ambush",
+            description:
+              "You have advantage on attack rolls against any creature that hasn't taken a turn in the combat yet. In addition, any hit you score against a creature that is surprised is a critical hit.",
+          },
+          {
+            name: "Gambit",
+            description:
+              "You don't need advantage on the attack roll to use your Black Magic against a creature if you are within 5 feet of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll.",
+          },
+          {
+            name: "Grudge",
+            description:
+              "You gain advantage on attack rolls against a creature that has damaged you since the end of your last turn.",
+          },
+          {
+            name: "Pique",
+            description:
+              "You have advantage on attack rolls when you have half of your hit points or less.",
+          },
+          {
+            name: "Hubris",
+            description:
+              "You gain advantage on attack rolls against any creature that has fewer hit points than you.",
+          },
+        ],
       },
       {
         name: "Signature Spells",

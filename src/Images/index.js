@@ -122,20 +122,28 @@ import OKelly from "./HogwartsStudents/Upperclassmen/Orflaith_Kelly_1.png";
 import RSkeeter from "./HogwartsStudents/Upperclassmen/Rita_Skeeter_1.jpg";
 import SCarrow from "./HogwartsStudents/Upperclassmen/Sinclair_Carrow_1.png";
 
-// Jaguars
-import AMelillan from "./Jaguars/Antu_Melillan.png";
-import ANordstrom from "./Jaguars/Astrid_Nordstrom.png";
-import CHalim from "./Jaguars/Cairo_Halim.png";
-import CGuaitiao from "./Jaguars/Caonabo_Guaitiao.png";
-import EWalker from "./Jaguars/Emma_Walker.png";
-import EBabajide from "./Jaguars/Eniola_Babajide.png";
-import IChihiro from "./Jaguars/Ito_Chihiro.png";
-import IBalam from "./Jaguars/Ixchel_Balam.png";
-import JBennett from "./Jaguars/Jackson_Bennett.png";
-import LHexsmith from "./Jaguars/Louise_Hexsmith.png";
-import NAlbany from "./Jaguars/Neiro_Albany.png";
-import PParkinson from "./Jaguars/Pierre_Parkinson.png";
-import PAbramov from "./Jaguars/Pyotr_Abramov.png";
+// Jaguaras Students
+import AMelillan from "./JaguarasStudents/Antu_Melillan.png";
+import ANordstrom from "./JaguarasStudents/Astrid_Nordstrom.png";
+import CHalim from "./JaguarasStudents/Cairo_Halim.png";
+import CGuaitiao from "./JaguarasStudents/Caonabo_Guaitiao.png";
+import EWalker from "./JaguarasStudents/Emma_Walker.png";
+import EBabajide from "./JaguarasStudents/Eniola_Babajide.png";
+import IChihiro from "./JaguarasStudents/Ito_Chihiro.png";
+import IBalam from "./JaguarasStudents/Ixchel_Balam.png";
+import JBennett from "./JaguarasStudents/Jackson_Bennett.png";
+import LHexsmith from "./JaguarasStudents/Louise_Hexsmith.png";
+import NAlbany from "./JaguarasStudents/Neiro_Albany.png";
+import PParkinson from "./JaguarasStudents/Pierre_Parkinson.png";
+import PAbramov from "./JaguarasStudents/Pyotr_Abramov.png";
+
+// Jaguaras Teachers
+import AnaCosta from "./JaguarasTeachers/HEADMISTRESS-ANA-COSTA.png";
+import LarissaAlmeida from "./JaguarasTeachers/PROFESSOR-LARISSA-ALMEIDA.png";
+import ShaniceAllen from "./JaguarasTeachers/PROFESSOR-SHANICE-ALLEN.png";
+import SantiagoEspinosa from "./JaguarasTeachers/PROFESSOR-SANTIAGO-ESPINOSA.png";
+import ShariAugustine from "./JaguarasTeachers/PROFESSOR-SHARI-AUGUSTINE.png";
+import WilnerToussaint from "./JaguarasTeachers/PROFESSOR-WILNER-TOUSSAINT.png";
 
 // Hogwarts Teachers
 import Hagrid from "./HogwartsTeachers/Hagrid.png";
@@ -277,7 +285,7 @@ export {
   RSkeeter,
   SCarrow,
 
-  // Jaguars
+  // Jaguaras Students
   AMelillan,
   ANordstrom,
   CHalim,
@@ -291,6 +299,14 @@ export {
   NAlbany,
   PParkinson,
   PAbramov,
+
+  // Jaguaras Teachers
+  AnaCosta,
+  LarissaAlmeida,
+  ShaniceAllen,
+  SantiagoEspinosa,
+  ShariAugustine,
+  WilnerToussaint,
 
   // Hogwarts Teachers
   Hagrid,

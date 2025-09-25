@@ -20,10 +20,14 @@ const FeatureSelectorSection = ({
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
 
-  const selectedFeats =
-    character._editingASILevel && !isLevel1Choice
-      ? (character.standardFeats || []).filter((feat) => feat)
-      : character.standardFeats || [];
+  const selectedFeats = (() => {
+    const feats =
+      character._editingASILevel && !isLevel1Choice
+        ? (character.standardFeats || []).filter((feat) => feat)
+        : character.standardFeats || [];
+
+    return [...new Set(feats)];
+  })();
   const featChoices = character.featChoices || {};
 
   const enhancedStyles = {
@@ -422,7 +426,7 @@ const FeatureSelectorSection = ({
 
   const handleFeatToggle = (featName) => {
     setCharacter((prev) => {
-      const currentFeats = prev.standardFeats || [];
+      const currentFeats = [...new Set(prev.standardFeats || [])];
       const currentChoices = prev.featChoices || {};
       const feat = standardFeats.find((f) => f.name === featName);
 
@@ -536,7 +540,7 @@ const FeatureSelectorSection = ({
 
       return {
         ...prev,
-        standardFeats: newFeats,
+        standardFeats: [...new Set(newFeats)],
         featChoices: newChoices,
       };
     });

@@ -17,6 +17,7 @@ import {
   ASILevelChoices,
   MagicModifiersSection,
   MetaMagicSection,
+  CastingStyleChoicesSection,
   NotesSection,
   BasicInfoSection,
 } from "../sections";
@@ -311,6 +312,17 @@ const CharacterForm = ({
       </FormSection>
 
       <FormSection
+        title="Casting Style Features"
+        subtitle="Level-based casting style feature choices"
+        id="section-casting-style-choices"
+      >
+        <CastingStyleChoicesSection
+          character={character}
+          setCharacter={updateCharacter}
+        />
+      </FormSection>
+
+      <FormSection
         title="House & School"
         subtitle="Choose your magical house and school affiliation"
         id="section-house"
@@ -405,7 +417,11 @@ const CharacterForm = ({
         />
       </FormSection>
 
-      <FormSection title="Tool Proficiencies" subtitle="Tool proficiencies" id="section-tools">
+      <FormSection
+        title="Tool Proficiencies"
+        subtitle="Tool proficiencies"
+        id="section-tools"
+      >
         <ToolsLanguagesSection
           character={character}
           onChange={(field, value) => updateCharacter(field, value)}
