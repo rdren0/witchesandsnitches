@@ -13,8 +13,8 @@ import {
   Copy,
   Crown,
 } from "lucide-react";
-import MDEditor from "@uiw/react-md-editor";
-import "@uiw/react-md-editor/markdown-editor.css";
+import Editor from "@monaco-editor/react";
+import ReactMarkdown from "react-markdown";
 import { templates } from "./templates";
 
 import { useTheme } from "../../contexts/ThemeContext";
@@ -29,6 +29,37 @@ export const CharacterNotes = ({
 }) => {
   const { theme } = useTheme();
   const styles = createCharacterNotesStyles(theme);
+
+  const createTemplateCardProps = (onClick) => ({
+    style: styles.templateCard,
+    onClick,
+    onMouseEnter: (e) => {
+      e.currentTarget.style.borderColor = theme.primary;
+      e.currentTarget.style.backgroundColor = theme.primary + "08";
+      e.currentTarget.style.transform = "translateY(-2px)";
+      e.currentTarget.style.boxShadow = `0 8px 25px ${theme.primary}20`;
+
+      const icon = e.currentTarget.querySelector(".template-icon");
+      if (icon) {
+        icon.style.backgroundColor = theme.primary + "25";
+        icon.style.color = theme.primary;
+        icon.style.transform = "scale(1.05)";
+      }
+    },
+    onMouseLeave: (e) => {
+      e.currentTarget.style.borderColor = theme.border;
+      e.currentTarget.style.backgroundColor = theme.background;
+      e.currentTarget.style.transform = "translateY(0)";
+      e.currentTarget.style.boxShadow = "none";
+
+      const icon = e.currentTarget.querySelector(".template-icon");
+      if (icon) {
+        icon.style.backgroundColor = theme.primary + "15";
+        icon.style.color = theme.primary;
+        icon.style.transform = "scale(1)";
+      }
+    },
+  });
 
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -174,6 +205,12 @@ export const CharacterNotes = ({
       setEntries(newEntries);
       setNewEntryTitle("");
       setShowNewEntryForm(false);
+
+      setEditingEntry(newEntry.id);
+
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 100);
     } catch (err) {
       console.error("Error creating entry:", err);
       alert("Failed to create entry. Please try again.");
@@ -355,75 +392,164 @@ export const CharacterNotes = ({
       </div>
 
       {showNewEntryForm && (
-        <div style={styles.newEntryForm}>
-          <div>
-            <h3 style={styles.newEntryTitle}>Create New Entry</h3>
-            <input
-              type="text"
-              placeholder="Entry title (optional - will auto-generate if empty)"
-              value={newEntryTitle}
-              onChange={(e) => setNewEntryTitle(e.target.value)}
-              style={styles.newEntryInput}
-              autoFocus
-            />
-          </div>
+        <div
+          style={styles.newEntryModal}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowNewEntryForm(false);
+              setNewEntryTitle("");
+            }
+          }}
+        >
+          <div style={styles.newEntryModalContent}>
+            <div style={styles.newEntryModalHeader}>
+              <h3 style={styles.newEntryModalTitle}>Create New Note</h3>
+              <button
+                onClick={() => {
+                  setShowNewEntryForm(false);
+                  setNewEntryTitle("");
+                }}
+                style={styles.modalCloseButton}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          <div style={styles.templateButtons}>
-            <button
-              onClick={() => createNewEntry(newEntryTitle)}
-              style={styles.templateButton}
-            >
-              <Zap size={16} />
-              Blank Entry
-            </button>
+            <div style={styles.newEntryInputSection}>
+              <input
+                type="text"
+                placeholder="Enter note title (optional)"
+                value={newEntryTitle}
+                onChange={(e) => setNewEntryTitle(e.target.value)}
+                style={styles.newEntryInput}
+                autoFocus
+              />
+            </div>
 
-            <button
-              onClick={() => createNewEntry(newEntryTitle, "", "spell")}
-              style={styles.templateButton}
-            >
-              <Zap size={16} />
-              Spell Template
-            </button>
+            <div style={styles.templateSection}>
+              <div style={styles.templateSectionHeader}>
+                <h4 style={styles.templateSectionTitle}>Quick Start</h4>
+                <p style={styles.templateSectionSubtitle}>
+                  Choose a template or start blank
+                </p>
+              </div>
 
-            <button
-              onClick={() => createNewEntry(newEntryTitle, "", "session")}
-              style={styles.templateButton}
-            >
-              <Calendar size={16} />
-              Session Notes
-            </button>
+              <div style={styles.templateGrid}>
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle)
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <FileText size={24} />
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Blank Note</h5>
+                    <p style={styles.templateCardDescription}>
+                      Start with an empty note
+                    </p>
+                  </div>
+                </div>
 
-            <button
-              onClick={() => createNewEntry(newEntryTitle, "", "combat")}
-              style={styles.templateButton}
-            >
-              ⚔️ Combat Tactics
-            </button>
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "session")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <Calendar size={24} />
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Session Notes</h5>
+                    <p style={styles.templateCardDescription}>
+                      Track what happened this session
+                    </p>
+                  </div>
+                </div>
 
-            <button
-              onClick={() => createNewEntry(newEntryTitle, "", "relationship")}
-              style={styles.templateButton}
-            >
-              👥 Relationship
-            </button>
-            <button
-              onClick={() => createNewEntry(newEntryTitle, "", "creature")}
-              style={styles.templateButton}
-            >
-              🦄 Magical Creature
-            </button>
-          </div>
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "spell")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <Zap size={24} />
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Spell Research</h5>
+                    <p style={styles.templateCardDescription}>
+                      Document spell details & effects
+                    </p>
+                  </div>
+                </div>
 
-          <div style={styles.formActions}>
-            <button
-              onClick={() => {
-                setShowNewEntryForm(false);
-                setNewEntryTitle("");
-              }}
-              style={styles.cancelButton}
-            >
-              Cancel
-            </button>
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "combat")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <span style={styles.templateCardEmoji}>⚔️</span>
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Combat Tactics</h5>
+                    <p style={styles.templateCardDescription}>
+                      Plan strategies & record battles
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "relationship")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <span style={styles.templateCardEmoji}>👥</span>
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Character Notes</h5>
+                    <p style={styles.templateCardDescription}>
+                      Track NPCs & relationships
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "creature")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <span style={styles.templateCardEmoji}>🦄</span>
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Magical Creatures</h5>
+                    <p style={styles.templateCardDescription}>
+                      Catalog creatures & their lore
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -454,7 +580,13 @@ export const CharacterNotes = ({
               <div key={entry.id} style={styles.entryCard}>
                 <EntryCard
                   entry={entry}
-                  onEdit={() => setEditingEntry(entry.id)}
+                  onEdit={() => {
+                    setEditingEntry(entry.id);
+
+                    setTimeout(() => {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }, 100);
+                  }}
                   onDelete={() => deleteEntry(entry.id)}
                   onDuplicate={() => duplicateEntry(entry)}
                   isDuplicating={duplicatingEntryId === entry.id}
@@ -492,6 +624,7 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
   const [title, setTitle] = useState(entry?.title || "");
   const [content, setContent] = useState(entry?.content || "");
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [viewMode, setViewMode] = useState("edit");
 
   useEffect(() => {
     if (entry) {
@@ -521,6 +654,22 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
     setContent(content + "\n\n" + templateContent);
   };
 
+  const isDarkTheme =
+    theme.surface === "#1F2937" ||
+    theme.surface === "#111827" ||
+    theme.text === "#FFFFFF";
+
+  const editorOptions = {
+    minimap: { enabled: false },
+    fontSize: 14,
+    lineNumbers: "on",
+    wordWrap: "on",
+    automaticLayout: true,
+    fontFamily: '"Fira Code", "Monaco", "Menlo", "Courier New", monospace',
+    scrollBeyondLastLine: false,
+    renderLineHighlight: "none",
+  };
+
   return (
     <div style={styles.editForm}>
       <div style={styles.editHeader}>
@@ -531,6 +680,35 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
           style={styles.editTitleInput}
         />
         <div style={styles.editActions}>
+          <div style={styles.viewModeButtons}>
+            <button
+              onClick={() => setViewMode("edit")}
+              style={{
+                ...styles.viewModeButton,
+                ...(viewMode === "edit" ? styles.viewModeButtonActive : {}),
+              }}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setViewMode("preview")}
+              style={{
+                ...styles.viewModeButton,
+                ...(viewMode === "preview" ? styles.viewModeButtonActive : {}),
+              }}
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => setViewMode("split")}
+              style={{
+                ...styles.viewModeButton,
+                ...(viewMode === "split" ? styles.viewModeButtonActive : {}),
+              }}
+            >
+              Split
+            </button>
+          </div>
           <button onClick={handleSave} style={styles.saveButton}>
             <Check size={16} />
             Save Changes
@@ -544,7 +722,7 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
 
       <div style={styles.templateSection}>
         <div>
-          <h4 style={styles.templateSectionTitle}>📋 Insert Template</h4>
+          <h4 style={styles.editTemplateSectionTitle}>📋 Insert Template</h4>
         </div>
 
         <div style={styles.templateButtons}>
@@ -582,15 +760,234 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
 
       <div style={styles.editorContainer}>
         {isEditorReady && content !== undefined ? (
-          <MDEditor
-            value={content}
-            onChange={(value) => setContent(value || "")}
-            height={500}
-            visibleDragBar={false}
-            data-color-mode="light"
-            preview="edit"
-            hideToolbar={false}
-          />
+          <div
+            style={{
+              display: "flex",
+              height: "500px",
+              border: `1px solid ${theme.border}`,
+              borderRadius: "8px",
+              backgroundColor: theme.surface,
+              overflow: "hidden",
+            }}
+          >
+            {(viewMode === "edit" || viewMode === "split") && (
+              <div
+                style={{
+                  flex: viewMode === "split" ? 1 : 2,
+                  minWidth: 0,
+                  backgroundColor: theme.surface,
+                }}
+              >
+                <Editor
+                  height="100%"
+                  language="markdown"
+                  value={content}
+                  onChange={(value) => setContent(value || "")}
+                  options={editorOptions}
+                  beforeMount={(monaco) => {
+                    monaco.editor.defineTheme("app-theme", {
+                      base: isDarkTheme ? "vs-dark" : "vs",
+                      inherit: true,
+                      rules: [
+                        { token: "", foreground: theme.text.replace("#", "") },
+                        {
+                          token: "text",
+                          foreground: theme.text.replace("#", ""),
+                        },
+                        {
+                          token: "keyword",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "string",
+                          foreground: theme.textSecondary.replace("#", ""),
+                        },
+                        {
+                          token: "number",
+                          foreground: theme.textSecondary.replace("#", ""),
+                        },
+                        {
+                          token: "comment",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "italic",
+                        },
+
+                        {
+                          token: "emphasis",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "italic",
+                        },
+                        {
+                          token: "strong",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "header.1",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "header.2",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "header.3",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "header.4",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "header.5",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "header.6",
+                          foreground: theme.textSecondary.replace("#", ""),
+                          fontStyle: "bold",
+                        },
+                        {
+                          token: "variable",
+                          foreground: theme.text.replace("#", ""),
+                        },
+                        {
+                          token: "variable.name",
+                          foreground: theme.text.replace("#", ""),
+                        },
+                        {
+                          token: "variable.value",
+                          foreground: theme.text.replace("#", ""),
+                        },
+                        {
+                          token: "meta",
+                          foreground: theme.textSecondary.replace("#", ""),
+                        },
+                        {
+                          token: "tag",
+                          foreground: theme.textSecondary.replace("#", ""),
+                        },
+                        {
+                          token: "attribute.name",
+                          foreground: theme.textSecondary.replace("#", ""),
+                        },
+                        {
+                          token: "attribute.value",
+                          foreground: theme.textSecondary.replace("#", ""),
+                        },
+                      ],
+                      colors: {
+                        "editor.background": theme.surface,
+                        "editor.foreground": theme.text,
+                        "editorLineNumber.foreground": theme.textSecondary,
+                        "editorLineNumber.activeForeground": theme.text,
+                        "editor.selectionBackground": theme.primary + "30",
+                        "editor.lineHighlightBackground": theme.background,
+                        "editorCursor.foreground": theme.primary,
+                        "editor.findMatchBackground": theme.primary + "40",
+                        "editor.findMatchHighlightBackground":
+                          theme.primary + "20",
+                        "scrollbarSlider.background": theme.border + "60",
+                        "scrollbarSlider.hoverBackground": theme.border + "80",
+                        "scrollbarSlider.activeBackground": theme.border,
+                        "editorWidget.background": theme.surface,
+                        "editorWidget.foreground": theme.text,
+                        "editorSuggestWidget.background": theme.surface,
+                        "editorSuggestWidget.foreground": theme.text,
+                        "editorHoverWidget.background": theme.surface,
+                        "editorHoverWidget.foreground": theme.text,
+                      },
+                    });
+                  }}
+                  onMount={(editor, monaco) => {
+                    monaco.editor.setTheme("app-theme");
+                  }}
+                />
+              </div>
+            )}
+            {viewMode === "split" && (
+              <div style={{ width: "1px", backgroundColor: theme.border }} />
+            )}
+            {(viewMode === "preview" || viewMode === "split") && (
+              <div
+                style={{
+                  flex: viewMode === "split" ? 1 : 2,
+                  padding: "16px",
+                  backgroundColor: theme.background,
+                  overflow: "auto",
+                  minWidth: 0,
+                }}
+              >
+                <div
+                  style={{
+                    color: theme.text,
+                    fontFamily: '"Newsreader", serif',
+                    lineHeight: "1.6",
+                  }}
+                  className="themed-markdown"
+                >
+                  <style>
+                    {`
+                      .themed-markdown h1, .themed-markdown h2, .themed-markdown h3,
+                      .themed-markdown h4, .themed-markdown h5, .themed-markdown h6 {
+                        color: ${theme.text};
+                        margin: 1em 0 0.5em 0;
+                      }
+                      .themed-markdown p {
+                        color: ${theme.text};
+                        margin: 0.5em 0;
+                      }
+                      .themed-markdown li {
+                        color: ${theme.text};
+                      }
+                      .themed-markdown code {
+                        background-color: ${theme.background};
+                        color: ${theme.text};
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+                      }
+                      .themed-markdown pre {
+                        background-color: ${theme.background};
+                        color: ${theme.text};
+                        padding: 12px;
+                        border-radius: 8px;
+                        overflow-x: auto;
+                      }
+                      .themed-markdown blockquote {
+                        border-left: 4px solid ${theme.primary};
+                        margin: 0;
+                        padding-left: 16px;
+                        color: ${theme.textSecondary};
+                      }
+                      .themed-markdown table {
+                        border-collapse: collapse;
+                        width: 100%;
+                      }
+                      .themed-markdown th, .themed-markdown td {
+                        border: 1px solid ${theme.border};
+                        padding: 8px;
+                        color: ${theme.text};
+                      }
+                      .themed-markdown th {
+                        background-color: ${theme.background};
+                        font-weight: 600;
+                      }
+                    `}
+                  </style>
+                  <ReactMarkdown>
+                    {content || "*No content to preview*"}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div style={styles.editorLoading}>Loading editor...</div>
         )}
@@ -647,13 +1044,66 @@ const EntryCard = ({
         </div>
       </div>
       <div style={styles.entryContent}>
-        <MDEditor.Markdown
-          source={entry.content}
+        <div
           style={{
             backgroundColor: "transparent",
             color: theme.text,
+            fontFamily: '"Newsreader", serif',
+            lineHeight: "1.6",
           }}
-        />
+          className="themed-markdown"
+        >
+          <style>
+            {`
+              .themed-markdown h1, .themed-markdown h2, .themed-markdown h3,
+              .themed-markdown h4, .themed-markdown h5, .themed-markdown h6 {
+                color: ${theme.text};
+                margin: 1em 0 0.5em 0;
+              }
+              .themed-markdown p {
+                color: ${theme.text};
+                margin: 0.5em 0;
+              }
+              .themed-markdown li {
+                color: ${theme.text};
+              }
+              .themed-markdown code {
+                background-color: ${theme.background};
+                color: ${theme.text};
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+              }
+              .themed-markdown pre {
+                background-color: ${theme.background};
+                color: ${theme.text};
+                padding: 12px;
+                border-radius: 8px;
+                overflow-x: auto;
+              }
+              .themed-markdown blockquote {
+                border-left: 4px solid ${theme.primary};
+                margin: 0;
+                padding-left: 16px;
+                color: ${theme.textSecondary};
+              }
+              .themed-markdown table {
+                border-collapse: collapse;
+                width: 100%;
+              }
+              .themed-markdown th, .themed-markdown td {
+                border: 1px solid ${theme.border};
+                padding: 8px;
+                color: ${theme.text};
+              }
+              .themed-markdown th {
+                background-color: ${theme.background};
+                font-weight: 600;
+              }
+            `}
+          </style>
+          <ReactMarkdown>{entry.content || "*No content*"}</ReactMarkdown>
+        </div>
       </div>
     </>
   );
