@@ -464,10 +464,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           brewingResult.characterModifier
         }`,
         quantity: 1,
-        value: getPotionValue(
-          brewingResult.achievedQuality,
-          brewingResult.potion.rarity
-        ),
+        value: null,
         category: "Potion",
         attunement_required: false,
         character_id: currentCharacter.id,
