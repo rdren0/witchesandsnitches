@@ -17,7 +17,7 @@ export const addStartingEquipment = async (
     name: item.name,
     description: item.description,
     quantity: item.quantity || 1,
-    value: item.value || "",
+    value: item.value || null,
     category: item.category || "General",
     attunement_required: item.attunement_required || false,
   }));

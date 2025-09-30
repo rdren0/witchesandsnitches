@@ -1713,7 +1713,7 @@ export const rollBrewPotion = async ({
             selectedPotion.description
           }\n\nBrewed on ${new Date().toLocaleString()} with ${rawIngredientQuality} ingredients (prepared to ${ingredientQuality}). Roll: ${d20Roll} + ${skillModifier} = ${totalRoll}`,
           quantity: 1,
-          value: getPotionValue(achievedQuality, selectedPotion.rarity),
+          value: null,
           category: "Potions",
           attunement_required: false,
           character_id: currentCharacter.id,

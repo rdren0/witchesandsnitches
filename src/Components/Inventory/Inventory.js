@@ -706,11 +706,9 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                               )}
 
                               <div style={styles.itemMeta}>
-                                <span>
-                                  {item.value
-                                    ? `Value: ${item.value}`
-                                    : "No value set"}
-                                </span>
+                                {item.value && item.value !== 0 && item.value !== "0" && (
+                                  <span>Value: {item.value}</span>
+                                )}
                                 <span>
                                   Added:{" "}
                                   {new Date(
