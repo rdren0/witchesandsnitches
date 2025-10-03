@@ -642,6 +642,14 @@ const LevelUpModal = ({
         imageUrl: character.imageUrl || character.image_url || null,
         sorceryPoints: currentSorceryPoints,
         maxSorceryPoints: newMaxSorceryPoints,
+        skill_proficiencies:
+          character.skill_proficiencies || character.skillProficiencies || [],
+        skillProficiencies:
+          character.skillProficiencies || character.skill_proficiencies || [],
+        skill_expertise:
+          character.skill_expertise || character.skillExpertise || [],
+        skillExpertise:
+          character.skillExpertise || character.skill_expertise || [],
         ...spellSlotUpdates,
       };
 
@@ -817,7 +825,9 @@ const LevelUpModal = ({
           }
 
           const currentSkills = [
-            ...(updatedCharacter.skill_proficiencies || []),
+            ...(updatedCharacter.skill_proficiencies ||
+              updatedCharacter.skillProficiencies ||
+              []),
           ];
           if (
             selectedFeat.benefits.skillProficiencies &&
@@ -844,9 +854,12 @@ const LevelUpModal = ({
             );
           }
           updatedCharacter.skill_proficiencies = currentSkills;
+          updatedCharacter.skillProficiencies = currentSkills;
 
           const currentExpertise = [
-            ...(updatedCharacter.skill_expertise || []),
+            ...(updatedCharacter.skill_expertise ||
+              updatedCharacter.skillExpertise ||
+              []),
           ];
           if (
             selectedFeat.benefits.expertise &&
@@ -865,6 +878,7 @@ const LevelUpModal = ({
             });
           }
           updatedCharacter.skill_expertise = currentExpertise;
+          updatedCharacter.skillExpertise = currentExpertise;
 
           const currentFeats = [...(updatedCharacter.standard_feats || [])];
           if (!currentFeats.includes(selectedFeat.name)) {
