@@ -359,32 +359,6 @@ const CharacterList = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onLevelUpCharacter && onLevelUpCharacter(character);
-            }}
-            style={{
-              ...styles.button,
-              backgroundColor: theme.success,
-              color: "white",
-              padding: "8px 12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              borderRadius: "6px",
-              fontSize: "13px",
-            }}
-            title="Level Up"
-          >
-            <TrendingUp size={14} />
-            <span
-              style={{ display: window.innerWidth > 768 ? "inline" : "none" }}
-            >
-              Level Up
-            </span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
               onEditCharacter && onEditCharacter(character);
             }}
             style={{
