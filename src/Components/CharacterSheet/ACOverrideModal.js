@@ -5,9 +5,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 const ACOverrideModal = ({ character, onClose, onSave, supabase }) => {
   const { theme } = useTheme();
 
-  console.log("ACOverrideModal - character.ac:", character.ac);
-  console.log("ACOverrideModal - full character:", character);
-
   const acData = character.ac || { override: null, modifier: 0 };
   const [acOverride, setAcOverride] = useState(acData.override ?? "");
   const [acModifier, setAcModifier] = useState(acData.modifier ?? 0);
@@ -34,17 +31,11 @@ const ACOverrideModal = ({ character, onClose, onSave, supabase }) => {
         modifier: parseInt(acModifier || 0),
       };
 
-      console.log("Saving AC object:", acObject);
-      console.log("Character ID:", character.id);
-
       const { data, error } = await supabase
         .from("characters")
         .update({ ac: acObject })
         .eq("id", character.id)
         .select();
-
-      console.log("Update response - data:", data);
-      console.log("Update response - error:", error);
 
       if (error) throw error;
 
@@ -228,9 +219,17 @@ const ACOverrideModal = ({ character, onClose, onSave, supabase }) => {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+          <div
+            style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}
+          >
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "24px",
+                  alignItems: "flex-start",
+                }}
+              >
                 <div style={{ flex: 1 }}>
                   <div style={styles.section}>
                     <label style={styles.label}>AC Override</label>
@@ -244,8 +243,8 @@ const ACOverrideModal = ({ character, onClose, onSave, supabase }) => {
                       max="99"
                     />
                     <div style={styles.helpText}>
-                      Override the calculated base AC with a custom value. Leave empty
-                      to use the base AC ({baseAC}).
+                      Override the calculated base AC with a custom value. Leave
+                      empty to use the base AC ({baseAC}).
                     </div>
                   </div>
 
@@ -261,8 +260,8 @@ const ACOverrideModal = ({ character, onClose, onSave, supabase }) => {
                       max="99"
                     />
                     <div style={styles.helpText}>
-                      Add a positive or negative modifier to your AC (e.g., +2 from
-                      shield, -1 from curse).
+                      Add a positive or negative modifier to your AC (e.g., +2
+                      from shield, -1 from curse).
                     </div>
                   </div>
                 </div>
