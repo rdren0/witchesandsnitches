@@ -479,6 +479,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
       .from("characters")
       .update({
         ability_scores: characterData.ability_scores,
+        ac: characterData.ac,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
@@ -537,6 +538,7 @@ const updateCharacterAsAdmin = async (characterId, characterData) => {
       .from("characters")
       .update({
         ability_scores: characterData.ability_scores,
+        ac: characterData.ac,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,

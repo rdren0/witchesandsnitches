@@ -32,6 +32,7 @@ import {
 import InspirationTracker from "./InspirationTracker";
 import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
+import ACOverrideModal from "./ACOverrideModal";
 import { characterService } from "../../services/characterService";
 import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
 import {
@@ -105,6 +106,7 @@ const CharacterSheet = ({
   const [damageAmount, setDamageAmount] = useState(0);
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
+  const [showACModal, setShowACModal] = useState(false);
   const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
@@ -623,6 +625,7 @@ const CharacterSheet = ({
 
         const transformedCharacter = {
           abilityScores: effectiveAbilityScores,
+          ac: data.ac || { override: null, modifier: 0 },
           allFeats: allFeats,
           armorClass:
             getBaseArmorClass(data.casting_style) +
@@ -1741,16 +1744,31 @@ const CharacterSheet = ({
                   style={{
                     ...styles.statCard,
                     backgroundColor: theme.background,
-                    border: `1px solid ${theme.border}`,
-                    cursor: "default",
+                    border: "3px solid #3b82f6",
+                    cursor: "pointer",
                   }}
+                  title="Click to override or modify AC"
+                  onClick={() => setShowACModal(true)}
                 >
                   <Shield
                     className="w-6 h-6 text-blue-600 mx-auto mb-1"
                     style={{ color: "#3b82f6" }}
                   />
                   <div style={{ ...styles.statValue, color: "#3b82f6" }}>
-                    {character.armorClass}
+                    {(() => {
+                      const baseAC = character.armorClass || 10;
+                      const acData = character.ac || {
+                        override: null,
+                        modifier: 0,
+                      };
+                      const override = acData.override;
+                      const modifier = acData.modifier || 0;
+
+                      if (override !== null && override !== undefined) {
+                        return override + modifier;
+                      }
+                      return baseAC + modifier;
+                    })()}
                   </div>
                   <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
                     Armor Class
@@ -1919,6 +1937,18 @@ const CharacterSheet = ({
             onSave={handleCharacterUpdated}
             onCancel={() => setShowLevelUp(false)}
             user={user}
+            supabase={supabase}
+          />
+        )}
+
+        {showACModal && character && (
+          <ACOverrideModal
+            character={character}
+            onClose={() => setShowACModal(false)}
+            onSave={(updatedCharacter) => {
+              setCharacter(updatedCharacter);
+              setShowACModal(false);
+            }}
             supabase={supabase}
           />
         )}
