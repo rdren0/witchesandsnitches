@@ -137,7 +137,6 @@ export const createDowntimeStyles = (theme) => ({
     width: "32px",
     height: "32px",
     borderRadius: "50%",
-    border: "2px solid",
     backgroundColor: "transparent",
     color: theme.text,
     fontSize: "12px",
@@ -650,7 +649,7 @@ export const createDowntimeStyles = (theme) => ({
 
   actionButtons: {
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "row",
     gap: "16px",
   },
   buttonGroup: {
@@ -680,7 +679,6 @@ export const createDowntimeStyles = (theme) => ({
     fontSize: "12px",
     cursor: "pointer",
   },
-
   submittedStatus: {
     display: "flex",
     alignItems: "center",
