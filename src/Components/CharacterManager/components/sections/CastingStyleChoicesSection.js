@@ -13,14 +13,20 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
     const features = [];
 
     if (level >= 1) {
+      const dexScore = character?.abilityScores?.dexterity || 10;
+      const intScore = character?.abilityScores?.intelligence || 10;
+      const dexMod = Math.floor((dexScore - 10) / 2);
+      const intMod = Math.floor((intScore - 10) / 2);
+      const formatMod = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
+
       const initiativeChoices = [
         {
           name: "Dexterity",
-          description: "Use Dexterity for initiative rolls.",
+          description: `Use Dexterity for initiative rolls (${formatMod(dexMod)} modifier).`,
         },
         {
           name: "Intelligence",
-          description: "Use Intelligence for initiative rolls.",
+          description: `Use Intelligence for initiative rolls (${formatMod(intMod)} modifier).`,
         },
       ];
 
@@ -272,16 +278,27 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                       color: theme.text,
                     }}
                   >
-                    {character.castingStyleChoices?.[feature.choiceKey]
-                      ? `Selected: ${
-                          character.castingStyleChoices[feature.choiceKey]
-                        }`
-                      : "Choose one option:"}
+                    {(() => {
+                      const savedChoice = character.castingStyleChoices?.[feature.choiceKey];
+                      // Fallback to direct field for initiative ability
+                      const fallbackChoice = feature.choiceKey === "initiativeAbility"
+                        ? character.initiativeAbility
+                        : null;
+                      const displayChoice = savedChoice || (fallbackChoice ? fallbackChoice.charAt(0).toUpperCase() + fallbackChoice.slice(1) : null);
+
+                      return displayChoice
+                        ? `Selected: ${displayChoice}`
+                        : "Choose one option:";
+                    })()}
                   </div>
 
                   {feature.choices.map((choice, choiceIndex) => {
-                    const currentChoice =
-                      character.castingStyleChoices?.[feature.choiceKey];
+                    const savedChoice = character.castingStyleChoices?.[feature.choiceKey];
+                    // Fallback to direct field for initiative ability
+                    const fallbackChoice = feature.choiceKey === "initiativeAbility"
+                      ? character.initiativeAbility
+                      : null;
+                    const currentChoice = savedChoice || (fallbackChoice ? fallbackChoice.charAt(0).toUpperCase() + fallbackChoice.slice(1) : null);
                     const isSelected = currentChoice === choice.name;
 
                     return (
