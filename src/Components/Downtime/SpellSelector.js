@@ -585,8 +585,8 @@ const SpellSelector = ({
   return (
     <div>
       <div style={styles.container}>
-        {renderSpellSelector("first", "First Spell")}
-        {renderSpellSelector("second", "Second Spell")}
+        {renderSpellSelector("first", isResearch ? "Research Spell" : "First Spell")}
+        {!isResearch && renderSpellSelector("second", "Second Spell")}
       </div>
 
       {isModalOpen && (

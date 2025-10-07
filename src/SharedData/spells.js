@@ -1826,6 +1826,7 @@ export const spellsData = {
           class: ["Divinations"],
           level: "Cantrip",
           castingTime: "Action",
+          restricted: true,
           range: "Touch",
           duration: "Concentration, up to 1 minute",
           year: 3,
@@ -1911,6 +1912,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "120 Feet",
           duration: "1 Round",
+          restricted: true,
           year: 3,
           description:
             "A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target. On a hit, the target takes 2d6 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage.",
@@ -3259,7 +3261,7 @@ export const spellsData = {
           range: "Touch",
           duration: "Concentration, up to 1 minute",
           year: 2,
-          restriction: false,
+          restricted: true,
           tags: [],
           description:
             "You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice. It can roll the die before or after making the ability check. The spell then ends.",
@@ -3289,7 +3291,7 @@ export const spellsData = {
           range: "120 Feet",
           duration: "1 Round",
           year: 3,
-          restriction: false,
+          restricted: true,
           tags: [],
           description:
             "A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target. On a hit, the target takes 2d6 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage, thanks to the mystical dim light glittering on the target until then.",
