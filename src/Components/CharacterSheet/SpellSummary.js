@@ -287,10 +287,6 @@ const SpellSummary = ({
               <Zap size={12} style={{ color: theme.success }} />
               <span>{spellStats.mastered.length} Mastered</span>
             </div>
-            <div style={styles.stat}>
-              <Target size={12} style={{ color: theme.warning }} />
-              <span>{spellStats.attempted.length} Attempted</span>
-            </div>
           </div>
         </div>
         {isExpanded ? (
@@ -356,72 +352,7 @@ const SpellSummary = ({
             </>
           )}
 
-          {spellStats.attempted.length > 0 && (
-            <>
-              <div style={styles.sectionTitle}>
-                <Target size={14} style={{ color: theme.warning }} />
-                Attempted ({spellStats.attempted.length})
-              </div>
-              <div style={styles.spellGrid}>
-                {spellStats.attempted.map((spell) => {
-                  const attempts = spellAttempts[spell.name] || {};
-                  const attemptCount = Object.keys(attempts).length;
-                  return (
-                    <div key={`attempted-${spell.name}`}>
-                      <div
-                        style={{
-                          ...styles.spellItem,
-                          ...styles.attemptedSpell,
-                          cursor: "pointer",
-                        }}
-                        onClick={() => toggleSpellExpansion(spell.name)}
-                        title={`${attemptCount} attempt${
-                          attemptCount !== 1 ? "s" : ""
-                        } made`}
-                      >
-                        <Target size={12} />
-                        {spell.name}
-                        <span style={{ marginLeft: "auto", fontSize: "10px" }}>
-                          {expandedSpells[spell.name] ? "▼" : "▶"}
-                        </span>
-                      </div>
-                      {expandedSpells[spell.name] && (
-                        <div style={styles.spellDetails}>
-                          <div style={styles.spellDetailRow}>
-                            <strong>Level:</strong> {spell.level}
-                          </div>
-                          <div style={styles.spellDetailRow}>
-                            <strong>Casting Time:</strong> {spell.castingTime}
-                          </div>
-                          <div style={styles.spellDetailRow}>
-                            <strong>Range:</strong> {spell.range}
-                          </div>
-                          <div style={styles.spellDetailRow}>
-                            <strong>Duration:</strong> {spell.duration}
-                          </div>
-                          <div style={styles.spellDetailRow}>
-                            <strong>Description:</strong> {spell.description}
-                          </div>
-                          {spell.higherLevels && (
-                            <div style={styles.spellDetailRow}>
-                              <strong>At Higher Levels:</strong>{" "}
-                              {spell.higherLevels}
-                            </div>
-                          )}
-                          <div style={styles.spellDetailRow}>
-                            <strong>Progress:</strong> {attemptCount} successful
-                            attempt{attemptCount !== 1 ? "s" : ""} made
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-          {spellStats.mastered.length === 0 &&
-            spellStats.attempted.length === 0 && (
+          {spellStats.mastered.length === 0 && (
               <div style={styles.emptyState}>
                 <BookOpen
                   size={24}

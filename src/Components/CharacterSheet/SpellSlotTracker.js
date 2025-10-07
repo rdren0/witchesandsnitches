@@ -127,6 +127,7 @@ const SpellSlotTracker = ({
     8: 0,
     9: 0,
   });
+  const [customMaxSorceryPoints, setCustomMaxSorceryPoints] = useState(0);
   const [lastKnownLevel, setLastKnownLevel] = useState(null);
 
   const updateMaxSpellSlotsOnLevelUp = useCallback(
@@ -381,6 +382,13 @@ const SpellSlotTracker = ({
         updateData[`spell_slots_${level}`] = Math.min(currentSlots, maxSlots);
       });
 
+      updateData.max_sorcery_points = customMaxSorceryPoints;
+      const currentSorceryPts = character?.sorceryPoints || 0;
+      updateData.sorcery_points = Math.min(
+        currentSorceryPts,
+        customMaxSorceryPoints
+      );
+
       const { error } = await supabase
         .from("character_resources")
         .upsert(updateData, {
@@ -403,6 +411,11 @@ const SpellSlotTracker = ({
           maxSlots
         );
       });
+      newCharacterState.maxSorceryPoints = customMaxSorceryPoints;
+      newCharacterState.sorceryPoints = Math.min(
+        character?.sorceryPoints || 0,
+        customMaxSorceryPoints
+      );
       setCharacter(newCharacterState);
 
       setShowCustomModal(false);
@@ -556,6 +569,7 @@ const SpellSlotTracker = ({
       currentCustomSlots[level] = character?.[`maxSpellSlots${level}`] || 0;
     }
     setCustomSlots(currentCustomSlots);
+    setCustomMaxSorceryPoints(character?.maxSorceryPoints || 0);
     setShowCustomModal(true);
   };
 
@@ -1029,6 +1043,16 @@ const SpellSlotTracker = ({
           <div style={styles.headerTitle}>
             <BookOpen size={20} />
             Spell Slots
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "normal",
+                color: theme.warning || "#f59e0b",
+                marginLeft: "8px",
+              }}
+            >
+              (Verify values manually - defaults may not account for all rules)
+            </span>
           </div>
           <div style={styles.headerButtons}>
             <button
@@ -1117,6 +1141,67 @@ const SpellSlotTracker = ({
                     />
                   </div>
                 ))}
+
+                <div
+                  style={{
+                    marginTop: "20px",
+                    paddingTop: "16px",
+                    borderTop: "1px solid #4b5563",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#9ca3af",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    Adjust maximum Sorcery Points
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px",
+                      backgroundColor: "#374151",
+                      border: `3px solid ${theme.primary}`,
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <label
+                      style={{
+                        color: theme.primary,
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        minWidth: "120px",
+                      }}
+                    >
+                      Sorcery Points:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="50"
+                      value={customMaxSorceryPoints}
+                      onChange={(e) =>
+                        setCustomMaxSorceryPoints(
+                          Math.max(
+                            0,
+                            Math.min(50, parseInt(e.target.value) || 0)
+                          )
+                        )
+                      }
+                      style={{
+                        ...styles.input,
+                        width: "80px",
+                        margin: 0,
+                        padding: "6px 8px",
+                        fontSize: "14px",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div style={styles.modalButtons}>
@@ -1212,7 +1297,7 @@ const SpellSlotTracker = ({
                     min="1"
                     max={
                       modalData.action === "add"
-                        ? 20 // Allow adding up to 20 slots regardless of current max
+                        ? 20
                         : spellSlots.find((s) => s.level === modalData.level)
                             ?.current || 1
                     }
