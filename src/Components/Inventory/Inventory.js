@@ -100,31 +100,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchItems, selectedCharacter?.id]);
 
-  useEffect(() => {
-    if (!selectedCharacter?.id) return;
-
-    const interval = setInterval(() => {
-      if (
-        !document.hidden &&
-        !isLoading &&
-        !isSaving &&
-        !editingId &&
-        !showAddForm
-      ) {
-        fetchItems();
-      }
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, [
-    fetchItems,
-    selectedCharacter?.id,
-    isLoading,
-    isSaving,
-    editingId,
-    showAddForm,
-  ]);
-
   const addItem = useCallback(async () => {
     if (!formData.name.trim() || !supabase || !selectedCharacter?.id) return;
 
@@ -418,11 +393,9 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </div>
           )}
 
-          {(showAddForm || editingId) && (
+          {showAddForm && (
             <div style={styles.formCard}>
-              <h3 style={styles.formTitle}>
-                {editingId ? "Edit Item" : "Add New Item"}
-              </h3>
+              <h3 style={styles.formTitle}>Add New Item</h3>
 
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
@@ -561,7 +534,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
               <div style={styles.formActions}>
                 <button
-                  onClick={editingId ? saveEdit : addItem}
+                  onClick={addItem}
                   disabled={!formData.name.trim() || isSaving}
                   style={{
                     ...styles.saveButton,
@@ -575,18 +548,28 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                   {isSaving ? (
                     <>
                       <Loader size={18} />
-                      {editingId ? "Saving..." : "Adding..."}
+                      Adding...
                     </>
                   ) : (
                     <>
                       <Check size={18} />
-                      {editingId ? "Save Changes" : "Add Item"}
+                      Add Item
                     </>
                   )}
                 </button>
 
                 <button
-                  onClick={cancelEdit}
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setFormData({
+                      name: "",
+                      description: "",
+                      quantity: 1,
+                      value: "",
+                      category: "General",
+                      attunement_required: false,
+                    });
+                  }}
                   style={styles.cancelButton}
                   disabled={isSaving}
                 >
@@ -619,80 +602,210 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                         </div>
                         <div style={styles.itemsGrid}>
                           {categoryItems.map((item) => (
-                            <div key={item.id} style={styles.itemCard}>
-                              <div style={styles.itemHeader}>
+                            <div
+                              key={item.id}
+                              style={{
+                                ...styles.itemCard,
+                                ...(editingId === item.id && { gridColumn: '1 / -1' })
+                              }}
+                            >
+                              {editingId === item.id ? (
+                                // Inline edit form
                                 <div>
-                                  <div style={styles.itemName}>
-                                    <Package size={18} color={theme.primary} />
-                                    {item.name}
-                                    {item.quantity > 1 && (
-                                      <span style={styles.quantityBadge}>
-                                        x{item.quantity}
-                                      </span>
-                                    )}
-                                    {item.attunement_required && (
-                                      <span style={styles.attunementBadge}>
-                                        <Star size={12} color={theme.warning} />
-                                        Attunement
-                                      </span>
-                                    )}
+                                  <h4 style={{ ...styles.formTitle, marginTop: 0 }}>Edit Item</h4>
+                                  <div style={styles.formGrid}>
+                                    <div style={styles.formField}>
+                                      <label style={styles.label}>Item Name *</label>
+                                      <input
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={(e) =>
+                                          setFormData({ ...formData, name: e.target.value })
+                                        }
+                                        style={styles.input}
+                                      />
+                                    </div>
+                                    <div style={styles.formField}>
+                                      <label style={styles.label}>Category</label>
+                                      <select
+                                        value={formData.category}
+                                        onChange={(e) =>
+                                          setFormData({ ...formData, category: e.target.value })
+                                        }
+                                        style={styles.select}
+                                      >
+                                        {categories.map((cat) => (
+                                          <option key={cat} value={cat}>
+                                            {cat}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div style={styles.formField}>
+                                      <label style={styles.label}>Quantity</label>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={formData.quantity}
+                                        onChange={(e) =>
+                                          setFormData({ ...formData, quantity: e.target.value })
+                                        }
+                                        style={styles.input}
+                                      />
+                                    </div>
+                                    <div style={styles.formField}>
+                                      <label style={styles.label}>Value</label>
+                                      <input
+                                        type="text"
+                                        value={formData.value}
+                                        onChange={(e) =>
+                                          setFormData({ ...formData, value: e.target.value })
+                                        }
+                                        placeholder="e.g., 50 gold"
+                                        style={styles.input}
+                                      />
+                                    </div>
+                                    <div style={{ ...styles.formField, ...styles.formFieldFull }}>
+                                      <label style={styles.label}>Description</label>
+                                      <textarea
+                                        value={formData.description}
+                                        onChange={(e) =>
+                                          setFormData({ ...formData, description: e.target.value })
+                                        }
+                                        placeholder="Item description..."
+                                        style={styles.textarea}
+                                      />
+                                    </div>
+                                    <div style={styles.checkboxField}>
+                                      <input
+                                        type="checkbox"
+                                        checked={formData.attunement_required}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            attunement_required: e.target.checked,
+                                          })
+                                        }
+                                        style={styles.checkbox}
+                                        id={`attunement-${item.id}`}
+                                      />
+                                      <label
+                                        htmlFor={`attunement-${item.id}`}
+                                        style={styles.checkboxLabel}
+                                      >
+                                        Requires Attunement
+                                      </label>
+                                    </div>
+                                  </div>
+                                  <div style={styles.formActions}>
+                                    <button
+                                      onClick={saveEdit}
+                                      disabled={!formData.name.trim() || isSaving}
+                                      style={{
+                                        ...styles.saveButton,
+                                        opacity: !formData.name.trim() || isSaving ? 0.5 : 1,
+                                      }}
+                                    >
+                                      {isSaving ? (
+                                        <>
+                                          <Loader size={18} />
+                                          Saving...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Check size={18} />
+                                          Save Changes
+                                        </>
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={cancelEdit}
+                                      style={styles.cancelButton}
+                                      disabled={isSaving}
+                                    >
+                                      <X size={18} />
+                                      Cancel
+                                    </button>
                                   </div>
                                 </div>
-                                <div style={styles.itemActions}>
-                                  <button
-                                    onClick={() => startEdit(item)}
-                                    disabled={
-                                      editingId || showAddForm || isSaving
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      ...styles.editButton,
-                                      opacity:
-                                        editingId || showAddForm || isSaving
-                                          ? 0.5
-                                          : 1,
-                                    }}
-                                  >
-                                    <Edit2 size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => deleteItem(item.id)}
-                                    disabled={
-                                      editingId || showAddForm || isSaving
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      ...styles.deleteButton,
-                                      opacity:
-                                        editingId || showAddForm || isSaving
-                                          ? 0.5
-                                          : 1,
-                                    }}
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
+                              ) : (
+                                // Regular item display
+                                <>
+                                  <div style={styles.itemHeader}>
+                                    <div>
+                                      <div style={styles.itemName}>
+                                        <Package size={18} color={theme.primary} />
+                                        {item.name}
+                                        {item.quantity > 1 && (
+                                          <span style={styles.quantityBadge}>
+                                            x{item.quantity}
+                                          </span>
+                                        )}
+                                        {item.attunement_required && (
+                                          <span style={styles.attunementBadge}>
+                                            <Star size={12} color={theme.warning} />
+                                            Attunement
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div style={styles.itemActions}>
+                                      <button
+                                        onClick={() => startEdit(item)}
+                                        disabled={
+                                          editingId || showAddForm || isSaving
+                                        }
+                                        style={{
+                                          ...styles.actionButton,
+                                          ...styles.editButton,
+                                          opacity:
+                                            editingId || showAddForm || isSaving
+                                              ? 0.5
+                                              : 1,
+                                        }}
+                                      >
+                                        <Edit2 size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteItem(item.id)}
+                                        disabled={
+                                          editingId || showAddForm || isSaving
+                                        }
+                                        style={{
+                                          ...styles.actionButton,
+                                          ...styles.deleteButton,
+                                          opacity:
+                                            editingId || showAddForm || isSaving
+                                              ? 0.5
+                                              : 1,
+                                        }}
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </div>
 
-                              {item.description && (
-                                <div style={styles.itemDescription}>
-                                  {item.description}
-                                </div>
-                              )}
-
-                              <div style={styles.itemMeta}>
-                                {item.value &&
-                                  item.value !== 0 &&
-                                  item.value !== "0" && (
-                                    <span>Value: {item.value}</span>
+                                  {item.description && (
+                                    <div style={styles.itemDescription}>
+                                      {item.description}
+                                    </div>
                                   )}
-                                <span>
-                                  Added:{" "}
-                                  {new Date(
-                                    item.created_at
-                                  ).toLocaleDateString()}
-                                </span>
-                              </div>
+
+                                  <div style={styles.itemMeta}>
+                                    {item.value &&
+                                      item.value !== 0 &&
+                                      item.value !== "0" && (
+                                        <span>Value: {item.value}</span>
+                                      )}
+                                    <span>
+                                      Added:{" "}
+                                      {new Date(
+                                        item.created_at
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>

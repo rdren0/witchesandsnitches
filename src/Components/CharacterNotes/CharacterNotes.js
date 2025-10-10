@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { templates } from "./templates";
 
 import { useTheme } from "../../contexts/ThemeContext";
@@ -979,7 +980,7 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
                       }
                     `}
                   </style>
-                  <ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {content || "*No content to preview*"}
                   </ReactMarkdown>
                 </div>
@@ -1100,7 +1101,7 @@ const EntryCard = ({
               }
             `}
           </style>
-          <ReactMarkdown>{entry.content || "*No content*"}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{entry.content || "*No content*"}</ReactMarkdown>
         </div>
       </div>
     </>

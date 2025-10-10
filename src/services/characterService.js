@@ -421,6 +421,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         house: characterData.house,
         house_choices: characterData.house_choices,
         initiative_ability: characterData.initiative_ability,
+        initiative: characterData.initiative || { modifier: 0, override: null },
         innate_heritage: characterData.innate_heritage,
         innate_heritage_skills: characterData.innate_heritage_skills,
         level: characterData.level,
@@ -436,6 +437,7 @@ const saveCharacter = async (characterData, discordUserId) => {
         subclass: characterData.subclass,
         subclass_choices: characterData.subclass_choices,
         wand_type: characterData.wand_type,
+        wand_info: characterData.wand_info,
         image_url: characterData.image_url || characterData.imageUrl || null,
         base_ability_scores: characterData.base_ability_scores,
         metamagic_choices: characterData.metamagic_choices,
@@ -475,7 +477,6 @@ const saveCharacter = async (characterData, discordUserId) => {
 
 const updateCharacter = async (characterId, characterData, discordUserId) => {
   try {
-
     const { data: updatedCharacter, error: characterError } = await supabase
       .from("characters")
       .update({
@@ -496,6 +497,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         house: characterData.house,
         image_url: characterData.image_url || characterData.imageUrl || null,
         initiative_ability: characterData.initiative_ability,
+        initiative: characterData.initiative || { modifier: 0, override: null },
         innate_heritage_skills: characterData.innate_heritage_skills,
         innate_heritage: characterData.innate_heritage,
         level: characterData.level,
@@ -512,6 +514,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         subclass: characterData.subclass,
         updated_at: new Date().toISOString(),
         wand_type: characterData.wand_type,
+        wand_info: characterData.wand_info,
         base_ability_scores: characterData.base_ability_scores,
         metamagic_choices: characterData.metamagic_choices,
       })
@@ -556,6 +559,7 @@ const updateCharacterAsAdmin = async (characterId, characterData) => {
         house: characterData.house,
         image_url: characterData.image_url || characterData.imageUrl || null,
         initiative_ability: characterData.initiative_ability,
+        initiative: characterData.initiative || { modifier: 0, override: null },
         innate_heritage_skills: characterData.innate_heritage_skills,
         innate_heritage: characterData.innate_heritage,
         level: characterData.level,
@@ -570,6 +574,7 @@ const updateCharacterAsAdmin = async (characterId, characterData) => {
         subclass: characterData.subclass,
         updated_at: new Date().toISOString(),
         wand_type: characterData.wand_type,
+        wand_info: characterData.wand_info,
         base_ability_scores: characterData.base_ability_scores,
         discord_user_id: characterData.discord_user_id,
         metamagic_choices: characterData.metamagic_choices,

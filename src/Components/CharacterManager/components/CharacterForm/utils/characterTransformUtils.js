@@ -68,7 +68,7 @@ export const transformCharacterForSave = (character) => {
   const hitPoints =
     character.hitPoints > 0 ? character.hitPoints : calculatedHitPoints;
 
-  return {
+  const transformed = {
     ability_scores: character.abilityScores || {
       strength: 8,
       dexterity: 8,
@@ -94,6 +94,7 @@ export const transformCharacterForSave = (character) => {
     house: character.house,
     image_url: character.imageUrl || character.image_url || null,
     initiative_ability: character.initiativeAbility || "dexterity",
+    initiative: character.initiative || { modifier: 0, override: null },
     innate_heritage_skills: character.innateHeritageSkills || [],
     innate_heritage: character.innateHeritage,
     level: character.level || 1,
@@ -109,10 +110,13 @@ export const transformCharacterForSave = (character) => {
     subclass: character.subclass,
     tool_proficiencies: character.toolProficiencies || [],
     wand_type: character.wandType || "",
+    wand_info: character.wandInfo || null,
     metamagic_choices: character.metamagicChoices || {},
     additional_feats: character.additionalFeats || [],
     additional_asi: character.additionalASI || [],
   };
+
+  return transformed;
 };
 
 export const transformCharacterFromDB = (dbCharacter) => {
@@ -148,6 +152,7 @@ export const transformCharacterFromDB = (dbCharacter) => {
     id: dbCharacter.id,
     imageUrl: dbCharacter.image_url || null,
     initiativeAbility: dbCharacter.initiative_ability || "dexterity",
+    initiative: dbCharacter.initiative || { modifier: 0, override: null },
     innateHeritage: dbCharacter.innate_heritage,
     innateHeritageSkills: dbCharacter.innate_heritage_skills || [],
     level: dbCharacter.level || 1,
@@ -184,6 +189,7 @@ export const transformCharacterFromDB = (dbCharacter) => {
     toolProficiencies: dbCharacter.tool_proficiencies || [],
     updatedAt: dbCharacter.updated_at,
     wandType: dbCharacter.wand_type || "",
+    wandInfo: dbCharacter.wand_info || "",
     metamagicChoices: dbCharacter.metamagic_choices || {},
     additionalFeats: dbCharacter.additional_feats || [],
     additionalASI: dbCharacter.additional_asi || [],

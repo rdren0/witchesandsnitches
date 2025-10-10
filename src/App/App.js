@@ -1065,7 +1065,8 @@ function AppContent() {
       setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
-  }, [user, loadCustomUsername, setThemeSelectedCharacter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, setThemeSelectedCharacter]);
 
   useEffect(() => {
     if (location.pathname === "/character") {

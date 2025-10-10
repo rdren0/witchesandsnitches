@@ -5,12 +5,18 @@ import { useTheme } from "../../contexts/ThemeContext";
 const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
   const { theme } = useTheme();
 
-  const spellAttackData = character.spellAttack || { override: null, modifier: 0 };
-  const [attackOverride, setAttackOverride] = useState(spellAttackData.override ?? "");
-  const [attackModifier, setAttackModifier] = useState(spellAttackData.modifier ?? 0);
+  const spellAttackData = character.spellAttack || {
+    override: null,
+    modifier: 0,
+  };
+  const [attackOverride, setAttackOverride] = useState(
+    spellAttackData.override ?? ""
+  );
+  const [attackModifier, setAttackModifier] = useState(
+    spellAttackData.modifier ?? 0
+  );
   const [isSaving, setIsSaving] = useState(false);
 
-  // Get base spell attack bonus
   const getSpellcastingAbility = (castingStyle) => {
     const spellcastingAbilityMap = {
       "Willpower Caster": "Charisma",
@@ -30,7 +36,8 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
     if (!spellcastingAbility) return 0;
 
     const abilityKey = spellcastingAbility.toLowerCase();
-    const abilityScore = character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
+    const abilityScore =
+      character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
     const abilityModifier = Math.floor((abilityScore - 10) / 2);
     const proficiencyBonus = character.proficiencyBonus || 0;
 
@@ -38,15 +45,18 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
   };
 
   const baseAttackBonus = getBaseSpellAttackBonus();
-  const spellcastingAbilityName = getSpellcastingAbility(character.castingStyle);
+  const spellcastingAbilityName = getSpellcastingAbility(
+    character.castingStyle
+  );
   const profBonus = character.proficiencyBonus || 0;
   const abilityKey = spellcastingAbilityName?.toLowerCase();
-  const abilityScore = character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
+  const abilityScore =
+    character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
   const abilityMod = Math.floor((abilityScore - 10) / 2);
 
   const getFinalAttackBonus = () => {
     if (attackOverride !== "" && attackOverride !== null) {
-      return parseInt(attackOverride) + parseInt(attackModifier || 0);
+      return parseInt(attackOverride);
     } else {
       return baseAttackBonus + parseInt(attackModifier || 0);
     }
@@ -251,9 +261,11 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
             }}
           >
             <div style={{ fontSize: "14px", color: theme.textSecondary }}>
-              <strong>Base Spell Attack Bonus:</strong> {formatModifier(baseAttackBonus)}
+              <strong>Base Spell Attack Bonus:</strong>{" "}
+              {formatModifier(baseAttackBonus)}
               <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                (Prof: +{profBonus} + {spellcastingAbilityName}: {formatModifier(abilityMod)})
+                (Prof: +{profBonus} + {spellcastingAbilityName}:{" "}
+                {formatModifier(abilityMod)})
               </div>
             </div>
           </div>
@@ -282,25 +294,54 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
                       max="99"
                     />
                     <div style={styles.helpText}>
-                      Override the calculated base spell attack bonus with a custom value. Leave
-                      empty to use the base bonus ({formatModifier(baseAttackBonus)}).
+                      Set spell attack as the FINAL value. This completely
+                      replaces the calculated value. Leave empty to use base
+                      bonus ({formatModifier(baseAttackBonus)}).
                     </div>
                   </div>
 
                   <div style={styles.section}>
-                    <label style={styles.label}>Additional Modifier</label>
+                    <label style={styles.label}>
+                      Additional Modifier
+                      {attackOverride !== "" && attackOverride !== null && (
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "normal",
+                            marginLeft: "8px",
+                            color: theme.textSecondary,
+                          }}
+                        >
+                          (disabled when override is set)
+                        </span>
+                      )}
+                    </label>
                     <input
                       type="number"
                       value={attackModifier}
                       onChange={(e) => setAttackModifier(e.target.value)}
                       placeholder="0"
-                      style={styles.input}
+                      style={{
+                        ...styles.input,
+                        opacity:
+                          attackOverride !== "" && attackOverride !== null
+                            ? 0.5
+                            : 1,
+                        cursor:
+                          attackOverride !== "" && attackOverride !== null
+                            ? "not-allowed"
+                            : "text",
+                      }}
+                      disabled={
+                        attackOverride !== "" && attackOverride !== null
+                      }
                       min="-99"
                       max="99"
                     />
                     <div style={styles.helpText}>
-                      Add a positive or negative modifier to your spell attack (e.g., +1
-                      from magical focus, -2 from disadvantage).
+                      Add a positive or negative modifier to calculated spell
+                      attack (e.g., +1 from magical focus). Only applies when
+                      override is NOT set.
                     </div>
                   </div>
                 </div>
@@ -308,25 +349,20 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
                 <div style={{ width: "200px" }}>
                   <label style={styles.label}>Final Spell Attack</label>
                   <div style={styles.previewBox}>
-                    <div style={styles.previewValue}>{formatModifier(getFinalAttackBonus())}</div>
+                    <div style={styles.previewValue}>
+                      {formatModifier(getFinalAttackBonus())}
+                    </div>
                     <div style={styles.previewBreakdown}>
                       {attackOverride !== "" && attackOverride !== null ? (
-                        <>
-                          Override: {formatModifier(parseInt(attackOverride))}
-                          {attackModifier !== 0 && attackModifier !== "0" && (
-                            <>
-                              {" "}
-                              + Modifier: {formatModifier(parseInt(attackModifier))}
-                            </>
-                          )}
-                        </>
+                        <>Override (final value)</>
                       ) : (
                         <>
                           Base: {formatModifier(baseAttackBonus)}
                           {attackModifier !== 0 && attackModifier !== "0" && (
                             <>
                               {" "}
-                              + Modifier: {formatModifier(parseInt(attackModifier))}
+                              + Modifier:{" "}
+                              {formatModifier(parseInt(attackModifier))}
                             </>
                           )}
                         </>

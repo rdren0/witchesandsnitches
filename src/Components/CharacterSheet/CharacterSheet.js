@@ -33,6 +33,7 @@ import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import ACOverrideModal from "./ACOverrideModal";
 import SpellAttackModal from "./SpellAttackModal";
 import SpellAttackRollModal from "./SpellAttackRollModal";
+import InitiativeOverrideModal from "./InitiativeOverrideModal";
 import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
@@ -105,7 +106,9 @@ const CharacterSheet = ({
   const [isLongResting, setIsLongResting] = useState(false);
   const [showACModal, setShowACModal] = useState(false);
   const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
-  const [showSpellAttackRollModal, setShowSpellAttackRollModal] = useState(false);
+  const [showSpellAttackRollModal, setShowSpellAttackRollModal] =
+    useState(false);
+  const [showInitiativeModal, setShowInitiativeModal] = useState(false);
   const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
@@ -166,14 +169,14 @@ const CharacterSheet = ({
     const proficiencyBonus = character.proficiencyBonus || 0;
     const baseAttackBonus = proficiencyBonus + baseModifier;
 
-    // Check for override/modifier
     const attackData = character.spellAttack || { override: null, modifier: 0 };
     const override = attackData.override;
     const modifier = attackData.modifier || 0;
 
     if (override !== null && override !== undefined) {
-      return override + modifier;
+      return override;
     }
+
     return baseAttackBonus + modifier;
   };
 
@@ -295,7 +298,12 @@ const CharacterSheet = ({
 
       const spellcastingModifier = getSpellcastingAbilityModifier(character);
 
-      const rollTypeText = rollType === "advantage" ? " (Advantage)" : rollType === "disadvantage" ? " (Disadvantage)" : "";
+      const rollTypeText =
+        rollType === "advantage"
+          ? " (Advantage)"
+          : rollType === "disadvantage"
+          ? " (Disadvantage)"
+          : "";
 
       showRollResult({
         title: `Spell Attack Roll${rollTypeText}`,
@@ -348,6 +356,18 @@ const CharacterSheet = ({
 
   const getInitiativeModifier = useCallback(
     (initiativeAbility, effectiveAbilityScores, characterData) => {
+      const initiativeData = characterData?.initiative || {
+        modifier: 0,
+        override: null,
+      };
+
+      if (
+        initiativeData.override !== null &&
+        initiativeData.override !== undefined
+      ) {
+        return initiativeData.override;
+      }
+
       let baseModifier;
       if (initiativeAbility === "intelligence") {
         baseModifier =
@@ -358,10 +378,13 @@ const CharacterSheet = ({
       }
 
       if (characterData) {
-        return calculateInitiativeWithFeats(characterData, baseModifier);
+        baseModifier = calculateInitiativeWithFeats(
+          characterData,
+          baseModifier
+        );
       }
 
-      return baseModifier;
+      return baseModifier + (initiativeData.modifier || 0);
     },
     []
   );
@@ -689,7 +712,7 @@ const CharacterSheet = ({
           houseChoices: data.house_choices || {},
           id: data.id,
           imageUrl: data.image_url || "",
-          initiative: 8,
+          initiative: data.initiative || { modifier: 0, override: null },
           initiativeAbility: data.initiative_ability,
           initiativeModifier: getInitiativeModifier(
             data.initiative_ability,
@@ -1528,9 +1551,15 @@ const CharacterSheet = ({
                       characterModifiers,
                     })
                   }
-                  title={`Click to roll initiative: d20 + ${formatModifier(
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setShowInitiativeModal(true);
+                  }}
+                  title={`Click to roll initiative: d20  ${formatModifier(
                     character.initiativeModifier
-                  )}`}
+                  )}${String.fromCharCode(
+                    10
+                  )}Right-click to modify or override`}
                 >
                   <Swords
                     className="w-6 h-6 text-green-600 mx-auto mb-1"
@@ -1552,7 +1581,9 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       transition: "all 0.2s ease",
                     }}
-                    onClick={() => !isRolling && setShowSpellAttackRollModal(true)}
+                    onClick={() =>
+                      !isRolling && setShowSpellAttackRollModal(true)
+                    }
                     onContextMenu={(e) => {
                       e.preventDefault();
                       setShowSpellAttackModal(true);
@@ -1838,6 +1869,36 @@ const CharacterSheet = ({
             onRoll={rollSpellAttack}
             getSpellAttackBonus={getSpellAttackBonus}
             formatModifier={formatModifier}
+          />
+        )}
+
+        {showInitiativeModal && character && (
+          <InitiativeOverrideModal
+            character={character}
+            onClose={() => setShowInitiativeModal(false)}
+            onSave={(updatedCharacter) => {
+              const effectiveAbilityScores = {
+                strength: character.strength,
+                dexterity: character.dexterity,
+                constitution: character.constitution,
+                intelligence: character.intelligence,
+                wisdom: character.wisdom,
+                charisma: character.charisma,
+              };
+
+              const newInitiativeModifier = getInitiativeModifier(
+                character.initiativeAbility,
+                effectiveAbilityScores,
+                updatedCharacter
+              );
+
+              setCharacter({
+                ...updatedCharacter,
+                initiativeModifier: newInitiativeModifier,
+              });
+              setShowInitiativeModal(false);
+            }}
+            supabase={supabase}
           />
         )}
       </div>
