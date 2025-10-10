@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { Skills } from "./Skills/Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
-import LevelUpModal from "../CharacterManager/LevelUpModal";
 import CharacterSheetModals from "./CharacterSheetModals";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -27,14 +26,12 @@ import {
   sendDiscordRollWebhook,
   getRollResultColor,
   ROLL_COLORS,
-  sendDiscordLevelUpMessage,
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import ACOverrideModal from "./ACOverrideModal";
-import { characterService } from "../../services/characterService";
-import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import SpellAttackModal from "./SpellAttackModal";
 import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
@@ -98,7 +95,6 @@ const CharacterSheet = ({
 
   const [character, setCharacter] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
-  const [showLevelUp, setShowLevelUp] = useState(false);
   const [showHitDiceModal, setShowHitDiceModal] = useState(false);
   const [selectedHitDiceCount, setSelectedHitDiceCount] = useState(1);
   const [isRollingHitDice, setIsRollingHitDice] = useState(false);
@@ -107,6 +103,7 @@ const CharacterSheet = ({
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
   const [showACModal, setShowACModal] = useState(false);
+  const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
   const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
@@ -160,6 +157,22 @@ const CharacterSheet = ({
     const abilityScore =
       character.ability_scores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
+  };
+
+  const getSpellAttackBonus = (character) => {
+    const baseModifier = getSpellcastingAbilityModifier(character);
+    const proficiencyBonus = character.proficiencyBonus || 0;
+    const baseAttackBonus = proficiencyBonus + baseModifier;
+
+    // Check for override/modifier
+    const attackData = character.spellAttack || { override: null, modifier: 0 };
+    const override = attackData.override;
+    const modifier = attackData.modifier || 0;
+
+    if (override !== null && override !== undefined) {
+      return override + modifier;
+    }
+    return baseAttackBonus + modifier;
   };
 
   const rollSpellcastingAbilityCheck = async () => {
@@ -244,8 +257,7 @@ const CharacterSheet = ({
     setIsRolling(true);
 
     try {
-      const spellcastingModifier = getSpellcastingAbilityModifier(character);
-      const totalModifier = character.proficiencyBonus + spellcastingModifier;
+      const totalModifier = getSpellAttackBonus(character);
 
       const rollValue = Math.floor(Math.random() * 20) + 1;
       const total = rollValue + totalModifier;
@@ -261,6 +273,8 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
       };
 
+      const spellcastingModifier = getSpellcastingAbilityModifier(character);
+
       showRollResult({
         title: "Spell Attack Roll",
         rollValue: rollValue,
@@ -270,7 +284,7 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
         character: character,
         type: "spellattack",
-        description: `d20 + ${character.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+        description: `d20 + ${totalModifier} (Spell Attack) = ${total}`,
       });
 
       const additionalFields = [
@@ -626,6 +640,7 @@ const CharacterSheet = ({
         const transformedCharacter = {
           abilityScores: effectiveAbilityScores,
           ac: data.ac || { override: null, modifier: 0 },
+          spellAttack: data.spell_attack || { override: null, modifier: 0 },
           allFeats: allFeats,
           armorClass:
             getBaseArmorClass(data.casting_style) +
@@ -1007,169 +1022,6 @@ const CharacterSheet = ({
     }
   };
 
-  const updateSpellSlotResources = async (
-    character,
-    newLevel,
-    discordUserId
-  ) => {
-    try {
-      const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
-        0, 0, 0, 0, 0, 0, 0, 0, 0,
-      ];
-
-      const updateData = {
-        character_id: character.id,
-        discord_user_id: discordUserId,
-        updated_at: new Date().toISOString(),
-      };
-
-      for (let i = 1; i <= 9; i++) {
-        const newMax = newMaxSlots[i - 1];
-        const currentSlots = character[`spellSlots${i}`] || 0;
-        const currentMax = character[`maxSpellSlots${i}`] || 0;
-
-        updateData[`max_spell_slots_${i}`] = newMax;
-
-        if (currentSlots > currentMax) {
-          const bonusSlots = currentSlots - currentMax;
-          updateData[`spell_slots_${i}`] = newMax + bonusSlots;
-        } else {
-          updateData[`spell_slots_${i}`] = newMax;
-        }
-      }
-
-      const { error } = await supabase
-        .from("character_resources")
-        .upsert(updateData, {
-          onConflict: "character_id,discord_user_id",
-        });
-
-      if (error) {
-        console.error("Error updating spell slot resources:", error);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error in updateSpellSlotResources:", error);
-      throw error;
-    }
-  };
-
-  const handleCharacterUpdated = async (updatedCharacter, levelUpDetails) => {
-    try {
-      const characterOwnerId = character.discord_user_id || character.ownerId;
-
-      const characterToSave = {
-        level: updatedCharacter.level,
-        hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
-        current_hit_points:
-          updatedCharacter.hit_points || updatedCharacter.hitPoints,
-        current_hit_dice: updatedCharacter.level,
-        ability_scores:
-          updatedCharacter.ability_scores || updatedCharacter.abilityScores,
-        standard_feats:
-          updatedCharacter.standard_feats ||
-          updatedCharacter.standardFeats ||
-          [],
-        skill_proficiencies:
-          updatedCharacter.skill_proficiencies ||
-          updatedCharacter.skillProficiencies ||
-          [],
-        skill_expertise:
-          updatedCharacter.skill_expertise ||
-          updatedCharacter.skillExpertise ||
-          [],
-        asi_choices:
-          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {},
-
-        name: character.name,
-        house: character.house,
-        casting_style: character.castingStyle || character.casting_style,
-        subclass: character.subclass,
-        background: character.background,
-        wand_type: character.wandType || character.wand_type,
-        magic_modifiers: character.magicModifiers || character.magic_modifiers,
-        game_session: character.gameSession || character.game_session,
-        initiative_ability:
-          character.initiativeAbility ||
-          character.initiative_ability ||
-          "dexterity",
-        school_year: character.schoolYear || character.school_year,
-        level1_choice_type:
-          character.level1ChoiceType || character.level1_choice_type,
-        innate_heritage: character.innateHeritage || character.innate_heritage,
-        house_choices: character.houseChoices || character.house_choices || {},
-        subclass_choices:
-          character.subclassChoices || character.subclass_choices || {},
-        feat_choices: character.featChoices || character.feat_choices || {},
-        heritage_choices:
-          character.heritageChoices || character.heritage_choices || {},
-        innate_heritage_skills:
-          character.innateHeritageSkills ||
-          character.innate_heritage_skills ||
-          [],
-        background_skills:
-          character.backgroundSkills || character.background_skills || [],
-        image_url: character.image_url || character.imageUrl || null,
-        imageUrl: character.imageUrl || character.image_url || null,
-      };
-
-      const result = await characterService.updateCharacter(
-        character.id,
-        characterToSave,
-        characterOwnerId
-      );
-
-      if (levelUpDetails) {
-        try {
-          await updateSpellSlotResources(
-            updatedCharacter,
-            levelUpDetails.newLevel,
-            characterOwnerId
-          );
-        } catch (spellSlotError) {
-          console.error("Error updating spell slot resources:", spellSlotError);
-        }
-      }
-
-      if (levelUpDetails) {
-        const {
-          oldLevel,
-          newLevel,
-          hitPointIncrease,
-          abilityIncreases,
-          selectedFeat,
-        } = levelUpDetails;
-
-        try {
-          await sendDiscordLevelUpMessage({
-            character: updatedCharacter,
-            oldLevel,
-            newLevel,
-            hitPointIncrease,
-            abilityIncreases,
-            selectedFeat,
-          });
-        } catch (discordError) {
-          console.error(
-            "Error sending Discord level-up message:",
-            discordError
-          );
-        }
-      }
-
-      setShowLevelUp(false);
-      await fetchCharacterDetails();
-      alert(
-        `${character.name} successfully leveled up to level ${updatedCharacter.level}!`
-      );
-    } catch (error) {
-      console.error("Error saving level up:", error);
-      alert("Failed to save level up changes. Please try again.");
-    }
-  };
-
   if (error) {
     return (
       <div style={styles.container}>
@@ -1455,7 +1307,10 @@ const CharacterSheet = ({
                       padding: "8px 12px",
                       height: "32px",
                     }}
-                    onClick={() => setShowLevelUp(true)}
+                    onClick={() =>
+                      onNavigateToCharacterManagement &&
+                      onNavigateToCharacterManagement(character.id)
+                    }
                     title={`Level up ${character.name} to level ${
                       (character.level || 1) + 1
                     }`}
@@ -1674,23 +1529,20 @@ const CharacterSheet = ({
                       transition: "all 0.2s ease",
                     }}
                     onClick={() => !isRolling && rollSpellAttack()}
-                    title={`Click to roll spell attack: d20 + Prof (${
-                      character.proficiencyBonus
-                    }) + ${getSpellcastingAbility(
-                      character.castingStyle
-                    )} (${formatModifier(
-                      getSpellcastingAbilityModifier(character)
-                    )})`}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setShowSpellAttackModal(true);
+                    }}
+                    title={`Left click to roll spell attack: d20 ${formatModifier(
+                      getSpellAttackBonus(character)
+                    )} • Right click to set override/modifier`}
                   >
                     <Target
                       className="w-6 h-6 text-green-600 mx-auto mb-1"
                       style={{ color: "#d1323dff" }}
                     />
                     <div style={{ ...styles.statValue, color: "#d1323dff" }}>
-                      {formatModifier(
-                        character.proficiencyBonus +
-                          getSpellcastingAbilityModifier(character)
-                      )}
+                      {formatModifier(getSpellAttackBonus(character))}
                     </div>
                     <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
                       Spell Attack
@@ -1745,10 +1597,13 @@ const CharacterSheet = ({
                     ...styles.statCard,
                     backgroundColor: theme.background,
                     border: "3px solid #3b82f6",
-                    cursor: "pointer",
+                    cursor: "default",
                   }}
-                  title="Click to override or modify AC"
-                  onClick={() => setShowACModal(true)}
+                  title="Right click to override or modify AC"
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setShowACModal(true);
+                  }}
                 >
                   <Shield
                     className="w-6 h-6 text-blue-600 mx-auto mb-1"
@@ -1930,17 +1785,6 @@ const CharacterSheet = ({
           isUserAdmin={isUserAdmin}
         />
 
-        {showLevelUp && character && (
-          <LevelUpModal
-            character={character}
-            isOpen={showLevelUp}
-            onSave={handleCharacterUpdated}
-            onCancel={() => setShowLevelUp(false)}
-            user={user}
-            supabase={supabase}
-          />
-        )}
-
         {showACModal && character && (
           <ACOverrideModal
             character={character}
@@ -1948,6 +1792,18 @@ const CharacterSheet = ({
             onSave={(updatedCharacter) => {
               setCharacter(updatedCharacter);
               setShowACModal(false);
+            }}
+            supabase={supabase}
+          />
+        )}
+
+        {showSpellAttackModal && character && (
+          <SpellAttackModal
+            character={character}
+            onClose={() => setShowSpellAttackModal(false)}
+            onSave={(updatedCharacter) => {
+              setCharacter(updatedCharacter);
+              setShowSpellAttackModal(false);
             }}
             supabase={supabase}
           />

@@ -1505,7 +1505,8 @@ const DowntimeForm = ({
                   )}
 
                   {(activityRequiresDualChecks(activity.activity) ||
-                    isSpellActivity) && (
+                    (isSpellActivity &&
+                      activity.activity?.toLowerCase().includes("attempt spells"))) && (
                     <div style={styles.inputGroup}>
                       <label style={styles.label}>Dual Check Activity</label>
                       <div

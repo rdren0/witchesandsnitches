@@ -1762,6 +1762,8 @@ export const spellsData = {
           level: "5th Level",
           castingTime: "Action",
           range: "300 Feet",
+          restriction: true,
+
           duration: "Concentration, up to 10 minutes",
           year: 6,
           description:

@@ -4,6 +4,7 @@ import {
   activityRequiresDualChecks,
   getCustomDiceTypeForActivity,
   activityRequiresExtraDie,
+  activityRequiresSpellDice,
 } from "./downtimeHelpers";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 
@@ -27,7 +28,7 @@ const DicePoolManager = ({
 
   const getSpellActivitiesCount = useCallback(() => {
     return formData.activities.filter((activity) =>
-      activityRequiresExtraDie(activity.activity)
+      activityRequiresSpellDice(activity.activity)
     ).length;
   }, [formData.activities]);
 

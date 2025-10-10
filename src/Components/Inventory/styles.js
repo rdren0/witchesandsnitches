@@ -279,7 +279,7 @@ export const createInventoryStyles = (theme) => ({
     fontSize: "12px",
     fontWeight: "600",
     padding: "4px 8px",
-    backgroundColor: theme.warning || "#F59E0B",
+    border: `2px solid ${theme.warning}`,
     color: "white",
     borderRadius: "12px",
     display: "flex",

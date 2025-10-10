@@ -11,6 +11,7 @@ import {
   getCustomDiceTypeForActivity,
   activityRequiresDualChecks,
   activityRequiresWandSelection,
+  activityRequiresSpellSelection,
   calculateWandStatIncreaseDC,
   getActivitySkillInfo,
 } from "../downtimeHelpers";
@@ -590,6 +591,10 @@ export const renderDiceAssignment = ({
 
   if (activityRequiresExtraDie(activityText)) {
     return <div style={{ marginTop: "1rem", textAlign: "center" }}></div>;
+  }
+
+  if (activityRequiresSpellSelection(activityText)) {
+    return null;
   }
 
   if (shouldUseCustomDiceForActivity(activityText)) {

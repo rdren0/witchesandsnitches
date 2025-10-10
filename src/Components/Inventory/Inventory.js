@@ -394,31 +394,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     <Plus size={18} />
                     Add New Item
                   </button>
-
-                  <button
-                    onClick={handleManualRefresh}
-                    disabled={isRefreshing}
-                    style={{
-                      ...styles.addButton,
-                      backgroundColor: theme.success || "#10B981",
-                      marginLeft: "8px",
-                      opacity: isRefreshing ? 0.7 : 1,
-                      cursor: isRefreshing ? "not-allowed" : "pointer",
-                    }}
-                    title="Check for new items from background changes or other updates"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <Loader size={18} />
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw size={18} />
-                        Check for New Items
-                      </>
-                    )}
-                  </button>
                 </>
               )}
 
@@ -657,7 +632,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                                     )}
                                     {item.attunement_required && (
                                       <span style={styles.attunementBadge}>
-                                        <Star size={12} />
+                                        <Star size={12} color={theme.warning} />
                                         Attunement
                                       </span>
                                     )}
@@ -706,9 +681,11 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                               )}
 
                               <div style={styles.itemMeta}>
-                                {item.value && item.value !== 0 && item.value !== "0" && (
-                                  <span>Value: {item.value}</span>
-                                )}
+                                {item.value &&
+                                  item.value !== 0 &&
+                                  item.value !== "0" && (
+                                    <span>Value: {item.value}</span>
+                                  )}
                                 <span>
                                   Added:{" "}
                                   {new Date(
