@@ -178,9 +178,9 @@ export const CharacterNotes = ({
         const templateNames = {
           spell: "New Spell",
           session: `Session ${new Date().toLocaleDateString()}`,
-          combat: "Combat Tactics",
           relationship: "Character Relationship",
           creature: "Magical Creature",
+          hogwartsMarkdown: "Default Markdown Template",
         };
         finalTitle = templateNames[templateType];
       } else {
@@ -491,26 +491,6 @@ export const CharacterNotes = ({
                     </p>
                   </div>
                 </div>
-
-                <div
-                  {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "combat")
-                  )}
-                >
-                  <div
-                    style={styles.templateCardIcon}
-                    className="template-icon"
-                  >
-                    <span style={styles.templateCardEmoji}>⚔️</span>
-                  </div>
-                  <div style={styles.templateCardContent}>
-                    <h5 style={styles.templateCardTitle}>Combat Tactics</h5>
-                    <p style={styles.templateCardDescription}>
-                      Plan strategies & record battles
-                    </p>
-                  </div>
-                </div>
-
                 <div
                   {...createTemplateCardProps(() =>
                     createNewEntry(newEntryTitle, "", "relationship")
@@ -545,6 +525,24 @@ export const CharacterNotes = ({
                     <h5 style={styles.templateCardTitle}>Magical Creatures</h5>
                     <p style={styles.templateCardDescription}>
                       Catalog creatures & their lore
+                    </p>
+                  </div>
+                </div>
+                <div
+                  {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "hogwartsMarkdown")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <span style={styles.templateCardEmoji}>🦄</span>
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Generic Template</h5>
+                    <p style={styles.templateCardDescription}>
+                      A Comprehensive Markdown Template
                     </p>
                   </div>
                 </div>

@@ -9,11 +9,9 @@ import { Users, Plus, Crown } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import { characterService } from "../../services/characterService";
-import { sendDiscordLevelUpMessage } from "../utils/discordWebhook";
 
 import CharacterForm from "./components/CharacterForm/CharacterForm";
 import CharacterList from "./CharacterList";
-import LevelUpModal from "./LevelUpModal";
 
 const CharacterManager = ({
   user,
@@ -33,7 +31,6 @@ const CharacterManager = ({
   const currentMode = mode || "list";
   const sectionToOpen = searchParams.get("section");
 
-  const [levelingUpCharacter, setLevelingUpCharacter] = useState(null);
   const [selectedTargetUserId, setSelectedTargetUserId] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
   const [viewMode, setViewMode] = useState("my");
@@ -99,61 +96,6 @@ const CharacterManager = ({
     });
   };
 
-  const handleLevelUpCharacter = (character) => {
-    setLevelingUpCharacter(character);
-  };
-
-  const handleLevelUpSave = async (updatedCharacter, levelUpDetails) => {
-    try {
-      await characterService.updateCharacter(
-        updatedCharacter.id,
-        updatedCharacter,
-        updatedCharacter.discord_user_id || discordUserId
-      );
-
-      if (levelUpDetails) {
-        const {
-          oldLevel,
-          newLevel,
-          hitPointIncrease,
-          abilityIncreases,
-          selectedFeat,
-        } = levelUpDetails;
-
-        try {
-          await sendDiscordLevelUpMessage({
-            character: updatedCharacter,
-            oldLevel,
-            newLevel,
-            hitPointIncrease,
-            abilityIncreases,
-            selectedFeat,
-          });
-        } catch (discordError) {
-          console.error(
-            "Error sending Discord level-up message:",
-            discordError
-          );
-        }
-      }
-
-      setLevelingUpCharacter(null);
-
-      if (adminMode && isUserAdmin) {
-        const newCharacters = await characterService.getAllCharacters();
-        setAllCharacters(newCharacters);
-      }
-
-      setRefreshTrigger((prev) => prev + 1);
-
-      if (onCharacterSaved) {
-        onCharacterSaved(updatedCharacter);
-      }
-    } catch (error) {
-      console.error("Error saving level up:", error);
-      alert("Failed to save level up changes. Please try again.");
-    }
-  };
 
   const handleDeleteCharacter = async (character) => {
     const confirmed = window.confirm(
@@ -385,7 +327,6 @@ const CharacterManager = ({
             viewMode={viewMode}
             allCharacters={allCharacters}
             onEditCharacter={handleEditCharacter}
-            onLevelUpCharacter={handleLevelUpCharacter}
             onDeleteCharacter={handleDeleteCharacter}
             supabase={supabase}
             refreshTrigger={refreshTrigger}

@@ -31,6 +31,8 @@ export const DEFAULT_CHARACTER = {
   castingStyleChoices: {},
   toolProficiencies: [],
   metamagic: [],
+  additionalFeats: [],
+  additionalASI: [],
 
   level1ChoiceType: "",
   name: "",

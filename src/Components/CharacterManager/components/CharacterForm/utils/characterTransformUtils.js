@@ -110,6 +110,8 @@ export const transformCharacterForSave = (character) => {
     tool_proficiencies: character.toolProficiencies || [],
     wand_type: character.wandType || "",
     metamagic_choices: character.metamagicChoices || {},
+    additional_feats: character.additionalFeats || [],
+    additional_asi: character.additionalASI || [],
   };
 };
 
@@ -183,5 +185,7 @@ export const transformCharacterFromDB = (dbCharacter) => {
     updatedAt: dbCharacter.updated_at,
     wandType: dbCharacter.wand_type || "",
     metamagicChoices: dbCharacter.metamagic_choices || {},
+    additionalFeats: dbCharacter.additional_feats || [],
+    additionalASI: dbCharacter.additional_asi || [],
   };
 };

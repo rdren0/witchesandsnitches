@@ -836,106 +836,103 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       <div style={styles.availableElementsSection}>
         <div style={styles.availableElementsContainer}>
           {visibleSubclasses.map((subclass) => {
-          const isSelected = selectedSubclass === subclass.name;
-          const isExpanded = expandedSubclasses.has(subclass.name);
-          const availableLevels = getAvailableLevels(subclass);
-          const featuresByLevel = parseAllFeaturesByLevel(subclass);
+            const isSelected = selectedSubclass === subclass.name;
+            const isExpanded = expandedSubclasses.has(subclass.name);
+            const availableLevels = getAvailableLevels(subclass);
+            const featuresByLevel = parseAllFeaturesByLevel(subclass);
 
-          const totalChoices = availableLevels.reduce((total, level) => {
+            const totalChoices = availableLevels.reduce((total, level) => {
+              return (
+                total + (featuresByLevel[level]?.choices?.length > 0 ? 1 : 0)
+              );
+            }, 0);
+
+            const levelRange =
+              availableLevels.length > 1
+                ? `${Math.min(...availableLevels)}-${Math.max(
+                    ...availableLevels
+                  )}`
+                : availableLevels[0] || 1;
+
             return (
-              total + (featuresByLevel[level]?.choices?.length > 0 ? 1 : 0)
-            );
-          }, 0);
-
-          const levelRange =
-            availableLevels.length > 1
-              ? `${Math.min(...availableLevels)}-${Math.max(
-                  ...availableLevels
-                )}`
-              : availableLevels[0] || 1;
-
-          return (
-            <div
-              key={subclass.name}
-              style={styles.featCard}
-            >
-              <div style={styles.featHeader}>
-                <label style={styles.featLabelClickable}>
-                  <input
-                    type="checkbox"
-                    name="subclass"
-                    value={subclass.name}
-                    checked={isSelected}
-                    onChange={() => handleSubclassToggle(subclass.name)}
-                    disabled={disabled}
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      marginRight: "8px",
-                      cursor: disabled ? "not-allowed" : "pointer",
-                      accentColor: theme.primary,
-                      transform: "scale(1.2)",
-                    }}
-                  />
-                  <span style={styles.featName}>
-                    {subclass.name}
-                    {totalChoices > 0 && (
-                      <span style={styles.availableChoicesIndicator}>
-                        ({totalChoices} choice{totalChoices > 1 ? "s" : ""}
-                        {characterLevel > 1 ? ` levels ${levelRange}` : ""})
-                      </span>
-                    )}
-                  </span>
-                </label>
-                {!isSelected && (
-                  <button
-                    onClick={() => toggleSubclassExpansion(subclass.name)}
-                    style={styles.expandButton}
-                    type="button"
-                    disabled={disabled}
-                  >
-                    {isExpanded ? "▲" : "▼"}
-                  </button>
-                )}
-              </div>
-
-              <div style={styles.featPreview}>
-                {subclass.description}
-              </div>
-
-              {(isExpanded || isSelected) && (
-                <div
-                  style={
-                    isSelected
-                      ? styles.featDescriptionSelected
-                      : styles.featDescription
-                  }
-                >
-                  {availableLevels.map((level) =>
-                    renderLevelFeatures(subclass, level)
+              <div key={subclass.name} style={styles.featCard}>
+                <div style={styles.featHeader}>
+                  <label style={styles.featLabelClickable}>
+                    <input
+                      type="checkbox"
+                      name="subclass"
+                      value={subclass.name}
+                      checked={isSelected}
+                      onChange={() => handleSubclassToggle(subclass.name)}
+                      disabled={disabled}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        marginRight: "8px",
+                        cursor: disabled ? "not-allowed" : "pointer",
+                        accentColor: theme.primary,
+                        transform: "scale(1.2)",
+                      }}
+                    />
+                    <span style={styles.featName}>
+                      {subclass.name}
+                      {totalChoices > 0 && (
+                        <span style={styles.availableChoicesIndicator}>
+                          ({totalChoices} choice{totalChoices > 1 ? "s" : ""}
+                          {characterLevel > 1 ? ` levels ${levelRange}` : ""})
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                  {!isSelected && (
+                    <button
+                      onClick={() => toggleSubclassExpansion(subclass.name)}
+                      style={styles.expandButton}
+                      type="button"
+                      disabled={disabled}
+                    >
+                      {isExpanded ? "▲" : "▼"}
+                    </button>
                   )}
+                </div>
 
-                  {renderLockedFeatures(subclass)}
+                <div style={styles.featPreview}>{subclass.description}</div>
 
+                {(isExpanded || isSelected) && (
                   <div
-                    style={isSelected ? styles.summarySelected : styles.summary}
+                    style={
+                      isSelected
+                        ? styles.featDescriptionSelected
+                        : styles.featDescription
+                    }
                   >
-                    <strong
+                    {availableLevels.map((level) =>
+                      renderLevelFeatures(subclass, level)
+                    )}
+
+                    {renderLockedFeatures(subclass)}
+
+                    <div
                       style={
-                        isSelected
-                          ? styles.summaryTitleSelected
-                          : styles.summaryTitle
+                        isSelected ? styles.summarySelected : styles.summary
                       }
                     >
-                      Summary:
-                    </strong>
-                    <p style={styles.summaryText}>{subclass.summary}</p>
+                      <strong
+                        style={
+                          isSelected
+                            ? styles.summaryTitleSelected
+                            : styles.summaryTitle
+                        }
+                      >
+                        Summary:
+                      </strong>
+                      <p style={styles.summaryText}>{subclass.summary}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -32,6 +32,7 @@ import LuckPointButton from "./LuckPointButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import ACOverrideModal from "./ACOverrideModal";
 import SpellAttackModal from "./SpellAttackModal";
+import SpellAttackRollModal from "./SpellAttackRollModal";
 import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
@@ -104,6 +105,7 @@ const CharacterSheet = ({
   const [isLongResting, setIsLongResting] = useState(false);
   const [showACModal, setShowACModal] = useState(false);
   const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
+  const [showSpellAttackRollModal, setShowSpellAttackRollModal] = useState(false);
   const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
@@ -248,7 +250,7 @@ const CharacterSheet = ({
     }
   };
 
-  const rollSpellAttack = async () => {
+  const rollSpellAttack = async (rollType = "normal", tempModifier = 0) => {
     if (!character || isRolling) return;
 
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
@@ -257,9 +259,27 @@ const CharacterSheet = ({
     setIsRolling(true);
 
     try {
-      const totalModifier = getSpellAttackBonus(character);
+      const baseModifier = getSpellAttackBonus(character);
+      const totalModifier = baseModifier + tempModifier;
 
-      const rollValue = Math.floor(Math.random() * 20) + 1;
+      let rollValue;
+      let rollDetails = "";
+
+      if (rollType === "advantage") {
+        const roll1 = Math.floor(Math.random() * 20) + 1;
+        const roll2 = Math.floor(Math.random() * 20) + 1;
+        rollValue = Math.max(roll1, roll2);
+        rollDetails = `2d20 (${roll1}, ${roll2}) kh1`;
+      } else if (rollType === "disadvantage") {
+        const roll1 = Math.floor(Math.random() * 20) + 1;
+        const roll2 = Math.floor(Math.random() * 20) + 1;
+        rollValue = Math.min(roll1, roll2);
+        rollDetails = `2d20 (${roll1}, ${roll2}) kl1`;
+      } else {
+        rollValue = Math.floor(Math.random() * 20) + 1;
+        rollDetails = "1d20";
+      }
+
       const total = rollValue + totalModifier;
 
       const isCriticalSuccess = rollValue === 20;
@@ -275,8 +295,10 @@ const CharacterSheet = ({
 
       const spellcastingModifier = getSpellcastingAbilityModifier(character);
 
+      const rollTypeText = rollType === "advantage" ? " (Advantage)" : rollType === "disadvantage" ? " (Disadvantage)" : "";
+
       showRollResult({
-        title: "Spell Attack Roll",
+        title: `Spell Attack Roll${rollTypeText}`,
         rollValue: rollValue,
         modifier: totalModifier,
         total: total,
@@ -284,7 +306,7 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
         character: character,
         type: "spellattack",
-        description: `d20 + ${totalModifier} (Spell Attack) = ${total}`,
+        description: `${rollDetails} + ${totalModifier} (Spell Attack) = ${total}`,
       });
 
       const additionalFields = [
@@ -292,7 +314,9 @@ const CharacterSheet = ({
           name: "Modifiers",
           value: `Prof: +${
             character.proficiencyBonus
-          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}`,
+          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}${
+            tempModifier !== 0 ? `, Temp: ${formatModifier(tempModifier)}` : ""
+          }`,
           inline: true,
         },
       ];
@@ -300,7 +324,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spell Attack Roll",
-        title: `Spell Attack Roll`,
+        title: `Spell Attack Roll${rollTypeText}`,
         embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
@@ -1528,14 +1552,12 @@ const CharacterSheet = ({
                       cursor: isRolling ? "wait" : "pointer",
                       transition: "all 0.2s ease",
                     }}
-                    onClick={() => !isRolling && rollSpellAttack()}
+                    onClick={() => !isRolling && setShowSpellAttackRollModal(true)}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       setShowSpellAttackModal(true);
                     }}
-                    title={`Left click to roll spell attack: d20 ${formatModifier(
-                      getSpellAttackBonus(character)
-                    )} • Right click to set override/modifier`}
+                    title={`Left click to roll spell attack with options • Right click to set override/modifier`}
                   >
                     <Target
                       className="w-6 h-6 text-green-600 mx-auto mb-1"
@@ -1806,6 +1828,16 @@ const CharacterSheet = ({
               setShowSpellAttackModal(false);
             }}
             supabase={supabase}
+          />
+        )}
+
+        {showSpellAttackRollModal && character && (
+          <SpellAttackRollModal
+            character={character}
+            onClose={() => setShowSpellAttackRollModal(false)}
+            onRoll={rollSpellAttack}
+            getSpellAttackBonus={getSpellAttackBonus}
+            formatModifier={formatModifier}
           />
         )}
       </div>
