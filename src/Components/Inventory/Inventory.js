@@ -10,6 +10,8 @@ import {
   Loader,
   Star,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getInventoryStyles } from "./styles";
@@ -24,6 +26,8 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [expandedStack, setExpandedStack] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -271,6 +275,34 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [filteredItems]
   );
 
+  const stackedItems = useMemo(() => {
+    const stacked = {};
+    Object.entries(groupedItems).forEach(([category, categoryItems]) => {
+      const itemStacks = {};
+
+      categoryItems.forEach((item) => {
+        const key = item.name.toLowerCase().trim();
+        if (!itemStacks[key]) {
+          itemStacks[key] = {
+            stackKey: `${category}-${key}`,
+            name: item.name,
+            category: item.category,
+            description: item.description,
+            value: item.value,
+            attunement_required: item.attunement_required,
+            totalQuantity: 0,
+            items: [],
+          };
+        }
+        itemStacks[key].totalQuantity += item.quantity;
+        itemStacks[key].items.push(item);
+      });
+
+      stacked[category] = Object.values(itemStacks);
+    });
+    return stacked;
+  }, [groupedItems]);
+
   const stats = useMemo(() => {
     const totalItems = items.length;
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -291,11 +323,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <Package
-            size={48}
-            color={theme.textSecondary}
-            style={styles.emptyIcon}
-          />
           <p style={styles.emptyText}>
             Please select a character to view their inventory.
           </p>
@@ -583,16 +610,45 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           {!isLoading && (
             <>
               {filteredItems.length > 0 ? (
-                Object.entries(groupedItems).map(
-                  ([category, categoryItems]) => {
-                    const attunementCount = categoryItems.filter(
-                      (item) => item.attunement_required
-                    ).length;
-                    return (
-                      <div key={category} style={{ marginBottom: "32px" }}>
-                        <div style={styles.categoryHeader}>
+                Object.entries(stackedItems).map(([category, stacks]) => {
+                  const attunementCount = stacks.filter(
+                    (stack) => stack.attunement_required
+                  ).length;
+                  const isCollapsed = collapsedCategories[category];
+
+                  return (
+                    <div key={category} style={{ marginBottom: "32px" }}>
+                      <div
+                        style={{
+                          ...styles.categoryHeader,
+                          cursor: "pointer",
+                          userSelect: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                        onClick={() =>
+                          setCollapsedCategories({
+                            ...collapsedCategories,
+                            [category]: !isCollapsed,
+                          })
+                        }
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          {isCollapsed ? (
+                            <ChevronDown size={20} />
+                          ) : (
+                            <ChevronUp size={20} />
+                          )}
                           <span>
-                            {category} ({categoryItems.length})
+                            {category} ({stacks.length}{" "}
+                            {stacks.length === 1 ? "type" : "types"})
                           </span>
                           {attunementCount > 0 && (
                             <span style={styles.categoryStats}>
@@ -600,219 +656,394 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                             </span>
                           )}
                         </div>
+                      </div>
+                      {!isCollapsed && (
                         <div style={styles.itemsGrid}>
-                          {categoryItems.map((item) => (
-                            <div
-                              key={item.id}
-                              style={{
-                                ...styles.itemCard,
-                                ...(editingId === item.id && { gridColumn: '1 / -1' })
-                              }}
-                            >
-                              {editingId === item.id ? (
-                                // Inline edit form
-                                <div>
-                                  <h4 style={{ ...styles.formTitle, marginTop: 0 }}>Edit Item</h4>
-                                  <div style={styles.formGrid}>
-                                    <div style={styles.formField}>
-                                      <label style={styles.label}>Item Name *</label>
-                                      <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) =>
-                                          setFormData({ ...formData, name: e.target.value })
-                                        }
-                                        style={styles.input}
-                                      />
-                                    </div>
-                                    <div style={styles.formField}>
-                                      <label style={styles.label}>Category</label>
-                                      <select
-                                        value={formData.category}
-                                        onChange={(e) =>
-                                          setFormData({ ...formData, category: e.target.value })
-                                        }
-                                        style={styles.select}
-                                      >
-                                        {categories.map((cat) => (
-                                          <option key={cat} value={cat}>
-                                            {cat}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div style={styles.formField}>
-                                      <label style={styles.label}>Quantity</label>
-                                      <input
-                                        type="number"
-                                        min="1"
-                                        value={formData.quantity}
-                                        onChange={(e) =>
-                                          setFormData({ ...formData, quantity: e.target.value })
-                                        }
-                                        style={styles.input}
-                                      />
-                                    </div>
-                                    <div style={styles.formField}>
-                                      <label style={styles.label}>Value</label>
-                                      <input
-                                        type="text"
-                                        value={formData.value}
-                                        onChange={(e) =>
-                                          setFormData({ ...formData, value: e.target.value })
-                                        }
-                                        placeholder="e.g., 50 gold"
-                                        style={styles.input}
-                                      />
-                                    </div>
-                                    <div style={{ ...styles.formField, ...styles.formFieldFull }}>
-                                      <label style={styles.label}>Description</label>
-                                      <textarea
-                                        value={formData.description}
-                                        onChange={(e) =>
-                                          setFormData({ ...formData, description: e.target.value })
-                                        }
-                                        placeholder="Item description..."
-                                        style={styles.textarea}
-                                      />
-                                    </div>
-                                    <div style={styles.checkboxField}>
-                                      <input
-                                        type="checkbox"
-                                        checked={formData.attunement_required}
-                                        onChange={(e) =>
-                                          setFormData({
-                                            ...formData,
-                                            attunement_required: e.target.checked,
-                                          })
-                                        }
-                                        style={styles.checkbox}
-                                        id={`attunement-${item.id}`}
-                                      />
-                                      <label
-                                        htmlFor={`attunement-${item.id}`}
-                                        style={styles.checkboxLabel}
-                                      >
-                                        Requires Attunement
-                                      </label>
-                                    </div>
-                                  </div>
-                                  <div style={styles.formActions}>
-                                    <button
-                                      onClick={saveEdit}
-                                      disabled={!formData.name.trim() || isSaving}
+                          {stacks.map((stack) => {
+                            const isExpanded = expandedStack === stack.stackKey;
+
+                            return (
+                              <div
+                                key={stack.stackKey}
+                                style={{
+                                  ...styles.itemCard,
+                                  ...(isExpanded && { gridColumn: "1 / -1" }),
+                                }}
+                              >
+                                {isExpanded ? (
+                                  <div>
+                                    <div
                                       style={{
-                                        ...styles.saveButton,
-                                        opacity: !formData.name.trim() || isSaving ? 0.5 : 1,
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginBottom: "16px",
                                       }}
                                     >
-                                      {isSaving ? (
-                                        <>
-                                          <Loader size={18} />
-                                          Saving...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Check size={18} />
-                                          Save Changes
-                                        </>
-                                      )}
-                                    </button>
-                                    <button
-                                      onClick={cancelEdit}
-                                      style={styles.cancelButton}
-                                      disabled={isSaving}
-                                    >
-                                      <X size={18} />
-                                      Cancel
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                // Regular item display
-                                <>
-                                  <div style={styles.itemHeader}>
-                                    <div>
-                                      <div style={styles.itemName}>
-                                        <Package size={18} color={theme.primary} />
-                                        {item.name}
-                                        {item.quantity > 1 && (
-                                          <span style={styles.quantityBadge}>
-                                            x{item.quantity}
-                                          </span>
-                                        )}
-                                        {item.attunement_required && (
-                                          <span style={styles.attunementBadge}>
-                                            <Star size={12} color={theme.warning} />
-                                            Attunement
-                                          </span>
+                                      <h4
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "16px",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        {stack.name}
+                                      </h4>
+                                      <button
+                                        onClick={() => {
+                                          setExpandedStack(null);
+                                          setEditingId(null);
+                                        }}
+                                        style={{
+                                          ...styles.actionButton,
+                                          backgroundColor:
+                                            theme.warning || "#F97316",
+                                          color: "white",
+                                        }}
+                                      >
+                                        <X size={16} />
+                                      </button>
+                                    </div>
+                                    {stack.items.map((item, index) => (
+                                      <div
+                                        key={item.id}
+                                        style={{
+                                          marginBottom:
+                                            index < stack.items.length - 1
+                                              ? "16px"
+                                              : 0,
+                                          paddingBottom:
+                                            index < stack.items.length - 1
+                                              ? "16px"
+                                              : 0,
+                                          borderBottom:
+                                            index < stack.items.length - 1
+                                              ? `1px solid ${theme.border}`
+                                              : "none",
+                                        }}
+                                      >
+                                        {editingId === item.id ? (
+                                          <div>
+                                            <div
+                                              style={{
+                                                ...styles.form,
+                                                margin: 0,
+                                              }}
+                                            >
+                                              <div style={styles.formRow}>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Name
+                                                  </label>
+                                                  <input
+                                                    type="text"
+                                                    value={formData.name}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        name: e.target.value,
+                                                      })
+                                                    }
+                                                    style={styles.input}
+                                                    placeholder="Item name"
+                                                  />
+                                                </div>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Category
+                                                  </label>
+                                                  <select
+                                                    value={formData.category}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        category:
+                                                          e.target.value,
+                                                      })
+                                                    }
+                                                    style={styles.input}
+                                                  >
+                                                    {categories.map((cat) => (
+                                                      <option
+                                                        key={cat}
+                                                        value={cat}
+                                                      >
+                                                        {cat}
+                                                      </option>
+                                                    ))}
+                                                  </select>
+                                                </div>
+                                              </div>
+
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Description
+                                                </label>
+                                                <textarea
+                                                  value={formData.description}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      description:
+                                                        e.target.value,
+                                                    })
+                                                  }
+                                                  style={{
+                                                    ...styles.input,
+                                                    minHeight: "80px",
+                                                  }}
+                                                  placeholder="Item description"
+                                                />
+                                              </div>
+
+                                              <div style={styles.formRow}>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Quantity
+                                                  </label>
+                                                  <input
+                                                    type="number"
+                                                    value={formData.quantity}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        quantity:
+                                                          parseInt(
+                                                            e.target.value
+                                                          ) || 0,
+                                                      })
+                                                    }
+                                                    style={styles.input}
+                                                    min="0"
+                                                  />
+                                                </div>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Value (Galleons)
+                                                  </label>
+                                                  <input
+                                                    type="text"
+                                                    value={formData.value}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        value: e.target.value,
+                                                      })
+                                                    }
+                                                    style={styles.input}
+                                                    placeholder="e.g., 10 or 5.5"
+                                                  />
+                                                </div>
+                                              </div>
+
+                                              <div style={styles.formGroup}>
+                                                <label
+                                                  style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "8px",
+                                                    cursor: "pointer",
+                                                  }}
+                                                >
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={
+                                                      formData.attunement_required
+                                                    }
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        attunement_required:
+                                                          e.target.checked,
+                                                      })
+                                                    }
+                                                    style={{
+                                                      cursor: "pointer",
+                                                    }}
+                                                  />
+                                                  <span style={styles.label}>
+                                                    Requires Attunement
+                                                  </span>
+                                                </label>
+                                              </div>
+
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  gap: "8px",
+                                                  marginTop: "12px",
+                                                }}
+                                              >
+                                                <button
+                                                  onClick={saveEdit}
+                                                  disabled={isSaving}
+                                                  style={{
+                                                    ...styles.button,
+                                                    ...styles.addButton,
+                                                    opacity: isSaving ? 0.7 : 1,
+                                                  }}
+                                                >
+                                                  {isSaving ? (
+                                                    <Loader size={16} />
+                                                  ) : (
+                                                    <Check size={16} />
+                                                  )}
+                                                  {isSaving
+                                                    ? "Saving..."
+                                                    : "Save"}
+                                                </button>
+                                                <button
+                                                  onClick={cancelEdit}
+                                                  disabled={isSaving}
+                                                  style={{
+                                                    ...styles.button,
+                                                    ...styles.cancelButton,
+                                                    opacity: isSaving ? 0.5 : 1,
+                                                  }}
+                                                >
+                                                  <X size={16} />
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              justifyContent: "space-between",
+                                              alignItems: "flex-start",
+                                            }}
+                                          >
+                                            <div style={{ flex: 1 }}>
+                                              <div
+                                                style={{
+                                                  fontWeight: "600",
+                                                  marginBottom: "4px",
+                                                }}
+                                              >
+                                                Qty: {item.quantity}
+                                                {item.value &&
+                                                  item.value !== 0 &&
+                                                  item.value !== "0" &&
+                                                  ` • Value: ${item.value}`}
+                                              </div>
+                                              {item.description && (
+                                                <div
+                                                  style={{
+                                                    fontSize: "13px",
+                                                    color: theme.textSecondary,
+                                                    marginTop: "4px",
+                                                  }}
+                                                >
+                                                  {item.description}
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "8px",
+                                                marginLeft: "12px",
+                                              }}
+                                            >
+                                              <button
+                                                onClick={() => startEdit(item)}
+                                                style={{
+                                                  ...styles.actionButton,
+                                                  ...styles.editButton,
+                                                }}
+                                              >
+                                                <Edit2 size={16} />
+                                              </button>
+                                              <button
+                                                onClick={() =>
+                                                  deleteItem(item.id)
+                                                }
+                                                style={{
+                                                  ...styles.actionButton,
+                                                  ...styles.deleteButton,
+                                                }}
+                                              >
+                                                <Trash2 size={16} />
+                                              </button>
+                                            </div>
+                                          </div>
                                         )}
                                       </div>
-                                    </div>
-                                    <div style={styles.itemActions}>
-                                      <button
-                                        onClick={() => startEdit(item)}
-                                        disabled={
-                                          editingId || showAddForm || isSaving
-                                        }
-                                        style={{
-                                          ...styles.actionButton,
-                                          ...styles.editButton,
-                                          opacity:
-                                            editingId || showAddForm || isSaving
-                                              ? 0.5
-                                              : 1,
-                                        }}
-                                      >
-                                        <Edit2 size={16} />
-                                      </button>
-                                      <button
-                                        onClick={() => deleteItem(item.id)}
-                                        disabled={
-                                          editingId || showAddForm || isSaving
-                                        }
-                                        style={{
-                                          ...styles.actionButton,
-                                          ...styles.deleteButton,
-                                          opacity:
-                                            editingId || showAddForm || isSaving
-                                              ? 0.5
-                                              : 1,
-                                        }}
-                                      >
-                                        <Trash2 size={16} />
-                                      </button>
-                                    </div>
+                                    ))}
                                   </div>
-
-                                  {item.description && (
-                                    <div style={styles.itemDescription}>
-                                      {item.description}
+                                ) : (
+                                  <>
+                                    <div style={styles.itemHeader}>
+                                      <div>
+                                        <div style={styles.itemName}>
+                                          {stack.name}
+                                          {stack.attunement_required && (
+                                            <span
+                                              style={styles.attunementBadge}
+                                            >
+                                              <Star
+                                                size={12}
+                                                color={theme.warning}
+                                              />
+                                              Attunement
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div style={styles.itemActions}>
+                                        <button
+                                          onClick={() =>
+                                            setExpandedStack(stack.stackKey)
+                                          }
+                                          disabled={
+                                            expandedStack ||
+                                            showAddForm ||
+                                            isSaving
+                                          }
+                                          style={{
+                                            ...styles.actionButton,
+                                            ...styles.editButton,
+                                            opacity:
+                                              expandedStack ||
+                                              showAddForm ||
+                                              isSaving
+                                                ? 0.5
+                                                : 1,
+                                          }}
+                                        >
+                                          <Edit2 size={16} />
+                                        </button>
+                                      </div>
                                     </div>
-                                  )}
 
-                                  <div style={styles.itemMeta}>
-                                    {item.value &&
-                                      item.value !== 0 &&
-                                      item.value !== "0" && (
-                                        <span>Value: {item.value}</span>
-                                      )}
-                                    <span>
-                                      Added:{" "}
-                                      {new Date(
-                                        item.created_at
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
+                                    {stack.description && (
+                                      <div style={styles.itemDescription}>
+                                        {stack.description}
+                                      </div>
+                                    )}
+
+                                    <div style={styles.itemMeta}>
+                                      <span style={styles.quantityBadge}>
+                                        Qty: {stack.totalQuantity}
+                                      </span>
+                                      {stack.value &&
+                                        stack.value !== 0 &&
+                                        stack.value !== "0" && (
+                                          <span>Value: {stack.value}</span>
+                                        )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
-                    );
-                  }
-                )
+                      )}
+                    </div>
+                  );
+                })
               ) : items.length > 0 ? (
                 <div style={styles.emptyState}>
                   <Search
