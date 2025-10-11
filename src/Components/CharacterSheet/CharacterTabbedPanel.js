@@ -247,7 +247,13 @@ const CharacterTabbedPanel = ({
       id: "creatures",
       label: "Creatures",
       icon: Rat,
-      component: <CreaturesPanel supabase={supabase} user={user} />,
+      component: (
+        <CreaturesPanel
+          supabase={supabase}
+          user={user}
+          selectedCharacter={selectedCharacter}
+        />
+      ),
     },
   ];
 

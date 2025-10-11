@@ -1474,7 +1474,12 @@ function AppContent() {
               element={
                 <ProtectedRoute user={user}>
                   {characterSelector}
-                  <Creatures supabase={supabase} user={user} />
+                  <Creatures
+                    supabase={supabase}
+                    user={user}
+                    characters={characters}
+                    selectedCharacter={selectedCharacter}
+                  />
                 </ProtectedRoute>
               }
             />

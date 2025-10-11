@@ -5,12 +5,157 @@ import {
   ROLL_COLORS,
 } from "../utils/discordWebhook";
 
+export const rollCreatureInitiative = async ({
+  creature,
+  initiativeModifier,
+  showRollResult,
+  ownerCharacter,
+}) => {
+  try {
+    const roller = new DiceRoller();
+    const roll = roller.roll("1d20");
+    const d20Value = roll.total;
+    const total = d20Value + initiativeModifier;
+
+    const isCriticalSuccess = d20Value === 20;
+    const isCriticalFailure = d20Value === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: "Initiative",
+        rollValue: d20Value,
+        modifier: initiativeModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "initiative",
+        description: `Rolling initiative for ${creature.name}`,
+      });
+    }
+
+    const rollResult = {
+      d20Roll: d20Value,
+      modifier: initiativeModifier,
+      total: total,
+      isCriticalSuccess,
+      isCriticalFailure,
+    };
+
+    const fields = [];
+    if (ownerCharacter) {
+      fields.push({
+        name: "Belongs to",
+        value: ownerCharacter.name,
+        inline: true,
+      });
+    }
+
+    await sendDiscordRollWebhook({
+      character: {
+        name: creature.name,
+        gameSession: creature.gameSession || "default",
+        image_url: creature.image_url,
+      },
+      rollType: "Initiative",
+      title: "Initiative",
+      description: isCriticalSuccess
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.initiative),
+      rollResult,
+      fields,
+      useCharacterAvatar: true,
+    });
+
+    return total;
+  } catch (error) {
+    console.error("Error rolling creature initiative:", error);
+    return null;
+  }
+};
+
+export const rollCreatureSavingThrow = async ({
+  creature,
+  abilityName,
+  abilityKey,
+  savingThrowModifier,
+  showRollResult,
+  ownerCharacter,
+}) => {
+  try {
+    const roller = new DiceRoller();
+    const roll = roller.roll("1d20");
+    const d20Value = roll.total;
+    const total = d20Value + savingThrowModifier;
+
+    const isCriticalSuccess = d20Value === 20;
+    const isCriticalFailure = d20Value === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${abilityName} Save`,
+        rollValue: d20Value,
+        modifier: savingThrowModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "save",
+        description: `Rolling ${abilityName} saving throw for ${creature.name}`,
+      });
+    }
+
+    const rollResult = {
+      d20Roll: d20Value,
+      modifier: savingThrowModifier,
+      total: total,
+      isCriticalSuccess,
+      isCriticalFailure,
+    };
+
+    const fields = [];
+    if (ownerCharacter) {
+      fields.push({
+        name: "Belongs to",
+        value: ownerCharacter.name,
+        inline: true,
+      });
+    }
+
+    await sendDiscordRollWebhook({
+      character: {
+        name: creature.name,
+        gameSession: creature.gameSession || "default",
+        image_url: creature.image_url,
+      },
+      rollType: "Saving Throw",
+      title: `${abilityName} Save`,
+      description: isCriticalSuccess
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.SAVE),
+      rollResult,
+      fields,
+      useCharacterAvatar: true,
+    });
+
+    return total;
+  } catch (error) {
+    console.error("Error rolling creature saving throw:", error);
+    return null;
+  }
+};
+
 export const rollCreatureAbility = async ({
   creature,
   abilityName,
   abilityKey,
   abilityModifier,
   showRollResult,
+  ownerCharacter,
 }) => {
   try {
     const roller = new DiceRoller();
@@ -42,10 +187,20 @@ export const rollCreatureAbility = async ({
       isCriticalFailure,
     };
 
+    const fields = [];
+    if (ownerCharacter) {
+      fields.push({
+        name: "Belongs to",
+        value: ownerCharacter.name,
+        inline: true,
+      });
+    }
+
     await sendDiscordRollWebhook({
       character: {
         name: creature.name,
         gameSession: creature.gameSession || "default",
+        image_url: creature.image_url,
       },
       rollType: "Ability Check",
       title: `${abilityName} Check`,
@@ -56,8 +211,8 @@ export const rollCreatureAbility = async ({
         : "",
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.ABILITY),
       rollResult,
-      fields: [],
-      useCharacterAvatar: false,
+      fields,
+      useCharacterAvatar: true,
     });
 
     return total;
@@ -71,6 +226,7 @@ export const rollCreatureAttackOnly = async ({
   creature,
   attack,
   showRollResult,
+  ownerCharacter,
 }) => {
   try {
     const roller = new DiceRoller();
@@ -96,6 +252,14 @@ export const rollCreatureAttackOnly = async ({
     }
 
     const fields = [];
+
+    if (ownerCharacter) {
+      fields.push({
+        name: "Belongs to",
+        value: ownerCharacter.name,
+        inline: true,
+      });
+    }
 
     if (attack.reach) {
       fields.push({
@@ -125,6 +289,7 @@ export const rollCreatureAttackOnly = async ({
       character: {
         name: creature.name,
         gameSession: creature.gameSession || "default",
+        image_url: creature.image_url,
       },
       rollType: "Attack Roll",
       title: `${attack.name} - Attack Roll`,
@@ -136,7 +301,7 @@ export const rollCreatureAttackOnly = async ({
       embedColor: getRollResultColor(attackRollResult, ROLL_COLORS.DAMAGE),
       rollResult: attackRollResult,
       fields,
-      useCharacterAvatar: false,
+      useCharacterAvatar: true,
     });
 
     return attackTotal;
@@ -151,6 +316,7 @@ export const rollCreatureDamage = async ({
   attack,
   isCritical = false,
   showRollResult,
+  ownerCharacter,
 }) => {
   try {
     const roller = new DiceRoller();
@@ -197,6 +363,14 @@ export const rollCreatureDamage = async ({
 
     const fields = [];
 
+    if (ownerCharacter) {
+      fields.push({
+        name: "Belongs to",
+        value: ownerCharacter.name,
+        inline: true,
+      });
+    }
+
     let damageDescription = `${damageFormula}`;
     if (isCritical) {
       damageDescription += ` (Critical Hit - doubled dice!)`;
@@ -222,6 +396,7 @@ export const rollCreatureDamage = async ({
       character: {
         name: creature.name,
         gameSession: creature.gameSession || "default",
+        image_url: creature.image_url,
       },
       rollType: "Damage Roll",
       title: `${attack.name} - Damage`,
@@ -229,7 +404,7 @@ export const rollCreatureDamage = async ({
       embedColor: ROLL_COLORS.DAMAGE,
       rollResult: null,
       fields,
-      useCharacterAvatar: false,
+      useCharacterAvatar: true,
     });
 
     return damageTotal;

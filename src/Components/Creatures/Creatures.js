@@ -15,20 +15,36 @@ import {
   Shield,
   Zap,
 } from "lucide-react";
+import { useRollModal } from "../utils/diceRoller";
+import {
+  rollCreatureAbility,
+  rollCreatureAttackOnly,
+  rollCreatureDamage,
+  rollCreatureSavingThrow,
+  rollCreatureInitiative,
+} from "./creatureRolls";
+import CreatureHPModal from "./CreatureHPModal";
 
-const Creatures = ({ supabase, user }) => {
+const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
   const { theme } = useTheme();
   const [creatures, setCreatures] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRolling, setIsRolling] = useState(false);
+  const { showRollResult } = useRollModal();
+  const [originalFormData, setOriginalFormData] = useState(null);
+  const [showHPModal, setShowHPModal] = useState(false);
+  const [selectedCreature, setSelectedCreature] = useState(null);
+  const [hpAmount, setHPAmount] = useState(0);
+  const [isApplyingHP, setIsApplyingHP] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
     combat: true,
     abilities: true,
     attacks: true,
-    details: false,
+    details: true,
   });
 
   const [formData, setFormData] = useState({
@@ -51,11 +67,14 @@ const Creatures = ({ supabase, user }) => {
     intelligence: 10,
     wisdom: 10,
     charisma: 10,
+    initiative_modifier: 0,
     attacks: [],
     description: "",
     notes: "",
     source: "",
+    image_url: "",
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const sizeOptions = [
     "Tiny",
@@ -84,6 +103,248 @@ const Creatures = ({ supabase, user }) => {
 
   const getModifier = (score) => {
     return Math.floor((score - 10) / 2);
+  };
+
+  const getInitiativeModifier = (creature) => {
+    return parseInt(creature.initiative_modifier) || 0;
+  };
+
+  const getHPColor = (creature) => {
+    const currentHP = creature.current_hit_points ?? creature.hit_points;
+    const maxHP = creature.hit_points;
+    const percentage = currentHP / maxHP;
+
+    if (percentage <= 0.25) return "#EF4444";
+    if (percentage <= 0.5) return "#F59E0B";
+    if (percentage <= 0.75) return "#EAB308";
+    return "#10B981";
+  };
+
+  const handleAbilityClick = async (
+    creature,
+    abilityName,
+    abilityKey,
+    abilityScore
+  ) => {
+    if (isRolling) return;
+    setIsRolling(true);
+
+    try {
+      const modifier = getModifier(abilityScore);
+      await rollCreatureAbility({
+        creature,
+        abilityName,
+        abilityKey,
+        abilityModifier: modifier,
+        showRollResult,
+        ownerCharacter: selectedCharacter,
+      });
+    } finally {
+      setIsRolling(false);
+    }
+  };
+
+  const handleSavingThrowClick = async (
+    creature,
+    abilityName,
+    abilityKey,
+    abilityScore,
+    event
+  ) => {
+    event.stopPropagation();
+    if (isRolling) return;
+    setIsRolling(true);
+
+    try {
+      const modifier = getModifier(abilityScore);
+      await rollCreatureSavingThrow({
+        creature,
+        abilityName,
+        abilityKey,
+        savingThrowModifier: modifier,
+        showRollResult,
+        ownerCharacter: selectedCharacter,
+      });
+    } finally {
+      setIsRolling(false);
+    }
+  };
+
+  const handleInitiativeClick = async (creature, event) => {
+    event.stopPropagation();
+    if (isRolling) return;
+    setIsRolling(true);
+
+    try {
+      const initiativeModifier = getInitiativeModifier(creature);
+      await rollCreatureInitiative({
+        creature,
+        initiativeModifier,
+        showRollResult,
+        ownerCharacter: selectedCharacter,
+      });
+    } finally {
+      setIsRolling(false);
+    }
+  };
+
+  const handleAttackRoll = async (creature, attack, event) => {
+    event.stopPropagation();
+    if (isRolling) return;
+    setIsRolling(true);
+
+    try {
+      await rollCreatureAttackOnly({
+        creature,
+        attack,
+        showRollResult,
+        ownerCharacter: selectedCharacter,
+      });
+    } finally {
+      setIsRolling(false);
+    }
+  };
+
+  const handleDamageRoll = async (
+    creature,
+    attack,
+    event,
+    isCritical = false
+  ) => {
+    event.stopPropagation();
+    if (isRolling) return;
+    setIsRolling(true);
+
+    try {
+      await rollCreatureDamage({
+        creature,
+        attack,
+        isCritical,
+        showRollResult,
+        ownerCharacter: selectedCharacter,
+      });
+    } finally {
+      setIsRolling(false);
+    }
+  };
+
+  const handleHPClick = (creature) => {
+    setSelectedCreature(creature);
+    setHPAmount(0);
+    setShowHPModal(true);
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Please upload a valid image file (JPEG, PNG, GIF, or WebP)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const discordUserId = user?.user_metadata?.provider_id;
+      if (!discordUserId) {
+        alert("User not authenticated");
+        return;
+      }
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${discordUserId}/${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabase.storage
+        .from("creature-images")
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("creature-images")
+        .getPublicUrl(fileName);
+
+      setFormData({ ...formData, image_url: urlData.publicUrl });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!formData.image_url) return;
+
+    if (!window.confirm("Are you sure you want to remove this image?")) {
+      return;
+    }
+
+    try {
+      if (formData.image_url.includes("creature-images")) {
+        const urlParts = formData.image_url.split("/");
+        const fileName = `${urlParts[urlParts.length - 2]}/${
+          urlParts[urlParts.length - 1]
+        }`;
+
+        await supabase.storage.from("creature-images").remove([fileName]);
+      }
+
+      setFormData({ ...formData, image_url: "" });
+    } catch (error) {
+      console.error("Error removing image:", error);
+
+      setFormData({ ...formData, image_url: "" });
+    }
+  };
+
+  const handleApplyHP = async (amount, type) => {
+    if (!selectedCreature || amount <= 0) return;
+
+    setIsApplyingHP(true);
+
+    try {
+      const currentHP =
+        selectedCreature.current_hit_points ?? selectedCreature.hit_points;
+      const maxHP = selectedCreature.hit_points;
+
+      let newCurrentHP;
+      if (type === "damage") {
+        newCurrentHP = Math.max(0, currentHP - amount);
+      } else {
+        newCurrentHP = Math.min(maxHP, currentHP + amount);
+      }
+
+      const { error } = await supabase
+        .from("creatures")
+        .update({
+          current_hit_points: newCurrentHP,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", selectedCreature.id);
+
+      if (error) {
+        console.error("Error updating creature HP:", error);
+        alert("Failed to update creature HP");
+        return;
+      }
+
+      await loadCreatures();
+      setShowHPModal(false);
+      setSelectedCreature(null);
+      setHPAmount(0);
+    } catch (error) {
+      console.error("Error applying HP change:", error);
+      alert("Error applying HP change. Please try again.");
+    } finally {
+      setIsApplyingHP(false);
+    }
   };
 
   const addAttack = () => {
@@ -125,18 +386,20 @@ const Creatures = ({ supabase, user }) => {
     });
   };
 
+  const hasFormChanges = () => {
+    if (!originalFormData) return true;
+    return JSON.stringify(formData) !== JSON.stringify(originalFormData);
+  };
+
   const loadCreatures = useCallback(async () => {
-    if (!supabase || !user) return;
+    if (!supabase || !user || !selectedCharacter) return;
 
     setIsLoading(true);
     try {
-      const discordUserId = user?.user_metadata?.provider_id;
-      if (!discordUserId) return;
-
       const { data, error } = await supabase
         .from("creatures")
         .select("*")
-        .eq("discord_user_id", discordUserId)
+        .eq("character_id", selectedCharacter.id)
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -146,14 +409,14 @@ const Creatures = ({ supabase, user }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user]);
+  }, [supabase, user, selectedCharacter]);
 
   useEffect(() => {
     loadCreatures();
   }, [loadCreatures]);
 
   const resetForm = () => {
-    setFormData({
+    const defaultFormData = {
       name: "",
       size: "Medium",
       type: "Beast",
@@ -173,11 +436,15 @@ const Creatures = ({ supabase, user }) => {
       intelligence: 10,
       wisdom: 10,
       charisma: 10,
+      initiative_modifier: 0,
       attacks: [],
       description: "",
       notes: "",
       source: "",
-    });
+      image_url: "",
+    };
+    setFormData(defaultFormData);
+    setOriginalFormData(null);
     setShowAddForm(false);
     setEditingId(null);
     setExpandedSections({
@@ -185,13 +452,18 @@ const Creatures = ({ supabase, user }) => {
       combat: true,
       abilities: true,
       attacks: true,
-      details: false,
+      details: true,
     });
   };
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
       alert("Name is required");
+      return;
+    }
+
+    if (!selectedCharacter) {
+      alert("No character selected");
       return;
     }
 
@@ -211,6 +483,7 @@ const Creatures = ({ supabase, user }) => {
 
       const creatureData = {
         discord_user_id: discordUserId,
+        character_id: selectedCharacter.id,
         name: formData.name.trim(),
         size: formData.size,
         type: formData.type,
@@ -226,10 +499,12 @@ const Creatures = ({ supabase, user }) => {
         intelligence: parseInt(formData.intelligence),
         wisdom: parseInt(formData.wisdom),
         charisma: parseInt(formData.charisma),
+        initiative_modifier: parseInt(formData.initiative_modifier) || 0,
         attacks: formData.attacks.length > 0 ? formData.attacks : null,
         description: formData.description.trim() || null,
         notes: formData.notes.trim() || null,
         source: formData.source.trim() || null,
+        image_url: formData.image_url.trim() || null,
       };
 
       if (editingId) {
@@ -257,7 +532,7 @@ const Creatures = ({ supabase, user }) => {
   };
 
   const handleEdit = (creature) => {
-    setFormData({
+    const editData = {
       name: creature.name,
       size: creature.size,
       type: creature.type,
@@ -277,11 +552,15 @@ const Creatures = ({ supabase, user }) => {
       intelligence: creature.intelligence,
       wisdom: creature.wisdom,
       charisma: creature.charisma,
+      initiative_modifier: creature.initiative_modifier || 0,
       attacks: creature.attacks || [],
       description: creature.description || "",
       notes: creature.notes || "",
       source: creature.source || "",
-    });
+      image_url: creature.image_url || "",
+    };
+    setFormData(editData);
+    setOriginalFormData(JSON.parse(JSON.stringify(editData)));
     setEditingId(creature.id);
     setShowAddForm(true);
   };
@@ -312,6 +591,12 @@ const Creatures = ({ supabase, user }) => {
       justifyContent: "space-between",
       alignItems: "center",
       marginBottom: "24px",
+      position: "sticky",
+      top: 0,
+      backgroundColor: theme.background,
+      zIndex: 100,
+      padding: "16px 0",
+      borderBottom: showAddForm ? `2px solid ${theme.border}` : "none",
     },
     title: {
       fontSize: "28px",
@@ -428,11 +713,12 @@ const Creatures = ({ supabase, user }) => {
     saveButton: {
       backgroundColor: theme.primary,
       color: "white",
+      border: `2px solid ${theme.primary}`,
     },
     cancelButton: {
       backgroundColor: theme.surface,
       color: theme.text,
-      border: `1px solid ${theme.border}`,
+      border: `2px solid ${theme.border}`,
     },
     toggleButton: {
       padding: "6px 12px",
@@ -460,12 +746,12 @@ const Creatures = ({ supabase, user }) => {
       marginBottom: "12px",
     },
     creatureName: {
-      fontSize: "18px",
+      fontSize: "20px",
       fontWeight: "600",
       color: theme.text,
     },
     creatureSubtitle: {
-      fontSize: "13px",
+      fontSize: "14px",
       fontStyle: "italic",
       color: theme.textSecondary,
       marginBottom: "12px",
@@ -474,7 +760,7 @@ const Creatures = ({ supabase, user }) => {
       display: "grid",
       gridTemplateColumns: "repeat(3, 1fr)",
       gap: "12px",
-      marginBottom: "12px",
+      marginBottom: "16px",
     },
     statBox: {
       display: "flex",
@@ -486,53 +772,61 @@ const Creatures = ({ supabase, user }) => {
       border: `1px solid ${theme.border}`,
     },
     statLabel: {
-      fontSize: "11px",
+      fontSize: "0.875rem",
       color: theme.textSecondary,
       marginBottom: "4px",
+      fontWeight: "500",
     },
     statValue: {
-      fontSize: "16px",
-      fontWeight: "600",
+      fontSize: "1.25rem",
+      fontWeight: "bold",
       color: theme.text,
     },
     abilityScores: {
       display: "grid",
       gridTemplateColumns: "repeat(6, 1fr)",
-      gap: "8px",
-      marginTop: "12px",
+      gap: "12px",
+      marginBottom: "16px",
     },
     abilityBox: {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      padding: "6px",
+      justifyContent: "center",
+      padding: "8px",
       backgroundColor: theme.background,
-      borderRadius: "4px",
-      border: `1px solid ${theme.border}`,
+      borderRadius: "8px",
+      border: `2px solid ${theme.border}`,
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      aspectRatio: "1 / 1",
     },
     abilityLabel: {
-      fontSize: "10px",
-      color: theme.textSecondary,
+      fontSize: "1rem",
+      color: theme.text,
       fontWeight: "600",
+      marginBottom: "2px",
     },
     abilityValue: {
-      fontSize: "14px",
-      fontWeight: "600",
+      fontSize: "1.25rem",
+      fontWeight: "bold",
       color: theme.text,
+      marginTop: "4px",
     },
     abilityModifier: {
-      fontSize: "11px",
-      color: theme.textSecondary,
+      fontSize: "0.875rem",
+      color: theme.primary,
+      fontWeight: "600",
     },
-    // Form ability score styles
+
     abilityGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
       gap: "16px",
     },
     abilityCard: {
-      padding: "16px",
-      backgroundColor: theme.surface,
+      padding: "12px",
+      backgroundColor: theme.background,
       border: `2px solid ${theme.border}`,
       borderRadius: "8px",
       textAlign: "center",
@@ -619,23 +913,60 @@ const Creatures = ({ supabase, user }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <div style={styles.title}>
-          <Rat size={32} color={theme.primary} />
-          Creatures ({creatures.length})
+        <div>
+          <div style={styles.title}>
+            <Rat size={32} color={theme.primary} />
+            Creatures ({creatures.length})
+          </div>
+          {selectedCharacter && (
+            <div
+              style={{
+                fontSize: "14px",
+                color: theme.textSecondary,
+                marginTop: "4px",
+                marginLeft: "44px",
+              }}
+            >
+              Viewing creatures for {selectedCharacter.name}
+            </div>
+          )}
         </div>
-        <button
-          style={styles.addButton}
-          onClick={() => {
-            if (showAddForm) {
-              resetForm();
-            } else {
-              setShowAddForm(true);
-            }
-          }}
-        >
-          {showAddForm ? <X size={18} /> : <Plus size={18} />}
-          {showAddForm ? "Cancel" : "Add Creature"}
-        </button>
+        {showAddForm ? (
+          <div style={styles.buttonGroup}>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !hasFormChanges()}
+              style={{
+                ...styles.button,
+                backgroundColor: hasFormChanges() ? "#10b981" : theme.border,
+                color: hasFormChanges() ? "white" : theme.textSecondary,
+                opacity: isSaving ? 0.7 : 1,
+                cursor:
+                  isSaving || !hasFormChanges() ? "not-allowed" : "pointer",
+              }}
+            >
+              {isSaving ? <Loader size={16} /> : <Check size={16} />}
+              {isSaving
+                ? "Saving..."
+                : editingId
+                ? "Update Creature"
+                : "Create Creature"}
+            </button>
+            <button
+              onClick={resetForm}
+              disabled={isSaving}
+              style={{ ...styles.button, ...styles.cancelButton }}
+            >
+              <X size={16} />
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button style={styles.addButton} onClick={() => setShowAddForm(true)}>
+            <Plus size={18} />
+            Add Creature
+          </button>
+        )}
       </div>
 
       {showAddForm && (
@@ -672,6 +1003,91 @@ const Creatures = ({ supabase, user }) => {
                       style={styles.input}
                       placeholder="Enter creature name"
                     />
+                  </div>
+                </div>
+                <div style={styles.formRow}>
+                  <div style={{ ...styles.formGroup, ...styles.formGroupFull }}>
+                    <label style={styles.label}>Creature Image</label>
+                    {formData.image_url ? (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                        }}
+                      >
+                        <img
+                          src={formData.image_url}
+                          alt={formData.name || "Creature"}
+                          style={{
+                            maxWidth: "200px",
+                            maxHeight: "200px",
+                            borderRadius: "8px",
+                            border: `2px solid ${theme.border}`,
+                            objectFit: "cover",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          style={{
+                            ...styles.button,
+                            backgroundColor: "#EF4444",
+                            color: "white",
+                            width: "fit-content",
+                          }}
+                        >
+                          <Trash2 size={14} />
+                          Remove Image
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage}
+                          style={{ display: "none" }}
+                          id="creature-image-upload"
+                        />
+                        <label
+                          htmlFor="creature-image-upload"
+                          style={{
+                            ...styles.button,
+                            backgroundColor: uploadingImage
+                              ? theme.border
+                              : theme.primary,
+                            color: uploadingImage
+                              ? theme.textSecondary
+                              : "white",
+                            cursor: uploadingImage ? "not-allowed" : "pointer",
+                            display: "inline-flex",
+                          }}
+                        >
+                          {uploadingImage ? (
+                            <>
+                              <Loader size={14} />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={14} />
+                              Upload Image
+                            </>
+                          )}
+                        </label>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: theme.textSecondary,
+                            marginTop: "8px",
+                          }}
+                        >
+                          Max 5MB. Supported formats: JPEG, PNG, GIF, WebP
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={styles.formRow}>
@@ -798,6 +1214,24 @@ const Creatures = ({ supabase, user }) => {
                       placeholder="e.g., 2d8 + 2"
                     />
                   </div>
+                </div>
+                <div style={styles.formRow}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Initiative Modifier</label>
+                    <input
+                      type="number"
+                      value={formData.initiative_modifier}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          initiative_modifier: e.target.value,
+                        })
+                      }
+                      style={styles.input}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div style={styles.formGroup}></div>
                 </div>
                 <div style={{ marginTop: "16px", marginBottom: "8px" }}>
                   <label style={styles.label}>Speed (ft)</label>
@@ -1267,37 +1701,34 @@ const Creatures = ({ supabase, user }) => {
               </div>
             )}
           </div>
+        </div>
+      )}
 
-          {/* Action Buttons */}
-          <div style={styles.section}>
-            <div style={styles.sectionContent}>
-              <div style={styles.buttonGroup}>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  style={{
-                    ...styles.button,
-                    ...styles.saveButton,
-                    opacity: isSaving ? 0.7 : 1,
-                  }}
-                >
-                  {isSaving ? <Loader size={16} /> : <Check size={16} />}
-                  {isSaving
-                    ? "Saving..."
-                    : editingId
-                    ? "Update Creature"
-                    : "Create Creature"}
-                </button>
-                <button
-                  onClick={resetForm}
-                  disabled={isSaving}
-                  style={{ ...styles.button, ...styles.cancelButton }}
-                >
-                  <X size={16} />
-                  Cancel
-                </button>
-              </div>
-            </div>
+      {showAddForm && (
+        <div
+          style={{
+            margin: "32px 0",
+            borderTop: `3px solid ${theme.border}`,
+            paddingTop: "24px",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "-12px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: theme.background,
+              padding: "0 16px",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: theme.textSecondary,
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}
+          >
+            All Creatures
           </div>
         </div>
       )}
@@ -1320,11 +1751,54 @@ const Creatures = ({ supabase, user }) => {
             return (
               <div key={creature.id} style={styles.creatureCard}>
                 <div style={styles.creatureHeader}>
-                  <div>
-                    <div style={styles.creatureName}>{creature.name}</div>
-                    <div style={styles.creatureSubtitle}>
-                      {creature.size} {creature.type}
-                      {creature.alignment && `, ${creature.alignment}`}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      flex: 1,
+                    }}
+                  >
+                    {creature.image_url && (
+                      <img
+                        src={creature.image_url}
+                        alt={`${creature.name}'s portrait`}
+                        style={{
+                          width: "48px",
+                          height: "48px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: `2px solid ${theme.primary}`,
+                          flexShrink: 0,
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    )}
+                    <div>
+                      <div style={styles.creatureName}>{creature.name}</div>
+                      <div style={styles.creatureSubtitle}>
+                        {creature.size} {creature.type}
+                        {creature.alignment && `, ${creature.alignment}`}
+                        {" • Speed: "}
+                        {(() => {
+                          const speeds = [];
+                          if (creature.speed?.walk)
+                            speeds.push(`${creature.speed.walk} ft.`);
+                          if (creature.speed?.fly)
+                            speeds.push(`fly ${creature.speed.fly} ft.`);
+                          if (creature.speed?.swim)
+                            speeds.push(`swim ${creature.speed.swim} ft.`);
+                          if (creature.speed?.climb)
+                            speeds.push(`climb ${creature.speed.climb} ft.`);
+                          if (creature.speed?.burrow)
+                            speeds.push(`burrow ${creature.speed.burrow} ft.`);
+                          return speeds.length > 0
+                            ? speeds.join(", ")
+                            : "30 ft.";
+                        })()}
+                      </div>
                     </div>
                   </div>
                   <div style={styles.actionButtons}>
@@ -1346,75 +1820,199 @@ const Creatures = ({ supabase, user }) => {
                 </div>
 
                 <div style={styles.statRow}>
-                  <div style={styles.statBox}>
-                    <div style={styles.statLabel}>AC</div>
-                    <div style={styles.statValue}>{creature.armor_class}</div>
+                  <div
+                    style={{
+                      ...styles.statBox,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      border: `3px solid ${getHPColor(creature)}`,
+                    }}
+                    onClick={() => handleHPClick(creature)}
+                    title="Click to manage HP"
+                  >
+                    <div
+                      style={{
+                        ...styles.statLabel,
+                        color: getHPColor(creature),
+                      }}
+                    >
+                      HP
+                    </div>
+                    <div
+                      style={{
+                        ...styles.statValue,
+                        color: getHPColor(creature),
+                      }}
+                    >
+                      {creature.current_hit_points ?? creature.hit_points}/
+                      {creature.hit_points}
+                    </div>
                   </div>
-                  <div style={styles.statBox}>
-                    <div style={styles.statLabel}>HP</div>
-                    <div style={styles.statValue}>{creature.hit_points}</div>
+                  <div
+                    style={{
+                      ...styles.statBox,
+                      cursor: isRolling ? "not-allowed" : "pointer",
+                      transition: "all 0.2s ease",
+                      border: `3px solid #b27424`,
+                      opacity: isRolling ? 0.6 : 1,
+                    }}
+                    onClick={(e) =>
+                      !isRolling && handleInitiativeClick(creature, e)
+                    }
+                    title={`Click to roll initiative (d20 ${
+                      getInitiativeModifier(creature) >= 0 ? "+" : ""
+                    }${getInitiativeModifier(creature)})`}
+                  >
+                    <div style={{ ...styles.statLabel, color: "#b27424" }}>
+                      INIT
+                    </div>
+                    <div style={{ ...styles.statValue, color: "#b27424" }}>
+                      {getInitiativeModifier(creature) >= 0 ? "+" : ""}
+                      {getInitiativeModifier(creature)}
+                    </div>
                   </div>
-                  <div style={styles.statBox}>
-                    <div style={styles.statLabel}>Speed</div>
-                    <div style={styles.statValue}>
-                      {creature.speed?.walk || 30}
+                  <div
+                    style={{ ...styles.statBox, border: `3px solid #3b82f6` }}
+                  >
+                    <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
+                      AC
+                    </div>
+                    <div style={{ ...styles.statValue, color: "#3b82f6" }}>
+                      {creature.armor_class}
                     </div>
                   </div>
                 </div>
 
                 <div style={styles.abilityScores}>
-                  <div style={styles.abilityBox}>
-                    <div style={styles.abilityLabel}>STR</div>
-                    <div style={styles.abilityValue}>{creature.strength}</div>
-                    <div style={styles.abilityModifier}>
-                      {getModifier(creature.strength) >= 0 ? "+" : ""}
-                      {getModifier(creature.strength)}
-                    </div>
-                  </div>
-                  <div style={styles.abilityBox}>
-                    <div style={styles.abilityLabel}>DEX</div>
-                    <div style={styles.abilityValue}>{creature.dexterity}</div>
-                    <div style={styles.abilityModifier}>
-                      {getModifier(creature.dexterity) >= 0 ? "+" : ""}
-                      {getModifier(creature.dexterity)}
-                    </div>
-                  </div>
-                  <div style={styles.abilityBox}>
-                    <div style={styles.abilityLabel}>CON</div>
-                    <div style={styles.abilityValue}>
-                      {creature.constitution}
-                    </div>
-                    <div style={styles.abilityModifier}>
-                      {getModifier(creature.constitution) >= 0 ? "+" : ""}
-                      {getModifier(creature.constitution)}
-                    </div>
-                  </div>
-                  <div style={styles.abilityBox}>
-                    <div style={styles.abilityLabel}>INT</div>
-                    <div style={styles.abilityValue}>
-                      {creature.intelligence}
-                    </div>
-                    <div style={styles.abilityModifier}>
-                      {getModifier(creature.intelligence) >= 0 ? "+" : ""}
-                      {getModifier(creature.intelligence)}
-                    </div>
-                  </div>
-                  <div style={styles.abilityBox}>
-                    <div style={styles.abilityLabel}>WIS</div>
-                    <div style={styles.abilityValue}>{creature.wisdom}</div>
-                    <div style={styles.abilityModifier}>
-                      {getModifier(creature.wisdom) >= 0 ? "+" : ""}
-                      {getModifier(creature.wisdom)}
-                    </div>
-                  </div>
-                  <div style={styles.abilityBox}>
-                    <div style={styles.abilityLabel}>CHA</div>
-                    <div style={styles.abilityValue}>{creature.charisma}</div>
-                    <div style={styles.abilityModifier}>
-                      {getModifier(creature.charisma) >= 0 ? "+" : ""}
-                      {getModifier(creature.charisma)}
-                    </div>
-                  </div>
+                  {[
+                    {
+                      label: "STR",
+                      key: "strength",
+                      name: "Strength",
+                      value: creature.strength,
+                    },
+                    {
+                      label: "DEX",
+                      key: "dexterity",
+                      name: "Dexterity",
+                      value: creature.dexterity,
+                    },
+                    {
+                      label: "CON",
+                      key: "constitution",
+                      name: "Constitution",
+                      value: creature.constitution,
+                    },
+                    {
+                      label: "INT",
+                      key: "intelligence",
+                      name: "Intelligence",
+                      value: creature.intelligence,
+                    },
+                    {
+                      label: "WIS",
+                      key: "wisdom",
+                      name: "Wisdom",
+                      value: creature.wisdom,
+                    },
+                    {
+                      label: "CHA",
+                      key: "charisma",
+                      name: "Charisma",
+                      value: creature.charisma,
+                    },
+                  ].map((ability) => {
+                    const modifier = getModifier(ability.value);
+                    return (
+                      <div
+                        key={ability.key}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "6px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div
+                          style={{
+                            ...styles.abilityBox,
+                            opacity: isRolling ? 0.6 : 1,
+                            cursor: isRolling ? "not-allowed" : "pointer",
+                          }}
+                          onClick={() =>
+                            !isRolling &&
+                            handleAbilityClick(
+                              creature,
+                              ability.name,
+                              ability.key,
+                              ability.value
+                            )
+                          }
+                          title={`Click to roll ${ability.name} check (d20 ${
+                            modifier >= 0 ? "+" : ""
+                          }${modifier})`}
+                        >
+                          <div style={styles.abilityLabel}>{ability.label}</div>
+                          <div style={styles.abilityModifier}>
+                            {modifier >= 0 ? "+" : ""}
+                            {modifier}
+                          </div>
+                          <div style={styles.abilityValue}>{ability.value}</div>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: theme.textSecondary,
+                            textAlign: "center",
+                            padding: "6px 8px",
+                            backgroundColor: theme.background,
+                            borderRadius: "8px",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: "28px",
+                            width: "100%",
+                            cursor: isRolling ? "not-allowed" : "pointer",
+                            transition: "all 0.2s ease",
+                            border: `2px solid ${theme.border}`,
+                          }}
+                          onClick={(e) =>
+                            !isRolling &&
+                            handleSavingThrowClick(
+                              creature,
+                              ability.name,
+                              ability.key,
+                              ability.value,
+                              e
+                            )
+                          }
+                          onMouseEnter={(e) => {
+                            if (!isRolling) {
+                              e.currentTarget.style.backgroundColor =
+                                theme.surface;
+                              e.currentTarget.style.color = theme.primary;
+                              e.currentTarget.style.borderColor = theme.primary;
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              theme.background;
+                            e.currentTarget.style.color = theme.textSecondary;
+                            e.currentTarget.style.borderColor = theme.border;
+                          }}
+                          title={`Click to roll ${
+                            ability.name
+                          } saving throw (d20 ${
+                            modifier >= 0 ? "+" : ""
+                          }${modifier})`}
+                        >
+                          Save: {modifier >= 0 ? "+" : ""}
+                          {modifier}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {creature.attacks && creature.attacks.length > 0 && (
@@ -1428,16 +2026,18 @@ const Creatures = ({ supabase, user }) => {
                   >
                     <div
                       style={{
-                        fontSize: "12px",
+                        fontSize: "1rem",
                         fontWeight: "600",
                         color: theme.text,
                         marginBottom: "8px",
+                        paddingBottom: "8px",
+                        borderBottom: `1px solid ${theme.border}`,
                         display: "flex",
                         alignItems: "center",
                         gap: "6px",
                       }}
                     >
-                      <Sword size={14} />
+                      <Sword size={16} />
                       Attacks
                     </div>
                     {creature.attacks.map((attack, idx) => (
@@ -1446,78 +2046,152 @@ const Creatures = ({ supabase, user }) => {
                         style={{
                           marginBottom: "8px",
                           paddingBottom: "8px",
+                          padding: "8px",
+                          borderRadius: "4px",
                           borderBottom:
                             idx < creature.attacks.length - 1
                               ? `1px solid ${theme.border}`
                               : "none",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "12px",
                         }}
                       >
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            fontWeight: "600",
-                            color: theme.text,
-                          }}
-                        >
-                          {attack.name}
-                          {attack.attack_bonus && (
-                            <span
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              fontSize: "0.9375rem",
+                              fontWeight: "600",
+                              color: theme.text,
+                            }}
+                          >
+                            {attack.name}
+                            {attack.attack_bonus && (
+                              <span
+                                style={{
+                                  marginLeft: "8px",
+                                  color: theme.primary,
+                                }}
+                              >
+                                +{attack.attack_bonus}
+                              </span>
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.9375rem",
+                              color: theme.textSecondary,
+                              marginTop: "2px",
+                            }}
+                          >
+                            {attack.reach && `Reach ${attack.reach} ft.`}
+                            {(attack.damage_quantity ||
+                              attack.damage_die ||
+                              attack.damage_dice) &&
+                              (() => {
+                                let damageString = "";
+                                if (
+                                  attack.damage_quantity &&
+                                  attack.damage_die
+                                ) {
+                                  damageString = `${attack.damage_quantity}${attack.damage_die}`;
+                                  if (
+                                    attack.damage_modifier &&
+                                    attack.damage_modifier !== 0
+                                  ) {
+                                    damageString +=
+                                      attack.damage_modifier > 0
+                                        ? ` + ${attack.damage_modifier}`
+                                        : ` - ${Math.abs(
+                                            attack.damage_modifier
+                                          )}`;
+                                  }
+                                } else if (attack.damage_dice) {
+                                  damageString = attack.damage_dice;
+                                }
+                                return ` ${damageString} ${
+                                  attack.damage_type || ""
+                                } damage`;
+                              })()}
+                          </div>
+                          {attack.description && (
+                            <div
                               style={{
-                                marginLeft: "8px",
-                                color: theme.primary,
+                                fontSize: "0.875rem",
+                                color: theme.text,
+                                marginTop: "4px",
+                                fontStyle: "italic",
                               }}
                             >
-                              +{attack.attack_bonus}
-                            </span>
+                              {attack.description}
+                            </div>
                           )}
                         </div>
                         <div
                           style={{
-                            fontSize: "12px",
-                            color: theme.textSecondary,
-                            marginTop: "2px",
+                            display: "flex",
+                            gap: "6px",
+                            flexShrink: 0,
                           }}
                         >
-                          {attack.reach && `Reach ${attack.reach} ft.`}
-                          {(attack.damage_quantity ||
-                            attack.damage_die ||
-                            attack.damage_dice) &&
-                            (() => {
-                              // Support both old format (damage_dice) and new format (damage_quantity, damage_die, damage_modifier)
-                              let damageString = "";
-                              if (attack.damage_quantity && attack.damage_die) {
-                                damageString = `${attack.damage_quantity}${attack.damage_die}`;
-                                if (
-                                  attack.damage_modifier &&
-                                  attack.damage_modifier !== 0
-                                ) {
-                                  damageString +=
-                                    attack.damage_modifier > 0
-                                      ? ` + ${attack.damage_modifier}`
-                                      : ` - ${Math.abs(
-                                          attack.damage_modifier
-                                        )}`;
-                                }
-                              } else if (attack.damage_dice) {
-                                damageString = attack.damage_dice;
-                              }
-                              return ` ${damageString} ${
-                                attack.damage_type || ""
-                              } damage`;
-                            })()}
-                        </div>
-                        {attack.description && (
-                          <div
+                          <button
                             style={{
-                              fontSize: "11px",
-                              color: theme.text,
-                              marginTop: "4px",
-                              fontStyle: "italic",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "4px 10px",
+                              fontSize: "10px",
+                              fontWeight: "500",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: isRolling ? "not-allowed" : "pointer",
+                              transition: "all 0.2s ease",
+                              backgroundColor: "#b27424",
+                              color: "white",
+                              opacity: isRolling ? 0.6 : 1,
                             }}
+                            onClick={(e) =>
+                              !isRolling &&
+                              handleAttackRoll(creature, attack, e)
+                            }
+                            disabled={isRolling}
+                            title={`Roll attack (d20${
+                              attack.attack_bonus
+                                ? ` + ${attack.attack_bonus}`
+                                : ""
+                            })`}
                           >
-                            {attack.description}
-                          </div>
-                        )}
+                            <Sword size={12} />
+                            Attack
+                          </button>
+                          <button
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "4px 10px",
+                              fontSize: "10px",
+                              fontWeight: "500",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: isRolling ? "not-allowed" : "pointer",
+                              transition: "all 0.2s ease",
+                              backgroundColor: "#EF4444",
+                              color: "white",
+                              opacity: isRolling ? 0.6 : 1,
+                            }}
+                            onClick={(e) =>
+                              !isRolling &&
+                              handleDamageRoll(creature, attack, e, false)
+                            }
+                            disabled={isRolling}
+                            title="Roll damage"
+                          >
+                            <Zap size={12} />
+                            Damage
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1563,6 +2237,17 @@ const Creatures = ({ supabase, user }) => {
           })}
         </div>
       )}
+
+      <CreatureHPModal
+        creature={selectedCreature}
+        theme={theme}
+        showHPModal={showHPModal}
+        setShowHPModal={setShowHPModal}
+        hpAmount={hpAmount}
+        setHPAmount={setHPAmount}
+        isApplyingHP={isApplyingHP}
+        onApplyHP={handleApplyHP}
+      />
     </div>
   );
 };
