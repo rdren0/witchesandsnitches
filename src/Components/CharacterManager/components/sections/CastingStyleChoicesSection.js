@@ -9,6 +9,37 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
   const level = character?.level || 1;
   const castingStyle = character?.castingStyle || "";
 
+  const renderIntellectCasterFeatures = () => {
+    const features = [];
+
+    if (level >= 1) {
+      features.push({
+        name: "Initiative Ability",
+        level: 1,
+        description:
+          "As an Intellect Caster, you may choose to use Intelligence or Dexterity for initiative rolls.",
+        isChoice: true,
+        choiceType: "initiativeAbility",
+        choices: [
+          {
+            name: "Dexterity",
+            value: "dexterity",
+            description:
+              "Use your Dexterity modifier for initiative rolls (traditional method).",
+          },
+          {
+            name: "Intelligence",
+            value: "intelligence",
+            description:
+              "Use your Intelligence modifier for initiative rolls (tactical advantage).",
+          },
+        ],
+      });
+    }
+
+    return features;
+  };
+
   const renderWillpowerCasterFeatures = () => {
     const features = [];
 
@@ -87,8 +118,9 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
     switch (castingStyle) {
       case "Willpower Caster":
         return renderWillpowerCasterFeatures();
-      case "Technique Caster":
       case "Intellect Caster":
+        return renderIntellectCasterFeatures();
+      case "Technique Caster":
       case "Vigor Caster":
         return [];
       default:
@@ -98,13 +130,19 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
 
   const features = getCastingStyleFeatures();
 
-  const handleChoiceChange = (choiceKey, selectedChoice) => {
-    const currentChoices = character.castingStyleChoices || {};
-    const updatedChoices = {
-      ...currentChoices,
-      [choiceKey]: selectedChoice,
-    };
-    setCharacter("castingStyleChoices", updatedChoices);
+  const handleChoiceChange = (choiceKey, selectedChoice, choiceType) => {
+    // Handle initiative ability as a direct character field
+    if (choiceType === "initiativeAbility") {
+      setCharacter("initiativeAbility", selectedChoice);
+    } else {
+      // Handle casting style choices
+      const currentChoices = character.castingStyleChoices || {};
+      const updatedChoices = {
+        ...currentChoices,
+        [choiceKey]: selectedChoice,
+      };
+      setCharacter("castingStyleChoices", updatedChoices);
+    }
   };
 
   if (!castingStyle) {
@@ -238,17 +276,64 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                       color: theme.text,
                     }}
                   >
-                    {character.castingStyleChoices?.[feature.choiceKey]
+                    {feature.choiceType === "initiativeAbility"
+                      ? character.initiativeAbility
+                        ? `Selected: ${
+                            character.initiativeAbility.charAt(0).toUpperCase() +
+                            character.initiativeAbility.slice(1)
+                          }`
+                        : "Choose one option:"
+                      : character.castingStyleChoices?.[feature.choiceKey]
                       ? `Selected: ${
                           character.castingStyleChoices[feature.choiceKey]
                         }`
                       : "Choose one option:"}
                   </div>
 
+                  {/* Show ability score comparison for initiative ability */}
+                  {feature.choiceType === "initiativeAbility" &&
+                    character.abilityScores &&
+                    character.abilityScores.dexterity &&
+                    character.abilityScores.intelligence && (
+                      <div
+                        style={{
+                          marginBottom: "12px",
+                          padding: "8px 12px",
+                          backgroundColor: `${theme.primary}10`,
+                          border: `1px solid ${theme.primary}`,
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontStyle: "italic",
+                          color: theme.primary,
+                        }}
+                      >
+                        {Math.floor(
+                          (character.abilityScores.intelligence - 10) / 2
+                        ) >
+                        Math.floor((character.abilityScores.dexterity - 10) / 2)
+                          ? "💡 Intelligence gives a higher modifier"
+                          : Math.floor(
+                              (character.abilityScores.dexterity - 10) / 2
+                            ) >
+                            Math.floor(
+                              (character.abilityScores.intelligence - 10) / 2
+                            )
+                          ? "⚡ Dexterity gives a higher modifier"
+                          : "⚖️ Both abilities give the same modifier"}
+                      </div>
+                    )}
+
                   {feature.choices.map((choice, choiceIndex) => {
+                    // Determine which value to check for selection
                     const currentChoice =
-                      character.castingStyleChoices?.[feature.choiceKey];
-                    const isSelected = currentChoice === choice.name;
+                      feature.choiceType === "initiativeAbility"
+                        ? character.initiativeAbility
+                        : character.castingStyleChoices?.[feature.choiceKey];
+
+                    const isSelected =
+                      feature.choiceType === "initiativeAbility"
+                        ? currentChoice === choice.value
+                        : currentChoice === choice.name;
 
                     return (
                       <div
@@ -267,7 +352,11 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                           transition: "all 0.2s ease",
                         }}
                         onClick={() =>
-                          handleChoiceChange(feature.choiceKey, choice.name)
+                          handleChoiceChange(
+                            feature.choiceKey,
+                            choice.value || choice.name,
+                            feature.choiceType
+                          )
                         }
                       >
                         <div
