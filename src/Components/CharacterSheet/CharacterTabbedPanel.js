@@ -7,6 +7,7 @@ import {
   Wand,
   Dices,
   Award,
+  Rat,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import SpellBook from "../SpellBook/SpellBook";
@@ -19,6 +20,7 @@ import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
 import SpellSummary from "./SpellSummary";
 import CustomSpells from "./CustomSpells";
+import CreaturesPanel from "./CreaturesPanel";
 
 const CharacterTabbedPanel = ({
   supabase,
@@ -240,6 +242,12 @@ const CharacterTabbedPanel = ({
           selectedCharacterId={selectedCharacter.id}
         />
       ),
+    },
+    {
+      id: "creatures",
+      label: "Creatures",
+      icon: Rat,
+      component: <CreaturesPanel supabase={supabase} user={user} />,
     },
   ];
 

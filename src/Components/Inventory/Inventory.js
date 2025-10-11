@@ -18,7 +18,7 @@ import { getInventoryStyles } from "./styles";
 
 import Bank from "../Bank/Bank";
 
-const Inventory = ({ user, selectedCharacter, supabase }) => {
+const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const { theme } = useTheme();
   const styles = getInventoryStyles(theme);
 
@@ -119,7 +119,10 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         category: formData.category,
         attunement_required: formData.attunement_required,
         character_id: selectedCharacter.id,
-        discord_user_id: user?.discord_user_id || user?.id,
+
+        discord_user_id: adminMode
+          ? selectedCharacter.discord_user_id
+          : user?.discord_user_id || user?.id,
       };
 
       const { data, error: insertError } = await supabase
@@ -338,6 +341,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           user={user}
           selectedCharacter={selectedCharacter}
           supabase={supabase}
+          adminMode={adminMode}
         />
 
         <div style={styles.inventorySection}>

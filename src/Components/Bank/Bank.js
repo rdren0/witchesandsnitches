@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Minus, Coins } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const Bank = ({ user, selectedCharacter, supabase }) => {
+const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
   const { theme } = useTheme();
 
   const [totalKnuts, setTotalKnuts] = useState(0);
@@ -37,12 +37,16 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
         throw new Error("Invalid character ID");
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("character_money")
         .select("total_knuts")
-        .eq("character_id", characterId)
-        .eq("discord_user_id", discordUserId)
-        .maybeSingle();
+        .eq("character_id", characterId);
+
+      if (!adminMode) {
+        query = query.eq("discord_user_id", discordUserId);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         throw error;
@@ -75,12 +79,17 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
       if (isNaN(characterId)) {
         throw new Error("Invalid character ID");
       }
-      const { data: existingData, error: fetchError } = await supabase
+      let query = supabase
         .from("character_money")
         .select("id")
-        .eq("character_id", characterId)
-        .eq("discord_user_id", discordUserId)
-        .maybeSingle();
+        .eq("character_id", characterId);
+
+      if (!adminMode) {
+        query = query.eq("discord_user_id", discordUserId);
+      }
+
+      const { data: existingData, error: fetchError } =
+        await query.maybeSingle();
 
       if (fetchError) {
         throw fetchError;
@@ -97,12 +106,16 @@ const Bank = ({ user, selectedCharacter, supabase }) => {
 
         if (updateError) throw updateError;
       } else {
+        const characterDiscordUserId = adminMode
+          ? selectedCharacter.discord_user_id
+          : discordUserId;
+
         const { error: insertError } = await supabase
           .from("character_money")
           .insert([
             {
               character_id: characterId,
-              discord_user_id: discordUserId,
+              discord_user_id: characterDiscordUserId,
               total_knuts: newTotalKnuts,
             },
           ]);
