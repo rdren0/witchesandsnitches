@@ -731,6 +731,14 @@ const CharacterFeatsDisplay = ({
       });
     }
 
+    if (character.additional_feats && character.additional_feats.length > 0) {
+      character.additional_feats.forEach((featName) => {
+        const featData = standardFeats.find((f) => f.name === featName);
+
+        addFeat(featName, "Additional Feat", "Bonus Feat", null, featData);
+      });
+    }
+
     if (character.castingStyle && castingStyleData[character.castingStyle]) {
       const styleData = castingStyleData[character.castingStyle];
       const castingChoices =

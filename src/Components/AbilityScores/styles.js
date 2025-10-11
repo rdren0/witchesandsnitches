@@ -53,19 +53,16 @@ export const createAbilityScoresStyles = (theme) => ({
     color: theme.textSecondary,
     textTransform: "uppercase",
     letterSpacing: "0.5px",
-    marginBottom: "14px",
   },
   abilityModifier: {
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: theme.primary,
-    marginTop: "4px",
-  },
-  abilityScore: {
     fontSize: "20px",
     fontWeight: "bold",
+    color: theme.primary,
+  },
+  abilityScore: {
+    fontSize: "28px",
+    fontWeight: "bold",
     color: theme.text,
-    marginTop: "4px",
   },
 });
 

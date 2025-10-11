@@ -279,7 +279,9 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                     {feature.choiceType === "initiativeAbility"
                       ? character.initiativeAbility
                         ? `Selected: ${
-                            character.initiativeAbility.charAt(0).toUpperCase() +
+                            character.initiativeAbility
+                              .charAt(0)
+                              .toUpperCase() +
                             character.initiativeAbility.slice(1)
                           }`
                         : "Choose one option:"

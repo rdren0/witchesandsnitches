@@ -8,6 +8,7 @@ export { default as Level1ChoiceSection } from "./Level1ChoiceSection";
 export { default as SkillsSection } from "./Skills/SkillsSection";
 export { default as ToolsLanguagesSection } from "./ToolsLanguagesSection";
 export { default as ASILevelChoices } from "./ASILevelChoices";
+export { default as AdditionalFeatsASISection } from "./AdditionalFeatsASISection";
 export { default as MagicModifiersSection } from "./MagicModifiersSection";
 export { default as MetaMagicSection } from "./MetaMagicSection";
 export { default as CastingStyleChoicesSection } from "./CastingStyleChoicesSection";

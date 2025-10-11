@@ -15,6 +15,7 @@ import {
   SkillsSection,
   ToolsLanguagesSection,
   ASILevelChoices,
+  AdditionalFeatsASISection,
   MagicModifiersSection,
   MetaMagicSection,
   CastingStyleChoicesSection,
@@ -396,6 +397,20 @@ const CharacterForm = ({
           />
         </FormSection>
       )}
+
+      <FormSection
+        title="Additional Feats and ASI"
+        subtitle="Extra feats and ability score improvements outside of standard progression"
+        id="section-additional-feats-asi"
+      >
+        <AdditionalFeatsASISection
+          character={character}
+          onChange={updateCharacter}
+          onCharacterUpdate={updateCharacterBulk}
+          mode={mode}
+        />
+      </FormSection>
+
       <FormSection
         title="Metamagic"
         subtitle="Select metamagic options available to your character"

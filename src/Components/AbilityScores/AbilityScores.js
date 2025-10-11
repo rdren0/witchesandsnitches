@@ -76,8 +76,33 @@ const AbilityScores = ({ character }) => {
           { name: "Wisdom", key: "wisdom" },
           { name: "Charisma", key: "charisma" },
         ].map((ability) => (
-          <div key={ability.key} style={getClickableAbilityStyle(ability)}>
+          <div
+            key={ability.key}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              backgroundColor: theme.background,
+              borderRadius: "8px",
+              border: `2px solid ${theme.border}`,
+              overflow: "hidden",
+            }}
+          >
             <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "12px 8px",
+                cursor: isRolling ? "not-allowed" : "pointer",
+                opacity: isRolling ? 0.6 : 1,
+                width: "100%",
+                transition: "all 0.2s ease",
+                backgroundColor: theme.background,
+                gap: "8px",
+                position: "relative",
+              }}
               onClick={() =>
                 !isRolling &&
                 rollAbility({
@@ -88,14 +113,19 @@ const AbilityScores = ({ character }) => {
                   character,
                 })
               }
-              title={`Click to roll ${
-                ability.name
-              } check (d20 + ${formatModifier(
+              onMouseEnter={(e) => {
+                if (!isRolling) {
+                  e.currentTarget.style.backgroundColor = theme.surface;
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.background;
+              }}
+              title={`Click to roll ${ability.name} check (d20 ${formatModifier(
                 characterModifiers[ability.key]
               )})`}
-              style={{ cursor: isRolling ? "not-allowed" : "pointer", flex: 1 }}
             >
-              <span style={styles.abilityName}>{ability.name}</span>
+              <div style={styles.abilityName}>{ability.name}</div>
               <div style={styles.abilityModifier}>
                 {formatModifier(characterModifiers[ability.key])}
               </div>
@@ -103,9 +133,28 @@ const AbilityScores = ({ character }) => {
                 {finalAbilityScores[ability.key]}
               </div>
             </div>
-
-            <button
-              style={getSavingThrowButtonStyle(ability.key)}
+            <div
+              style={{
+                width: "100%",
+                height: "2px",
+                backgroundColor: theme.border,
+              }}
+            />
+            <div
+              style={{
+                fontSize: "0.875rem",
+                color: theme.textSecondary,
+                textAlign: "center",
+                padding: "10px 8px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                cursor: isRolling ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease",
+                backgroundColor: theme.background,
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isRolling) {
@@ -118,13 +167,24 @@ const AbilityScores = ({ character }) => {
                   });
                 }
               }}
-              title={`Roll ${ability.name} saving throw (d20 + ${formatModifier(
+              onMouseEnter={(e) => {
+                if (!isRolling) {
+                  e.currentTarget.style.backgroundColor = theme.surface;
+                  e.currentTarget.style.color = theme.primary;
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.background;
+                e.currentTarget.style.color = theme.textSecondary;
+              }}
+              title={`Click to roll ${
+                ability.name
+              } saving throw (d20 ${formatModifier(
                 getSavingThrowModifier(ability.key)
               )})`}
-              disabled={isRolling}
             >
-              Save {formatModifier(getSavingThrowModifier(ability.key))}
-            </button>
+              Save: {formatModifier(getSavingThrowModifier(ability.key))}
+            </div>
           </div>
         ))}
       </div>

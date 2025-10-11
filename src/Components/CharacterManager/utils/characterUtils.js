@@ -26,6 +26,14 @@ export const getAllSelectedFeats = (character) => {
     selectedFeats.push(...character.standard_feats);
   }
 
+  if (character.additional_feats && Array.isArray(character.additional_feats)) {
+    selectedFeats.push(...character.additional_feats);
+  }
+
+  if (character.additionalFeats && Array.isArray(character.additionalFeats)) {
+    selectedFeats.push(...character.additionalFeats);
+  }
+
   if (character.asiChoices) {
     Object.values(character.asiChoices).forEach((choice) => {
       if (choice.type === "feat" && choice.selectedFeat) {
