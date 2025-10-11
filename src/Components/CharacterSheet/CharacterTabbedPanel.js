@@ -18,6 +18,7 @@ import CorruptionTracker from "./CorruptionTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
 import SpellSummary from "./SpellSummary";
+import CustomSpells from "./CustomSpells";
 
 const CharacterTabbedPanel = ({
   supabase,
@@ -140,6 +141,11 @@ const CharacterTabbedPanel = ({
             discordUserId={discordUserId}
             adminMode={adminMode}
             isUserAdmin={isUserAdmin}
+          />
+          <CustomSpells
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
           />
           <SpellSlotTracker
             character={selectedCharacter}
