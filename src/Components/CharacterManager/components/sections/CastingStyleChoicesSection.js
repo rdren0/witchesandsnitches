@@ -303,7 +303,6 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                     })()}
                   </div>
 
-                  {/* Show ability score comparison for initiative ability */}
                   {feature.choiceType === "initiativeAbility" &&
                     character.abilityScores &&
                     character.abilityScores.dexterity &&

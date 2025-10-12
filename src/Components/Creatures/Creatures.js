@@ -977,7 +977,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
 
       {showAddForm && (
         <div>
-          {/* Basic Info Section */}
           <div style={styles.section}>
             <div
               style={styles.sectionHeader}
@@ -1146,7 +1145,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
             )}
           </div>
 
-          {/* Combat Stats Section */}
           <div style={styles.section}>
             <div
               style={styles.sectionHeader}
@@ -1354,7 +1352,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
             )}
           </div>
 
-          {/* Ability Scores Section */}
           <div style={styles.section}>
             <div
               style={styles.sectionHeader}
@@ -1443,7 +1440,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
             )}
           </div>
 
-          {/* Attacks Section */}
           <div style={styles.section}>
             <div
               style={styles.sectionHeader}
@@ -1641,7 +1637,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
             )}
           </div>
 
-          {/* Description & Details Section */}
           <div style={styles.section}>
             <div
               style={styles.sectionHeader}

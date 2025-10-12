@@ -252,7 +252,6 @@ const CorruptionButton = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div
               style={{
                 position: "sticky",
@@ -297,9 +296,7 @@ const CorruptionButton = ({
               </button>
             </div>
 
-            {/* Content */}
             <div style={{ padding: "24px" }}>
-              {/* Current Corruption Display */}
               <div
                 style={{
                   textAlign: "center",
@@ -346,7 +343,6 @@ const CorruptionButton = ({
                 )}
               </div>
 
-              {/* Gain Corruption Section */}
               <div
                 style={{
                   marginBottom: "24px",
@@ -470,7 +466,6 @@ const CorruptionButton = ({
                 </button>
               </div>
 
-              {/* Spend Corruption Section */}
               <div
                 style={{
                   padding: "20px",
@@ -633,7 +628,6 @@ const CorruptionButton = ({
                 </button>
               </div>
 
-              {/* Corruption Tiers Info */}
               <div
                 style={{
                   marginTop: "24px",

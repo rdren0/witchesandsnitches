@@ -342,7 +342,6 @@ const FeatureSelectorSection = ({
 
   return (
     <div style={styles.fieldContainer}>
-      {/* === SELECTIONS SUMMARY === */}
       {(selectionsSummary.summary.length > 0 ||
         selectionsSummary.additionalFeats.length > 0) && (
         <div style={{ marginBottom: "32px" }}>
@@ -362,7 +361,6 @@ const FeatureSelectorSection = ({
               border: `2px solid ${theme.border}`,
             }}
           >
-            {/* Main Selections */}
             {selectionsSummary.summary.length > 0 && (
               <div
                 style={{
@@ -433,7 +431,6 @@ const FeatureSelectorSection = ({
               </div>
             )}
 
-            {/* Additional Feats */}
             {selectionsSummary.additionalFeats.length > 0 && (
               <div>
                 <div
@@ -524,7 +521,6 @@ const FeatureSelectorSection = ({
         </div>
       )}
 
-      {/* === INNATE HERITAGE SECTION === */}
       <div style={{ marginBottom: "32px" }}>
         <div
           style={sectionHeaderStyle}
@@ -643,7 +639,6 @@ const FeatureSelectorSection = ({
                       </div>
                     </label>
 
-                    {/* Always show full heritage details */}
                     {heritageData && (
                       <div
                         style={{
@@ -652,7 +647,6 @@ const FeatureSelectorSection = ({
                           borderTop: `1px solid ${theme.border}`,
                         }}
                       >
-                        {/* Description */}
                         <div style={{ marginBottom: "16px" }}>
                           <p
                             style={{
@@ -666,7 +660,6 @@ const FeatureSelectorSection = ({
                           </p>
                         </div>
 
-                        {/* Benefits */}
                         {heritageData.benefits &&
                           heritageData.benefits.length > 0 && (
                             <div>
@@ -710,7 +703,6 @@ const FeatureSelectorSection = ({
         )}
       </div>
 
-      {/* === STANDARD FEATS SECTION === */}
       <div style={{ marginBottom: "32px" }}>
         <div
           style={sectionHeaderStyle}
@@ -747,7 +739,6 @@ const FeatureSelectorSection = ({
               <strong>Levels 1, 4, 8, 12, 16, and 19</strong>.
             </div>
 
-            {/* Selected Feats Summary */}
             {selectedFeatsSummary.length > 0 && (
               <div
                 style={{
@@ -837,7 +828,6 @@ const FeatureSelectorSection = ({
               </div>
             )}
 
-            {/* Available Feats Section */}
             <div
               style={{
                 fontSize: "14px",
@@ -850,7 +840,6 @@ const FeatureSelectorSection = ({
               Available Feats:
             </div>
 
-            {/* Search Filter */}
             <div style={{ position: "relative", marginBottom: "16px" }}>
               <input
                 type="text"
@@ -888,7 +877,6 @@ const FeatureSelectorSection = ({
               )}
             </div>
 
-            {/* Feats List */}
             <div
               style={{
                 maxHeight: "600px",
@@ -997,7 +985,6 @@ const FeatureSelectorSection = ({
                       </label>
                     </div>
 
-                    {/* Always show full details */}
                     <div
                       style={{
                         marginTop: "12px",
@@ -1005,7 +992,6 @@ const FeatureSelectorSection = ({
                         borderTop: `1px solid ${theme.border}`,
                       }}
                     >
-                      {/* Description */}
                       <div style={{ marginBottom: "16px" }}>
                         {Array.isArray(feat.description) ? (
                           feat.description.map((desc, idx) => (
@@ -1035,7 +1021,6 @@ const FeatureSelectorSection = ({
                         )}
                       </div>
 
-                      {/* Benefits */}
                       {feat.benefits && (
                         <div>
                           <strong
@@ -1050,7 +1035,6 @@ const FeatureSelectorSection = ({
                               lineHeight: "1.4",
                             }}
                           >
-                            {/* Ability Score Increase */}
                             {feat.benefits.abilityScoreIncrease && (
                               <div
                                 style={{
@@ -1085,7 +1069,6 @@ const FeatureSelectorSection = ({
                               </div>
                             )}
 
-                            {/* Skill Proficiencies */}
                             {feat.benefits.skillProficiencies?.length > 0 && (
                               <div
                                 style={{
@@ -1116,7 +1099,6 @@ const FeatureSelectorSection = ({
                               </div>
                             )}
 
-                            {/* Special Abilities */}
                             {feat.benefits.specialAbilities?.length > 0 && (
                               <div
                                 style={{
@@ -1141,7 +1123,6 @@ const FeatureSelectorSection = ({
                               </div>
                             )}
 
-                            {/* Resistances */}
                             {feat.benefits.resistances?.length > 0 && (
                               <div
                                 style={{
@@ -1155,7 +1136,6 @@ const FeatureSelectorSection = ({
                               </div>
                             )}
 
-                            {/* Immunities */}
                             {feat.benefits.immunities?.length > 0 && (
                               <div
                                 style={{
@@ -1169,7 +1149,6 @@ const FeatureSelectorSection = ({
                               </div>
                             )}
 
-                            {/* Combat Bonuses */}
                             {feat.benefits.combatBonuses &&
                               Object.keys(feat.benefits.combatBonuses).length >
                                 0 && (
@@ -1197,7 +1176,6 @@ const FeatureSelectorSection = ({
                                 </div>
                               )}
 
-                            {/* Speeds */}
                             {feat.benefits.speeds &&
                               Object.keys(feat.benefits.speeds).length > 0 && (
                                 <div
@@ -1247,7 +1225,6 @@ const FeatureSelectorSection = ({
         )}
       </div>
 
-      {/* === ASI (ABILITY SCORE IMPROVEMENTS) SECTION === */}
       <div style={{ marginBottom: "32px" }}>
         <div
           style={sectionHeaderStyle}
@@ -1301,7 +1278,6 @@ const FeatureSelectorSection = ({
                   ability) or a Standard Feat.
                 </div>
 
-                {/* ASI Level Choices */}
                 {availableASILevels.map((level) => {
                   const choice = character.asiChoices?.[level] || {};
                   const isASI = choice.type === "asi";
@@ -1332,7 +1308,6 @@ const FeatureSelectorSection = ({
         )}
       </div>
 
-      {/* Feat Choice Modal */}
       {selectingFeat && (
         <div
           style={{
@@ -1551,7 +1526,6 @@ const ASILevelSelection = ({
         )}
       </div>
 
-      {/* Choice Selection */}
       <div
         style={{
           display: "flex",
@@ -1641,7 +1615,6 @@ const ASILevelSelection = ({
         </label>
       </div>
 
-      {/* ASI Ability Selection */}
       {isASI && (
         <ASIAbilitySelector
           level={level}
@@ -1654,7 +1627,6 @@ const ASILevelSelection = ({
         />
       )}
 
-      {/* Feat Selection Note */}
       {isFeat && (
         <div
           style={{
@@ -1673,7 +1645,6 @@ const ASILevelSelection = ({
         </div>
       )}
 
-      {/* No Choice Selected */}
       {!choice.type && (
         <div
           style={{

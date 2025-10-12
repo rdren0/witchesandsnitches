@@ -2,11 +2,16 @@ import React, { useState, useMemo } from "react";
 import { X, Search } from "lucide-react";
 import { downtime } from "../../SharedData/downtime";
 
-const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, theme }) => {
+const ActivitySelectionModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  currentActivity,
+  theme,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Filter activities based on search query
   const filteredCategories = useMemo(() => {
     if (!searchQuery && !selectedCategory) {
       return Object.entries(downtime);
@@ -75,7 +80,6 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div
           style={{
             padding: "20px 24px",
@@ -88,7 +92,14 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
             borderTopRightRadius: "12px",
           }}
         >
-          <h2 style={{ margin: 0, color: theme.text, fontSize: "24px", fontWeight: "600" }}>
+          <h2
+            style={{
+              margin: 0,
+              color: theme.text,
+              fontSize: "24px",
+              fontWeight: "600",
+            }}
+          >
             Select Downtime Activity
           </h2>
           <button
@@ -118,7 +129,6 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
           </button>
         </div>
 
-        {/* Search Bar */}
         <div style={{ padding: "16px 24px", backgroundColor: theme.surface }}>
           <div style={{ position: "relative" }}>
             <Search
@@ -157,7 +167,6 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
           </div>
         </div>
 
-        {/* Category Filter Pills */}
         <div
           style={{
             padding: "12px 24px",
@@ -174,9 +183,13 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
             onClick={() => setSelectedCategory(null)}
             style={{
               padding: "6px 14px",
-              backgroundColor: !selectedCategory ? theme.primary : theme.background,
+              backgroundColor: !selectedCategory
+                ? theme.primary
+                : theme.background,
               color: !selectedCategory ? "white" : theme.text,
-              border: `1px solid ${!selectedCategory ? theme.primary : theme.border}`,
+              border: `1px solid ${
+                !selectedCategory ? theme.primary : theme.border
+              }`,
               borderRadius: "20px",
               cursor: "pointer",
               fontSize: "13px",
@@ -193,9 +206,12 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
               onClick={() => setSelectedCategory(key)}
               style={{
                 padding: "6px 14px",
-                backgroundColor: selectedCategory === key ? theme.primary : theme.background,
+                backgroundColor:
+                  selectedCategory === key ? theme.primary : theme.background,
                 color: selectedCategory === key ? "white" : theme.text,
-                border: `1px solid ${selectedCategory === key ? theme.primary : theme.border}`,
+                border: `1px solid ${
+                  selectedCategory === key ? theme.primary : theme.border
+                }`,
                 borderRadius: "20px",
                 cursor: "pointer",
                 fontSize: "13px",
@@ -221,7 +237,6 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
           ))}
         </div>
 
-        {/* Activities List */}
         <div
           style={{
             flex: 1,
@@ -275,7 +290,13 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
                   </span>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
                   {category.activities.map((activity, index) => {
                     const mainName = getActivityMainName(activity);
                     const details = getActivityDetails(activity);
@@ -301,14 +322,17 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.backgroundColor = theme.background;
-                            e.currentTarget.style.borderColor = theme.primary + "80";
+                            e.currentTarget.style.backgroundColor =
+                              theme.background;
+                            e.currentTarget.style.borderColor =
+                              theme.primary + "80";
                             e.currentTarget.style.transform = "translateX(4px)";
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.backgroundColor = theme.surface;
+                            e.currentTarget.style.backgroundColor =
+                              theme.surface;
                             e.currentTarget.style.borderColor = theme.border;
                             e.currentTarget.style.transform = "translateX(0)";
                           }
@@ -356,7 +380,6 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
           )}
         </div>
 
-        {/* Footer */}
         <div
           style={{
             padding: "16px 24px",
@@ -372,7 +395,8 @@ const ActivitySelectionModal = ({ isOpen, onClose, onSelect, currentActivity, th
           <div style={{ fontSize: "13px", color: theme.textSecondary }}>
             {currentActivity ? (
               <span>
-                Currently selected: <strong>{getActivityMainName(currentActivity)}</strong>
+                Currently selected:{" "}
+                <strong>{getActivityMainName(currentActivity)}</strong>
               </span>
             ) : (
               <span>No activity selected</span>

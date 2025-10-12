@@ -82,10 +82,18 @@ const AdditionalFeatsASISection = ({
 
   const updateFeatChoice = (featName, choiceId, value) => {
     // Convert ability names to lowercase to match the ability score keys
-    const normalizedValue = typeof value === 'string' &&
-      ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'].includes(value)
-      ? value.toLowerCase()
-      : value;
+    const normalizedValue =
+      typeof value === "string" &&
+      [
+        "Strength",
+        "Dexterity",
+        "Constitution",
+        "Intelligence",
+        "Wisdom",
+        "Charisma",
+      ].includes(value)
+        ? value.toLowerCase()
+        : value;
 
     const newFeatChoices = {
       ...(character.featChoices || character.feat_choices || {}),
@@ -158,7 +166,6 @@ const AdditionalFeatsASISection = ({
 
   return (
     <div style={styles.fieldContainer}>
-      {/* Section Header */}
       <div
         style={sectionHeaderStyle}
         onClick={() => setIsExpanded(!isExpanded)}
@@ -184,7 +191,6 @@ const AdditionalFeatsASISection = ({
         </span>
       </div>
 
-      {/* Section Content */}
       {isExpanded && (
         <div style={{ marginTop: "0" }}>
           <div style={styles.helpText}>
@@ -192,7 +198,6 @@ const AdditionalFeatsASISection = ({
             are not from standard level progression.
           </div>
 
-          {/* Summary of selections */}
           {(additionalFeats.length > 0 || additionalASI.length > 0) && (
             <div
               style={{
@@ -215,7 +220,6 @@ const AdditionalFeatsASISection = ({
                 ✓ Selected Additional Features:
               </div>
 
-              {/* Additional Feats */}
               {additionalFeats.length > 0 && (
                 <div
                   style={{
@@ -282,7 +286,6 @@ const AdditionalFeatsASISection = ({
                           </button>
                         </div>
 
-                        {/* Feat Choices (e.g., ability score selection) */}
                         {requiredChoices.length > 0 && (
                           <div style={{ marginTop: "8px" }}>
                             {requiredChoices.map((choice) => (
@@ -310,7 +313,8 @@ const AdditionalFeatsASISection = ({
                                 >
                                   {choice.options.map((option) => {
                                     // Check if selected, handling both capitalized display and lowercase storage
-                                    const storedValue = featChoicesData[choice.id];
+                                    const storedValue =
+                                      featChoicesData[choice.id];
                                     const isSelected =
                                       storedValue === option ||
                                       storedValue === option.toLowerCase();
@@ -380,7 +384,6 @@ const AdditionalFeatsASISection = ({
                 </div>
               )}
 
-              {/* Additional ASI */}
               {additionalASI.length > 0 && (
                 <div>
                   <div
@@ -468,7 +471,6 @@ const AdditionalFeatsASISection = ({
             </div>
           )}
 
-          {/* Feats Section */}
           <div style={{ marginTop: "24px" }}>
             <div
               style={{
@@ -481,7 +483,6 @@ const AdditionalFeatsASISection = ({
               🏆 Select Additional Feats:
             </div>
 
-            {/* Search Filter */}
             <div style={{ position: "relative", marginBottom: "16px" }}>
               <input
                 type="text"
@@ -522,7 +523,6 @@ const AdditionalFeatsASISection = ({
               )}
             </div>
 
-            {/* Feats List */}
             <div
               style={{
                 maxHeight: "500px",
@@ -639,7 +639,6 @@ const AdditionalFeatsASISection = ({
             </div>
           </div>
 
-          {/* ASI Section */}
           <div style={{ marginTop: "32px" }}>
             <div
               style={{

@@ -104,11 +104,6 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
     setIsLoading(true);
     try {
-      console.log("Loading custom spells for:", {
-        character_id: character.id,
-        discord_user_id: character.discord_user_id,
-      });
-
       const { data, error } = await supabase
         .from("custom_spells")
         .select("*")
@@ -119,7 +114,6 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
       if (error) throw error;
 
-      console.log("Custom spells loaded:", data);
       setCustomSpells(data || []);
     } catch (error) {
       console.error("Error loading custom spells:", error);
@@ -648,7 +642,6 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                 </div>
               )}
 
-              {/* Damage Section */}
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Damage Dice Count</label>
@@ -717,7 +710,6 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                 </div>
               </div>
 
-              {/* Status Section */}
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Spell Status</label>
@@ -835,21 +827,37 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                         fontSize: "13px",
                       }}
                     >
-                      {spell.level} • {spell.casting_time} • Range: {spell.range}
+                      {spell.level} • {spell.casting_time} • Range:{" "}
+                      {spell.range}
                       {spell.check_type !== "none" && (
-                        <> • {spell.check_type === "save" ? `Save: ${spell.save_type}` : "Attack: Spell Attack"}</>
+                        <>
+                          {" "}
+                          •{" "}
+                          {spell.check_type === "save"
+                            ? `Save: ${spell.save_type}`
+                            : "Attack: Spell Attack"}
+                        </>
                       )}
                       {spell.damage_dice_count && (
-                        <> • Damage: {spell.damage_dice_count}{spell.damage_dice_type}
-                        {spell.damage_modifier && ` + ${spell.damage_modifier}`}
-                        {spell.damage_type && ` ${spell.damage_type}`}</>
+                        <>
+                          {" "}
+                          • Damage: {spell.damage_dice_count}
+                          {spell.damage_dice_type}
+                          {spell.damage_modifier &&
+                            ` + ${spell.damage_modifier}`}
+                          {spell.damage_type && ` ${spell.damage_type}`}
+                        </>
                       )}
                       {spell.status && (
-                        <> • Status: <span style={{ textTransform: "capitalize" }}>{spell.status}</span></>
+                        <>
+                          {" "}
+                          • Status:{" "}
+                          <span style={{ textTransform: "capitalize" }}>
+                            {spell.status}
+                          </span>
+                        </>
                       )}
-                      {spell.tags && (
-                        <> • Tags: {spell.tags}</>
-                      )}
+                      {spell.tags && <> • Tags: {spell.tags}</>}
                     </div>
 
                     {isSpellExpanded && (
@@ -871,7 +879,8 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                               color: theme.primary,
                             }}
                           >
-                            <strong>At Higher Levels:</strong> {spell.higher_levels}
+                            <strong>At Higher Levels:</strong>{" "}
+                            {spell.higher_levels}
                           </div>
                         )}
                       </div>

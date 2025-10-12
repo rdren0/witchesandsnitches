@@ -28,7 +28,7 @@ const DicePoolManager = ({
 
   const getSpellActivitiesCount = useCallback(() => {
     return formData.activities.filter((activity) =>
-      activityRequiresSpellDice(activity.activity)
+      activityRequiresExtraDie(activity.activity)
     ).length;
   }, [formData.activities]);
 
