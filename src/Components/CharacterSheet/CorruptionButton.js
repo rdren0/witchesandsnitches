@@ -40,7 +40,7 @@ const CorruptionButton = ({
       return {
         name: "Pragmatic",
         range: "(1-4)",
-        color: "#f59e0b",
+        color: "#fb923c",
         saveDC: 12,
         boon: "Empowered Darkness",
         effect: null,
@@ -49,7 +49,7 @@ const CorruptionButton = ({
       return {
         name: "Devious",
         range: "(5-7)",
-        color: "#ef4444",
+        color: "#dc2626",
         saveDC: 14,
         boon: null,
         effect: "Mild Effect",
@@ -58,7 +58,7 @@ const CorruptionButton = ({
       return {
         name: "Vicious",
         range: "(8-11)",
-        color: "#7c2d12",
+        color: "#991b1b",
         saveDC: 16,
         boon: "Heightened Darkness",
         effect: "Severe Effect",
@@ -66,7 +66,7 @@ const CorruptionButton = ({
     return {
       name: "Vile",
       range: "(12+)",
-      color: "#1f2937",
+      color: "#450a0a",
       saveDC: 18,
       boon: null,
       effect: "Severe Effect",

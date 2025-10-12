@@ -72,6 +72,7 @@ const CharacterTabbedPanel = ({
       color: theme.primary,
       borderBottomColor: theme.primary,
       backgroundColor: theme.surface,
+      borderRadius: "8px 8px 0 0",
     },
     tabContent: {
       flex: 1,
