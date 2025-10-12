@@ -1503,7 +1503,6 @@ const SpellBook = ({
         )}
 
       <div style={styles.subjectsGrid}>
-        {/* Render core subjects first */}
         {Object.entries(filteredSpellsData)
           .filter(([subjectName]) => !isSpecializedSubject(subjectName))
           .map(([subjectName, subjectData]) => (
