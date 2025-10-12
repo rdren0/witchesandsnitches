@@ -184,30 +184,40 @@ export const parseSubclassSkills = (character) => {
   const innateHeritageSkills = character.innateHeritageSkills || [];
 
   Object.values(subclassChoices).forEach((choice) => {
-    if (typeof choice === "object" && choice.mainChoice && choice.subChoice) {
-      if (choice.mainChoice === "Study Buddy") {
-        const selectedSkill = choice.subChoice;
-        studyBuddySkills.push(selectedSkill);
+    const choices = Array.isArray(choice) ? choice : [choice];
 
-        const hasFromOtherSource =
-          backgroundSkills.includes(selectedSkill) ||
-          innateHeritageSkills.includes(selectedSkill);
+    choices.forEach((singleChoice) => {
+      if (!singleChoice) return;
 
-        if (hasFromOtherSource) {
-          expertiseSkills.push(selectedSkill);
-        } else {
-          subclassSkills.push(selectedSkill);
+      if (
+        typeof singleChoice === "object" &&
+        singleChoice.mainChoice &&
+        singleChoice.subChoice
+      ) {
+        if (singleChoice.mainChoice === "Study Buddy") {
+          const selectedSkill = singleChoice.subChoice;
+          studyBuddySkills.push(selectedSkill);
+
+          const hasFromOtherSource =
+            backgroundSkills.includes(selectedSkill) ||
+            innateHeritageSkills.includes(selectedSkill);
+
+          if (hasFromOtherSource) {
+            expertiseSkills.push(selectedSkill);
+          } else {
+            subclassSkills.push(selectedSkill);
+          }
+        }
+      } else if (typeof singleChoice === "string") {
+        if (singleChoice === "Practice Makes Perfect") {
+          hasExpertiseGranter.push("Practice Makes Perfect");
+        }
+
+        if (SUBCLASS_SKILL_NAMES.includes(singleChoice)) {
+          subclassSkills.push(singleChoice);
         }
       }
-    } else if (typeof choice === "string") {
-      if (choice === "Practice Makes Perfect") {
-        hasExpertiseGranter.push("Practice Makes Perfect");
-      }
-
-      if (SUBCLASS_SKILL_NAMES.includes(choice)) {
-        subclassSkills.push(choice);
-      }
-    }
+    });
   });
 
   return {

@@ -75,6 +75,121 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
     }
   }, [selectedSubclass]);
 
+  const extractBenefitChoices = useCallback((benefits) => {
+    if (!benefits) return [];
+
+    const benefitChoices = [];
+
+    // Skill Proficiencies
+    if (benefits.skillProficiencies) {
+      benefits.skillProficiencies.forEach((skillProf) => {
+        if (skillProf.type === "choice") {
+          benefitChoices.push({
+            type: "skillProficiency",
+            options: skillProf.skills || [],
+            count: skillProf.count || 1,
+            expertise: skillProf.expertise,
+            category: "any",
+          });
+        }
+      });
+    }
+
+    // Skill Expertise
+    if (benefits.skillExpertise) {
+      benefits.skillExpertise.forEach((skillExp) => {
+        if (skillExp.type === "choice") {
+          benefitChoices.push({
+            type: "skillExpertise",
+            options: [], // Will be filled from character's proficient skills
+            count: skillExp.count || 1,
+            from: skillExp.from || "proficient skills",
+          });
+        }
+      });
+    }
+
+    // Ability Score Increases
+    if (benefits.abilityScoreIncrease?.type === "choice") {
+      benefitChoices.push({
+        type: "abilityScoreIncrease",
+        options: benefits.abilityScoreIncrease.abilities || [],
+        count: 1,
+        amount: benefits.abilityScoreIncrease.amount || 1,
+      });
+    }
+
+    // Tool Proficiencies
+    if (benefits.toolProficiencies) {
+      benefits.toolProficiencies.forEach((toolProf) => {
+        if (toolProf.type === "choice") {
+          benefitChoices.push({
+            type: "toolProficiency",
+            options: toolProf.options || [],
+            count: toolProf.count || 1,
+            category: toolProf.category,
+          });
+        }
+      });
+    }
+
+    // Spell Lists
+    if (benefits.spellList?.type === "choice") {
+      benefitChoices.push({
+        type: "spellList",
+        options: benefits.spellList.options || [],
+        count: benefits.spellList.count || 1,
+      });
+    }
+
+    // Spells
+    if (benefits.spells?.type === "choice") {
+      benefitChoices.push({
+        type: "spells",
+        lists: benefits.spells.lists || [],
+        count: benefits.spells.count || 1,
+      });
+    }
+
+    // Immunities
+    if (benefits.immunities) {
+      benefits.immunities.forEach((immunity) => {
+        if (immunity.type === "choice") {
+          benefitChoices.push({
+            type: "immunity",
+            options: immunity.options || [],
+            count: immunity.count || 1,
+          });
+        }
+      });
+    }
+
+    // Special Abilities
+    if (benefits.specialAbilities) {
+      benefits.specialAbilities.forEach((ability) => {
+        if (ability.type === "choice") {
+          benefitChoices.push({
+            type: "specialAbility",
+            options: ability.options || [],
+            count: 1,
+            name: ability.name,
+          });
+        }
+      });
+    }
+
+    // Potion Recipes
+    if (benefits.potionRecipes?.type === "choice") {
+      benefitChoices.push({
+        type: "potionRecipe",
+        options: benefits.potionRecipes.options || [],
+        count: 1,
+      });
+    }
+
+    return benefitChoices;
+  }, []);
+
   const parseAllFeaturesByLevel = useCallback((subclassData) => {
     if (!subclassData) return {};
 
@@ -102,6 +217,9 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
 
         if (feature.choices && Array.isArray(feature.choices)) {
           const processedChoices = feature.choices.map((choice) => {
+            // Extract benefit choices
+            const benefitChoices = extractBenefitChoices(choice.benefits);
+
             if (choice.description && choice.description.includes("Choose:")) {
               const parts = choice.description.split("Choose:");
               const beforeChoose = parts[0].trim();
@@ -135,9 +253,13 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
                 description: beforeChoose,
                 hasNestedChoices: true,
                 nestedChoices: nestedChoices,
+                benefitChoices: benefitChoices,
               };
             }
-            return choice;
+            return {
+              ...choice,
+              benefitChoices: benefitChoices,
+            };
           });
 
           featuresByLevel[level].choices = processedChoices;
@@ -173,7 +295,7 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
     }
 
     return featuresByLevel;
-  }, []);
+  }, [extractBenefitChoices]);
 
   const getAvailableLevels = useCallback(
     (subclassData) => {

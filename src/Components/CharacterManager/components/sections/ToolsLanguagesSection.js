@@ -48,20 +48,35 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
 
       if (subclassInfo?.choices) {
         Object.entries(character.subclassChoices).forEach(([level, choice]) => {
-          const levelData = subclassInfo.choices[level];
-          if (levelData?.options) {
-            const selectedOption = levelData.options.find(
-              (opt) => opt.name === choice
-            );
-            if (selectedOption?.benefits?.toolProficiencies) {
-              subclassTools.push(...selectedOption.benefits.toolProficiencies);
-            }
-            if (selectedOption?.benefits?.vehicleProficiencies) {
-              subclassTools.push(
-                ...selectedOption.benefits.vehicleProficiencies
+          const choices = Array.isArray(choice) ? choice : [choice];
+
+          choices.forEach((singleChoice) => {
+            if (!singleChoice) return;
+
+            const choiceName =
+              typeof singleChoice === "string"
+                ? singleChoice
+                : singleChoice.mainChoice ||
+                  singleChoice.name ||
+                  String(singleChoice);
+
+            const levelData = subclassInfo.choices[level];
+            if (levelData?.options) {
+              const selectedOption = levelData.options.find(
+                (opt) => opt.name === choiceName
               );
+              if (selectedOption?.benefits?.toolProficiencies) {
+                subclassTools.push(
+                  ...selectedOption.benefits.toolProficiencies
+                );
+              }
+              if (selectedOption?.benefits?.vehicleProficiencies) {
+                subclassTools.push(
+                  ...selectedOption.benefits.vehicleProficiencies
+                );
+              }
             }
-          }
+          });
         });
       }
     }

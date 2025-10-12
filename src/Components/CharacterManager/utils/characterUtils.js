@@ -508,12 +508,21 @@ export const getAllAbilityModifiers = (character) => {
       subclasses[character.castingStyle]?.[character.subclass];
 
     if (subclassData) {
-      Object.entries(character.subclassChoices).forEach(
-        ([level, choiceName]) => {
+      Object.entries(character.subclassChoices).forEach(([level, choice]) => {
+        const choices = Array.isArray(choice) ? choice : [choice];
+
+        choices.forEach((choiceName) => {
+          if (!choiceName) return;
+
+          const actualChoiceName =
+            typeof choiceName === "string"
+              ? choiceName
+              : choiceName.mainChoice || choiceName.name || String(choiceName);
+
           const levelChoices = subclassData.choices?.[level];
           if (levelChoices && Array.isArray(levelChoices)) {
             const selectedChoice = levelChoices.find(
-              (choice) => choice.name === choiceName
+              (choice) => choice.name === actualChoiceName
             );
 
             if (selectedChoice) {
@@ -528,8 +537,8 @@ export const getAllAbilityModifiers = (character) => {
               });
             }
           }
-        }
-      );
+        });
+      });
     }
   }
 
