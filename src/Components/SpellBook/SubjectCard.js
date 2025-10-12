@@ -22,6 +22,7 @@ import {
   Brain,
   Eye as WisdomIcon,
   Target,
+  Lock,
 } from "lucide-react";
 
 import { spellsData } from "../../SharedData/spells";
@@ -1083,6 +1084,9 @@ export const SubjectCard = ({
           <thead style={styles.tableHeader}>
             <tr>
               <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
+              <th
+                style={{ ...styles.tableHeaderCellCenter, width: "2.5rem" }}
+              ></th>
               <th style={styles.tableHeaderCell}>Spell Name</th>
               <th style={styles.tableHeaderCell}>Successful Attempts</th>
               <th style={styles.tableHeaderCellCenter}>Critical</th>
@@ -1370,6 +1374,18 @@ export const SubjectCard = ({
       >
         <td style={styles.tableCell}>
           {showLevel ? `${spellObj.level.replace("Level ", "")}` : index + 1}
+        </td>
+        <td style={{ ...styles.tableCell, textAlign: "center" }}>
+          {spellObj.restriction === true ? (
+            <span
+              title="This spell has special restrictions"
+              style={{ display: "inline-flex", cursor: "help" }}
+            >
+              <Lock size={14} color={theme.warning || "#f59e0b"} />
+            </span>
+          ) : (
+            <span style={styles.noCriticalText}>-</span>
+          )}
         </td>
         <td style={styles.tableCell}>
           <div style={styles.spellNameContainer}>
@@ -1676,7 +1692,7 @@ export const SubjectCard = ({
       isDescriptionExpanded && spellObj.description ? (
         <tr key={`${spellName}-description`}>
           <td
-            colSpan={showLevel ? "9" : "6"}
+            colSpan={showLevel ? "10" : "7"}
             style={{ padding: "0", border: "none" }}
           >
             <div
@@ -2456,6 +2472,9 @@ export const SubjectCard = ({
             <thead style={styles.tableHeader}>
               <tr>
                 <th style={{ ...styles.tableHeaderCell, width: "3rem" }}>#</th>
+                <th
+                  style={{ ...styles.tableHeaderCellCenter, width: "2.5rem" }}
+                ></th>
                 <th style={styles.tableHeaderCell}>Spell Name</th>
                 <th style={styles.tableHeaderCell}>Successful Attempts</th>
                 <th style={styles.tableHeaderCellCenter}>Critical</th>
