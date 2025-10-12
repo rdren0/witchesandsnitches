@@ -850,188 +850,214 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                         }}
                                       >
                                         {editingId === item.id ? (
-                                          <div>
-                                            <div
-                                              style={{
-                                                ...styles.form,
-                                                margin: 0,
-                                              }}
-                                            >
-                                              <div style={styles.formRow}>
-                                                <div style={styles.formGroup}>
-                                                  <label style={styles.label}>
-                                                    Name
-                                                  </label>
-                                                  <input
-                                                    type="text"
-                                                    value={formData.name}
-                                                    onChange={(e) =>
-                                                      setFormData({
-                                                        ...formData,
-                                                        name: e.target.value,
-                                                      })
-                                                    }
-                                                    style={styles.input}
-                                                    placeholder="Item name"
-                                                  />
-                                                </div>
-                                                <div style={styles.formGroup}>
-                                                  <label style={styles.label}>
-                                                    Category
-                                                  </label>
-                                                  <select
-                                                    value={formData.category}
-                                                    onChange={(e) =>
-                                                      setFormData({
-                                                        ...formData,
-                                                        category:
-                                                          e.target.value,
-                                                      })
-                                                    }
-                                                    style={styles.input}
-                                                  >
-                                                    {categories.map((cat) => (
-                                                      <option
-                                                        key={cat}
-                                                        value={cat}
-                                                      >
-                                                        {cat}
-                                                      </option>
-                                                    ))}
-                                                  </select>
-                                                </div>
-                                              </div>
-
+                                          <div style={styles.form}>
+                                            <div style={styles.formRow}>
                                               <div style={styles.formGroup}>
                                                 <label style={styles.label}>
-                                                  Description
+                                                  Name *
                                                 </label>
-                                                <textarea
-                                                  value={formData.description}
+                                                <input
+                                                  type="text"
+                                                  value={formData.name}
                                                   onChange={(e) =>
                                                     setFormData({
                                                       ...formData,
-                                                      description:
-                                                        e.target.value,
+                                                      name: e.target.value,
                                                     })
                                                   }
-                                                  style={{
-                                                    ...styles.input,
-                                                    minHeight: "80px",
+                                                  style={styles.input}
+                                                  placeholder="Item name"
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
                                                   }}
-                                                  placeholder="Item description"
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
                                                 />
                                               </div>
-
-                                              <div style={styles.formRow}>
-                                                <div style={styles.formGroup}>
-                                                  <label style={styles.label}>
-                                                    Quantity
-                                                  </label>
-                                                  <input
-                                                    type="number"
-                                                    value={formData.quantity}
-                                                    onChange={(e) =>
-                                                      setFormData({
-                                                        ...formData,
-                                                        quantity:
-                                                          parseInt(
-                                                            e.target.value
-                                                          ) || 0,
-                                                      })
-                                                    }
-                                                    style={styles.input}
-                                                    min="0"
-                                                  />
-                                                </div>
-                                                <div style={styles.formGroup}>
-                                                  <label style={styles.label}>
-                                                    Value (Galleons)
-                                                  </label>
-                                                  <input
-                                                    type="text"
-                                                    value={formData.value}
-                                                    onChange={(e) =>
-                                                      setFormData({
-                                                        ...formData,
-                                                        value: e.target.value,
-                                                      })
-                                                    }
-                                                    style={styles.input}
-                                                    placeholder="e.g., 10 or 5.5"
-                                                  />
-                                                </div>
-                                              </div>
-
                                               <div style={styles.formGroup}>
-                                                <label
-                                                  style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "8px",
-                                                    cursor: "pointer",
-                                                  }}
-                                                >
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={
-                                                      formData.attunement_required
-                                                    }
-                                                    onChange={(e) =>
-                                                      setFormData({
-                                                        ...formData,
-                                                        attunement_required:
-                                                          e.target.checked,
-                                                      })
-                                                    }
-                                                    style={{
-                                                      cursor: "pointer",
-                                                    }}
-                                                  />
-                                                  <span style={styles.label}>
-                                                    Requires Attunement
-                                                  </span>
+                                                <label style={styles.label}>
+                                                  Category
                                                 </label>
+                                                <select
+                                                  value={formData.category}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      category: e.target.value,
+                                                    })
+                                                  }
+                                                  style={styles.select}
+                                                  disabled={isSaving}
+                                                >
+                                                  {categories.map((cat) => (
+                                                    <option
+                                                      key={cat}
+                                                      value={cat}
+                                                    >
+                                                      {cat}
+                                                    </option>
+                                                  ))}
+                                                </select>
                                               </div>
+                                            </div>
 
-                                              <div
+                                            <div style={styles.formRow}>
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Quantity
+                                                </label>
+                                                <input
+                                                  type="number"
+                                                  value={formData.quantity}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      quantity:
+                                                        parseInt(
+                                                          e.target.value
+                                                        ) || 0,
+                                                    })
+                                                  }
+                                                  style={styles.input}
+                                                  min="0"
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
+                                                  }}
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
+                                                />
+                                              </div>
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Value
+                                                </label>
+                                                <input
+                                                  type="text"
+                                                  value={formData.value}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      value: e.target.value,
+                                                    })
+                                                  }
+                                                  style={styles.input}
+                                                  placeholder="5 Galleons, 10 Sickles, etc."
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
+                                                  }}
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
+                                                />
+                                              </div>
+                                            </div>
+
+                                            <div style={styles.formGroup}>
+                                              <label style={styles.label}>
+                                                Description
+                                              </label>
+                                              <textarea
+                                                value={formData.description}
+                                                onChange={(e) =>
+                                                  setFormData({
+                                                    ...formData,
+                                                    description: e.target.value,
+                                                  })
+                                                }
+                                                style={styles.textarea}
+                                                placeholder="Item description, magical properties, etc."
+                                                disabled={isSaving}
+                                                onFocus={(e) => {
+                                                  e.target.style.borderColor =
+                                                    theme.primary;
+                                                }}
+                                                onBlur={(e) => {
+                                                  e.target.style.borderColor =
+                                                    theme.border;
+                                                }}
+                                              />
+                                            </div>
+
+                                            <div style={styles.checkboxField}>
+                                              <label style={styles.checkboxLabel}>
+                                                <input
+                                                  type="checkbox"
+                                                  checked={
+                                                    formData.attunement_required
+                                                  }
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      attunement_required:
+                                                        e.target.checked,
+                                                    })
+                                                  }
+                                                  style={styles.checkbox}
+                                                  disabled={isSaving}
+                                                />
+                                                <Star size={16} color="#F59E0B" />
+                                                Requires Attunement
+                                              </label>
+                                            </div>
+
+                                            <div style={styles.formActions}>
+                                              <button
+                                                onClick={saveEdit}
+                                                disabled={
+                                                  !formData.name.trim() ||
+                                                  isSaving
+                                                }
                                                 style={{
-                                                  display: "flex",
-                                                  gap: "8px",
-                                                  marginTop: "12px",
+                                                  ...styles.saveButton,
+                                                  opacity:
+                                                    !formData.name.trim() ||
+                                                    isSaving
+                                                      ? 0.5
+                                                      : 1,
+                                                  cursor:
+                                                    !formData.name.trim() ||
+                                                    isSaving
+                                                      ? "not-allowed"
+                                                      : "pointer",
                                                 }}
                                               >
-                                                <button
-                                                  onClick={saveEdit}
-                                                  disabled={isSaving}
-                                                  style={{
-                                                    ...styles.button,
-                                                    ...styles.addButton,
-                                                    opacity: isSaving ? 0.7 : 1,
-                                                  }}
-                                                >
-                                                  {isSaving ? (
-                                                    <Loader size={16} />
-                                                  ) : (
-                                                    <Check size={16} />
-                                                  )}
-                                                  {isSaving
-                                                    ? "Saving..."
-                                                    : "Save"}
-                                                </button>
-                                                <button
-                                                  onClick={cancelEdit}
-                                                  disabled={isSaving}
-                                                  style={{
-                                                    ...styles.button,
-                                                    ...styles.cancelButton,
-                                                    opacity: isSaving ? 0.5 : 1,
-                                                  }}
-                                                >
-                                                  <X size={16} />
-                                                  Cancel
-                                                </button>
-                                              </div>
+                                                {isSaving ? (
+                                                  <>
+                                                    <Loader size={18} />
+                                                    Saving...
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Check size={18} />
+                                                    Save Changes
+                                                  </>
+                                                )}
+                                              </button>
+                                              <button
+                                                onClick={cancelEdit}
+                                                disabled={isSaving}
+                                                style={{
+                                                  ...styles.cancelButton,
+                                                  opacity: isSaving ? 0.5 : 1,
+                                                  cursor: isSaving
+                                                    ? "not-allowed"
+                                                    : "pointer",
+                                                }}
+                                              >
+                                                <X size={18} />
+                                                Cancel
+                                              </button>
                                             </div>
                                           </div>
                                         ) : (
