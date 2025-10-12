@@ -764,6 +764,7 @@ const CharacterSheet = ({
           strength: effectiveAbilityScores.strength || 10,
           subclass: data.subclass,
           subclassChoices: data.subclass_choices || {},
+          tempHP: data.temp_hp || 0,
           toolProficiencies: data.tool_proficiencies || [],
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
@@ -1493,6 +1494,18 @@ const CharacterSheet = ({
                     }}
                   >
                     Hit Points
+                    {character.tempHP > 0 && (
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          marginTop: "2px",
+                          color: "#3b82f6",
+                          fontWeight: "600",
+                        }}
+                      >
+                        (+{character.tempHP} temp)
+                      </div>
+                    )}
                   </div>
                   {(character.currentHitPoints ?? character.hitPoints) ===
                     0 && (
