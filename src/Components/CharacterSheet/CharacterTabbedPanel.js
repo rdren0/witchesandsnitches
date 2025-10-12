@@ -3,7 +3,6 @@ import {
   BookOpen,
   Beaker,
   Package,
-  Skull,
   Wand,
   Dices,
   Award,
@@ -15,7 +14,6 @@ import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import SpellSlotTracker from "./SpellSlotTracker";
-import CorruptionTracker from "./CorruptionTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
 import SpellSummary from "./SpellSummary";
@@ -226,20 +224,6 @@ const CharacterTabbedPanel = ({
           user={user}
           selectedCharacter={selectedCharacter}
           supabase={supabase}
-        />
-      ),
-    },
-    {
-      id: "corruption",
-      label: "Corruption",
-      icon: Skull,
-      component: (
-        <CorruptionTracker
-          character={selectedCharacter}
-          supabase={supabase}
-          discordUserId={discordUserId}
-          setCharacter={setCharacter}
-          selectedCharacterId={selectedCharacter.id}
         />
       ),
     },

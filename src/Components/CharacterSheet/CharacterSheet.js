@@ -29,6 +29,7 @@ import {
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import LuckPointButton from "./LuckPointButton";
+import CorruptionButton from "./CorruptionButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import ACOverrideModal from "./ACOverrideModal";
 import SpellAttackModal from "./SpellAttackModal";
@@ -1278,6 +1279,13 @@ const CharacterSheet = ({
                     setCharacter={setCharacter}
                     selectedCharacterId={selectedCharacter.id}
                     isAdmin={adminMode}
+                  />
+                  <CorruptionButton
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    setCharacter={setCharacter}
+                    selectedCharacterId={selectedCharacter.id}
                   />
                   <LuckPointButton
                     character={character}

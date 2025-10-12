@@ -32,8 +32,8 @@ export const createAbilityScoresStyles = (theme) => ({
   },
   abilityGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-    gap: "12px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+    gap: "16px",
   },
   abilityItem: {
     backgroundColor: theme.background,
@@ -55,12 +55,12 @@ export const createAbilityScoresStyles = (theme) => ({
     letterSpacing: "0.5px",
   },
   abilityModifier: {
-    fontSize: "20px",
+    fontSize: "18px",
     fontWeight: "bold",
     color: theme.primary,
   },
   abilityScore: {
-    fontSize: "28px",
+    fontSize: "24px",
     fontWeight: "bold",
     color: theme.text,
   },

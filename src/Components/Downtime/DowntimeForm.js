@@ -1288,6 +1288,10 @@ const DowntimeForm = ({
             );
             const isDistinctCheck = isDistinctCheckActivity(activity.activity);
 
+            const isResearch = activity.activity
+              ?.toLowerCase()
+              .includes("research spells");
+
             return (
               <div key={index} style={styles.activityCard}>
                 <div
@@ -1505,8 +1509,7 @@ const DowntimeForm = ({
                   )}
 
                   {(activityRequiresDualChecks(activity.activity) ||
-                    (isSpellActivity &&
-                      activity.activity?.toLowerCase().includes("attempt spells"))) && (
+                    (isSpellActivity && !isResearch)) && (
                     <div style={styles.inputGroup}>
                       <label style={styles.label}>Dual Check Activity</label>
                       <div
@@ -1856,8 +1859,13 @@ const DowntimeForm = ({
             disabled={isSavingDraft}
             style={{
               ...styles.button,
-              ...styles.secondaryButton,
-              ...(isSavingDraft ? { opacity: 0.6, cursor: "not-allowed" } : {}),
+              ...styles.successButton,
+              ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {}),
+              backgroundColor: theme.primary,
+              width: "100%",
+              borderRadius: "8px",
+              margin: "auto",
+              fontSize: "16px",
             }}
           >
             {isSavingDraft ? "Saving..." : "Save as Draft"}
@@ -1870,6 +1878,11 @@ const DowntimeForm = ({
               ...styles.button,
               ...styles.successButton,
               ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {}),
+              backgroundColor: theme.success,
+              width: "100%",
+              borderRadius: "8px",
+              margin: "auto",
+              fontSize: "16px",
             }}
           >
             {isSubmitting ? "Submitting..." : "Submit Downtime Sheet"}

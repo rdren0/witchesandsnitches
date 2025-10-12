@@ -13,27 +13,35 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
     const features = [];
 
     if (level >= 1) {
+      const dexScore = character?.abilityScores?.dexterity || 10;
+      const intScore = character?.abilityScores?.intelligence || 10;
+      const dexMod = Math.floor((dexScore - 10) / 2);
+      const intMod = Math.floor((intScore - 10) / 2);
+      const formatMod = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
+
+      const initiativeChoices = [
+        {
+          name: "Dexterity",
+          description: `Use Dexterity for initiative rolls (${formatMod(
+            dexMod
+          )} modifier).`,
+        },
+        {
+          name: "Intelligence",
+          description: `Use Intelligence for initiative rolls (${formatMod(
+            intMod
+          )} modifier).`,
+        },
+      ];
+
       features.push({
         name: "Initiative Ability",
         level: 1,
         description:
-          "As an Intellect Caster, you may choose to use Intelligence or Dexterity for initiative rolls.",
+          "As an Intellect Caster, you may choose to use Intelligence or Dexterity for initiative.",
         isChoice: true,
-        choiceType: "initiativeAbility",
-        choices: [
-          {
-            name: "Dexterity",
-            value: "dexterity",
-            description:
-              "Use your Dexterity modifier for initiative rolls (traditional method).",
-          },
-          {
-            name: "Intelligence",
-            value: "intelligence",
-            description:
-              "Use your Intelligence modifier for initiative rolls (tactical advantage).",
-          },
-        ],
+        choices: initiativeChoices,
+        choiceKey: "initiativeAbility",
       });
     }
 
@@ -130,18 +138,17 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
 
   const features = getCastingStyleFeatures();
 
-  const handleChoiceChange = (choiceKey, selectedChoice, choiceType) => {
-    // Handle initiative ability as a direct character field
-    if (choiceType === "initiativeAbility") {
-      setCharacter("initiativeAbility", selectedChoice);
-    } else {
-      // Handle casting style choices
-      const currentChoices = character.castingStyleChoices || {};
-      const updatedChoices = {
-        ...currentChoices,
-        [choiceKey]: selectedChoice,
-      };
-      setCharacter("castingStyleChoices", updatedChoices);
+  const handleChoiceChange = (choiceKey, selectedChoice) => {
+    const currentChoices = character.castingStyleChoices || {};
+    const updatedChoices = {
+      ...currentChoices,
+      [choiceKey]: selectedChoice,
+    };
+    setCharacter("castingStyleChoices", updatedChoices);
+
+    // Also update initiativeAbility field directly when it's chosen
+    if (choiceKey === "initiativeAbility") {
+      setCharacter("initiativeAbility", selectedChoice.toLowerCase());
     }
   };
 
@@ -176,8 +183,7 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
               fontStyle: "italic",
             }}
           >
-            No casting style features available at level {level} for{" "}
-            {castingStyle}.
+            No casting style features available for {castingStyle}.
           </div>
         </div>
       </div>
@@ -276,20 +282,25 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                       color: theme.text,
                     }}
                   >
-                    {feature.choiceType === "initiativeAbility"
-                      ? character.initiativeAbility
-                        ? `Selected: ${
-                            character.initiativeAbility
-                              .charAt(0)
-                              .toUpperCase() +
-                            character.initiativeAbility.slice(1)
-                          }`
-                        : "Choose one option:"
-                      : character.castingStyleChoices?.[feature.choiceKey]
-                      ? `Selected: ${
-                          character.castingStyleChoices[feature.choiceKey]
-                        }`
-                      : "Choose one option:"}
+                    {(() => {
+                      const savedChoice =
+                        character.castingStyleChoices?.[feature.choiceKey];
+                      // Fallback to direct field for initiative ability
+                      const fallbackChoice =
+                        feature.choiceKey === "initiativeAbility"
+                          ? character.initiativeAbility
+                          : null;
+                      const displayChoice =
+                        savedChoice ||
+                        (fallbackChoice
+                          ? fallbackChoice.charAt(0).toUpperCase() +
+                            fallbackChoice.slice(1)
+                          : null);
+
+                      return displayChoice
+                        ? `Selected: ${displayChoice}`
+                        : "Choose one option:";
+                    })()}
                   </div>
 
                   {/* Show ability score comparison for initiative ability */}
@@ -326,16 +337,20 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                     )}
 
                   {feature.choices.map((choice, choiceIndex) => {
-                    // Determine which value to check for selection
-                    const currentChoice =
-                      feature.choiceType === "initiativeAbility"
+                    const savedChoice =
+                      character.castingStyleChoices?.[feature.choiceKey];
+                    // Fallback to direct field for initiative ability
+                    const fallbackChoice =
+                      feature.choiceKey === "initiativeAbility"
                         ? character.initiativeAbility
-                        : character.castingStyleChoices?.[feature.choiceKey];
-
-                    const isSelected =
-                      feature.choiceType === "initiativeAbility"
-                        ? currentChoice === choice.value
-                        : currentChoice === choice.name;
+                        : null;
+                    const currentChoice =
+                      savedChoice ||
+                      (fallbackChoice
+                        ? fallbackChoice.charAt(0).toUpperCase() +
+                          fallbackChoice.slice(1)
+                        : null);
+                    const isSelected = currentChoice === choice.name;
 
                     return (
                       <div
