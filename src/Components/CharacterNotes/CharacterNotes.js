@@ -12,6 +12,7 @@ import {
   Check,
   Copy,
   Crown,
+  BookOpen,
 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import ReactMarkdown from "react-markdown";
@@ -720,8 +721,46 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
       </div>
 
       <div style={styles.templateSection}>
-        <div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <h4 style={styles.editTemplateSectionTitle}>📋 Insert Template</h4>
+          <a
+            href="https://www.markdownguide.org/basic-syntax/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "6px 10px",
+              fontSize: "12px",
+              color: theme.primary,
+              backgroundColor: theme.primary + "15",
+              border: `1px solid ${theme.primary}40`,
+              borderRadius: "4px",
+              textDecoration: "none",
+              fontWeight: "500",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.primary + "25";
+              e.currentTarget.style.borderColor = theme.primary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.primary + "15";
+              e.currentTarget.style.borderColor = theme.primary + "40";
+            }}
+          >
+            <BookOpen size={14} />
+            <span style={{ lineHeight: "1", display: "block" }}>
+              Markdown Guide
+            </span>
+          </a>
         </div>
 
         <div style={styles.templateButtons}>
@@ -1101,7 +1140,9 @@ const EntryCard = ({
               }
             `}
           </style>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{entry.content || "*No content*"}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {entry.content || "*No content*"}
+          </ReactMarkdown>
         </div>
       </div>
     </>
