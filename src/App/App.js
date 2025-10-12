@@ -1167,7 +1167,7 @@ function AppContent() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: {
-          redirectTo: isLocalhost ? LOCAL_HOST : WEBSITE,
+          redirectTo: window.location.origin,
         },
       });
 
