@@ -216,7 +216,7 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
         character: character,
         type: "abilitycheck",
-        description: `d20 + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+        description: `d20 ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
 
       const additionalFields = [
@@ -1623,7 +1623,7 @@ const CharacterSheet = ({
                     onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
                     title={`Click to roll ${getSpellcastingAbility(
                       character.castingStyle
-                    )} ability check (no proficiency): d20 + ${formatModifier(
+                    )} ability check (no proficiency): d20 ${formatModifier(
                       getSpellcastingAbilityModifier(character)
                     )}`}
                   >
