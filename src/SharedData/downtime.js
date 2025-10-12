@@ -1,4 +1,53 @@
 export const downtime = {
+  exploration: {
+    name: "Exploration & Discovery",
+    description: "Exploring the castle, grounds, and forbidden areas",
+    activities: [
+      "Explore the Castle - Roll Investigation to uncover new locations and secrets",
+      "Explore the Forbidden Forest - Requires Stealth and Investigation rolls",
+      "Restricted Section - Requires Stealth and Investigation rolls",
+      "Search for Magical Creatures - Roll Magical Creatures",
+      "Search for Plants - Roll Herbology",
+    ],
+  },
+
+  magic_study: {
+    name: "Magical Studies",
+    description: "Activities related to learning and practicing magic",
+    activities: [
+      "Research Spells - Roll History of Magic to research a spell",
+      "Attempt Spells - Practice casting any spell previously researched or attempted",
+      "Create a Spell - Must succeed on three separate checks using separate downtime slots per attempt: Magical Theory Check, Wand Modifier Check, and Spellcasting Ability Check",
+      "Studying - Improve performance in classes through focused study",
+      "Research a Topic - Roll Investigation to gather information",
+    ],
+  },
+
+  personal_development: {
+    name: "Personal Development",
+    description:
+      "Activities focused on improving character abilities and skills",
+    activities: [
+      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots. DC equals current ability score",
+      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots. Nat 20 gives two successes; if nat 20 on third attempt, gain one success towards expertise. Proficiency DC equals associated ability score. Expertise DC equals associated ability score + prof bonus",
+      "Increase Wand Stat - Roll against a DC based on the current Wand Stat",
+    ],
+  },
+
+  crafting: {
+    name: "Crafting & Creation",
+    description: "Making items, potions, recipes, and engineered plants",
+    activities: [
+      "Craft Items - Roll with the appropriate tool proficiency",
+      "Brew a Potion - Requires Proficiency with a Potioneer's Kit and a Potion Making check",
+      "Invent a Potion - Must succeed on three separate checks using separate downtime slots",
+      "Cooking - Roll Survival to prepare meals",
+      "Learn a Recipe - Roll Survival to memorize a recipe",
+      "Create a New Recipe - Must complete three distinct checks across separate downtime slots: Survival Check, Cultural Research Check (Muggle Studies OR History of Magic), and Spellcasting Ability Check",
+      "Engineer Plants - Must succeed on three separate checks using separate downtime slots",
+    ],
+  },
+
   employment: {
     name: "Employment & Economics",
     description: "Activities related to jobs, money, and commerce",
@@ -19,18 +68,6 @@ export const downtime = {
     ],
   },
 
-  exploration: {
-    name: "Exploration & Discovery",
-    description: "Exploring the castle, grounds, and forbidden areas",
-    activities: [
-      "Explore the Castle - Roll Investigation to uncover new locations and secrets",
-      "Explore the Forbidden Forest - Requires Stealth and Investigation rolls",
-      "Restricted Section - Requires Stealth and Investigation rolls",
-      "Search for Magical Creatures - Roll Magical Creatures",
-      "Search for Plants - Roll Herbology",
-    ],
-  },
-
   social: {
     name: "Social Interactions",
     description: "Activities involving other students and social dynamics",
@@ -45,62 +82,6 @@ export const downtime = {
     name: "Mischief & Rule Breaking",
     description: "Illegal or rule-breaking activities",
     activities: ["Stealing - Roll Sleight of Hand and Investigation"],
-  },
-
-  personal_development: {
-    name: "Personal Development",
-    description:
-      "Activities focused on improving character abilities and skills",
-    activities: [
-      "Increase an Ability Score - Must succeed on three separate checks using separate downtime slots. DC equals current ability score",
-      "Gain Proficiency or Expertise - Must succeed on three separate checks using separate downtime slots. Nat 20 gives two successes; if nat 20 on third attempt, gain one success towards expertise. Proficiency DC equals associated ability score. Expertise DC equals associated ability score + prof bonus",
-      "Increase Wand Stat - Roll against a DC based on the current Wand Stat",
-    ],
-  },
-
-  magic_study: {
-    name: "Magical Studies",
-    description: "Activities related to learning and practicing magic",
-    activities: [
-      "Research Spells - Roll History of Magic to research a spell",
-      "Attempt Spells - Practice casting any spell previously researched or attempted",
-      "Create a Spell - Must succeed on three separate checks using separate downtime slots per attempt: Magical Theory Check, Wand Modifier Check, and Spellcasting Ability Check",
-      "Studying - Improve performance in classes through focused study",
-    ],
-  },
-
-  research: {
-    name: "Research & Investigation",
-    description: "Academic and investigative pursuits",
-    activities: ["Research a Topic - Roll Investigation to gather information"],
-  },
-
-  crafting: {
-    name: "Crafting & Creation",
-    description: "Making items, potions, and other creations",
-    activities: [
-      "Craft Items - Roll with the appropriate tool proficiency",
-      "Brew a Potion - Requires Proficiency with a Potioneer's Kit and a Potion Making check",
-      "Invent a Potion - Must succeed on three separate checks using separate downtime slots",
-    ],
-  },
-
-  cooking: {
-    name: "Cooking & Recipes",
-    description: "Food preparation and culinary activities",
-    activities: [
-      "Cooking - Roll Survival to prepare meals",
-      "Learn a Recipe - Roll Survival to memorize a recipe",
-      "Create a New Recipe - Must complete three distinct checks across separate downtime slots: Survival Check, Cultural Research Check (Muggle Studies OR History of Magic), and Spellcasting Ability Check",
-    ],
-  },
-
-  herbology_advanced: {
-    name: "Advanced Herbology",
-    description: "Advanced plant manipulation and engineering",
-    activities: [
-      "Engineer Plants - Must succeed on three separate checks using separate downtime slots",
-    ],
   },
 
   tutoring: {

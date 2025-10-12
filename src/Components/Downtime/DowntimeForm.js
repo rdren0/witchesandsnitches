@@ -1,12 +1,6 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { downtime, classes } from "../../SharedData/downtime";
+import { classes } from "../../SharedData/downtime";
 import { downtimeStyles } from "./styles";
 import DicePoolManager from "./DicePoolManager";
 import SkillSelector from "./SkillSelector";
@@ -62,6 +56,8 @@ import {
   calculateAbilityScoreIncreaseDC,
 } from "./downtimeHelpers";
 import NPCAutocompleteInput from "./NPCAutocompleteInput";
+import ActivitySelectionModal from "./ActivitySelectionModal";
+import { Plus } from "lucide-react";
 
 const DowntimeForm = ({
   user,
@@ -209,9 +205,9 @@ const DowntimeForm = ({
   const [spellAttempts, setSpellAttempts] = useState({});
   const [researchedSpells, setResearchedSpells] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
+  const [activityModalOpen, setActivityModalOpen] = useState(null); // Stores the index of the activity being edited
 
   const availableActivities = useMemo(() => getAvailableActivities(), []);
-  const selectRef = useRef(null);
 
   useEffect(() => {
     if (selectedCharacter && user) {
@@ -797,21 +793,6 @@ const DowntimeForm = ({
     });
   };
 
-  const scrollToSelectedOption = () => {
-    const selectElement = selectRef.current;
-    if (!selectElement) return;
-
-    const selectedIndex = selectElement.selectedIndex;
-    const selectedOption = selectElement.options[selectedIndex];
-
-    if (selectedOption) {
-      selectedOption.scrollIntoView({
-        block: "start",
-        inline: "nearest",
-      });
-    }
-  };
-
   const renderMakeRecipeActivity = (activity, index) => {
     const info = getDistinctCheckActivityInfo(activity.activity);
     if (!info) return null;
@@ -1182,6 +1163,21 @@ const DowntimeForm = ({
 
   return (
     <div style={styles.container}>
+      <ActivitySelectionModal
+        isOpen={activityModalOpen !== null}
+        onClose={() => setActivityModalOpen(null)}
+        onSelect={(selectedActivity) => {
+          if (activityModalOpen !== null) {
+            updateActivity(activityModalOpen, "activity", selectedActivity);
+          }
+        }}
+        currentActivity={
+          activityModalOpen !== null
+            ? formData.activities[activityModalOpen]?.activity
+            : null
+        }
+        theme={theme}
+      />
       {diceManager.component}
 
       {dicePool.length > 0 && (
@@ -1233,7 +1229,11 @@ const DowntimeForm = ({
                       lineHeight: "1.5",
                     }}
                   >
-                    After your downtime is approved, you must manually update your wand subject modifier in the <strong>Character Manager</strong> under the <strong>Wand Subject Settings</strong> section. This change is not applied automatically.
+                    After your downtime is approved, you must manually update
+                    your wand subject modifier in the{" "}
+                    <strong>Character Manager</strong> under the{" "}
+                    <strong>Wand Subject Settings</strong> section. This change
+                    is not applied automatically.
                   </div>
                 </div>
               </div>
@@ -1359,38 +1359,73 @@ const DowntimeForm = ({
                   >
                     <label style={styles.label}>Activity Type</label>
 
-                    <select
-                      ref={selectRef}
-                      onFocus={scrollToSelectedOption}
-                      style={styles.select}
-                      value={activity.activity || ""}
-                      onChange={(e) =>
-                        updateActivity(index, "activity", e.target.value)
-                      }
+                    <button
+                      onClick={() => setActivityModalOpen(index)}
                       disabled={!editable}
+                      style={{
+                        ...styles.select,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: editable ? "pointer" : "not-allowed",
+                        backgroundColor: editable
+                          ? theme.surface
+                          : theme.background,
+                        textAlign: "left",
+                        position: "relative",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (editable) {
+                          e.currentTarget.style.borderColor = theme.primary;
+                          e.currentTarget.style.backgroundColor =
+                            theme.background;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (editable) {
+                          e.currentTarget.style.borderColor = theme.border;
+                          e.currentTarget.style.backgroundColor = theme.surface;
+                        }
+                      }}
                     >
-                      <option value="">Select Activity</option>
-                      {Object.entries(downtime).map(
-                        ([categoryKey, categoryInfo]) => (
-                          <optgroup
-                            key={categoryKey}
-                            label={categoryInfo.name}
-                            title={categoryInfo.description}
-                          >
-                            {categoryInfo.activities.map(
-                              (activityName, actIndex) => (
-                                <option
-                                  key={`${categoryKey}-${actIndex}`}
-                                  value={activityName}
-                                >
-                                  {activityName.split(" - ")[0]}
-                                </option>
-                              )
-                            )}
-                          </optgroup>
-                        )
-                      )}
-                    </select>
+                      <span
+                        style={{
+                          flex: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          color: activity.activity
+                            ? theme.text
+                            : theme.textSecondary,
+                        }}
+                      >
+                        {activity.activity
+                          ? activity.activity.split(" - ")[0]
+                          : "Select Activity"}
+                      </span>
+                      <Plus
+                        size={18}
+                        style={{
+                          marginLeft: "8px",
+                          flexShrink: 0,
+                          color: editable ? theme.primary : theme.textSecondary,
+                        }}
+                      />
+                    </button>
+
+                    {activity.activity && (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          fontSize: "12px",
+                          color: theme.textSecondary,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {activity.activity.split(" - ")[1] || ""}
+                      </div>
+                    )}
                   </div>
 
                   {!activityRequiresDualChecks(activity.activity) &&
