@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Filter, ChevronDown } from "lucide-react";
+import {
+  Search,
+  X,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  Info,
+} from "lucide-react";
 import { SubjectCard } from "./SubjectCard";
 import { useTheme } from "../../contexts/ThemeContext";
 import { createSpellBookStyles, searchStyles } from "./styles";
@@ -22,6 +29,7 @@ const SpellBook = ({
   const styles = createSpellBookStyles(theme);
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedSubjects, setExpandedSubjects] = useState({});
+  const [showSpecializedSubjects, setShowSpecializedSubjects] = useState(false);
   const [error, setError] = useState(null);
   const [criticalSuccesses, setCriticalSuccesses] = useState({});
   const [spellAttempts, setSpellAttempts] = useState({});
@@ -135,6 +143,19 @@ const SpellBook = ({
   ];
 
   const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
+
+  // Define core subjects that are always visible
+  const coreSubjects = [
+    "Charms",
+    "Jinxes, Hexes & Curses",
+    "Transfigurations",
+    "Divinations",
+    "Healing",
+  ];
+
+  const isSpecializedSubject = (subjectName) => {
+    return !coreSubjects.includes(subjectName);
+  };
 
   const getAvailableClasses = useCallback(() => {
     const availableSpells = getAvailableSpellsData();
@@ -726,7 +747,14 @@ const SpellBook = ({
   }
 
   return (
-    <div className="SpellBook">
+    <div
+      className="SpellBook"
+      style={{
+        backgroundColor: theme.background,
+        minHeight: "100vh",
+        paddingBottom: "20px",
+      }}
+    >
       <CastingTiles character={selectedCharacter} />
 
       {error && (
@@ -1475,8 +1503,9 @@ const SpellBook = ({
         )}
 
       <div style={styles.subjectsGrid}>
-        {Object.entries(filteredSpellsData).map(
-          ([subjectName, subjectData]) => (
+        {Object.entries(filteredSpellsData)
+          .filter(([subjectName]) => !isSpecializedSubject(subjectName))
+          .map(([subjectName, subjectData]) => (
             <SubjectCard
               key={subjectName}
               criticalSuccesses={criticalSuccesses}
@@ -1507,7 +1536,147 @@ const SpellBook = ({
               selectedAttemptFilters={selectedAttemptFilters}
               onSpellProgressUpdate={loadSpellProgress}
             />
-          )
+          ))}
+
+        {Object.entries(filteredSpellsData).filter(([subjectName]) =>
+          isSpecializedSubject(subjectName)
+        ).length > 0 && (
+          <div
+            style={{
+              backgroundColor: theme.background || "#f8fafc",
+              border: `1px solid ${theme.border || "#e5e7eb"}`,
+              borderRadius: "12px",
+              marginBottom: "16px",
+              overflow: "hidden",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            <button
+              onClick={() =>
+                setShowSpecializedSubjects(!showSpecializedSubjects)
+              }
+              style={{
+                width: "100%",
+                padding: "16px 20px",
+                backgroundColor: theme.background || "#f8fafc",
+                border: "none",
+                borderBottom: showSpecializedSubjects
+                  ? `1px solid ${theme.border || "#e5e7eb"}`
+                  : "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease",
+                color: theme.text || "#1f2937",
+                fontSize: "18px",
+                fontWeight: "600",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  theme.surface || "#ffffff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  theme.background || "#f8fafc";
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                {showSpecializedSubjects ? (
+                  <ChevronDown size={24} color={theme.text} />
+                ) : (
+                  <ChevronRight size={24} color={theme.text} />
+                )}
+                <span>Specialized Subjects</span>
+              </div>
+              <span
+                style={{
+                  fontSize: "14px",
+                  color: theme.textSecondary || "#6b7280",
+                  fontWeight: "500",
+                }}
+              >
+                {
+                  Object.entries(filteredSpellsData).filter(([subjectName]) =>
+                    isSpecializedSubject(subjectName)
+                  ).length
+                }{" "}
+                subjects
+              </span>
+            </button>
+
+            {showSpecializedSubjects && (
+              <div style={{ padding: "16px" }}>
+                <div
+                  style={{
+                    backgroundColor: theme.surface || "#ffffff",
+                    border: `2px solid ${theme.primary || "#6366f1"}`,
+                    borderRadius: "8px",
+                    padding: "16px",
+                    marginBottom: "16px",
+                    display: "flex",
+                    gap: "12px",
+                    alignItems: "center",
+                  }}
+                >
+                  <Info
+                    size={16}
+                    color={theme.primary || "#6366f1"}
+                    style={{ flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        color: theme.textSecondary || "#6b7280",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      These subjects are restricted to certain subclasses.
+                      Please consult with the DM for clarification on which
+                      subjects your character can access.
+                    </div>
+                  </div>
+                </div>
+                {Object.entries(filteredSpellsData)
+                  .filter(([subjectName]) => isSpecializedSubject(subjectName))
+                  .map(([subjectName, subjectData]) => (
+                    <SubjectCard
+                      key={subjectName}
+                      criticalSuccesses={criticalSuccesses}
+                      discordUserId={discordUserId}
+                      expandedSections={expandedSections}
+                      expandedSubjects={expandedSubjects}
+                      selectedCharacter={selectedCharacter}
+                      setCriticalSuccesses={setCriticalSuccesses}
+                      setError={setError}
+                      setExpandedSections={setExpandedSections}
+                      setExpandedSubjects={setExpandedSubjects}
+                      setSpellAttempts={setSpellAttempts}
+                      spellAttempts={spellAttempts}
+                      failedAttempts={failedAttempts}
+                      setFailedAttempts={setFailedAttempts}
+                      researchedSpells={researchedSpells}
+                      setResearchedSpells={setResearchedSpells}
+                      arithmancticTags={arithmancticTags}
+                      setArithmancticTags={setArithmancticTags}
+                      runicTags={runicTags}
+                      setRunicTags={setRunicTags}
+                      subjectData={subjectData}
+                      subjectName={subjectName}
+                      supabase={supabase}
+                      user={user}
+                      globalSearchTerm={searchTerm}
+                      selectedLevels={selectedLevels}
+                      selectedAttemptFilters={selectedAttemptFilters}
+                      onSpellProgressUpdate={loadSpellProgress}
+                    />
+                  ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
