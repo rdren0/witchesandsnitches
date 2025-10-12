@@ -24,13 +24,13 @@ const RestrictionModal = ({
       zIndex: 9999,
     },
     modal: {
-      backgroundColor: theme.background || "#ffffff",
+      backgroundColor: theme.background || "#1a1a1a",
       borderRadius: "12px",
       padding: "24px",
       maxWidth: "500px",
       margin: "20px",
-      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-      border: `2px solid ${theme.warning || "#f59e0b"}`,
+      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+      border: `2px solid ${theme.border || "#333333"}`,
     },
     header: {
       display: "flex",
@@ -47,24 +47,26 @@ const RestrictionModal = ({
     spellName: {
       fontSize: "18px",
       fontWeight: "600",
-      color: theme.text || "#000000",
+      color: theme.text || "#ffffff",
       marginBottom: "12px",
     },
     content: {
-      color: theme.text || "#000000",
+      color: theme.text || "#ffffff",
       lineHeight: "1.6",
       marginBottom: "20px",
     },
     restrictionList: {
-      backgroundColor: theme.secondary || "#f3f4f6",
+      backgroundColor: theme.surface || "#2a2a2a",
       padding: "16px",
       borderRadius: "8px",
       marginBottom: "20px",
+      border: `1px solid ${theme.border || "#333333"}`,
     },
     listItem: {
       marginBottom: "8px",
       paddingLeft: "16px",
       position: "relative",
+      color: theme.text || "#ffffff",
     },
     bullet: {
       position: "absolute",
@@ -83,16 +85,16 @@ const RestrictionModal = ({
       borderRadius: "6px",
       border: "none",
       fontSize: "14px",
-      fontWeight: "500",
+      fontWeight: "600",
       cursor: "pointer",
       transition: "all 0.2s ease",
     },
     cancelButton: {
-      backgroundColor: theme.secondary || "#f3f4f6",
-      color: theme.text || "#000000",
+      backgroundColor: theme.error || "#EF4444",
+      color: "white",
     },
     confirmButton: {
-      backgroundColor: theme.warning || "#f59e0b",
+      backgroundColor: theme.primary || "#6366F1",
       color: "white",
     },
     closeButton: {
@@ -102,7 +104,7 @@ const RestrictionModal = ({
       background: "none",
       border: "none",
       cursor: "pointer",
-      color: theme.text || "#000000",
+      color: theme.text || "#ffffff",
       padding: "4px",
     },
   };
