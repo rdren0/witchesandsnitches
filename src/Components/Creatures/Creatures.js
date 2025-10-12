@@ -481,6 +481,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
       if (formData.speed_climb > 0) speed.climb = formData.speed_climb;
       if (formData.speed_burrow > 0) speed.burrow = formData.speed_burrow;
 
+      const hitPoints = parseInt(formData.hit_points);
+
       const creatureData = {
         discord_user_id: discordUserId,
         character_id: selectedCharacter.id,
@@ -490,7 +492,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
         alignment: formData.alignment.trim() || null,
         armor_class: parseInt(formData.armor_class),
         armor_type: formData.armor_type.trim() || null,
-        hit_points: parseInt(formData.hit_points),
+        hit_points: hitPoints,
+        current_hit_points: hitPoints,
         hit_dice: formData.hit_dice.trim() || null,
         speed: speed,
         strength: parseInt(formData.strength),
@@ -731,7 +734,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
     },
     creaturesList: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fill, minmax(510px, 1fr))",
       gap: "16px",
     },
     creatureCard: {
@@ -740,6 +743,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
       borderRadius: "12px",
       padding: "16px",
       transition: "all 0.2s ease",
+      minWidth: "510px",
     },
     creatureHeader: {
       display: "flex",
@@ -1902,170 +1906,180 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                 </div>
 
                 <div style={styles.abilityScores}>
-                    {[
-                      {
-                        label: "STR",
-                        key: "strength",
-                        name: "Strength",
-                        value: creature.strength,
-                      },
-                      {
-                        label: "DEX",
-                        key: "dexterity",
-                        name: "Dexterity",
-                        value: creature.dexterity,
-                      },
-                      {
-                        label: "CON",
-                        key: "constitution",
-                        name: "Constitution",
-                        value: creature.constitution,
-                      },
-                      {
-                        label: "INT",
-                        key: "intelligence",
-                        name: "Intelligence",
-                        value: creature.intelligence,
-                      },
-                      {
-                        label: "WIS",
-                        key: "wisdom",
-                        name: "Wisdom",
-                        value: creature.wisdom,
-                      },
-                      {
-                        label: "CHA",
-                        key: "charisma",
-                        name: "Charisma",
-                        value: creature.charisma,
-                      },
-                    ].map((ability) => {
-                      const modifier = getModifier(ability.value);
-                      return (
+                  {[
+                    {
+                      label: "STR",
+                      key: "strength",
+                      name: "Strength",
+                      value: creature.strength,
+                    },
+                    {
+                      label: "DEX",
+                      key: "dexterity",
+                      name: "Dexterity",
+                      value: creature.dexterity,
+                    },
+                    {
+                      label: "CON",
+                      key: "constitution",
+                      name: "Constitution",
+                      value: creature.constitution,
+                    },
+                    {
+                      label: "INT",
+                      key: "intelligence",
+                      name: "Intelligence",
+                      value: creature.intelligence,
+                    },
+                    {
+                      label: "WIS",
+                      key: "wisdom",
+                      name: "Wisdom",
+                      value: creature.wisdom,
+                    },
+                    {
+                      label: "CHA",
+                      key: "charisma",
+                      name: "Charisma",
+                      value: creature.charisma,
+                    },
+                  ].map((ability) => {
+                    const modifier = getModifier(ability.value);
+                    return (
+                      <div
+                        key={ability.key}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          backgroundColor: theme.background,
+                          borderRadius: "8px",
+                          border: `2px solid ${theme.border}`,
+                          overflow: "hidden",
+                        }}
+                      >
                         <div
-                          key={ability.key}
                           style={{
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
+                            justifyContent: "center",
+                            padding: "10px 8px 8px 8px",
+                            cursor: isRolling ? "not-allowed" : "pointer",
+                            opacity: isRolling ? 0.6 : 1,
+                            width: "100%",
+                            transition: "all 0.2s ease",
                             backgroundColor: theme.background,
-                            borderRadius: "8px",
-                            border: `2px solid ${theme.border}`,
-                            overflow: "hidden",
+                            gap: "4px",
                           }}
+                          onClick={() =>
+                            !isRolling &&
+                            handleAbilityClick(
+                              creature,
+                              ability.name,
+                              ability.key,
+                              ability.value
+                            )
+                          }
+                          onMouseEnter={(e) => {
+                            if (!isRolling) {
+                              e.currentTarget.style.backgroundColor =
+                                theme.surface;
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              theme.background;
+                          }}
+                          title={`Click to roll ${ability.name} check (d20 ${
+                            modifier >= 0 ? "+" : ""
+                          }${modifier})`}
                         >
                           <div
                             style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              padding: "10px 8px 8px 8px",
-                              cursor: isRolling ? "not-allowed" : "pointer",
-                              opacity: isRolling ? 0.6 : 1,
-                              width: "100%",
-                              transition: "all 0.2s ease",
-                              backgroundColor: theme.background,
-                              gap: "4px",
-                            }}
-                            onClick={() =>
-                              !isRolling &&
-                              handleAbilityClick(
-                                creature,
-                                ability.name,
-                                ability.key,
-                                ability.value
-                              )
-                            }
-                            onMouseEnter={(e) => {
-                              if (!isRolling) {
-                                e.currentTarget.style.backgroundColor =
-                                  theme.surface;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                theme.background;
-                            }}
-                            title={`Click to roll ${ability.name} check (d20 ${
-                              modifier >= 0 ? "+" : ""
-                            }${modifier})`}
-                          >
-                            <div style={{
                               fontSize: "1rem",
                               color: theme.text,
                               fontWeight: "600",
-                            }}>{ability.label}</div>
-                            <div style={{
+                            }}
+                          >
+                            {ability.label}
+                          </div>
+                          <div
+                            style={{
                               fontSize: "0.875rem",
                               color: theme.primary,
                               fontWeight: "600",
-                            }}>
-                              {modifier >= 0 ? "+" : ""}
-                              {modifier}
-                            </div>
-                            <div style={{
+                            }}
+                          >
+                            {modifier >= 0 ? "+" : ""}
+                            {modifier}
+                          </div>
+                          <div
+                            style={{
                               fontSize: "1.25rem",
                               fontWeight: "bold",
                               color: theme.text,
-                            }}>{ability.value}</div>
-                          </div>
-                          <div
-                            style={{
-                              width: "100%",
-                              height: "2px",
-                              backgroundColor: theme.border,
                             }}
-                          />
-                          <div
-                            style={{
-                              fontSize: "0.75rem",
-                              color: theme.textSecondary,
-                              textAlign: "center",
-                              padding: "6px 8px",
-                              fontWeight: "500",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "100%",
-                              cursor: isRolling ? "not-allowed" : "pointer",
-                              transition: "all 0.2s ease",
-                              backgroundColor: theme.background,
-                            }}
-                            onClick={(e) =>
-                              !isRolling &&
-                              handleSavingThrowClick(
-                                creature,
-                                ability.name,
-                                ability.key,
-                                ability.value,
-                                e
-                              )
-                            }
-                            onMouseEnter={(e) => {
-                              if (!isRolling) {
-                                e.currentTarget.style.backgroundColor =
-                                  theme.surface;
-                                e.currentTarget.style.color = theme.primary;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                theme.background;
-                              e.currentTarget.style.color = theme.textSecondary;
-                            }}
-                            title={`Click to roll ${
-                              ability.name
-                            } saving throw (d20 ${
-                              modifier >= 0 ? "+" : ""
-                            }${modifier})`}
                           >
-                            Save: {modifier >= 0 ? "+" : ""}
-                            {modifier}
+                            {ability.value}
                           </div>
                         </div>
-                      );
-                    })}
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "2px",
+                            backgroundColor: theme.border,
+                          }}
+                        />
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: theme.textSecondary,
+                            textAlign: "center",
+                            padding: "6px 8px",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "100%",
+                            cursor: isRolling ? "not-allowed" : "pointer",
+                            transition: "all 0.2s ease",
+                            backgroundColor: theme.background,
+                          }}
+                          onClick={(e) =>
+                            !isRolling &&
+                            handleSavingThrowClick(
+                              creature,
+                              ability.name,
+                              ability.key,
+                              ability.value,
+                              e
+                            )
+                          }
+                          onMouseEnter={(e) => {
+                            if (!isRolling) {
+                              e.currentTarget.style.backgroundColor =
+                                theme.surface;
+                              e.currentTarget.style.color = theme.primary;
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              theme.background;
+                            e.currentTarget.style.color = theme.textSecondary;
+                          }}
+                          title={`Click to roll ${
+                            ability.name
+                          } saving throw (d20 ${
+                            modifier >= 0 ? "+" : ""
+                          }${modifier})`}
+                        >
+                          Save: {modifier >= 0 ? "+" : ""}
+                          {modifier}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {creature.attacks && creature.attacks.length > 0 && (
