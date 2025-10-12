@@ -35,7 +35,7 @@ const CharacterTabbedPanel = ({
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
       height: "1200px",
@@ -70,13 +70,14 @@ const CharacterTabbedPanel = ({
     activeTab: {
       color: theme.primary,
       borderBottomColor: theme.primary,
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
     },
     tabContent: {
       flex: 1,
       overflow: "auto",
       padding: "0",
       height: "calc(600px - 48px)",
+      backgroundColor: theme.background,
     },
     placeholderContent: {
       display: "flex",
@@ -202,11 +203,19 @@ const CharacterTabbedPanel = ({
       label: "Potions",
       icon: Beaker,
       component: (
-        <PotionBrewingSystem
-          user={user}
-          character={selectedCharacter}
-          supabase={supabase}
-        />
+        <div
+          style={{
+            backgroundColor: theme.background,
+            padding: "16px",
+            height: "100%",
+          }}
+        >
+          <PotionBrewingSystem
+            user={user}
+            character={selectedCharacter}
+            supabase={supabase}
+          />
+        </div>
       ),
     },
     {
@@ -214,11 +223,19 @@ const CharacterTabbedPanel = ({
       label: "Inventory",
       icon: Package,
       component: (
-        <Inventory
-          user={user}
-          selectedCharacter={selectedCharacter}
-          supabase={supabase}
-        />
+        <div
+          style={{
+            backgroundColor: theme.background,
+            padding: "16px",
+            height: "100%",
+          }}
+        >
+          <Inventory
+            user={user}
+            selectedCharacter={selectedCharacter}
+            supabase={supabase}
+          />
+        </div>
       ),
     },
     {
@@ -226,13 +243,21 @@ const CharacterTabbedPanel = ({
       label: "Corruption",
       icon: Skull,
       component: (
-        <CorruptionTracker
-          character={selectedCharacter}
-          supabase={supabase}
-          discordUserId={discordUserId}
-          setCharacter={setCharacter}
-          selectedCharacterId={selectedCharacter.id}
-        />
+        <div
+          style={{
+            backgroundColor: theme.background,
+            padding: "16px",
+            height: "100%",
+          }}
+        >
+          <CorruptionTracker
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
+            setCharacter={setCharacter}
+            selectedCharacterId={selectedCharacter.id}
+          />
+        </div>
       ),
     },
   ];
