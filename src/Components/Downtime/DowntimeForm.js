@@ -1202,6 +1202,42 @@ const DowntimeForm = ({
                 magical discipline.
               </p>
 
+              <div
+                style={{
+                  padding: "12px 16px",
+                  backgroundColor: theme.primary + "20",
+                  border: `2px solid ${theme.primary}`,
+                  borderRadius: "8px",
+                  marginBottom: "1rem",
+                  display: "flex",
+                  gap: "12px",
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ fontSize: "16px", flexShrink: 0 }}>ℹ️</span>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontWeight: "600",
+                      color: theme.text,
+                      marginBottom: "4px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Important: Manual Update Required
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: theme.text,
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    After your downtime is approved, you must manually update your wand subject modifier in the <strong>Character Manager</strong> under the <strong>Wand Subject Settings</strong> section. This change is not applied automatically.
+                  </div>
+                </div>
+              </div>
+
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Select School of Magic</label>
 

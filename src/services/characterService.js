@@ -407,6 +407,8 @@ const saveCharacter = async (characterData, discordUserId) => {
       .from("characters")
       .insert({
         ability_scores: characterData.ability_scores,
+        additional_feats: characterData.additional_feats,
+        additional_asi: characterData.additional_asi,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
@@ -483,6 +485,7 @@ const updateCharacter = async (characterId, characterData, discordUserId) => {
         ability_scores: characterData.ability_scores,
         ac: characterData.ac,
         additional_feats: characterData.additional_feats,
+        additional_asi: characterData.additional_asi,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,
@@ -546,6 +549,7 @@ const updateCharacterAsAdmin = async (characterId, characterData) => {
         ability_scores: characterData.ability_scores,
         ac: characterData.ac,
         additional_feats: characterData.additional_feats,
+        additional_asi: characterData.additional_asi,
         asi_choices: characterData.asi_choices,
         background: characterData.background,
         casting_style: characterData.casting_style,

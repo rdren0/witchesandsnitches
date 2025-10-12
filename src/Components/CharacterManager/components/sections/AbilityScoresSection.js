@@ -142,6 +142,21 @@ const AbilityScoresSection = ({
       });
     }
 
+    if (character.additionalASI && Array.isArray(character.additionalASI)) {
+      character.additionalASI.forEach((asi) => {
+        if (
+          asi.abilityScoreIncreases &&
+          Array.isArray(asi.abilityScoreIncreases)
+        ) {
+          asi.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability && increase.increase) {
+              asiModifiers[increase.ability] += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
     return asiModifiers;
   };
 
@@ -230,26 +245,53 @@ const AbilityScoresSection = ({
       }
 
       const levelsWithASI = [];
+      let levelASICount = 0;
       if (character.asiChoices) {
         Object.entries(character.asiChoices).forEach(([level, choice]) => {
           if (choice.type === "asi" && choice.abilityScoreIncreases) {
-            const hasThisAbility = choice.abilityScoreIncreases.some(
-              (inc) => inc.ability === ability
-            );
-            if (hasThisAbility) {
-              levelsWithASI.push(level);
-            }
+            choice.abilityScoreIncreases.forEach((inc) => {
+              if (inc.ability === ability) {
+                levelsWithASI.push(level);
+                levelASICount += inc.increase || 1;
+              }
+            });
           }
         });
+      }
+
+      let additionalASICount = 0;
+      if (character.additionalASI && Array.isArray(character.additionalASI)) {
+        character.additionalASI.forEach((asi) => {
+          if (
+            asi.abilityScoreIncreases &&
+            Array.isArray(asi.abilityScoreIncreases)
+          ) {
+            asi.abilityScoreIncreases.forEach((inc) => {
+              if (inc.ability === ability) {
+                additionalASICount += inc.increase || 1;
+              }
+            });
+          }
+        });
+      }
+
+      const asiParts = [];
+      if (levelASICount > 0) {
+        asiParts.push(
+          `Level${levelsWithASI.length > 1 ? "s" : ""} ${levelsWithASI.join(
+            ", "
+          )} (+${levelASICount})`
+        );
+      }
+      if (additionalASICount > 0) {
+        asiParts.push(`Additional ASI (+${additionalASICount})`);
       }
 
       allDetails[ability].push({
         source: "asi",
         amount: asiModifiers[ability],
         levels: levelsWithASI,
-        asiName: `ASI Level${
-          levelsWithASI.length > 1 ? "s" : ""
-        } ${levelsWithASI.join(", ")}`,
+        asiName: asiParts.join(", "),
       });
     }
   });

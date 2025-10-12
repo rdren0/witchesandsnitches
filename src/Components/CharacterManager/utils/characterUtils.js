@@ -219,6 +219,22 @@ export const calculateFinalAbilityScores = (character) => {
       });
     }
 
+    const additionalASI = character.additionalASI || character.additional_asi;
+    if (additionalASI && Array.isArray(additionalASI)) {
+      additionalASI.forEach((asi) => {
+        if (
+          asi.abilityScoreIncreases &&
+          Array.isArray(asi.abilityScoreIncreases)
+        ) {
+          asi.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability === ability && increase.increase) {
+              finalScore += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
     finalScores[ability] = finalScore;
   });
 
