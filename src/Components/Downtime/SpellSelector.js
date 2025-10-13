@@ -787,7 +787,6 @@ const SpellSelector = ({
           break;
         case "level": {
           const levelOrder = {
-            Cantrip: 0,
             Cantrips: 0,
             "1st Level": 1,
             "2nd Level": 2,
@@ -875,7 +874,12 @@ const SpellSelector = ({
         });
       }
     });
-    return Array.from(levels).sort();
+    return Array.from(levels).sort((a, b) => {
+      if (a === "Cantrips") return -1;
+      if (b === "Cantrips") return 1;
+
+      return a.localeCompare(b);
+    });
   }, []);
 
   return (
