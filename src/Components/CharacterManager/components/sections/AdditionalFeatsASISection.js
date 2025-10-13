@@ -81,7 +81,6 @@ const AdditionalFeatsASISection = ({
   };
 
   const updateFeatChoice = (featName, choiceId, value) => {
-    // Convert ability names to lowercase to match the ability score keys
     const normalizedValue =
       typeof value === "string" &&
       [
@@ -312,7 +311,6 @@ const AdditionalFeatsASISection = ({
                                   }}
                                 >
                                   {choice.options.map((option) => {
-                                    // Check if selected, handling both capitalized display and lowercase storage
                                     const storedValue =
                                       featChoicesData[choice.id];
                                     const isSelected =
@@ -592,17 +590,53 @@ const AdditionalFeatsASISection = ({
                             </span>
                           )}
                         </div>
-                        <p
-                          style={{
-                            color: theme.textSecondary,
-                            fontSize: "13px",
-                            marginTop: "4px",
-                            marginBottom:
-                              requiredChoices.length > 0 ? "8px" : 0,
-                          }}
-                        >
-                          {feat.preview}
-                        </p>
+                        <div style={{ marginTop: "4px" }}>
+                          <p
+                            style={{
+                              color: theme.textSecondary,
+                              fontSize: "13px",
+                              marginBottom: "8px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {feat.preview}
+                          </p>
+                          {feat.description && (
+                            <div
+                              style={{
+                                color: theme.text,
+                                fontSize: "12px",
+                                lineHeight: "1.6",
+                                marginBottom:
+                                  requiredChoices.length > 0 ? "8px" : 0,
+                                padding: "8px",
+                                backgroundColor: theme.background,
+                                borderRadius: "6px",
+                                border: `1px solid ${theme.border}`,
+                              }}
+                            >
+                              {Array.isArray(feat.description) ? (
+                                <ul
+                                  style={{
+                                    margin: 0,
+                                    paddingLeft: "20px",
+                                  }}
+                                >
+                                  {feat.description.map((desc, idx) => (
+                                    <li
+                                      key={idx}
+                                      style={{ marginBottom: "4px" }}
+                                    >
+                                      {desc}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div>{feat.description}</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                         {requiredChoices.length > 0 && (
                           <div
                             style={{

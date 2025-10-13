@@ -709,10 +709,11 @@ const DowntimeWrapper = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      if (!toolbarRef.current) return;
+      if (!placeholderRef.current || !toolbarRef.current) return;
 
+      const placeholder = placeholderRef.current;
       const toolbar = toolbarRef.current;
-      const rect = toolbar.getBoundingClientRect();
+      const rect = placeholder.getBoundingClientRect();
 
       if (toolbar && !isSticky) {
         setToolbarHeight(toolbar.offsetHeight);
@@ -1532,24 +1533,70 @@ const DowntimeWrapper = ({
                 style={{ display: "flex", gap: "8px", alignItems: "center" }}
               >
                 {currentSheet && (
-                  <button
-                    onClick={() => {
-                      resetFormState();
-                      setSelectedYear("");
-                      setSelectedSemester("");
-                    }}
-                    style={{
-                      ...styles.button,
-                      backgroundColor: theme.primary,
-                      padding: "8px 16px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    Start New Sheet
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "Are you sure you want to cancel editing this draft? Any unsaved changes will be lost."
+                          )
+                        ) {
+                          resetFormState();
+                          setSelectedYear("");
+                          setSelectedSemester("");
+                        }
+                      }}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: theme.error,
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        resetFormState();
+                        setSelectedYear("");
+                        setSelectedSemester("");
+                      }}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: theme.primary,
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Start New Sheet
+                    </button>
+                  </>
                 )}
                 {selectedYear && selectedSemester && (
                   <>
+                    {!currentSheet && (
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to cancel? Any unsaved changes will be lost."
+                            )
+                          ) {
+                            resetFormState();
+                            setSelectedYear("");
+                            setSelectedSemester("");
+                          }
+                        }}
+                        style={{
+                          ...styles.button,
+                          backgroundColor: theme.error,
+                          padding: "8px 16px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    )}
                     <button
                       onClick={() => saveHandler && saveHandler()}
                       disabled={isSavingDraft || !saveHandler}

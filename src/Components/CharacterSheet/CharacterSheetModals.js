@@ -1150,6 +1150,36 @@ const CharacterSheetModals = ({
                         return;
                       }
 
+                      const additionalFields = [
+                        {
+                          name: "Temporary HP Set",
+                          value: `${damageAmount} temp HP`,
+                          inline: true,
+                        },
+                        {
+                          name: "Current HP",
+                          value: `${
+                            character.currentHitPoints ?? character.hitPoints
+                          }/${character.maxHitPoints ?? character.hitPoints}`,
+                          inline: true,
+                        },
+                      ];
+
+                      const success = await sendDiscordRollWebhook({
+                        character,
+                        rollType: "Temporary HP",
+                        title: "Temporary HP Added",
+                        embedColor: 0x3b82f6,
+                        rollResult: null,
+                        fields: additionalFields,
+                        useCharacterAvatar: true,
+                        description: " **Temporary hit points gained!**",
+                      });
+
+                      if (!success) {
+                        console.error("Failed to send temp HP to Discord");
+                      }
+
                       await fetchCharacterDetails();
                       setShowDamageModal(false);
                     } catch (error) {

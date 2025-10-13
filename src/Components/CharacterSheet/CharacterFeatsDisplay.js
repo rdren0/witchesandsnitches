@@ -271,6 +271,10 @@ const CharacterFeatsDisplay = ({
         if (character.subclassChoices) {
           Object.entries(character.subclassChoices).forEach(
             ([level, choice]) => {
+              if (parseInt(level) > character.level) {
+                return;
+              }
+
               let choiceName, subChoiceName;
 
               if (typeof choice === "string") {
@@ -678,7 +682,11 @@ const CharacterFeatsDisplay = ({
 
     if (character.asiChoices) {
       Object.entries(character.asiChoices).forEach(([level, choice]) => {
-        if (choice.type === "feat" && choice.selectedFeat) {
+        if (
+          choice.type === "feat" &&
+          choice.selectedFeat &&
+          parseInt(level) <= character.level
+        ) {
           const featData = standardFeats.find(
             (f) => f.name === choice.selectedFeat
           );

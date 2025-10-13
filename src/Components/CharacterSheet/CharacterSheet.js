@@ -773,6 +773,7 @@ const CharacterSheet = ({
           metamagicChoices: data.metamagic_choices || {},
           heritageChoices: heritageChoices,
           castingStyleChoices: data.casting_style_choices || {},
+          additional_feats: data.additional_feats || [],
         };
         setCharacter(transformedCharacter);
       }
@@ -1461,8 +1462,7 @@ const CharacterSheet = ({
                 <Tooltip
                   content={{
                     title: "HP Management",
-                    leftClick: "Manage HP (take damage/heal)",
-                    rightClick: "Full heal to max HP",
+                    rightClick: "Open HP actions",
                   }}
                   delay={100}
                 >
@@ -1472,13 +1472,12 @@ const CharacterSheet = ({
                         ...styles.statCard,
                         backgroundColor: theme.background,
                         border: `3px solid ${getHPColor(character)}`,
-                        cursor: "pointer",
+                        cursor: "context-menu",
                       }),
                     }}
-                    onClick={handleDamageClick}
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      fullHeal();
+                      handleDamageClick();
                     }}
                   >
                     <Heart
@@ -1567,7 +1566,9 @@ const CharacterSheet = ({
                 <Tooltip
                   content={{
                     title: "Initiative",
-                    leftClick: `Roll initiative (d20 ${formatModifier(character.initiativeModifier)})`,
+                    leftClick: `Roll initiative (d20 ${formatModifier(
+                      character.initiativeModifier
+                    )})`,
                     rightClick: "Modify or override initiative modifier",
                   }}
                   delay={200}
@@ -1610,8 +1611,10 @@ const CharacterSheet = ({
                   <Tooltip
                     content={{
                       title: "Spell Attack",
-                      leftClick: "Roll spell attack with advantage/disadvantage options",
-                      rightClick: "Set override or modifier for spell attack bonus",
+                      leftClick:
+                        "Roll spell attack with advantage/disadvantage options",
+                      rightClick:
+                        "Set override or modifier for spell attack bonus",
                     }}
                     delay={200}
                   >
@@ -1648,8 +1651,14 @@ const CharacterSheet = ({
                 {getSpellcastingAbility(character.castingStyle) && (
                   <Tooltip
                     content={{
-                      title: `Spellcasting Ability (${getSpellcastingAbility(character.castingStyle)})`,
-                      leftClick: `Roll ${getSpellcastingAbility(character.castingStyle)} check (d20 ${formatModifier(getSpellcastingAbilityModifier(character))})`,
+                      title: `Spellcasting Ability (${getSpellcastingAbility(
+                        character.castingStyle
+                      )})`,
+                      leftClick: `Roll ${getSpellcastingAbility(
+                        character.castingStyle
+                      )} check (d20 ${formatModifier(
+                        getSpellcastingAbilityModifier(character)
+                      )})`,
                       description: "No proficiency bonus applied",
                     }}
                     delay={200}
@@ -1662,7 +1671,9 @@ const CharacterSheet = ({
                         cursor: isRolling ? "wait" : "pointer",
                         transition: "all 0.2s ease",
                       }}
-                      onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
+                      onClick={() =>
+                        !isRolling && rollSpellcastingAbilityCheck()
+                      }
                     >
                       <Sparkles
                         className="w-6 h-6 text-yellow-600 mx-auto mb-1"

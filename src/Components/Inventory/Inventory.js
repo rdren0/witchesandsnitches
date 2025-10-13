@@ -1518,42 +1518,24 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                         No other characters in your session
                       </div>
                     ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
+                      <select
+                        value={selectedRecipient?.id || ""}
+                        onChange={(e) => {
+                          const characterId = e.target.value;
+                          const character = sessionCharacters.find(
+                            (c) => c.id === characterId
+                          );
+                          setSelectedRecipient(character || null);
                         }}
+                        style={styles.select}
                       >
+                        <option value="">Select a character...</option>
                         {sessionCharacters.map((character) => (
-                          <button
-                            key={character.id}
-                            onClick={() => setSelectedRecipient(character)}
-                            style={{
-                              padding: "12px",
-                              backgroundColor:
-                                selectedRecipient?.id === character.id
-                                  ? theme.primary + "20"
-                                  : theme.surface,
-                              border: `2px solid ${
-                                selectedRecipient?.id === character.id
-                                  ? theme.primary
-                                  : theme.border
-                              }`,
-                              borderRadius: "8px",
-                              cursor: "pointer",
-                              textAlign: "left",
-                              color: theme.text,
-                              fontWeight:
-                                selectedRecipient?.id === character.id
-                                  ? "600"
-                                  : "normal",
-                            }}
-                          >
+                          <option key={character.id} value={character.id}>
                             {character.name}
-                          </button>
+                          </option>
                         ))}
-                      </div>
+                      </select>
                     )}
                   </div>
                 </>

@@ -165,40 +165,46 @@ export const renderDiceValue = ({
 
     return (
       <div style={styles.assignedDice}>
-        <div style={styles.diceValue}>{diceValue}</div>
         {hasAnyModifier ? (
-          <div style={styles.total}>
-            {diceValue} {formatModifier(modifierValue)} = {totalValue}
-          </div>
+          <>
+            <div style={styles.total}>
+              <span style={{ color: theme.primary, fontWeight: "600" }}>
+                {diceValue}
+              </span>{" "}
+              {formatModifier(modifierValue)} ={" "}
+              <span style={styles.diceValue}>{totalValue}</span>
+            </div>
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: theme.textSecondary,
+                marginTop: "0.25rem",
+              }}
+            >
+              Using:{" "}
+              {hasAutoSkill
+                ? `${
+                    allSkills.find((s) => s.name === autoSelectedSkill)
+                      ?.displayName || autoSelectedSkill
+                  } (Auto)`
+                : modifierSource}
+            </div>
+          </>
         ) : (
-          <div
-            style={{
-              ...styles.total,
-              color: theme.textSecondary,
-              fontSize: "0.875rem",
-            }}
-          >
-            {isSecond
-              ? "Select second skill/modifier"
-              : "Select skill/modifier for total"}
-          </div>
-        )}
-        {hasAnyModifier && (
-          <div
-            style={{
-              fontSize: "0.75rem",
-              color: theme.textSecondary,
-              marginTop: "0.25rem",
-            }}
-          >
-            Using:{" "}
-            {hasAutoSkill
-              ? `${
-                  allSkills.find((s) => s.name === autoSelectedSkill)
-                    ?.displayName || autoSelectedSkill
-                } (Auto)`
-              : modifierSource}
-          </div>
+          <>
+            <div style={styles.diceValue}>{diceValue}</div>
+            <div
+              style={{
+                ...styles.total,
+                color: theme.textSecondary,
+                fontSize: "0.875rem",
+              }}
+            >
+              {isSecond
+                ? "Select second skill/modifier"
+                : "Select skill/modifier for total"}
+            </div>
+          </>
         )}
       </div>
     );

@@ -35,6 +35,7 @@ const SpellSelector = ({
   const [filterLevel, setFilterLevel] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [pendingSpell, setPendingSpell] = useState(null);
 
   const useNewInterface = activityIndex !== undefined;
 
@@ -539,6 +540,7 @@ const SpellSelector = ({
     setActiveSpellSlot(spellSlot);
     setSearchTerm("");
     setHoveredSpell(null);
+    setPendingSpell(null);
     setIsModalOpen(true);
   };
 
@@ -549,15 +551,35 @@ const SpellSelector = ({
       return;
     }
 
+    setPendingSpell(spell);
+  };
+
+  const handleConfirmSelection = () => {
+    if (!pendingSpell) return;
+
     if (useNewInterface) {
-      onSpellSelect(activityIndex, activeSpellSlot, spell.name);
+      onSpellSelect(activityIndex, activeSpellSlot, pendingSpell.name);
     } else {
-      onSpellSelect?.(activeSpellSlot, spell.name);
+      onSpellSelect?.(activeSpellSlot, pendingSpell.name);
     }
     setIsModalOpen(false);
     setActiveSpellSlot(null);
     setSearchTerm("");
     setHoveredSpell(null);
+    setPendingSpell(null);
+    setFilterSubject("all");
+    setFilterYear("all");
+    setFilterLevel("all");
+    setSortBy("name");
+    setSortOrder("asc");
+  };
+
+  const handleCancelSelection = () => {
+    setIsModalOpen(false);
+    setActiveSpellSlot(null);
+    setSearchTerm("");
+    setHoveredSpell(null);
+    setPendingSpell(null);
     setFilterSubject("all");
     setFilterYear("all");
     setFilterLevel("all");
@@ -925,19 +947,7 @@ const SpellSelector = ({
       </div>
 
       {isModalOpen && (
-        <div
-          style={styles.modalOverlay}
-          onClick={() => {
-            setIsModalOpen(false);
-            setSearchTerm("");
-            setHoveredSpell(null);
-            setFilterSubject("all");
-            setFilterYear("all");
-            setFilterLevel("all");
-            setSortBy("name");
-            setSortOrder("asc");
-          }}
-        >
+        <div style={styles.modalOverlay} onClick={handleCancelSelection}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div style={styles.modalHeader}>
@@ -1107,6 +1117,7 @@ const SpellSelector = ({
                   const status = getSpellStatus(spell);
                   const isDisabled = status.isDisabled;
                   const isHovered = hoveredSpell === `${spell.name}-${index}`;
+                  const isSelected = pendingSpell?.name === spell.name;
 
                   const getYearColor = (year) => {
                     const colors = {
@@ -1129,7 +1140,14 @@ const SpellSelector = ({
                           ? styles.spellOptionDisabled
                           : {
                               ...styles.spellCard,
-                              ...(isHovered ? styles.spellCardHovered : {}),
+                              ...(isSelected
+                                ? {
+                                    border: `3px solid ${theme.success}`,
+                                    backgroundColor: theme.success + "15",
+                                  }
+                                : isHovered
+                                ? styles.spellCardHovered
+                                : {}),
                             }
                       }
                       onClick={() => handleSpellSelection(spell)}
@@ -1138,7 +1156,14 @@ const SpellSelector = ({
                       }
                       onMouseLeave={() => setHoveredSpell(null)}
                     >
-                      <div style={styles.spellCardHeader}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
                         <div style={styles.spellName}>
                           {spell.name}
                           {status.isRestricted && (
@@ -1174,17 +1199,42 @@ const SpellSelector = ({
                               </span>
                             )}
                         </div>
-                        {spell.year && (
-                          <span
-                            style={{
-                              ...styles.spellBadge,
-                              backgroundColor: getYearColor(spell.year) + "20",
-                              color: getYearColor(spell.year),
-                            }}
-                          >
-                            Year {spell.year}
-                          </span>
-                        )}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.5rem",
+                            flexShrink: 0,
+                            marginLeft: "1rem",
+                          }}
+                        >
+                          {spell.year && (
+                            <span
+                              style={{
+                                ...styles.spellBadge,
+                                backgroundColor:
+                                  getYearColor(spell.year) + "20",
+                                color: getYearColor(spell.year),
+                                padding: "4px 8px",
+                                fontSize: "11px",
+                              }}
+                            >
+                              Year {spell.year}
+                            </span>
+                          )}
+                          {spell.level && (
+                            <span
+                              style={{
+                                ...styles.spellBadge,
+                                backgroundColor: theme.info + "20",
+                                color: theme.info,
+                                padding: "4px 8px",
+                                fontSize: "11px",
+                              }}
+                            >
+                              {spell.level}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div style={styles.spellDescription}>
@@ -1195,10 +1245,6 @@ const SpellSelector = ({
                         <div style={styles.spellMetaItem}>
                           <span style={{ fontWeight: "600" }}>Subject:</span>
                           <span>{spell.subject}</span>
-                        </div>
-                        <div style={styles.spellMetaItem}>
-                          <span style={{ fontWeight: "600" }}>Level:</span>
-                          <span>{spell.level}</span>
                         </div>
                         <div style={styles.spellMetaItem}>
                           <span style={{ fontWeight: "600" }}>DC:</span>
@@ -1273,32 +1319,54 @@ const SpellSelector = ({
               <div style={styles.spellCount}>
                 Showing {availableSpells.length} spell
                 {availableSpells.length !== 1 ? "s" : ""}
+                {pendingSpell && (
+                  <span
+                    style={{
+                      marginLeft: "1rem",
+                      color: theme.success,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Selected: {pendingSpell.name}
+                  </span>
+                )}
               </div>
-              <button
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  backgroundColor: theme.error,
-                  color: "#fff",
-                  fontWeight: "600",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  transition: "all 0.2s ease",
-                }}
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setSearchTerm("");
-                  setHoveredSpell(null);
-                  setFilterSubject("all");
-                  setFilterYear("all");
-                  setFilterLevel("all");
-                  setSortBy("name");
-                  setSortOrder("asc");
-                }}
-              >
-                Cancel
-              </button>
+              <div style={{ display: "flex", gap: "0.75rem" }}>
+                <button
+                  style={{
+                    padding: "0.75rem 1.5rem",
+                    backgroundColor: theme.success,
+                    color: "#fff",
+                    fontWeight: "600",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: pendingSpell ? "pointer" : "not-allowed",
+                    fontSize: "14px",
+                    transition: "all 0.2s ease",
+                    opacity: pendingSpell ? 1 : 0.5,
+                  }}
+                  onClick={handleConfirmSelection}
+                  disabled={!pendingSpell}
+                >
+                  Confirm
+                </button>
+                <button
+                  style={{
+                    padding: "0.75rem 1.5rem",
+                    backgroundColor: theme.error,
+                    color: "#fff",
+                    fontWeight: "600",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={handleCancelSelection}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -25,6 +25,7 @@ import {
 
 import {
   getAllSelectedFeats,
+  getAvailableASILevels,
   handleASIChoiceChange as utilsHandleASIChoiceChange,
   handleASIFeatChange as utilsHandleASIFeatChange,
   handleASIAbilityChange as utilsHandleASIAbilityChange,
@@ -378,7 +379,7 @@ const CharacterForm = ({
         />
       </FormSection>
 
-      {character.level > 1 && (
+      {getAvailableASILevels(character.level).length > 0 && (
         <FormSection
           title="ASI & Feat Progression"
           subtitle={`Level ${

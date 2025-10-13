@@ -699,9 +699,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
     buttonGroup: {
       display: "flex",
       gap: "12px",
-      marginTop: "20px",
-      paddingTop: "20px",
-      borderTop: `1px solid ${theme.border}`,
     },
     button: {
       padding: "8px 16px",

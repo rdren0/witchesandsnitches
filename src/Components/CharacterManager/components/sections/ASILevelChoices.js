@@ -24,6 +24,26 @@ const ASILevelChoices = ({
 
   const availableASILevels = getAvailableASILevels(character.level);
 
+  React.useEffect(() => {
+    if (character.asiChoices) {
+      const invalidLevels = Object.keys(character.asiChoices).filter(
+        (level) => parseInt(level) > character.level
+      );
+
+      if (invalidLevels.length > 0 && onCharacterUpdate) {
+        const cleanedASIChoices = { ...character.asiChoices };
+        invalidLevels.forEach((level) => {
+          delete cleanedASIChoices[level];
+        });
+
+        onCharacterUpdate({
+          ...character,
+          asiChoices: cleanedASIChoices,
+        });
+      }
+    }
+  }, [character.level]);
+
   if (availableASILevels.length === 0) {
     return null;
   }
