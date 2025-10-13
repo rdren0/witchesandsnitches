@@ -75,6 +75,10 @@ const DowntimeForm = ({
   loadSubmittedSheets,
   loadDrafts,
   setActiveTab,
+  setSaveHandler,
+  setSubmitHandler,
+  setSavingState,
+  setSubmittingState,
 }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => downtimeStyles(theme), [theme]);
@@ -205,7 +209,7 @@ const DowntimeForm = ({
   const [spellAttempts, setSpellAttempts] = useState({});
   const [researchedSpells, setResearchedSpells] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
-  const [activityModalOpen, setActivityModalOpen] = useState(null); // Stores the index of the activity being edited
+  const [activityModalOpen, setActivityModalOpen] = useState(null);
 
   const availableActivities = useMemo(() => getAvailableActivities(), []);
 
@@ -622,6 +626,7 @@ const DowntimeForm = ({
 
   const handleSaveAsDraft = useCallback(async () => {
     setIsSavingDraft(true);
+    if (setSavingState) setSavingState(true);
     await saveAsDraft({
       selectedCharacter,
       user,
@@ -637,6 +642,7 @@ const DowntimeForm = ({
       loadDrafts,
     });
     setIsSavingDraft(false);
+    if (setSavingState) setSavingState(false);
   }, [
     selectedCharacter,
     user,
@@ -650,6 +656,7 @@ const DowntimeForm = ({
     supabase,
     setCurrentSheet,
     loadDrafts,
+    setSavingState,
   ]);
 
   const handleSubmitDowntimeSheet = useCallback(async () => {
@@ -689,6 +696,7 @@ const DowntimeForm = ({
     }
 
     setIsSubmitting(true);
+    if (setSubmittingState) setSubmittingState(true);
 
     const updateSpellProgress = () =>
       updateSpellProgressOnSubmission(
@@ -719,6 +727,7 @@ const DowntimeForm = ({
     });
 
     setIsSubmitting(false);
+    if (setSubmittingState) setSubmittingState(false);
   }, [
     formData,
     rollAssignments,
@@ -736,7 +745,20 @@ const DowntimeForm = ({
     loadSubmittedSheets,
     loadDrafts,
     setActiveTab,
+    setSubmittingState,
   ]);
+
+  useEffect(() => {
+    if (setSaveHandler) {
+      setSaveHandler(() => handleSaveAsDraft);
+    }
+  }, [handleSaveAsDraft, setSaveHandler]);
+
+  useEffect(() => {
+    if (setSubmitHandler) {
+      setSubmitHandler(() => handleSubmitDowntimeSheet);
+    }
+  }, [handleSubmitDowntimeSheet, setSubmitHandler]);
 
   const validateMagicSchoolSelection = (
     selectedMagicSchool,
@@ -1920,44 +1942,6 @@ const DowntimeForm = ({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {dicePool.length > 0 && editable && (
-        <div style={styles.actionButtons}>
-          <button
-            onClick={handleSaveAsDraft}
-            disabled={isSavingDraft}
-            style={{
-              ...styles.button,
-              ...styles.successButton,
-              ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-              backgroundColor: theme.primary,
-              width: "100%",
-              borderRadius: "8px",
-              margin: "auto",
-              fontSize: "16px",
-            }}
-          >
-            {isSavingDraft ? "Saving..." : "Save as Draft"}
-          </button>
-
-          <button
-            onClick={handleSubmitDowntimeSheet}
-            disabled={isSubmitting}
-            style={{
-              ...styles.button,
-              ...styles.successButton,
-              ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-              backgroundColor: theme.success,
-              width: "100%",
-              borderRadius: "8px",
-              margin: "auto",
-              fontSize: "16px",
-            }}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Downtime Sheet"}
-          </button>
         </div>
       )}
     </div>
