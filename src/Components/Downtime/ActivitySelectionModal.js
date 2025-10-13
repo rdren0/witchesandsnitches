@@ -175,8 +175,7 @@ const ActivitySelectionModal = ({
             display: "flex",
             gap: "8px",
             flexWrap: "wrap",
-            maxHeight: "120px",
-            overflowY: "auto",
+            overflow: "visible",
           }}
         >
           <button
@@ -192,7 +191,7 @@ const ActivitySelectionModal = ({
               }`,
               borderRadius: "20px",
               cursor: "pointer",
-              fontSize: "13px",
+              fontSize: "12px",
               fontWeight: "500",
               transition: "all 0.2s",
               whiteSpace: "nowrap",
@@ -214,7 +213,7 @@ const ActivitySelectionModal = ({
                 }`,
                 borderRadius: "20px",
                 cursor: "pointer",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "500",
                 transition: "all 0.2s",
                 whiteSpace: "nowrap",
