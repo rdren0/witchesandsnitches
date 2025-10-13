@@ -1649,7 +1649,7 @@ const CharacterSheet = ({
                       characterModifiers,
                     })
                   }
-                  title={`Click to roll initiative: d20 + ${formatModifier(
+                  title={`Click to roll initiative: d20 ${formatModifier(
                     character.initiativeModifier
                   )}`}
                 >
@@ -1710,7 +1710,7 @@ const CharacterSheet = ({
                     onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
                     title={`Click to roll ${getSpellcastingAbility(
                       character.castingStyle
-                    )} ability check (no proficiency): d20 + ${formatModifier(
+                    )} ability check (no proficiency): d20 ${formatModifier(
                       getSpellcastingAbilityModifier(character)
                     )}`}
                   >

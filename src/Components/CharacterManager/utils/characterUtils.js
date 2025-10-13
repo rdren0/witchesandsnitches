@@ -519,6 +519,11 @@ export const getAllAbilityModifiers = (character) => {
               ? choiceName
               : choiceName.mainChoice || choiceName.name || String(choiceName);
 
+          const benefitSelections =
+            typeof choiceName === "object" && choiceName.benefitSelections
+              ? choiceName.benefitSelections
+              : {};
+
           const levelChoices = subclassData.choices?.[level];
           if (levelChoices && Array.isArray(levelChoices)) {
             const selectedChoice = levelChoices.find(
@@ -526,6 +531,21 @@ export const getAllAbilityModifiers = (character) => {
             );
 
             if (selectedChoice) {
+              Object.entries(benefitSelections).forEach(
+                ([benefitKey, selections]) => {
+                  if (
+                    benefitKey.startsWith("abilityScoreIncrease_") &&
+                    Array.isArray(selections)
+                  ) {
+                    selections.forEach((ability) => {
+                      if (modifiers.hasOwnProperty(ability)) {
+                        modifiers[ability] += 1;
+                      }
+                    });
+                  }
+                }
+              );
+
               const abilityIncreases = checkForModifiers(
                 selectedChoice,
                 "abilityIncreases"

@@ -36,9 +36,20 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
     Object.entries(choices).forEach(([level, choice]) => {
       if (choice) {
         if (Array.isArray(choice)) {
-          normalized[level] = choice;
+          normalized[level] = choice.map((c) => {
+            if (typeof c === "string") {
+              return { name: c, benefitSelections: {} };
+            } else if (typeof c === "object" && c.name) {
+              return {
+                name: c.name,
+                benefitSelections: c.benefitSelections || {},
+              };
+            } else {
+              return { name: String(c), benefitSelections: {} };
+            }
+          });
         } else if (typeof choice === "string") {
-          normalized[level] = [choice];
+          normalized[level] = [{ name: choice, benefitSelections: {} }];
         } else if (typeof choice === "object") {
           if (choice.mainChoice && choice.subChoice) {
             normalized[level] = {
@@ -46,13 +57,24 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
               subChoice: choice.subChoice,
             };
           } else if (choice.name) {
-            normalized[level] = [choice.name];
+            normalized[level] = [
+              {
+                name: choice.name,
+                benefitSelections: choice.benefitSelections || {},
+              },
+            ];
           } else if (choice.selectedChoice) {
-            normalized[level] = [choice.selectedChoice];
+            normalized[level] = [
+              { name: choice.selectedChoice, benefitSelections: {} },
+            ];
           } else if (choice.choice) {
-            normalized[level] = [choice.choice];
+            normalized[level] = [
+              { name: choice.choice, benefitSelections: {} },
+            ];
           } else {
-            normalized[level] = [String(choice)];
+            normalized[level] = [
+              { name: String(choice), benefitSelections: {} },
+            ];
           }
         }
       }
@@ -80,7 +102,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
 
     const benefitChoices = [];
 
-    // Skill Proficiencies
     if (benefits.skillProficiencies) {
       benefits.skillProficiencies.forEach((skillProf) => {
         if (skillProf.type === "choice") {
@@ -95,13 +116,12 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Skill Expertise
     if (benefits.skillExpertise) {
       benefits.skillExpertise.forEach((skillExp) => {
         if (skillExp.type === "choice") {
           benefitChoices.push({
             type: "skillExpertise",
-            options: [], // Will be filled from character's proficient skills
+            options: [],
             count: skillExp.count || 1,
             from: skillExp.from || "proficient skills",
           });
@@ -109,7 +129,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Ability Score Increases
     if (benefits.abilityScoreIncrease?.type === "choice") {
       benefitChoices.push({
         type: "abilityScoreIncrease",
@@ -119,7 +138,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Tool Proficiencies
     if (benefits.toolProficiencies) {
       benefits.toolProficiencies.forEach((toolProf) => {
         if (toolProf.type === "choice") {
@@ -133,7 +151,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Spell Lists
     if (benefits.spellList?.type === "choice") {
       benefitChoices.push({
         type: "spellList",
@@ -142,7 +159,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Spells
     if (benefits.spells?.type === "choice") {
       benefitChoices.push({
         type: "spells",
@@ -151,7 +167,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Immunities
     if (benefits.immunities) {
       benefits.immunities.forEach((immunity) => {
         if (immunity.type === "choice") {
@@ -164,7 +179,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Special Abilities
     if (benefits.specialAbilities) {
       benefits.specialAbilities.forEach((ability) => {
         if (ability.type === "choice") {
@@ -178,7 +192,6 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    // Potion Recipes
     if (benefits.potionRecipes?.type === "choice") {
       benefitChoices.push({
         type: "potionRecipe",
@@ -190,112 +203,117 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
     return benefitChoices;
   }, []);
 
-  const parseAllFeaturesByLevel = useCallback((subclassData) => {
-    if (!subclassData) return {};
+  const parseAllFeaturesByLevel = useCallback(
+    (subclassData) => {
+      if (!subclassData) return {};
 
-    const featuresByLevel = {};
+      const featuresByLevel = {};
 
-    if (subclassData.level1Features) {
-      featuresByLevel[1] = {
-        features: subclassData.level1Features,
-        choices: subclassData.level1Choices || [],
-        selectionCount: subclassData.level1SelectionCount || 1,
-      };
-    }
+      if (subclassData.level1Features) {
+        featuresByLevel[1] = {
+          features: subclassData.level1Features,
+          choices: subclassData.level1Choices || [],
+          selectionCount: subclassData.level1SelectionCount || 1,
+        };
+      }
 
-    if (subclassData.higherLevelFeatures) {
-      subclassData.higherLevelFeatures.forEach((feature) => {
-        const level = feature.level;
+      if (subclassData.higherLevelFeatures) {
+        subclassData.higherLevelFeatures.forEach((feature) => {
+          const level = feature.level;
 
-        if (!featuresByLevel[level]) {
-          featuresByLevel[level] = {
-            features: [],
-            choices: [],
-            selectionCount: feature.selectionCount || 1,
-          };
-        }
+          if (!featuresByLevel[level]) {
+            featuresByLevel[level] = {
+              features: [],
+              choices: [],
+              selectionCount: feature.selectionCount || 1,
+            };
+          }
 
-        if (feature.choices && Array.isArray(feature.choices)) {
-          const processedChoices = feature.choices.map((choice) => {
-            // Extract benefit choices
-            const benefitChoices = extractBenefitChoices(choice.benefits);
+          if (feature.choices && Array.isArray(feature.choices)) {
+            const processedChoices = feature.choices.map((choice) => {
+              const benefitChoices = extractBenefitChoices(choice.benefits);
 
-            if (choice.description && choice.description.includes("Choose:")) {
-              const parts = choice.description.split("Choose:");
-              const beforeChoose = parts[0].trim();
-              const afterChoose = parts[1];
+              if (
+                choice.description &&
+                choice.description.includes("Choose:")
+              ) {
+                const parts = choice.description.split("Choose:");
+                const beforeChoose = parts[0].trim();
+                const afterChoose = parts[1];
 
-              const endings = [
-                " to gain proficiency in",
-                ". After",
-                ". Once",
-                ". Master",
-              ];
-              let choicesText = afterChoose;
-              let afterChoices = "";
+                const endings = [
+                  " to gain proficiency in",
+                  ". After",
+                  ". Once",
+                  ". Master",
+                ];
+                let choicesText = afterChoose;
+                let afterChoices = "";
 
-              for (const ending of endings) {
-                if (afterChoose.includes(ending)) {
-                  const splitPoint = afterChoose.indexOf(ending);
-                  choicesText = afterChoose.substring(0, splitPoint);
-                  afterChoices = afterChoose.substring(splitPoint);
-                  break;
+                for (const ending of endings) {
+                  if (afterChoose.includes(ending)) {
+                    const splitPoint = afterChoose.indexOf(ending);
+                    choicesText = afterChoose.substring(0, splitPoint);
+                    afterChoices = afterChoose.substring(splitPoint);
+                    break;
+                  }
                 }
+
+                const nestedChoices = choicesText.split(" or ").map((opt) => ({
+                  name: opt.trim(),
+                  description: `${beforeChoose} ${opt.trim()}${afterChoices}`,
+                }));
+
+                return {
+                  ...choice,
+                  description: beforeChoose,
+                  hasNestedChoices: true,
+                  nestedChoices: nestedChoices,
+                  benefitChoices: benefitChoices,
+                };
               }
-
-              const nestedChoices = choicesText.split(" or ").map((opt) => ({
-                name: opt.trim(),
-                description: `${beforeChoose} ${opt.trim()}${afterChoices}`,
-              }));
-
               return {
                 ...choice,
-                description: beforeChoose,
-                hasNestedChoices: true,
-                nestedChoices: nestedChoices,
                 benefitChoices: benefitChoices,
               };
-            }
-            return {
-              ...choice,
-              benefitChoices: benefitChoices,
-            };
-          });
-
-          featuresByLevel[level].choices = processedChoices;
-
-          featuresByLevel[level].features.push({
-            name: feature.name,
-            description: feature.description,
-          });
-        } else if (
-          feature.description &&
-          feature.description.includes("Choose:")
-        ) {
-          const choicesText = feature.description.split("Choose:")[1];
-          if (choicesText) {
-            const choices = choicesText.split(" or ").map((choice) => {
-              const cleanChoice = choice.trim().split("(")[0].trim();
-              return {
-                name: cleanChoice,
-                description: choice.trim(),
-              };
             });
-            featuresByLevel[level].choices = choices;
+
+            featuresByLevel[level].choices = processedChoices;
 
             featuresByLevel[level].features.push({
               name: feature.name,
-              description: feature.description.split("Choose:")[0].trim(),
+              description: feature.description,
             });
-          }
-        } else {
-          featuresByLevel[level].features.push(feature);
-        }
-      });
-    }
+          } else if (
+            feature.description &&
+            feature.description.includes("Choose:")
+          ) {
+            const choicesText = feature.description.split("Choose:")[1];
+            if (choicesText) {
+              const choices = choicesText.split(" or ").map((choice) => {
+                const cleanChoice = choice.trim().split("(")[0].trim();
+                return {
+                  name: cleanChoice,
+                  description: choice.trim(),
+                };
+              });
+              featuresByLevel[level].choices = choices;
 
-    return featuresByLevel;
-  }, [extractBenefitChoices]);
+              featuresByLevel[level].features.push({
+                name: feature.name,
+                description: feature.description.split("Choose:")[0].trim(),
+              });
+            }
+          } else {
+            featuresByLevel[level].features.push(feature);
+          }
+        });
+      }
+
+      return featuresByLevel;
+    },
+    [extractBenefitChoices]
+  );
 
   const getAvailableLevels = useCallback(
     (subclassData) => {
@@ -433,16 +451,24 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
 
     if (isMainChoice) {
       if (Array.isArray(currentChoice)) {
-        const isSelected = currentChoice.includes(choiceName);
+        const isSelected = currentChoice.some(
+          (c) => (typeof c === "object" && c.name ? c.name : c) === choiceName
+        );
         if (isSelected) {
           newChoices = {
             ...normalizedSubclassChoices,
-            [level]: currentChoice.filter((c) => c !== choiceName),
+            [level]: currentChoice.filter(
+              (c) =>
+                (typeof c === "object" && c.name ? c.name : c) !== choiceName
+            ),
           };
         } else {
           newChoices = {
             ...normalizedSubclassChoices,
-            [level]: [...currentChoice, choiceName],
+            [level]: [
+              ...currentChoice,
+              { name: choiceName, benefitSelections: {} },
+            ],
           };
         }
       } else if (
@@ -457,7 +483,7 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       } else {
         newChoices = {
           ...normalizedSubclassChoices,
-          [level]: [choiceName],
+          [level]: [{ name: choiceName, benefitSelections: {} }],
         };
       }
     } else {
@@ -469,6 +495,59 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
         },
       };
     }
+
+    onChange("subclassChoices", newChoices);
+  };
+
+  const handleBenefitSelectionChange = (
+    level,
+    choiceName,
+    benefitType,
+    selectedValue,
+    isRadio = false
+  ) => {
+    const currentChoice = normalizedSubclassChoices[level];
+
+    if (!Array.isArray(currentChoice)) return;
+
+    const updatedChoices = currentChoice.map((c) => {
+      const cName = typeof c === "object" && c.name ? c.name : c;
+
+      if (cName === choiceName) {
+        const currentBenefitSelections =
+          typeof c === "object" ? c.benefitSelections || {} : {};
+        const currentTypeSelections =
+          currentBenefitSelections[benefitType] || [];
+
+        let newTypeSelections;
+        if (isRadio) {
+          newTypeSelections = [selectedValue];
+        } else {
+          if (currentTypeSelections.includes(selectedValue)) {
+            newTypeSelections = currentTypeSelections.filter(
+              (val) => val !== selectedValue
+            );
+          } else {
+            newTypeSelections = [...currentTypeSelections, selectedValue];
+          }
+        }
+
+        return {
+          name: cName,
+          benefitSelections: {
+            ...currentBenefitSelections,
+            [benefitType]: newTypeSelections,
+          },
+        };
+      }
+
+      return c;
+    });
+
+    const newChoices = {
+      ...normalizedSubclassChoices,
+      [level]: updatedChoices,
+    };
 
     onChange("subclassChoices", newChoices);
   };
@@ -487,7 +566,9 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
       );
     } else {
       if (Array.isArray(currentChoice)) {
-        return currentChoice.includes(choiceName);
+        return currentChoice.some(
+          (c) => (typeof c === "object" && c.name ? c.name : c) === choiceName
+        );
       } else if (typeof currentChoice === "string") {
         return currentChoice === choiceName;
       } else if (typeof currentChoice === "object") {
@@ -520,6 +601,357 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
     const lockedLevels = allLevels.filter((level) => level > characterLevel);
 
     return lockedLevels.sort((a, b) => a - b);
+  };
+
+  const renderBenefitChoices = (level, choiceName, benefitChoices) => {
+    if (!benefitChoices || benefitChoices.length === 0) return null;
+
+    const currentChoice = normalizedSubclassChoices[level];
+    if (!Array.isArray(currentChoice)) return null;
+
+    const choiceObj = currentChoice.find(
+      (c) => (typeof c === "object" && c.name ? c.name : c) === choiceName
+    );
+    const currentBenefitSelections =
+      typeof choiceObj === "object" ? choiceObj.benefitSelections || {} : {};
+
+    return (
+      <div
+        style={{
+          marginLeft: "20px",
+          marginTop: "10px",
+          padding: "12px",
+          border: `1px solid ${theme.border}`,
+          borderRadius: "6px",
+          backgroundColor: theme.surfaceHover,
+        }}
+      >
+        {benefitChoices.map((benefit, benefitIndex) => {
+          const benefitKey = `${benefit.type}_${benefitIndex}`;
+          const currentSelections = currentBenefitSelections[benefitKey] || [];
+
+          if (benefit.type === "skillProficiency") {
+            return (
+              <div key={benefitKey} style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: theme.text,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Select {benefit.count} skill{benefit.count > 1 ? "s" : ""}
+                  {benefit.expertise
+                    ? " (gain expertise if already proficient)"
+                    : ""}
+                  :
+                  {currentSelections.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "8px",
+                        color:
+                          currentSelections.length >= benefit.count
+                            ? theme.success
+                            : theme.warning,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ({currentSelections.length}/{benefit.count} selected)
+                    </span>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
+                  {benefit.options.map((skill) => {
+                    const isSelected = currentSelections.includes(skill);
+                    const canSelect =
+                      isSelected || currentSelections.length < benefit.count;
+
+                    return (
+                      <label
+                        key={skill}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          cursor:
+                            disabled || !canSelect ? "not-allowed" : "pointer",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          border: `1px solid ${
+                            isSelected ? theme.primary : theme.border
+                          }`,
+                          backgroundColor: isSelected
+                            ? `${theme.primary}15`
+                            : theme.surface,
+                          opacity: !canSelect && !isSelected ? 0.5 : 1,
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!disabled && canSelect) {
+                            handleBenefitSelectionChange(
+                              level,
+                              choiceName,
+                              benefitKey,
+                              skill
+                            );
+                          }
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={disabled || !canSelect}
+                          onChange={() => {}}
+                          style={{
+                            margin: 0,
+                            accentColor: theme.primary,
+                            cursor:
+                              disabled || !canSelect
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span
+                          style={{
+                            color: isSelected ? theme.primary : theme.text,
+                            fontWeight: isSelected ? "600" : "500",
+                          }}
+                        >
+                          {skill}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          if (benefit.type === "toolProficiency") {
+            return (
+              <div key={benefitKey} style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: theme.text,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Select {benefit.count} tool proficienc
+                  {benefit.count > 1 ? "ies" : "y"}:
+                  {currentSelections.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "8px",
+                        color:
+                          currentSelections.length >= benefit.count
+                            ? theme.success
+                            : theme.warning,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ({currentSelections.length}/{benefit.count} selected)
+                    </span>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
+                  {benefit.options.map((tool) => {
+                    const isSelected = currentSelections.includes(tool);
+                    const canSelect =
+                      isSelected || currentSelections.length < benefit.count;
+
+                    return (
+                      <label
+                        key={tool}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          cursor:
+                            disabled || !canSelect ? "not-allowed" : "pointer",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          border: `1px solid ${
+                            isSelected ? theme.primary : theme.border
+                          }`,
+                          backgroundColor: isSelected
+                            ? `${theme.primary}15`
+                            : theme.surface,
+                          opacity: !canSelect && !isSelected ? 0.5 : 1,
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!disabled && canSelect) {
+                            handleBenefitSelectionChange(
+                              level,
+                              choiceName,
+                              benefitKey,
+                              tool
+                            );
+                          }
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={disabled || !canSelect}
+                          onChange={() => {}}
+                          style={{
+                            margin: 0,
+                            accentColor: theme.primary,
+                            cursor:
+                              disabled || !canSelect
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span
+                          style={{
+                            color: isSelected ? theme.primary : theme.text,
+                            fontWeight: isSelected ? "600" : "500",
+                          }}
+                        >
+                          {tool}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          if (benefit.type === "abilityScoreIncrease") {
+            return (
+              <div key={benefitKey} style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: theme.text,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Select an ability to increase by +{benefit.amount}:
+                  {currentSelections.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "8px",
+                        color: theme.success,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ({currentSelections[0]})
+                    </span>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
+                  {benefit.options.map((ability) => {
+                    const isSelected = currentSelections.includes(ability);
+
+                    return (
+                      <label
+                        key={ability}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "12px",
+                          cursor: disabled ? "not-allowed" : "pointer",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          border: `1px solid ${
+                            isSelected ? theme.primary : theme.border
+                          }`,
+                          backgroundColor: isSelected
+                            ? `${theme.primary}15`
+                            : theme.surface,
+                          transition: "all 0.2s ease",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!disabled) {
+                            handleBenefitSelectionChange(
+                              level,
+                              choiceName,
+                              benefitKey,
+                              ability,
+                              true
+                            );
+                          }
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={`${benefitKey}-${choiceName}`}
+                          checked={isSelected}
+                          disabled={disabled}
+                          onChange={() => {}}
+                          style={{
+                            margin: 0,
+                            accentColor: theme.primary,
+                            cursor: disabled ? "not-allowed" : "pointer",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span
+                          style={{
+                            color: isSelected ? theme.primary : theme.text,
+                            fontWeight: isSelected ? "600" : "500",
+                          }}
+                        >
+                          {ability}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={benefitKey} style={{ marginBottom: "12px" }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: theme.textSecondary,
+                  fontStyle: "italic",
+                }}
+              >
+                {benefit.type} selection (UI coming soon)
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const renderLevelFeatures = (subclassData, level) => {
@@ -601,7 +1033,11 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
                   Current selection:{" "}
                   {Array.isArray(selectedChoice)
                     ? selectedChoice.length > 0
-                      ? selectedChoice.join(", ")
+                      ? selectedChoice
+                          .map((c) =>
+                            typeof c === "object" && c.name ? c.name : c
+                          )
+                          .join(", ")
                       : "None"
                     : typeof selectedChoice === "object"
                     ? `${selectedChoice.mainChoice} (${
@@ -810,6 +1246,16 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
                       </div>
                     </div>
                   )}
+
+                  {isSelected &&
+                    isMainChoiceSelected &&
+                    choice.benefitChoices &&
+                    choice.benefitChoices.length > 0 &&
+                    renderBenefitChoices(
+                      level,
+                      choice.name,
+                      choice.benefitChoices
+                    )}
                 </div>
               );
             })}
@@ -907,7 +1353,9 @@ const SubclassSection = ({ character, onChange, disabled = false }) => {
           const choiceDisplay = hasChoice
             ? Array.isArray(choice)
               ? choice.length > 0
-                ? `${choice.join(", ")} (${choice.length}/${requiredCount})`
+                ? `${choice
+                    .map((c) => (typeof c === "object" && c.name ? c.name : c))
+                    .join(", ")} (${choice.length}/${requiredCount})`
                 : "Not selected"
               : typeof choice === "object"
               ? `${choice.mainChoice} (${choice.subChoice || "incomplete"})`
