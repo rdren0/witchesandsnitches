@@ -60,7 +60,7 @@ export const subclassesData = {
           {
             name: "Protective Enchantments",
             description:
-              "You gain access to the Protego spell. Additionally, when you cast a Protego, you may choose to affect a friendly creature within 30 feet. When you or a friendly creature is affected by one of your protego spells, they may roll 1d4 and add that number to the AC bonus of the spell. At 5th level, you gain access to Protego Maxima and can cast either spell twice per round as reactions.",
+              "You gain access to the Protego spell. Additionally, when you cast a Protego, you may choose to affect a friendly creature within 30 feet. When you or a friendly creature is affected by one of your protego spells, they may roll 1d4 and add that number to the AC bonus of the spell.\n\nAt Higher Levels. At 5th level you gain access to the protego maxima spell, and when you cast a protego or protego maxima as a reaction, you may cast either spell a second time as a free reaction per round.",
             benefits: {
               spells: ["Protego", "Protego Maxima (at 5th level)"],
               specialAbilities: [
@@ -244,7 +244,7 @@ export const subclassesData = {
           {
             name: "The Sound of Silence",
             description:
-              "Gain Subtle Spell metamagic (doesn't count toward limit). Use Subtle Spell for half normal sorcery points. If you already have Subtle Spell, exchange it for a different metamagic.",
+              "You are a master of being silent when it counts. If you don't already have it, Subtle Spell is added to your metamagic options and does not count towards your metamagic count. When you use the Subtle Spell metamagic to cast a spell of 1st level or lower silently, you can do so without expending a sorcery point. If you already have Subtle Spell as a metamagic, you may exchange it for a different metamagic of your choice.",
             benefits: {
               metamagic: ["Subtle Spell (free)"],
               specialAbilities: [
@@ -324,7 +324,7 @@ export const subclassesData = {
           {
             name: "Auror Training",
             description:
-              "You've started practicing skills to become an Auror. You learn two common potion recipes (or one uncommon), gain an Auror's kit with tracking tools, disguise items, false identity materials, and a healing vial (1d4 HP per dose, proficiency bonus doses per long rest). Gain proficiency in two of: Investigation, Potion-Making, Stealth, Survival.",
+              "You've already started practicing the required skills to become an Auror. You learn two common potion recipes or one uncommon potion recipe and gain an Auror's kit containing tracking tools, disguise and false identity items and a vial that restores 1d4 HP per dose and contains a number of doses equal to your proficiency bonus per long rest. Additionally, you gain proficiency in two of the following: Investigation, Potion-Making, Stealth, Survival.",
             benefits: {
               equipment: ["Auror's Kit"],
               potionRecipes: {
@@ -356,7 +356,7 @@ export const subclassesData = {
           {
             name: "Curse-Breaking",
             description:
-              "Your curiosity in dismantling spells has found an outlet. When you or an ally within 5 feet are targeted by any Jinx, Hex, Curse, or Dark spell, you can use your reaction to make a spellcasting ability check (DC 10 + spell level). On success, you change the spell into a different locked-in JHC or Dark spell of your choosing.",
+              "Your curiosity in taking apart spells and enchantments has found an outlet. When you or an ally within 5 feet of you are the target of any Jinx, Hex, Curse or Dark spell, you can use your reaction to make a spellcasting ability check with a DC of 10+ the spell's level. If you succeed, you change the spell into a locked in Jinx, Hex, Curse or Dark spell of your choosing.",
             benefits: {
               specialAbilities: [
                 {
@@ -380,7 +380,7 @@ export const subclassesData = {
           {
             name: "Forceful Magic",
             description:
-              "When you cast a spell requiring a spell attack, make an additional melee spell attack as a bonus action (1d6 + spellcasting modifier damage). Damage increases: 1d8 at 8th level, 1d10 at 10th level, 1d12 at 12th level.",
+              "You cast every spell as if it were life-or-death. When you cast a spell that requires you to make a spell attack you can make an additional melee spell attack using your spell attack modifier as a Bonus Action. The damage for this attack is 1d6 + your spellcasting ability modifier.\n\nThis damage increases to 1d8 at 8th level, 1d10 at 10th level, and 1d12 at 12th level.",
             benefits: {
               specialAbilities: [
                 {
@@ -403,7 +403,7 @@ export const subclassesData = {
           {
             name: "Magical Adrenaline",
             description:
-              "As a bonus action, regain 1d10 + your level hit points. Use 1 + Constitution modifier times per long rest (minimum 1).",
+              "Your magic invigorates you in times of dire need. As a bonus action you can regain hit points equal to 1d10 + your level. You have a number of uses equal to 1 + your Constitution Modifier (with a minimum of 1), and all uses are restored after a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -419,9 +419,9 @@ export const subclassesData = {
       },
       {
         level: 9,
-        name: "Enhanced Curses",
+        name: "Hex",
         description:
-          "When you hit a creature with a Jinx, Hex, or Curse, use bonus action to deal additional damage equal to JHC modifier + Charisma modifier. Use JHC modifier times per long rest.",
+          "At 9th level when you hit a creature with a Jinx, Hex or Curse you can use your bonus action to deal additional damage to the target equal to your JHC modifier + your Charisma modifier.\n\nYou can use this feature a number of times equal to your JHC modifier per long rest.",
         benefits: {
           specialAbilities: [
             {
@@ -444,7 +444,7 @@ export const subclassesData = {
           {
             name: "Dark Traces",
             description:
-              "As an action, detect Dark Beings or Dark magics within 60 feet until end of next turn (not behind total cover). Know creature type but not identity. Use 1 + Charisma modifier times per long rest.",
+              "The presence of strong evil registers on your senses like a noxious odor. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any Dark Beings or Dark magics (such as magical traps) within 60 feet of you that are not behind total cover. You know the type (human, beast, inferi) of any being whose presence you sense, but not its identity (Lord Voldemort, for instance).\n\nYou can use this feature a number of times equal to 1 + your Charisma modifier. When you finish a long rest, you regain all expended uses.",
             benefits: {
               specialAbilities: [
                 {
@@ -461,7 +461,7 @@ export const subclassesData = {
           {
             name: "Ward-Breaker",
             description:
-              "Requires Curse-Breaking. When hostile creature casts JHC/Dark spell with area effect, reaction to make spellcasting check (DC 12 + spell level). Success redirects spell origin to center on the caster.",
+              "Curse-Breaking required. You have perfected your ability of breaking spells and enchantments. When a hostile creature casts a Jinx, Hex, Curse or Dark spell with an area of effect (cube, line, sphere, or cone) you can use your reaction to make a spellcasting ability check with a DC of 12+ the spell's level. If you succeed, you redirect the origin of the spell to be centered on the caster.",
             requirements: ["Curse-Breaking"],
             benefits: {
               specialAbilities: [
@@ -485,7 +485,7 @@ export const subclassesData = {
           {
             name: "Dark Duelist",
             description:
-              "Advantage on saving throws against Jinxes, Hexes, Curses, or Dark spells. Your JHC/Dark spells are automatically cast one level higher than the consumed spell slot (not exceeding your highest available slot level).",
+              "Your experience fighting Dark wizards has taught you how to use their own techniques against them. You have advantage on any saving throws made against Jinxes, Hexes, Curses or Dark spells, and any Jinxes, Hexes, Curses, or Dark spells you cast are automatically cast one level higher than the consumed spell slot, not exceeding the highest available level of spell slots you have.",
             benefits: {
               savingThrows: {
                 advantage: ["Jinxes", "Hexes", "Curses", "Dark spells"],
@@ -507,7 +507,7 @@ export const subclassesData = {
           {
             name: "Defensive Arts",
             description:
-              "If a creature misses a ranged spell attack against you, or you succeed on a spell's saving throw, blast the attacker with 4d6 arcane force damage as a reaction.",
+              "If a creature misses a ranged spell attack against you, or you succeed on a spell's saving throw, you can blast the attacker with 4d6 arcane force damage as a reaction.",
             benefits: {
               specialAbilities: [
                 {
@@ -531,7 +531,7 @@ export const subclassesData = {
           {
             name: "Dark Manipulation",
             description:
-              "Use an action to summon two inferi to fight with you. Once per long rest.",
+              "You can use an action to summon two inferi to fight with you. You can't use this feature again until you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -579,7 +579,7 @@ export const subclassesData = {
               name: "Anatomy Textbook",
               type: "spell enhancement",
               description:
-                "When casting a Transfiguration spell that normally requires a higher-level slot to affect a living creature, you can instead use a slot one level lower than normal. In addition, when you cast Vera Verto, it can automatically target creatures one size larger than normally allowed for the slot level used.",
+                "Your deep understanding of living anatomy makes altering creatures second nature. When casting a Transfiguration spell that normally requires a higher-level slot to affect a living creature, you can instead use a slot one level lower than normal. In addition, when you cast Vera Verto, it can automatically target creatures one size larger than normally allowed for the slot level used.",
             },
           ],
         },
@@ -608,7 +608,7 @@ export const subclassesData = {
           {
             name: "Elementalist",
             description:
-              "Your study of Alchemy has given you insights in the nature of elements. You can choose one of the following Effects: Any spell that involves only fire, water, earth, or air is automatically cast one level higher than the consumed spell slot, not exceeding the highest available level of spell slots you have. OR Any time you cast a spell that deals acid, cold, fire, lightning, or thunder damage, you deal an additional 1d4 damage. The damage die increases to 2d4 at 5th Level, 3d4 at 9th level, 4d4 at 13th level and 5d4 at 17th level. Additionally, you can use a bonus action on your turn to cause whirling gusts of elemental air to briefly surround you, immediately before or after you cast a spell of 1st level or higher. Doing so allows you to fly up to 10 feet without provoking opportunity attacks.",
+              "Your study of Alchemy has given you insights in the nature of elements. You can choose one of the following Effects:\n* Any spell that involves only fire, water, earth, or air is automatically cast one level higher than the consumed spell slot, not exceeding the highest available level of spell slots you have.\n* Any time you cast a spell that deals acid, cold, fire, lightning, or thunder damage, you deal an additional 1d4 damage. The damage die increases to 2d4 at 5th Level, 3d4 at 9th level, 4d4 at 13th level and 5d4 at 17th level.\nAdditionally, you can use a bonus action on your turn to cause whirling gusts of elemental air to briefly surround you, immediately before or after you cast a spell of 1st level or higher. Doing so allows you to fly up to 10 feet without provoking opportunity attacks.",
             benefits: {
               specialAbilities: [
                 {
@@ -807,8 +807,8 @@ export const subclassesData = {
           {
             name: "Aura of Valiance",
             description:
-              "Requires Transfigured Armament. You and allies within 10 feet (30 feet at 18th level) gain Strength modifier bonus to saving throws while you're conscious.",
-            requirements: ["Transfigured Armament"],
+              "Transfigured Armament or Animagus Transformation Required. Whenever you or a friendly creature within 10 feet of you must make a saving throw, the creature gains a bonus to the saving throw equal to your Strength modifier (with a minimum bonus of +1). You must be conscious to grant this bonus.\n\nAt 18th level, the range of this aura increases to 30 feet.",
+            requirements: ["Transfigured Armament", "Animagus Transformation"],
             benefits: {
               specialAbilities: [
                 {
@@ -826,7 +826,7 @@ export const subclassesData = {
           {
             name: "Elemental Push",
             description:
-              "Requires Elementalist. Elemental damage reduces creature speed by 10 feet. Add Strength modifier to Incendio Ruptis damage.",
+              "Elementalist Required. When you deal acid, cold, fire, lightning, or thunder damage to a Large or smaller creature, you can reduce that creature's speed for 10 feet until the end of your next turn.\n\nAdditionally when you cast Incendio Ruptis, you can add your Strength Modifier to the damage it deals on a hit.",
             requirements: ["Elementalist"],
             benefits: {
               specialAbilities: [
@@ -855,7 +855,7 @@ export const subclassesData = {
           {
             name: "Partial Transfiguration",
             description:
-              "Any Transfiguration spell can target only desired portions of the target while maintaining all normal capabilities and restrictions.",
+              "Your understanding of magical theory has enabled you to compartmentalize your magic. Any transfiguration spell can be intentionally cast as a partial transfiguration, converting only the desired portion of the target. All the same capabilities and restrictions of casting those spells at higher levels apply.",
             benefits: {
               specialAbilities: [
                 {
@@ -870,7 +870,8 @@ export const subclassesData = {
           {
             name: "Molding the Elements",
             description:
-              "When hit by attack, reaction to deal your level in elemental damage and force Strength save (DC = spell save DC). Failed save pushes 20 feet, failure by 5+ knocks prone.",
+              "Elementalist Required When you are hit by an attack, you can use your reaction to deal acid, cold, fire, lightning, or thunder damage to the attacker. The damage equals your level. The attacker must also make a Strength saving throw against your spell save DC. On a failed save, the attacker is pushed in a straight line up to 20 feet away from you, if they fail the save by 5 or more, they are knocked prone.",
+            requirements: ["Elementalist"],
             benefits: {
               specialAbilities: [
                 {
@@ -1102,7 +1103,7 @@ export const subclassesData = {
         level: 1,
         name: "Star Grass Salve",
         description:
-          "You learn the star grass salve recipe. Use Intelligence (Potion Making) or Wisdom (Medicine) instead of Wisdom (Potion Making) when brewing. When administering star grass salve to others, it heals additional HP equal to your level.",
+          "You learn the recipe for star grass salve. When brewing a potion, you may make an Intelligence (Potion Making) or Wisdom (Medicine) check instead of a Wisdom (Potion Making) check. If you are using your action to administer a star grass salve to another creature, your star grass salve heals an additional amount of hit points equal to your level.",
         benefits: {
           potionRecipes: ["Star Grass Salve"],
           specialAbilities: [
@@ -1130,7 +1131,7 @@ export const subclassesData = {
           {
             name: "Unshakable Nerves",
             description:
-              "Your study of injuries and diseases has given you iron will. Cannot be frightened by non-magical effects and have advantage on Constitution saving throws.",
+              "Your study of injuries and magical diseases has given you a strong stomach and iron will. You cannot be frightened by non-magical effects, and have advantage on Constitution saving throws.",
             benefits: {
               immunities: ["frightened (non-magical)"],
               savingThrows: {
@@ -1149,7 +1150,7 @@ export const subclassesData = {
           {
             name: "Powerful Healer",
             description:
-              "Your healing spells are more effective. When using spells of 1st level or higher to restore HP, the target regains additional HP equal to 2 + spell level.",
+              "Your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level.",
             benefits: {
               specialAbilities: [
                 {
@@ -1164,7 +1165,7 @@ export const subclassesData = {
           {
             name: "Therapeutic Friendship",
             description:
-              "Create magical bonds among willing creatures (proficiency bonus creatures within 30 feet for 10 minutes). Bonded creatures within 30 feet of each other can add 1d4 to attack rolls, ability checks, or saves once per turn. Use proficiency bonus times per long rest.",
+              "You can forge an empowering bond among people who consider themselves your friends. As an action, you can choose a number of willing creatures within 30 feet of you (this can include yourself) equal to your proficiency bonus. You create a magical bond among them for 10 minutes or until you use this feature again. While any bonded creature is within 30 feet of another, the creature can roll a d4 and add the number rolled to an attack roll, an ability check, or a saving throw it makes. Each creature can add the d4 no more than once per turn.\n\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -1190,7 +1191,7 @@ export const subclassesData = {
           {
             name: "Preserve Life",
             description:
-              "As an action, restore HP equal to 5 × your level. Divide among creatures within 30 feet, maximum half their HP max each. Cannot target undead/constructs. Use half proficiency bonus times per long rest.",
+              "As an action, you evoke healing energy that can restore a number of hit points equal to five times your level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct.\n\nYou can use this feature a number of times equal to half of your proficiency bonus.",
             benefits: {
               specialAbilities: [
                 {
@@ -1207,7 +1208,7 @@ export const subclassesData = {
           {
             name: "Life Balm",
             description:
-              "As an action, move up to speed without provoking opportunity attacks. When moving within 5 feet of creatures, restore 2d6 + spellcasting modifier HP (minimum 1). Each creature can benefit once per use. Use half proficiency bonus times per long rest.",
+              "As an action, you can move up to your speed, without provoking opportunity attacks, and when you move within 5 feet of any other creature during this action, you can restore a number of hit points to that creature equal to 2d6 + your spellcasting ability modifier (minimum of 1 hit point). A creature can receive this healing only once whenever you take this action.\n\nYou can use this feature a number of times equal to half of your proficiency bonus.",
             benefits: {
               specialAbilities: [
                 {
@@ -1231,7 +1232,7 @@ export const subclassesData = {
           {
             name: "An Ounce of Prevention",
             description:
-              "Requires Powerful Healer. When casting healing spells of 1st level+ on others, you regain HP equal to 2 + spell level.",
+              "Powerful Healer Required. The healing spells you cast on others heal you as well. When you cast a spell of 1st level or higher that restores hit points to a creature other than you, you regain hit points equal to 2 + the spell's level.",
             requirements: ["Powerful Healer"],
             benefits: {
               specialAbilities: [
@@ -1247,7 +1248,7 @@ export const subclassesData = {
           {
             name: "A Saving-People Thing",
             description:
-              "Requires Therapeutic Friendship. When bonded creature takes damage, another bonded creature within 30 feet can use reaction to cast Protego, teleport within 5 feet, and take all damage instead.",
+              "Therapeutic Friendship Required. You and your friends will throw yourself in the line of fire to protect each other. When a creature affected by your Therapeutic Friendship feature is about to take damage, a second Friend within 30 feet can use their reaction to cast protego and teleport in front of that creature to an unoccupied space within 5 feet of that creature. The second creature then takes all of the damage if the attack still hits.",
             requirements: ["Therapeutic Friendship"],
             benefits: {
               specialAbilities: [
@@ -1267,7 +1268,7 @@ export const subclassesData = {
           {
             name: "Potent Spellcasting",
             description:
-              "Once per turn when hitting with spell attack, deal extra 1d8 radiant damage (2d8 at 14th level).",
+              "You gain the ability to power your attacks with your will to protect your friends. Once on each of your turns when you hit a creature with a spell attack, you can cause the spell to deal an extra 1d8 radiant damage to the target. When you reach 14th level, the extra damage increases to 2d8.",
             benefits: {
               specialAbilities: [
                 {
@@ -1288,7 +1289,7 @@ export const subclassesData = {
         level: 9,
         name: "Spell Breaker",
         description:
-          "When restoring HP with 1st level+ spell, can also end one spell on the target. Ended spell level must be ≤ healing spell slot level used.",
+          "At 9th Level when you restore hit points to an ally with a spell of 1st level or higher, you can also end one spell of your choice on that creature. The level of the spell you end must be equal to or lower than the level of the spell slot you use to cast the healing spell.",
         benefits: {
           specialAbilities: [
             {
@@ -1310,7 +1311,7 @@ export const subclassesData = {
           {
             name: "Never Give Up",
             description:
-              "While conscious, allies within 60 feet have advantage on death saves. Allies stabilized/healed from dying by your healing receive bonus HP equal to your level.",
+              "Your presence on the battlefield is a sign to allies that all will be well, and no person will be left behind on your watch. So long as you are conscious, allies within 60 feet of you have advantage on death saving throws. Allies stabilized or healed from the dying state by your spells, potions, or other healing actions within this range receive a bonus to hit points restored equal to your level.",
             benefits: {
               specialAbilities: [
                 {
@@ -1330,7 +1331,7 @@ export const subclassesData = {
           {
             name: "Emergency Care Plan",
             description:
-              "All Healing spell ranges doubled (Touch becomes 60 feet). Can cast healing spells on targets within range as long as you can hear them.",
+              "Your unparalleled ability to keep track of your allies and those in need in times of crisis and emergency is an asset to anybody in a state of dire need. All of your Healing spells' ranges are doubled. If a Healing spell has a range of touch, its new range is 60 feet. All healing spells you cast on targets within your spellcasting range may be cast as long as you can hear them.",
             benefits: {
               specialAbilities: [
                 {
@@ -1349,7 +1350,7 @@ export const subclassesData = {
           {
             name: "When It Matters",
             description:
-              "When rolling initiative (DM discretion), romantic partner, best friend, or significant NPC may apparate to your side for defense.",
+              "You've spent your entire life so far caring for others and keeping them safe, keeping them happy, and keeping them from harm. It's only right that those closest to you would want to return the favor. When appropriate, (DMs discretion), and you are rolling for initiative, a romantic partner, best friend and/or other significantly appropriate NPC may apparate to your side and come to your defense.",
             benefits: {
               specialAbilities: [
                 {
@@ -1372,7 +1373,7 @@ export const subclassesData = {
           {
             name: "Phoenix Tears",
             description:
-              "After 8 hours of magical outreach, a phoenix provides tears that remove all curses, diseases, poisons and restore all HP. Only works when you have no other tears, loses power if anyone else possesses/administers them.",
+              "Your saint-like devotion to others and bravery in the face of danger has earned the respect of phoenixes. If you spend 8 hours reaching out with your magic, a phoenix will appear in a flash of fire and shed tears into a vial for you. Phoenix tears remove all curses, diseases, and poisons affecting a creature. Also, the creature regains all its hit points. A phoenix will only appear and fill a vial with tears when you do not have any other tears, and the phoenix tears will lose their healing properties if anyone other than you possesses the tears or tries to administer them.",
             benefits: {
               specialAbilities: [
                 {
@@ -1396,7 +1397,7 @@ export const subclassesData = {
           {
             name: "Bold Caster",
             description:
-              "Add your Healing modifier to damage dealt with any locked-in cantrips.",
+              "You add your Healing Modifier to the damage you deal with any locked in Cantrips.",
             benefits: {
               specialAbilities: [
                 {
@@ -1419,7 +1420,7 @@ export const subclassesData = {
           {
             name: "Empathic Bond",
             description:
-              "Requires A Saving-People Thing. Therapeutic Friendship and A Saving-People Thing work at 60 feet range. When using A Saving-People Thing to take damage, gain resistance to that damage.",
+              "A Saving-People Thing Required. The benefits of your Theraputic Friendship and A Saving-People Thing features now work when the creatures are within 60 feet of each other. Moreover, when a creature uses A Saving-People Thing to take someone else's damage, the creature has resistance to that damage.",
             requirements: ["A Saving-People Thing"],
             benefits: {
               specialAbilities: [
@@ -1439,7 +1440,7 @@ export const subclassesData = {
           {
             name: "Supreme Healing",
             description:
-              "When rolling dice to restore HP with spells, use highest possible result for each die (e.g., 2d6 becomes 12 HP restored).",
+              "When you would normally roll one or more dice to restore hit points with a spell, you instead use the highest number possible for each die. For example, instead of restoring 2d6 hit points to a creature, you restore 12.",
             benefits: {
               specialAbilities: [
                 {
@@ -5671,7 +5672,7 @@ export const subclassesData = {
         level: 1,
         name: "Outward Expressions",
         description:
-          "At 1st level, you gain proficiency in Magical Creatures or History of Magic and choose your primary area of study. Note: Intellect casters do not gain the opposite ability at 3rd level, instead receiving an ASI or Feat.",
+          "At 1st level, you gain proficiency in Magical Creatures or History of Magic and choose one of the following features. At third level, Intellect casters do not gain the opposite ability in this subclass. Instead, they gain either an Ability Score Improvement or a Feat.",
         benefits: {
           skillProficiencies: [
             {
@@ -5691,7 +5692,7 @@ export const subclassesData = {
           {
             name: "Ghoulish Trick",
             description:
-              "Use illusion to take ghoulish form as bonus action for 1 minute. Gain 1d10 + level temporary HP, force Intelligence saves on attacks to avoid being frightened until end of next turn, immunity to frightened condition. Use proficiency bonus times per long rest.",
+              "You use illusionary trickery to take on a Ghoulish form. As a bonus action, you transform for 1 minute. You gain the following benefits while transformed: You gain temporary hit points equal to 1d10 + your level. Once during each of your turns, when you hit a creature with an attack, you can force it to make an Intelligence saving throw to see through the illusion or be terrified by your horrifying visage. If the saving throw fails, the target is frightened of you until the end of your next turn. Targets who have seen through your Ghoulish trick within the last 24 hours are immune to being frightened by you. You are immune to the frightened condition. You can transform a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.",
             benefits: {
               immunities: ["frightened (while in ghoulish form)"],
               specialAbilities: [
@@ -5709,12 +5710,12 @@ export const subclassesData = {
           {
             name: "Ancestral Call",
             description:
-              "As action, target creature becomes hindered by Ancient spirits until start of next turn. When target attacks or casts spell, must make Intelligence save or attack/spell hits Ancients and is wasted.",
+              "As a bonus action, you call upon the Ancient historical figures you have studied to fight alongside you. One creature of your choice becomes the target of the Ancients, which hinder its attacks. Until the start of your next turn, when the target makes an attack or casts a spell that target must make an intelligence saving throw against your spell save DC. On a fail, the target's attack or spell hits the Ancients and is wasted.",
             benefits: {
               specialAbilities: [
                 {
                   name: "Spirit Hindrance",
-                  type: "action",
+                  type: "bonus action",
                   duration: "until start of next turn",
                   save: "Intelligence or waste attack/spell",
                 },
@@ -5732,7 +5733,7 @@ export const subclassesData = {
           {
             name: "Inner Ghoul",
             description:
-              "Requires Ghoulish Trick. Gain 60-foot darkvision (+30 feet if already have), invisible to darkvision while in darkness, replace spell damage with psychic once per turn (+1 damage die while using Ghoulish Trick).",
+              "Ghoulish Trick Required. Your fascination and study of Ghouls has caused you to be able to mimic their behaviors, and learn how to perform their magic. You gain the following benefits. You gain darkvision out to a range of 60 feet. If you already have darkvision from your race (Innate Feat), its range increases by 30 feet. While in darkness, you are invisible to any creature that relies on darkvision to see you in that darkness. Once during each of your turns, when you hit a creature with a spell attack and roll damage against the creature, you can replace the damage type with psychic damage. While you are using a Ghoulish Trick, you can roll one additional damage die when determining the psychic damage the target takes.",
             requirements: ["Ghoulish Trick"],
             benefits: {
               vision: {
@@ -5756,7 +5757,7 @@ export const subclassesData = {
           {
             name: "Ancient Guardian",
             description:
-              "Requires Ancestral Call. When creature within 30 feet takes damage, use reaction to reduce by 1d6 + spellcasting modifier (2d6 at 10th, 4d6 at 14th level).",
+              "Ancestral Call Required. The Ancient spirits that aid you can provide supernatural protection to those you defend. If a creature you can see within 30 feet of you takes damage, you can use your reaction to command an Ancient spirit to absorb the hit, reducing that damage by 1d6 + your spellcasting ability modifier. When you reach certain levels in this subclass, you can reduce the damage by more: by 2d6 at 10th level and by 4d6 at 14th level.",
             requirements: ["Ancestral Call"],
             benefits: {
               specialAbilities: [
@@ -5779,7 +5780,7 @@ export const subclassesData = {
         level: 9,
         name: "Dark Shield",
         description:
-          "Your connection to ghouls or spirits grants protection. Gain advantage on death saving throws and resistance to necrotic damage.",
+          "At 9th Level, your connection to Ghouls or Spirits grants you protection. You gain advantage on death saving throws and resistance to necrotic damage.",
         benefits: {
           resistances: ["necrotic"],
           savingThrows: {
@@ -5797,7 +5798,7 @@ export const subclassesData = {
           {
             name: "Warped Mind",
             description:
-              "Requires Inner Ghoul. Resistance to psychic damage (immunity while using Ghoulish Trick). When reduced to 0 HP, reaction to drop to 1 HP and release wail: 30-foot radius, 2d10 + level psychic damage, gain 2 exhaustion levels. Once per long rest.",
+              "Inner Ghoul Required. You've spent so much time with spooky creatures that you have fortified your mind against their attacks. You have resistance to psychic damage. If you are using your Ghoulish Trick, you instead become immune to psychic damage. In addition, when you are reduced to 0 hit points, you can use your reaction to drop to 1 hit point instead and let out an ear piercing wail, bursting with sonic energy. Each creature that is within 30 feet of you takes psychic damage equal to 2d10 + your level. You then gain 2 levels of exhaustion. Once you use this reaction, you can't do so again until you finish a long rest.",
             requirements: ["Inner Ghoul"],
             benefits: {
               resistances: ["psychic"],
@@ -5819,7 +5820,7 @@ export const subclassesData = {
           {
             name: "Ancestral Guidance",
             description:
-              "Requires Ancient Guardian. Free action at turn start: move through creatures/objects as difficult terrain, see/affect Unseen Realm. 1d10 force damage if ending turn in object. Lasts Intelligence modifier rounds. Once per short/long rest (twice at 14th level).",
+              "Ancient Guardian Required. As a free action at the start of your turn, you can compel your Ancient spirits to guide you through the Unseen Realm as long as you aren't incapacitated. You can move through other creatures and objects as if they were difficult terrain, as well as see and affect creatures and objects on the Unseen Realm. You take 1d10 force damage if you end your turn inside an object. This feature lasts for a number of rounds equal to your Intelligence modifier (minimum of 1 round). If you are inside an object when it ends, you are immediately shunted to the nearest unoccupied space and you take force damage equal to twice the number of feet you moved. Once you use this feature, you must finish a short or long rest before you can use it again. You can use Ancestral Guidance twice between rests starting at 14th level.",
             requirements: ["Ancient Guardian"],
             benefits: {
               specialAbilities: [
@@ -5851,7 +5852,7 @@ export const subclassesData = {
           {
             name: "Spook",
             description:
-              "Requires Warped Mind. When attacked without advantage, reaction to impose disadvantage and force Intelligence save or frighten. Immune if seen through Ghoulish trick in last 24 hours.",
+              "Warped Mind Required. You begin to behave in erratic ways that throw off your enemies. Whenever a creature makes an attack roll against you and doesn't have advantage on the roll, you can use your reaction to growl and gurgle in their direction, imposing disadvantage on it. Additionally, the target must succeed on an intelligence saving throw against your spell save DC or be frightened. Targets who have seen through your Ghoulish trick within the last 24 hours are immune to being frightened by you.",
             requirements: ["Warped Mind"],
             benefits: {
               specialAbilities: [
@@ -5869,7 +5870,7 @@ export const subclassesData = {
           {
             name: "Ancient Rebuke",
             description:
-              "Requires Ancestral Guidance. When using Ancient Guardian to reduce damage, the prevented damage rebounds to the attacker.",
+              "Ancestral Guidance Required. Your Ancient Spirits become temporal enough to retaliate. When you use your Ancient Guardian to reduce the damage of an attack, the damage rebounds and the attacker takes the amount of damage that your Guardian prevented.",
             requirements: ["Ancestral Guidance"],
             benefits: {
               specialAbilities: [
@@ -5893,7 +5894,7 @@ export const subclassesData = {
           {
             name: "Ghoulish Existence",
             description:
-              "Requires Spook. Enhanced Ghoulish Trick: regain 10 temp HP each turn, cast action spells as bonus action, touch attack spending 1-10 sorcery points for 1d10 psychic per point (Int save for half), enemies within 10 feet have disadvantage on saves. Once per long rest.",
+              "Spook Required. You can assume the form of a massive angry Ghoul, striking fear into those around you who do not know your true form. Your Ghoulish Trick gains the following benefits: At the start of each of your turns, you regain 10 temporary hit points. Whenever you cast a spell that has a casting time of 1 action, you can cast it using a bonus action instead. As an action, you touch one creature within 5 feet of you, and you expend 1 to 10 sorcery points. The target must make an Intelligence saving throw to see through the illusion, and it takes 1d10 psychic damage per sorcery point spent on a failed save, or half as much damage on a successful one. Enemy creatures within 10 feet of you have disadvantage on saving throws against your spells and Ghoul Studies Subclass options. Once you use this feature, you can't use it again until you finish a long rest.",
             requirements: ["Spook"],
             benefits: {
               specialAbilities: [
@@ -5914,7 +5915,7 @@ export const subclassesData = {
           {
             name: "Ancient Secrets",
             description:
-              "Requires Ancient Rebuke. Ask Ancients one question per year (truthful answer from their lifetime knowledge). Action to detect illusions, shapechangers, and deception magic within 30 feet, advantage on dispelling detected effects.",
+              "Ancient Rebuke Required. Your study and bond with the Ancients has gained you their favor. Once per year, you may ask them a question. They will answer truthfully, based on their knowledge from their lifetime. Additionally, as an action, you can use your Ancient Guardian to sense the presence of illusions, shapechangers not in their original form, and other magic designed to deceive the senses within 30 feet of you. You sense that an effect is attempting to trick you, but you gain no insight into what is hidden or into its true nature. When attempting to dispel magic detected this way, you gain advantage.",
             requirements: ["Ancient Rebuke"],
             benefits: {
               specialAbilities: [

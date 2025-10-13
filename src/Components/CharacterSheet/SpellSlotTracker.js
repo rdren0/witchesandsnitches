@@ -955,7 +955,7 @@ const SpellSlotTracker = ({
         border: `3px solid ${theme.primary}`,
         backgroundColor: theme.surface,
       }}
-      onClick={() => openSorceryModal("use")}
+      onClick={() => openSorceryModal("edit")}
     >
       <button
         style={{

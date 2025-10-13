@@ -3,10 +3,10 @@ import {
   BookOpen,
   Beaker,
   Package,
-  Skull,
   Wand,
   Dices,
   Award,
+  Rat,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import SpellBook from "../SpellBook/SpellBook";
@@ -14,10 +14,11 @@ import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import SpellSlotTracker from "./SpellSlotTracker";
-import CorruptionTracker from "./CorruptionTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
 import SpellSummary from "./SpellSummary";
+import CustomSpells from "./CustomSpells";
+import CreaturesPanel from "./CreaturesPanel";
 
 const CharacterTabbedPanel = ({
   supabase,
@@ -71,6 +72,7 @@ const CharacterTabbedPanel = ({
       color: theme.primary,
       borderBottomColor: theme.primary,
       backgroundColor: theme.surface,
+      borderRadius: "8px 8px 0 0",
     },
     tabContent: {
       flex: 1,
@@ -140,6 +142,11 @@ const CharacterTabbedPanel = ({
             discordUserId={discordUserId}
             adminMode={adminMode}
             isUserAdmin={isUserAdmin}
+          />
+          <CustomSpells
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
           />
           <SpellSlotTracker
             character={selectedCharacter}
@@ -222,16 +229,14 @@ const CharacterTabbedPanel = ({
       ),
     },
     {
-      id: "corruption",
-      label: "Corruption",
-      icon: Skull,
+      id: "creatures",
+      label: "Creatures",
+      icon: Rat,
       component: (
-        <CorruptionTracker
-          character={selectedCharacter}
+        <CreaturesPanel
           supabase={supabase}
-          discordUserId={discordUserId}
-          setCharacter={setCharacter}
-          selectedCharacterId={selectedCharacter.id}
+          user={user}
+          selectedCharacter={selectedCharacter}
         />
       ),
     },

@@ -26,6 +26,14 @@ export const getAllSelectedFeats = (character) => {
     selectedFeats.push(...character.standard_feats);
   }
 
+  if (character.additional_feats && Array.isArray(character.additional_feats)) {
+    selectedFeats.push(...character.additional_feats);
+  }
+
+  if (character.additionalFeats && Array.isArray(character.additionalFeats)) {
+    selectedFeats.push(...character.additionalFeats);
+  }
+
   if (character.asiChoices) {
     Object.values(character.asiChoices).forEach((choice) => {
       if (choice.type === "feat" && choice.selectedFeat) {
@@ -203,6 +211,22 @@ export const calculateFinalAbilityScores = (character) => {
       Object.values(asiChoices).forEach((choice) => {
         if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
           choice.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability === ability && increase.increase) {
+              finalScore += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    const additionalASI = character.additionalASI || character.additional_asi;
+    if (additionalASI && Array.isArray(additionalASI)) {
+      additionalASI.forEach((asi) => {
+        if (
+          asi.abilityScoreIncreases &&
+          Array.isArray(asi.abilityScoreIncreases)
+        ) {
+          asi.abilityScoreIncreases.forEach((increase) => {
             if (increase.ability === ability && increase.increase) {
               finalScore += increase.increase;
             }

@@ -651,6 +651,7 @@ export const createDowntimeStyles = (theme) => ({
     display: "flex",
     flexDirection: "row",
     gap: "16px",
+    marginTop: "24px",
   },
   buttonGroup: {
     display: "flex",
@@ -658,7 +659,7 @@ export const createDowntimeStyles = (theme) => ({
     flexWrap: "wrap",
   },
   button: {
-    padding: "10px 20px",
+    padding: "12px 24px",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
@@ -668,7 +669,14 @@ export const createDowntimeStyles = (theme) => ({
     transition: "all 0.2s ease",
     display: "flex",
     alignItems: "center",
+    justifyContent: "center",
     gap: "6px",
+  },
+  secondaryButton: {
+    backgroundColor: theme.warning || "#ea580c",
+  },
+  successButton: {
+    backgroundColor: theme.success || "#10b981",
   },
   removeButton: {
     padding: "4px 8px",

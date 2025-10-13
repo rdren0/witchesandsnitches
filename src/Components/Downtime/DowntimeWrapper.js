@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   Calendar,
   Edit3,
@@ -31,6 +37,16 @@ const DowntimeWrapper = ({
 
   const [viewMode, setViewMode] = useState("list");
   const [viewingSheet, setViewingSheet] = useState(null);
+
+  const [isSticky, setIsSticky] = useState(false);
+  const toolbarRef = useRef(null);
+  const placeholderRef = useRef(null);
+  const [toolbarHeight, setToolbarHeight] = useState(0);
+
+  const [saveHandler, setSaveHandler] = useState(null);
+  const [submitHandler, setSubmitHandler] = useState(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [dicePool, setDicePool] = useState([]);
   const [rollAssignments, setRollAssignments] = useState({
@@ -116,7 +132,10 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        let query = supabase.from("character_downtime").select("*").eq("archived", false);
+        let query = supabase
+          .from("character_downtime")
+          .select("*")
+          .eq("archived", false);
 
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);
@@ -136,7 +155,19 @@ const DowntimeWrapper = ({
           .order("semester", { ascending: true });
 
         if (error) throw error;
-        setSubmittedSheets(sheets || []);
+
+        const sortedSheets = (sheets || []).sort((a, b) => {
+          const yearA = parseInt(a.year) || 0;
+          const yearB = parseInt(b.year) || 0;
+          if (yearA !== yearB) {
+            return yearA - yearB;
+          }
+          const semesterA = parseInt(a.semester) || 0;
+          const semesterB = parseInt(b.semester) || 0;
+          return semesterA - semesterB;
+        });
+
+        setSubmittedSheets(sortedSheets);
       } catch (err) {
         console.error("Error loading submitted sheets:", err);
       } finally {
@@ -152,7 +183,10 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        let query = supabase.from("character_downtime").select("*").eq("archived", false);
+        let query = supabase
+          .from("character_downtime")
+          .select("*")
+          .eq("archived", false);
 
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);
@@ -672,6 +706,36 @@ const DowntimeWrapper = ({
       setViewingSheet(null);
     }
   }, [selectedCharacter?.id, resetFormState]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!placeholderRef.current || !toolbarRef.current) return;
+
+      const placeholder = placeholderRef.current;
+      const toolbar = toolbarRef.current;
+      const rect = placeholder.getBoundingClientRect();
+
+      if (toolbar && !isSticky) {
+        setToolbarHeight(toolbar.offsetHeight);
+      }
+
+      if (rect.top <= 0) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
+      }
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [isSticky]);
 
   if (!selectedCharacter) {
     return (
@@ -1420,33 +1484,156 @@ const DowntimeWrapper = ({
         {activeTab === "create" && (
           <div>
             <div
+              ref={placeholderRef}
+              style={{
+                height: isSticky ? `${toolbarHeight}px` : 0,
+                transition: "height 0.3s ease",
+              }}
+            />
+
+            <div
+              ref={toolbarRef}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "1rem",
+                marginBottom: isSticky ? "0" : "1rem",
+                padding: "16px",
+                backgroundColor: theme.surface,
+                borderRadius: isSticky ? "0" : "8px",
+                border: `3px solid ${theme.text}`,
+                ...(isSticky && {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1000,
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                  borderRadius: 0,
+                }),
+                transition: "all 0.3s ease",
               }}
             >
-              <h3 style={styles.sectionTitle}>
-                {currentSheet
-                  ? "Edit Draft Sheet"
-                  : "Create New Downtime Sheet"}
-              </h3>
-              {currentSheet && (
-                <button
-                  onClick={() => {
-                    resetFormState();
-                    setSelectedYear("");
-                    setSelectedSemester("");
-                  }}
+              <div>
+                <h3
                   style={{
-                    ...styles.button,
-                    backgroundColor: theme.primary,
+                    margin: 0,
+                    fontSize: "1.25rem",
+                    fontWeight: "600",
+                    color: theme.text,
                   }}
                 >
-                  Start New Sheet
-                </button>
-              )}
+                  {currentSheet
+                    ? "Edit Draft Sheet"
+                    : "Create New Downtime Sheet"}
+                </h3>
+              </div>
+
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
+                {currentSheet && (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "Are you sure you want to cancel editing this draft? Any unsaved changes will be lost."
+                          )
+                        ) {
+                          resetFormState();
+                          setSelectedYear("");
+                          setSelectedSemester("");
+                        }
+                      }}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: theme.error,
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        resetFormState();
+                        setSelectedYear("");
+                        setSelectedSemester("");
+                      }}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: theme.primary,
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Start New Sheet
+                    </button>
+                  </>
+                )}
+                {selectedYear && selectedSemester && (
+                  <>
+                    {!currentSheet && (
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to cancel? Any unsaved changes will be lost."
+                            )
+                          ) {
+                            resetFormState();
+                            setSelectedYear("");
+                            setSelectedSemester("");
+                          }
+                        }}
+                        style={{
+                          ...styles.button,
+                          backgroundColor: theme.error,
+                          padding: "8px 16px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => saveHandler && saveHandler()}
+                      disabled={isSavingDraft || !saveHandler}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: "#ff8c00",
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                        opacity: isSavingDraft || !saveHandler ? 0.6 : 1,
+                        cursor:
+                          isSavingDraft || !saveHandler
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {isSavingDraft ? "Saving..." : "Save as Draft"}
+                    </button>
+                    <button
+                      onClick={() => submitHandler && submitHandler()}
+                      disabled={isSubmitting || !submitHandler}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: theme.success,
+                        padding: "8px 16px",
+                        fontSize: "14px",
+                        opacity: isSubmitting || !submitHandler ? 0.6 : 1,
+                        cursor:
+                          isSubmitting || !submitHandler
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Downtime Sheet"}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             {currentSheet && (
@@ -1620,6 +1807,10 @@ const DowntimeWrapper = ({
                   loadSubmittedSheets={loadSubmittedSheets}
                   loadDrafts={loadDrafts}
                   setActiveTab={setActiveTab}
+                  setSaveHandler={setSaveHandler}
+                  setSubmitHandler={setSubmitHandler}
+                  setSavingState={setIsSavingDraft}
+                  setSubmittingState={setIsSubmitting}
                 />
               )}
           </div>

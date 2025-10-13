@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { Skills } from "./Skills/Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
-import LevelUpModal from "../CharacterManager/LevelUpModal";
 import CharacterSheetModals from "./CharacterSheetModals";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -27,14 +26,16 @@ import {
   sendDiscordRollWebhook,
   getRollResultColor,
   ROLL_COLORS,
-  sendDiscordLevelUpMessage,
 } from "../utils/discordWebhook";
 import InspirationTracker from "./InspirationTracker";
 import LuckPointButton from "./LuckPointButton";
+import CorruptionButton from "./CorruptionButton";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import ACOverrideModal from "./ACOverrideModal";
-import { characterService } from "../../services/characterService";
-import { SPELL_SLOT_PROGRESSION } from "../../SharedData/data";
+import SpellAttackModal from "./SpellAttackModal";
+import SpellAttackRollModal from "./SpellAttackRollModal";
+import InitiativeOverrideModal from "./InitiativeOverrideModal";
+import Tooltip from "../Common/Tooltip";
 import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
@@ -98,7 +99,6 @@ const CharacterSheet = ({
 
   const [character, setCharacter] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
-  const [showLevelUp, setShowLevelUp] = useState(false);
   const [showHitDiceModal, setShowHitDiceModal] = useState(false);
   const [selectedHitDiceCount, setSelectedHitDiceCount] = useState(1);
   const [isRollingHitDice, setIsRollingHitDice] = useState(false);
@@ -107,6 +107,10 @@ const CharacterSheet = ({
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
   const [showACModal, setShowACModal] = useState(false);
+  const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
+  const [showSpellAttackRollModal, setShowSpellAttackRollModal] =
+    useState(false);
+  const [showInitiativeModal, setShowInitiativeModal] = useState(false);
   const characterModifiers = modifiers(character);
 
   const [characterLoading, setCharacterLoading] = useState(false);
@@ -162,6 +166,22 @@ const CharacterSheet = ({
     return Math.floor((abilityScore - 10) / 2);
   };
 
+  const getSpellAttackBonus = (character) => {
+    const baseModifier = getSpellcastingAbilityModifier(character);
+    const proficiencyBonus = character.proficiencyBonus || 0;
+    const baseAttackBonus = proficiencyBonus + baseModifier;
+
+    const attackData = character.spellAttack || { override: null, modifier: 0 };
+    const override = attackData.override;
+    const modifier = attackData.modifier || 0;
+
+    if (override !== null && override !== undefined) {
+      return override;
+    }
+
+    return baseAttackBonus + modifier;
+  };
+
   const rollSpellcastingAbilityCheck = async () => {
     if (!character || isRolling) return;
 
@@ -197,7 +217,7 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
         character: character,
         type: "abilitycheck",
-        description: `d20 + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+        description: `d20 ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
       });
 
       const additionalFields = [
@@ -235,7 +255,7 @@ const CharacterSheet = ({
     }
   };
 
-  const rollSpellAttack = async () => {
+  const rollSpellAttack = async (rollType = "normal", tempModifier = 0) => {
     if (!character || isRolling) return;
 
     const spellcastingAbility = getSpellcastingAbility(character.castingStyle);
@@ -244,10 +264,27 @@ const CharacterSheet = ({
     setIsRolling(true);
 
     try {
-      const spellcastingModifier = getSpellcastingAbilityModifier(character);
-      const totalModifier = character.proficiencyBonus + spellcastingModifier;
+      const baseModifier = getSpellAttackBonus(character);
+      const totalModifier = baseModifier + tempModifier;
 
-      const rollValue = Math.floor(Math.random() * 20) + 1;
+      let rollValue;
+      let rollDetails = "";
+
+      if (rollType === "advantage") {
+        const roll1 = Math.floor(Math.random() * 20) + 1;
+        const roll2 = Math.floor(Math.random() * 20) + 1;
+        rollValue = Math.max(roll1, roll2);
+        rollDetails = `2d20 (${roll1}, ${roll2}) kh1`;
+      } else if (rollType === "disadvantage") {
+        const roll1 = Math.floor(Math.random() * 20) + 1;
+        const roll2 = Math.floor(Math.random() * 20) + 1;
+        rollValue = Math.min(roll1, roll2);
+        rollDetails = `2d20 (${roll1}, ${roll2}) kl1`;
+      } else {
+        rollValue = Math.floor(Math.random() * 20) + 1;
+        rollDetails = "1d20";
+      }
+
       const total = rollValue + totalModifier;
 
       const isCriticalSuccess = rollValue === 20;
@@ -261,8 +298,17 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
       };
 
+      const spellcastingModifier = getSpellcastingAbilityModifier(character);
+
+      const rollTypeText =
+        rollType === "advantage"
+          ? " (Advantage)"
+          : rollType === "disadvantage"
+          ? " (Disadvantage)"
+          : "";
+
       showRollResult({
-        title: "Spell Attack Roll",
+        title: `Spell Attack Roll${rollTypeText}`,
         rollValue: rollValue,
         modifier: totalModifier,
         total: total,
@@ -270,7 +316,7 @@ const CharacterSheet = ({
         isCriticalFailure: isCriticalFailure,
         character: character,
         type: "spellattack",
-        description: `d20 + ${character.proficiencyBonus} (Prof) + ${spellcastingModifier} (${spellcastingAbility}) = ${total}`,
+        description: `${rollDetails} + ${totalModifier} (Spell Attack) = ${total}`,
       });
 
       const additionalFields = [
@@ -278,7 +324,9 @@ const CharacterSheet = ({
           name: "Modifiers",
           value: `Prof: +${
             character.proficiencyBonus
-          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}`,
+          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}${
+            tempModifier !== 0 ? `, Temp: ${formatModifier(tempModifier)}` : ""
+          }`,
           inline: true,
         },
       ];
@@ -286,7 +334,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spell Attack Roll",
-        title: `Spell Attack Roll`,
+        title: `Spell Attack Roll${rollTypeText}`,
         embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
@@ -310,6 +358,18 @@ const CharacterSheet = ({
 
   const getInitiativeModifier = useCallback(
     (initiativeAbility, effectiveAbilityScores, characterData) => {
+      const initiativeData = characterData?.initiative || {
+        modifier: 0,
+        override: null,
+      };
+
+      if (
+        initiativeData.override !== null &&
+        initiativeData.override !== undefined
+      ) {
+        return initiativeData.override;
+      }
+
       let baseModifier;
       if (initiativeAbility === "intelligence") {
         baseModifier =
@@ -320,10 +380,13 @@ const CharacterSheet = ({
       }
 
       if (characterData) {
-        return calculateInitiativeWithFeats(characterData, baseModifier);
+        baseModifier = calculateInitiativeWithFeats(
+          characterData,
+          baseModifier
+        );
       }
 
-      return baseModifier;
+      return baseModifier + (initiativeData.modifier || 0);
     },
     []
   );
@@ -626,6 +689,7 @@ const CharacterSheet = ({
         const transformedCharacter = {
           abilityScores: effectiveAbilityScores,
           ac: data.ac || { override: null, modifier: 0 },
+          spellAttack: data.spell_attack || { override: null, modifier: 0 },
           allFeats: allFeats,
           armorClass:
             getBaseArmorClass(data.casting_style) +
@@ -650,7 +714,7 @@ const CharacterSheet = ({
           houseChoices: data.house_choices || {},
           id: data.id,
           imageUrl: data.image_url || "",
-          initiative: 8,
+          initiative: data.initiative || { modifier: 0, override: null },
           initiativeAbility: data.initiative_ability,
           initiativeModifier: getInitiativeModifier(
             data.initiative_ability,
@@ -701,6 +765,7 @@ const CharacterSheet = ({
           strength: effectiveAbilityScores.strength || 10,
           subclass: data.subclass,
           subclassChoices: data.subclass_choices || {},
+          tempHP: data.temp_hp || 0,
           toolProficiencies: data.tool_proficiencies || [],
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
@@ -708,6 +773,7 @@ const CharacterSheet = ({
           metamagicChoices: data.metamagic_choices || {},
           heritageChoices: heritageChoices,
           castingStyleChoices: data.casting_style_choices || {},
+          additional_feats: data.additional_feats || [],
         };
         setCharacter(transformedCharacter);
       }
@@ -1007,169 +1073,6 @@ const CharacterSheet = ({
     }
   };
 
-  const updateSpellSlotResources = async (
-    character,
-    newLevel,
-    discordUserId
-  ) => {
-    try {
-      const newMaxSlots = SPELL_SLOT_PROGRESSION[newLevel] || [
-        0, 0, 0, 0, 0, 0, 0, 0, 0,
-      ];
-
-      const updateData = {
-        character_id: character.id,
-        discord_user_id: discordUserId,
-        updated_at: new Date().toISOString(),
-      };
-
-      for (let i = 1; i <= 9; i++) {
-        const newMax = newMaxSlots[i - 1];
-        const currentSlots = character[`spellSlots${i}`] || 0;
-        const currentMax = character[`maxSpellSlots${i}`] || 0;
-
-        updateData[`max_spell_slots_${i}`] = newMax;
-
-        if (currentSlots > currentMax) {
-          const bonusSlots = currentSlots - currentMax;
-          updateData[`spell_slots_${i}`] = newMax + bonusSlots;
-        } else {
-          updateData[`spell_slots_${i}`] = newMax;
-        }
-      }
-
-      const { error } = await supabase
-        .from("character_resources")
-        .upsert(updateData, {
-          onConflict: "character_id,discord_user_id",
-        });
-
-      if (error) {
-        console.error("Error updating spell slot resources:", error);
-        throw error;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error in updateSpellSlotResources:", error);
-      throw error;
-    }
-  };
-
-  const handleCharacterUpdated = async (updatedCharacter, levelUpDetails) => {
-    try {
-      const characterOwnerId = character.discord_user_id || character.ownerId;
-
-      const characterToSave = {
-        level: updatedCharacter.level,
-        hit_points: updatedCharacter.hit_points || updatedCharacter.hitPoints,
-        current_hit_points:
-          updatedCharacter.hit_points || updatedCharacter.hitPoints,
-        current_hit_dice: updatedCharacter.level,
-        ability_scores:
-          updatedCharacter.ability_scores || updatedCharacter.abilityScores,
-        standard_feats:
-          updatedCharacter.standard_feats ||
-          updatedCharacter.standardFeats ||
-          [],
-        skill_proficiencies:
-          updatedCharacter.skill_proficiencies ||
-          updatedCharacter.skillProficiencies ||
-          [],
-        skill_expertise:
-          updatedCharacter.skill_expertise ||
-          updatedCharacter.skillExpertise ||
-          [],
-        asi_choices:
-          updatedCharacter.asi_choices || updatedCharacter.asiChoices || {},
-
-        name: character.name,
-        house: character.house,
-        casting_style: character.castingStyle || character.casting_style,
-        subclass: character.subclass,
-        background: character.background,
-        wand_type: character.wandType || character.wand_type,
-        magic_modifiers: character.magicModifiers || character.magic_modifiers,
-        game_session: character.gameSession || character.game_session,
-        initiative_ability:
-          character.initiativeAbility ||
-          character.initiative_ability ||
-          "dexterity",
-        school_year: character.schoolYear || character.school_year,
-        level1_choice_type:
-          character.level1ChoiceType || character.level1_choice_type,
-        innate_heritage: character.innateHeritage || character.innate_heritage,
-        house_choices: character.houseChoices || character.house_choices || {},
-        subclass_choices:
-          character.subclassChoices || character.subclass_choices || {},
-        feat_choices: character.featChoices || character.feat_choices || {},
-        heritage_choices:
-          character.heritageChoices || character.heritage_choices || {},
-        innate_heritage_skills:
-          character.innateHeritageSkills ||
-          character.innate_heritage_skills ||
-          [],
-        background_skills:
-          character.backgroundSkills || character.background_skills || [],
-        image_url: character.image_url || character.imageUrl || null,
-        imageUrl: character.imageUrl || character.image_url || null,
-      };
-
-      const result = await characterService.updateCharacter(
-        character.id,
-        characterToSave,
-        characterOwnerId
-      );
-
-      if (levelUpDetails) {
-        try {
-          await updateSpellSlotResources(
-            updatedCharacter,
-            levelUpDetails.newLevel,
-            characterOwnerId
-          );
-        } catch (spellSlotError) {
-          console.error("Error updating spell slot resources:", spellSlotError);
-        }
-      }
-
-      if (levelUpDetails) {
-        const {
-          oldLevel,
-          newLevel,
-          hitPointIncrease,
-          abilityIncreases,
-          selectedFeat,
-        } = levelUpDetails;
-
-        try {
-          await sendDiscordLevelUpMessage({
-            character: updatedCharacter,
-            oldLevel,
-            newLevel,
-            hitPointIncrease,
-            abilityIncreases,
-            selectedFeat,
-          });
-        } catch (discordError) {
-          console.error(
-            "Error sending Discord level-up message:",
-            discordError
-          );
-        }
-      }
-
-      setShowLevelUp(false);
-      await fetchCharacterDetails();
-      alert(
-        `${character.name} successfully leveled up to level ${updatedCharacter.level}!`
-      );
-    } catch (error) {
-      console.error("Error saving level up:", error);
-      alert("Failed to save level up changes. Please try again.");
-    }
-  };
-
   if (error) {
     return (
       <div style={styles.container}>
@@ -1380,6 +1283,13 @@ const CharacterSheet = ({
                     selectedCharacterId={selectedCharacter.id}
                     isAdmin={adminMode}
                   />
+                  <CorruptionButton
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    setCharacter={setCharacter}
+                    selectedCharacterId={selectedCharacter.id}
+                  />
                   <LuckPointButton
                     character={character}
                     supabase={supabase}
@@ -1455,7 +1365,10 @@ const CharacterSheet = ({
                       padding: "8px 12px",
                       height: "32px",
                     }}
-                    onClick={() => setShowLevelUp(true)}
+                    onClick={() =>
+                      onNavigateToCharacterManagement &&
+                      onNavigateToCharacterManagement(character.id)
+                    }
                     title={`Level up ${character.name} to level ${
                       (character.level || 1) + 1
                     }`}
@@ -1546,234 +1459,294 @@ const CharacterSheet = ({
                   gap: "12px",
                 }}
               >
-                <div
-                  style={{
-                    ...getEnhancedHPStyle(character, {
-                      ...styles.statCard,
-                      backgroundColor: theme.background,
-                      border: `3px solid ${getHPColor(character)}`,
-                      cursor: "pointer",
-                    }),
+                <Tooltip
+                  content={{
+                    title: "HP Management",
+                    rightClick: "Open HP actions",
                   }}
-                  onClick={handleDamageClick}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    fullHeal();
-                  }}
-                  title="Left click to manage HP • Right click to full heal"
+                  delay={100}
                 >
-                  <Heart
-                    className="w-6 h-6 mx-auto mb-1"
-                    style={{ color: getHPColor(character) }}
-                  />
                   <div
                     style={{
-                      ...styles.statValue,
-                      color: getHPColor(character),
-                      fontSize: "24px",
+                      ...getEnhancedHPStyle(character, {
+                        ...styles.statCard,
+                        backgroundColor: theme.background,
+                        border: `3px solid ${getHPColor(character)}`,
+                        cursor: "context-menu",
+                      }),
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      handleDamageClick();
                     }}
                   >
-                    {character.currentHitPoints ?? character.hitPoints}/
-                    {character.maxHitPoints ?? character.hitPoints}
-                  </div>
-                  <div
-                    style={{
-                      ...styles.statLabel,
-                      color: getHPColor(character),
-                    }}
-                  >
-                    Hit Points
-                  </div>
-                  {(character.currentHitPoints ?? character.hitPoints) ===
-                    0 && (
+                    <Heart
+                      className="w-6 h-6 mx-auto mb-1"
+                      style={{ color: getHPColor(character) }}
+                    />
                     <div
                       style={{
-                        position: "absolute",
-                        top: "-8px",
-                        right: "-8px",
-                        background: "#EF4444",
-                        color: "white",
-                        borderRadius: "50%",
-                        width: "20px",
-                        height: "20px",
-                        fontSize: "12px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold",
-                        animation: "pulse 2s infinite",
+                        ...styles.statValue,
+                        color: getHPColor(character),
+                        fontSize: "24px",
                       }}
                     >
-                      💀
+                      {character.currentHitPoints ?? character.hitPoints}/
+                      {character.maxHitPoints ?? character.hitPoints}
                     </div>
-                  )}
-                  {(character.currentHitPoints ?? character.hitPoints) > 0 &&
-                    (character.currentHitPoints ?? character.hitPoints) /
-                      (character.maxHitPoints ?? character.hitPoints) <=
-                      0.25 && (
+                    <div
+                      style={{
+                        ...styles.statLabel,
+                        color: getHPColor(character),
+                      }}
+                    >
+                      Hit Points
+                      {character.tempHP > 0 && (
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            marginTop: "2px",
+                            color: "#3b82f6",
+                            fontWeight: "600",
+                          }}
+                        >
+                          (+{character.tempHP} temp)
+                        </div>
+                      )}
+                    </div>
+                    {(character.currentHitPoints ?? character.hitPoints) ===
+                      0 && (
                       <div
                         style={{
                           position: "absolute",
-                          top: "-4px",
-                          right: "-4px",
+                          top: "-8px",
+                          right: "-8px",
                           background: "#EF4444",
                           color: "white",
                           borderRadius: "50%",
-                          width: "16px",
-                          height: "16px",
-                          fontSize: "10px",
+                          width: "20px",
+                          height: "20px",
+                          fontSize: "12px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: "bold",
+                          animation: "pulse 2s infinite",
                         }}
                       >
-                        !
+                        💀
                       </div>
                     )}
-                </div>
-                <div
-                  style={{
-                    ...styles.statCard,
-                    backgroundColor: theme.background,
-                    border: "3px solid #b27424ff",
-                    cursor: isRolling ? "wait" : "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                  onClick={() =>
-                    !isRolling &&
-                    rollInitiative({
-                      character,
-                      isRolling,
-                      setIsRolling,
-                      characterModifiers,
-                    })
-                  }
-                  title={`Click to roll initiative: d20 + ${formatModifier(
-                    character.initiativeModifier
-                  )}`}
-                >
-                  <Swords
-                    className="w-6 h-6 text-green-600 mx-auto mb-1"
-                    style={{ color: "#b27424ff" }}
-                  />
-                  <div style={{ ...styles.statValue, color: "#b27424ff" }}>
-                    {formatModifier(character.initiativeModifier)}
-                  </div>
-                  <div style={{ ...styles.statLabel, color: "#b27424ff" }}>
-                    Initiative
-                  </div>
-                </div>
-                {getSpellcastingAbility(character.castingStyle) && (
-                  <div
-                    style={{
-                      ...styles.statCard,
-                      backgroundColor: theme.background,
-                      border: "3px solid #d1323dff",
-                      cursor: isRolling ? "wait" : "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                    onClick={() => !isRolling && rollSpellAttack()}
-                    title={`Click to roll spell attack: d20 + Prof (${
-                      character.proficiencyBonus
-                    }) + ${getSpellcastingAbility(
-                      character.castingStyle
-                    )} (${formatModifier(
-                      getSpellcastingAbilityModifier(character)
-                    )})`}
-                  >
-                    <Target
-                      className="w-6 h-6 text-green-600 mx-auto mb-1"
-                      style={{ color: "#d1323dff" }}
-                    />
-                    <div style={{ ...styles.statValue, color: "#d1323dff" }}>
-                      {formatModifier(
-                        character.proficiencyBonus +
-                          getSpellcastingAbilityModifier(character)
+                    {(character.currentHitPoints ?? character.hitPoints) > 0 &&
+                      (character.currentHitPoints ?? character.hitPoints) /
+                        (character.maxHitPoints ?? character.hitPoints) <=
+                        0.25 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "-4px",
+                            right: "-4px",
+                            background: "#EF4444",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: "16px",
+                            height: "16px",
+                            fontSize: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          !
+                        </div>
                       )}
-                    </div>
-                    <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
-                      Spell Attack
-                    </div>
                   </div>
-                )}
-
-                {getSpellcastingAbility(character.castingStyle) && (
+                </Tooltip>
+                <Tooltip
+                  content={{
+                    title: "Initiative",
+                    leftClick: `Roll initiative (d20 ${formatModifier(
+                      character.initiativeModifier
+                    )})`,
+                    rightClick: "Modify or override initiative modifier",
+                  }}
+                  delay={200}
+                >
                   <div
                     style={{
                       ...styles.statCard,
                       backgroundColor: theme.background,
-                      border: "3px solid #8b5cf6",
+                      border: "3px solid #b27424ff",
                       cursor: isRolling ? "wait" : "pointer",
                       transition: "all 0.2s ease",
                     }}
-                    onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
-                    title={`Click to roll ${getSpellcastingAbility(
-                      character.castingStyle
-                    )} ability check (no proficiency): d20 + ${formatModifier(
-                      getSpellcastingAbilityModifier(character)
-                    )}`}
+                    onClick={() =>
+                      !isRolling &&
+                      rollInitiative({
+                        character,
+                        isRolling,
+                        setIsRolling,
+                        characterModifiers,
+                      })
+                    }
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setShowInitiativeModal(true);
+                    }}
                   >
-                    <Sparkles
-                      className="w-6 h-6 text-yellow-600 mx-auto mb-1"
-                      style={{ color: "#8b5cf6" }}
+                    <Swords
+                      className="w-6 h-6 text-green-600 mx-auto mb-1"
+                      style={{ color: "#b27424ff" }}
                     />
+                    <div style={{ ...styles.statValue, color: "#b27424ff" }}>
+                      {formatModifier(character.initiativeModifier)}
+                    </div>
+                    <div style={{ ...styles.statLabel, color: "#b27424ff" }}>
+                      Initiative
+                    </div>
+                  </div>
+                </Tooltip>
+                {getSpellcastingAbility(character.castingStyle) && (
+                  <Tooltip
+                    content={{
+                      title: "Spell Attack",
+                      leftClick:
+                        "Roll spell attack with advantage/disadvantage options",
+                      rightClick:
+                        "Set override or modifier for spell attack bonus",
+                    }}
+                    delay={200}
+                  >
                     <div
                       style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        color: "#8b5cf6",
-                        marginBottom: "0.25rem",
+                        ...styles.statCard,
+                        backgroundColor: theme.background,
+                        border: "3px solid #d1323dff",
+                        cursor: isRolling ? "wait" : "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() =>
+                        !isRolling && setShowSpellAttackRollModal(true)
+                      }
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowSpellAttackModal(true);
                       }}
                     >
-                      {formatModifier(
-                        getSpellcastingAbilityModifier(character)
-                      )}
+                      <Target
+                        className="w-6 h-6 text-green-600 mx-auto mb-1"
+                        style={{ color: "#d1323dff" }}
+                      />
+                      <div style={{ ...styles.statValue, color: "#d1323dff" }}>
+                        {formatModifier(getSpellAttackBonus(character))}
+                      </div>
+                      <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
+                        Spell Attack
+                      </div>
                     </div>
-                    <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
-                      {" "}
-                      Spellcasting Ability (
-                      {getSpellcastingAbility(character.castingStyle)
-                        ?.slice(0, 3)
-                        .toUpperCase()}
-                      )
-                    </div>
-                  </div>
+                  </Tooltip>
                 )}
-                <div
-                  style={{
-                    ...styles.statCard,
-                    backgroundColor: theme.background,
-                    border: "3px solid #3b82f6",
-                    cursor: "pointer",
-                  }}
-                  title="Click to override or modify AC"
-                  onClick={() => setShowACModal(true)}
-                >
-                  <Shield
-                    className="w-6 h-6 text-blue-600 mx-auto mb-1"
-                    style={{ color: "#3b82f6" }}
-                  />
-                  <div style={{ ...styles.statValue, color: "#3b82f6" }}>
-                    {(() => {
-                      const baseAC = character.armorClass || 10;
-                      const acData = character.ac || {
-                        override: null,
-                        modifier: 0,
-                      };
-                      const override = acData.override;
-                      const modifier = acData.modifier || 0;
 
-                      if (override !== null && override !== undefined) {
-                        return override + modifier;
+                {getSpellcastingAbility(character.castingStyle) && (
+                  <Tooltip
+                    content={{
+                      title: `Spellcasting Ability (${getSpellcastingAbility(
+                        character.castingStyle
+                      )})`,
+                      leftClick: `Roll ${getSpellcastingAbility(
+                        character.castingStyle
+                      )} check (d20 ${formatModifier(
+                        getSpellcastingAbilityModifier(character)
+                      )})`,
+                      description: "No proficiency bonus applied",
+                    }}
+                    delay={200}
+                  >
+                    <div
+                      style={{
+                        ...styles.statCard,
+                        backgroundColor: theme.background,
+                        border: "3px solid #8b5cf6",
+                        cursor: isRolling ? "wait" : "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() =>
+                        !isRolling && rollSpellcastingAbilityCheck()
                       }
-                      return baseAC + modifier;
-                    })()}
+                    >
+                      <Sparkles
+                        className="w-6 h-6 text-yellow-600 mx-auto mb-1"
+                        style={{ color: "#8b5cf6" }}
+                      />
+                      <div
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: "bold",
+                          color: "#8b5cf6",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
+                        {formatModifier(
+                          getSpellcastingAbilityModifier(character)
+                        )}
+                      </div>
+                      <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
+                        {" "}
+                        Spellcasting Ability (
+                        {getSpellcastingAbility(character.castingStyle)
+                          ?.slice(0, 3)
+                          .toUpperCase()}
+                        )
+                      </div>
+                    </div>
+                  </Tooltip>
+                )}
+                <Tooltip
+                  content={{
+                    title: "Armor Class (AC)",
+                    rightClick: "Override or modify AC value",
+                    description: "Determines how hard you are to hit in combat",
+                  }}
+                  delay={200}
+                >
+                  <div
+                    style={{
+                      ...styles.statCard,
+                      backgroundColor: theme.background,
+                      border: "3px solid #3b82f6",
+                      cursor: "context-menu",
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setShowACModal(true);
+                    }}
+                  >
+                    <Shield
+                      className="w-6 h-6 text-blue-600 mx-auto mb-1"
+                      style={{ color: "#3b82f6" }}
+                    />
+                    <div style={{ ...styles.statValue, color: "#3b82f6" }}>
+                      {(() => {
+                        const baseAC = character.armorClass || 10;
+                        const acData = character.ac || {
+                          override: null,
+                          modifier: 0,
+                        };
+                        const override = acData.override;
+                        const modifier = acData.modifier || 0;
+
+                        if (override !== null && override !== undefined) {
+                          return override + modifier;
+                        }
+                        return baseAC + modifier;
+                      })()}
+                    </div>
+                    <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
+                      Armor Class
+                    </div>
                   </div>
-                  <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
-                    Armor Class
-                  </div>
-                </div>
+                </Tooltip>
 
                 <div
                   style={{
@@ -1930,17 +1903,6 @@ const CharacterSheet = ({
           isUserAdmin={isUserAdmin}
         />
 
-        {showLevelUp && character && (
-          <LevelUpModal
-            character={character}
-            isOpen={showLevelUp}
-            onSave={handleCharacterUpdated}
-            onCancel={() => setShowLevelUp(false)}
-            user={user}
-            supabase={supabase}
-          />
-        )}
-
         {showACModal && character && (
           <ACOverrideModal
             character={character}
@@ -1948,6 +1910,58 @@ const CharacterSheet = ({
             onSave={(updatedCharacter) => {
               setCharacter(updatedCharacter);
               setShowACModal(false);
+            }}
+            supabase={supabase}
+          />
+        )}
+
+        {showSpellAttackModal && character && (
+          <SpellAttackModal
+            character={character}
+            onClose={() => setShowSpellAttackModal(false)}
+            onSave={(updatedCharacter) => {
+              setCharacter(updatedCharacter);
+              setShowSpellAttackModal(false);
+            }}
+            supabase={supabase}
+          />
+        )}
+
+        {showSpellAttackRollModal && character && (
+          <SpellAttackRollModal
+            character={character}
+            onClose={() => setShowSpellAttackRollModal(false)}
+            onRoll={rollSpellAttack}
+            getSpellAttackBonus={getSpellAttackBonus}
+            formatModifier={formatModifier}
+          />
+        )}
+
+        {showInitiativeModal && character && (
+          <InitiativeOverrideModal
+            character={character}
+            onClose={() => setShowInitiativeModal(false)}
+            onSave={(updatedCharacter) => {
+              const effectiveAbilityScores = {
+                strength: character.strength,
+                dexterity: character.dexterity,
+                constitution: character.constitution,
+                intelligence: character.intelligence,
+                wisdom: character.wisdom,
+                charisma: character.charisma,
+              };
+
+              const newInitiativeModifier = getInitiativeModifier(
+                character.initiativeAbility,
+                effectiveAbilityScores,
+                updatedCharacter
+              );
+
+              setCharacter({
+                ...updatedCharacter,
+                initiativeModifier: newInitiativeModifier,
+              });
+              setShowInitiativeModal(false);
             }}
             supabase={supabase}
           />

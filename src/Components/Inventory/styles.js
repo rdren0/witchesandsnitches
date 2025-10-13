@@ -228,7 +228,7 @@ export const createInventoryStyles = (theme) => ({
     alignItems: "center",
     gap: "8px",
     padding: "12px 24px",
-    backgroundColor: theme.textSecondary,
+    backgroundColor: theme.warning || "#F97316",
     color: "white",
     border: "none",
     borderRadius: "8px",
@@ -279,7 +279,7 @@ export const createInventoryStyles = (theme) => ({
     fontSize: "12px",
     fontWeight: "600",
     padding: "4px 8px",
-    backgroundColor: theme.warning || "#F59E0B",
+    border: `2px solid ${theme.warning}`,
     color: "white",
     borderRadius: "12px",
     display: "flex",
@@ -374,6 +374,35 @@ export const createInventoryStyles = (theme) => ({
   },
   statsRowLast: {
     marginBottom: 0,
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  },
+  formRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "16px",
+  },
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+  button: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "10px 20px",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "14px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
   },
 });
 

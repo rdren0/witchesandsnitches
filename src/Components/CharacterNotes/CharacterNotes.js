@@ -12,9 +12,11 @@ import {
   Check,
   Copy,
   Crown,
+  BookOpen,
 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { templates } from "./templates";
 
 import { useTheme } from "../../contexts/ThemeContext";
@@ -178,9 +180,9 @@ export const CharacterNotes = ({
         const templateNames = {
           spell: "New Spell",
           session: `Session ${new Date().toLocaleDateString()}`,
-          combat: "Combat Tactics",
           relationship: "Character Relationship",
           creature: "Magical Creature",
+          hogwartsMarkdown: "Default Markdown Template",
         };
         finalTitle = templateNames[templateType];
       } else {
@@ -456,6 +458,25 @@ export const CharacterNotes = ({
 
                 <div
                   {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "hogwartsMarkdown")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <BookOpen size={24} />
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Generic Template</h5>
+                    <p style={styles.templateCardDescription}>
+                      A Comprehensive Markdown Template
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  {...createTemplateCardProps(() =>
                     createNewEntry(newEntryTitle, "", "session")
                   )}
                 >
@@ -491,26 +512,6 @@ export const CharacterNotes = ({
                     </p>
                   </div>
                 </div>
-
-                <div
-                  {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "combat")
-                  )}
-                >
-                  <div
-                    style={styles.templateCardIcon}
-                    className="template-icon"
-                  >
-                    <span style={styles.templateCardEmoji}>⚔️</span>
-                  </div>
-                  <div style={styles.templateCardContent}>
-                    <h5 style={styles.templateCardTitle}>Combat Tactics</h5>
-                    <p style={styles.templateCardDescription}>
-                      Plan strategies & record battles
-                    </p>
-                  </div>
-                </div>
-
                 <div
                   {...createTemplateCardProps(() =>
                     createNewEntry(newEntryTitle, "", "relationship")
@@ -721,8 +722,46 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
       </div>
 
       <div style={styles.templateSection}>
-        <div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <h4 style={styles.editTemplateSectionTitle}>📋 Insert Template</h4>
+          <a
+            href="https://www.markdownguide.org/basic-syntax/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "6px 10px",
+              fontSize: "12px",
+              color: theme.primary,
+              backgroundColor: theme.primary + "15",
+              border: `1px solid ${theme.primary}40`,
+              borderRadius: "4px",
+              textDecoration: "none",
+              fontWeight: "500",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.primary + "25";
+              e.currentTarget.style.borderColor = theme.primary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.primary + "15";
+              e.currentTarget.style.borderColor = theme.primary + "40";
+            }}
+          >
+            <BookOpen size={14} />
+            <span style={{ lineHeight: "1", display: "block" }}>
+              Markdown Guide
+            </span>
+          </a>
         </div>
 
         <div style={styles.templateButtons}>
@@ -981,7 +1020,7 @@ const FullWidthEditForm = ({ entry, onSave, onCancel, styles, theme }) => {
                       }
                     `}
                   </style>
-                  <ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {content || "*No content to preview*"}
                   </ReactMarkdown>
                 </div>
@@ -1102,7 +1141,9 @@ const EntryCard = ({
               }
             `}
           </style>
-          <ReactMarkdown>{entry.content || "*No content*"}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {entry.content || "*No content*"}
+          </ReactMarkdown>
         </div>
       </div>
     </>

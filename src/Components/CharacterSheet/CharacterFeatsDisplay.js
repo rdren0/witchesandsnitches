@@ -271,6 +271,10 @@ const CharacterFeatsDisplay = ({
         if (character.subclassChoices) {
           Object.entries(character.subclassChoices).forEach(
             ([level, choice]) => {
+              if (parseInt(level) > character.level) {
+                return;
+              }
+
               let choiceName, subChoiceName;
 
               if (typeof choice === "string") {
@@ -678,7 +682,11 @@ const CharacterFeatsDisplay = ({
 
     if (character.asiChoices) {
       Object.entries(character.asiChoices).forEach(([level, choice]) => {
-        if (choice.type === "feat" && choice.selectedFeat) {
+        if (
+          choice.type === "feat" &&
+          choice.selectedFeat &&
+          parseInt(level) <= character.level
+        ) {
           const featData = standardFeats.find(
             (f) => f.name === choice.selectedFeat
           );
@@ -728,6 +736,14 @@ const CharacterFeatsDisplay = ({
         const featData = standardFeats.find((f) => f.name === featName);
 
         addFeat(featName, "Standard Feat", "Character Level", null, featData);
+      });
+    }
+
+    if (character.additional_feats && character.additional_feats.length > 0) {
+      character.additional_feats.forEach((featName) => {
+        const featData = standardFeats.find((f) => f.name === featName);
+
+        addFeat(featName, "Additional Feat", "Bonus Feat", null, featData);
       });
     }
 

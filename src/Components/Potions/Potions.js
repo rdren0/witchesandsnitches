@@ -20,6 +20,7 @@ import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { potions, qualityDCs } from "../../SharedData/potionsData";
 import { createPotionsStyles } from "./styles";
+import { findExistingPotion } from "../../services/potionConsolidationService";
 
 const PotionBrewingSystem = ({ character, supabase, user }) => {
   const { theme, selectedCharacter } = useTheme();
@@ -35,7 +36,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   const [expandedCards, setExpandedCards] = useState(new Set());
 
   const toggleCardExpansion = (potionKey) => {
-    setExpandedCards(prev => {
+    setExpandedCards((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(potionKey)) {
         newSet.delete(potionKey);
@@ -450,11 +451,32 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     }
 
     try {
+      const potionName = `${
+        brewingResult.achievedQuality.charAt(0).toUpperCase() +
+        brewingResult.achievedQuality.slice(1)
+      } ${brewingResult.potion.name}`;
+
+      const existingPotion = await findExistingPotion(
+        currentCharacter.id,
+        potionName,
+        supabase
+      );
+
+      if (existingPotion) {
+        const { data, error } = await supabase
+          .from("inventory_items")
+          .update({ quantity: existingPotion.quantity + 1 })
+          .eq("id", existingPotion.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        return data;
+      }
+
       const potionItem = {
-        name: `${
-          brewingResult.achievedQuality.charAt(0).toUpperCase() +
-          brewingResult.achievedQuality.slice(1)
-        } ${brewingResult.potion.name}`,
+        name: potionName,
         description: `${
           brewingResult.potion.description
         }\n\nBrewed on ${new Date().toLocaleString()} with ${ingredientQuality} ingredients (prepared to ${getPreparedIngredientQuality()}). Roll: ${
@@ -465,7 +487,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         }`,
         quantity: 1,
         value: null,
-        category: "Potion",
+        category: "Potions",
         attunement_required: false,
         character_id: currentCharacter.id,
         discord_user_id: user?.discord_user_id || user?.id,
@@ -769,12 +791,14 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                 >
                   <div
                     onClick={() => setSelectedPotion(potion)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                   >
                     <div style={styles.potionHeader}>
                       <h3 style={styles.potionName}>{potion.name}</h3>
                       <div style={styles.potionMeta}>
-                        <span style={styles.potionYear}>Year {potion.year}</span>
+                        <span style={styles.potionYear}>
+                          Year {potion.year}
+                        </span>
                         <span
                           style={{
                             ...styles.rarityBadge,
@@ -814,7 +838,9 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
                       {isExpanded && (
                         <div style={styles.longDescription}>
-                          <p style={styles.longDescriptionText}>{potion.longDescription}</p>
+                          <p style={styles.longDescriptionText}>
+                            {potion.longDescription}
+                          </p>
                         </div>
                       )}
                     </div>

@@ -18,6 +18,7 @@ import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
 import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
 import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
 import OtherPlayers from "../Components/OtherPlayers/OtherPlayers";
+import Creatures from "../Components/Creatures/Creatures";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
@@ -507,7 +508,6 @@ const CharacterSubNavigation = () => {
     { path: "/character/sheet", label: "Character Sheet", key: "sheet" },
     { path: "/character/spellbook", label: "Spellbook", key: "spellbook" },
     { path: "/character/potions", label: "Potions", key: "potions" },
-    { path: "/character/recipes", label: "Recipes", key: "recipes" },
     { path: "/character/inventory", label: "Inventory", key: "inventory" },
     {
       path: "/character/gallery",
@@ -521,6 +521,12 @@ const CharacterSubNavigation = () => {
     },
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
     { path: "/character/notes", label: "Notes", key: "notes" },
+    { path: "/character/recipes", label: "Recipes", key: "recipes" },
+    {
+      path: "/character/creatures",
+      label: "Creatures",
+      key: "creatures",
+    },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -1065,7 +1071,8 @@ function AppContent() {
       setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
-  }, [user, loadCustomUsername, setThemeSelectedCharacter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, setThemeSelectedCharacter]);
 
   useEffect(() => {
     if (location.pathname === "/character") {
@@ -1160,7 +1167,7 @@ function AppContent() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: {
-          redirectTo: isLocalhost ? LOCAL_HOST : WEBSITE,
+          redirectTo: window.location.origin,
         },
       });
 
@@ -1400,6 +1407,7 @@ function AppContent() {
                     user={user}
                     selectedCharacter={selectedCharacter}
                     supabase={supabase}
+                    adminMode={adminMode}
                   />
                 </ProtectedRoute>
               }
@@ -1457,6 +1465,20 @@ function AppContent() {
                     selectedCharacter={selectedCharacter}
                     supabase={supabase}
                     user={user}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character/creatures"
+              element={
+                <ProtectedRoute user={user}>
+                  {characterSelector}
+                  <Creatures
+                    supabase={supabase}
+                    user={user}
+                    characters={characters}
+                    selectedCharacter={selectedCharacter}
                   />
                 </ProtectedRoute>
               }

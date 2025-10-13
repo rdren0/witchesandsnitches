@@ -255,14 +255,32 @@ const CharacterSheetModals = ({
     try {
       const currentHP = character.currentHitPoints ?? character.hitPoints;
       const maxHP = character.maxHitPoints ?? character.hitPoints;
+      const currentTempHP = character.tempHP || 0;
 
       let newCurrentHP;
+      let newTempHP = currentTempHP;
       let changeAmount;
       let changeType;
+      let tempHPUsed = 0;
 
       if (type === "damage") {
-        newCurrentHP = Math.max(0, currentHP - amount);
-        changeAmount = currentHP - newCurrentHP;
+        if (currentTempHP > 0) {
+          if (amount <= currentTempHP) {
+            newTempHP = currentTempHP - amount;
+            newCurrentHP = currentHP;
+            tempHPUsed = amount;
+            changeAmount = 0;
+          } else {
+            tempHPUsed = currentTempHP;
+            const remainingDamage = amount - currentTempHP;
+            newTempHP = 0;
+            newCurrentHP = Math.max(0, currentHP - remainingDamage);
+            changeAmount = currentHP - newCurrentHP;
+          }
+        } else {
+          newCurrentHP = Math.max(0, currentHP - amount);
+          changeAmount = currentHP - newCurrentHP;
+        }
         changeType = "damage";
       } else {
         newCurrentHP = Math.min(maxHP, currentHP + amount);
@@ -275,16 +293,18 @@ const CharacterSheetModals = ({
 
       const resultDescription =
         type === "damage"
-          ? `${changeAmount} damage taken • HP: ${currentHP} → ${newCurrentHP}${
+          ? `${amount} damage taken${
+              tempHPUsed > 0 ? ` • ${tempHPUsed} absorbed by temp HP` : ""
+            } • HP: ${currentHP} → ${newCurrentHP}${
               newCurrentHP === 0 ? " (Unconscious!)" : ""
             }`
           : `${changeAmount} HP restored • HP: ${currentHP} → ${newCurrentHP}`;
 
       showRollResult({
         title: type === "damage" ? "Damage Applied" : "Healing Applied",
-        rollValue: changeAmount,
+        rollValue: amount,
         modifier: 0,
-        total: changeAmount,
+        total: amount,
         character: character,
         isCriticalSuccess: type === "healing" && newCurrentHP === maxHP,
         isCriticalFailure: type === "damage" && newCurrentHP === 0,
@@ -298,6 +318,7 @@ const CharacterSheetModals = ({
         .from("characters")
         .update({
           current_hit_points: newCurrentHP,
+          temp_hp: newTempHP,
           updated_at: new Date().toISOString(),
         })
         .eq("id", character.id);
@@ -317,7 +338,7 @@ const CharacterSheetModals = ({
       const additionalFields = [
         {
           name: type === "damage" ? "Damage Taken" : "HP Restored",
-          value: `${changeAmount} ${type === "damage" ? "damage" : "HP"}`,
+          value: `${amount} ${type === "damage" ? "damage" : "HP"}`,
           inline: true,
         },
         {
@@ -326,6 +347,22 @@ const CharacterSheetModals = ({
           inline: true,
         },
       ];
+
+      if (type === "damage" && tempHPUsed > 0) {
+        additionalFields.push({
+          name: "Temp HP Absorbed",
+          value: `${tempHPUsed} damage`,
+          inline: true,
+        });
+      }
+
+      if (newTempHP > 0 && type === "damage") {
+        additionalFields.push({
+          name: "Remaining Temp HP",
+          value: `${newTempHP}`,
+          inline: true,
+        });
+      }
 
       let webhookDescription = "";
       let embedColor = type === "damage" ? 0xef4444 : 0x10b981;
@@ -340,9 +377,7 @@ const CharacterSheetModals = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: type === "damage" ? "Damage Taken" : "Healing Applied",
-        title: `${character.name} - ${
-          type === "damage" ? "Damage Taken" : "Healing Applied"
-        }`,
+        title: type === "damage" ? "Damage Taken" : "Healing Applied",
         embedColor: embedColor,
         rollResult: null,
         fields: additionalFields,
@@ -1037,6 +1072,205 @@ const CharacterSheetModals = ({
                   <Plus size={14} />
                   Heal
                 </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: theme.text,
+                  marginBottom: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                Temporary HP
+                {character.tempHP > 0 && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#3b82f6",
+                      fontWeight: "500",
+                    }}
+                  >
+                    (Current: {character.tempHP})
+                  </span>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="number"
+                  min="0"
+                  value={damageAmount || ""}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    setDamageAmount(Math.max(0, value));
+                  }}
+                  placeholder="Amount"
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    border: theme.surface,
+                    borderRadius: "6px",
+                    backgroundColor: theme.surface,
+                    color: theme.text,
+                    fontSize: "14px",
+                  }}
+                />
+                <button
+                  onClick={async () => {
+                    if (!damageAmount || damageAmount <= 0 || isApplyingDamage)
+                      return;
+
+                    setIsApplyingDamage(true);
+                    try {
+                      const characterOwnerId =
+                        character.discord_user_id || character.ownerId;
+
+                      let query = supabase
+                        .from("characters")
+                        .update({
+                          temp_hp: damageAmount,
+                          updated_at: new Date().toISOString(),
+                        })
+                        .eq("id", character.id);
+
+                      if (!(adminMode && isUserAdmin)) {
+                        query = query.eq("discord_user_id", discordUserId);
+                      }
+
+                      const { error } = await query;
+
+                      if (error) {
+                        console.error("Error updating temp HP:", error);
+                        alert("Failed to update temp HP");
+                        return;
+                      }
+
+                      const additionalFields = [
+                        {
+                          name: "Temporary HP Set",
+                          value: `${damageAmount} temp HP`,
+                          inline: true,
+                        },
+                        {
+                          name: "Current HP",
+                          value: `${
+                            character.currentHitPoints ?? character.hitPoints
+                          }/${character.maxHitPoints ?? character.hitPoints}`,
+                          inline: true,
+                        },
+                      ];
+
+                      const success = await sendDiscordRollWebhook({
+                        character,
+                        rollType: "Temporary HP",
+                        title: "Temporary HP Added",
+                        embedColor: 0x3b82f6,
+                        rollResult: null,
+                        fields: additionalFields,
+                        useCharacterAvatar: true,
+                        description: " **Temporary hit points gained!**",
+                      });
+
+                      if (!success) {
+                        console.error("Failed to send temp HP to Discord");
+                      }
+
+                      await fetchCharacterDetails();
+                      setShowDamageModal(false);
+                    } catch (error) {
+                      console.error("Error setting temp HP:", error);
+                      alert("Error setting temp HP. Please try again.");
+                    } finally {
+                      setIsApplyingDamage(false);
+                    }
+                  }}
+                  disabled={!damageAmount || isApplyingDamage}
+                  style={{
+                    padding: "8px 16px",
+                    width: "100px",
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    cursor:
+                      !damageAmount || isApplyingDamage
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity: !damageAmount || isApplyingDamage ? 0.5 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "4px",
+                  }}
+                >
+                  Set Temp
+                </button>
+                {character.tempHP > 0 && (
+                  <button
+                    onClick={async () => {
+                      if (isApplyingDamage) return;
+
+                      setIsApplyingDamage(true);
+                      try {
+                        const characterOwnerId =
+                          character.discord_user_id || character.ownerId;
+
+                        let query = supabase
+                          .from("characters")
+                          .update({
+                            temp_hp: 0,
+                            updated_at: new Date().toISOString(),
+                          })
+                          .eq("id", character.id);
+
+                        if (!(adminMode && isUserAdmin)) {
+                          query = query.eq("discord_user_id", discordUserId);
+                        }
+
+                        const { error } = await query;
+
+                        if (error) {
+                          console.error("Error clearing temp HP:", error);
+                          alert("Failed to clear temp HP");
+                          return;
+                        }
+
+                        await fetchCharacterDetails();
+                        setShowDamageModal(false);
+                      } catch (error) {
+                        console.error("Error clearing temp HP:", error);
+                        alert("Error clearing temp HP. Please try again.");
+                      } finally {
+                        setIsApplyingDamage(false);
+                      }
+                    }}
+                    disabled={isApplyingDamage}
+                    style={{
+                      padding: "8px 12px",
+                      backgroundColor: "#ef444410",
+                      color: "#ef4444",
+                      border: "1px solid #ef4444",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      cursor: isApplyingDamage ? "not-allowed" : "pointer",
+                      opacity: isApplyingDamage ? 0.5 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "4px",
+                      fontWeight: "600",
+                    }}
+                    title="Clear all temporary HP"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
 

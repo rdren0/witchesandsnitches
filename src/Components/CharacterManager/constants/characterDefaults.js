@@ -31,6 +31,11 @@ export const DEFAULT_CHARACTER = {
   castingStyleChoices: {},
   toolProficiencies: [],
   metamagic: [],
+  additionalFeats: [],
+  additionalASI: [],
+  wandType: "",
+  wandInfo: "",
+  initiative: { modifier: 0, override: null },
 
   level1ChoiceType: "",
   name: "",

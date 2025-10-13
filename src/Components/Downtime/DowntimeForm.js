@@ -1,12 +1,6 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { downtime, classes } from "../../SharedData/downtime";
+import { classes } from "../../SharedData/downtime";
 import { downtimeStyles } from "./styles";
 import DicePoolManager from "./DicePoolManager";
 import SkillSelector from "./SkillSelector";
@@ -62,6 +56,8 @@ import {
   calculateAbilityScoreIncreaseDC,
 } from "./downtimeHelpers";
 import NPCAutocompleteInput from "./NPCAutocompleteInput";
+import ActivitySelectionModal from "./ActivitySelectionModal";
+import { Plus } from "lucide-react";
 
 const DowntimeForm = ({
   user,
@@ -79,6 +75,10 @@ const DowntimeForm = ({
   loadSubmittedSheets,
   loadDrafts,
   setActiveTab,
+  setSaveHandler,
+  setSubmitHandler,
+  setSavingState,
+  setSubmittingState,
 }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => downtimeStyles(theme), [theme]);
@@ -209,9 +209,9 @@ const DowntimeForm = ({
   const [spellAttempts, setSpellAttempts] = useState({});
   const [researchedSpells, setResearchedSpells] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
+  const [activityModalOpen, setActivityModalOpen] = useState(null);
 
   const availableActivities = useMemo(() => getAvailableActivities(), []);
-  const selectRef = useRef(null);
 
   useEffect(() => {
     if (selectedCharacter && user) {
@@ -626,6 +626,7 @@ const DowntimeForm = ({
 
   const handleSaveAsDraft = useCallback(async () => {
     setIsSavingDraft(true);
+    if (setSavingState) setSavingState(true);
     await saveAsDraft({
       selectedCharacter,
       user,
@@ -641,6 +642,7 @@ const DowntimeForm = ({
       loadDrafts,
     });
     setIsSavingDraft(false);
+    if (setSavingState) setSavingState(false);
   }, [
     selectedCharacter,
     user,
@@ -654,6 +656,7 @@ const DowntimeForm = ({
     supabase,
     setCurrentSheet,
     loadDrafts,
+    setSavingState,
   ]);
 
   const handleSubmitDowntimeSheet = useCallback(async () => {
@@ -693,6 +696,7 @@ const DowntimeForm = ({
     }
 
     setIsSubmitting(true);
+    if (setSubmittingState) setSubmittingState(true);
 
     const updateSpellProgress = () =>
       updateSpellProgressOnSubmission(
@@ -723,6 +727,7 @@ const DowntimeForm = ({
     });
 
     setIsSubmitting(false);
+    if (setSubmittingState) setSubmittingState(false);
   }, [
     formData,
     rollAssignments,
@@ -740,7 +745,20 @@ const DowntimeForm = ({
     loadSubmittedSheets,
     loadDrafts,
     setActiveTab,
+    setSubmittingState,
   ]);
+
+  useEffect(() => {
+    if (setSaveHandler) {
+      setSaveHandler(() => handleSaveAsDraft);
+    }
+  }, [handleSaveAsDraft, setSaveHandler]);
+
+  useEffect(() => {
+    if (setSubmitHandler) {
+      setSubmitHandler(() => handleSubmitDowntimeSheet);
+    }
+  }, [handleSubmitDowntimeSheet, setSubmitHandler]);
 
   const validateMagicSchoolSelection = (
     selectedMagicSchool,
@@ -795,21 +813,6 @@ const DowntimeForm = ({
         )}${isAtMaximum ? " (MAX)" : ""})`,
       };
     });
-  };
-
-  const scrollToSelectedOption = () => {
-    const selectElement = selectRef.current;
-    if (!selectElement) return;
-
-    const selectedIndex = selectElement.selectedIndex;
-    const selectedOption = selectElement.options[selectedIndex];
-
-    if (selectedOption) {
-      selectedOption.scrollIntoView({
-        block: "start",
-        inline: "nearest",
-      });
-    }
   };
 
   const renderMakeRecipeActivity = (activity, index) => {
@@ -1182,6 +1185,21 @@ const DowntimeForm = ({
 
   return (
     <div style={styles.container}>
+      <ActivitySelectionModal
+        isOpen={activityModalOpen !== null}
+        onClose={() => setActivityModalOpen(null)}
+        onSelect={(selectedActivity) => {
+          if (activityModalOpen !== null) {
+            updateActivity(activityModalOpen, "activity", selectedActivity);
+          }
+        }}
+        currentActivity={
+          activityModalOpen !== null
+            ? formData.activities[activityModalOpen]?.activity
+            : null
+        }
+        theme={theme}
+      />
       {diceManager.component}
 
       {dicePool.length > 0 && (
@@ -1201,6 +1219,46 @@ const DowntimeForm = ({
                 period. This represents focused study and practice in that
                 magical discipline.
               </p>
+
+              <div
+                style={{
+                  padding: "12px 16px",
+                  backgroundColor: theme.primary + "20",
+                  border: `2px solid ${theme.primary}`,
+                  borderRadius: "8px",
+                  marginBottom: "1rem",
+                  display: "flex",
+                  gap: "12px",
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ fontSize: "16px", flexShrink: 0 }}>ℹ️</span>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontWeight: "600",
+                      color: theme.text,
+                      marginBottom: "4px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Important: Manual Update Required
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      color: theme.text,
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    After your downtime is approved, you must manually update
+                    your wand subject modifier in the{" "}
+                    <strong>Character Manager</strong> under the{" "}
+                    <strong>Wand Subject Settings</strong> section. This change
+                    is not applied automatically.
+                  </div>
+                </div>
+              </div>
 
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Select School of Magic</label>
@@ -1323,38 +1381,73 @@ const DowntimeForm = ({
                   >
                     <label style={styles.label}>Activity Type</label>
 
-                    <select
-                      ref={selectRef}
-                      onFocus={scrollToSelectedOption}
-                      style={styles.select}
-                      value={activity.activity || ""}
-                      onChange={(e) =>
-                        updateActivity(index, "activity", e.target.value)
-                      }
+                    <button
+                      onClick={() => setActivityModalOpen(index)}
                       disabled={!editable}
+                      style={{
+                        ...styles.select,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: editable ? "pointer" : "not-allowed",
+                        backgroundColor: editable
+                          ? theme.surface
+                          : theme.background,
+                        textAlign: "left",
+                        position: "relative",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (editable) {
+                          e.currentTarget.style.borderColor = theme.primary;
+                          e.currentTarget.style.backgroundColor =
+                            theme.background;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (editable) {
+                          e.currentTarget.style.borderColor = theme.border;
+                          e.currentTarget.style.backgroundColor = theme.surface;
+                        }
+                      }}
                     >
-                      <option value="">Select Activity</option>
-                      {Object.entries(downtime).map(
-                        ([categoryKey, categoryInfo]) => (
-                          <optgroup
-                            key={categoryKey}
-                            label={categoryInfo.name}
-                            title={categoryInfo.description}
-                          >
-                            {categoryInfo.activities.map(
-                              (activityName, actIndex) => (
-                                <option
-                                  key={`${categoryKey}-${actIndex}`}
-                                  value={activityName}
-                                >
-                                  {activityName.split(" - ")[0]}
-                                </option>
-                              )
-                            )}
-                          </optgroup>
-                        )
-                      )}
-                    </select>
+                      <span
+                        style={{
+                          flex: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          color: activity.activity
+                            ? theme.text
+                            : theme.textSecondary,
+                        }}
+                      >
+                        {activity.activity
+                          ? activity.activity.split(" - ")[0]
+                          : "Select Activity"}
+                      </span>
+                      <Plus
+                        size={18}
+                        style={{
+                          marginLeft: "8px",
+                          flexShrink: 0,
+                          color: editable ? theme.primary : theme.textSecondary,
+                        }}
+                      />
+                    </button>
+
+                    {activity.activity && (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          fontSize: "12px",
+                          color: theme.textSecondary,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {activity.activity.split(" - ")[1] || ""}
+                      </div>
+                    )}
                   </div>
 
                   {!activityRequiresDualChecks(activity.activity) &&
@@ -1849,44 +1942,6 @@ const DowntimeForm = ({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {dicePool.length > 0 && editable && (
-        <div style={styles.actionButtons}>
-          <button
-            onClick={handleSaveAsDraft}
-            disabled={isSavingDraft}
-            style={{
-              ...styles.button,
-              ...styles.successButton,
-              ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-              backgroundColor: theme.primary,
-              width: "100%",
-              borderRadius: "8px",
-              margin: "auto",
-              fontSize: "16px",
-            }}
-          >
-            {isSavingDraft ? "Saving..." : "Save as Draft"}
-          </button>
-
-          <button
-            onClick={handleSubmitDowntimeSheet}
-            disabled={isSubmitting}
-            style={{
-              ...styles.button,
-              ...styles.successButton,
-              ...(isSubmitting ? { opacity: 0.6, cursor: "not-allowed" } : {}),
-              backgroundColor: theme.success,
-              width: "100%",
-              borderRadius: "8px",
-              margin: "auto",
-              fontSize: "16px",
-            }}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Downtime Sheet"}
-          </button>
         </div>
       )}
     </div>

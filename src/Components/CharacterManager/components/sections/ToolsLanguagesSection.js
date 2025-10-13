@@ -285,7 +285,6 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
           paddingRight: "4px",
         }}
       >
-        {/* Tool Proficiencies Section */}
         <div style={{ marginBottom: "32px" }}>
           <h3
             style={{

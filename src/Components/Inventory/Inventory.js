@@ -10,13 +10,17 @@ import {
   Loader,
   Star,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Gift,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getInventoryStyles } from "./styles";
-
+import { shouldFilterFromOtherPlayers } from "../../utils/characterFiltering";
 import Bank from "../Bank/Bank";
+import { consolidatePotions } from "../../services/potionConsolidationService"; // TODO: REMOVE THIS IMPORT WHEN REMOVING CONSOLIDATION CODE
 
-const Inventory = ({ user, selectedCharacter, supabase }) => {
+const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const { theme } = useTheme();
   const styles = getInventoryStyles(theme);
 
@@ -24,11 +28,17 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [expandedStack, setExpandedStack] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sendItemModal, setSendItemModal] = useState(null);
+  const [sessionCharacters, setSessionCharacters] = useState([]);
+  const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const [isSendingItem, setIsSendingItem] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -70,6 +80,14 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
       setItems(data || []);
       setLastRefresh(Date.now());
+
+      // TODO: REMOVE THIS CONSOLIDATION CODE ONCE ALL USER INVENTORIES ARE CLEANED UP
+      // Silently consolidate potions in the background
+      // This will eventually be removed once all inventories are cleaned up
+      consolidatePotions(selectedCharacter.id, supabase).catch((err) => {
+        console.error("Background consolidation error:", err);
+        // Silently fail - don't show error to user
+      });
     } catch (err) {
       console.error("Error fetching inventory items:", err);
       setError("Failed to load inventory items. Please try again.");
@@ -88,6 +106,52 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     fetchItems();
   }, [fetchItems]);
 
+  const fetchSessionCharacters = useCallback(async () => {
+    const gameSession =
+      selectedCharacter?.gameSession || selectedCharacter?.game_session;
+
+    if (!supabase || !gameSession) {
+      return;
+    }
+
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("characters")
+        .select("id, name, discord_user_id, game_session")
+        .eq("active", true)
+        .eq("game_session", gameSession)
+        .neq("id", selectedCharacter.id)
+        .order("name", { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      const filteredData = (data || []).filter((character) => {
+        return !shouldFilterFromOtherPlayers(character.name, gameSession);
+      });
+
+      setSessionCharacters(filteredData);
+    } catch (err) {
+      console.error("Error fetching session characters:", err);
+    }
+  }, [
+    supabase,
+    selectedCharacter?.gameSession,
+    selectedCharacter?.game_session,
+    selectedCharacter?.id,
+  ]);
+
+  useEffect(() => {
+    const gameSession =
+      selectedCharacter?.gameSession || selectedCharacter?.game_session;
+    if (gameSession) {
+      fetchSessionCharacters();
+    }
+  }, [
+    fetchSessionCharacters,
+    selectedCharacter?.gameSession,
+    selectedCharacter?.game_session,
+  ]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && selectedCharacter?.id) {
@@ -99,31 +163,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchItems, selectedCharacter?.id]);
-
-  useEffect(() => {
-    if (!selectedCharacter?.id) return;
-
-    const interval = setInterval(() => {
-      if (
-        !document.hidden &&
-        !isLoading &&
-        !isSaving &&
-        !editingId &&
-        !showAddForm
-      ) {
-        fetchItems();
-      }
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, [
-    fetchItems,
-    selectedCharacter?.id,
-    isLoading,
-    isSaving,
-    editingId,
-    showAddForm,
-  ]);
 
   const addItem = useCallback(async () => {
     if (!formData.name.trim() || !supabase || !selectedCharacter?.id) return;
@@ -140,7 +179,10 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
         category: formData.category,
         attunement_required: formData.attunement_required,
         character_id: selectedCharacter.id,
-        discord_user_id: user?.discord_user_id || user?.id,
+
+        discord_user_id: adminMode
+          ? selectedCharacter.discord_user_id
+          : user?.discord_user_id || user?.id,
       };
 
       const { data, error: insertError } = await supabase
@@ -270,6 +312,83 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     setError(null);
   }, []);
 
+  const sendItem = useCallback(async () => {
+    if (!sendItemModal || !selectedRecipient || !supabase) return;
+
+    const { selectedItem, quantityToSend } = sendItemModal;
+
+    if (!selectedItem) {
+      setError("Please select an item to send");
+      return;
+    }
+
+    if (quantityToSend <= 0 || quantityToSend > selectedItem.quantity) {
+      setError("Invalid quantity to send");
+      return;
+    }
+
+    setIsSendingItem(true);
+    setError(null);
+
+    try {
+      const senderName = selectedCharacter?.name || "Unknown";
+      const descriptionWithSender = selectedItem.description
+        ? `${selectedItem.description}\n\nSent by: ${senderName}`
+        : `Sent by: ${senderName}`;
+
+      const newItem = {
+        name: selectedItem.name,
+        description: descriptionWithSender,
+        quantity: quantityToSend,
+        value: selectedItem.value,
+        category: selectedItem.category,
+        attunement_required: selectedItem.attunement_required,
+        character_id: selectedRecipient.id,
+        discord_user_id: selectedRecipient.discord_user_id,
+      };
+
+      const { error: insertError } = await supabase
+        .from("inventory_items")
+        .insert([newItem]);
+
+      if (insertError) throw insertError;
+
+      if (quantityToSend === selectedItem.quantity) {
+        const { error: deleteError } = await supabase
+          .from("inventory_items")
+          .delete()
+          .eq("id", selectedItem.id);
+
+        if (deleteError) throw deleteError;
+
+        setItems((prev) => prev.filter((i) => i.id !== selectedItem.id));
+      } else {
+        const { error: updateError } = await supabase
+          .from("inventory_items")
+          .update({ quantity: selectedItem.quantity - quantityToSend })
+          .eq("id", selectedItem.id);
+
+        if (updateError) throw updateError;
+
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === selectedItem.id
+              ? { ...i, quantity: i.quantity - quantityToSend }
+              : i
+          )
+        );
+      }
+
+      setSendItemModal(null);
+      setSelectedRecipient(null);
+    } catch (err) {
+      console.error("Error sending item:", err);
+      setError("Failed to send item. Please try again.");
+    } finally {
+      setIsSendingItem(false);
+    }
+  }, [sendItemModal, selectedRecipient, supabase]);
+
   const filteredItems = useMemo(
     () =>
       items.filter(
@@ -296,6 +415,34 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     [filteredItems]
   );
 
+  const stackedItems = useMemo(() => {
+    const stacked = {};
+    Object.entries(groupedItems).forEach(([category, categoryItems]) => {
+      const itemStacks = {};
+
+      categoryItems.forEach((item) => {
+        const key = item.name.toLowerCase().trim();
+        if (!itemStacks[key]) {
+          itemStacks[key] = {
+            stackKey: `${category}-${key}`,
+            name: item.name,
+            category: item.category,
+            description: item.description,
+            value: item.value,
+            attunement_required: item.attunement_required,
+            totalQuantity: 0,
+            items: [],
+          };
+        }
+        itemStacks[key].totalQuantity += item.quantity;
+        itemStacks[key].items.push(item);
+      });
+
+      stacked[category] = Object.values(itemStacks);
+    });
+    return stacked;
+  }, [groupedItems]);
+
   const stats = useMemo(() => {
     const totalItems = items.length;
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -316,11 +463,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
     return (
       <div style={styles.container}>
         <div style={styles.emptyState}>
-          <Package
-            size={48}
-            color={theme.textSecondary}
-            style={styles.emptyIcon}
-          />
           <p style={styles.emptyText}>
             Please select a character to view their inventory.
           </p>
@@ -336,6 +478,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           user={user}
           selectedCharacter={selectedCharacter}
           supabase={supabase}
+          adminMode={adminMode}
         />
 
         <div style={styles.inventorySection}>
@@ -394,31 +537,6 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                     <Plus size={18} />
                     Add New Item
                   </button>
-
-                  <button
-                    onClick={handleManualRefresh}
-                    disabled={isRefreshing}
-                    style={{
-                      ...styles.addButton,
-                      backgroundColor: theme.success || "#10B981",
-                      marginLeft: "8px",
-                      opacity: isRefreshing ? 0.7 : 1,
-                      cursor: isRefreshing ? "not-allowed" : "pointer",
-                    }}
-                    title="Check for new items from background changes or other updates"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <Loader size={18} />
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw size={18} />
-                        Check for New Items
-                      </>
-                    )}
-                  </button>
                 </>
               )}
 
@@ -443,11 +561,9 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
             </div>
           )}
 
-          {(showAddForm || editingId) && (
+          {showAddForm && (
             <div style={styles.formCard}>
-              <h3 style={styles.formTitle}>
-                {editingId ? "Edit Item" : "Add New Item"}
-              </h3>
+              <h3 style={styles.formTitle}>Add New Item</h3>
 
               <div style={styles.formGrid}>
                 <div style={styles.formField}>
@@ -586,7 +702,7 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
 
               <div style={styles.formActions}>
                 <button
-                  onClick={editingId ? saveEdit : addItem}
+                  onClick={addItem}
                   disabled={!formData.name.trim() || isSaving}
                   style={{
                     ...styles.saveButton,
@@ -600,18 +716,28 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                   {isSaving ? (
                     <>
                       <Loader size={18} />
-                      {editingId ? "Saving..." : "Adding..."}
+                      Adding...
                     </>
                   ) : (
                     <>
                       <Check size={18} />
-                      {editingId ? "Save Changes" : "Add Item"}
+                      Add Item
                     </>
                   )}
                 </button>
 
                 <button
-                  onClick={cancelEdit}
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setFormData({
+                      name: "",
+                      description: "",
+                      quantity: 1,
+                      value: "",
+                      category: "General",
+                      attunement_required: false,
+                    });
+                  }}
                   style={styles.cancelButton}
                   disabled={isSaving}
                 >
@@ -625,16 +751,45 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           {!isLoading && (
             <>
               {filteredItems.length > 0 ? (
-                Object.entries(groupedItems).map(
-                  ([category, categoryItems]) => {
-                    const attunementCount = categoryItems.filter(
-                      (item) => item.attunement_required
-                    ).length;
-                    return (
-                      <div key={category} style={{ marginBottom: "32px" }}>
-                        <div style={styles.categoryHeader}>
+                Object.entries(stackedItems).map(([category, stacks]) => {
+                  const attunementCount = stacks.filter(
+                    (stack) => stack.attunement_required
+                  ).length;
+                  const isCollapsed = collapsedCategories[category];
+
+                  return (
+                    <div key={category} style={{ marginBottom: "32px" }}>
+                      <div
+                        style={{
+                          ...styles.categoryHeader,
+                          cursor: "pointer",
+                          userSelect: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                        onClick={() =>
+                          setCollapsedCategories({
+                            ...collapsedCategories,
+                            [category]: !isCollapsed,
+                          })
+                        }
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          {isCollapsed ? (
+                            <ChevronDown size={20} />
+                          ) : (
+                            <ChevronUp size={20} />
+                          )}
                           <span>
-                            {category} ({categoryItems.length})
+                            {category} ({stacks.length}{" "}
+                            {stacks.length === 1 ? "type" : "types"})
                           </span>
                           {attunementCount > 0 && (
                             <span style={styles.categoryStats}>
@@ -642,87 +797,702 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
                             </span>
                           )}
                         </div>
-                        <div style={styles.itemsGrid}>
-                          {categoryItems.map((item) => (
-                            <div key={item.id} style={styles.itemCard}>
-                              <div style={styles.itemHeader}>
-                                <div>
-                                  <div style={styles.itemName}>
-                                    <Package size={18} color={theme.primary} />
-                                    {item.name}
-                                    {item.quantity > 1 && (
-                                      <span style={styles.quantityBadge}>
-                                        x{item.quantity}
-                                      </span>
-                                    )}
-                                    {item.attunement_required && (
-                                      <span style={styles.attunementBadge}>
-                                        <Star size={12} />
-                                        Attunement
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div style={styles.itemActions}>
-                                  <button
-                                    onClick={() => startEdit(item)}
-                                    disabled={
-                                      editingId || showAddForm || isSaving
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      ...styles.editButton,
-                                      opacity:
-                                        editingId || showAddForm || isSaving
-                                          ? 0.5
-                                          : 1,
-                                    }}
-                                  >
-                                    <Edit2 size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => deleteItem(item.id)}
-                                    disabled={
-                                      editingId || showAddForm || isSaving
-                                    }
-                                    style={{
-                                      ...styles.actionButton,
-                                      ...styles.deleteButton,
-                                      opacity:
-                                        editingId || showAddForm || isSaving
-                                          ? 0.5
-                                          : 1,
-                                    }}
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-
-                              {item.description && (
-                                <div style={styles.itemDescription}>
-                                  {item.description}
-                                </div>
-                              )}
-
-                              <div style={styles.itemMeta}>
-                                {item.value && item.value !== 0 && item.value !== "0" && (
-                                  <span>Value: {item.value}</span>
-                                )}
-                                <span>
-                                  Added:{" "}
-                                  {new Date(
-                                    item.created_at
-                                  ).toLocaleDateString()}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
                       </div>
-                    );
-                  }
-                )
+                      {!isCollapsed && (
+                        <div style={styles.itemsGrid}>
+                          {stacks.map((stack) => {
+                            const isExpanded = expandedStack === stack.stackKey;
+                            const isBeingEdited = stack.items.some(
+                              (item) => item.id === editingId
+                            );
+
+                            return (
+                              <div
+                                key={stack.stackKey}
+                                style={{
+                                  ...styles.itemCard,
+                                  ...((isExpanded || isBeingEdited) && {
+                                    gridColumn: "1 / -1",
+                                  }),
+                                }}
+                              >
+                                {isBeingEdited ? (
+                                  <div style={styles.form}>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginBottom: "16px",
+                                      }}
+                                    >
+                                      <h4
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "16px",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        Edit: {stack.name}
+                                      </h4>
+                                    </div>
+                                    <div style={styles.formRow}>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Name *
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={formData.name}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              name: e.target.value,
+                                            })
+                                          }
+                                          style={styles.input}
+                                          placeholder="Item name"
+                                          disabled={isSaving}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.primary;
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.border;
+                                          }}
+                                        />
+                                      </div>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Category
+                                        </label>
+                                        <select
+                                          value={formData.category}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              category: e.target.value,
+                                            })
+                                          }
+                                          style={styles.select}
+                                          disabled={isSaving}
+                                        >
+                                          {categories.map((cat) => (
+                                            <option key={cat} value={cat}>
+                                              {cat}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    <div style={styles.formRow}>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Quantity
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={formData.quantity}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              quantity:
+                                                parseInt(e.target.value) || 0,
+                                            })
+                                          }
+                                          style={styles.input}
+                                          min="0"
+                                          disabled={isSaving}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.primary;
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.border;
+                                          }}
+                                        />
+                                      </div>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Value
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={formData.value}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              value: e.target.value,
+                                            })
+                                          }
+                                          style={styles.input}
+                                          placeholder="5 Galleons, 10 Sickles, etc."
+                                          disabled={isSaving}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.primary;
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.border;
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div style={styles.formGroup}>
+                                      <label style={styles.label}>
+                                        Description
+                                      </label>
+                                      <textarea
+                                        value={formData.description}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            description: e.target.value,
+                                          })
+                                        }
+                                        style={styles.textarea}
+                                        placeholder="Item description, magical properties, etc."
+                                        disabled={isSaving}
+                                        onFocus={(e) => {
+                                          e.target.style.borderColor =
+                                            theme.primary;
+                                        }}
+                                        onBlur={(e) => {
+                                          e.target.style.borderColor =
+                                            theme.border;
+                                        }}
+                                      />
+                                    </div>
+
+                                    <div style={styles.checkboxField}>
+                                      <label style={styles.checkboxLabel}>
+                                        <input
+                                          type="checkbox"
+                                          checked={formData.attunement_required}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              attunement_required:
+                                                e.target.checked,
+                                            })
+                                          }
+                                          style={styles.checkbox}
+                                          disabled={isSaving}
+                                        />
+                                        <Star size={16} color="#F59E0B" />
+                                        Requires Attunement
+                                      </label>
+                                    </div>
+
+                                    <div style={styles.formActions}>
+                                      <button
+                                        onClick={saveEdit}
+                                        disabled={
+                                          !formData.name.trim() || isSaving
+                                        }
+                                        style={{
+                                          ...styles.saveButton,
+                                          opacity:
+                                            !formData.name.trim() || isSaving
+                                              ? 0.5
+                                              : 1,
+                                          cursor:
+                                            !formData.name.trim() || isSaving
+                                              ? "not-allowed"
+                                              : "pointer",
+                                        }}
+                                      >
+                                        {isSaving ? (
+                                          <>
+                                            <Loader size={18} />
+                                            Saving...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Check size={18} />
+                                            Save Changes
+                                          </>
+                                        )}
+                                      </button>
+                                      <button
+                                        onClick={cancelEdit}
+                                        disabled={isSaving}
+                                        style={{
+                                          ...styles.cancelButton,
+                                          opacity: isSaving ? 0.5 : 1,
+                                          cursor: isSaving
+                                            ? "not-allowed"
+                                            : "pointer",
+                                        }}
+                                      >
+                                        <X size={18} />
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : isExpanded ? (
+                                  <div>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginBottom: "16px",
+                                      }}
+                                    >
+                                      <h4
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "16px",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        {stack.name}
+                                      </h4>
+                                      <button
+                                        onClick={() => {
+                                          setExpandedStack(null);
+                                          setEditingId(null);
+                                        }}
+                                        style={{
+                                          ...styles.actionButton,
+                                          backgroundColor:
+                                            theme.warning || "#F97316",
+                                          color: "white",
+                                        }}
+                                      >
+                                        <X size={16} />
+                                      </button>
+                                    </div>
+                                    {stack.items.map((item, index) => (
+                                      <div
+                                        key={item.id}
+                                        style={{
+                                          marginBottom:
+                                            index < stack.items.length - 1
+                                              ? "16px"
+                                              : 0,
+                                          paddingBottom:
+                                            index < stack.items.length - 1
+                                              ? "16px"
+                                              : 0,
+                                          borderBottom:
+                                            index < stack.items.length - 1
+                                              ? `1px solid ${theme.border}`
+                                              : "none",
+                                        }}
+                                      >
+                                        {editingId === item.id ? (
+                                          <div style={styles.form}>
+                                            <div style={styles.formRow}>
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Name *
+                                                </label>
+                                                <input
+                                                  type="text"
+                                                  value={formData.name}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      name: e.target.value,
+                                                    })
+                                                  }
+                                                  style={styles.input}
+                                                  placeholder="Item name"
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
+                                                  }}
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
+                                                />
+                                              </div>
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Category
+                                                </label>
+                                                <select
+                                                  value={formData.category}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      category: e.target.value,
+                                                    })
+                                                  }
+                                                  style={styles.select}
+                                                  disabled={isSaving}
+                                                >
+                                                  {categories.map((cat) => (
+                                                    <option
+                                                      key={cat}
+                                                      value={cat}
+                                                    >
+                                                      {cat}
+                                                    </option>
+                                                  ))}
+                                                </select>
+                                              </div>
+                                            </div>
+
+                                            <div style={styles.formRow}>
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Quantity
+                                                </label>
+                                                <input
+                                                  type="number"
+                                                  value={formData.quantity}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      quantity:
+                                                        parseInt(
+                                                          e.target.value
+                                                        ) || 0,
+                                                    })
+                                                  }
+                                                  style={styles.input}
+                                                  min="0"
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
+                                                  }}
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
+                                                />
+                                              </div>
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Value
+                                                </label>
+                                                <input
+                                                  type="text"
+                                                  value={formData.value}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      value: e.target.value,
+                                                    })
+                                                  }
+                                                  style={styles.input}
+                                                  placeholder="5 Galleons, 10 Sickles, etc."
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
+                                                  }}
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
+                                                />
+                                              </div>
+                                            </div>
+
+                                            <div style={styles.formGroup}>
+                                              <label style={styles.label}>
+                                                Description
+                                              </label>
+                                              <textarea
+                                                value={formData.description}
+                                                onChange={(e) =>
+                                                  setFormData({
+                                                    ...formData,
+                                                    description: e.target.value,
+                                                  })
+                                                }
+                                                style={styles.textarea}
+                                                placeholder="Item description, magical properties, etc."
+                                                disabled={isSaving}
+                                                onFocus={(e) => {
+                                                  e.target.style.borderColor =
+                                                    theme.primary;
+                                                }}
+                                                onBlur={(e) => {
+                                                  e.target.style.borderColor =
+                                                    theme.border;
+                                                }}
+                                              />
+                                            </div>
+
+                                            <div style={styles.checkboxField}>
+                                              <label
+                                                style={styles.checkboxLabel}
+                                              >
+                                                <input
+                                                  type="checkbox"
+                                                  checked={
+                                                    formData.attunement_required
+                                                  }
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      attunement_required:
+                                                        e.target.checked,
+                                                    })
+                                                  }
+                                                  style={styles.checkbox}
+                                                  disabled={isSaving}
+                                                />
+                                                <Star
+                                                  size={16}
+                                                  color="#F59E0B"
+                                                />
+                                                Requires Attunement
+                                              </label>
+                                            </div>
+
+                                            <div style={styles.formActions}>
+                                              <button
+                                                onClick={saveEdit}
+                                                disabled={
+                                                  !formData.name.trim() ||
+                                                  isSaving
+                                                }
+                                                style={{
+                                                  ...styles.saveButton,
+                                                  opacity:
+                                                    !formData.name.trim() ||
+                                                    isSaving
+                                                      ? 0.5
+                                                      : 1,
+                                                  cursor:
+                                                    !formData.name.trim() ||
+                                                    isSaving
+                                                      ? "not-allowed"
+                                                      : "pointer",
+                                                }}
+                                              >
+                                                {isSaving ? (
+                                                  <>
+                                                    <Loader size={18} />
+                                                    Saving...
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Check size={18} />
+                                                    Save Changes
+                                                  </>
+                                                )}
+                                              </button>
+                                              <button
+                                                onClick={cancelEdit}
+                                                disabled={isSaving}
+                                                style={{
+                                                  ...styles.cancelButton,
+                                                  opacity: isSaving ? 0.5 : 1,
+                                                  cursor: isSaving
+                                                    ? "not-allowed"
+                                                    : "pointer",
+                                                }}
+                                              >
+                                                <X size={18} />
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              justifyContent: "space-between",
+                                              alignItems: "flex-start",
+                                            }}
+                                          >
+                                            <div style={{ flex: 1 }}>
+                                              <div
+                                                style={{
+                                                  fontWeight: "600",
+                                                  marginBottom: "4px",
+                                                }}
+                                              >
+                                                Qty: {item.quantity}
+                                                {item.value &&
+                                                  item.value !== 0 &&
+                                                  item.value !== "0" &&
+                                                  ` • Value: ${item.value}`}
+                                              </div>
+                                              {item.description && (
+                                                <div
+                                                  style={{
+                                                    fontSize: "13px",
+                                                    color: theme.textSecondary,
+                                                    marginTop: "4px",
+                                                  }}
+                                                >
+                                                  {item.description}
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: "8px",
+                                                marginLeft: "12px",
+                                              }}
+                                            >
+                                              {sessionCharacters.length > 0 && (
+                                                <button
+                                                  onClick={() =>
+                                                    setSendItemModal({
+                                                      stack: null,
+                                                      items: [item],
+                                                      selectedItem: item,
+                                                      quantityToSend: 1,
+                                                    })
+                                                  }
+                                                  style={{
+                                                    ...styles.actionButton,
+                                                    backgroundColor:
+                                                      theme.primary,
+                                                    color: "white",
+                                                  }}
+                                                  title="Send to another character"
+                                                >
+                                                  <Gift size={16} />
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => startEdit(item)}
+                                                style={{
+                                                  ...styles.actionButton,
+                                                  ...styles.editButton,
+                                                }}
+                                              >
+                                                <Edit2 size={16} />
+                                              </button>
+                                              <button
+                                                onClick={() =>
+                                                  deleteItem(item.id)
+                                                }
+                                                style={{
+                                                  ...styles.actionButton,
+                                                  ...styles.deleteButton,
+                                                }}
+                                              >
+                                                <Trash2 size={16} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div style={styles.itemHeader}>
+                                      <div>
+                                        <div style={styles.itemName}>
+                                          {stack.name}
+                                          {stack.attunement_required && (
+                                            <span
+                                              style={styles.attunementBadge}
+                                            >
+                                              <Star
+                                                size={12}
+                                                color={theme.warning}
+                                              />
+                                              Attunement
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div style={styles.itemActions}>
+                                        {sessionCharacters.length > 0 && (
+                                          <button
+                                            onClick={() =>
+                                              setSendItemModal({
+                                                stack,
+                                                items: stack.items,
+                                                selectedItem:
+                                                  stack.items.length === 1
+                                                    ? stack.items[0]
+                                                    : null,
+                                                quantityToSend: 1,
+                                              })
+                                            }
+                                            disabled={
+                                              expandedStack ||
+                                              showAddForm ||
+                                              isSaving
+                                            }
+                                            style={{
+                                              ...styles.actionButton,
+                                              backgroundColor: theme.primary,
+                                              color: "white",
+                                              opacity:
+                                                expandedStack ||
+                                                showAddForm ||
+                                                isSaving
+                                                  ? 0.5
+                                                  : 1,
+                                            }}
+                                            title="Send to another character"
+                                          >
+                                            <Gift size={16} />
+                                          </button>
+                                        )}
+                                        <button
+                                          onClick={() =>
+                                            startEdit(stack.items[0])
+                                          }
+                                          disabled={
+                                            editingId || showAddForm || isSaving
+                                          }
+                                          style={{
+                                            ...styles.actionButton,
+                                            ...styles.editButton,
+                                            opacity:
+                                              editingId ||
+                                              showAddForm ||
+                                              isSaving
+                                                ? 0.5
+                                                : 1,
+                                          }}
+                                        >
+                                          <Edit2 size={16} />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {stack.description && (
+                                      <div style={styles.itemDescription}>
+                                        {stack.description}
+                                      </div>
+                                    )}
+
+                                    <div style={styles.itemMeta}>
+                                      <span style={styles.quantityBadge}>
+                                        Qty: {stack.totalQuantity}
+                                      </span>
+                                      {stack.value &&
+                                        stack.value !== 0 &&
+                                        stack.value !== "0" && (
+                                          <span>Value: {stack.value}</span>
+                                        )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               ) : items.length > 0 ? (
                 <div style={styles.emptyState}>
                   <Search
@@ -758,6 +1528,331 @@ const Inventory = ({ user, selectedCharacter, supabase }) => {
           )}
         </div>
       </div>
+
+      {sendItemModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => {
+            setSendItemModal(null);
+            setSelectedRecipient(null);
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: theme.background,
+              borderRadius: "12px",
+              maxWidth: "500px",
+              width: "100%",
+              maxHeight: "80vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+              border: `1px solid ${theme.border}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: `2px solid ${theme.border}`,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: theme.surface,
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+              }}
+            >
+              <h2 style={{ margin: 0, color: theme.text, fontSize: "20px" }}>
+                <Gift
+                  size={24}
+                  style={{ verticalAlign: "middle", marginRight: "8px" }}
+                />
+                Send Item
+              </h2>
+              <button
+                onClick={() => {
+                  setSendItemModal(null);
+                  setSelectedRecipient(null);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: theme.textSecondary,
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ padding: "24px", flex: 1, overflowY: "auto" }}>
+              {sendItemModal.items.length > 1 &&
+                !sendItemModal.selectedItem && (
+                  <div style={{ marginBottom: "20px" }}>
+                    <label
+                      style={{
+                        ...styles.label,
+                        marginBottom: "8px",
+                        display: "block",
+                      }}
+                    >
+                      Select Item to Send
+                    </label>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                      }}
+                    >
+                      {sendItemModal.items.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() =>
+                            setSendItemModal((prev) => ({
+                              ...prev,
+                              selectedItem: item,
+                              quantityToSend: 1,
+                            }))
+                          }
+                          style={{
+                            padding: "12px",
+                            backgroundColor: theme.surface,
+                            border: `2px solid ${theme.border}`,
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            color: theme.text,
+                          }}
+                        >
+                          <div
+                            style={{ fontWeight: "600", marginBottom: "4px" }}
+                          >
+                            {item.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              color: theme.textSecondary,
+                            }}
+                          >
+                            Qty: {item.quantity}
+                            {item.value && ` • Value: ${item.value}`}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {sendItemModal.selectedItem && (
+                <>
+                  <div
+                    style={{
+                      marginBottom: "20px",
+                      padding: "12px",
+                      backgroundColor: theme.surface,
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                        color: theme.text,
+                      }}
+                    >
+                      {sendItemModal.selectedItem.name}
+                    </div>
+                    {sendItemModal.selectedItem.description && (
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: theme.textSecondary,
+                          marginBottom: "8px",
+                        }}
+                      >
+                        {sendItemModal.selectedItem.description}
+                      </div>
+                    )}
+                    <div
+                      style={{ fontSize: "13px", color: theme.textSecondary }}
+                    >
+                      Available: {sendItemModal.selectedItem.quantity}
+                      {sendItemModal.selectedItem.value &&
+                        ` • Value: ${sendItemModal.selectedItem.value}`}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <label
+                      style={{
+                        ...styles.label,
+                        marginBottom: "8px",
+                        display: "block",
+                      }}
+                    >
+                      Quantity to Send
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={sendItemModal.selectedItem.quantity}
+                      value={sendItemModal.quantityToSend}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1;
+                        setSendItemModal((prev) => ({
+                          ...prev,
+                          quantityToSend: Math.min(
+                            Math.max(1, value),
+                            sendItemModal.selectedItem.quantity
+                          ),
+                        }));
+                      }}
+                      style={styles.input}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <label
+                      style={{
+                        ...styles.label,
+                        marginBottom: "8px",
+                        display: "block",
+                      }}
+                    >
+                      Send To
+                    </label>
+                    {sessionCharacters.length === 0 ? (
+                      <div
+                        style={{
+                          padding: "12px",
+                          backgroundColor: theme.surface,
+                          borderRadius: "8px",
+                          color: theme.textSecondary,
+                        }}
+                      >
+                        No other characters in your session
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedRecipient?.id || ""}
+                        onChange={(e) => {
+                          const characterId = e.target.value;
+                          const character = sessionCharacters.find(
+                            (c) => c.id === characterId
+                          );
+                          setSelectedRecipient(character || null);
+                        }}
+                        style={styles.select}
+                      >
+                        <option value="">Select a character...</option>
+                        {sessionCharacters.map((character) => (
+                          <option key={character.id} value={character.id}>
+                            {character.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: `1px solid ${theme.border}`,
+                backgroundColor: theme.surface,
+                borderBottomLeftRadius: "12px",
+                borderBottomRightRadius: "12px",
+                display: "flex",
+                gap: "12px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setSendItemModal(null);
+                  setSelectedRecipient(null);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "10px 20px",
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendItem}
+                disabled={
+                  !sendItemModal.selectedItem ||
+                  !selectedRecipient ||
+                  isSendingItem
+                }
+                style={{
+                  flex: 1,
+                  padding: "10px 20px",
+                  backgroundColor: theme.primary,
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor:
+                    !sendItemModal.selectedItem ||
+                    !selectedRecipient ||
+                    isSendingItem
+                      ? "not-allowed"
+                      : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  opacity:
+                    !sendItemModal.selectedItem ||
+                    !selectedRecipient ||
+                    isSendingItem
+                      ? 0.5
+                      : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                }}
+              >
+                {isSendingItem ? (
+                  <>
+                    <Loader size={16} />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Gift size={16} />
+                    Send Item
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

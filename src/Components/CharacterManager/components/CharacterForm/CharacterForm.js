@@ -15,6 +15,7 @@ import {
   SkillsSection,
   ToolsLanguagesSection,
   ASILevelChoices,
+  AdditionalFeatsASISection,
   MagicModifiersSection,
   MetaMagicSection,
   CastingStyleChoicesSection,
@@ -24,6 +25,7 @@ import {
 
 import {
   getAllSelectedFeats,
+  getAvailableASILevels,
   handleASIChoiceChange as utilsHandleASIChoiceChange,
   handleASIFeatChange as utilsHandleASIFeatChange,
   handleASIAbilityChange as utilsHandleASIAbilityChange,
@@ -377,7 +379,7 @@ const CharacterForm = ({
         />
       </FormSection>
 
-      {character.level > 1 && (
+      {getAvailableASILevels(character.level).length > 0 && (
         <FormSection
           title="ASI & Feat Progression"
           subtitle={`Level ${
@@ -396,6 +398,20 @@ const CharacterForm = ({
           />
         </FormSection>
       )}
+
+      <FormSection
+        title="Additional Feats and ASI"
+        subtitle="Extra feats and ability score improvements outside of standard progression"
+        id="section-additional-feats-asi"
+      >
+        <AdditionalFeatsASISection
+          character={character}
+          onChange={updateCharacter}
+          onCharacterUpdate={updateCharacterBulk}
+          mode={mode}
+        />
+      </FormSection>
+
       <FormSection
         title="Metamagic"
         subtitle="Select metamagic options available to your character"

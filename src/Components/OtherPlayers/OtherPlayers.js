@@ -424,6 +424,63 @@ const PlayerCard = ({
           {showNPCBadge && <NPCBadge theme={theme} />}
         </h3>
         <div style={styles.playerDetails}>
+          {(character.currentHp !== undefined ||
+            character.maxHp !== undefined) && (
+            <div style={{ marginBottom: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginBottom: "4px",
+                }}
+              >
+                <Heart size={14} color="#ef4444" />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "500",
+                    color: theme.textSecondary,
+                  }}
+                >
+                  {character.currentHp || 0}/{character.maxHp || 0} HP
+                </span>
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  height: "8px",
+                  backgroundColor: theme.surface,
+                  borderRadius: "4px",
+                  overflow: "hidden",
+                  border: `1px solid ${theme.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.max(
+                      0,
+                      Math.min(
+                        100,
+                        ((character.currentHp || 0) / (character.maxHp || 1)) *
+                          100
+                      )
+                    )}%`,
+                    height: "100%",
+                    backgroundColor: (() => {
+                      const percentage =
+                        (character.currentHp || 0) / (character.maxHp || 1);
+                      if (percentage <= 0.25) return "#EF4444";
+                      if (percentage <= 0.5) return "#F59E0B";
+                      if (percentage <= 0.75) return "#EAB308";
+                      return "#10B981";
+                    })(),
+                    transition: "width 0.3s ease, background-color 0.3s ease",
+                  }}
+                />
+              </div>
+            </div>
+          )}
           {character.house && (
             <div style={styles.detailRow}>
               <Home size={14} color={theme.primary} />
@@ -765,7 +822,17 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
 
       if (fetchError) throw fetchError;
 
-      setOtherPlayers(characters || []);
+      if (characters && characters.length > 0) {
+        const charactersWithHp = characters.map((character) => ({
+          ...character,
+          currentHp: character.current_hit_points ?? character.hit_points,
+          maxHp: character.hit_points,
+        }));
+
+        setOtherPlayers(charactersWithHp || []);
+      } else {
+        setOtherPlayers([]);
+      }
     } catch (err) {
       console.error("Error loading other players:", err);
       setError("Failed to load other players. Please try again.");
@@ -803,7 +870,6 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
 
   const filteredPlayers = otherPlayers
     .filter((player) => {
-      // Filter out characters that match Jaguaras NPC names (unless they're exceptions)
       return !shouldFilterFromOtherPlayers(
         player.name,
         selectedCharacter.gameSession

@@ -1440,17 +1440,6 @@ export const spellsData = {
           description:
             "The Cruciatus Curse - One of the three Unforgivable Curses. Causes intense, excruciating pain to the victim. Prolonged use can cause permanent insanity. Using this curse on another human being is punishable by a life sentence in Azkaban.",
         },
-        {
-          name: "Nullum Effigium",
-          class: ["Defense Against the Dark Arts"],
-          level: "5th Level",
-          castingTime: "10 minutes",
-          range: "Self (60-foot-radius sphere)",
-          duration: "8 hours",
-          year: 7,
-          description:
-            "Commonly used by the Department of Magical Law enforcement, this wards an area against apparition or disapparition. No one may arrive in the warded area via apparition, nor may any creatures within the warded area cast the spell. Any attempt to do so results in the typical apparition effect, except the creature stays exactly where they are. At Higher Levels: When you cast this spell using a spell slot of 6th level or higher, the radius of the sphere increases by 60 feet for each slot level above 5th.",
-        },
       ],
       "8th Level": [
         {
@@ -1759,6 +1748,8 @@ export const spellsData = {
           level: "5th Level",
           castingTime: "Action",
           range: "300 Feet",
+          restriction: true,
+
           duration: "Concentration, up to 10 minutes",
           year: 6,
           description:
@@ -2724,7 +2715,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Instantaneous",
           year: 1,
-          restriction: false,
+          restriction: true,
           description:
             "You cause a cloud of mites, fleas, and other parasites to appear momentarily on one creature you can see within range. The target must succeed on a Constitution saving throw, or it takes 1d6 poison damage and moves 5 feet in a random direction if it can move and its speed is at least 5 feet. Roll a d4 for the direction: 1, north; 2, south; 3, east; or 4, west. This movement doesn't provoke opportunity attacks, and if the direction rolled is blocked, the target doesn't move.",
           higherLevels:

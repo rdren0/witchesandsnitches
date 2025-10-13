@@ -4,6 +4,7 @@ import {
   activityRequiresDualChecks,
   getCustomDiceTypeForActivity,
   activityRequiresExtraDie,
+  activityRequiresSpellDice,
 } from "./downtimeHelpers";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 

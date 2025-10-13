@@ -9,7 +9,6 @@ import {
   Shield,
   Calendar,
   Edit3,
-  TrendingUp,
   User,
 } from "lucide-react";
 
@@ -24,7 +23,6 @@ const CharacterList = ({
   selectedCharacterId,
   onSelectedCharacterReset,
   onEditCharacter,
-  onLevelUpCharacter,
   onDeleteCharacter,
   onCreateNew,
   supabase,
