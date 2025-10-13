@@ -787,9 +787,21 @@ const SpellSelector = ({
         case "name":
           comparison = a.name.localeCompare(b.name);
           break;
-        case "year":
-          comparison = (a.year || 0) - (b.year || 0);
+        case "year": {
+          const aHasYear = Boolean(a.year);
+          const bHasYear = Boolean(b.year);
+
+          if (!aHasYear && !bHasYear) {
+            comparison = 0;
+          } else if (!aHasYear) {
+            return 1;
+          } else if (!bHasYear) {
+            return -1;
+          } else {
+            comparison = a.year - b.year;
+          }
           break;
+        }
         case "level": {
           const levelOrder = {
             Cantrip: 0,
@@ -1162,15 +1174,17 @@ const SpellSelector = ({
                               </span>
                             )}
                         </div>
-                        <span
-                          style={{
-                            ...styles.spellBadge,
-                            backgroundColor: getYearColor(spell.year) + "20",
-                            color: getYearColor(spell.year),
-                          }}
-                        >
-                          Year {spell.year}
-                        </span>
+                        {spell.year && (
+                          <span
+                            style={{
+                              ...styles.spellBadge,
+                              backgroundColor: getYearColor(spell.year) + "20",
+                              color: getYearColor(spell.year),
+                            }}
+                          >
+                            Year {spell.year}
+                          </span>
+                        )}
                       </div>
 
                       <div style={styles.spellDescription}>
