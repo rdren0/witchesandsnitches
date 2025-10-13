@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronDown, User } from "lucide-react";
+import { ChevronDown, User, X } from "lucide-react";
 import { ALL_CHARACTERS } from "../../SharedData/charactersData";
 
 const NPCAutocompleteInput = ({
@@ -25,7 +25,7 @@ const NPCAutocompleteInput = ({
     },
     input: {
       width: "100%",
-      padding: "12px 40px 12px 12px",
+      padding: "12px 68px 12px 12px",
       border: `2px solid ${theme.border || "#e5e7eb"}`,
       borderRadius: "8px",
       fontSize: "14px",
@@ -251,6 +251,22 @@ const NPCAutocompleteInput = ({
         aria-haspopup="listbox"
         aria-label="NPC Name"
       />
+
+      {value && value.trim() !== "" && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          disabled={disabled}
+          style={{
+            ...mergedStyles.dropdownButton,
+            right: "36px",
+          }}
+          aria-label="Clear input"
+          tabIndex={-1}
+        >
+          <X size={16} />
+        </button>
+      )}
 
       <button
         type="button"

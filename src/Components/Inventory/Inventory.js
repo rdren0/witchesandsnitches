@@ -322,9 +322,14 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     setError(null);
 
     try {
+      const senderName = selectedCharacter?.name || "Unknown";
+      const descriptionWithSender = selectedItem.description
+        ? `${selectedItem.description}\n\nSent by: ${senderName}`
+        : `Sent by: ${senderName}`;
+
       const newItem = {
         name: selectedItem.name,
-        description: selectedItem.description,
+        description: descriptionWithSender,
         quantity: quantityToSend,
         value: selectedItem.value,
         category: selectedItem.category,
@@ -990,7 +995,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                             </div>
 
                                             <div style={styles.checkboxField}>
-                                              <label style={styles.checkboxLabel}>
+                                              <label
+                                                style={styles.checkboxLabel}
+                                              >
                                                 <input
                                                   type="checkbox"
                                                   checked={
@@ -1006,7 +1013,10 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                   style={styles.checkbox}
                                                   disabled={isSaving}
                                                 />
-                                                <Star size={16} color="#F59E0B" />
+                                                <Star
+                                                  size={16}
+                                                  color="#F59E0B"
+                                                />
                                                 Requires Attunement
                                               </label>
                                             </div>

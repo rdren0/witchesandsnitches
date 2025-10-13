@@ -2128,8 +2128,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                               color: theme.text,
                             }}
                           >
-                            {attack.name || `Attack ${idx + 1}`}
-                            {attack.attack_bonus && (
+                            {attack.name || "Attack - Not Named"}
+                            {attack.attack_bonus > 0 && (
                               <span
                                 style={{
                                   marginLeft: "8px",

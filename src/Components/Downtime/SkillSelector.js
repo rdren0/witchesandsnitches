@@ -105,6 +105,50 @@ const SkillSelector = memo(
     };
 
     const renderOptions = () => {
+      if (choiceInfo.type === "spell_creation") {
+        const magicalTheorySkill = allSkills.find((skill) => skill.name === "magicalTheory");
+        const magicalTheoryModifier = magicalTheorySkill
+          ? calculateModifier(magicalTheorySkill.name, selectedCharacter)
+          : 0;
+        const spellcastingModifier = calculateModifier("spellcastingAbility", selectedCharacter);
+
+        return (
+          <>
+            <option value="">Choose check type...</option>
+
+            <optgroup label="Magical Theory Check">
+              {magicalTheorySkill && (
+                <option value={magicalTheorySkill.name}>
+                  Magical Theory ({formatModifier(magicalTheoryModifier)})
+                </option>
+              )}
+            </optgroup>
+
+            {choiceInfo.includeWandModifiers && (
+              <optgroup label="Wand Modifier Checks">
+                {wandModifiers
+                  .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                  .map((wand) => {
+                    const modifier =
+                      selectedCharacter?.magicModifiers?.[wand.name] || 0;
+                    return (
+                      <option key={wand.name} value={wand.name}>
+                        {wand.displayName} ({formatModifier(modifier)})
+                      </option>
+                    );
+                  })}
+              </optgroup>
+            )}
+
+            <optgroup label="Spellcasting Ability Check">
+              <option value="spellcastingAbility">
+                Spellcasting Ability ({formatModifier(spellcastingModifier)})
+              </option>
+            </optgroup>
+          </>
+        );
+      }
+
       if (choiceInfo.type === "limited" && choiceInfo.skills) {
         const availableSkills = allSkills.filter((skill) =>
           choiceInfo.skills.includes(skill.name)

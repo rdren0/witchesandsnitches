@@ -757,8 +757,9 @@ export const getActivitySkillInfo = (activityText) => {
 
   if (text.includes("create a spell")) {
     return {
-      type: "locked",
-      skills: ["magicalTheory"],
+      type: "spell_creation",
+      skills: ["magicalTheory", "spellcastingAbility"],
+      includeWandModifiers: true,
     };
   }
 

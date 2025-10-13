@@ -1,8 +1,7 @@
 import { getAllActivities } from "../../../SharedData/downtime";
 
 export const activityRequiresMakeSpellInterface = (activityText) => {
-  if (!activityText) return false;
-  return activityText.toLowerCase().includes("make a spell");
+  return false;
 };
 
 export const getActivityDescription = (activityValue, availableActivities) => {

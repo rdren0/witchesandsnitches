@@ -148,7 +148,8 @@ export const renderDiceValue = ({
 
     if (hasSkill) {
       modifierValue = getModifierValue(skillName);
-      modifierSource = skillName;
+      const skill = allSkills.find((s) => s.name === skillName);
+      modifierSource = skill?.displayName || skillName;
     } else if (hasWandModifier) {
       modifierValue = getModifierValue(wandModifier);
       modifierSource = wandModifier;
@@ -267,6 +268,7 @@ export const renderSpecialActivityInfo = ({
           border: `1px solid ${theme.warning}`,
           borderRadius: "6px",
           marginTop: "1rem",
+          marginBottom: "1rem",
         }}
       >
         <strong>⏳ Multi-Session Activity</strong>
@@ -461,12 +463,7 @@ export const renderMakeSpellActivity = ({
   const spellName = activity.spellName || "";
   const spellLevel = activity.spellLevel || 1;
   const currentProgress = activity.currentSuccesses || 0;
-  const checkTypes = [
-    "Magical Theory",
-    "Wand Modifier",
-    "Spellcasting Ability",
-  ];
-  const currentCheckType = checkTypes[currentProgress] || checkTypes[0];
+  const selectedCheckType = activity.selectedSpellCheckType || "Magical Theory";
 
   const dc = 17 + spellLevel - (selectedCharacter?.year || 1);
 
@@ -508,52 +505,75 @@ export const renderMakeSpellActivity = ({
 
       <div style={styles.progressContainer}>
         <div style={styles.progressHeader}>
-          <h4 style={styles.progressTitle}>Creation Progress</h4>
+          <h4 style={styles.progressTitle}>Overall Progress</h4>
           <div style={styles.progressBadge}>
-            {currentProgress}/3 Checks Complete
+            {currentProgress}/3 Successful Checks
           </div>
         </div>
 
-        <div style={styles.checksList}>
-          {checkTypes.map((checkType, checkIndex) => {
-            const isCompleted = checkIndex < currentProgress;
-            const isCurrent = checkIndex === currentProgress;
-
-            return (
-              <div
-                key={checkType}
-                style={{
-                  ...styles.checkItem,
-                  ...(isCompleted ? styles.checkItemCompleted : {}),
-                  ...(isCurrent ? styles.checkItemCurrent : {}),
-                }}
-              >
-                <div style={styles.checkIcon}>
-                  {isCompleted ? "✓" : isCurrent ? "○" : "○"}
-                </div>
-                <div style={styles.checkContent}>
-                  <div style={styles.checkName}>{checkType}</div>
-                  <div style={styles.checkDescription}>
-                    {getCheckDescription(checkType)}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {currentProgress < 3 && (
-          <div style={styles.currentCheckInfo}>
-            <div style={styles.currentCheckTitle}>
-              Next Check: {currentCheckType}
+          <div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>
+                Select Check Type for This Downtime
+              </label>
+              <select
+                value={selectedCheckType}
+                onChange={(e) =>
+                  updateActivity(
+                    index,
+                    "selectedSpellCheckType",
+                    e.target.value
+                  )
+                }
+                style={styles.select}
+                disabled={!editable}
+              >
+                <option value="Magical Theory">Magical Theory Check</option>
+                <option value="Wand Modifier">Wand Modifier Check</option>
+                <option value="Spellcasting Ability">
+                  Spellcasting Ability Check
+                </option>
+              </select>
             </div>
-            <div style={styles.dcInfo}>
-              <strong>DC {dc}</strong> (17 + {spellLevel} spell level -{" "}
-              {selectedCharacter?.year || 1} current year)
+
+            <div
+              style={{
+                padding: "1rem",
+                backgroundColor: "rgba(100, 150, 255, 0.1)",
+                borderRadius: "6px",
+                marginTop: "1rem",
+                fontSize: "0.875rem",
+              }}
+            >
+              <div style={{ fontWeight: "600", marginBottom: "0.5rem" }}>
+                {selectedCheckType}
+              </div>
+              <div style={{ color: styles.textSecondary }}>
+                {getCheckDescription(selectedCheckType)}
+              </div>
+              <div style={{ marginTop: "0.75rem", fontWeight: "600" }}>
+                DC {dc}{" "}
+                <span style={{ fontWeight: "normal", fontSize: "0.8rem" }}>
+                  (17 + {spellLevel} spell level -{" "}
+                  {selectedCharacter?.year || 1} year)
+                </span>
+              </div>
             </div>
-            <div style={styles.checkNote}>
-              Natural 20 automatically succeeds but provides no additional
-              benefit
+
+            <div
+              style={{
+                padding: "0.75rem",
+                backgroundColor: "rgba(255, 200, 100, 0.15)",
+                borderRadius: "6px",
+                marginTop: "0.75rem",
+                fontSize: "0.8rem",
+                fontStyle: "italic",
+              }}
+            >
+              💡 You can attempt any of the 3 check types in any order across
+              different downtime sessions. You need 3 total successful checks
+              (they can be any combination of the check types).
             </div>
           </div>
         )}

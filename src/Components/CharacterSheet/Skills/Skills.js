@@ -80,7 +80,7 @@ export const Skills = ({
       height: "1200px",
       display: "flex",
       flexDirection: "column",
-      overflow: "hidden",
+      overflow: "visible",
     },
     header: {
       padding: "20px 24px",
@@ -111,7 +111,7 @@ export const Skills = ({
       backgroundColor: theme.surface,
       borderRadius: "8px",
       border: `1px solid ${theme.border}`,
-      overflow: "hidden",
+      overflow: "visible",
     },
     table: {
       width: "100%",
@@ -150,6 +150,7 @@ export const Skills = ({
       color: theme.text,
       borderBottom: `1px solid ${theme.border}`,
       position: "relative",
+      overflow: "visible",
     },
     proficiencyButton: {
       background: "none",
@@ -206,9 +207,10 @@ export const Skills = ({
       whiteSpace: "nowrap",
       maxWidth: "300px",
       minWidth: "150px",
-      zIndex: 1000,
+      zIndex: 999999,
       pointerEvents: "none",
       boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      border: `1px solid ${theme.border}`,
     },
     tooltipContent: {
       display: "flex",
@@ -1000,7 +1002,7 @@ export const Skills = ({
                                   opacity: "0",
                                   pointerEvents: "none",
                                   transition: "opacity 0.2s ease",
-                                  zIndex: 1000,
+                                  zIndex: 999999,
                                 }}
                               >
                                 Roll this skill to potentially earn bonus dice
