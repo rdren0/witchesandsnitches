@@ -18,6 +18,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getInventoryStyles } from "./styles";
 import { shouldFilterFromOtherPlayers } from "../../utils/characterFiltering";
 import Bank from "../Bank/Bank";
+import { consolidatePotions } from "../../services/potionConsolidationService"; // TODO: REMOVE THIS IMPORT WHEN REMOVING CONSOLIDATION CODE
 
 const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const { theme } = useTheme();
@@ -79,6 +80,14 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
 
       setItems(data || []);
       setLastRefresh(Date.now());
+
+      // TODO: REMOVE THIS CONSOLIDATION CODE ONCE ALL USER INVENTORIES ARE CLEANED UP
+      // Silently consolidate potions in the background
+      // This will eventually be removed once all inventories are cleaned up
+      consolidatePotions(selectedCharacter.id, supabase).catch((err) => {
+        console.error("Background consolidation error:", err);
+        // Silently fail - don't show error to user
+      });
     } catch (err) {
       console.error("Error fetching inventory items:", err);
       setError("Failed to load inventory items. Please try again.");
@@ -793,16 +802,240 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                         <div style={styles.itemsGrid}>
                           {stacks.map((stack) => {
                             const isExpanded = expandedStack === stack.stackKey;
+                            const isBeingEdited = stack.items.some(
+                              (item) => item.id === editingId
+                            );
 
                             return (
                               <div
                                 key={stack.stackKey}
                                 style={{
                                   ...styles.itemCard,
-                                  ...(isExpanded && { gridColumn: "1 / -1" }),
+                                  ...((isExpanded || isBeingEdited) && {
+                                    gridColumn: "1 / -1",
+                                  }),
                                 }}
                               >
-                                {isExpanded ? (
+                                {isBeingEdited ? (
+                                  <div style={styles.form}>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginBottom: "16px",
+                                      }}
+                                    >
+                                      <h4
+                                        style={{
+                                          margin: 0,
+                                          fontSize: "16px",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        Edit: {stack.name}
+                                      </h4>
+                                    </div>
+                                    <div style={styles.formRow}>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Name *
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={formData.name}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              name: e.target.value,
+                                            })
+                                          }
+                                          style={styles.input}
+                                          placeholder="Item name"
+                                          disabled={isSaving}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.primary;
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.border;
+                                          }}
+                                        />
+                                      </div>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Category
+                                        </label>
+                                        <select
+                                          value={formData.category}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              category: e.target.value,
+                                            })
+                                          }
+                                          style={styles.select}
+                                          disabled={isSaving}
+                                        >
+                                          {categories.map((cat) => (
+                                            <option key={cat} value={cat}>
+                                              {cat}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    <div style={styles.formRow}>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Quantity
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={formData.quantity}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              quantity:
+                                                parseInt(e.target.value) || 0,
+                                            })
+                                          }
+                                          style={styles.input}
+                                          min="0"
+                                          disabled={isSaving}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.primary;
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.border;
+                                          }}
+                                        />
+                                      </div>
+                                      <div style={styles.formGroup}>
+                                        <label style={styles.label}>
+                                          Value
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={formData.value}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              value: e.target.value,
+                                            })
+                                          }
+                                          style={styles.input}
+                                          placeholder="5 Galleons, 10 Sickles, etc."
+                                          disabled={isSaving}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.primary;
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor =
+                                              theme.border;
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div style={styles.formGroup}>
+                                      <label style={styles.label}>
+                                        Description
+                                      </label>
+                                      <textarea
+                                        value={formData.description}
+                                        onChange={(e) =>
+                                          setFormData({
+                                            ...formData,
+                                            description: e.target.value,
+                                          })
+                                        }
+                                        style={styles.textarea}
+                                        placeholder="Item description, magical properties, etc."
+                                        disabled={isSaving}
+                                        onFocus={(e) => {
+                                          e.target.style.borderColor =
+                                            theme.primary;
+                                        }}
+                                        onBlur={(e) => {
+                                          e.target.style.borderColor =
+                                            theme.border;
+                                        }}
+                                      />
+                                    </div>
+
+                                    <div style={styles.checkboxField}>
+                                      <label style={styles.checkboxLabel}>
+                                        <input
+                                          type="checkbox"
+                                          checked={formData.attunement_required}
+                                          onChange={(e) =>
+                                            setFormData({
+                                              ...formData,
+                                              attunement_required:
+                                                e.target.checked,
+                                            })
+                                          }
+                                          style={styles.checkbox}
+                                          disabled={isSaving}
+                                        />
+                                        <Star size={16} color="#F59E0B" />
+                                        Requires Attunement
+                                      </label>
+                                    </div>
+
+                                    <div style={styles.formActions}>
+                                      <button
+                                        onClick={saveEdit}
+                                        disabled={
+                                          !formData.name.trim() || isSaving
+                                        }
+                                        style={{
+                                          ...styles.saveButton,
+                                          opacity:
+                                            !formData.name.trim() || isSaving
+                                              ? 0.5
+                                              : 1,
+                                          cursor:
+                                            !formData.name.trim() || isSaving
+                                              ? "not-allowed"
+                                              : "pointer",
+                                        }}
+                                      >
+                                        {isSaving ? (
+                                          <>
+                                            <Loader size={18} />
+                                            Saving...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Check size={18} />
+                                            Save Changes
+                                          </>
+                                        )}
+                                      </button>
+                                      <button
+                                        onClick={cancelEdit}
+                                        disabled={isSaving}
+                                        style={{
+                                          ...styles.cancelButton,
+                                          opacity: isSaving ? 0.5 : 1,
+                                          cursor: isSaving
+                                            ? "not-allowed"
+                                            : "pointer",
+                                        }}
+                                      >
+                                        <X size={18} />
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : isExpanded ? (
                                   <div>
                                     <div
                                       style={{
@@ -1213,18 +1446,16 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                         )}
                                         <button
                                           onClick={() =>
-                                            setExpandedStack(stack.stackKey)
+                                            startEdit(stack.items[0])
                                           }
                                           disabled={
-                                            expandedStack ||
-                                            showAddForm ||
-                                            isSaving
+                                            editingId || showAddForm || isSaving
                                           }
                                           style={{
                                             ...styles.actionButton,
                                             ...styles.editButton,
                                             opacity:
-                                              expandedStack ||
+                                              editingId ||
                                               showAddForm ||
                                               isSaving
                                                 ? 0.5

@@ -458,6 +458,25 @@ export const CharacterNotes = ({
 
                 <div
                   {...createTemplateCardProps(() =>
+                    createNewEntry(newEntryTitle, "", "hogwartsMarkdown")
+                  )}
+                >
+                  <div
+                    style={styles.templateCardIcon}
+                    className="template-icon"
+                  >
+                    <BookOpen size={24} />
+                  </div>
+                  <div style={styles.templateCardContent}>
+                    <h5 style={styles.templateCardTitle}>Generic Template</h5>
+                    <p style={styles.templateCardDescription}>
+                      A Comprehensive Markdown Template
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  {...createTemplateCardProps(() =>
                     createNewEntry(newEntryTitle, "", "session")
                   )}
                 >
@@ -527,24 +546,6 @@ export const CharacterNotes = ({
                     <h5 style={styles.templateCardTitle}>Magical Creatures</h5>
                     <p style={styles.templateCardDescription}>
                       Catalog creatures & their lore
-                    </p>
-                  </div>
-                </div>
-                <div
-                  {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "hogwartsMarkdown")
-                  )}
-                >
-                  <div
-                    style={styles.templateCardIcon}
-                    className="template-icon"
-                  >
-                    <span style={styles.templateCardEmoji}>🦄</span>
-                  </div>
-                  <div style={styles.templateCardContent}>
-                    <h5 style={styles.templateCardTitle}>Generic Template</h5>
-                    <p style={styles.templateCardDescription}>
-                      A Comprehensive Markdown Template
                     </p>
                   </div>
                 </div>

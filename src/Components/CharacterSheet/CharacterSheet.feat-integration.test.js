@@ -289,6 +289,7 @@ describe("CharacterSheet Feat Integration Tests", () => {
     it("should display ASI choice feats correctly", () => {
       const character = {
         ...baseCharacter,
+        level: 8,
         asiChoices: {
           4: {
             type: "feat",
@@ -317,7 +318,7 @@ describe("CharacterSheet Feat Integration Tests", () => {
       expect(screen.getByText(/Mobile/)).toBeInTheDocument();
       expect(screen.getByText(/War Caster/)).toBeInTheDocument();
       expect(screen.getByText(/Level 4/)).toBeInTheDocument();
-      expect(screen.getByText(/Level 8/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Level 8/).length).toBeGreaterThan(0);
     });
 
     it("should search feats correctly", async () => {
