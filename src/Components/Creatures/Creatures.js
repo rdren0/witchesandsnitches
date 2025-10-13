@@ -2128,7 +2128,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                               color: theme.text,
                             }}
                           >
-                            {attack.name}
+                            {attack.name || `Attack ${idx + 1}`}
                             {attack.attack_bonus && (
                               <span
                                 style={{

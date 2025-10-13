@@ -507,6 +507,7 @@ export const rollCorruption = async ({
   character,
   pointsGained,
   pointsRedeemed,
+  pointsSpent,
   reason,
   pointsTotal,
   pointsRemaining,
@@ -521,7 +522,10 @@ export const rollCorruption = async ({
 
     const characterName = character?.name || "Unknown Character";
     const usedFor =
-      reason?.trim() || (type === "gained" ? "Dark deed" : "Act of redemption");
+      reason?.trim() ||
+      (type === "gained" ? "Dark deed" :
+       type === "spent" ? "Dark power unleashed" :
+       "Act of redemption");
 
     const getCorruptionTier = (points) => {
       if (points === 0)
@@ -633,6 +637,43 @@ export const rollCorruption = async ({
         value: corruptionLevel,
         inline: false,
       });
+    } else if (type === "spent") {
+      embed = {
+        title: "⚡ Corruption Spent",
+        description: `${characterName} channels dark power...`,
+        color: 0x8b5cf6,
+        fields: [
+          {
+            name: "Character",
+            value: characterName,
+            inline: true,
+          },
+          {
+            name: "Points Spent",
+            value: pointsSpent.toString(),
+            inline: true,
+          },
+          {
+            name: "Remaining Corruption",
+            value: pointsRemaining.toString(),
+            inline: true,
+          },
+          {
+            name: "Dark Power Unleashed",
+            value: usedFor,
+            inline: false,
+          },
+          {
+            name: "Corruption Tier",
+            value: corruptionLevel,
+            inline: false,
+          },
+        ],
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: `${character.name} - Corruption Spent • Wisdom Save DC: ${currentTier.saveDC}`,
+        },
+      };
     } else {
       embed = {
         title: "✨ Corruption Redeemed",
@@ -684,7 +725,7 @@ export const rollCorruption = async ({
       });
     }
 
-    if (type === "gained") {
+    if (type === "gained" || type === "spent") {
       if (finalPoints >= 12) {
         embed.fields.push({
           name: "⚠️ Warning",
@@ -707,7 +748,7 @@ export const rollCorruption = async ({
           inline: false,
         });
       }
-    } else {
+    } else if (type === "redeemed") {
       if (finalPoints === 0) {
         embed.fields.push({
           name: "🎉 Redemption Complete",

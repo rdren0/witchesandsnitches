@@ -377,9 +377,7 @@ const CharacterSheetModals = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: type === "damage" ? "Damage Taken" : "Healing Applied",
-        title: `${character.name} - ${
-          type === "damage" ? "Damage Taken" : "Healing Applied"
-        }`,
+        title: type === "damage" ? "Damage Taken" : "Healing Applied",
         embedColor: embedColor,
         rollResult: null,
         fields: additionalFields,

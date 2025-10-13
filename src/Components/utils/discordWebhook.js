@@ -20,10 +20,9 @@ export const sendDiscordRollWebhook = async ({
     }
 
     const characterName = character?.name || "Unknown Character";
-    const enhancedTitle = `${characterName}: ${title}`;
 
     const embed = {
-      title: enhancedTitle,
+      title: title,
       description: description || "",
       color: embedColor,
       fields: [...fields],

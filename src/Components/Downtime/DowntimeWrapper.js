@@ -116,7 +116,10 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        let query = supabase.from("character_downtime").select("*").eq("archived", false);
+        let query = supabase
+          .from("character_downtime")
+          .select("*")
+          .eq("archived", false);
 
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);
@@ -136,7 +139,19 @@ const DowntimeWrapper = ({
           .order("semester", { ascending: true });
 
         if (error) throw error;
-        setSubmittedSheets(sheets || []);
+
+        const sortedSheets = (sheets || []).sort((a, b) => {
+          const yearA = parseInt(a.year) || 0;
+          const yearB = parseInt(b.year) || 0;
+          if (yearA !== yearB) {
+            return yearA - yearB;
+          }
+          const semesterA = parseInt(a.semester) || 0;
+          const semesterB = parseInt(b.semester) || 0;
+          return semesterA - semesterB;
+        });
+
+        setSubmittedSheets(sortedSheets);
       } catch (err) {
         console.error("Error loading submitted sheets:", err);
       } finally {
@@ -152,7 +167,10 @@ const DowntimeWrapper = ({
 
       setLoading(true);
       try {
-        let query = supabase.from("character_downtime").select("*").eq("archived", false);
+        let query = supabase
+          .from("character_downtime")
+          .select("*")
+          .eq("archived", false);
 
         const useAdminAccess =
           isUserAdminOverride || (isUserAdmin && adminMode);

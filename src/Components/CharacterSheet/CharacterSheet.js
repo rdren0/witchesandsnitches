@@ -35,6 +35,7 @@ import ACOverrideModal from "./ACOverrideModal";
 import SpellAttackModal from "./SpellAttackModal";
 import SpellAttackRollModal from "./SpellAttackRollModal";
 import InitiativeOverrideModal from "./InitiativeOverrideModal";
+import Tooltip from "../Common/Tooltip";
 import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
@@ -1457,252 +1458,284 @@ const CharacterSheet = ({
                   gap: "12px",
                 }}
               >
-                <div
-                  style={{
-                    ...getEnhancedHPStyle(character, {
-                      ...styles.statCard,
-                      backgroundColor: theme.background,
-                      border: `3px solid ${getHPColor(character)}`,
-                      cursor: "pointer",
-                    }),
+                <Tooltip
+                  content={{
+                    title: "HP Management",
+                    leftClick: "Manage HP (take damage/heal)",
+                    rightClick: "Full heal to max HP",
                   }}
-                  onClick={handleDamageClick}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    fullHeal();
-                  }}
-                  title="Left click to manage HP • Right click to full heal"
+                  delay={100}
                 >
-                  <Heart
-                    className="w-6 h-6 mx-auto mb-1"
-                    style={{ color: getHPColor(character) }}
-                  />
                   <div
                     style={{
-                      ...styles.statValue,
-                      color: getHPColor(character),
-                      fontSize: "24px",
+                      ...getEnhancedHPStyle(character, {
+                        ...styles.statCard,
+                        backgroundColor: theme.background,
+                        border: `3px solid ${getHPColor(character)}`,
+                        cursor: "pointer",
+                      }),
+                    }}
+                    onClick={handleDamageClick}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      fullHeal();
                     }}
                   >
-                    {character.currentHitPoints ?? character.hitPoints}/
-                    {character.maxHitPoints ?? character.hitPoints}
-                  </div>
-                  <div
-                    style={{
-                      ...styles.statLabel,
-                      color: getHPColor(character),
-                    }}
-                  >
-                    Hit Points
-                    {character.tempHP > 0 && (
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          marginTop: "2px",
-                          color: "#3b82f6",
-                          fontWeight: "600",
-                        }}
-                      >
-                        (+{character.tempHP} temp)
-                      </div>
-                    )}
-                  </div>
-                  {(character.currentHitPoints ?? character.hitPoints) ===
-                    0 && (
+                    <Heart
+                      className="w-6 h-6 mx-auto mb-1"
+                      style={{ color: getHPColor(character) }}
+                    />
                     <div
                       style={{
-                        position: "absolute",
-                        top: "-8px",
-                        right: "-8px",
-                        background: "#EF4444",
-                        color: "white",
-                        borderRadius: "50%",
-                        width: "20px",
-                        height: "20px",
-                        fontSize: "12px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold",
-                        animation: "pulse 2s infinite",
+                        ...styles.statValue,
+                        color: getHPColor(character),
+                        fontSize: "24px",
                       }}
                     >
-                      💀
+                      {character.currentHitPoints ?? character.hitPoints}/
+                      {character.maxHitPoints ?? character.hitPoints}
                     </div>
-                  )}
-                  {(character.currentHitPoints ?? character.hitPoints) > 0 &&
-                    (character.currentHitPoints ?? character.hitPoints) /
-                      (character.maxHitPoints ?? character.hitPoints) <=
-                      0.25 && (
+                    <div
+                      style={{
+                        ...styles.statLabel,
+                        color: getHPColor(character),
+                      }}
+                    >
+                      Hit Points
+                      {character.tempHP > 0 && (
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            marginTop: "2px",
+                            color: "#3b82f6",
+                            fontWeight: "600",
+                          }}
+                        >
+                          (+{character.tempHP} temp)
+                        </div>
+                      )}
+                    </div>
+                    {(character.currentHitPoints ?? character.hitPoints) ===
+                      0 && (
                       <div
                         style={{
                           position: "absolute",
-                          top: "-4px",
-                          right: "-4px",
+                          top: "-8px",
+                          right: "-8px",
                           background: "#EF4444",
                           color: "white",
                           borderRadius: "50%",
-                          width: "16px",
-                          height: "16px",
-                          fontSize: "10px",
+                          width: "20px",
+                          height: "20px",
+                          fontSize: "12px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: "bold",
+                          animation: "pulse 2s infinite",
                         }}
                       >
-                        !
+                        💀
                       </div>
                     )}
-                </div>
-                <div
-                  style={{
-                    ...styles.statCard,
-                    backgroundColor: theme.background,
-                    border: "3px solid #b27424ff",
-                    cursor: isRolling ? "wait" : "pointer",
-                    transition: "all 0.2s ease",
+                    {(character.currentHitPoints ?? character.hitPoints) > 0 &&
+                      (character.currentHitPoints ?? character.hitPoints) /
+                        (character.maxHitPoints ?? character.hitPoints) <=
+                        0.25 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "-4px",
+                            right: "-4px",
+                            background: "#EF4444",
+                            color: "white",
+                            borderRadius: "50%",
+                            width: "16px",
+                            height: "16px",
+                            fontSize: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          !
+                        </div>
+                      )}
+                  </div>
+                </Tooltip>
+                <Tooltip
+                  content={{
+                    title: "Initiative",
+                    leftClick: `Roll initiative (d20 ${formatModifier(character.initiativeModifier)})`,
+                    rightClick: "Modify or override initiative modifier",
                   }}
-                  onClick={() =>
-                    !isRolling &&
-                    rollInitiative({
-                      character,
-                      isRolling,
-                      setIsRolling,
-                      characterModifiers,
-                    })
-                  }
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setShowInitiativeModal(true);
-                  }}
-                  title={`Click to roll initiative: d20  ${formatModifier(
-                    character.initiativeModifier
-                  )}${String.fromCharCode(
-                    10
-                  )}Right-click to modify or override`}
+                  delay={200}
                 >
-                  <Swords
-                    className="w-6 h-6 text-green-600 mx-auto mb-1"
-                    style={{ color: "#b27424ff" }}
-                  />
-                  <div style={{ ...styles.statValue, color: "#b27424ff" }}>
-                    {formatModifier(character.initiativeModifier)}
-                  </div>
-                  <div style={{ ...styles.statLabel, color: "#b27424ff" }}>
-                    Initiative
-                  </div>
-                </div>
-                {getSpellcastingAbility(character.castingStyle) && (
                   <div
                     style={{
                       ...styles.statCard,
                       backgroundColor: theme.background,
-                      border: "3px solid #d1323dff",
+                      border: "3px solid #b27424ff",
                       cursor: isRolling ? "wait" : "pointer",
                       transition: "all 0.2s ease",
                     }}
                     onClick={() =>
-                      !isRolling && setShowSpellAttackRollModal(true)
+                      !isRolling &&
+                      rollInitiative({
+                        character,
+                        isRolling,
+                        setIsRolling,
+                        characterModifiers,
+                      })
                     }
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      setShowSpellAttackModal(true);
+                      setShowInitiativeModal(true);
                     }}
-                    title={`Left click to roll spell attack with options • Right click to set override/modifier`}
                   >
-                    <Target
+                    <Swords
                       className="w-6 h-6 text-green-600 mx-auto mb-1"
-                      style={{ color: "#d1323dff" }}
+                      style={{ color: "#b27424ff" }}
                     />
-                    <div style={{ ...styles.statValue, color: "#d1323dff" }}>
-                      {formatModifier(getSpellAttackBonus(character))}
+                    <div style={{ ...styles.statValue, color: "#b27424ff" }}>
+                      {formatModifier(character.initiativeModifier)}
                     </div>
-                    <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
-                      Spell Attack
+                    <div style={{ ...styles.statLabel, color: "#b27424ff" }}>
+                      Initiative
                     </div>
                   </div>
+                </Tooltip>
+                {getSpellcastingAbility(character.castingStyle) && (
+                  <Tooltip
+                    content={{
+                      title: "Spell Attack",
+                      leftClick: "Roll spell attack with advantage/disadvantage options",
+                      rightClick: "Set override or modifier for spell attack bonus",
+                    }}
+                    delay={200}
+                  >
+                    <div
+                      style={{
+                        ...styles.statCard,
+                        backgroundColor: theme.background,
+                        border: "3px solid #d1323dff",
+                        cursor: isRolling ? "wait" : "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() =>
+                        !isRolling && setShowSpellAttackRollModal(true)
+                      }
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowSpellAttackModal(true);
+                      }}
+                    >
+                      <Target
+                        className="w-6 h-6 text-green-600 mx-auto mb-1"
+                        style={{ color: "#d1323dff" }}
+                      />
+                      <div style={{ ...styles.statValue, color: "#d1323dff" }}>
+                        {formatModifier(getSpellAttackBonus(character))}
+                      </div>
+                      <div style={{ ...styles.statLabel, color: "#d1323dff" }}>
+                        Spell Attack
+                      </div>
+                    </div>
+                  </Tooltip>
                 )}
 
                 {getSpellcastingAbility(character.castingStyle) && (
+                  <Tooltip
+                    content={{
+                      title: `Spellcasting Ability (${getSpellcastingAbility(character.castingStyle)})`,
+                      leftClick: `Roll ${getSpellcastingAbility(character.castingStyle)} check (d20 ${formatModifier(getSpellcastingAbilityModifier(character))})`,
+                      description: "No proficiency bonus applied",
+                    }}
+                    delay={200}
+                  >
+                    <div
+                      style={{
+                        ...styles.statCard,
+                        backgroundColor: theme.background,
+                        border: "3px solid #8b5cf6",
+                        cursor: isRolling ? "wait" : "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
+                    >
+                      <Sparkles
+                        className="w-6 h-6 text-yellow-600 mx-auto mb-1"
+                        style={{ color: "#8b5cf6" }}
+                      />
+                      <div
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: "bold",
+                          color: "#8b5cf6",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
+                        {formatModifier(
+                          getSpellcastingAbilityModifier(character)
+                        )}
+                      </div>
+                      <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
+                        {" "}
+                        Spellcasting Ability (
+                        {getSpellcastingAbility(character.castingStyle)
+                          ?.slice(0, 3)
+                          .toUpperCase()}
+                        )
+                      </div>
+                    </div>
+                  </Tooltip>
+                )}
+                <Tooltip
+                  content={{
+                    title: "Armor Class (AC)",
+                    rightClick: "Override or modify AC value",
+                    description: "Determines how hard you are to hit in combat",
+                  }}
+                  delay={200}
+                >
                   <div
                     style={{
                       ...styles.statCard,
                       backgroundColor: theme.background,
-                      border: "3px solid #8b5cf6",
-                      cursor: isRolling ? "wait" : "pointer",
-                      transition: "all 0.2s ease",
+                      border: "3px solid #3b82f6",
+                      cursor: "context-menu",
                     }}
-                    onClick={() => !isRolling && rollSpellcastingAbilityCheck()}
-                    title={`Click to roll ${getSpellcastingAbility(
-                      character.castingStyle
-                    )} ability check (no proficiency): d20 ${formatModifier(
-                      getSpellcastingAbilityModifier(character)
-                    )}`}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setShowACModal(true);
+                    }}
                   >
-                    <Sparkles
-                      className="w-6 h-6 text-yellow-600 mx-auto mb-1"
-                      style={{ color: "#8b5cf6" }}
+                    <Shield
+                      className="w-6 h-6 text-blue-600 mx-auto mb-1"
+                      style={{ color: "#3b82f6" }}
                     />
-                    <div
-                      style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        color: "#8b5cf6",
-                        marginBottom: "0.25rem",
-                      }}
-                    >
-                      {formatModifier(
-                        getSpellcastingAbilityModifier(character)
-                      )}
-                    </div>
-                    <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
-                      {" "}
-                      Spellcasting Ability (
-                      {getSpellcastingAbility(character.castingStyle)
-                        ?.slice(0, 3)
-                        .toUpperCase()}
-                      )
-                    </div>
-                  </div>
-                )}
-                <div
-                  style={{
-                    ...styles.statCard,
-                    backgroundColor: theme.background,
-                    border: "3px solid #3b82f6",
-                    cursor: "default",
-                  }}
-                  title="Right click to override or modify AC"
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setShowACModal(true);
-                  }}
-                >
-                  <Shield
-                    className="w-6 h-6 text-blue-600 mx-auto mb-1"
-                    style={{ color: "#3b82f6" }}
-                  />
-                  <div style={{ ...styles.statValue, color: "#3b82f6" }}>
-                    {(() => {
-                      const baseAC = character.armorClass || 10;
-                      const acData = character.ac || {
-                        override: null,
-                        modifier: 0,
-                      };
-                      const override = acData.override;
-                      const modifier = acData.modifier || 0;
+                    <div style={{ ...styles.statValue, color: "#3b82f6" }}>
+                      {(() => {
+                        const baseAC = character.armorClass || 10;
+                        const acData = character.ac || {
+                          override: null,
+                          modifier: 0,
+                        };
+                        const override = acData.override;
+                        const modifier = acData.modifier || 0;
 
-                      if (override !== null && override !== undefined) {
-                        return override + modifier;
-                      }
-                      return baseAC + modifier;
-                    })()}
+                        if (override !== null && override !== undefined) {
+                          return override + modifier;
+                        }
+                        return baseAC + modifier;
+                      })()}
+                    </div>
+                    <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
+                      Armor Class
+                    </div>
                   </div>
-                  <div style={{ ...styles.statLabel, color: "#3b82f6" }}>
-                    Armor Class
-                  </div>
-                </div>
+                </Tooltip>
 
                 <div
                   style={{

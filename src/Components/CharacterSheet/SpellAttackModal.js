@@ -54,8 +54,12 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
     character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
   const abilityMod = Math.floor((abilityScore - 10) / 2);
 
+  const hasOverride = () => {
+    return attackOverride !== "" && attackOverride !== null && attackOverride !== 0 && attackOverride !== "0";
+  };
+
   const getFinalAttackBonus = () => {
-    if (attackOverride !== "" && attackOverride !== null) {
+    if (hasOverride()) {
       return parseInt(attackOverride);
     } else {
       return baseAttackBonus + parseInt(attackModifier || 0);
@@ -65,11 +69,9 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const overrideValue = hasOverride() ? parseInt(attackOverride) : null;
       const attackObject = {
-        override:
-          attackOverride !== "" && attackOverride !== null
-            ? parseInt(attackOverride)
-            : null,
+        override: overrideValue,
         modifier: parseInt(attackModifier || 0),
       };
 
@@ -303,7 +305,7 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
                   <div style={styles.section}>
                     <label style={styles.label}>
                       Additional Modifier
-                      {attackOverride !== "" && attackOverride !== null && (
+                      {hasOverride() && (
                         <span
                           style={{
                             fontSize: "11px",
@@ -323,18 +325,10 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
                       placeholder="0"
                       style={{
                         ...styles.input,
-                        opacity:
-                          attackOverride !== "" && attackOverride !== null
-                            ? 0.5
-                            : 1,
-                        cursor:
-                          attackOverride !== "" && attackOverride !== null
-                            ? "not-allowed"
-                            : "text",
+                        opacity: hasOverride() ? 0.5 : 1,
+                        cursor: hasOverride() ? "not-allowed" : "text",
                       }}
-                      disabled={
-                        attackOverride !== "" && attackOverride !== null
-                      }
+                      disabled={hasOverride()}
                       min="-99"
                       max="99"
                     />
@@ -353,7 +347,7 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
                       {formatModifier(getFinalAttackBonus())}
                     </div>
                     <div style={styles.previewBreakdown}>
-                      {attackOverride !== "" && attackOverride !== null ? (
+                      {hasOverride() ? (
                         <>Override (final value)</>
                       ) : (
                         <>
@@ -372,7 +366,7 @@ const SpellAttackModal = ({ character, onClose, onSave, supabase }) => {
                 </div>
               </div>
 
-              {((attackOverride !== "" && attackOverride !== null) ||
+              {(hasOverride() ||
                 (attackModifier !== 0 && attackModifier !== "0")) && (
                 <button
                   onClick={handleClearAll}
