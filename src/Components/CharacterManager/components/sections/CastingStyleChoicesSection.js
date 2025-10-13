@@ -1,6 +1,9 @@
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
-import { BLACK_MAGIC_PROGRESSION } from "../../../../SharedData/data";
+import {
+  BLACK_MAGIC_PROGRESSION,
+  castingStyleData,
+} from "../../../../SharedData/data";
 
 const CastingStyleChoicesSection = ({ character, setCharacter }) => {
   const { theme } = useTheme();
@@ -9,131 +12,85 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
   const level = character?.level || 1;
   const castingStyle = character?.castingStyle || "";
 
-  const renderIntellectCasterFeatures = () => {
-    const features = [];
-
-    if (level >= 1) {
-      const dexScore = character?.abilityScores?.dexterity || 10;
-      const intScore = character?.abilityScores?.intelligence || 10;
-      const dexMod = Math.floor((dexScore - 10) / 2);
-      const intMod = Math.floor((intScore - 10) / 2);
-      const formatMod = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
-
-      const initiativeChoices = [
-        {
-          name: "Dexterity",
-          description: `Use Dexterity for initiative rolls (${formatMod(
-            dexMod
-          )} modifier).`,
-        },
-        {
-          name: "Intelligence",
-          description: `Use Intelligence for initiative rolls (${formatMod(
-            intMod
-          )} modifier).`,
-        },
-      ];
-
-      features.push({
-        name: "Initiative Ability",
-        level: 1,
-        description:
-          "As an Intellect Caster, you may choose to use Intelligence or Dexterity for initiative.",
-        isChoice: true,
-        choices: initiativeChoices,
-        choiceKey: "initiativeAbility",
-      });
-    }
-
-    return features;
-  };
-
-  const renderWillpowerCasterFeatures = () => {
-    const features = [];
-
-    if (level >= 1) {
-      const blackMagicDamage = BLACK_MAGIC_PROGRESSION[level] || "1d6";
-      features.push({
-        name: "Black Magic",
-        level: 1,
-        description: `Once per turn, you can deal an extra ${blackMagicDamage} damage to one creature you hit with a cantrip if you have advantage on the attack roll. You don't need advantage if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.`,
-        automatic: true,
-      });
-    }
-
-    if (level >= 3) {
-      features.push({
-        name: "Metamagic: Fierce Spell",
-        level: 3,
-        description:
-          "When you cast a spell, you can spend 2 sorcery points to cast that spell as if it were cast using a spell slot one level higher than its original level, or 4 sorcery points to cast that spell two levels higher. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
-        automatic: true,
-      });
-
-      features.push({
-        name: "Metamagic: Resistant Spell",
-        level: 3,
-        description:
-          "When you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
-        automatic: true,
-      });
-    }
-
-    if (level >= 5) {
-      const blackMagicChoices = [
-        {
-          name: "Ambush",
-          description:
-            "You have advantage on attack rolls against any creature that hasn't taken a turn in the combat yet. In addition, any hit you score against a creature that is surprised is a critical hit.",
-        },
-        {
-          name: "Gambit",
-          description:
-            "You don't need advantage on the attack roll to use your Black Magic against a creature if you are within 5 feet of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll.",
-        },
-        {
-          name: "Grudge",
-          description:
-            "You gain advantage on attack rolls against a creature that has damaged you since the end of your last turn.",
-        },
-        {
-          name: "Pique",
-          description:
-            "You have advantage on attack rolls when you have half of your hit points or less.",
-        },
-        {
-          name: "Hubris",
-          description:
-            "You gain advantage on attack rolls against any creature that has fewer hit points than you.",
-        },
-      ];
-
-      features.push({
-        name: "Black Magic Specialization",
-        level: 5,
-        description:
-          "At 5th level, you may choose one of the following options to enhance your Black Magic:",
-        isChoice: true,
-        choices: blackMagicChoices,
-        choiceKey: "blackMagicSpecialization",
-      });
-    }
-
-    return features;
-  };
-
   const getCastingStyleFeatures = () => {
-    switch (castingStyle) {
-      case "Willpower Caster":
-        return renderWillpowerCasterFeatures();
-      case "Intellect Caster":
-        return renderIntellectCasterFeatures();
-      case "Technique Caster":
-      case "Vigor Caster":
-        return [];
-      default:
-        return [];
+    if (!castingStyle || !castingStyleData[castingStyle]) {
+      return [];
     }
+
+    const styleData = castingStyleData[castingStyle];
+    const features = [];
+
+    styleData.keyFeatures?.forEach((feature) => {
+      if (level >= feature.level) {
+        if (
+          castingStyle === "Intellect Caster" &&
+          feature.name === "Tactical Wit"
+        ) {
+          const dexScore = character?.abilityScores?.dexterity || 10;
+          const intScore = character?.abilityScores?.intelligence || 10;
+          const dexMod = Math.floor((dexScore - 10) / 2);
+          const intMod = Math.floor((intScore - 10) / 2);
+          const formatMod = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
+
+          features.push({
+            name: "Initiative Ability",
+            level: 1,
+            description:
+              "As an Intellect Caster, you may choose to use Intelligence or Dexterity for initiative (from Tactical Wit feature).",
+            isChoice: true,
+            choices: [
+              {
+                name: "Dexterity",
+                description: `Use Dexterity for initiative rolls (${formatMod(
+                  dexMod
+                )} base modifier).`,
+              },
+              {
+                name: "Intelligence",
+                description: `Use Intelligence for initiative rolls (${formatMod(
+                  intMod
+                )} base modifier).`,
+              },
+            ],
+            choiceKey: "initiativeAbility",
+          });
+        }
+
+        if (
+          castingStyle === "Willpower Caster" &&
+          feature.name === "Black Magic"
+        ) {
+          const blackMagicDamage = BLACK_MAGIC_PROGRESSION[level] || "1d6";
+          features.push({
+            name: feature.name,
+            level: feature.level,
+            description: `Once per turn, you can deal an extra ${blackMagicDamage} damage to one creature you hit with a cantrip if you have advantage on the attack roll. You don't need advantage if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.`,
+            automatic: true,
+          });
+        } else if (feature.isChoice && feature.choices) {
+          features.push({
+            name: feature.name,
+            level: feature.level,
+            description: feature.description,
+            isChoice: true,
+            choices: feature.choices,
+            choiceKey:
+              feature.name === "Black Magic Specialization"
+                ? "blackMagicSpecialization"
+                : undefined,
+          });
+        } else {
+          features.push({
+            name: feature.name,
+            level: feature.level,
+            description: feature.description,
+            automatic: !feature.isChoice,
+          });
+        }
+      }
+    });
+
+    return features;
   };
 
   const features = getCastingStyleFeatures();
@@ -146,7 +103,6 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
     };
     setCharacter("castingStyleChoices", updatedChoices);
 
-    // Also update initiativeAbility field directly when it's chosen
     if (choiceKey === "initiativeAbility") {
       setCharacter("initiativeAbility", selectedChoice.toLowerCase());
     }
@@ -285,7 +241,7 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                     {(() => {
                       const savedChoice =
                         character.castingStyleChoices?.[feature.choiceKey];
-                      // Fallback to direct field for initiative ability
+
                       const fallbackChoice =
                         feature.choiceKey === "initiativeAbility"
                           ? character.initiativeAbility
@@ -338,7 +294,7 @@ const CastingStyleChoicesSection = ({ character, setCharacter }) => {
                   {feature.choices.map((choice, choiceIndex) => {
                     const savedChoice =
                       character.castingStyleChoices?.[feature.choiceKey];
-                    // Fallback to direct field for initiative ability
+
                     const fallbackChoice =
                       feature.choiceKey === "initiativeAbility"
                         ? character.initiativeAbility

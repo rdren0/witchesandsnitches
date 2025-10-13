@@ -112,17 +112,6 @@ const CASTING_STYLE_METAMAGICS = {
       castingStyle: "Technique Caster",
     },
   ],
-  "Vigor Caster": [
-    {
-      name: "Rage",
-      cost: "5 sorcery points",
-      description:
-        "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain advantage on Strength checks and saves, resistance to bludgeoning, piercing, slashing and fire damage, and +2 to unarmed strike damage (+3 at 10th level, +4 at 16th level). You can't cast area effect spells or concentrate while raging. Your rage lasts for 1 minute.",
-      preview: "Enter a primal rage for combat bonuses",
-      requiredLevel: 3,
-      castingStyle: "Vigor Caster",
-    },
-  ],
 };
 
 const MetaMagicSection = ({ character, onChange, disabled = false }) => {
@@ -174,7 +163,16 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
   };
 
   const getAutomaticMetaMagics = (character) => {
-    return [];
+    const automaticMetaMagics = [];
+    const castingStyle = character?.castingStyle;
+    const level = character?.level || 1;
+
+    if (castingStyle === "Willpower Caster" && level >= 3) {
+      const willpowerMetaMagics = CASTING_STYLE_METAMAGICS["Willpower Caster"];
+      automaticMetaMagics.push(...willpowerMetaMagics);
+    }
+
+    return automaticMetaMagics;
   };
 
   const allAvailableMetaMagics = getAvailableMetaMagics(character);
