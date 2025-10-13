@@ -520,7 +520,6 @@ export const rollCorruption = async ({
       return;
     }
 
-    const characterName = character?.name || "Unknown Character";
     const usedFor =
       reason?.trim() ||
       (type === "gained" ? "Dark deed" :
@@ -577,138 +576,99 @@ export const rollCorruption = async ({
     const finalPoints = type === "gained" ? pointsTotal : pointsRemaining;
     const currentTier = getCorruptionTier(finalPoints);
 
-    let corruptionLevel = `${currentTier.name} ${currentTier.range}`;
-
-    if (finalPoints === 0) {
-      corruptionLevel = "✨ **PURE HEARTED** - Soul cleansed of darkness";
-    } else if (finalPoints <= 4) {
-      corruptionLevel =
-        "⚖️ **PRAGMATIC** - Willing to bend rules for the greater good";
-    } else if (finalPoints <= 7) {
-      corruptionLevel = "😈 **DEVIOUS** - Embracing darker methods";
-    } else if (finalPoints <= 11) {
-      corruptionLevel = "🔥 **VICIOUS** - Deep in corruption's grip";
-    } else {
-      corruptionLevel = "💀 **VILE** - Soul consumed by darkness";
-    }
-
     let embed;
 
     if (type === "gained") {
       embed = {
         title: "💀 Corruption Gained",
-        description: `${characterName} has fallen deeper into darkness...`,
         color: currentTier.color,
         fields: [
           {
-            name: "Character",
-            value: characterName,
+            name: "Gained",
+            value: `+${pointsGained}`,
             inline: true,
           },
           {
-            name: "Points Gained",
-            value: pointsGained.toString(),
-            inline: true,
-          },
-          {
-            name: "Total Corruption",
+            name: "Total",
             value: pointsTotal.toString(),
             inline: true,
+          },
+          {
+            name: "Tier",
+            value: `${currentTier.name} (DC ${currentTier.saveDC})`,
+            inline: true,
+          },
+          {
+            name: "Reason",
+            value: usedFor,
+            inline: false,
           },
         ],
         timestamp: new Date().toISOString(),
         footer: {
-          text: `${
-            character.name
-          } - Corruption ${"Gained"} • Next Wisdom Save DC: ${
-            currentTier.saveDC
-          }`,
+          text: character.name,
         },
       };
-
-      embed.fields.push({
-        name: "Dark Deed",
-        value: usedFor,
-        inline: false,
-      });
-
-      embed.fields.push({
-        name: "Corruption Tier",
-        value: corruptionLevel,
-        inline: false,
-      });
     } else if (type === "spent") {
       embed = {
         title: "⚡ Corruption Spent",
-        description: `${characterName} channels dark power...`,
         color: 0x8b5cf6,
         fields: [
           {
-            name: "Character",
-            value: characterName,
+            name: "Spent",
+            value: `-${pointsSpent}`,
             inline: true,
           },
           {
-            name: "Points Spent",
-            value: pointsSpent.toString(),
-            inline: true,
-          },
-          {
-            name: "Remaining Corruption",
+            name: "Remaining",
             value: pointsRemaining.toString(),
             inline: true,
           },
           {
-            name: "Dark Power Unleashed",
-            value: usedFor,
-            inline: false,
+            name: "Tier",
+            value: `${currentTier.name} (DC ${currentTier.saveDC})`,
+            inline: true,
           },
           {
-            name: "Corruption Tier",
-            value: corruptionLevel,
+            name: "Used For",
+            value: usedFor,
             inline: false,
           },
         ],
         timestamp: new Date().toISOString(),
         footer: {
-          text: `${character.name} - Corruption Spent • Wisdom Save DC: ${currentTier.saveDC}`,
+          text: character.name,
         },
       };
     } else {
       embed = {
         title: "✨ Corruption Redeemed",
-        description: `${characterName} has found redemption through remorse...`,
         color: finalPoints === 0 ? 0x10b981 : currentTier.color,
         fields: [
           {
-            name: "Character",
-            value: characterName,
+            name: "Redeemed",
+            value: `-${pointsRedeemed}`,
             inline: true,
           },
           {
-            name: "Points Redeemed",
-            value: pointsRedeemed.toString(),
-            inline: true,
-          },
-          {
-            name: "Remaining Corruption",
+            name: "Remaining",
             value: pointsRemaining.toString(),
             inline: true,
           },
           {
-            name: "Act of Redemption",
-            value: usedFor,
-            inline: false,
+            name: "Tier",
+            value: `${currentTier.name} (DC ${currentTier.saveDC})`,
+            inline: true,
           },
           {
-            name: "Corruption Tier",
-            value: corruptionLevel,
+            name: "Reason",
+            value: usedFor,
             inline: false,
           },
         ],
         timestamp: new Date().toISOString(),
         footer: {
-          text: `${character.name} - Corruption Redeemed • Wisdom Save DC: ${currentTier.saveDC}`,
+          text: character.name,
         },
       };
     }
