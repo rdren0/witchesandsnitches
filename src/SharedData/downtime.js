@@ -8,6 +8,7 @@ export const downtime = {
       "Restricted Section - Requires Stealth and Investigation rolls",
       "Search for Magical Creatures - Roll Magical Creatures",
       "Search for Plants - Roll Herbology",
+      "Stealing - Roll Sleight of Hand and Investigation",
     ],
   },
 
@@ -76,12 +77,6 @@ export const downtime = {
       "Dig for Dirt - Roll Investigation, Insight, Intimidation, or Persuasion",
       "Prank Other Students - Players can attempt mischievous acts",
     ],
-  },
-
-  mischief: {
-    name: "Mischief & Rule Breaking",
-    description: "Illegal or rule-breaking activities",
-    activities: ["Stealing - Roll Sleight of Hand and Investigation"],
   },
 
   tutoring: {
