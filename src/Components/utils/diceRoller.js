@@ -522,9 +522,11 @@ export const rollCorruption = async ({
 
     const usedFor =
       reason?.trim() ||
-      (type === "gained" ? "Dark deed" :
-       type === "spent" ? "Dark power unleashed" :
-       "Act of redemption");
+      (type === "gained"
+        ? "Dark deed"
+        : type === "spent"
+        ? "Dark power unleashed"
+        : "Act of redemption");
 
     const getCorruptionTier = (points) => {
       if (points === 0)
@@ -580,7 +582,7 @@ export const rollCorruption = async ({
 
     if (type === "gained") {
       embed = {
-        title: "💀 Corruption Gained",
+        title: `${character.name} Corruption Gained`,
         color: currentTier.color,
         fields: [
           {
@@ -611,7 +613,7 @@ export const rollCorruption = async ({
       };
     } else if (type === "spent") {
       embed = {
-        title: "⚡ Corruption Spent",
+        title: `${character.name} Corruption Spent`,
         color: 0x8b5cf6,
         fields: [
           {

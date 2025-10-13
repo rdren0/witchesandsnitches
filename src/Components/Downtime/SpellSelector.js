@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { X, Search, Star, Check } from "lucide-react";
+import { X, Search, Lock } from "lucide-react";
 import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -172,19 +172,12 @@ const SpellSelector = ({
       const hasSuccessfulAttempts = attempts > 0;
       const hasFailedAttempts = (failedAttempts?.[spell.name] || 0) > 0;
 
-      const unforgivableCurses = ["Avada Kedavra", "Crucio", "Imperio"];
-      const isUnforgivable = unforgivableCurses.includes(spell.name);
+      const isRestricted = spell.restriction === true;
 
       let isDisabled = false;
       let disabledReason = "";
-      let isRestricted = false;
 
-      if (isUnforgivable) {
-        isRestricted = true;
-        disabledReason = "Unforgivable Curse - Requires DM permission";
-      }
-
-      if (isResearch && !isUnforgivable) {
+      if (isResearch && !isRestricted) {
         if (isMastered) {
           isDisabled = true;
           disabledReason = "Mastered";
@@ -253,6 +246,10 @@ const SpellSelector = ({
       borderRadius: "6px",
       cursor: canEdit ? "pointer" : "default",
       marginBottom: "0.5rem",
+    },
+    restrictionIcon: {
+      color: "#f59e0b",
+      marginLeft: "0.5rem",
     },
     placeholder: {
       padding: "0.75rem",
@@ -458,21 +455,6 @@ const SpellSelector = ({
       backgroundColor: theme.surface,
       opacity: 0.5,
     },
-    spellCardRestricted: {
-      padding: "1rem",
-      border: `2px solid #dc2626`,
-      borderRadius: "8px",
-      marginBottom: "0.75rem",
-      cursor: "pointer",
-      backgroundColor: "#dc262610",
-      transition: "all 0.2s ease",
-    },
-    spellCardRestrictedHovered: {
-      border: `2px solid #b91c1c`,
-      backgroundColor: "#dc262618",
-      transform: "translateY(-2px)",
-      boxShadow: `0 4px 12px #dc262630`,
-    },
     spellCard: {
       padding: "1rem",
       border: `2px solid ${theme.border}`,
@@ -626,8 +608,18 @@ const SpellSelector = ({
               onClick={() => handleSpellClick(spellSlot)}
             >
               <div>
-                <div style={{ fontWeight: "600", marginBottom: "0.25rem" }}>
+                <div
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: "0.25rem",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
                   {spellName}
+                  {spellStatus?.isRestricted && (
+                    <Lock size={14} style={styles.restrictionIcon} />
+                  )}
                 </div>
                 <div style={{ fontSize: "12px", color: theme.textSecondary }}>
                   {spellData.subject} • {spellData.level} • Year{" "}
@@ -1097,14 +1089,7 @@ const SpellSelector = ({
                     <div
                       key={`spell-${spell.name}-${spell.subject}-${index}`}
                       style={
-                        status.isRestricted
-                          ? {
-                              ...styles.spellCardRestricted,
-                              ...(isHovered
-                                ? styles.spellCardRestrictedHovered
-                                : {}),
-                            }
-                          : isDisabled
+                        isDisabled
                           ? styles.spellOptionDisabled
                           : {
                               ...styles.spellCard,
@@ -1121,15 +1106,7 @@ const SpellSelector = ({
                         <div style={styles.spellName}>
                           {spell.name}
                           {status.isRestricted && (
-                            <span
-                              style={{
-                                ...styles.spellBadge,
-                                backgroundColor: "#dc2626",
-                                color: "#fff",
-                              }}
-                            >
-                              ⚠️ Restricted
-                            </span>
+                            <Lock size={16} style={styles.restrictionIcon} />
                           )}
                           {!status.isRestricted && status.isMastered && (
                             <span
@@ -1200,12 +1177,11 @@ const SpellSelector = ({
                         )}
                       </div>
 
-                      {(isDisabled || status.isRestricted) &&
-                        status.disabledReason && (
-                          <div style={styles.disabledReason}>
-                            {status.disabledReason}
-                          </div>
-                        )}
+                      {isDisabled && status.disabledReason && (
+                        <div style={styles.disabledReason}>
+                          {status.disabledReason}
+                        </div>
+                      )}
                     </div>
                   );
                 })
