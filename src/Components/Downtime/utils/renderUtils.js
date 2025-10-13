@@ -1,6 +1,7 @@
 import React from "react";
 
 import { allSkills } from "../../../SharedData/data";
+import { wandModifiers } from "../../../SharedData/downtime";
 import { formatModifier } from "./modifierUtils";
 import {
   activityRequiresNoDiceRoll,
@@ -152,10 +153,12 @@ export const renderDiceValue = ({
       modifierSource = skill?.displayName || skillName;
     } else if (hasWandModifier) {
       modifierValue = getModifierValue(wandModifier);
-      modifierSource = wandModifier;
+      const wand = wandModifiers.find((w) => w.name === wandModifier);
+      modifierSource = wand?.displayName || wandModifier;
     } else if (hasAutoSkill) {
       modifierValue = getModifierValue(autoSelectedSkill);
-      modifierSource = autoSelectedSkill;
+      const skill = allSkills.find((s) => s.name === autoSelectedSkill);
+      modifierSource = skill?.displayName || autoSelectedSkill;
     }
 
     const totalValue = diceValue + modifierValue;
