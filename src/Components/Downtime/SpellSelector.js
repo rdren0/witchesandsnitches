@@ -558,6 +558,11 @@ const SpellSelector = ({
     setActiveSpellSlot(null);
     setSearchTerm("");
     setHoveredSpell(null);
+    setFilterSubject("all");
+    setFilterYear("all");
+    setFilterLevel("all");
+    setSortBy("name");
+    setSortOrder("asc");
   };
 
   const handleDiceAssign = (spellSlot, diceIndex) => {
@@ -787,6 +792,7 @@ const SpellSelector = ({
           break;
         case "level": {
           const levelOrder = {
+            Cantrip: 0,
             Cantrips: 0,
             "1st Level": 1,
             "2nd Level": 2,
@@ -804,9 +810,23 @@ const SpellSelector = ({
           break;
         }
         case "dc": {
-          const aDC = calculateSpellDC(a.name, a);
-          const bDC = calculateSpellDC(b.name, b);
-          comparison = aDC - bDC;
+          const aStatus = getSpellStatus(a);
+          const bStatus = getSpellStatus(b);
+
+          const aHasUnknownDC = aStatus.isRestricted || !a.year;
+          const bHasUnknownDC = bStatus.isRestricted || !b.year;
+
+          if (aHasUnknownDC && !bHasUnknownDC) {
+            comparison = 1;
+          } else if (!aHasUnknownDC && bHasUnknownDC) {
+            comparison = -1;
+          } else if (!aHasUnknownDC && !bHasUnknownDC) {
+            const aDC = calculateSpellDC(a.name, a);
+            const bDC = calculateSpellDC(b.name, b);
+            comparison = aDC - bDC;
+          } else {
+            comparison = 0;
+          }
           break;
         }
         default:
@@ -1166,9 +1186,18 @@ const SpellSelector = ({
                           <span style={{ fontWeight: "600" }}>Level:</span>
                           <span>{spell.level}</span>
                         </div>
-                        {!status.isRestricted && spell.year && (
-                          <div style={styles.spellMetaItem}>
-                            <span style={{ fontWeight: "600" }}>DC:</span>
+                        <div style={styles.spellMetaItem}>
+                          <span style={{ fontWeight: "600" }}>DC:</span>
+                          {status.isRestricted || !spell.year ? (
+                            <span
+                              style={{
+                                color: theme.error,
+                                fontStyle: "italic",
+                              }}
+                            >
+                              ?? (Consult DM)
+                            </span>
+                          ) : (
                             <span
                               style={{
                                 color: theme.primary,
@@ -1177,8 +1206,8 @@ const SpellSelector = ({
                             >
                               {calculateSpellDC(spell.name, spell)}
                             </span>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
 
                       {isDisabled && status.disabledReason && (
