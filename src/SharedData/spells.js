@@ -2536,7 +2536,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Instantaneous",
           year: 1,
-          restriction: false,
+          restriction: true,
           description:
             "The Airway Clearing Spell - A being's airway is cleared and they are assisted in breathing. If used on a living being that has 0 hit points, the being becomes stable.",
         },
@@ -2618,7 +2618,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Instantaneous",
           year: 4,
-          restriction: false,
+          restriction: true,
           description:
             "You sacrifice some of your health to mend another creature's injuries. You take 4d8 necrotic damage, which can't be reduced in any way, and one creature of your choice that you can see within range regains a number of hit points equal to twice the necrotic damage you take.",
           higherLevels:
@@ -2632,7 +2632,7 @@ export const spellsData = {
           range: "Touch",
           duration: "Instantaneous",
           year: 4,
-          restriction: false,
+          restriction: true,
           description:
             "You touch a creature that has died within the last minute. That creature returns to life with 1 hit point. This spell can't return to life a creature that has died of old age, nor can it restore any missing body parts.",
         },
@@ -2644,7 +2644,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Concentration, up to 1 minute",
           year: 4,
-          restriction: false,
+          restriction: true,
           ritual: true,
           description:
             "The Entrail-Expelling Curse - Invented by Urquhart Rackharrow, this medieval remedy causes the recipient to purge and experience great abdominal pain. Choose one being that you can see within range to make a Constitution saving throw. If it fails, the target's exhaustion is set to 2 levels for the duration. At the end of each of its turns, the target can make a Constitution saving throw, without disadvantage from exhaustion. On a success, the spell ends. If the target has higher levels of exhaustion than the spell's effect, the spell does not change its levels of exhaustion. If the target gains any levels of exhaustion within the duration of this spell, it stacks with this spell's effect. Additionally, if the target is suffering any condition or negative effects from something it ingested, such as drinking a poison, this spell ends those effects.",
@@ -2677,7 +2677,7 @@ export const spellsData = {
           range: "Touch",
           duration: "Instantaneous",
           year: 6,
-          restriction: false,
+          restriction: true,
           description:
             "You return a dead creature you touch to life, provided that it has been dead no longer than 10 days. If the creature's soul is both willing and at liberty to rejoin the body, the creature returns to life with 1 hit point. This spell also neutralizes any poison and cures non-magical diseases that affected the creature at the time it died. This spell doesn't, however, remove magical diseases, curses, or similar effects; if these aren't first removed prior to casting the spell, they take effect when the creature returns to life. The spell can't return an undead creature to life. This spell closes all mortal wounds, but it doesn't restore missing body parts. If the creature is lacking body parts or organs integral for its survival – its head, for instance – the spell automatically fails. Coming back from the dead is an ordeal. The target takes a -4 penalty to all attack rolls, saving throws, and ability checks. Every time the target finishes a long rest, the penalty is reduced by 1 until it disappears.",
         },
