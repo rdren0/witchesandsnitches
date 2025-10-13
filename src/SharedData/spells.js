@@ -107,7 +107,6 @@ export const standardSchools = [
 
 export const spellsData = {
   Charms: {
-    hasRestriction: false,
     icon: "Wand2",
     color: "#51B5F6",
     description: "Utility and enhancement magic",
@@ -989,7 +988,6 @@ export const spellsData = {
     },
   },
   "Jinxes, Hexes & Curses": {
-    hasRestriction: false,
     icon: "Zap",
     color: "#B751F6",
     description: "Offensive and mischievous magic",
@@ -1470,7 +1468,6 @@ export const spellsData = {
     },
   },
   Transfigurations: {
-    hasRestriction: false,
     icon: "BookOpen",
     color: "#5BC257",
     description: "Transformation and alteration magic",
@@ -1802,7 +1799,6 @@ export const spellsData = {
     },
   },
   Divinations: {
-    hasRestriction: false,
     icon: "Eye",
     color: "#D2C90C",
     description: "Sight beyond sight and knowledge magic",
@@ -1926,6 +1922,7 @@ export const spellsData = {
           castingTime: "1 Minute",
           range: "5 Feet",
           duration: "Concentration, 8 Hours",
+          restriction: true,
           year: 4,
           description:
             "You create a Tiny incorporeal hand of shimmering light in an unoccupied space you can see within range. The hand exists for the duration, but it disappears if you apparate or use a portkey. When the hand appears, you name one major landmark, and the hand moves in the direction of the landmark.",
@@ -2255,7 +2252,6 @@ export const spellsData = {
     },
   },
   Elemental: {
-    hasRestriction: true,
     icon: "Zap",
     color: "#97C00C",
     description: "Mastery over the elements",
@@ -2382,7 +2378,6 @@ export const spellsData = {
     },
   },
   Valiant: {
-    hasRestriction: true,
     icon: "Shield",
     color: "#7A5E0D",
     description: "Combat and valor magic",
@@ -2522,7 +2517,6 @@ export const spellsData = {
     },
   },
   Healing: {
-    hasRestriction: false,
     icon: "Heart",
     color: "#F31717",
     description: "Restoration and medical magic",
@@ -2717,7 +2711,6 @@ export const spellsData = {
     },
   },
   Magizoo: {
-    hasRestriction: false,
     icon: "PawPrint",
     color: "#E6A327",
     description: "Beast and creature magic",
@@ -2897,7 +2890,6 @@ export const spellsData = {
     },
   },
   Grim: {
-    hasRestriction: true,
     icon: "Skull",
     color: "#F17FF1",
     description: "Dark and fear magic",
@@ -2940,7 +2932,7 @@ export const spellsData = {
           level: "2nd Level",
           castingTime: "Action",
           range: "60 Feet",
-          restriction: "true",
+          restriction: true,
           duration: "Concentration, Up to 1 minute",
           year: 4,
           description:
@@ -2970,7 +2962,7 @@ export const spellsData = {
           range: "Self (30 Foot Cone)",
           duration: "Concentration, up to 1 minute",
           year: 3,
-          restriction: false,
+          restriction: true,
           description:
             "You project a phantasmal image of a creature's worst fears. Each creature in a 30-foot cone must succeed on a Wisdom saving throw or drop whatever it is holding and become frightened for the duration. While frightened by this spell, a creature must take the Dash action and move away from you by the safest available route on each of its turns, unless there is nowhere to move. If the creature ends its turn in a location where it doesn't have line of sight to you, the creature can make a Wisdom saving throw. On a successful save, the spell ends for that creature.",
         },
@@ -3014,7 +3006,7 @@ export const spellsData = {
           range: "90 Feet",
           duration: "Instantaneous",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "You unleash the power of your mind to blast the intellect of up to ten creatures of your choice that you can see within range. Creatures that have an Intelligence score of 2 or lower are unaffected. Each target must make an Intelligence saving throw. On a failed save, a target takes 14d6 psychic damage and is stunned. On a successful save, a target takes half as much damage and isn't stunned. If a target is killed by this damage, its head explodes, assuming it has one. A stunned target can make an Intelligence saving throw at the end of each of its turns. On a successful save, the stunning effect ends.",
@@ -3023,7 +3015,6 @@ export const spellsData = {
     },
   },
   Forbidden: {
-    hasRestriction: true,
     icon: "Ban",
     color: "#000000",
     description: "Dangerous and forbidden magic",
@@ -3037,7 +3028,7 @@ export const spellsData = {
           range: "120 Feet",
           duration: "Instantaneous",
           year: 2,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "A beam of crackling black energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.",
@@ -3054,7 +3045,7 @@ export const spellsData = {
           range: "Self (10-foot radius)",
           duration: "Instantaneous",
           year: 3,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "You invoke the power of the Unseen Realm. Tendrils of dark energy erupt from you and batter all creatures within 10 feet of you. Each creature in that area must make a Strength saving throw. On a failed save, a target takes 2d6 necrotic damage and can't take reactions until its next turn. On a successful save, the creature takes half damage, but suffers no other effect.",
@@ -3069,7 +3060,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Concentration, up to 1 minute",
           year: 3,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "A beam of crackling, black energy lances out toward a creature within range, forming a sustained arc of lightning between you and the target. Make a ranged spell attack against that creature. On a hit, the target takes 1d12 lightning damage, and on each of your turns for the duration, you can use your bonus action to deal 1d12 lightning damage to the target automatically. The spell ends if you use your action to do anything else. The spell also ends if the target is ever outside the spell's range or if it has total cover from you.",
@@ -3086,7 +3077,7 @@ export const spellsData = {
           range: "90 Feet",
           duration: "Instantaneous",
           year: 4,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "A poisonous green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn.",
@@ -3103,7 +3094,7 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Concentration, up to 1 hour",
           year: 5,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "You utter foul words, summoning an Inferius from the land of the dead. You choose the unoccupied spaces you can see within range where they appear. A summoned Inferi disappears when it drops to 0 hit points or when the spell ends. The Inferi are hostile to all creatures, including you. Roll initiative for the summoned Inferi which has its own turn(s). The Inferi pursue and attack the nearest non-Inferi to the best of their ability. As part of casting the spell, you can form a magical circle on the ground that is large enough to encompass your space. While the spell lasts, the summoned Inferi can't cross the circle or harm it, and they can't target anyone within it.",
@@ -3120,7 +3111,7 @@ export const spellsData = {
           range: "90 Feet",
           duration: "Concentration, up to 1 minute",
           year: 6,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "Flames wreathe one creature you can see within range. The target must make a Dexterity saving throw. It takes 7d6 fire damage on a failed save, or half as much damage on a successful one. On a failed save, the target also burns for the spell's duration. The burning target sheds bright light in a 30-foot radius and dim light for an additional 30 feet. At the end of each of its turns, the target repeats the saving throw. It takes 3d6 fire damage on a failed save, and the spell ends on a successful one. These magical flames can't be extinguished through non-magical means. If damage from this spell reduces a target to 0 hit points, the target is turned to ash.",
@@ -3136,7 +3127,7 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Until Dispelled",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "This spell snatches the soul of a being from the clutches of Death as it dies and traps it inside the tiny magical cage. A stolen soul remains inside the cage until the spell ends or if the cage is destroyed by a Finite Incantatem, which ends the spell. While you have a soul inside the cage, you can exploit it in any of the ways described below. You can use a trapped soul up to six times. Once you exploit a soul for the sixth time, it is released, and the spell ends. While a soul is trapped, the dead being it came from can't be revived. Steal Life. You can use a bonus action to drain vigor from the soul and regain 2d8 hit points. Query Soul. You ask the soul a question (no action required) and receive a brief telepathic answer, which you can understand regardless of the language used. The soul knows only what it knew in life, but it must answer you truthfully and to the best of its ability. The answer is no more than a sentence or two and might be cryptic. Borrow Experience. You can use a bonus action to bolster yourself with the soul's life experience, making your next attack roll, ability check, or saving throw with advantage. If you don't use this benefit before the start of your next turn, it is lost. Eyes of the Dead. You can use an action to name a place the humanoid saw in life, which creates an invisible sensor somewhere in that place if it is on the plane of existence you're currently on. The sensor remains for as long as you concentrate, up to 10 minutes (as if you were concentrating on a spell). You receive visual and auditory information from the sensor as if you were in its space using your senses. A creature that can see the sensor (such as one using see invisibility or truesight) sees a translucent image of the tormented humanoid whose soul you caged.",
@@ -3149,7 +3140,7 @@ export const spellsData = {
           range: "150 Feet",
           duration: "Instantaneous",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "A sphere of malicious energy ripples out in a 60-foot-radius sphere from a point within range. Each creature in that area must make a Constitution saving throw. A target takes 8d6 necrotic damage on a failed save, or half as much damage on a successful one.",
@@ -3166,7 +3157,7 @@ export const spellsData = {
           range: "150 Feet",
           duration: "Concentration, up to 10 minutes",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "Magical darkness spreads from a point you choose within range to fill a 60-foot-radius sphere until the spell ends. The darkness spreads around corners. A creature with darkvision can't see through this darkness. Non-magical light, as well as light created by spells of 8th level or lower, can't illuminate the area. Shrieks, gibbering, and mad laughter from the land of the dead can be heard within the sphere. Whenever a creature starts its turn in the sphere, it must make a Wisdom saving throw, taking 8d8 psychic damage on a failed save, or half as much damage on a successful one.",
@@ -3179,7 +3170,7 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Concentration, up to 1 minute",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Dark"],
           description:
             "You shatter the barriers between realities and timelines, thrusting a creature into turmoil and madness. The target must succeed on a Wisdom saving throw, or it can't take reactions until the spell ends. The affected target must also roll a d10 at the start of each of its turns; the number rolled determines what happens to the target as shown on the Insanio Effects table. At the end of each of its turns, the affected target can repeat the Wisdom saving throw, ending the spell on itself on a success. Insanio Effects: d10 1-2 Vision of the land of the dead. The target takes 6d12 psychic damage, and it is stunned until the end of the turn. 3-5 Rending Rift. The target must make a Dexterity saving throw, taking 8d12 force damage on a failed save, or half as much damage on a successful save. 6-8 Wormhole. The target is teleported, along with everything it is wearing and carrying, up to 30 feet to an unoccupied space of your choice that you can see. The target also takes 10d12 force damage and is knocked prone. 9-10 Chill of the Touch of Death. The target takes 10d12 cold damage, and it is blinded until the end of the turn.",
@@ -3188,7 +3179,6 @@ export const spellsData = {
     },
   },
   Ancient: {
-    hasRestriction: true,
     icon: "Scroll",
     color: "#941212",
     description: "Lost and ancient magics",
@@ -3202,7 +3192,7 @@ export const spellsData = {
           range: "10 Feet",
           duration: "1 hour",
           year: 1,
-          restriction: false,
+          restriction: true,
           tags: ["Arithmantic"],
           description:
             "This spell is a minor magical trick that novice spellcasters use for practice. You create one of the following magical effects within range: You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor. You instantaneously light or snuff out a candle, a torch, or a small campfire. You instantaneously clean or soil an object no larger than 1 cubic foot. You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour. You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour. You create a nonmagical trinket or an illusory image that can fit in your hand and that lasts until the end of your next turn. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time, and you can dismiss such an effect as an action.",
@@ -3217,7 +3207,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Concentration, up to 1 round",
           year: 2,
-          restriction: false,
+          restriction: true,
           tags: ["Runic"],
           description:
             "A magic rune appears on the target's weak spots. Any attacks made against the target are made with advantage until the start of your next turn. Bonus Action casting rules do not apply to this spell.",
@@ -3232,7 +3222,7 @@ export const spellsData = {
           range: "90 Feet",
           duration: "Concentration, 1 hour",
           year: 4,
-          restriction: false,
+          restriction: true,
           tags: ["Runic"],
           description:
             "You choose a creature you can see within range and mystically mark it as your target. Until the spell ends, you deal an extra 1d6 Runic damage to the target whenever you: hit it with a spell or it fails your spell's saving throw. Additionally, you have advantage on any Wisdom (Perception) or Wisdom (Survival) checks you make to find it. If the target drops to 0 hit points before this spell ends, you can use a bonus action on a subsequent turn of yours to mark a new creature.",
@@ -3247,7 +3237,7 @@ export const spellsData = {
           range: "Self",
           duration: "1 Minute",
           year: 4,
-          restriction: false,
+          restriction: true,
           tags: ["Arithmantic"],
           description:
             "The spell captures some of the incoming energy, lessening its effect on you and storing it for your next attack. When you are damaged by a spell, roll a number of D4 equal to that spell's level and add half of your proficiency bonus to the roll. You may reduce your damage taken by the triggering attack by that amount. Also, the next time you cast a spell that deals damage, in the next minute, one target of the spell takes extra damage equal to the damage reduced from the triggering attack and the spell ends.",
@@ -3262,7 +3252,7 @@ export const spellsData = {
           range: "30 Feet",
           duration: "Concentration, 1 minute",
           year: 6,
-          restriction: false,
+          restriction: true,
           tags: ["Runic", "Dark"],
           description:
             "You choose a creature you can see within range, that creature must succeed on a Wisdom saving throw or become Cursed for the Duration of the spell. When you cast this spell, choose one curse from the following options. • Choose one ability score. While Cursed, the target has disadvantage on Ability Checks and Saving Throws made with that ability score. • While Cursed, the target has disadvantage on Attack rolls against you. • While Cursed, the target must make a Wisdom saving throw at the start of each of its turns. If it fails, it wastes its Action that turn doing nothing. • While the target is Cursed, your spells deal an extra 1d8 damage to the target.",
@@ -3277,7 +3267,7 @@ export const spellsData = {
           range: "Self (60 Foot cone)",
           duration: "Instantaneous",
           year: 6,
-          restriction: false,
+          restriction: true,
           tags: ["Arithmantic", "Dark"],
           description:
             "A deadly rain of conjured arrows streaks down towards the earth. Each creature in a 60-foot cone must succeed on a Dexterity saving throw. Each creature takes damage equal to 4d8 + your spellcasting ability modifier on a failed save, or half as much damage on a successful one.",
@@ -3294,7 +3284,7 @@ export const spellsData = {
           range: "60 Feet",
           duration: "Dedication, 1 minute",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Arithmantic"],
           description:
             "Healing equations appear on the chest of up to six Creatures of your choice that you can see within range. For a duration of 1 minute, each creature regains Hit Points equal to 1d4 + your Spellcasting ability modifier at the start of your turns as long as you maintain Dedication. This spell has no Effect on undead or Constructs.",
@@ -3311,7 +3301,7 @@ export const spellsData = {
           range: "Self",
           duration: "Concentration, 10 minutes",
           year: 7,
-          restriction: false,
+          restriction: true,
           tags: ["Runic"],
           description:
             "You endow yourself with a temporary surge of magic, making yourself lighter on your feet and more powerful in your spellcasting. You gain the following Benefits: You gain 50 temporary hit points. If any of these remain when the spell ends, they are lost. You have +2 to spell attack rolls. When you hit a target with a spell attack, that target takes an extra 1d12 Psychic damage. You have proficiency in Strength and Constitution saving throws. You can cast leveled spells twice, instead of once, when you cast a spell as an action on your turn. You ignore this benefit if you already have a feature, like Extra Attack, that gives you extra attacks. Immediately after the spell ends, you must succeed on a DC 15 Constitution saving throw or suffer one level of exhaustion.",
@@ -3320,7 +3310,6 @@ export const spellsData = {
     },
   },
   Astronomic: {
-    hasRestriction: true,
     icon: "Moon",
     color: "#0E48D8",
     description: "Celestial and stellar magic",
@@ -3436,7 +3425,6 @@ export const spellsData = {
   },
 
   Trickery: {
-    hasRestriction: true,
     icon: "Star",
     color: "#d55713",
     description: "Illusion and misdirection magic",
@@ -3519,7 +3507,6 @@ export const spellsData = {
     },
   },
   "Prof. Charms": {
-    hasRestriction: true,
     icon: "GraduationCap",
     color: "#51DDF6",
     description: "Professional and advanced charm work",
@@ -3604,7 +3591,6 @@ export const spellsData = {
     },
   },
   Justice: {
-    hasRestriction: false,
     icon: "Shield",
     color: "#FFD700",
     description: "Protective and righteous magic",
@@ -3631,6 +3617,7 @@ export const spellsData = {
           restriction: true,
           duration: "Instantaneous",
           school: "Charms",
+          restriction: true,
           description:
             "You raise your hand, and burning radiance erupts from it. Each creature of your choice that you can see within 5 feet of you must succeed on a Constitution saving throw or take 1d6 radiant damage.",
           higherLevels:
@@ -3645,6 +3632,7 @@ export const spellsData = {
           castingTime: "Reaction",
           range: "60 Feet",
           duration: "Instantaneous",
+          restriction: true,
           school: "Charms",
           restriction: true,
           description:
@@ -3659,6 +3647,7 @@ export const spellsData = {
           castingTime: "Bonus Action",
           range: "60 Feet",
           duration: "Concentration, up to 10 minutes",
+          restriction: true,
           school: "Charms",
           tags: ["Defensive"],
           restriction: true,
@@ -3673,6 +3662,8 @@ export const spellsData = {
           range: "30 Feet",
           duration: "1 Minute",
           school: "Charms",
+
+          restriction: true,
           tags: ["Defensive"],
           restriction: true,
           description:
@@ -3702,6 +3693,7 @@ export const spellsData = {
           level: "4th Level",
           castingTime: "Action",
           range: "60 Feet",
+          restriction: true,
           duration: "Concentration, up to 1 minute",
           school: "Charm",
           restriction: true,
@@ -3716,6 +3708,7 @@ export const spellsData = {
           level: "4th Level",
           castingTime: "Action",
           range: "120 Feet",
+          restriction: true,
           duration: "Instantaneous",
           school: "Transfiguration",
           restriction: true,
@@ -3733,6 +3726,7 @@ export const spellsData = {
           range: "Self (10 Foot Radius Sphere)",
           duration: "Concentration, up to 1 hour",
           school: "Charms",
+          restriction: true,
           description:
             "A 10-foot-radius invisible sphere of antimagic surrounds you. This area is divorced from magical energy. Within the sphere, spells can't be cast, summoned creatures disappear, and even magic items become mundane. Until the spell ends, the sphere moves with you, centered on you. Spells and other magical effects, are suppressed in the sphere and can't protrude into it. A slot expended to cast a suppressed spell is consumed. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration. Targeted Effects: Spells and other magical effects that target a creature or an object in the sphere have no effect on that target. Areas of Magic: The area of another spell or magical effect, such as confringo, can't extend into the sphere. If the sphere overlaps an area of magic, the part of the area that is covered by the sphere is suppressed. Spells: Any active spell or other magical effect on a creature or an object in the sphere is suppressed while the creature or object is in it. Magic Items: The properties and powers of magic items are suppressed in the sphere. Magical Travel: Apparition and Portkeys fail to work in the sphere, whether the sphere is the destination or the departure point for such magical travel. Creatures and Objects: A creature or object summoned or created by magic temporarily winks out of existence in the sphere. Dispel Magic: Spells and magical effects such as Finite Incantatem have no effect on the sphere.",
         },
@@ -3754,7 +3748,6 @@ export const spellsData = {
     },
   },
   Gravetouched: {
-    hasRestriction: false,
     icon: "Skull",
     color: "#8B0000",
     description: "Dark healing and necromantic magic",
@@ -3770,6 +3763,7 @@ export const spellsData = {
           duration: "1 Round",
           school: "Jinxes, Hexes, Curses",
           tags: ["Dark"],
+          restriction: true,
           description:
             "You brand a willing creature with a mark of shadow. Until the end of its next turn, the target's movement speed increases by 5 feet, and its next attack deals an additional 2d4 necrotic damage. The effect ends early if the attack hits. If the target casts a spell that incorporates this additional damage, that spell gains the Dark tag for the purpose of effects, resistances, and synergies.",
         },
@@ -3784,6 +3778,7 @@ export const spellsData = {
           range: "Self",
           duration: "1 Hour",
           school: "Healing",
+          restriction: true,
           description:
             "Bolstering yourself with a necromantic facsimile of life, you gain 1d4 + 4 temporary hit points for the duration.",
           higherLevels:
@@ -3799,6 +3794,7 @@ export const spellsData = {
             "1 reaction, when you see a creature cast a Healing spell",
           range: "60 Feet",
           duration: "Instantaneous",
+          restriction: true,
           school: "Healing",
           restriction: true,
           description:
@@ -3845,6 +3841,7 @@ export const spellsData = {
           range: "10 Feet",
           duration: "10 Minutes",
           school: "Charms",
+          restriction: true,
           description:
             "You grant the semblance of life and intelligence to a corpse of your choice within range, allowing it to answer the questions you pose. The corpse must still have a mouth and can't be undead. The spell fails if the corpse was the target of this spell within the last 10 days. Until the spell ends, you can ask the corpse up to five questions. The corpse knows only what it knew in life, including the languages it knew. Answers are usually brief, cryptic, or repetitive, and the corpse is under no compulsion to offer a truthful answer if you are hostile to it or it recognizes you as an enemy. This spell doesn't return the creature's soul to its body, only its animating spirit. Thus, the corpse can't learn new information, doesn't comprehend anything that has happened since it died, and can't speculate about future events.",
         },
@@ -3857,6 +3854,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "Touch",
           duration: "7 Days",
+          restriction: true,
           school: "Healing",
           restriction: true,
           tags: ["Dark"],
@@ -3875,6 +3873,7 @@ export const spellsData = {
           school: "Healing",
           restriction: true,
           tags: ["Dark"],
+          restriction: true,
           description:
             "You draw the moisture from every creature in a 30-foot cube centered on a point you choose within range. Each creature in that area must make a Constitution saving throw. Constructs and undead aren't affected, and plants and aquatic creatures make this saving throw with disadvantage. A creature takes 12d8 necrotic damage on a failed save, or half as much damage on a successful one. Nonmagical plants in the area that aren't creatures, such as trees and shrubs, wither and die instantly.",
         },
