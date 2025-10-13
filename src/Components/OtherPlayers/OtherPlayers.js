@@ -467,12 +467,14 @@ const PlayerCard = ({
                       )
                     )}%`,
                     height: "100%",
-                    backgroundColor:
-                      character.currentHp <= (character.maxHp || 0) * 0.25
-                        ? "#ef4444"
-                        : character.currentHp <= (character.maxHp || 0) * 0.5
-                        ? "#f59e0b"
-                        : "#10b981",
+                    backgroundColor: (() => {
+                      const percentage =
+                        (character.currentHp || 0) / (character.maxHp || 1);
+                      if (percentage <= 0.25) return "#EF4444";
+                      if (percentage <= 0.5) return "#F59E0B";
+                      if (percentage <= 0.75) return "#EAB308";
+                      return "#10B981";
+                    })(),
                     transition: "width 0.3s ease, background-color 0.3s ease",
                   }}
                 />
@@ -823,7 +825,7 @@ export const OtherPlayers = ({ selectedCharacter, supabase, user }) => {
       if (characters && characters.length > 0) {
         const charactersWithHp = characters.map((character) => ({
           ...character,
-          currentHp: character.hit_points,
+          currentHp: character.current_hit_points ?? character.hit_points,
           maxHp: character.hit_points,
         }));
 
