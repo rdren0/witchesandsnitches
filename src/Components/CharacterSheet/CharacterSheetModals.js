@@ -22,6 +22,10 @@ const CharacterSheetModals = ({
   setShowDamageModal,
   damageAmount,
   setDamageAmount,
+  healAmount,
+  setHealAmount,
+  tempHPAmount,
+  setTempHPAmount,
   isApplyingDamage,
   setIsApplyingDamage,
   adminMode = false,
@@ -410,8 +414,8 @@ const CharacterSheetModals = ({
   };
 
   const handleCustomHeal = () => {
-    if (damageAmount > 0) {
-      applyHPChange(Math.abs(damageAmount), "healing");
+    if (healAmount > 0) {
+      applyHPChange(Math.abs(healAmount), "healing");
     }
   };
 
@@ -1018,10 +1022,10 @@ const CharacterSheetModals = ({
                     (character.maxHitPoints ?? character.hitPoints) -
                     (character.currentHitPoints ?? character.hitPoints)
                   }
-                  value={damageAmount || ""}
+                  value={healAmount || ""}
                   onChange={(e) => {
                     const value = parseInt(e.target.value) || 0;
-                    setDamageAmount(Math.max(0, value));
+                    setHealAmount(Math.max(0, value));
                   }}
                   placeholder="Amount"
                   style={{
@@ -1037,7 +1041,7 @@ const CharacterSheetModals = ({
                 <button
                   onClick={handleCustomHeal}
                   disabled={
-                    !damageAmount ||
+                    !healAmount ||
                     (character.currentHitPoints ?? character.hitPoints) ===
                       (character.maxHitPoints ?? character.hitPoints) ||
                     isApplyingDamage
@@ -1051,14 +1055,14 @@ const CharacterSheetModals = ({
                     borderRadius: "6px",
                     fontSize: "14px",
                     cursor:
-                      !damageAmount ||
+                      !healAmount ||
                       (character.currentHitPoints ?? character.hitPoints) ===
                         (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
                     opacity:
-                      !damageAmount ||
+                      !healAmount ||
                       (character.currentHitPoints ?? character.hitPoints) ===
                         (character.maxHitPoints ?? character.hitPoints) ||
                       isApplyingDamage
@@ -1104,10 +1108,10 @@ const CharacterSheetModals = ({
                 <input
                   type="number"
                   min="0"
-                  value={damageAmount || ""}
+                  value={tempHPAmount || ""}
                   onChange={(e) => {
                     const value = parseInt(e.target.value) || 0;
-                    setDamageAmount(Math.max(0, value));
+                    setTempHPAmount(Math.max(0, value));
                   }}
                   placeholder="Amount"
                   style={{
@@ -1122,7 +1126,7 @@ const CharacterSheetModals = ({
                 />
                 <button
                   onClick={async () => {
-                    if (!damageAmount || damageAmount <= 0 || isApplyingDamage)
+                    if (!tempHPAmount || tempHPAmount <= 0 || isApplyingDamage)
                       return;
 
                     setIsApplyingDamage(true);
@@ -1133,7 +1137,7 @@ const CharacterSheetModals = ({
                       let query = supabase
                         .from("characters")
                         .update({
-                          temp_hp: damageAmount,
+                          temp_hp: tempHPAmount,
                           updated_at: new Date().toISOString(),
                         })
                         .eq("id", character.id);
@@ -1153,7 +1157,7 @@ const CharacterSheetModals = ({
                       const additionalFields = [
                         {
                           name: "Temporary HP Set",
-                          value: `${damageAmount} temp HP`,
+                          value: `${tempHPAmount} temp HP`,
                           inline: true,
                         },
                         {
@@ -1189,7 +1193,7 @@ const CharacterSheetModals = ({
                       setIsApplyingDamage(false);
                     }
                   }}
-                  disabled={!damageAmount || isApplyingDamage}
+                  disabled={!tempHPAmount || isApplyingDamage}
                   style={{
                     padding: "8px 16px",
                     width: "100px",
@@ -1199,10 +1203,10 @@ const CharacterSheetModals = ({
                     borderRadius: "6px",
                     fontSize: "14px",
                     cursor:
-                      !damageAmount || isApplyingDamage
+                      !tempHPAmount || isApplyingDamage
                         ? "not-allowed"
                         : "pointer",
-                    opacity: !damageAmount || isApplyingDamage ? 0.5 : 1,
+                    opacity: !tempHPAmount || isApplyingDamage ? 0.5 : 1,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
