@@ -488,12 +488,12 @@ const DowntimeForm = ({
           setRollAssignments((prev) => ({
             ...prev,
             [activityKey]: {
-              diceIndex: null,
-              skill: "",
+              diceIndex: prev[activityKey]?.diceIndex ?? null,
+              skill: prev[activityKey]?.skill || "",
               wandModifier: "",
               notes: prev[activityKey]?.notes || "",
-              secondDiceIndex: null,
-              secondSkill: "",
+              secondDiceIndex: prev[activityKey]?.secondDiceIndex ?? null,
+              secondSkill: prev[activityKey]?.secondSkill || "",
               secondWandModifier: "",
               customDice: null,
               jobType: null,
@@ -1702,27 +1702,49 @@ const DowntimeForm = ({
                       onDiceAssign={handleSpellDiceAssign}
                       availableDiceOptions={diceManager.functions.getSortedDiceOptions.filter(
                         ({ index: diceIndex }) => {
-                          const isAssignedToSpells = Object.values(
+                          const isAssignedToOtherSpells = Object.entries(
                             rollAssignments
                           ).some(
-                            (assignment) =>
-                              assignment.firstSpellDice === diceIndex ||
-                              assignment.secondSpellDice === diceIndex
+                            ([key, assignment]) =>
+                              key !== assignmentKey &&
+                              (assignment.firstSpellDice === diceIndex ||
+                                assignment.secondSpellDice === diceIndex)
                           );
-                          const isAssignedToActivities = Object.values(
+
+                          const isAssignedToOtherActivities = Object.entries(
                             rollAssignments
-                          ).some(
-                            (assignment) =>
+                          ).some(([key, assignment]) => {
+                            if (key === assignmentKey) return false;
+
+                            const activityIndex =
+                              parseInt(key.replace("activity", "")) - 1;
+                            const activityData =
+                              formData.activities[activityIndex];
+                            const isOtherActivitySpell =
+                              activityRequiresSpellSelection(
+                                activityData?.activity
+                              );
+
+                            if (isOtherActivitySpell) return false;
+
+                            return (
                               assignment.diceIndex === diceIndex ||
                               assignment.secondDiceIndex === diceIndex
-                          );
+                            );
+                          });
+
                           const isThisActivitySpell =
                             assignment.firstSpellDice === diceIndex ||
                             assignment.secondSpellDice === diceIndex;
+                          const isThisActivityRegular =
+                            assignment.diceIndex === diceIndex ||
+                            assignment.secondDiceIndex === diceIndex;
 
                           return (
-                            (!isAssignedToSpells && !isAssignedToActivities) ||
-                            isThisActivitySpell
+                            (!isAssignedToOtherSpells &&
+                              !isAssignedToOtherActivities) ||
+                            isThisActivitySpell ||
+                            isThisActivityRegular
                           );
                         }
                       )}
