@@ -1395,7 +1395,9 @@ const ViewingSheetForm = ({
                             <div>
                               {firstSpellName && (
                                 <div style={{ marginBottom: "0.5rem" }}>
-                                  <div style={styles.label}>Researched Spell:</div>
+                                  <div style={styles.label}>
+                                    Researched Spell:
+                                  </div>
                                   <div
                                     style={{
                                       ...styles.value,
