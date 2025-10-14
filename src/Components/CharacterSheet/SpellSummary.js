@@ -252,7 +252,6 @@ const SpellSummary = ({
                 diceFormula = `${baseDiceCount + bonusDiceCount}${
                   baseDiceMatch[2]
                 }${modifier ? "+" + modifier : ""}`;
-                console.log("New dice formula:", diceFormula);
               }
             }
           }
@@ -266,15 +265,6 @@ const SpellSummary = ({
       const diceSize = parseInt(diceMatch[2]);
       const bonus = parseInt(diceMatch[3]) || 0;
 
-      console.log(
-        "About to roll:",
-        numDice,
-        "d",
-        diceSize,
-        "with bonus:",
-        bonus
-      );
-
       let total = bonus;
       const rolls = [];
       for (let i = 0; i < numDice; i++) {
@@ -282,8 +272,6 @@ const SpellSummary = ({
         rolls.push(roll);
         total += roll;
       }
-
-      console.log("Rolled dice:", rolls, "Total:", total);
 
       const damageTypeDisplay = damageData.type
         ? damageData.type.charAt(0).toUpperCase() + damageData.type.slice(1)
