@@ -26,6 +26,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [expandedSpells, setExpandedSpells] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedSpellLevels, setSelectedSpellLevels] = useState({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -42,6 +43,9 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
     damage_dice_count: "",
     damage_dice_type: "d8",
     damage_modifier: "",
+    scaling_dice_count: "",
+    scaling_dice_type: "d8",
+    scaling_per_level: true,
     status: "known",
     description: "",
     higher_levels: "",
@@ -155,6 +159,9 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       damage_dice_count: "",
       damage_dice_type: "d8",
       damage_modifier: "",
+      scaling_dice_count: "",
+      scaling_dice_type: "d8",
+      scaling_per_level: true,
       status: "known",
       description: "",
       higher_levels: "",
@@ -181,7 +188,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
         range: formData.range,
         duration: formData.duration.trim() || null,
         concentration: formData.concentration || false,
-        components: null, // No longer used, but table still requires it
+        components: null,
         check_type: formData.check_type,
         save_type: formData.check_type === "save" ? formData.save_type : null,
         damage_type: formData.damage_type || null,
@@ -193,6 +200,11 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
         damage_modifier: formData.damage_modifier
           ? parseInt(formData.damage_modifier)
           : null,
+        scaling_dice_count: formData.scaling_dice_count
+          ? parseInt(formData.scaling_dice_count)
+          : null,
+        scaling_dice_type: formData.scaling_dice_type || null,
+        scaling_per_level: formData.scaling_per_level,
         status: formData.status || "known",
         description: formData.description.trim(),
         higher_levels: formData.higher_levels.trim() || null,
@@ -239,6 +251,9 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       damage_dice_count: spell.damage_dice_count || "",
       damage_dice_type: spell.damage_dice_type || "d8",
       damage_modifier: spell.damage_modifier || "",
+      scaling_dice_count: spell.scaling_dice_count || "",
+      scaling_dice_type: spell.scaling_dice_type || "d8",
+      scaling_per_level: spell.scaling_per_level !== false,
       status: spell.status || "known",
       description: spell.description,
       higher_levels: spell.higher_levels || "",
@@ -293,13 +308,54 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
     return 8 + (character.proficiencyBonus || 0) + spellcastingModifier;
   };
 
-  const handleDamageRoll = async (spell) => {
+  const getAvailableSpellLevels = (baseLevel) => {
+    if (baseLevel === "Cantrip") return ["Cantrip"];
+
+    const levelNum = parseInt(baseLevel.match(/(\d+)/)?.[1] || "1");
+    const levels = [];
+
+    for (let i = levelNum; i <= 9; i++) {
+      levels.push(
+        `${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} Level`
+      );
+    }
+
+    return levels;
+  };
+
+  const handleDamageRoll = async (spell, castAtLevel = null) => {
     if (!character || !spell.damage_dice_count) return;
 
     try {
-      const numDice = spell.damage_dice_count;
-      const diceSize = parseInt(spell.damage_dice_type.substring(1)); // Remove 'd' prefix
+      let numDice = spell.damage_dice_count;
+      const diceSize = parseInt(spell.damage_dice_type.substring(1));
       const bonus = spell.damage_modifier || 0;
+
+      if (
+        castAtLevel &&
+        spell.scaling_dice_count &&
+        spell.level !== "Cantrip"
+      ) {
+        const baseLevel = parseInt(spell.level.match(/(\d+)/)?.[1] || "1");
+        const castLevel = parseInt(
+          castAtLevel.match(/(\d+)/)?.[1] || baseLevel
+        );
+        const levelDiff = castLevel - baseLevel;
+
+        if (levelDiff > 0) {
+          const scalingDiceSize = parseInt(
+            spell.scaling_dice_type.substring(1)
+          );
+
+          if (scalingDiceSize === diceSize) {
+            if (spell.scaling_per_level) {
+              numDice = numDice + spell.scaling_dice_count * levelDiff;
+            } else {
+              numDice = numDice + spell.scaling_dice_count;
+            }
+          }
+        }
+      }
 
       let total = bonus;
       const rolls = [];
@@ -314,7 +370,9 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
         : "Damage";
 
       showRollResult({
-        title: `${spell.name} - Damage Roll`,
+        title: `${spell.name} - Damage Roll${
+          castAtLevel ? ` (${castAtLevel})` : ""
+        }`,
         rollValue: rolls.reduce((sum, roll) => sum + roll, 0),
         modifier: bonus,
         total: total,
@@ -856,6 +914,47 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
+                  <label style={styles.label}>
+                    Scaling Dice Count (when upcast)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.scaling_dice_count}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        scaling_dice_count: e.target.value,
+                      })
+                    }
+                    style={styles.input}
+                    placeholder="e.g., 1 (adds 1d8 per level)"
+                    min="0"
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Scaling Dice Type</label>
+                  <select
+                    value={formData.scaling_dice_type}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        scaling_dice_type: e.target.value,
+                      })
+                    }
+                    style={styles.input}
+                    disabled={!formData.scaling_dice_count}
+                  >
+                    {diceTypes.map((dice) => (
+                      <option key={dice} value={dice}>
+                        {dice}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
                   <label style={styles.label}>Spell Status</label>
                   <select
                     value={formData.status}
@@ -1088,8 +1187,40 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                             </span>
                           )}
                         </div>
+                        {spell.level !== "Cantrip" && spell.scaling_dice_count && (
+                          <select
+                            value={selectedSpellLevels[spell.id] || spell.level}
+                            onChange={(e) =>
+                              setSelectedSpellLevels({
+                                ...selectedSpellLevels,
+                                [spell.id]: e.target.value,
+                              })
+                            }
+                            style={{
+                              padding: "6px 12px",
+                              backgroundColor: theme.surface,
+                              border: `1px solid ${theme.border}`,
+                              borderRadius: "4px",
+                              fontSize: "13px",
+                              color: theme.text,
+                              cursor: "pointer",
+                              fontWeight: "500",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {getAvailableSpellLevels(spell.level).map(
+                              (level) => (
+                                <option key={level} value={level}>
+                                  {level}
+                                </option>
+                              )
+                            )}
+                          </select>
+                        )}
                         <button
-                          onClick={() => handleDamageRoll(spell)}
+                          onClick={() =>
+                            handleDamageRoll(spell, selectedSpellLevels[spell.id])
+                          }
                           style={styles.damageButton}
                           title="Roll damage"
                         >
@@ -1127,9 +1258,67 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                               minWidth: "fit-content",
                             }}
                           >
+                            {spell.level !== "Cantrip" &&
+                              spell.scaling_dice_count && (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <label
+                                    style={{
+                                      fontSize: "11px",
+                                      fontWeight: "700",
+                                      textTransform: "uppercase",
+                                      color: theme.textSecondary,
+                                      letterSpacing: "0.5px",
+                                    }}
+                                  >
+                                    Cast at Level
+                                  </label>
+                                  <select
+                                    value={
+                                      selectedSpellLevels[spell.id] ||
+                                      spell.level
+                                    }
+                                    onChange={(e) =>
+                                      setSelectedSpellLevels({
+                                        ...selectedSpellLevels,
+                                        [spell.id]: e.target.value,
+                                      })
+                                    }
+                                    style={{
+                                      padding: "6px 12px",
+                                      backgroundColor: theme.surface,
+                                      border: `1px solid ${theme.border}`,
+                                      borderRadius: "4px",
+                                      fontSize: "13px",
+                                      color: theme.text,
+                                      cursor: "pointer",
+                                      fontWeight: "500",
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {getAvailableSpellLevels(spell.level).map(
+                                      (level) => (
+                                        <option key={level} value={level}>
+                                          {level}
+                                        </option>
+                                      )
+                                    )}
+                                  </select>
+                                </div>
+                              )}
                             {spell.damage_dice_count && (
                               <button
-                                onClick={() => handleDamageRoll(spell)}
+                                onClick={() =>
+                                  handleDamageRoll(
+                                    spell,
+                                    selectedSpellLevels[spell.id]
+                                  )
+                                }
                                 style={{
                                   ...styles.damageButton,
                                   padding: "8px 16px",
