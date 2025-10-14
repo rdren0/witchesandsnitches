@@ -1072,7 +1072,6 @@ const SpellSlotTracker = ({
 
         <div style={styles.slotsGrid}>{allTiles}</div>
 
-        {/* Sorcery Point Conversion Table */}
         <div
           style={{
             marginTop: "20px",
