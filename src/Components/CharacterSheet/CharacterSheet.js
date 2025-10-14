@@ -104,6 +104,8 @@ const CharacterSheet = ({
   const [isRollingHitDice, setIsRollingHitDice] = useState(false);
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [damageAmount, setDamageAmount] = useState(0);
+  const [healAmount, setHealAmount] = useState(0);
+  const [tempHPAmount, setTempHPAmount] = useState(0);
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
   const [showACModal, setShowACModal] = useState(false);
@@ -983,6 +985,8 @@ const CharacterSheet = ({
   const handleDamageClick = () => {
     if (!character) return;
     setDamageAmount(0);
+    setHealAmount(0);
+    setTempHPAmount(0);
     setShowDamageModal(true);
   };
 
@@ -1897,6 +1901,10 @@ const CharacterSheet = ({
           setShowDamageModal={setShowDamageModal}
           damageAmount={damageAmount}
           setDamageAmount={setDamageAmount}
+          healAmount={healAmount}
+          setHealAmount={setHealAmount}
+          tempHPAmount={tempHPAmount}
+          setTempHPAmount={setTempHPAmount}
           isApplyingDamage={isApplyingDamage}
           setIsApplyingDamage={setIsApplyingDamage}
           adminMode={adminMode}

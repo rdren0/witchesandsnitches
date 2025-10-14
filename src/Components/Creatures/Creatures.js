@@ -37,7 +37,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
   const [originalFormData, setOriginalFormData] = useState(null);
   const [showHPModal, setShowHPModal] = useState(false);
   const [selectedCreature, setSelectedCreature] = useState(null);
-  const [hpAmount, setHPAmount] = useState(0);
+  const [damageAmount, setDamageAmount] = useState(0);
+  const [healAmount, setHealAmount] = useState(0);
   const [isApplyingHP, setIsApplyingHP] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
@@ -230,7 +231,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
 
   const handleHPClick = (creature) => {
     setSelectedCreature(creature);
-    setHPAmount(0);
+    setDamageAmount(0);
+    setHealAmount(0);
     setShowHPModal(true);
   };
 
@@ -338,7 +340,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
       await loadCreatures();
       setShowHPModal(false);
       setSelectedCreature(null);
-      setHPAmount(0);
+      setDamageAmount(0);
+      setHealAmount(0);
     } catch (error) {
       console.error("Error applying HP change:", error);
       alert("Error applying HP change. Please try again.");
@@ -2302,8 +2305,10 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
         theme={theme}
         showHPModal={showHPModal}
         setShowHPModal={setShowHPModal}
-        hpAmount={hpAmount}
-        setHPAmount={setHPAmount}
+        damageAmount={damageAmount}
+        setDamageAmount={setDamageAmount}
+        healAmount={healAmount}
+        setHealAmount={setHealAmount}
         isApplyingHP={isApplyingHP}
         onApplyHP={handleApplyHP}
       />
