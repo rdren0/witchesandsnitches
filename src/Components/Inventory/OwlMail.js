@@ -162,6 +162,10 @@ const OwlMail = ({
       !mail.read && mail.recipient_character_id === selectedCharacter?.id
   ).length;
 
+  const receivedMails = owlMails.filter(
+    (mail) => mail.recipient_character_id === selectedCharacter?.id
+  );
+
   const styles = {
     container: {
       padding: "20px",
@@ -374,7 +378,7 @@ const OwlMail = ({
           <Loader size={16} />
           Loading letters...
         </div>
-      ) : owlMails.length === 0 ? (
+      ) : receivedMails.length === 0 ? (
         <div style={styles.emptyState}>
           <div
             style={{
@@ -415,108 +419,143 @@ const OwlMail = ({
           </div>
         </div>
       ) : (
-        <div style={styles.mailList}>
-          {owlMails.map((mail) => {
-            const isReceived =
-              mail.recipient_character_id === selectedCharacter?.id;
-            const isSent = mail.sender_character_id === selectedCharacter?.id;
-            const isExpanded = expandedMail === mail.id;
-
-            return (
+        <>
+          {receivedMails.length === 0 ? (
+            <div style={styles.emptyState}>
               <div
-                key={mail.id}
                 style={{
-                  ...styles.mailCard,
-                  ...(!mail.read && isReceived && styles.mailCardUnread),
-                }}
-                onClick={() => {
-                  if (!isExpanded && isReceived && !mail.read) {
-                    markMailAsRead(mail.id);
-                  }
-                  setExpandedMail(isExpanded ? null : mail.id);
+                  ...styles.emptyIcon,
+                  color: theme.text,
+                  display: "flex",
+                  justifyContent: "center",
                 }}
               >
-                <div style={styles.mailHeader}>
-                  <div style={{ flex: 1 }}>
-                    <div style={styles.mailSubject}>{mail.subject}</div>
-                    <div style={styles.mailMeta}>
-                      <span>
-                        {isReceived ? "From:" : "To:"}{" "}
-                        {isReceived
-                          ? mail.sender?.name || "Unknown"
-                          : mail.recipient?.name || "Unknown"}
-                      </span>
-                      <span>
-                        {new Date(mail.created_at).toLocaleDateString()}
-                      </span>
-                      {!mail.read && isReceived && (
-                        <span
-                          style={{
-                            color: theme.primary,
-                            fontWeight: "600",
-                          }}
-                        >
-                          New
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {isExpanded ? (
-                  <>
-                    {mail.message && (
-                      <div
-                        style={{
-                          fontSize: "15px",
-                          color: theme.text,
-                          marginTop: "16px",
-                          whiteSpace: "pre-wrap",
-                          padding: "16px",
-                          backgroundColor: theme.background,
-                          borderRadius: "2px",
-                          border: `1px solid ${theme.border}`,
-                          fontFamily: "'Georgia', serif",
-                          lineHeight: "1.8",
-                        }}
-                      >
-                        {mail.message}
-                      </div>
-                    )}
-                    <div style={styles.mailActions}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (
-                            window.confirm(
-                              "Are you sure you want to burn this letter?"
-                            )
-                          ) {
-                            deleteOwlMail(mail.id);
-                          }
-                        }}
-                        style={{
-                          ...styles.actionButton,
-                          ...styles.deleteButton,
-                        }}
-                      >
-                        <Trash2 size={14} />
-                        Burn
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  mail.message && (
-                    <div style={styles.mailPreview}>{mail.message}</div>
-                  )
-                )}
+                <OwlIcon
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                  }}
+                  fill="currentColor"
+                />
               </div>
-            );
-          })}
-        </div>
+              <p>No new letters yet. Maybe the owls are overworked today!</p>
+              <div
+                style={{
+                  backgroundColor: theme.surface,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: "8px",
+                  padding: "12px 16px",
+                  marginTop: "24px",
+                  fontSize: "13px",
+                  color: theme.textSecondary,
+                  lineHeight: "1.5",
+                  maxWidth: "600px",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                }}
+              >
+                <strong style={{ color: theme.text }}>Note:</strong> Owl Post is
+                for fun, in-character communication between players. Don't use
+                inventory management for mischief - use this instead! Messages
+                are automatically deleted after 15 days.
+              </div>
+            </div>
+          ) : (
+            <div style={styles.mailList}>
+              {receivedMails.map((mail) => {
+                const isExpanded = expandedMail === mail.id;
+
+                return (
+                  <div
+                    key={mail.id}
+                    style={{
+                      ...styles.mailCard,
+                      ...(!mail.read && styles.mailCardUnread),
+                    }}
+                    onClick={() => {
+                      if (!isExpanded && !mail.read) {
+                        markMailAsRead(mail.id);
+                      }
+                      setExpandedMail(isExpanded ? null : mail.id);
+                    }}
+                  >
+                    <div style={styles.mailHeader}>
+                      <div style={{ flex: 1 }}>
+                        <div style={styles.mailSubject}>{mail.subject}</div>
+                        <div style={styles.mailMeta}>
+                          <span>From: {mail.sender?.name || "Unknown"}</span>
+                          <span>
+                            {new Date(mail.created_at).toLocaleDateString()}
+                          </span>
+                          {!mail.read && (
+                            <span
+                              style={{
+                                color: theme.primary,
+                                fontWeight: "600",
+                              }}
+                            >
+                              New
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isExpanded ? (
+                      <>
+                        {mail.message && (
+                          <div
+                            style={{
+                              fontSize: "15px",
+                              color: theme.text,
+                              marginTop: "16px",
+                              whiteSpace: "pre-wrap",
+                              padding: "16px",
+                              backgroundColor: theme.background,
+                              borderRadius: "2px",
+                              border: `1px solid ${theme.border}`,
+                              fontFamily: "'Georgia', serif",
+                              lineHeight: "1.8",
+                            }}
+                          >
+                            {mail.message}
+                          </div>
+                        )}
+                        <div style={styles.mailActions}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to burn this letter?"
+                                )
+                              ) {
+                                deleteOwlMail(mail.id);
+                              }
+                            }}
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.deleteButton,
+                            }}
+                          >
+                            <Trash2 size={14} />
+                            Burn
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      mail.message && (
+                        <div style={styles.mailPreview}>{mail.message}</div>
+                      )
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Compose Modal */}
       {showComposeModal && (
         <div
           style={{
