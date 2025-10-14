@@ -11,10 +11,14 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
+  Zap,
 } from "lucide-react";
+import { useRollModal } from "../utils/diceRoller";
+import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 
 const CustomSpells = ({ character, supabase, discordUserId }) => {
   const { theme } = useTheme();
+  const { showRollResult } = useRollModal();
   const [customSpells, setCustomSpells] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -29,6 +33,8 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
     level: "Cantrip",
     casting_time: "Action",
     range: "Touch",
+    duration: "Instantaneous",
+    concentration: false,
     check_type: "none",
     save_type: "",
     damage_type: "",
@@ -42,13 +48,20 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
   });
 
   const spellClasses = [
+    "Ancient",
+    "Astronomic",
     "Charms",
-    "Transfiguration",
-    "Jinxes, Hexes & Curses",
-    "Defense Against the Dark Arts",
-    "Healing",
     "Divinations",
     "Elemental",
+    "Forbidden",
+    "Grim",
+    "Gravetouched",
+    "Healing",
+    "Jinxes, Hexes & Curses",
+    "Justice",
+    "Magizoo",
+    "Transfigurations",
+    "Trickery",
     "Valiant",
   ];
 
@@ -133,6 +146,8 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       level: "Cantrip",
       casting_time: "Action",
       range: "Touch",
+      duration: "Instantaneous",
+      concentration: false,
       check_type: "none",
       save_type: "",
       damage_type: "",
@@ -164,7 +179,8 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
         level: formData.level,
         casting_time: formData.casting_time,
         range: formData.range,
-        duration: null, // No longer used, but table still requires it
+        duration: formData.duration.trim() || null,
+        concentration: formData.concentration || false,
         components: null, // No longer used, but table still requires it
         check_type: formData.check_type,
         save_type: formData.check_type === "save" ? formData.save_type : null,
@@ -214,6 +230,8 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       level: spell.level,
       casting_time: spell.casting_time,
       range: spell.range,
+      duration: spell.duration || "Instantaneous",
+      concentration: spell.concentration || false,
       check_type: spell.check_type || "none",
       save_type: spell.save_type || "",
       damage_type: spell.damage_type || "",
@@ -245,6 +263,107 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
     } catch (error) {
       console.error("Error deleting custom spell:", error);
       alert("Failed to delete spell. Please try again.");
+    }
+  };
+
+  const getSpellcastingAbilityModifier = (character) => {
+    if (!character) return 0;
+
+    const spellcastingAbilityMap = {
+      "Willpower Caster": "charisma",
+      "Technique Caster": "wisdom",
+      "Intellect Caster": "intelligence",
+      "Vigor Caster": "constitution",
+      Willpower: "charisma",
+      Technique: "wisdom",
+      Intellect: "intelligence",
+      Vigor: "constitution",
+    };
+
+    const abilityKey = spellcastingAbilityMap[character.castingStyle];
+    if (!abilityKey) return 0;
+
+    const abilityScore = character[abilityKey] || 10;
+    return Math.floor((abilityScore - 10) / 2);
+  };
+
+  const getSpellSaveDC = (character) => {
+    if (!character) return 8;
+    const spellcastingModifier = getSpellcastingAbilityModifier(character);
+    return 8 + (character.proficiencyBonus || 0) + spellcastingModifier;
+  };
+
+  const handleDamageRoll = async (spell) => {
+    if (!character || !spell.damage_dice_count) return;
+
+    try {
+      const numDice = spell.damage_dice_count;
+      const diceSize = parseInt(spell.damage_dice_type.substring(1)); // Remove 'd' prefix
+      const bonus = spell.damage_modifier || 0;
+
+      let total = bonus;
+      const rolls = [];
+      for (let i = 0; i < numDice; i++) {
+        const roll = Math.floor(Math.random() * diceSize) + 1;
+        rolls.push(roll);
+        total += roll;
+      }
+
+      const damageTypeDisplay = spell.damage_type
+        ? spell.damage_type.charAt(0).toUpperCase() + spell.damage_type.slice(1)
+        : "Damage";
+
+      showRollResult({
+        title: `${spell.name} - Damage Roll`,
+        rollValue: rolls.reduce((sum, roll) => sum + roll, 0),
+        modifier: bonus,
+        total: total,
+        character: character,
+        type: "damage",
+        description: `${numDice}${spell.damage_dice_type}${
+          bonus > 0 ? ` + ${bonus}` : ""
+        } ${spell.damage_type || ""} damage = ${total}`,
+        individualDiceResults: rolls,
+        diceQuantity: numDice,
+        diceType: diceSize,
+      });
+
+      const additionalFields = [
+        {
+          name: "Spell",
+          value: `${spell.name} (Custom Spell)`,
+          inline: true,
+        },
+        {
+          name: "Damage Type",
+          value: damageTypeDisplay,
+          inline: true,
+        },
+        {
+          name: "Dice Rolled",
+          value: rolls.join(", ") + (bonus > 0 ? ` + ${bonus}` : ""),
+          inline: true,
+        },
+      ];
+
+      await sendDiscordRollWebhook({
+        character: character,
+        rollType: "Custom Spell Damage Roll",
+        title: `${spell.name} - ${damageTypeDisplay}`,
+        embedColor: 0xef4444,
+        rollResult: {
+          d20Roll: rolls.reduce((sum, roll) => sum + roll, 0),
+          rollValue: rolls.reduce((sum, roll) => sum + roll, 0),
+          modifier: bonus,
+          total: total,
+          isCriticalSuccess: false,
+          isCriticalFailure: false,
+        },
+        fields: additionalFields,
+        useCharacterAvatar: true,
+      });
+    } catch (error) {
+      console.error("Error rolling damage:", error);
     }
   };
 
@@ -459,6 +578,20 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       color: theme.textSecondary,
       fontSize: "14px",
     },
+    damageButton: {
+      padding: "6px 12px",
+      backgroundColor: "#dc2626",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: "500",
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+      transition: "all 0.2s ease",
+    },
   };
 
   if (isLoading) {
@@ -525,7 +658,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Class</label>
+                  <label style={styles.label}>School</label>
                   <select
                     value={formData.spell_class}
                     onChange={(e) =>
@@ -603,6 +736,21 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                   />
                 </div>
                 <div style={styles.formGroup}>
+                  <label style={styles.label}>Duration</label>
+                  <input
+                    type="text"
+                    value={formData.duration}
+                    onChange={(e) =>
+                      setFormData({ ...formData, duration: e.target.value })
+                    }
+                    style={styles.input}
+                    placeholder="e.g., Instantaneous, 1 Minute, 1 Hour"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
                   <label style={styles.label}>Check Type</label>
                   <select
                     value={formData.check_type}
@@ -618,29 +766,25 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                     ))}
                   </select>
                 </div>
-              </div>
-
-              {formData.check_type === "save" && (
-                <div style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>Save Type</label>
-                    <select
-                      value={formData.save_type}
-                      onChange={(e) =>
-                        setFormData({ ...formData, save_type: e.target.value })
-                      }
-                      style={styles.input}
-                    >
-                      <option value="">Select save type</option>
-                      {saveTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Save Type</label>
+                  <select
+                    value={formData.save_type}
+                    onChange={(e) =>
+                      setFormData({ ...formData, save_type: e.target.value })
+                    }
+                    style={styles.input}
+                    disabled={formData.check_type !== "save"}
+                  >
+                    <option value="">Select save type</option>
+                    {saveTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
 
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
@@ -726,6 +870,47 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Concentration</label>
+                  <div
+                    style={{
+                      ...styles.input,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      height: "auto",
+                      minHeight: "38px",
+                    }}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        concentration: !formData.concentration,
+                      })
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.concentration}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          concentration: e.target.checked,
+                        })
+                      }
+                      style={{
+                        accentColor: theme.primary,
+                        cursor: "pointer",
+                        width: "18px",
+                        height: "18px",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span style={{ color: theme.text }}>
+                      Requires Concentration
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -829,6 +1014,13 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                     >
                       {spell.level} • {spell.casting_time} • Range:{" "}
                       {spell.range}
+                      {spell.duration && <> • Duration: {spell.duration}</>}
+                      {spell.concentration && (
+                        <>
+                          {" "}
+                          • <strong>Concentration</strong>
+                        </>
+                      )}
                       {spell.check_type !== "none" && (
                         <>
                           {" "}
@@ -860,16 +1052,121 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                       {spell.tags && <> • Tags: {spell.tags}</>}
                     </div>
 
-                    {isSpellExpanded && (
-                      <div style={styles.spellDetails}>
+                    {spell.damage_dice_count && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <div
                           style={{
-                            whiteSpace: "pre-line",
+                            backgroundColor: theme.surface,
+                            border: `2px solid #dc2626`,
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            fontSize: "14px",
+                            fontWeight: "600",
                             color: theme.text,
+                          }}
+                        >
+                          {spell.damage_dice_count}
+                          {spell.damage_dice_type}
+                          {spell.damage_modifier
+                            ? spell.damage_modifier > 0
+                              ? ` + ${spell.damage_modifier}`
+                              : ` - ${Math.abs(spell.damage_modifier)}`
+                            : ""}
+                          {spell.damage_type && (
+                            <span
+                              style={{ color: "#dc2626", marginLeft: "6px" }}
+                            >
+                              {spell.damage_type}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDamageRoll(spell)}
+                          style={styles.damageButton}
+                          title="Roll damage"
+                        >
+                          <Zap size={14} />
+                          Roll Damage
+                        </button>
+                      </div>
+                    )}
+
+                    {isSpellExpanded && (
+                      <div style={{ ...styles.spellDetails, width: "100%" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: "16px",
                             marginBottom: "12px",
                           }}
                         >
-                          {spell.description}
+                          <div
+                            style={{
+                              flex: 1,
+                              whiteSpace: "pre-line",
+                              color: theme.text,
+                            }}
+                          >
+                            {spell.description}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                              minWidth: "fit-content",
+                            }}
+                          >
+                            {spell.damage_dice_count && (
+                              <button
+                                onClick={() => handleDamageRoll(spell)}
+                                style={{
+                                  ...styles.damageButton,
+                                  padding: "8px 16px",
+                                }}
+                                title="Roll damage"
+                              >
+                                <Zap size={16} />
+                                Roll Damage
+                              </button>
+                            )}
+                            {spell.check_type === "save" && spell.save_type && (
+                              <div
+                                style={{
+                                  backgroundColor: "#3B82F6",
+                                  color: "white",
+                                  padding: "8px 16px",
+                                  borderRadius: "6px",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  textAlign: "center",
+                                  whiteSpace: "nowrap",
+                                }}
+                                title={`${spell.save_type} Saving Throw`}
+                              >
+                                DC {getSpellSaveDC(character)}
+                                <div
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: "400",
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  {spell.save_type} Save
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {spell.higher_levels && (
                           <div
