@@ -1373,79 +1373,15 @@ const ViewingSheetForm = ({
                   !requiresExtraDie &&
                   !assignment.customDice &&
                   !activityRequiresAbilitySelection(activity.activity) &&
+                  !activityRequiresSpellSelection(activity.activity) &&
                   (!assignment.skill ||
                     assignment.diceIndex === null ||
                     assignment.diceIndex === undefined) && (
                     <div style={styles.rollContainer}>
                       <div style={styles.rollLabel}>Roll Information</div>
-                      {(() => {
-                        const firstSpellName = getSpellNameForActivity(
-                          index,
-                          "first",
-                          viewingSheet
-                        );
-                        const secondSpellName = getSpellNameForActivity(
-                          index,
-                          "second",
-                          viewingSheet
-                        );
-
-                        if (firstSpellName || secondSpellName) {
-                          return (
-                            <div>
-                              {firstSpellName && (
-                                <div style={{ marginBottom: "0.5rem" }}>
-                                  <div style={styles.label}>
-                                    Researched Spell:
-                                  </div>
-                                  <div
-                                    style={{
-                                      ...styles.value,
-                                      fontWeight: "600",
-                                      color: theme.primary,
-                                      fontSize: "1.125rem",
-                                    }}
-                                  >
-                                    {firstSpellName}
-                                  </div>
-                                </div>
-                              )}
-                              {secondSpellName && (
-                                <div style={{ marginBottom: "0.5rem" }}>
-                                  <div style={styles.label}>
-                                    Second Researched Spell:
-                                  </div>
-                                  <div
-                                    style={{
-                                      ...styles.value,
-                                      fontWeight: "600",
-                                      color: theme.primary,
-                                      fontSize: "1.125rem",
-                                    }}
-                                  >
-                                    {secondSpellName}
-                                  </div>
-                                </div>
-                              )}
-                              <div
-                                style={{
-                                  ...styles.value,
-                                  fontSize: "0.875rem",
-                                  color: theme.textSecondary,
-                                }}
-                              >
-                                No roll data recorded for this activity
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div style={styles.value}>
-                            No roll data recorded for this activity
-                          </div>
-                        );
-                      })()}
+                      <div style={styles.value}>
+                        No roll data recorded for this activity
+                      </div>
                     </div>
                   )}
 
