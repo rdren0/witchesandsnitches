@@ -340,16 +340,6 @@ const CharacterSheet = ({
         });
       }
 
-      additionalFields.push({
-        name: "Modifiers",
-        value: `Prof: +${
-          character.proficiencyBonus
-        }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}${
-          tempModifier !== 0 ? `, Temp: ${formatModifier(tempModifier)}` : ""
-        }`,
-        inline: true,
-      });
-
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spell Attack Roll",
