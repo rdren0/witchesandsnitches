@@ -57,12 +57,12 @@ const SpellSelector = ({
       const playerYear = selectedCharacter.year || 1;
       const spellYear = spellData.year || 1;
 
+      let baseDC = 8 + 2 * spellYear;
+      if (spellYear > playerYear) {
+        baseDC += (spellYear - playerYear) * 2;
+      }
+
       if (isResearch) {
-        let baseDC = 10 + 2 * (playerYear - 1);
-
-        const yearDifference = spellYear - playerYear;
-        baseDC += yearDifference * 2;
-
         const difficultSpells = [
           "Abscondi",
           "Pellucidi Pellis",
@@ -83,15 +83,9 @@ const SpellSelector = ({
         if (difficultSpells.includes(spellData.name)) {
           baseDC += 3;
         }
-
-        return Math.max(5, baseDC);
-      } else {
-        let baseDC = 8 + 2 * spellYear;
-        if (spellYear > playerYear) {
-          baseDC += (spellYear - playerYear) * 2;
-        }
-        return Math.max(5, baseDC);
       }
+
+      return Math.max(5, baseDC);
     },
     [isResearch, selectedCharacter]
   );
@@ -621,8 +615,7 @@ const SpellSelector = ({
     }
 
     const diceResult = calculateDiceResult(spellSlot, spellName);
-    const shouldShowDC =
-      spellData && !spellStatus?.isRestricted && spellData.year;
+    const shouldShowDC = spellData && spellData.year;
 
     return (
       <div style={styles.spellSlot}>
@@ -844,11 +837,8 @@ const SpellSelector = ({
           break;
         }
         case "dc": {
-          const aStatus = getSpellStatus(a);
-          const bStatus = getSpellStatus(b);
-
-          const aHasUnknownDC = aStatus.isRestricted || !a.year;
-          const bHasUnknownDC = bStatus.isRestricted || !b.year;
+          const aHasUnknownDC = !a.year;
+          const bHasUnknownDC = !b.year;
 
           if (aHasUnknownDC && !bHasUnknownDC) {
             comparison = 1;
@@ -1248,7 +1238,7 @@ const SpellSelector = ({
                         </div>
                         <div style={styles.spellMetaItem}>
                           <span style={{ fontWeight: "600" }}>DC:</span>
-                          {status.isRestricted || !spell.year ? (
+                          {!spell.year ? (
                             <span
                               style={{
                                 color: theme.error,

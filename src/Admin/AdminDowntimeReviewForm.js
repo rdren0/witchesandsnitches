@@ -452,10 +452,11 @@ const AdminDowntimeReviewForm = React.memo(
 
     const calculateResearchDC = useCallback(
       (playerYear, spellYear, spellName) => {
-        let baseDC = 8 + 2 * playerYear;
+        let baseDC = 8 + 2 * spellYear;
 
-        const yearDifference = spellYear - playerYear;
-        baseDC += yearDifference * 2;
+        if (spellYear > playerYear) {
+          baseDC += (spellYear - playerYear) * 2;
+        }
 
         const difficultSpells = [
           "Abscondi",
