@@ -271,17 +271,20 @@ const CharacterSheet = ({
 
       let rollValue;
       let rollDetails = "";
+      let individualDice = null;
 
       if (rollType === "advantage") {
         const roll1 = Math.floor(Math.random() * 20) + 1;
         const roll2 = Math.floor(Math.random() * 20) + 1;
         rollValue = Math.max(roll1, roll2);
-        rollDetails = `2d20 (${roll1}, ${roll2}) kh1`;
+        rollDetails = `2d20kh1`;
+        individualDice = [roll1, roll2];
       } else if (rollType === "disadvantage") {
         const roll1 = Math.floor(Math.random() * 20) + 1;
         const roll2 = Math.floor(Math.random() * 20) + 1;
         rollValue = Math.min(roll1, roll2);
-        rollDetails = `2d20 (${roll1}, ${roll2}) kl1`;
+        rollDetails = `2d20kl1`;
+        individualDice = [roll1, roll2];
       } else {
         rollValue = Math.floor(Math.random() * 20) + 1;
         rollDetails = "1d20";
@@ -323,15 +326,29 @@ const CharacterSheet = ({
 
       const additionalFields = [
         {
-          name: "Modifiers",
-          value: `Prof: +${
-            character.proficiencyBonus
-          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}${
-            tempModifier !== 0 ? `, Temp: ${formatModifier(tempModifier)}` : ""
-          }`,
+          name: "Dice Formula",
+          value: rollDetails,
           inline: true,
         },
       ];
+
+      if (individualDice) {
+        additionalFields.push({
+          name: "Individual Dice",
+          value: `[${individualDice.join(", ")}]`,
+          inline: true,
+        });
+      }
+
+      additionalFields.push({
+        name: "Modifiers",
+        value: `Prof: +${
+          character.proficiencyBonus
+        }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}${
+          tempModifier !== 0 ? `, Temp: ${formatModifier(tempModifier)}` : ""
+        }`,
+        inline: true,
+      });
 
       const success = await sendDiscordRollWebhook({
         character,
