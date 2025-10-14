@@ -41,7 +41,7 @@ const LuckPointButton = ({
     if (!character || isUpdating) return;
 
     setIsUpdating(true);
-    const effectiveUserId = isAdmin ? character.ownerId : discordUserId;
+    const effectiveUserId = isAdmin ? character.discord_user_id : discordUserId;
     const validatedCurrent = Math.max(0, Math.min(maxLuckPoints, newCurrent));
 
     try {
