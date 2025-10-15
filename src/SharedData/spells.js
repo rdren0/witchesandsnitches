@@ -1464,7 +1464,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Aguamenti",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self (30 Foot Cone)",
@@ -1475,7 +1475,7 @@ export const spellsData = {
         },
         {
           name: "Crinus Muto",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "1 Action",
           range: "Self",
@@ -1486,7 +1486,7 @@ export const spellsData = {
         },
         {
           name: "Epoximise",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -1499,7 +1499,7 @@ export const spellsData = {
         },
         {
           name: "Incendio Glacia",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -1510,7 +1510,7 @@ export const spellsData = {
         },
         {
           name: "Orchideous",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "10 Feet",
@@ -1521,7 +1521,7 @@ export const spellsData = {
         },
         {
           name: "Vera Verto",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Touch",
@@ -1536,7 +1536,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Inanimatus Conjurus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Action",
           range: "10 Feet",
@@ -1549,7 +1549,7 @@ export const spellsData = {
         },
         {
           name: "Incendio",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Action",
           range: "90 Feet",
@@ -1563,7 +1563,7 @@ export const spellsData = {
         },
         {
           name: "Obscuro",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -1574,7 +1574,7 @@ export const spellsData = {
         },
         {
           name: "Sagittario",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "1 action",
           range: "150 feet",
@@ -1588,7 +1588,7 @@ export const spellsData = {
         },
         {
           name: "Nebulus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "1 action",
           range: "120 feet",
@@ -1603,7 +1603,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Incarcerous",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "30 feet",
@@ -1617,7 +1617,7 @@ export const spellsData = {
         },
         {
           name: "Orbis",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -1631,7 +1631,7 @@ export const spellsData = {
         },
         {
           name: "Reparifarge",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "90 feet",
@@ -1646,7 +1646,7 @@ export const spellsData = {
         },
         {
           name: "Serpensortia",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "2nd Level",
           castingTime: "1 action",
           range: "30 feet",
@@ -1662,7 +1662,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Avis",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -1675,7 +1675,7 @@ export const spellsData = {
         },
         {
           name: "Evanesco",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "1 action",
           range: "30 ft",
@@ -1688,7 +1688,7 @@ export const spellsData = {
         },
         {
           name: "Ignis Laquis",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -1702,7 +1702,7 @@ export const spellsData = {
         },
         {
           name: "Melofors",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -1717,7 +1717,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Ebublio",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "4th Level",
           castingTime: "1 action",
           range: "90 feet",
@@ -1729,7 +1729,7 @@ export const spellsData = {
         },
         {
           name: "Lapifors",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "4th Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -1744,7 +1744,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Insectum Maxima",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "5th Level",
           castingTime: "Action",
           range: "300 Feet",
@@ -1759,7 +1759,7 @@ export const spellsData = {
         },
         {
           name: "Draconifors",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "5th Level",
           castingTime: "1 action",
           range: "30 feet",
@@ -1774,7 +1774,7 @@ export const spellsData = {
       "6th Level": [
         {
           name: "Ignis Furore",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "6th Level",
           castingTime: "1 action",
           range: "60 feet",
@@ -2252,7 +2252,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Incendio Ruptis",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "120 Feet",
@@ -2269,7 +2269,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Diffindo Glacia",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -2297,7 +2297,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Fulgur",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "Action",
           range: "120 Feet",
@@ -2311,7 +2311,7 @@ export const spellsData = {
         },
         {
           name: "Respersio",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "Action",
           range: "120 Feet",
@@ -2342,7 +2342,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Tempestus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "8th Level",
           castingTime: "1 Minute",
           range: "Sight",
@@ -2356,7 +2356,7 @@ export const spellsData = {
       "9th Level": [
         {
           name: "Fulgur Maxima",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "9th Level",
           castingTime: "Action",
           range: "Sight",
@@ -2378,7 +2378,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Magno",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "Cantrip",
           castingTime: "Action",
           range: "Self (5 Foot Radius)",
@@ -2394,7 +2394,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Clario",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2406,7 +2406,7 @@ export const spellsData = {
         },
         {
           name: "Ignis Ictus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2417,7 +2417,7 @@ export const spellsData = {
         },
         {
           name: "Irus Ictus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2429,7 +2429,7 @@ export const spellsData = {
         },
         {
           name: "Pererro",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Touch",
@@ -2443,7 +2443,7 @@ export const spellsData = {
         },
         {
           name: "Tonitrus Ictus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2457,7 +2457,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Notam Ictus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "2nd Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2470,7 +2470,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Inanus Ictus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "3rd Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2483,7 +2483,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Titubo Ictus",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "4th Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2496,7 +2496,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Clario Maxima",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "5th Level",
           castingTime: "Bonus Action",
           range: "Touch",
@@ -2517,7 +2517,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Anapneo",
-          class: ["Healing"],
+          class: [],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -2529,7 +2529,7 @@ export const spellsData = {
         },
         {
           name: "Rennervate",
-          class: ["Healing"],
+          class: [],
           level: "Cantrip",
           castingTime: "Action",
           range: "10 Feet",
@@ -2543,7 +2543,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Episkey",
-          class: ["Healing"],
+          class: [],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "10 Feet",
@@ -2557,7 +2557,7 @@ export const spellsData = {
         },
         {
           name: "Ferula",
-          class: ["Healing"],
+          class: [],
           level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2569,7 +2569,7 @@ export const spellsData = {
         },
         {
           name: "Reparifors",
-          class: ["Healing"],
+          class: [],
           level: "1st Level",
           castingTime: "Action",
           range: "Touch",
@@ -2585,7 +2585,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Adversus Interitus",
-          class: ["Healing"],
+          class: [],
           level: "2nd Level",
           castingTime: "Action",
           range: "Touch",
@@ -2599,7 +2599,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Aculeo Sanentur",
-          class: ["Healing"],
+          class: [],
           level: "3rd Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2613,7 +2613,7 @@ export const spellsData = {
         },
         {
           name: "Animatem",
-          class: ["Healing"],
+          class: [],
           level: "3rd Level",
           castingTime: "Action",
           range: "Touch",
@@ -2625,7 +2625,7 @@ export const spellsData = {
         },
         {
           name: "Intus Sunt",
-          class: ["Healing"],
+          class: [],
           level: "3rd Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2642,7 +2642,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Brackium Emendo",
-          class: ["Healing"],
+          class: [],
           level: "4th Level",
           castingTime: "Action",
           range: "Touch",
@@ -2658,7 +2658,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Pervivo",
-          class: ["Healing"],
+          class: [],
           level: "5th Level",
           castingTime: "1 Hour",
           range: "Touch",
@@ -2687,7 +2687,7 @@ export const spellsData = {
         },
         {
           name: "Vulnera Sanentur",
-          class: ["Healing"],
+          class: [],
           level: "6th Level",
           castingTime: "Action",
           range: "Touch",
@@ -2711,7 +2711,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Insectum",
-          class: ["Jinxes, Hexes & Curses"],
+          class: [],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -2855,7 +2855,7 @@ export const spellsData = {
       "7th Level": [
         {
           name: "Draconiverto",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "7th Level",
           castingTime: "Bonus Action",
           range: "Self",
@@ -2869,7 +2869,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Animato Maxima",
-          class: ["Transfiguration"],
+          class: ["Transfigurations"],
           level: "8th Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -3606,7 +3606,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Virtus",
-          class: ["Justice"],
+          class: [],
           level: "Cantrip",
           castingTime: "Bonus Action",
           range: "Touch",
@@ -3618,7 +3618,7 @@ export const spellsData = {
         },
         {
           name: "Lumos Ruptis",
-          class: ["Justice"],
+          class: [],
           level: "Cantrip",
           castingTime: "Action",
           range: "5 Feet",
@@ -3635,7 +3635,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Increpa",
-          class: ["Justice"],
+          class: [],
           level: "1st Level",
           castingTime: "Reaction",
           range: "60 Feet",
@@ -3650,7 +3650,7 @@ export const spellsData = {
         },
         {
           name: "Protego Fidelia",
-          class: ["Justice"],
+          class: [],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "60 Feet",
@@ -3664,7 +3664,7 @@ export const spellsData = {
         },
         {
           name: "Tholus",
-          class: ["Justice"],
+          class: [],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "30 Feet",
@@ -3681,7 +3681,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Iuvo",
-          class: ["Justice"],
+          class: [],
           level: "2nd Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -3697,7 +3697,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Expello",
-          class: ["Justice"],
+          class: [],
           level: "4th Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -3712,7 +3712,7 @@ export const spellsData = {
         },
         {
           name: "Ostium",
-          class: ["Justice"],
+          class: [],
           level: "4th Level",
           castingTime: "Action",
           range: "120 Feet",
@@ -3727,7 +3727,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Nulla Magica",
-          class: ["Justice"],
+          class: [],
           level: "8th Level",
           castingTime: "Action",
           restriction: true,
@@ -3742,7 +3742,7 @@ export const spellsData = {
       "9th Level": [
         {
           name: "Incarcerous Maxima",
-          class: ["Justice"],
+          class: [],
           level: "9th Level",
           castingTime: "1 Minute",
           range: "30 Feet",
@@ -3763,7 +3763,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Umbrus Notatem",
-          class: ["Gravetouched"],
+          class: [],
           level: "Cantrip",
           castingTime: "Bonus Action",
           restriction: true,
@@ -3779,7 +3779,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Ictus Vitalus",
-          class: ["Gravetouched"],
+          class: [],
           level: "1st Level",
           castingTime: "Action",
           restriction: true,
@@ -3796,7 +3796,7 @@ export const spellsData = {
       "2nd Level": [
         {
           name: "Destruunt",
-          class: ["Gravetouched"],
+          class: [],
           level: "2nd Level",
           castingTime:
             "1 reaction, when you see a creature cast a Healing spell",
@@ -3810,7 +3810,7 @@ export const spellsData = {
         },
         {
           name: "Quo Flora",
-          class: ["Gravetouched"],
+          class: [],
           level: "2nd Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -3827,7 +3827,7 @@ export const spellsData = {
       "3rd Level": [
         {
           name: "Gehennus Conjurus",
-          class: ["Gravetouched"],
+          class: [],
           level: "3rd Level",
           castingTime: "Action",
           range: "60 Feet",
@@ -3842,7 +3842,7 @@ export const spellsData = {
         },
         {
           name: "Mortus Oratio",
-          class: ["Gravetouched"],
+          class: [],
           level: "3rd Level",
           castingTime: "Action",
           restriction: true,
@@ -3857,7 +3857,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Morbus",
-          class: ["Gravetouched"],
+          class: [],
           level: "5th Level",
           castingTime: "Action",
           range: "Touch",
@@ -3873,7 +3873,7 @@ export const spellsData = {
       "8th Level": [
         {
           name: "Pati",
-          class: ["Gravetouched"],
+          class: [],
           level: "8th Level",
           castingTime: "Action",
           range: "150 Feet",
