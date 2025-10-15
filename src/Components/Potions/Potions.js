@@ -567,7 +567,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   };
 
   const isPotionRestricted = (potion) => {
-    return potion.restricted === true;
+    return potion?.restricted === true;
   };
 
   const canCharacterBrewPotion = (potion) => {
