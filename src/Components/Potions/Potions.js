@@ -14,6 +14,8 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { useRollFunctions } from "../utils/diceRoller";
 
@@ -564,6 +566,16 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     }
   };
 
+  const isPotionRestricted = (potion) => {
+    return potion?.restricted === true;
+  };
+
+  const canCharacterBrewPotion = (potion) => {
+    if (!isPotionRestricted(potion)) return true;
+
+    return currentCharacter?.subclass === potion.restrictedTo;
+  };
+
   const getFilteredPotions = () => {
     let allPotions = [];
 
@@ -778,6 +790,8 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
             {filteredPotions.map((potion, index) => {
               const potionKey = `${potion.year}-${index}`;
               const isExpanded = expandedCards.has(potionKey);
+              const isRestricted = isPotionRestricted(potion);
+              const canBrew = canCharacterBrewPotion(potion);
 
               return (
                 <div
@@ -787,6 +801,9 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                     ...(selectedPotion?.name === potion.name
                       ? styles.potionItemSelected
                       : {}),
+                    ...(isRestricted && !canBrew
+                      ? { border: `2px solid ${theme.error}` }
+                      : {}),
                   }}
                 >
                   <div
@@ -794,11 +811,35 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                     style={{ cursor: "pointer" }}
                   >
                     <div style={styles.potionHeader}>
-                      <h3 style={styles.potionName}>{potion.name}</h3>
+                      <h3 style={styles.potionName}>
+                        {potion.name}
+                        {isRestricted && !canBrew && (
+                          <Lock
+                            size={16}
+                            style={{
+                              marginLeft: "8px",
+                              color: theme.error,
+                              display: "inline",
+                            }}
+                          />
+                        )}
+                      </h3>
                       <div style={styles.potionMeta}>
                         <span style={styles.potionYear}>
                           Year {potion.year}
                         </span>
+                        {isRestricted && (
+                          <span
+                            style={{
+                              ...styles.rarityBadge,
+                              backgroundColor: theme.error,
+                              color: "white",
+                              marginRight: "4px",
+                            }}
+                          >
+                            {potion.restrictedTo}
+                          </span>
+                        )}
                         <span
                           style={{
                             ...styles.rarityBadge,
@@ -812,6 +853,26 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                       </div>
                     </div>
                     <p style={styles.potionDescription}>{potion.description}</p>
+                    {isRestricted && !canBrew && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "8px",
+                          backgroundColor: `${theme.error}15`,
+                          borderRadius: "4px",
+                          fontSize: "0.875rem",
+                          color: theme.error,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <AlertTriangle size={16} />
+                        <span>
+                          Restricted to {potion.restrictedTo} subclass only
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {potion.longDescription && (
@@ -838,7 +899,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
                       {isExpanded && (
                         <div style={styles.longDescription}>
-                          <p style={styles.longDescriptionText}>
+                          <p style={{...styles.longDescriptionText, whiteSpace: 'pre-line'}}>
                             {potion.longDescription}
                           </p>
                         </div>
@@ -993,6 +1054,44 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
             </div>
           )}
           <div style={styles.card}>
+            {selectedPotion &&
+              isPotionRestricted(selectedPotion) &&
+              !canCharacterBrewPotion(selectedPotion) && (
+                <div
+                  style={{
+                    marginBottom: "16px",
+                    padding: "12px",
+                    backgroundColor: `${theme.error}20`,
+                    border: `2px solid ${theme.error}`,
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    color: theme.error,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <Lock size={20} />
+                  <div>
+                    <div>
+                      This potion is restricted to {selectedPotion.restrictedTo}{" "}
+                      subclass only.
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.8rem",
+                        marginTop: "4px",
+                        fontWeight: "normal",
+                      }}
+                    >
+                      Your character ({currentCharacter?.name || "Unknown"})
+                      with subclass "{currentCharacter?.subclass || "None"}"
+                      cannot brew this potion.
+                    </div>
+                  </div>
+                </div>
+              )}
             <button
               onClick={brewPotion}
               disabled={

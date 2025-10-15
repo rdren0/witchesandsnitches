@@ -319,7 +319,7 @@ const SpellSummary = ({
       await sendDiscordRollWebhook({
         character: character,
         rollType: "Damage Roll",
-        title: `${spell.name} - ${damageTypeDisplay}`,
+        title: `${character.name}: ${spell.name} - ${damageTypeDisplay}`,
         embedColor: 0xef4444,
         rollResult: {
           d20Roll: rolls.reduce((sum, roll) => sum + roll, 0),
