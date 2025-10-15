@@ -899,7 +899,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
                       {isExpanded && (
                         <div style={styles.longDescription}>
-                          <p style={styles.longDescriptionText}>
+                          <p style={{...styles.longDescriptionText, whiteSpace: 'pre-line'}}>
                             {potion.longDescription}
                           </p>
                         </div>
