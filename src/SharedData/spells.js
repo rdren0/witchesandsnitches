@@ -1802,6 +1802,7 @@ export const spellsData = {
           castingTime: "Action",
           range: "60 Feet",
           duration: "Instantaneous",
+          restriction: true,
           year: 3,
           description:
             "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage. The target gains no benefit from cover for this saving throw.",
@@ -1862,6 +1863,7 @@ export const spellsData = {
           level: "1st Level",
           castingTime: "Action",
           range: "Touch",
+          restriction: true,
           duration: "Concentration, up to 10 minutes",
           year: 3,
           description:

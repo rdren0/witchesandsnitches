@@ -678,7 +678,7 @@ export const SubjectCard = ({
       await sendDiscordRollWebhook({
         character: selectedCharacter,
         rollType: "Spell Attack Roll",
-        title: `${spellName} - Spell Attack`,
+        title: `${selectedCharacter.name}: ${spellName} - Spell Attack`,
         embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
@@ -743,7 +743,7 @@ export const SubjectCard = ({
       await sendDiscordRollWebhook({
         character: selectedCharacter,
         rollType: "Damage Roll",
-        title: `${spellName} - ${
+        title: `${selectedCharacter.name}: ${spellName} - ${
           damageInfo.type.charAt(0).toUpperCase() + damageInfo.type.slice(1)
         } Damage`,
         embedColor: 0xef4444,

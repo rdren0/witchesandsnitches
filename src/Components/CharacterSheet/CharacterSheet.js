@@ -235,7 +235,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spellcasting Ability Check",
-        title: "Spellcasting Ability Check",
+        title: `${character.name}: Spellcasting Ability Check`,
 
         embedColor: getRollResultColor(
           rollResult,
@@ -343,7 +343,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spell Attack Roll",
-        title: `Spell Attack Roll${rollTypeText}`,
+        title: `${character.name}: Spell Attack Roll${rollTypeText}`,
         embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
@@ -968,7 +968,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Long Rest",
-        title: "Long Rest Complete",
+        title: `${character.name}: Long Rest Complete`,
         embedColor: 0x3b82f6,
         rollResult: null,
         fields: additionalFields,

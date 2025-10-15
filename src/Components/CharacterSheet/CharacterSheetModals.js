@@ -112,7 +112,7 @@ const CharacterSheetModals = ({
         const success = await sendDiscordRollWebhook({
           character,
           rollType: "Short Rest",
-          title: "Short Rest Complete",
+          title: `${character.name}: Short Rest Complete`,
           embedColor: 0x10b981,
           rollResult: null,
           fields: additionalFields,
@@ -381,7 +381,7 @@ const CharacterSheetModals = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: type === "damage" ? "Damage Taken" : "Healing Applied",
-        title: type === "damage" ? "Damage Taken" : "Healing Applied",
+        title: type === "damage" ? `${character.name}: Damage Taken` : `${character.name}: Healing Applied`,
         embedColor: embedColor,
         rollResult: null,
         fields: additionalFields,

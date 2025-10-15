@@ -1019,7 +1019,7 @@ export const rollMagicCasting = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Magic Casting",
-      title: `Cast: ${school} ${type}`,
+      title: `${character.name}: ${school} ${type}`,
       description: isCriticalSuccess
         ? "Natural 20! Exceptional magical prowess!"
         : isCriticalFailure
@@ -1245,7 +1245,7 @@ export const rollMagicalTheoryCheck = async ({
     await sendDiscordRollWebhook({
       character,
       rollType: "Magical Theory Check",
-      title: "Magical Theory Check (Spell Bonus)",
+      title: `${character.name}: Magical Theory Check`,
       description: isNaturalTwenty
         ? "Natural 20!"
         : isCriticalFailure
@@ -1350,7 +1350,7 @@ export const rollAbility = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Ability Check",
-      title: `${ability.name} Check`,
+      title: `${character.name}: ${ability.name} Check`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
@@ -1805,7 +1805,7 @@ export const rollBrewPotion = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Potion Brewing",
-      title: `Brewed a Potion: ${selectedPotion.name}`,
+      title: `${character.name} brewed: ${selectedPotion.name}`,
       description: achievedQuality === "ruined" ? randomRuinedMessage : "",
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.potion),
       rollResult,
@@ -1869,7 +1869,7 @@ export const rollInitiative = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Initiative",
-      title: `Rolled Initiative`,
+      title: `${character.name}: Initiative`,
       description: "",
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.initiative),
       rollResult,
@@ -1997,7 +1997,7 @@ export const rollSkill = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Skill Check",
-      title: `${skill.displayName}`,
+      title: `${character.name}: ${skill.displayName}`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
@@ -2313,7 +2313,7 @@ export const attemptSpell = async ({
       rollDetailsDisplay: rollDetailsDisplay,
     };
 
-    let title = `Attempted: ${spellName}`;
+    let title = `${selectedCharacter.name} attempted: ${spellName}`;
     if (bonusDiceUsed) {
       title += ` (Bonus ${bonusDiceUsed})`;
     }
@@ -2489,11 +2489,11 @@ export const attemptArithmancySpell = async ({
       isSuccess,
     };
 
-    let title = `Arithmancy Cast: ${spellName}`;
+    let title = `${selectedCharacter.name} attempted: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `Arithmancy Cast: ${spellName}`;
+      title = `${selectedCharacter.name} attempted: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `Arithmancy Cast: ${spellName}`;
+      title = `${selectedCharacter.name} attempted: ${spellName}`;
     }
 
     const additionalFields = [
@@ -2640,11 +2640,11 @@ export const attemptRunesSpell = async ({
       isSuccess,
     };
 
-    let title = `Runic Cast: ${spellName}`;
+    let title = `${selectedCharacter.name} attempted: ${spellName}`;
     if (isCriticalSuccess) {
-      title = `Runic Cast: ${spellName}`;
+      title = `${selectedCharacter.name} attempted: ${spellName}`;
     } else if (isCriticalFailure) {
-      title = `Runic Cast: ${spellName}`;
+      title = `${selectedCharacter.name} attempted: ${spellName}`;
     }
 
     const additionalFields = [
@@ -2956,7 +2956,7 @@ export const rollCookRecipe = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Recipe Cooking",
-      title: `Cooked a Recipe: ${selectedRecipe.name}`,
+      title: `${character.name} cooked: ${selectedRecipe.name}`,
       description: achievedQuality === "ruined" ? randomRuinedMessage : "",
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.recipe),
       rollResult,
@@ -3037,7 +3037,7 @@ export const rollSavingThrow = async ({
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Saving Throw",
-      title: `${ability.name} Saving Throw`,
+      title: `${character.name}: ${ability.name} Saving Throw`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
@@ -3118,11 +3118,11 @@ export const rollResearch = async ({
       customRoll,
     };
 
-    let title = `Researched: ${spellName}`;
+    let title = `${selectedCharacter.name} researched: ${spellName}`;
     let resultText = "";
 
     if (isNaturalTwenty) {
-      title = `⭐ Researched: ${spellName}`;
+      title = `⭐ ${selectedCharacter.name} researched: ${spellName}`;
       resultText = "⭐ **EXCELLENT RESEARCH!** (Natural 20)";
     } else if (isSuccess) {
       resultText = "✅ **Research Successful!**";

@@ -8,6 +8,15 @@ export const potions = {
         "This magical skincare solution instantly clears away facial blemishes, acne, and minor skin imperfections when applied topically. The potion works by magically purifying the skin's surface and temporarily enhancing natural healing processes. Effects last for 24 hours, during which the skin maintains a healthy, clear appearance. Commonly used by students before important social events or presentations.",
     },
     {
+      name: "Liquid Darkness",
+      rarity: "common",
+      description: "Creates a 15-foot radius of magical darkness for 1 minute",
+      longDescription:
+        "When thrown or poured, this potion creates a sphere of impenetrable magical darkness with a 15-foot radius that lasts for 1 minute. The darkness spreads around corners and blocks all normal and magical light (including darkvision) except for light created by spells of 3rd level or higher. Creatures inside the darkness are blinded. This potion is a signature creation of Dark Arts practitioners, taught exclusively to those who study the shadowy side of magic.",
+      restricted: true,
+      restrictedTo: "Dark Arts",
+    },
+    {
       name: "Babbling Beverage",
       rarity: "common",
       description: "Makes words come out as gibberish for 1 minute",
