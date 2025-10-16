@@ -32,18 +32,45 @@ const SpellSummary = ({
   const [arithmancticTags, setArithmancticTags] = useState({});
   const [runicTags, setRunicTags] = useState({});
   const [isExpanded, setIsExpanded] = useState(() => {
-    const saved = localStorage.getItem("spellSummaryExpanded");
-    return saved !== null ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem("spellSummaryExpanded");
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch (error) {
+      console.error("Error reading spellSummaryExpanded from localStorage:", error);
+      return false;
+    }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSpells, setExpandedSpells] = useState({});
   const [selectedSpellLevels, setSelectedSpellLevels] = useState({});
-  const [showCanAttempt, setShowCanAttempt] = useState(false);
+  const [showCanAttempt, setShowCanAttempt] = useState(() => {
+    try {
+      const saved = localStorage.getItem("spellSummaryShowCanAttempt");
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch (error) {
+      console.error("Error reading spellSummaryShowCanAttempt from localStorage:", error);
+      return false;
+    }
+  });
   const [attemptingSpells, setAttemptingSpells] = useState({});
 
   useEffect(() => {
-    localStorage.setItem("spellSummaryExpanded", JSON.stringify(isExpanded));
+    try {
+      localStorage.setItem("spellSummaryExpanded", JSON.stringify(isExpanded));
+      console.log("Saved spellSummaryExpanded to localStorage:", isExpanded);
+    } catch (error) {
+      console.error("Error saving spellSummaryExpanded to localStorage:", error);
+    }
   }, [isExpanded]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("spellSummaryShowCanAttempt", JSON.stringify(showCanAttempt));
+      console.log("Saved spellSummaryShowCanAttempt to localStorage:", showCanAttempt);
+    } catch (error) {
+      console.error("Error saving spellSummaryShowCanAttempt to localStorage:", error);
+    }
+  }, [showCanAttempt]);
 
   useEffect(() => {
     if (!character || !supabase) return;
@@ -1063,7 +1090,10 @@ const SpellSummary = ({
 
   return (
     <div style={styles.container}>
-      <div style={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
+      <div style={styles.header} onClick={() => {
+        console.log("Toggle clicked! Current state:", isExpanded, "New state will be:", !isExpanded);
+        setIsExpanded(!isExpanded);
+      }}>
         <div style={styles.headerLeft}>
           <div style={styles.headerTitle}>
             <BookOpen size={16} />
