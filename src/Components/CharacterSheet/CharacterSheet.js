@@ -45,7 +45,10 @@ import {
   subclassesData,
   standardFeats,
 } from "../../SharedData";
-import { calculateInitiativeWithFeats } from "../CharacterManager/utils/featBenefitsCalculator";
+import {
+  calculateInitiativeWithFeats,
+  calculateFeatBenefits,
+} from "../CharacterManager/utils/featBenefitsCalculator";
 import { calculateHeritageModifiers } from "../CharacterManager/utils/utils";
 
 const hitDiceData = {
@@ -104,6 +107,8 @@ const CharacterSheet = ({
   const [isRollingHitDice, setIsRollingHitDice] = useState(false);
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [damageAmount, setDamageAmount] = useState(0);
+  const [healAmount, setHealAmount] = useState(0);
+  const [tempHPAmount, setTempHPAmount] = useState(0);
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
   const [showACModal, setShowACModal] = useState(false);
@@ -233,7 +238,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spellcasting Ability Check",
-        title: "Spellcasting Ability Check",
+        title: `${character.name}: Spellcasting Ability Check`,
 
         embedColor: getRollResultColor(
           rollResult,
@@ -269,17 +274,20 @@ const CharacterSheet = ({
 
       let rollValue;
       let rollDetails = "";
+      let individualDice = null;
 
       if (rollType === "advantage") {
         const roll1 = Math.floor(Math.random() * 20) + 1;
         const roll2 = Math.floor(Math.random() * 20) + 1;
         rollValue = Math.max(roll1, roll2);
-        rollDetails = `2d20 (${roll1}, ${roll2}) kh1`;
+        rollDetails = `2d20kh1`;
+        individualDice = [roll1, roll2];
       } else if (rollType === "disadvantage") {
         const roll1 = Math.floor(Math.random() * 20) + 1;
         const roll2 = Math.floor(Math.random() * 20) + 1;
         rollValue = Math.min(roll1, roll2);
-        rollDetails = `2d20 (${roll1}, ${roll2}) kl1`;
+        rollDetails = `2d20kl1`;
+        individualDice = [roll1, roll2];
       } else {
         rollValue = Math.floor(Math.random() * 20) + 1;
         rollDetails = "1d20";
@@ -321,20 +329,24 @@ const CharacterSheet = ({
 
       const additionalFields = [
         {
-          name: "Modifiers",
-          value: `Prof: +${
-            character.proficiencyBonus
-          }, ${spellcastingAbility}: ${formatModifier(spellcastingModifier)}${
-            tempModifier !== 0 ? `, Temp: ${formatModifier(tempModifier)}` : ""
-          }`,
+          name: "Dice Formula",
+          value: rollDetails,
           inline: true,
         },
       ];
 
+      if (individualDice) {
+        additionalFields.push({
+          name: "Individual Dice",
+          value: `[${individualDice.join(", ")}]`,
+          inline: true,
+        });
+      }
+
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Spell Attack Roll",
-        title: `Spell Attack Roll${rollTypeText}`,
+        title: `${character.name}: Spell Attack Roll${rollTypeText}`,
         embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
@@ -839,16 +851,8 @@ const CharacterSheet = ({
       return;
     }
 
-    const hasLuckyFeat =
-      character?.selectedFeats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      ) ||
-      character?.feats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      ) ||
-      character?.standardFeats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      );
+    const featBenefits = calculateFeatBenefits(character);
+    const hasLuckyFeat = featBenefits.resources.luckPoints > 0;
 
     const confirmed = window.confirm(
       `Take a long rest for ${
@@ -883,14 +887,6 @@ const CharacterSheet = ({
         return;
       }
 
-      const getProficiencyBonus = (level) => {
-        if (level <= 4) return 2;
-        if (level <= 8) return 3;
-        if (level <= 12) return 4;
-        if (level <= 16) return 5;
-        return 6;
-      };
-
       if (hasSpellSlots || hasLuckyFeat) {
         const resourceUpdates = {
           character_id: character.id,
@@ -908,7 +904,7 @@ const CharacterSheet = ({
         }
 
         if (hasLuckyFeat) {
-          const maxLuckPoints = getProficiencyBonus(character?.level || 1);
+          const maxLuckPoints = featBenefits.resources.luckPoints;
           resourceUpdates.luck = maxLuckPoints;
         }
 
@@ -959,7 +955,7 @@ const CharacterSheet = ({
       const success = await sendDiscordRollWebhook({
         character,
         rollType: "Long Rest",
-        title: "Long Rest Complete",
+        title: `${character.name}: Long Rest Complete`,
         embedColor: 0x3b82f6,
         rollResult: null,
         fields: additionalFields,
@@ -983,6 +979,8 @@ const CharacterSheet = ({
   const handleDamageClick = () => {
     if (!character) return;
     setDamageAmount(0);
+    setHealAmount(0);
+    setTempHPAmount(0);
     setShowDamageModal(true);
   };
 
@@ -1897,6 +1895,10 @@ const CharacterSheet = ({
           setShowDamageModal={setShowDamageModal}
           damageAmount={damageAmount}
           setDamageAmount={setDamageAmount}
+          healAmount={healAmount}
+          setHealAmount={setHealAmount}
+          tempHPAmount={tempHPAmount}
+          setTempHPAmount={setTempHPAmount}
           isApplyingDamage={isApplyingDamage}
           setIsApplyingDamage={setIsApplyingDamage}
           adminMode={adminMode}

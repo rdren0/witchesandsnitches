@@ -145,7 +145,7 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
     const castingStyle = character?.castingStyle;
     const level = character?.level || 1;
 
-    if (castingStyle && CASTING_STYLE_METAMAGICS[castingStyle] && level >= 3) {
+    if (castingStyle === "Willpower Caster" && level >= 3) {
       return CASTING_STYLE_METAMAGICS[castingStyle].map((name) => ({
         name,
         ...METAMAGIC_DATA[name],

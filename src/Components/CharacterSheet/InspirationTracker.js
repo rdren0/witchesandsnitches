@@ -21,7 +21,7 @@ const InspirationTracker = ({
     if (!character || isUpdating) return;
 
     setIsUpdating(true);
-    const effectiveUserId = isAdmin ? character.ownerId : discordUserId;
+    const effectiveUserId = isAdmin ? character.discord_user_id : discordUserId;
 
     try {
       const updateData = {

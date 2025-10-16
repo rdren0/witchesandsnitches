@@ -7,10 +7,12 @@ export const calculateResearchDC = (
   spellName,
   selectedCharacter
 ) => {
-  let baseDC = 8 + 2 * playerYear;
+  let baseDC = 8 + 2 * spellYear;
 
-  const yearDifference = spellYear - playerYear;
-  baseDC += yearDifference * 2;
+  if (spellYear > playerYear) {
+    baseDC += (spellYear - playerYear) * 2;
+  }
+
   const difficultSpells = [
     "Abscondi",
     "Pellucidi Pellis",
@@ -84,15 +86,21 @@ export const updateSpellProgressSummary = async (
 
     if (existingProgress) {
       const currentAttempts = existingProgress.successful_attempts || 0;
-      const newAttempts = isNaturalTwenty
-        ? 2
-        : Math.min(currentAttempts + (isSuccess ? 1 : 0), 2);
+
+      let newAttempts = currentAttempts;
+      if (!isResearch) {
+        newAttempts = isNaturalTwenty
+          ? 2
+          : Math.min(currentAttempts + (isSuccess ? 1 : 0), 2);
+      }
 
       const updateData = {
         successful_attempts: newAttempts,
         has_natural_twenty:
-          existingProgress.has_natural_twenty || isNaturalTwenty,
-        has_failed_attempt: existingProgress.has_failed_attempt || !isSuccess,
+          existingProgress.has_natural_twenty ||
+          (isNaturalTwenty && !isResearch),
+        has_failed_attempt:
+          existingProgress.has_failed_attempt || (!isSuccess && !isResearch),
         researched: existingProgress.researched || (isResearch && isSuccess),
       };
 
@@ -109,9 +117,11 @@ export const updateSpellProgressSummary = async (
         character_id: selectedCharacter.id,
         discord_user_id: characterOwnerDiscordId,
         spell_name: spellName,
-        successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
-        has_natural_twenty: isNaturalTwenty,
-        has_failed_attempt: !isSuccess,
+
+        successful_attempts:
+          !isResearch && isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
+        has_natural_twenty: isNaturalTwenty && !isResearch,
+        has_failed_attempt: !isSuccess && !isResearch,
         researched: isResearch && isSuccess,
       };
 

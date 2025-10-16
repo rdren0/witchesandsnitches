@@ -6,8 +6,10 @@ const CreatureHPModal = ({
   theme,
   showHPModal,
   setShowHPModal,
-  hpAmount,
-  setHPAmount,
+  damageAmount,
+  setDamageAmount,
+  healAmount,
+  setHealAmount,
   isApplyingHP,
   onApplyHP,
 }) => {
@@ -29,14 +31,14 @@ const CreatureHPModal = ({
   };
 
   const handleCustomDamage = () => {
-    if (hpAmount > 0) {
-      onApplyHP(Math.abs(hpAmount), "damage");
+    if (damageAmount > 0) {
+      onApplyHP(Math.abs(damageAmount), "damage");
     }
   };
 
   const handleCustomHeal = () => {
-    if (hpAmount > 0) {
-      onApplyHP(Math.abs(hpAmount), "healing");
+    if (healAmount > 0) {
+      onApplyHP(Math.abs(healAmount), "healing");
     }
   };
 
@@ -244,10 +246,10 @@ const CreatureHPModal = ({
               type="number"
               min="1"
               max={currentHP}
-              value={hpAmount || ""}
+              value={damageAmount || ""}
               onChange={(e) => {
                 const value = parseInt(e.target.value) || 0;
-                setHPAmount(Math.max(0, value));
+                setDamageAmount(Math.max(0, value));
               }}
               placeholder="Amount"
               style={{
@@ -262,7 +264,7 @@ const CreatureHPModal = ({
             />
             <button
               onClick={handleCustomDamage}
-              disabled={!hpAmount || currentHP === 0 || isApplyingHP}
+              disabled={!damageAmount || currentHP === 0 || isApplyingHP}
               style={{
                 padding: "8px 16px",
                 width: "100px",
@@ -272,10 +274,10 @@ const CreatureHPModal = ({
                 borderRadius: "6px",
                 fontSize: "14px",
                 cursor:
-                  !hpAmount || currentHP === 0 || isApplyingHP
+                  !damageAmount || currentHP === 0 || isApplyingHP
                     ? "not-allowed"
                     : "pointer",
-                opacity: !hpAmount || currentHP === 0 || isApplyingHP ? 0.5 : 1,
+                opacity: !damageAmount || currentHP === 0 || isApplyingHP ? 0.5 : 1,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -304,10 +306,10 @@ const CreatureHPModal = ({
               type="number"
               min="1"
               max={maxHP - currentHP}
-              value={hpAmount || ""}
+              value={healAmount || ""}
               onChange={(e) => {
                 const value = parseInt(e.target.value) || 0;
-                setHPAmount(Math.max(0, value));
+                setHealAmount(Math.max(0, value));
               }}
               placeholder="Amount"
               style={{
@@ -322,7 +324,7 @@ const CreatureHPModal = ({
             />
             <button
               onClick={handleCustomHeal}
-              disabled={!hpAmount || currentHP === maxHP || isApplyingHP}
+              disabled={!healAmount || currentHP === maxHP || isApplyingHP}
               style={{
                 padding: "8px 16px",
                 width: "100px",
@@ -332,10 +334,10 @@ const CreatureHPModal = ({
                 borderRadius: "6px",
                 fontSize: "14px",
                 cursor:
-                  !hpAmount || currentHP === maxHP || isApplyingHP
+                  !healAmount || currentHP === maxHP || isApplyingHP
                     ? "not-allowed"
                     : "pointer",
-                opacity: !hpAmount || currentHP === maxHP || isApplyingHP ? 0.5 : 1,
+                opacity: !healAmount || currentHP === maxHP || isApplyingHP ? 0.5 : 1,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

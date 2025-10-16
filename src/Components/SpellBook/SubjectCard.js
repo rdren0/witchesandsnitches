@@ -678,7 +678,7 @@ export const SubjectCard = ({
       await sendDiscordRollWebhook({
         character: selectedCharacter,
         rollType: "Spell Attack Roll",
-        title: `${spellName} - Spell Attack`,
+        title: `${selectedCharacter.name}: ${spellName} - Spell Attack`,
         embedColor: getRollResultColor(rollResult, ROLL_COLORS.spell),
         rollResult,
         fields: additionalFields,
@@ -743,7 +743,7 @@ export const SubjectCard = ({
       await sendDiscordRollWebhook({
         character: selectedCharacter,
         rollType: "Damage Roll",
-        title: `${spellName} - ${
+        title: `${selectedCharacter.name}: ${spellName} - ${
           damageInfo.type.charAt(0).toUpperCase() + damageInfo.type.slice(1)
         } Damage`,
         embedColor: 0xef4444,
@@ -1822,10 +1822,11 @@ export const SubjectCard = ({
     spellName,
     selectedCharacter
   ) => {
-    let baseDC = 8 + 2 * playerYear;
+    let baseDC = 8 + 2 * spellYear;
 
-    const yearDifference = spellYear - playerYear;
-    baseDC += yearDifference * 2;
+    if (spellYear > playerYear) {
+      baseDC += (spellYear - playerYear) * 2;
+    }
 
     const difficultSpells = [
       "Abscondi",

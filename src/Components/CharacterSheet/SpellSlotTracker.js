@@ -6,6 +6,8 @@ import {
   MinusIcon,
   Sparkles,
   Edit3,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
@@ -28,6 +30,7 @@ const SpellSlotTracker = ({
   const [showModal, setShowModal] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [showSorceryModal, setShowSorceryModal] = useState(false);
+  const [showConversionTable, setShowConversionTable] = useState(false);
   const [modalData, setModalData] = useState({
     level: 1,
     action: "use",
@@ -1068,6 +1071,163 @@ const SpellSlotTracker = ({
         </div>
 
         <div style={styles.slotsGrid}>{allTiles}</div>
+
+        <div
+          style={{
+            marginTop: "20px",
+            backgroundColor: theme.background,
+            border: `2px solid ${theme.border}`,
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            onClick={() => setShowConversionTable(!showConversionTable)}
+            style={{
+              padding: "12px 16px",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: theme.text,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              cursor: "pointer",
+              backgroundColor: theme.surface,
+              transition: "background-color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                theme.hover || theme.background;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.surface;
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Sparkles size={16} style={{ color: theme.primary }} />
+              Flexible Casting (How to convert spell slots and sorcery points)
+            </div>
+            {showConversionTable ? (
+              <ChevronUp size={20} style={{ color: theme.textSecondary }} />
+            ) : (
+              <ChevronDown size={20} style={{ color: theme.textSecondary }} />
+            )}
+          </div>
+
+          {showConversionTable && (
+            <div style={{ padding: "16px" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: theme.textSecondary,
+                  marginBottom: "20px",
+                  lineHeight: "1.6",
+                }}
+              >
+                <p style={{ margin: "0 0 12px 0" }}>
+                  <strong>Creating Spell Slots.</strong> You can transform
+                  unexpended sorcery points into one spell slot as a bonus
+                  action on your turn. The Creating Spell Slots table shows the
+                  cost of creating a spell slot of a given level. You can create
+                  spell slots no higher in level than 5th. Any spell slot you
+                  create with this feature vanishes when you finish a long rest.
+                </p>
+                <p style={{ margin: "0" }}>
+                  <strong>Converting a Spell Slot to Sorcery Points.</strong> As
+                  a bonus action on your turn, you can expend one spell slot and
+                  gain a number of sorcery points equal to the slot's level.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  height: "1px",
+                  backgroundColor: theme.border,
+                  margin: "20px 0",
+                }}
+              />
+
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: theme.text,
+                  marginBottom: "12px",
+                }}
+              >
+                Creating Spell Slots Table
+              </div>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "13px",
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        padding: "8px",
+                        textAlign: "left",
+                        borderBottom: `2px solid ${theme.border}`,
+                        color: theme.textSecondary,
+                        fontWeight: "600",
+                      }}
+                    >
+                      Spell Slot Level
+                    </th>
+                    <th
+                      style={{
+                        padding: "8px",
+                        textAlign: "right",
+                        borderBottom: `2px solid ${theme.border}`,
+                        color: theme.textSecondary,
+                        fontWeight: "600",
+                      }}
+                    >
+                      Sorcery Point Cost
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { level: "1st", cost: 2 },
+                    { level: "2nd", cost: 3 },
+                    { level: "3rd", cost: 5 },
+                    { level: "4th", cost: 6 },
+                    { level: "5th", cost: 7 },
+                  ].map((row, index) => (
+                    <tr key={row.level}>
+                      <td
+                        style={{
+                          padding: "8px",
+                          borderBottom:
+                            index < 4 ? `1px solid ${theme.border}` : "none",
+                          color: theme.text,
+                        }}
+                      >
+                        {row.level}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px",
+                          textAlign: "right",
+                          borderBottom:
+                            index < 4 ? `1px solid ${theme.border}` : "none",
+                          color: theme.primary,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {row.cost}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {showCustomModal && (
           <div style={styles.modal} onClick={() => setShowCustomModal(false)}>
