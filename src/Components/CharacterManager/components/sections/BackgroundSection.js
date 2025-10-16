@@ -190,11 +190,14 @@ const BackgroundSection = ({
   const selectedBackground = value || "";
 
   const selectedBackgroundData = useMemo(() => {
-    return selectedBackground ? backgroundsData[selectedBackground] : null;
+    if (!selectedBackground) return null;
+    return backgroundsData[selectedBackground] || null;
   }, [selectedBackground]);
 
+  const hasValidBackground = selectedBackground && selectedBackgroundData;
+
   const availableBackgrounds = useMemo(() => {
-    if (selectedBackground) {
+    if (hasValidBackground) {
       return [];
     }
 
@@ -289,7 +292,7 @@ const BackgroundSection = ({
           paddingRight: "4px",
         }}
       >
-        {selectedBackgroundData && (
+        {hasValidBackground && (
           <div style={styles.selectedElementsSection}>
             <div style={styles.selectedElementsHeader}>
               <h4 style={styles.selectedElementsTitle}>Selected Background:</h4>
@@ -404,7 +407,7 @@ const BackgroundSection = ({
           </div>
         )}
 
-        {!selectedBackground && (
+        {!hasValidBackground && (
           <div style={styles.availableElementsSection}>
             <div style={styles.availableElementsContainer}>
               {availableBackgrounds.map(({ name, data }) => {
@@ -459,7 +462,7 @@ const BackgroundSection = ({
                           )}
                         </span>
                       </label>
-                      {!selectedBackground && (
+                      {!hasValidBackground && (
                         <button
                           onClick={() => toggleBackgroundExpansion(name)}
                           style={styles.expandButton}
@@ -588,8 +591,45 @@ const BackgroundSection = ({
           </div>
         )}
 
+        {selectedBackground && !selectedBackgroundData && (
+          <div
+            style={{
+              padding: "16px",
+              backgroundColor: `${theme.error}20`,
+              border: `2px solid ${theme.error}`,
+              borderRadius: "8px",
+              marginBottom: "16px",
+              color: theme.error,
+              textAlign: "center",
+            }}
+          >
+            <strong>Invalid Background: "{selectedBackground}"</strong>
+            <br />
+            <span style={{ fontSize: "14px" }}>
+              This background is not recognized. Please select a valid
+              background from the list below.
+            </span>
+            <button
+              onClick={() => handleBackgroundToggle(selectedBackground)}
+              style={{
+                marginTop: "12px",
+                padding: "8px 16px",
+                backgroundColor: theme.error,
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              Clear Invalid Background
+            </button>
+          </div>
+        )}
+
         <div style={styles.helpText}>
-          {selectedBackground
+          {hasValidBackground
             ? "Your background provides skill proficiencies and special features that reflect your character's life before adventuring."
             : "Choose a background that represents your character's life before adventuring. Each background provides skill proficiencies and special features."}
         </div>

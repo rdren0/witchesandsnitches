@@ -36,7 +36,10 @@ const SpellSummary = ({
       const saved = localStorage.getItem("spellSummaryExpanded");
       return saved !== null ? JSON.parse(saved) : false;
     } catch (error) {
-      console.error("Error reading spellSummaryExpanded from localStorage:", error);
+      console.error(
+        "Error reading spellSummaryExpanded from localStorage:",
+        error
+      );
       return false;
     }
   });
@@ -48,7 +51,10 @@ const SpellSummary = ({
       const saved = localStorage.getItem("spellSummaryShowCanAttempt");
       return saved !== null ? JSON.parse(saved) : false;
     } catch (error) {
-      console.error("Error reading spellSummaryShowCanAttempt from localStorage:", error);
+      console.error(
+        "Error reading spellSummaryShowCanAttempt from localStorage:",
+        error
+      );
       return false;
     }
   });
@@ -58,15 +64,24 @@ const SpellSummary = ({
     try {
       localStorage.setItem("spellSummaryExpanded", JSON.stringify(isExpanded));
     } catch (error) {
-      console.error("Error saving spellSummaryExpanded to localStorage:", error);
+      console.error(
+        "Error saving spellSummaryExpanded to localStorage:",
+        error
+      );
     }
   }, [isExpanded]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("spellSummaryShowCanAttempt", JSON.stringify(showCanAttempt));
+      localStorage.setItem(
+        "spellSummaryShowCanAttempt",
+        JSON.stringify(showCanAttempt)
+      );
     } catch (error) {
-      console.error("Error saving spellSummaryShowCanAttempt to localStorage:", error);
+      console.error(
+        "Error saving spellSummaryShowCanAttempt to localStorage:",
+        error
+      );
     }
   }, [showCanAttempt]);
 
@@ -490,6 +505,81 @@ const SpellSummary = ({
                       >
                         <Zap size={16} />
                         Roll Damage
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "400",
+                            opacity: 0.9,
+                          }}
+                        >
+                          (
+                          {(() => {
+                            const damageData =
+                              spell.damage ||
+                              parseDamageFromDescription(spell.description);
+                            if (!damageData) return "";
+
+                            let diceFormula = damageData.dice;
+
+                            // Scale cantrip damage
+                            if (spell.level === "Cantrip") {
+                              diceFormula = getCantripScaledDamage(
+                                diceFormula,
+                                character?.level || 1
+                              );
+                            }
+                            // Scale spell damage if cast at higher level
+                            else if (
+                              selectedSpellLevels[spell.name] &&
+                              spell.higherLevels
+                            ) {
+                              const baseLevel = parseInt(
+                                spell.level.match(/(\d+)/)?.[1] || "1"
+                              );
+                              const castLevel = parseInt(
+                                selectedSpellLevels[spell.name].match(
+                                  /(\d+)/
+                                )?.[1] || baseLevel
+                              );
+                              const levelDiff = castLevel - baseLevel;
+
+                              if (levelDiff > 0) {
+                                const scalingMatch = spell.higherLevels.match(
+                                  /(?:the\s+)?damage\s+(?:increases|is\s+increased)\s+by\s+(\d+d\d+)/i
+                                );
+                                if (scalingMatch) {
+                                  const bonusDice = scalingMatch[1];
+                                  const bonusMatch =
+                                    bonusDice.match(/(\d+)(d\d+)/);
+                                  if (bonusMatch) {
+                                    const baseDiceMatch = diceFormula.match(
+                                      /(\d+)(d\d+)(?:\+(\d+))?/
+                                    );
+                                    if (
+                                      baseDiceMatch &&
+                                      baseDiceMatch[2] === bonusMatch[2]
+                                    ) {
+                                      const baseDiceCount = parseInt(
+                                        baseDiceMatch[1]
+                                      );
+                                      const bonusDiceCount =
+                                        parseInt(bonusMatch[1]) * levelDiff;
+                                      const modifier = baseDiceMatch[3] || "";
+                                      diceFormula = `${
+                                        baseDiceCount + bonusDiceCount
+                                      }${baseDiceMatch[2]}${
+                                        modifier ? "+" + modifier : ""
+                                      }`;
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            return diceFormula;
+                          })()}
+                          )
+                        </span>
                       </button>
                     )}
                     {hasSave && (

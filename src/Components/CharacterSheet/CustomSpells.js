@@ -674,19 +674,6 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
             <Sparkles size={16} color={theme.primary} />
             Custom Spells ({customSpells.length})
           </div>
-          {isExpanded && (
-            <button
-              style={styles.addButton}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAddForm(!showAddForm);
-                if (showAddForm) resetForm();
-              }}
-            >
-              {showAddForm ? <X size={16} /> : <Plus size={16} />}
-              {showAddForm ? "Cancel" : "Add Spell"}
-            </button>
-          )}
         </div>
         {isExpanded ? (
           <ChevronUp size={16} style={styles.expandIcon} />
@@ -807,6 +794,25 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                 </div>
               </div>
 
+              <div
+                style={{
+                  marginTop: "20px",
+                  marginBottom: "16px",
+                  paddingBottom: "8px",
+                  borderBottom: `2px solid ${theme.border}`,
+                }}
+              >
+                <label
+                  style={{
+                    ...styles.label,
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Attack & Saving Throws
+                </label>
+              </div>
+
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Check Type</label>
@@ -842,6 +848,25 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "20px",
+                  marginBottom: "16px",
+                  paddingBottom: "8px",
+                  borderBottom: `2px solid ${theme.border}`,
+                }}
+              >
+                <label
+                  style={{
+                    ...styles.label,
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Damage
+                </label>
               </div>
 
               <div style={styles.formRow}>
@@ -1105,50 +1130,82 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
                     <div
                       style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                        marginBottom: "8px",
+                        alignItems: "center",
                         fontStyle: "italic",
                         color: theme.success,
-                        marginBottom: "8px",
                         fontSize: "13px",
                       }}
                     >
-                      {spell.level} • {spell.casting_time} • Range:{" "}
-                      {spell.range}
-                      {spell.duration && <> • Duration: {spell.duration}</>}
+                      <span>{spell.level}</span>
+                      <span style={{ color: theme.text }}>•</span>
+                      <span>{spell.casting_time}</span>
+                      <span style={{ color: theme.text }}>•</span>
+                      <span>Range: {spell.range}</span>
+                      {spell.duration && (
+                        <>
+                          <span style={{ color: theme.text }}>•</span>
+                          <span>Duration: {spell.duration}</span>
+                        </>
+                      )}
                       {spell.concentration && (
                         <>
-                          {" "}
-                          • <strong>Concentration</strong>
+                          <span style={{ color: theme.text }}>•</span>
+                          <strong>Concentration</strong>
                         </>
                       )}
                       {spell.check_type !== "none" && (
                         <>
-                          {" "}
-                          •{" "}
-                          {spell.check_type === "save"
-                            ? `Save: ${spell.save_type}`
-                            : "Attack: Spell Attack"}
+                          <span style={{ color: theme.text }}>•</span>
+                          <span style={{ color: theme.primary }}>
+                            {spell.check_type === "save"
+                              ? `Save: ${spell.save_type}`
+                              : "Attack: Spell Attack"}
+                          </span>
                         </>
                       )}
                       {spell.damage_dice_count && (
                         <>
-                          {" "}
-                          • Damage: {spell.damage_dice_count}
-                          {spell.damage_dice_type}
-                          {spell.damage_modifier &&
-                            ` + ${spell.damage_modifier}`}
-                          {spell.damage_type && ` ${spell.damage_type}`}
+                          <span style={{ color: theme.text }}>•</span>
+                          <div
+                            style={{
+                              padding: "4px 12px",
+                              border: "1px solid #dc2626",
+                              borderRadius: "12px",
+                              color: "#dc2626",
+                              fontSize: "12px",
+                              fontWeight: "500",
+                              fontStyle: "normal",
+                            }}
+                          >
+                            {spell.damage_dice_count}
+                            {spell.damage_dice_type}
+                            {spell.damage_modifier &&
+                              ` + ${spell.damage_modifier}`}
+                            {spell.damage_type && ` ${spell.damage_type}`}
+                          </div>
                         </>
                       )}
                       {spell.status && (
                         <>
-                          {" "}
-                          • Status:{" "}
-                          <span style={{ textTransform: "capitalize" }}>
-                            {spell.status}
+                          <span style={{ color: theme.text }}>•</span>
+                          <span>
+                            Status:{" "}
+                            <span style={{ textTransform: "capitalize" }}>
+                              {spell.status}
+                            </span>
                           </span>
                         </>
                       )}
-                      {spell.tags && <> • Tags: {spell.tags}</>}
+                      {spell.tags && (
+                        <>
+                          <span style={{ color: theme.text }}>•</span>
+                          <span>Tags: {spell.tags}</span>
+                        </>
+                      )}
                     </div>
 
                     {spell.damage_dice_count && (
@@ -1161,71 +1218,108 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                           flexWrap: "wrap",
                         }}
                       >
-                        <div
-                          style={{
-                            backgroundColor: theme.surface,
-                            border: `2px solid #dc2626`,
-                            borderRadius: "6px",
-                            padding: "8px 12px",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: theme.text,
-                          }}
-                        >
-                          {spell.damage_dice_count}
-                          {spell.damage_dice_type}
-                          {spell.damage_modifier
-                            ? spell.damage_modifier > 0
-                              ? ` + ${spell.damage_modifier}`
-                              : ` - ${Math.abs(spell.damage_modifier)}`
-                            : ""}
-                          {spell.damage_type && (
-                            <span
-                              style={{ color: "#dc2626", marginLeft: "6px" }}
+                        {spell.level !== "Cantrip" &&
+                          spell.scaling_dice_count && (
+                            <select
+                              value={
+                                selectedSpellLevels[spell.id] || spell.level
+                              }
+                              onChange={(e) =>
+                                setSelectedSpellLevels({
+                                  ...selectedSpellLevels,
+                                  [spell.id]: e.target.value,
+                                })
+                              }
+                              style={{
+                                padding: "6px 12px",
+                                backgroundColor: theme.surface,
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: "4px",
+                                fontSize: "13px",
+                                color: theme.text,
+                                cursor: "pointer",
+                                fontWeight: "500",
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              {spell.damage_type}
-                            </span>
+                              {getAvailableSpellLevels(spell.level).map(
+                                (level) => (
+                                  <option key={level} value={level}>
+                                    {level}
+                                  </option>
+                                )
+                              )}
+                            </select>
                           )}
-                        </div>
-                        {spell.level !== "Cantrip" && spell.scaling_dice_count && (
-                          <select
-                            value={selectedSpellLevels[spell.id] || spell.level}
-                            onChange={(e) =>
-                              setSelectedSpellLevels({
-                                ...selectedSpellLevels,
-                                [spell.id]: e.target.value,
-                              })
-                            }
-                            style={{
-                              padding: "6px 12px",
-                              backgroundColor: theme.surface,
-                              border: `1px solid ${theme.border}`,
-                              borderRadius: "4px",
-                              fontSize: "13px",
-                              color: theme.text,
-                              cursor: "pointer",
-                              fontWeight: "500",
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {getAvailableSpellLevels(spell.level).map(
-                              (level) => (
-                                <option key={level} value={level}>
-                                  {level}
-                                </option>
-                              )
-                            )}
-                          </select>
-                        )}
                         <button
                           onClick={() =>
-                            handleDamageRoll(spell, selectedSpellLevels[spell.id])
+                            handleDamageRoll(
+                              spell,
+                              selectedSpellLevels[spell.id]
+                            )
                           }
                           style={styles.damageButton}
                           title="Roll damage"
                         >
                           <Zap size={14} />
                           Roll Damage
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: "400",
+                              opacity: 0.9,
+                              marginLeft: "4px",
+                            }}
+                          >
+                            (
+                            {(() => {
+                              let numDice = spell.damage_dice_count;
+                              const castAtLevel = selectedSpellLevels[spell.id];
+
+                              if (
+                                castAtLevel &&
+                                spell.scaling_dice_count &&
+                                spell.level !== "Cantrip"
+                              ) {
+                                const baseLevel = parseInt(
+                                  spell.level.match(/(\d+)/)?.[1] || "1"
+                                );
+                                const castLevel = parseInt(
+                                  castAtLevel.match(/(\d+)/)?.[1] || baseLevel
+                                );
+                                const levelDiff = castLevel - baseLevel;
+
+                                if (levelDiff > 0) {
+                                  const scalingDiceSize = parseInt(
+                                    spell.scaling_dice_type.substring(1)
+                                  );
+                                  const diceSize = parseInt(
+                                    spell.damage_dice_type.substring(1)
+                                  );
+
+                                  if (scalingDiceSize === diceSize) {
+                                    if (spell.scaling_per_level) {
+                                      numDice =
+                                        numDice +
+                                        spell.scaling_dice_count * levelDiff;
+                                    } else {
+                                      numDice =
+                                        numDice + spell.scaling_dice_count;
+                                    }
+                                  }
+                                }
+                              }
+
+                              return `${numDice}${spell.damage_dice_type}${
+                                spell.damage_modifier
+                                  ? spell.damage_modifier > 0
+                                    ? `+${spell.damage_modifier}`
+                                    : spell.damage_modifier
+                                  : ""
+                              }`;
+                            })()}
+                            )
+                          </span>
                         </button>
                       </div>
                     )}
@@ -1327,6 +1421,69 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                               >
                                 <Zap size={16} />
                                 Roll Damage
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: "400",
+                                    opacity: 0.9,
+                                    marginLeft: "4px",
+                                  }}
+                                >
+                                  (
+                                  {(() => {
+                                    let numDice = spell.damage_dice_count;
+                                    const castAtLevel =
+                                      selectedSpellLevels[spell.id];
+
+                                    if (
+                                      castAtLevel &&
+                                      spell.scaling_dice_count &&
+                                      spell.level !== "Cantrip"
+                                    ) {
+                                      const baseLevel = parseInt(
+                                        spell.level.match(/(\d+)/)?.[1] || "1"
+                                      );
+                                      const castLevel = parseInt(
+                                        castAtLevel.match(/(\d+)/)?.[1] ||
+                                          baseLevel
+                                      );
+                                      const levelDiff = castLevel - baseLevel;
+
+                                      if (levelDiff > 0) {
+                                        const scalingDiceSize = parseInt(
+                                          spell.scaling_dice_type.substring(1)
+                                        );
+                                        const diceSize = parseInt(
+                                          spell.damage_dice_type.substring(1)
+                                        );
+
+                                        if (scalingDiceSize === diceSize) {
+                                          if (spell.scaling_per_level) {
+                                            numDice =
+                                              numDice +
+                                              spell.scaling_dice_count *
+                                                levelDiff;
+                                          } else {
+                                            numDice =
+                                              numDice +
+                                              spell.scaling_dice_count;
+                                          }
+                                        }
+                                      }
+                                    }
+
+                                    return `${numDice}${
+                                      spell.damage_dice_type
+                                    }${
+                                      spell.damage_modifier
+                                        ? spell.damage_modifier > 0
+                                          ? `+${spell.damage_modifier}`
+                                          : spell.damage_modifier
+                                        : ""
+                                    }`;
+                                  })()}
+                                  )
+                                </span>
                               </button>
                             )}
                             {spell.check_type === "save" && spell.save_type && (
@@ -1376,6 +1533,23 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
               })
             )}
           </div>
+
+          {!showAddForm && (
+            <button
+              style={{
+                ...styles.addButton,
+                marginTop: "16px",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAddForm(!showAddForm);
+                if (showAddForm) resetForm();
+              }}
+            >
+              <Plus size={16} />
+              Add Spell
+            </button>
+          )}
         </div>
       )}
     </div>

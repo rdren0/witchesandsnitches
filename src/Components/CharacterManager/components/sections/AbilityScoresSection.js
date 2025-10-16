@@ -719,8 +719,8 @@ const AbilityScoresSection = ({
     },
     abilityGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-      gap: "16px",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: "12px",
     },
     abilityCard: {
       padding: "16px",
