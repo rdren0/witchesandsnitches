@@ -62,7 +62,11 @@ export const sendDiscordRollWebhook = async ({
       }
 
       if (isCriticalSuccess) {
-        embed.description += "\n\n✨ **Critical Success!**";
+        const isDamageRoll =
+          rollType && rollType.toLowerCase().includes("damage");
+        embed.description += isDamageRoll
+          ? "\n\n💥 **Critical Damage!**"
+          : "\n\n✨ **Critical Success!**";
       } else if (isCriticalFailure) {
         embed.description += "\n\n💀 **Critical Failure!**";
       }

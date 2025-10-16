@@ -192,7 +192,9 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
 
   const handleDelete = async (id) => {
     if (
-      !window.confirm("Are you sure you want to delete this custom melee attack?")
+      !window.confirm(
+        "Are you sure you want to delete this custom melee attack?"
+      )
     ) {
       return;
     }
@@ -235,7 +237,15 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
 
     try {
       const d20Roll = Math.floor(Math.random() * 20) + 1;
-      const attackBonus = getAttackBonus(attack);
+      const abilityMod = getAbilityModifier(
+        character,
+        attack.attack_ability_modifier
+      );
+      const profBonus = attack.has_proficiency
+        ? character.proficiencyBonus || 0
+        : 0;
+      const magicBonus = attack.magical_bonus || 0;
+      const attackBonus = abilityMod + profBonus + magicBonus;
       const total = d20Roll + attackBonus;
 
       const isCrit = d20Roll === 20;
@@ -253,11 +263,33 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
         isCriticalFailure: isFail,
       });
 
+      const abilityName =
+        attack.attack_ability_modifier.charAt(0).toUpperCase() +
+        attack.attack_ability_modifier.slice(0, 3).toUpperCase();
+      let breakdown = `${abilityName}: ${
+        abilityMod >= 0 ? "+" : ""
+      }${abilityMod}`;
+
+      if (profBonus > 0) {
+        breakdown += `\nProf: +${profBonus}`;
+      }
+
+      if (magicBonus !== 0) {
+        breakdown += `\nMagic: ${magicBonus >= 0 ? "+" : ""}${magicBonus}`;
+      }
+
+      let embedColor = 0x10b981;
+      if (isCrit) {
+        embedColor = 0xffd700;
+      } else if (isFail) {
+        embedColor = 0xef4444;
+      }
+
       await sendDiscordRollWebhook({
         character: character,
         rollType: "Custom Melee Attack Roll",
-        title: attack.name,
-        embedColor: 0x10b981,
+        title: `${character.name} - ${attack.name}`,
+        embedColor: embedColor,
         rollResult: {
           d20Roll: d20Roll,
           rollValue: d20Roll,
@@ -265,11 +297,12 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
           total: total,
           isCriticalSuccess: isCrit,
           isCriticalFailure: isFail,
+          rollDetailsDisplay: `1d20 + ${attackBonus}`,
         },
         fields: [
           {
-            name: "Attack",
-            value: `${attack.name} (Custom Melee Attack)`,
+            name: "Attack Bonus Breakdown",
+            value: breakdown,
             inline: true,
           },
           {
@@ -328,10 +361,18 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
         diceType: diceSize,
       });
 
+      const damageEquation = `${numDice}${attack.damage_dice_type}${
+        totalBonus !== 0
+          ? totalBonus > 0
+            ? ` + ${totalBonus}`
+            : ` - ${Math.abs(totalBonus)}`
+          : ""
+      }`;
+
       const additionalFields = [
         {
-          name: "Weapon",
-          value: `${attack.name} (Custom Melee Attack)`,
+          name: "Damage Roll",
+          value: damageEquation,
           inline: true,
         },
         {
@@ -341,7 +382,13 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
         },
         {
           name: "Dice Rolled",
-          value: rolls.join(", ") + (totalBonus > 0 ? ` + ${totalBonus}` : ""),
+          value:
+            rolls.join(", ") +
+            (totalBonus > 0
+              ? ` + ${totalBonus}`
+              : totalBonus < 0
+              ? ` - ${Math.abs(totalBonus)}`
+              : ""),
           inline: true,
         },
       ];
@@ -349,7 +396,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
       await sendDiscordRollWebhook({
         character: character,
         rollType: "Custom Melee Attack Damage Roll",
-        title: `${attack.name} - ${damageTypeDisplay}`,
+        title: `${character.name} - ${attack.name}`,
         embedColor: 0xef4444,
         rollResult: {
           d20Roll: rolls.reduce((sum, roll) => sum + roll, 0),
@@ -358,6 +405,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
           total: total,
           isCriticalSuccess: isCritical,
           isCriticalFailure: false,
+          rollDetailsDisplay: damageEquation,
         },
         fields: additionalFields,
         useCharacterAvatar: true,
@@ -787,7 +835,9 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                       }}
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <span style={{ color: theme.text }}>Add Proficiency Bonus</span>
+                    <span style={{ color: theme.text }}>
+                      Add Proficiency Bonus
+                    </span>
                   </div>
                 </div>
                 <div style={styles.formGroup}>
@@ -1207,7 +1257,8 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                               color: theme.warning,
                             }}
                           >
-                            <strong>On Failed Save:</strong> {attack.save_effect}
+                            <strong>On Failed Save:</strong>{" "}
+                            {attack.save_effect}
                           </div>
                         )}
                         {attack.additional_damage &&
@@ -1216,13 +1267,20 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                               <strong style={{ color: theme.text }}>
                                 Additional Damage:
                               </strong>
-                              <ul style={{ margin: "4px 0", paddingLeft: "20px" }}>
-                                {attack.additional_damage.map((damage, index) => (
-                                  <li key={index} style={{ color: theme.text }}>
-                                    {damage.dice_count}
-                                    {damage.dice_type} {damage.damage_type}
-                                  </li>
-                                ))}
+                              <ul
+                                style={{ margin: "4px 0", paddingLeft: "20px" }}
+                              >
+                                {attack.additional_damage.map(
+                                  (damage, index) => (
+                                    <li
+                                      key={index}
+                                      style={{ color: theme.text }}
+                                    >
+                                      {damage.dice_count}
+                                      {damage.dice_type} {damage.damage_type}
+                                    </li>
+                                  )
+                                )}
                               </ul>
                             </div>
                           )}
