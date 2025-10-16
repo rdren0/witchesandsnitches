@@ -221,7 +221,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
   };
 
   const getAbilityModifier = (character, ability) => {
-    if (!character) return 0;
+    if (!character || !ability) return 0;
     const abilityScore = character[ability] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
@@ -891,6 +891,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                     }
                     style={styles.input}
                   >
+                    <option value="">None</option>
                     {abilityModifiers.map((mod) => (
                       <option key={mod.value} value={mod.value}>
                         {mod.label}
