@@ -519,7 +519,6 @@ const CharacterSubNavigation = () => {
       label: "Other Players",
       key: "players",
     },
-    { path: "/character/downtime", label: "Downtime", key: "downtime" },
     { path: "/character/notes", label: "Notes", key: "notes" },
     { path: "/character/recipes", label: "Recipes", key: "recipes" },
     {
@@ -527,6 +526,7 @@ const CharacterSubNavigation = () => {
       label: "Creatures",
       key: "creatures",
     },
+    { path: "/character/downtime", label: "Downtime", key: "downtime" },
   ];
 
   const isActive = (path) => location.pathname === path;
