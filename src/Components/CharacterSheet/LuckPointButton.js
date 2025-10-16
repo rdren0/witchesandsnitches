@@ -190,7 +190,7 @@ const LuckPointButton = ({
       <div
         style={buttonStyle}
         onClick={() => setShowModal(true)}
-        title={`Luck Points: ${currentLuckPoints}/${maxLuckPoints}\nClick to manage luck points`}
+        title={`Luck Points: ${currentLuckPoints}/${maxLuckPoints}\nClick to spend or manage luck points`}
       >
         <Clover size={16} />
         <span>Luck</span>
@@ -273,47 +273,176 @@ const LuckPointButton = ({
               </div>
             </div>
 
+            {/* Spend Luck Point Section */}
+            <button
+              style={{
+                ...modalButtonStyle,
+                backgroundColor:
+                  currentLuckPoints > 0 ? "#065f46" : theme.surface,
+                color: currentLuckPoints > 0 ? "white" : theme.textSecondary,
+                cursor:
+                  currentLuckPoints > 0
+                    ? isUpdating
+                      ? "wait"
+                      : "pointer"
+                    : "not-allowed",
+                opacity: currentLuckPoints > 0 ? (isUpdating ? 0.7 : 1) : 0.6,
+                width: "100%",
+                marginBottom: "16px",
+                padding: "12px",
+                fontSize: "14px",
+              }}
+              onClick={() =>
+                spendLuckPoint("Advantage/disadvantage manipulation")
+              }
+              disabled={currentLuckPoints <= 0 || isUpdating}
+            >
+              {isUpdating ? "Spending..." : "Spend Luck Point"}
+            </button>
+
+            {/* Manual Adjustment Section */}
             <div
               style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
+                borderTop: `1px solid ${theme.border}`,
+                paddingTop: "16px",
+                marginBottom: "12px",
               }}
             >
-              <button
+              <div
                 style={{
-                  ...modalButtonStyle,
-                  backgroundColor:
-                    currentLuckPoints > 0 ? "#065f46" : theme.surface,
-                  color: currentLuckPoints > 0 ? "white" : theme.textSecondary,
-                  cursor:
-                    currentLuckPoints > 0
-                      ? isUpdating
-                        ? "wait"
-                        : "pointer"
-                      : "not-allowed",
-                  opacity: currentLuckPoints > 0 ? (isUpdating ? 0.7 : 1) : 0.6,
+                  fontSize: "12px",
+                  color: theme.textSecondary,
+                  marginBottom: "8px",
+                  fontWeight: "600",
                 }}
-                onClick={() =>
-                  spendLuckPoint("Advantage/disadvantage manipulation")
-                }
-                disabled={currentLuckPoints <= 0 || isUpdating}
               >
-                {isUpdating ? "Spending..." : "Spend Point"}
-              </button>
-              <button
+                Manual Adjustment
+              </div>
+              <div
                 style={{
-                  ...modalButtonStyle,
-                  backgroundColor: theme.error,
-                  color: "white",
-                  border: "none",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "8px",
                 }}
-                onClick={() => setShowModal(false)}
-                disabled={isUpdating}
               >
-                Cancel
-              </button>
+                <button
+                  style={{
+                    ...modalButtonStyle,
+                    backgroundColor:
+                      currentLuckPoints < maxLuckPoints
+                        ? "#10b981"
+                        : theme.surface,
+                    color:
+                      currentLuckPoints < maxLuckPoints
+                        ? "white"
+                        : theme.textSecondary,
+                    cursor:
+                      currentLuckPoints < maxLuckPoints
+                        ? isUpdating
+                          ? "wait"
+                          : "pointer"
+                        : "not-allowed",
+                    opacity:
+                      currentLuckPoints < maxLuckPoints
+                        ? isUpdating
+                          ? 0.7
+                          : 1
+                        : 0.6,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "4px",
+                  }}
+                  onClick={restoreLuckPoint}
+                  disabled={currentLuckPoints >= maxLuckPoints || isUpdating}
+                >
+                  <Plus size={14} />
+                  Add 1
+                </button>
+                <button
+                  style={{
+                    ...modalButtonStyle,
+                    backgroundColor:
+                      currentLuckPoints > 0 ? "#ef4444" : theme.surface,
+                    color:
+                      currentLuckPoints > 0 ? "white" : theme.textSecondary,
+                    cursor:
+                      currentLuckPoints > 0
+                        ? isUpdating
+                          ? "wait"
+                          : "pointer"
+                        : "not-allowed",
+                    opacity:
+                      currentLuckPoints > 0 ? (isUpdating ? 0.7 : 1) : 0.6,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "4px",
+                  }}
+                  onClick={async () => {
+                    if (currentLuckPoints <= 0) return;
+                    const newCurrent = await updateLuckPoints(
+                      currentLuckPoints - 1
+                    );
+                    if (newCurrent !== undefined) {
+                      setCharacter((prev) => ({
+                        ...prev,
+                        luck: newCurrent,
+                      }));
+                    }
+                  }}
+                  disabled={currentLuckPoints <= 0 || isUpdating}
+                >
+                  <Minus size={14} />
+                  Remove 1
+                </button>
+                <button
+                  style={{
+                    ...modalButtonStyle,
+                    backgroundColor:
+                      currentLuckPoints < maxLuckPoints
+                        ? "#065f46"
+                        : theme.surface,
+                    color:
+                      currentLuckPoints < maxLuckPoints
+                        ? "white"
+                        : theme.textSecondary,
+                    cursor:
+                      currentLuckPoints < maxLuckPoints
+                        ? isUpdating
+                          ? "wait"
+                          : "pointer"
+                        : "not-allowed",
+                    opacity:
+                      currentLuckPoints < maxLuckPoints
+                        ? isUpdating
+                          ? 0.7
+                          : 1
+                        : 0.6,
+                    fontSize: "12px",
+                  }}
+                  onClick={restoreAllLuckPoints}
+                  disabled={currentLuckPoints >= maxLuckPoints || isUpdating}
+                >
+                  {isUpdating ? "..." : "Restore All"}
+                </button>
+              </div>
             </div>
+
+            {/* Close Button */}
+            <button
+              style={{
+                ...modalButtonStyle,
+                backgroundColor: theme.background,
+                color: theme.text,
+                border: `1px solid ${theme.border}`,
+                width: "100%",
+              }}
+              onClick={() => setShowModal(false)}
+              disabled={isUpdating}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

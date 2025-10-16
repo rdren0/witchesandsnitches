@@ -45,7 +45,10 @@ import {
   subclassesData,
   standardFeats,
 } from "../../SharedData";
-import { calculateInitiativeWithFeats } from "../CharacterManager/utils/featBenefitsCalculator";
+import {
+  calculateInitiativeWithFeats,
+  calculateFeatBenefits,
+} from "../CharacterManager/utils/featBenefitsCalculator";
 import { calculateHeritageModifiers } from "../CharacterManager/utils/utils";
 
 const hitDiceData = {
@@ -848,16 +851,8 @@ const CharacterSheet = ({
       return;
     }
 
-    const hasLuckyFeat =
-      character?.selectedFeats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      ) ||
-      character?.feats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      ) ||
-      character?.standardFeats?.some((feat) =>
-        typeof feat === "string" ? feat === "Lucky" : feat?.name === "Lucky"
-      );
+    const featBenefits = calculateFeatBenefits(character);
+    const hasLuckyFeat = featBenefits.resources.luckPoints > 0;
 
     const confirmed = window.confirm(
       `Take a long rest for ${
@@ -892,14 +887,6 @@ const CharacterSheet = ({
         return;
       }
 
-      const getProficiencyBonus = (level) => {
-        if (level <= 4) return 2;
-        if (level <= 8) return 3;
-        if (level <= 12) return 4;
-        if (level <= 16) return 5;
-        return 6;
-      };
-
       if (hasSpellSlots || hasLuckyFeat) {
         const resourceUpdates = {
           character_id: character.id,
@@ -917,7 +904,7 @@ const CharacterSheet = ({
         }
 
         if (hasLuckyFeat) {
-          const maxLuckPoints = getProficiencyBonus(character?.level || 1);
+          const maxLuckPoints = featBenefits.resources.luckPoints;
           resourceUpdates.luck = maxLuckPoints;
         }
 
