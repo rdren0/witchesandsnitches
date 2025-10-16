@@ -57,7 +57,6 @@ const SpellSummary = ({
   useEffect(() => {
     try {
       localStorage.setItem("spellSummaryExpanded", JSON.stringify(isExpanded));
-      console.log("Saved spellSummaryExpanded to localStorage:", isExpanded);
     } catch (error) {
       console.error("Error saving spellSummaryExpanded to localStorage:", error);
     }
@@ -66,7 +65,6 @@ const SpellSummary = ({
   useEffect(() => {
     try {
       localStorage.setItem("spellSummaryShowCanAttempt", JSON.stringify(showCanAttempt));
-      console.log("Saved spellSummaryShowCanAttempt to localStorage:", showCanAttempt);
     } catch (error) {
       console.error("Error saving spellSummaryShowCanAttempt to localStorage:", error);
     }
@@ -1090,10 +1088,7 @@ const SpellSummary = ({
 
   return (
     <div style={styles.container}>
-      <div style={styles.header} onClick={() => {
-        console.log("Toggle clicked! Current state:", isExpanded, "New state will be:", !isExpanded);
-        setIsExpanded(!isExpanded);
-      }}>
+      <div style={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
         <div style={styles.headerLeft}>
           <div style={styles.headerTitle}>
             <BookOpen size={16} />
