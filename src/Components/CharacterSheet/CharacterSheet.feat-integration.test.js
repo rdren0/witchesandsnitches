@@ -258,7 +258,7 @@ describe("CharacterSheet Feat Integration Tests", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Luck Points")).toBeInTheDocument();
-        expect(screen.getByText("Spend Point")).toBeInTheDocument();
+        expect(screen.getByText("Spend Luck Point")).toBeInTheDocument();
         expect(screen.getByText("2/3")).toBeInTheDocument();
       });
     });

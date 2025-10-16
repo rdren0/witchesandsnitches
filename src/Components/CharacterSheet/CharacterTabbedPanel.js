@@ -8,6 +8,7 @@ import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
 import SpellSummary from "./SpellSummary";
 import CustomSpells from "./CustomSpells";
+import CustomMeleeAttacks from "./CustomMeleeAttacks";
 import CreaturesPanel from "./CreaturesPanel";
 
 const CharacterTabbedPanel = ({
@@ -115,14 +116,14 @@ const CharacterTabbedPanel = ({
     },
     {
       id: "slots",
-      label: "Spell & Sorcery",
+      label: "Spellcasting & Attacks",
       icon: Wand,
       component: (
         <div
           style={{
             backgroundColor: theme.background,
             padding: "16px",
-            height: "100%",
+            paddingBottom: "32px",
           }}
         >
           <SpellSummary
@@ -148,6 +149,11 @@ const CharacterTabbedPanel = ({
           <MetaMagicDisplay
             character={selectedCharacter}
             onNavigateToCharacterManagement={onNavigateToCharacterManagement}
+          />
+          <CustomMeleeAttacks
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
           />
         </div>
       ),

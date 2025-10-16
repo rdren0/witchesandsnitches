@@ -203,6 +203,11 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
       flexDirection: "column",
       gap: "8px",
     },
+    scrollContainer: {
+      maxHeight: "400px",
+      overflowY: "auto",
+      paddingRight: "4px",
+    },
     metaMagicItem: {
       display: "flex",
       flexDirection: "column",
@@ -292,128 +297,130 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
         <h3 style={styles.title}>Metamagic Options</h3>
       </div>
 
-      {automaticMetaMagics.length > 0 && (
-        <>
-          <div
-            style={{
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#8b5cf6",
-              marginBottom: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            {character?.castingStyle}
-          </div>
-          <div style={styles.metaMagicList}>
-            {automaticMetaMagics.map((metaMagic, index) => (
-              <div
-                key={`auto-${index}`}
-                style={{
-                  ...styles.metaMagicItem,
-                  border: `1px solid #8b5cf6`,
-                  backgroundColor: theme.background,
-                }}
-              >
-                <div style={styles.metaMagicHeader}>
-                  <span style={styles.metaMagicName}>{metaMagic.name}</span>
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: "600",
-                      color: "#8b5cf6",
-                      backgroundColor: "#8b5cf625",
-                      padding: "2px 6px",
-                      borderRadius: "4px",
-                      marginRight: "8px",
-                    }}
-                  >
-                    Granted at level 3
-                  </span>
-                  <span
-                    style={{
-                      ...styles.metaMagicCost,
-                      backgroundColor: "#8b5cf625",
-                      color: "#8b5cf6",
-                    }}
-                  >
-                    {metaMagic.cost}
-                  </span>
-                </div>
-                <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
-                <div style={styles.metaMagicDescription}>
-                  {metaMagic.description}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {shouldShowMissingNotification && (
-        <div style={{ ...styles.missingNotification, marginTop: "16px" }}>
-          <div style={styles.notificationText}>
-            You have not selected a metamagic perk
-          </div>
-          <button
-            style={styles.managerButton}
-            onClick={handleNavigateToCharacterManager}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = theme.secondary;
-              e.target.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = theme.primary;
-              e.target.style.transform = "translateY(0)";
-            }}
-          >
-            <Settings size={16} />
-            Go to Character Manager
-          </button>
-        </div>
-      )}
-
-      {selectedMetaMagics.length > 0 && (
-        <>
-          {automaticMetaMagics.length > 0 && (
+      <div style={styles.scrollContainer}>
+        {automaticMetaMagics.length > 0 && (
+          <>
             <div
               style={{
                 fontSize: "16px",
                 fontWeight: "600",
-                color: theme.primary,
-                marginTop: "16px",
+                color: "#8b5cf6",
                 marginBottom: "8px",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
               }}
             >
-              Granted by Level Progression
+              {character?.castingStyle}
             </div>
-          )}
-          <div style={styles.metaMagicList}>
-            {selectedMetaMagics.map((metaMagic, index) => (
-              <div key={`selected-${index}`} style={styles.metaMagicItem}>
-                <div style={styles.metaMagicHeader}>
-                  <CircleSmall size={16} style={styles.icon} />
-                  <span style={styles.metaMagicName}>{metaMagic.name}</span>
-                  <span style={styles.metaMagicCost}>{metaMagic.cost}</span>
+            <div style={styles.metaMagicList}>
+              {automaticMetaMagics.map((metaMagic, index) => (
+                <div
+                  key={`auto-${index}`}
+                  style={{
+                    ...styles.metaMagicItem,
+                    border: `1px solid #8b5cf6`,
+                    backgroundColor: theme.background,
+                  }}
+                >
+                  <div style={styles.metaMagicHeader}>
+                    <span style={styles.metaMagicName}>{metaMagic.name}</span>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "600",
+                        color: "#8b5cf6",
+                        backgroundColor: "#8b5cf625",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                        marginRight: "8px",
+                      }}
+                    >
+                      Granted at level 3
+                    </span>
+                    <span
+                      style={{
+                        ...styles.metaMagicCost,
+                        backgroundColor: "#8b5cf625",
+                        color: "#8b5cf6",
+                      }}
+                    >
+                      {metaMagic.cost}
+                    </span>
+                  </div>
+                  <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
+                  <div style={styles.metaMagicDescription}>
+                    {metaMagic.description}
+                  </div>
                 </div>
-                <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
-                <div style={styles.metaMagicDescription}>
-                  {metaMagic.description}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+              ))}
+            </div>
+          </>
+        )}
 
-      {!hasAnyMetaMagic && (
-        <div style={styles.emptyState}>No metamagic options available</div>
-      )}
+        {shouldShowMissingNotification && (
+          <div style={{ ...styles.missingNotification, marginTop: "16px" }}>
+            <div style={styles.notificationText}>
+              You have not selected a metamagic perk
+            </div>
+            <button
+              style={styles.managerButton}
+              onClick={handleNavigateToCharacterManager}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = theme.secondary;
+                e.target.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = theme.primary;
+                e.target.style.transform = "translateY(0)";
+              }}
+            >
+              <Settings size={16} />
+              Go to Character Manager
+            </button>
+          </div>
+        )}
+
+        {selectedMetaMagics.length > 0 && (
+          <>
+            {automaticMetaMagics.length > 0 && (
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: theme.primary,
+                  marginTop: "16px",
+                  marginBottom: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                Granted by Level Progression
+              </div>
+            )}
+            <div style={styles.metaMagicList}>
+              {selectedMetaMagics.map((metaMagic, index) => (
+                <div key={`selected-${index}`} style={styles.metaMagicItem}>
+                  <div style={styles.metaMagicHeader}>
+                    <CircleSmall size={16} style={styles.icon} />
+                    <span style={styles.metaMagicName}>{metaMagic.name}</span>
+                    <span style={styles.metaMagicCost}>{metaMagic.cost}</span>
+                  </div>
+                  <div style={styles.metaMagicPreview}>{metaMagic.preview}</div>
+                  <div style={styles.metaMagicDescription}>
+                    {metaMagic.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!hasAnyMetaMagic && (
+          <div style={styles.emptyState}>No metamagic options available</div>
+        )}
+      </div>
     </div>
   );
 };

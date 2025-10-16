@@ -868,7 +868,10 @@ export const standardFeats = [
       immunities: [],
       speeds: {},
       combatBonuses: {
-        advantageConditions: ["Pack tactics with allies within 5 feet", "Perception checks that rely on smell"],
+        advantageConditions: [
+          "Pack tactics with allies within 5 feet",
+          "Perception checks that rely on smell",
+        ],
       },
       spellcasting: {},
       specialAbilities: [
@@ -1534,6 +1537,20 @@ export const standardFeats = [
       "Ability Score Increase: Increase your Charisma by 1, to a maximum of 20.",
       "Tattooist: You gain proficiency with Tattoo Kit, which may include enchanted needles, inks, and binding stencils. If you and a willing recipient spend a Free Period or a full Downtime Slot together, you may attempt to inscribe a magical tattoo using one of the inks in your kit. You must succeed on a DC 16 Charisma (Performance) check to complete the tattoo properly. On a failure, the ink is wasted and the magic fails to bind.",
       "Inked: You gain access to a selection of enchanted inks and may choose three types of ink to include in your Tattoo Kit:",
+      "Quicksilver Ink. Grants +5 feet to movement speed.",
+      "Ironroot Ink. Grants a +1 bonus to Armor Class.",
+      "Starseer Ink. Grants +1 to the spell save DC of all spells you cast.",
+      "Golden Ash Ink. Grants proficiency in one Charisma-based skill of your choice.",
+      "Umbral Glass Ink. Once per long rest, add +1d4 to a saving throw after rolling.",
+      "Windshade Ink. Once per short rest, you may Dash as a bonus action.",
+      "Sapphire Coil Ink. Grants proficiency in one Intelligence-based skill of your choice.",
+      "Emberwake Ink. Once per long rest, when you deal damage with a spell or magical ability, you may reroll a number of damage dice equal to your proficiency bonus. You must keep the new results.",
+      "Moonbind Ink (paired application). Two linked tattoos. Once per long rest, one bearer can use their reaction to grant the other resistance to the damage of one incoming attack.",
+      "Crimson Spiral Ink. Once per long rest, when you roll a natural 20 on a weapon attack roll, you may immediately make an additional weapon attack or unarmed strike as part of the same action.",
+      "Echowood Ink. Grants advantage on your first Initiative roll after a long rest.",
+      "Frostvein Ink. Once per short rest, when you are hit by a melee attack, the attacker takes 1d6 cold damage.",
+      "Duskmire Ink. Grants advantage on one Stealth check per long rest.",
+      "Glassheart Ink. Grants resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks.",
     ],
     benefits: {
       abilityScoreIncrease: { ability: "charisma", amount: 1 },
@@ -1880,10 +1897,9 @@ export const standardFeats = [
     name: "Telepathic",
     preview: "Telepathic communication abilities. +1 Int/Wis/Cha.",
     description: [
-      "Increase Intelligence, Wisdom, or Charisma by 1.",
-      "Telepathic Utterance: Speak telepathically to creatures within 60 feet.",
-      "Must share a language for understanding.",
-      "One-way communication only.",
+      "You gain the following benefits.",
+      "Ability Score Increase: Increase your Intelligence, Wisdom, or Charisma by 1, to a maximum of 20.",
+      "Telepathic Utterance: You can speak telepathically to any creature you can see within 60 feet of yourself. Your telepathic utterances are in a language you know, and the creature understands you only if it knows that language. Your communication doesn't give the creature the ability to respond to you telepathically.",
     ],
     benefits: {
       abilityScoreIncrease: {
