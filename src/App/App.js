@@ -521,11 +521,7 @@ const CharacterSubNavigation = () => {
     },
     { path: "/character/notes", label: "Notes", key: "notes" },
     { path: "/character/recipes", label: "Recipes", key: "recipes" },
-    {
-      path: "/character/creatures",
-      label: "Creatures",
-      key: "creatures",
-    },
+
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
   ];
 
