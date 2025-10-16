@@ -47,8 +47,7 @@ const SpellSummary = ({
           .from("spell_progress_summary")
           .select("*")
           .eq("character_id", character.id)
-          .eq("discord_user_id", characterOwnerDiscordId)
-          .or("has_natural_twenty.eq.true,successful_attempts.gt.0");
+          .eq("discord_user_id", characterOwnerDiscordId);
         if (error) {
           console.error("Error fetching spell progress:", error);
           return;
@@ -60,7 +59,6 @@ const SpellSummary = ({
         const newResearchedSpells = {};
         const newArithmancticTags = {};
         const newRunicTags = {};
-
         if (data && data.length > 0) {
           data.forEach((spell) => {
             const spellName = spell.spell_name;
@@ -79,12 +77,26 @@ const SpellSummary = ({
             if (spell.has_failed_attempt) {
               newFailedAttempts[spellName] = true;
             }
+
+            if (spell.researched) {
+              newResearchedSpells[spellName] = true;
+            }
+
+            if (spell.has_arithmantic_tag) {
+              newArithmancticTags[spellName] = true;
+            }
+            if (spell.has_runic_tag) {
+              newRunicTags[spellName] = true;
+            }
           });
         }
 
         setSpellAttempts(newSpellAttempts);
         setCriticalSuccesses(newCriticalSuccesses);
         setFailedAttempts(newFailedAttempts);
+        setResearchedSpells(newResearchedSpells);
+        setArithmancticTags(newArithmancticTags);
+        setRunicTags(newRunicTags);
       } catch (error) {
         console.error("Error loading spell progress:", error);
       } finally {
@@ -657,19 +669,19 @@ const SpellSummary = ({
       color: theme.success,
     },
     attemptedSpell: {
-      backgroundColor: "#fef3c7",
+      backgroundColor: "rgba(251, 191, 36, 0.15)",
       borderColor: "#fbbf24",
-      color: "#92400e",
+      color: theme.text,
     },
     failedSpell: {
-      backgroundColor: "#fed7aa",
+      backgroundColor: "rgba(249, 115, 22, 0.15)",
       borderColor: "#f97316",
-      color: "#7c2d12",
+      color: theme.text,
     },
     researchedSpell: {
-      backgroundColor: "#fecaca",
+      backgroundColor: "rgba(239, 68, 68, 0.15)",
       borderColor: "#ef4444",
-      color: "#7f1d1d",
+      color: theme.text,
     },
     sectionTitle: {
       fontSize: "14px",
@@ -835,10 +847,31 @@ const SpellSummary = ({
             Unlocked Spells
           </div>
           <div style={styles.statsRow}>
-            <div style={styles.stat}>
-              <Zap size={12} style={{ color: theme.success }} />
-              <span>{spellStats.mastered.length} Mastered</span>
-            </div>
+            {!showCanAttempt ? (
+              <div style={styles.stat}>
+                <Zap size={12} style={{ color: theme.success }} />
+                <span>{spellStats.mastered.length} Mastered</span>
+              </div>
+            ) : (
+              <>
+                <div style={styles.stat}>
+                  <Zap size={12} style={{ color: theme.success }} />
+                  <span>{spellStats.mastered.length} Mastered</span>
+                </div>
+                <div style={styles.stat}>
+                  <Target size={12} style={{ color: "#fbbf24" }} />
+                  <span>{spellStats.attempted.length} Attempted</span>
+                </div>
+                <div style={styles.stat}>
+                  <X size={12} style={{ color: "#f97316" }} />
+                  <span>{spellStats.failed.length} Failed</span>
+                </div>
+                <div style={styles.stat}>
+                  <BookOpen size={12} style={{ color: "#ef4444" }} />
+                  <span>{spellStats.researched.length} Researched</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
         {isExpanded ? (
@@ -902,7 +935,7 @@ const SpellSummary = ({
                     style={{
                       width: "16px",
                       height: "16px",
-                      backgroundColor: "#fef3c7",
+                      backgroundColor: "rgba(251, 191, 36, 0.15)",
                       border: "2px solid #fbbf24",
                       borderRadius: "4px",
                     }}
@@ -918,7 +951,7 @@ const SpellSummary = ({
                     style={{
                       width: "16px",
                       height: "16px",
-                      backgroundColor: "#fed7aa",
+                      backgroundColor: "rgba(249, 115, 22, 0.15)",
                       border: "2px solid #f97316",
                       borderRadius: "4px",
                     }}
@@ -934,7 +967,7 @@ const SpellSummary = ({
                     style={{
                       width: "16px",
                       height: "16px",
-                      backgroundColor: "#fecaca",
+                      backgroundColor: "rgba(239, 68, 68, 0.15)",
                       border: "2px solid #ef4444",
                       borderRadius: "4px",
                     }}
