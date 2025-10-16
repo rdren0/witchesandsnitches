@@ -18,6 +18,7 @@ import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
 import SpellSummary from "./SpellSummary";
 import CustomSpells from "./CustomSpells";
+import CustomMeleeAttacks from "./CustomMeleeAttacks";
 import CreaturesPanel from "./CreaturesPanel";
 
 const CharacterTabbedPanel = ({
@@ -144,6 +145,11 @@ const CharacterTabbedPanel = ({
             isUserAdmin={isUserAdmin}
           />
           <CustomSpells
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
+          />
+          <CustomMeleeAttacks
             character={selectedCharacter}
             supabase={supabase}
             discordUserId={discordUserId}
