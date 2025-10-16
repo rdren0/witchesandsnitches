@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { BookOpen, Zap, Target, ChevronDown, ChevronUp, X } from "lucide-react";
+import {
+  BookOpen,
+  Zap,
+  Target,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Dice6,
+} from "lucide-react";
 import { spellsData } from "../../SharedData/spells";
-import { useRollModal } from "../utils/diceRoller";
+import { useRollModal, useRollFunctions } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
+import { getSpellModifier } from "../SpellBook/utils";
 
 const SpellSummary = ({
   character,
@@ -15,17 +24,26 @@ const SpellSummary = ({
 }) => {
   const { theme } = useTheme();
   const { showRollResult } = useRollModal();
+  const { attemptSpell } = useRollFunctions();
   const [spellAttempts, setSpellAttempts] = useState({});
   const [criticalSuccesses, setCriticalSuccesses] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
   const [researchedSpells, setResearchedSpells] = useState({});
   const [arithmancticTags, setArithmancticTags] = useState({});
   const [runicTags, setRunicTags] = useState({});
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem("spellSummaryExpanded");
+    return saved !== null ? JSON.parse(saved) : false;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSpells, setExpandedSpells] = useState({});
   const [selectedSpellLevels, setSelectedSpellLevels] = useState({});
   const [showCanAttempt, setShowCanAttempt] = useState(false);
+  const [attemptingSpells, setAttemptingSpells] = useState({});
+
+  useEffect(() => {
+    localStorage.setItem("spellSummaryExpanded", JSON.stringify(isExpanded));
+  }, [isExpanded]);
 
   useEffect(() => {
     if (!character || !supabase) return;
@@ -121,7 +139,171 @@ const SpellSummary = ({
     }));
   };
 
+  const getSpellSubject = (spellName) => {
+    for (const [subjectName, subjectData] of Object.entries(spellsData)) {
+      if (subjectData.levels) {
+        for (const [, levelSpells] of Object.entries(subjectData.levels)) {
+          const spell = levelSpells.find((s) => s.name === spellName);
+          if (spell) {
+            return subjectName;
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const updateSpellProgressSummary = async (
+    spellName,
+    isSuccess,
+    isNaturalTwenty = false
+  ) => {
+    if (!character) return;
+
+    const characterOwnerDiscordId =
+      adminMode && isUserAdmin
+        ? character.discord_user_id || character.ownerId
+        : user?.user_metadata?.provider_id || discordUserId;
+
+    if (!characterOwnerDiscordId) return;
+
+    try {
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", character.id)
+        .eq("discord_user_id", characterOwnerDiscordId)
+        .eq("spell_name", spellName)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Error fetching spell progress:", fetchError);
+        return;
+      }
+
+      if (existingProgress) {
+        const currentAttempts = existingProgress.successful_attempts || 0;
+        const newAttempts = isNaturalTwenty
+          ? 2
+          : Math.min(currentAttempts + (isSuccess ? 1 : 0), 2);
+
+        const updateData = {
+          successful_attempts: newAttempts,
+          has_natural_twenty:
+            existingProgress.has_natural_twenty || isNaturalTwenty,
+          has_failed_attempt: existingProgress.has_failed_attempt || !isSuccess,
+        };
+
+        const { error: updateError } = await supabase
+          .from("spell_progress_summary")
+          .update(updateData)
+          .eq("id", existingProgress.id);
+
+        if (updateError) {
+          console.error("Error updating spell progress:", updateError);
+        }
+      } else {
+        const insertData = {
+          character_id: character.id,
+          discord_user_id: characterOwnerDiscordId,
+          spell_name: spellName,
+          successful_attempts: isSuccess ? (isNaturalTwenty ? 2 : 1) : 0,
+          has_natural_twenty: isNaturalTwenty,
+          has_failed_attempt: !isSuccess,
+        };
+
+        const { error: insertError } = await supabase
+          .from("spell_progress_summary")
+          .insert([insertData]);
+
+        if (insertError) {
+          console.error("Error inserting spell progress:", insertError);
+        }
+      }
+
+      const { data, error } = await supabase
+        .from("spell_progress_summary")
+        .select("*")
+        .eq("character_id", character.id)
+        .eq("discord_user_id", characterOwnerDiscordId);
+
+      if (!error && data) {
+        const newSpellAttempts = {};
+        const newCriticalSuccesses = {};
+        const newFailedAttempts = {};
+        const newResearchedSpells = {};
+        const newArithmancticTags = {};
+        const newRunicTags = {};
+
+        data.forEach((spell) => {
+          const name = spell.spell_name;
+
+          if (spell.successful_attempts > 0) {
+            newSpellAttempts[name] = {
+              1: true,
+              2: spell.successful_attempts >= 2,
+            };
+          }
+
+          if (spell.has_natural_twenty) {
+            newCriticalSuccesses[name] = true;
+          }
+
+          if (spell.has_failed_attempt) {
+            newFailedAttempts[name] = true;
+          }
+
+          if (spell.researched) {
+            newResearchedSpells[name] = true;
+          }
+
+          if (spell.has_arithmantic_tag) {
+            newArithmancticTags[name] = true;
+          }
+
+          if (spell.has_runic_tag) {
+            newRunicTags[name] = true;
+          }
+        });
+
+        setSpellAttempts(newSpellAttempts);
+        setCriticalSuccesses(newCriticalSuccesses);
+        setFailedAttempts(newFailedAttempts);
+        setResearchedSpells(newResearchedSpells);
+        setArithmancticTags(newArithmancticTags);
+        setRunicTags(newRunicTags);
+      }
+    } catch (error) {
+      console.error("Error updating spell progress summary:", error);
+    }
+  };
+
+  const handleSpellAttempt = async (spellName) => {
+    const subject = getSpellSubject(spellName);
+    if (!subject) return;
+
+    await attemptSpell({
+      spellName,
+      subject,
+      getSpellModifier,
+      selectedCharacter: character,
+      setSpellAttempts,
+      discordUserId: character.discord_user_id || discordUserId,
+      setAttemptingSpells,
+      setCriticalSuccesses,
+      setFailedAttempts,
+      updateSpellProgressSummary,
+      supabase,
+      showBonusDiceModal: () => {},
+      hideBonusDiceModal: () => {},
+    });
+  };
+
   const renderSpellTile = (spell, spellStyle, icon) => {
+    const attempts = spellAttempts[spell.name] || {};
+    const isMastered = attempts[1] && attempts[2];
+    const isAttempting = attemptingSpells[spell.name] || false;
+
     return (
       <div
         key={`spell-${spell.name}`}
@@ -143,12 +325,13 @@ const SpellSummary = ({
             {expandedSpells[spell.name] ? "▼" : "▶"}
           </span>
         </div>
-        {expandedSpells[spell.name] && renderSpellDetails(spell)}
+        {expandedSpells[spell.name] &&
+          renderSpellDetails(spell, isMastered, isAttempting)}
       </div>
     );
   };
 
-  const renderSpellDetails = (spell) => {
+  const renderSpellDetails = (spell, isMastered, isAttempting) => {
     return (
       <div style={styles.spellDetails}>
         <div style={styles.spellHeader}>
@@ -211,6 +394,25 @@ const SpellSummary = ({
 
                 return (
                   <>
+                    {!isMastered && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSpellAttempt(spell.name);
+                        }}
+                        disabled={isAttempting || !character}
+                        style={{
+                          ...styles.attemptButton,
+                          ...(isAttempting || !character
+                            ? styles.attemptButtonDisabled
+                            : {}),
+                        }}
+                        title="Attempt to learn this spell"
+                      >
+                        <Dice6 size={14} />
+                        {isAttempting ? "Rolling..." : "Attempt"}
+                      </button>
+                    )}
                     {spell.level !== "Cantrip" && hasDamage && (
                       <div
                         style={{
@@ -251,12 +453,13 @@ const SpellSummary = ({
                     )}
                     {hasDamage && (
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           handleDamageRoll(
                             spell,
                             selectedSpellLevels[spell.name]
-                          )
-                        }
+                          );
+                        }}
                         style={styles.damageButton}
                         title="Roll damage"
                       >
@@ -554,14 +757,17 @@ const SpellSummary = ({
     allSpells.forEach((spell) => {
       const spellName = spell.name;
       const attempts = spellAttempts[spellName] || {};
+      const successfulAttempts = Object.keys(attempts).filter(
+        (key) => attempts[key]
+      ).length;
       const hasFailed = failedAttempts[spellName];
       const isResearched = researchedSpells[spellName];
 
-      if (Object.keys(attempts).length > 0) {
+      if (successfulAttempts > 0) {
         matchCount++;
       }
 
-      const isMastered = attempts[1] && attempts[2];
+      const isMastered = successfulAttempts >= 2;
       const level = spell.level || "Unknown";
 
       if (isMastered) {
@@ -570,27 +776,24 @@ const SpellSummary = ({
           stats.masteredByLevel[level] = [];
         }
         stats.masteredByLevel[level].push(spell);
-      } else if (Object.keys(attempts).length > 0) {
-        // Has successful attempts but not mastered
+      } else if (successfulAttempts > 0 && !isMastered) {
         stats.attempted.push(spell);
         if (!stats.attemptedByLevel[level]) {
           stats.attemptedByLevel[level] = [];
         }
         stats.attemptedByLevel[level].push(spell);
-      } else if (hasFailed && Object.keys(attempts).length === 0) {
-        // Only failed attempts, no successes
-        stats.failed.push(spell);
-        if (!stats.failedByLevel[level]) {
-          stats.failedByLevel[level] = [];
-        }
-        stats.failedByLevel[level].push(spell);
-      } else if (isResearched) {
-        // Researched spells
+      } else if (isResearched && successfulAttempts === 0) {
         stats.researched.push(spell);
         if (!stats.researchedByLevel[level]) {
           stats.researchedByLevel[level] = [];
         }
         stats.researchedByLevel[level].push(spell);
+      } else if (hasFailed && successfulAttempts === 0 && !isResearched) {
+        stats.failed.push(spell);
+        if (!stats.failedByLevel[level]) {
+          stats.failedByLevel[level] = [];
+        }
+        stats.failedByLevel[level].push(spell);
       }
     });
     return stats;
@@ -784,6 +987,26 @@ const SpellSummary = ({
       fontWeight: "600",
       textAlign: "center",
       whiteSpace: "nowrap",
+    },
+    attemptButton: {
+      backgroundColor: theme.primary || "#6366f1",
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      padding: "8px 16px",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      transition: "all 0.2s ease",
+      whiteSpace: "nowrap",
+    },
+    attemptButtonDisabled: {
+      backgroundColor: theme.textSecondary || "#6b7280",
+      cursor: "not-allowed",
+      opacity: 0.6,
     },
     toggleContainer: {
       padding: "12px 16px",

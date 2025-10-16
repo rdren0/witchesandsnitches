@@ -1,16 +1,6 @@
 import React, { useState } from "react";
-import {
-  BookOpen,
-  Beaker,
-  Package,
-  Wand,
-  Dices,
-  Award,
-  Rat,
-} from "lucide-react";
+import { Package, Wand, Dices, Award, Rat } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import SpellBook from "../SpellBook/SpellBook";
-import PotionBrewingSystem from "../Potions/Potions";
 import Inventory from "../Inventory/Inventory";
 import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import SpellSlotTracker from "./SpellSlotTracker";
@@ -32,7 +22,7 @@ const CharacterTabbedPanel = ({
   onNavigateToCharacterManagement,
 }) => {
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState("spellbook");
+  const [activeTab, setActiveTab] = useState("slots");
 
   const styles = {
     container: {
@@ -163,33 +153,6 @@ const CharacterTabbedPanel = ({
       ),
     },
     {
-      id: "spellbook",
-      label: "Spellbook",
-      icon: BookOpen,
-      component: (
-        <div
-          style={{
-            backgroundColor: theme.background,
-            padding: "16px",
-            height: "100%",
-          }}
-        >
-          <SpellBook
-            supabase={supabase}
-            user={user}
-            discordUserId={discordUserId}
-            selectedCharacter={selectedCharacter}
-            setCharacter={setCharacter}
-            selectedCharacterId={selectedCharacter.id}
-            characters={characters}
-            isEmbedded={true}
-            adminMode={adminMode}
-            isUserAdmin={isUserAdmin}
-          />
-        </div>
-      ),
-    },
-    {
       id: "feats",
       label: "Feats",
       icon: Award,
@@ -201,18 +164,6 @@ const CharacterTabbedPanel = ({
           setCharacter={setCharacter}
           adminMode={adminMode}
           isUserAdmin={isUserAdmin}
-        />
-      ),
-    },
-    {
-      id: "potions",
-      label: "Potions",
-      icon: Beaker,
-      component: (
-        <PotionBrewingSystem
-          user={user}
-          character={selectedCharacter}
-          supabase={supabase}
         />
       ),
     },

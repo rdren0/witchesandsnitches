@@ -1454,9 +1454,9 @@ export const SubjectCard = ({
                         : isMastered
                         ? theme.success || "#10b981"
                         : hasAttempts
-                        ? "#f59e0b"
+                        ? "#fbbf24"
                         : hasFailedAttempt
-                        ? theme.error || "#ef4444"
+                        ? "#f97316"
                         : "#6b7280",
                     color:
                       (isMastered && hasCriticalSuccess) || hasAttempts
@@ -1488,7 +1488,7 @@ export const SubjectCard = ({
                     borderRadius: "10px",
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
-                    backgroundColor: theme.warning || "#f59e0b",
+                    backgroundColor: "#ef4444",
                     color: "white",
                   }}
                 >

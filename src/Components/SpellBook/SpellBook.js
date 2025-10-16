@@ -506,6 +506,17 @@ const SpellBook = ({
     }, 0);
   };
 
+  const spellExistsInSpellsData = (spellName) => {
+    for (const subject of Object.values(spellsData)) {
+      for (const levelSpells of Object.values(subject.levels)) {
+        if (levelSpells.some((spell) => spell.name === spellName)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const getTotalMastered = () => {
     const allSpellNames = new Set([
       ...Object.keys(spellAttempts),
@@ -514,6 +525,7 @@ const SpellBook = ({
     ]);
 
     return Array.from(allSpellNames).filter((spellName) => {
+      if (!spellExistsInSpellsData(spellName)) return false;
       const status = getSpellAttemptStatus(spellName);
       return status.isMastered;
     }).length;
@@ -527,15 +539,26 @@ const SpellBook = ({
     ]);
 
     return Array.from(allSpellNames).filter((spellName) => {
+      if (!spellExistsInSpellsData(spellName)) return false;
       const status = getSpellAttemptStatus(spellName);
       return status.isAttempted;
     }).length;
   };
 
   const getTotalResearched = () => {
-    return Object.keys(researchedSpells).filter(
-      (spellName) => researchedSpells[spellName]
-    ).length;
+    const allSpellNames = new Set([
+      ...Object.keys(spellAttempts),
+      ...Object.keys(failedAttempts),
+      ...Object.keys(researchedSpells),
+    ]);
+
+    return Array.from(allSpellNames).filter((spellName) => {
+      if (!spellExistsInSpellsData(spellName)) return false;
+      const status = getSpellAttemptStatus(spellName);
+      // Only count as researched if not mastered and not attempted
+      // Researched trumps failed
+      return status.isResearched && !status.isMastered && !status.isAttempted;
+    }).length;
   };
 
   const getTotalFailed = () => {
@@ -546,8 +569,16 @@ const SpellBook = ({
     ]);
 
     return Array.from(allSpellNames).filter((spellName) => {
+      if (!spellExistsInSpellsData(spellName)) return false;
       const status = getSpellAttemptStatus(spellName);
-      return status.hasFailed;
+      // Only count as failed if not mastered, not attempted, and not researched
+      // Failed is lowest priority
+      return (
+        status.hasFailed &&
+        !status.isMastered &&
+        !status.isAttempted &&
+        !status.isResearched
+      );
     }).length;
   };
 
@@ -1381,21 +1412,21 @@ const SpellBook = ({
         </span>
         <span style={styles.statItem}>
           <span
-            style={{ ...styles.statDot, backgroundColor: "#f59e0b" }}
+            style={{ ...styles.statDot, backgroundColor: "#fbbf24" }}
           ></span>
           {totalAttempted} Attempted
         </span>
         <span style={styles.statItem}>
           <span
-            style={{ ...styles.statDot, backgroundColor: "#8b5cf6" }}
+            style={{ ...styles.statDot, backgroundColor: "#f97316" }}
           ></span>
-          {totalResearched} Researched
+          {totalFailed} Failed
         </span>
         <span style={styles.statItem}>
           <span
             style={{ ...styles.statDot, backgroundColor: "#ef4444" }}
           ></span>
-          {totalFailed} Failed
+          {totalResearched} Researched
         </span>
         {hasSubclassFeature(selectedCharacter, "Researcher") &&
           totalEnhanced > 0 && (
