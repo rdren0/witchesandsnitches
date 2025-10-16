@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { BookOpen, Zap, Target, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Zap, Target, ChevronDown, ChevronUp, X } from "lucide-react";
 import { spellsData } from "../../SharedData/spells";
 import { useRollModal } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
@@ -25,6 +25,7 @@ const SpellSummary = ({
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSpells, setExpandedSpells] = useState({});
   const [selectedSpellLevels, setSelectedSpellLevels] = useState({});
+  const [showCanAttempt, setShowCanAttempt] = useState(false);
 
   useEffect(() => {
     if (!character || !supabase) return;
@@ -106,6 +107,181 @@ const SpellSummary = ({
       ...prev,
       [spellName]: !prev[spellName],
     }));
+  };
+
+  const renderSpellTile = (spell, spellStyle, icon) => {
+    return (
+      <div
+        key={`spell-${spell.name}`}
+        style={{
+          gridColumn: expandedSpells[spell.name] ? "1 / -1" : "auto",
+        }}
+      >
+        <div
+          style={{
+            ...styles.spellItem,
+            ...spellStyle,
+            cursor: "pointer",
+          }}
+          onClick={() => toggleSpellExpansion(spell.name)}
+        >
+          {icon}
+          {spell.name}
+          <span style={{ marginLeft: "auto", fontSize: "10px" }}>
+            {expandedSpells[spell.name] ? "▼" : "▶"}
+          </span>
+        </div>
+        {expandedSpells[spell.name] && renderSpellDetails(spell)}
+      </div>
+    );
+  };
+
+  const renderSpellDetails = (spell) => {
+    return (
+      <div style={styles.spellDetails}>
+        <div style={styles.spellHeader}>
+          <div style={styles.spellStats}>
+            <div style={styles.spellStatItem}>
+              <strong>{spell.level}</strong>
+            </div>
+            <div style={styles.spellStatItem}>⏱️ {spell.castingTime}</div>
+            <div style={styles.spellStatItem}>📍 {spell.range}</div>
+            <div style={styles.spellStatItem}>⌛ {spell.duration}</div>
+          </div>
+        </div>
+
+        <div style={styles.spellBody}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "16px",
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={styles.spellSection}>
+                <div style={styles.spellSectionTitle}>Description</div>
+                <div style={styles.spellSectionContent}>
+                  {spell.description}
+                </div>
+              </div>
+
+              {spell.higherLevels && (
+                <div style={styles.spellSection}>
+                  <div style={styles.spellSectionTitle}>At Higher Levels</div>
+                  <div
+                    style={{
+                      ...styles.spellSectionContent,
+                      fontStyle: "italic",
+                      color: theme.primary,
+                    }}
+                  >
+                    {spell.higherLevels}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                minWidth: "fit-content",
+              }}
+            >
+              {(() => {
+                const hasDamage =
+                  spell.damage || parseDamageFromDescription(spell.description);
+                const hasSave =
+                  spell.savingThrow ||
+                  parseSavingThrowFromDescription(spell.description);
+
+                return (
+                  <>
+                    {spell.level !== "Cantrip" && hasDamage && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "4px",
+                        }}
+                      >
+                        <label
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            textTransform: "uppercase",
+                            color: theme.textSecondary,
+                            letterSpacing: "0.5px",
+                          }}
+                        >
+                          Cast at Level
+                        </label>
+                        <select
+                          value={selectedSpellLevels[spell.name] || spell.level}
+                          onChange={(e) =>
+                            setSelectedSpellLevels({
+                              ...selectedSpellLevels,
+                              [spell.name]: e.target.value,
+                            })
+                          }
+                          style={styles.spellLevelSelector}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {getAvailableSpellLevels(spell.level).map((level) => (
+                            <option key={level} value={level}>
+                              {level}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {hasDamage && (
+                      <button
+                        onClick={() =>
+                          handleDamageRoll(
+                            spell,
+                            selectedSpellLevels[spell.name]
+                          )
+                        }
+                        style={styles.damageButton}
+                        title="Roll damage"
+                      >
+                        <Zap size={16} />
+                        Roll Damage
+                      </button>
+                    )}
+                    {hasSave && (
+                      <div
+                        style={styles.saveDCPill}
+                        title={`${
+                          hasSave.ability.charAt(0).toUpperCase() +
+                          hasSave.ability.slice(1)
+                        } Saving Throw`}
+                      >
+                        DC {getSpellSaveDC(character)}
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "400",
+                            marginTop: "2px",
+                          }}
+                        >
+                          {hasSave.ability.charAt(0).toUpperCase() +
+                            hasSave.ability.slice(1)}{" "}
+                          Save
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const getSpellcastingAbilityModifier = (character) => {
@@ -342,7 +518,11 @@ const SpellSummary = ({
       mastered: [],
       attempted: [],
       failed: [],
+      researched: [],
       masteredByLevel: {},
+      attemptedByLevel: {},
+      failedByLevel: {},
+      researchedByLevel: {},
     };
 
     if (!spellsData || isLoading) return stats;
@@ -362,29 +542,47 @@ const SpellSummary = ({
     allSpells.forEach((spell) => {
       const spellName = spell.name;
       const attempts = spellAttempts[spellName] || {};
+      const hasFailed = failedAttempts[spellName];
+      const isResearched = researchedSpells[spellName];
 
       if (Object.keys(attempts).length > 0) {
         matchCount++;
       }
 
       const isMastered = attempts[1] && attempts[2];
+      const level = spell.level || "Unknown";
 
       if (isMastered) {
         stats.mastered.push(spell);
-
-        const level = spell.level || "Unknown";
         if (!stats.masteredByLevel[level]) {
           stats.masteredByLevel[level] = [];
         }
         stats.masteredByLevel[level].push(spell);
       } else if (Object.keys(attempts).length > 0) {
+        // Has successful attempts but not mastered
         stats.attempted.push(spell);
-      } else {
+        if (!stats.attemptedByLevel[level]) {
+          stats.attemptedByLevel[level] = [];
+        }
+        stats.attemptedByLevel[level].push(spell);
+      } else if (hasFailed && Object.keys(attempts).length === 0) {
+        // Only failed attempts, no successes
         stats.failed.push(spell);
+        if (!stats.failedByLevel[level]) {
+          stats.failedByLevel[level] = [];
+        }
+        stats.failedByLevel[level].push(spell);
+      } else if (isResearched) {
+        // Researched spells
+        stats.researched.push(spell);
+        if (!stats.researchedByLevel[level]) {
+          stats.researchedByLevel[level] = [];
+        }
+        stats.researchedByLevel[level].push(spell);
       }
     });
     return stats;
-  }, [spellAttempts, isLoading]);
+  }, [spellAttempts, failedAttempts, researchedSpells, isLoading]);
 
   const styles = {
     container: {
@@ -459,9 +657,19 @@ const SpellSummary = ({
       color: theme.success,
     },
     attemptedSpell: {
-      backgroundColor: `${theme.warning}15`,
-      borderColor: theme.warning,
-      color: theme.warning,
+      backgroundColor: "#fef3c7",
+      borderColor: "#fbbf24",
+      color: "#92400e",
+    },
+    failedSpell: {
+      backgroundColor: "#fed7aa",
+      borderColor: "#f97316",
+      color: "#7c2d12",
+    },
+    researchedSpell: {
+      backgroundColor: "#fecaca",
+      borderColor: "#ef4444",
+      color: "#7f1d1d",
     },
     sectionTitle: {
       fontSize: "14px",
@@ -565,6 +773,41 @@ const SpellSummary = ({
       textAlign: "center",
       whiteSpace: "nowrap",
     },
+    toggleContainer: {
+      padding: "12px 16px",
+      borderBottom: `1px solid ${theme.border}`,
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      backgroundColor: theme.background,
+    },
+    toggleLabel: {
+      fontSize: "14px",
+      fontWeight: "500",
+      color: theme.text,
+    },
+    toggleSwitch: {
+      position: "relative",
+      width: "44px",
+      height: "24px",
+      backgroundColor: showCanAttempt
+        ? theme.primary || "#6366f1"
+        : theme.border,
+      borderRadius: "12px",
+      cursor: "pointer",
+      transition: "background-color 0.2s ease",
+    },
+    toggleKnob: {
+      position: "absolute",
+      top: "2px",
+      left: showCanAttempt ? "22px" : "2px",
+      width: "20px",
+      height: "20px",
+      backgroundColor: "white",
+      borderRadius: "50%",
+      transition: "left 0.2s ease",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+    },
   };
 
   if (isLoading) {
@@ -606,254 +849,217 @@ const SpellSummary = ({
       </div>
 
       {isExpanded && (
-        <div style={styles.content}>
-          {spellStats.mastered.length > 0 && (
-            <>
-              {getSortedSpellLevels(spellStats.masteredByLevel).map(
-                (levelName) => (
-                  <div key={levelName} style={{ marginBottom: "24px" }}>
-                    <div style={styles.sectionTitle}>
-                      <Zap size={14} style={{ color: theme.success }} />
-                      {levelName} (
-                      {spellStats.masteredByLevel[levelName].length})
-                    </div>
-                    <div style={styles.spellGrid}>
-                      {spellStats.masteredByLevel[levelName].map((spell) => (
-                        <div
-                          key={`mastered-${spell.name}`}
-                          style={{
-                            gridColumn: expandedSpells[spell.name]
-                              ? "1 / -1"
-                              : "auto",
-                          }}
-                        >
-                          <div
-                            style={{
-                              ...styles.spellItem,
-                              ...styles.masteredSpell,
-                              cursor: "pointer",
-                            }}
-                            onClick={() => toggleSpellExpansion(spell.name)}
-                          >
-                            <Zap size={12} />
-                            {spell.name}
-                            <span
-                              style={{ marginLeft: "auto", fontSize: "10px" }}
-                            >
-                              {expandedSpells[spell.name] ? "▼" : "▶"}
-                            </span>
-                          </div>
-                          {expandedSpells[spell.name] && (
-                            <div style={styles.spellDetails}>
-                              <div style={styles.spellHeader}>
-                                <div style={styles.spellStats}>
-                                  <div style={styles.spellStatItem}>
-                                    <strong>{spell.level}</strong>
-                                  </div>
-                                  <div style={styles.spellStatItem}>
-                                    ⏱️ {spell.castingTime}
-                                  </div>
-                                  <div style={styles.spellStatItem}>
-                                    📍 {spell.range}
-                                  </div>
-                                  <div style={styles.spellStatItem}>
-                                    ⌛ {spell.duration}
-                                  </div>
-                                </div>
-                              </div>
+        <>
+          <div style={styles.toggleContainer}>
+            <span style={styles.toggleLabel}>Mastered</span>
+            <div
+              style={styles.toggleSwitch}
+              onClick={() => setShowCanAttempt(!showCanAttempt)}
+            >
+              <div style={styles.toggleKnob}></div>
+            </div>
+            <span style={styles.toggleLabel}>All Attemptable</span>
+          </div>
 
-                              <div style={styles.spellBody}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    gap: "16px",
-                                  }}
-                                >
-                                  <div style={{ flex: 1 }}>
-                                    <div style={styles.spellSection}>
-                                      <div style={styles.spellSectionTitle}>
-                                        Description
-                                      </div>
-                                      <div style={styles.spellSectionContent}>
-                                        {spell.description}
-                                      </div>
-                                    </div>
-
-                                    {spell.higherLevels && (
-                                      <div style={styles.spellSection}>
-                                        <div style={styles.spellSectionTitle}>
-                                          At Higher Levels
-                                        </div>
-                                        <div
-                                          style={{
-                                            ...styles.spellSectionContent,
-                                            fontStyle: "italic",
-                                            color: theme.primary,
-                                          }}
-                                        >
-                                          {spell.higherLevels}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      gap: "8px",
-                                      minWidth: "fit-content",
-                                    }}
-                                  >
-                                    {(() => {
-                                      const hasDamage =
-                                        spell.damage ||
-                                        parseDamageFromDescription(
-                                          spell.description
-                                        );
-                                      const hasSave =
-                                        spell.savingThrow ||
-                                        parseSavingThrowFromDescription(
-                                          spell.description
-                                        );
-
-                                      return (
-                                        <>
-                                          {spell.level !== "Cantrip" &&
-                                            hasDamage && (
-                                              <div
-                                                style={{
-                                                  display: "flex",
-                                                  flexDirection: "column",
-                                                  gap: "4px",
-                                                }}
-                                              >
-                                                <label
-                                                  style={{
-                                                    fontSize: "11px",
-                                                    fontWeight: "700",
-                                                    textTransform: "uppercase",
-                                                    color: theme.textSecondary,
-                                                    letterSpacing: "0.5px",
-                                                  }}
-                                                >
-                                                  Cast at Level
-                                                </label>
-                                                <select
-                                                  value={
-                                                    selectedSpellLevels[
-                                                      spell.name
-                                                    ] || spell.level
-                                                  }
-                                                  onChange={(e) =>
-                                                    setSelectedSpellLevels({
-                                                      ...selectedSpellLevels,
-                                                      [spell.name]:
-                                                        e.target.value,
-                                                    })
-                                                  }
-                                                  style={
-                                                    styles.spellLevelSelector
-                                                  }
-                                                  onClick={(e) =>
-                                                    e.stopPropagation()
-                                                  }
-                                                >
-                                                  {getAvailableSpellLevels(
-                                                    spell.level
-                                                  ).map((level) => (
-                                                    <option
-                                                      key={level}
-                                                      value={level}
-                                                    >
-                                                      {level}
-                                                    </option>
-                                                  ))}
-                                                </select>
-                                              </div>
-                                            )}
-                                          {hasDamage && (
-                                            <button
-                                              onClick={() =>
-                                                handleDamageRoll(
-                                                  spell,
-                                                  selectedSpellLevels[
-                                                    spell.name
-                                                  ]
-                                                )
-                                              }
-                                              style={styles.damageButton}
-                                              title="Roll damage"
-                                            >
-                                              <Zap size={16} />
-                                              Roll Damage
-                                            </button>
-                                          )}
-                                          {hasSave && (
-                                            <div
-                                              style={styles.saveDCPill}
-                                              title={`${
-                                                hasSave.ability
-                                                  .charAt(0)
-                                                  .toUpperCase() +
-                                                hasSave.ability.slice(1)
-                                              } Saving Throw`}
-                                            >
-                                              DC {getSpellSaveDC(character)}
-                                              <div
-                                                style={{
-                                                  fontSize: "11px",
-                                                  fontWeight: "400",
-                                                  marginTop: "2px",
-                                                }}
-                                              >
-                                                {hasSave.ability
-                                                  .charAt(0)
-                                                  .toUpperCase() +
-                                                  hasSave.ability.slice(1)}{" "}
-                                                Save
-                                              </div>
-                                            </div>
-                                          )}
-                                        </>
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              )}
-            </>
-          )}
-
-          {spellStats.mastered.length === 0 && (
-            <div style={styles.emptyState}>
-              <BookOpen
-                size={24}
-                style={{ marginBottom: "8px", opacity: 0.5 }}
-              />
-              <div>No spell progress yet</div>
-              <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                Visit the SpellBook to start learning spells
-              </div>
-              {!isLoading && (
+          {showCanAttempt && (
+            <div
+              style={{
+                padding: "12px 16px",
+                borderBottom: `1px solid ${theme.border}`,
+                backgroundColor: theme.background,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  gap: "16px",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  fontSize: "13px",
+                }}
+              >
+                <span style={{ fontWeight: "600", color: theme.text }}>
+                  Legend:
+                </span>
                 <div
-                  style={{ fontSize: "10px", marginTop: "8px", opacity: 0.7 }}
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  Debug: Loaded {Object.keys(spellAttempts).length} spells from
-                  database
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: `${theme.success}15`,
+                      border: `2px solid ${theme.success}`,
+                      borderRadius: "4px",
+                    }}
+                  ></div>
+                  <span style={{ color: theme.textSecondary }}>Mastered</span>
                 </div>
-              )}
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: "#fef3c7",
+                      border: "2px solid #fbbf24",
+                      borderRadius: "4px",
+                    }}
+                  ></div>
+                  <span style={{ color: theme.textSecondary }}>
+                    Successfully Attempted
+                  </span>
+                </div>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: "#fed7aa",
+                      border: "2px solid #f97316",
+                      borderRadius: "4px",
+                    }}
+                  ></div>
+                  <span style={{ color: theme.textSecondary }}>
+                    Failed Only
+                  </span>
+                </div>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: "#fecaca",
+                      border: "2px solid #ef4444",
+                      borderRadius: "4px",
+                    }}
+                  ></div>
+                  <span style={{ color: theme.textSecondary }}>Researched</span>
+                </div>
+              </div>
             </div>
           )}
-        </div>
+
+          <div style={styles.content}>
+            {!showCanAttempt && spellStats.mastered.length > 0 && (
+              <>
+                {getSortedSpellLevels(spellStats.masteredByLevel).map(
+                  (levelName) => (
+                    <div key={levelName} style={{ marginBottom: "24px" }}>
+                      <div style={styles.sectionTitle}>
+                        <Zap size={14} style={{ color: theme.success }} />
+                        {levelName} (
+                        {spellStats.masteredByLevel[levelName].length})
+                      </div>
+                      <div style={styles.spellGrid}>
+                        {spellStats.masteredByLevel[levelName].map((spell) =>
+                          renderSpellTile(
+                            spell,
+                            styles.masteredSpell,
+                            <Zap size={12} />
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )
+                )}
+              </>
+            )}
+
+            {showCanAttempt && (
+              <>
+                {getSortedSpellLevels({
+                  ...spellStats.masteredByLevel,
+                  ...spellStats.attemptedByLevel,
+                  ...spellStats.failedByLevel,
+                  ...spellStats.researchedByLevel,
+                }).map((levelName) => {
+                  const masteredSpells =
+                    spellStats.masteredByLevel[levelName] || [];
+                  const attemptedSpells =
+                    spellStats.attemptedByLevel[levelName] || [];
+                  const failedSpells =
+                    spellStats.failedByLevel[levelName] || [];
+                  const researchedSpells =
+                    spellStats.researchedByLevel[levelName] || [];
+
+                  const totalSpells =
+                    masteredSpells.length +
+                    attemptedSpells.length +
+                    failedSpells.length +
+                    researchedSpells.length;
+
+                  if (totalSpells === 0) return null;
+
+                  return (
+                    <div key={levelName} style={{ marginBottom: "24px" }}>
+                      <div style={styles.sectionTitle}>
+                        <Zap size={14} style={{ color: theme.text }} />
+                        {levelName} ({totalSpells})
+                      </div>
+                      <div style={styles.spellGrid}>
+                        {masteredSpells.map((spell) =>
+                          renderSpellTile(
+                            spell,
+                            styles.masteredSpell,
+                            <Zap size={12} />
+                          )
+                        )}
+                        {attemptedSpells.map((spell) =>
+                          renderSpellTile(
+                            spell,
+                            styles.attemptedSpell,
+                            <Target size={12} />
+                          )
+                        )}
+                        {failedSpells.map((spell) =>
+                          renderSpellTile(
+                            spell,
+                            styles.failedSpell,
+                            <X size={12} />
+                          )
+                        )}
+                        {researchedSpells.map((spell) =>
+                          renderSpellTile(
+                            spell,
+                            styles.researchedSpell,
+                            <BookOpen size={12} />
+                          )
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {!showCanAttempt && spellStats.mastered.length === 0 && (
+              <div style={styles.emptyState}>
+                <BookOpen
+                  size={24}
+                  style={{ marginBottom: "8px", opacity: 0.5 }}
+                />
+                <div>No spell progress yet</div>
+                <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                  Visit the SpellBook to start learning spells
+                </div>
+                {!isLoading && (
+                  <div
+                    style={{ fontSize: "10px", marginTop: "8px", opacity: 0.7 }}
+                  >
+                    Debug: Loaded {Object.keys(spellAttempts).length} spells
+                    from database
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
