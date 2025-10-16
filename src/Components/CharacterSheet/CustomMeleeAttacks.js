@@ -273,7 +273,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
 
       const abilityName =
         attack.attack_ability_modifier.charAt(0).toUpperCase() +
-        attack.attack_ability_modifier.slice(0, 3).toUpperCase();
+        attack.attack_ability_modifier.slice(1, 3).toUpperCase();
       let breakdown = `${abilityName}: ${
         abilityMod >= 0 ? "+" : ""
       }${abilityMod}`;
@@ -345,7 +345,11 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
     }
   };
 
-  const handleDamageRoll = async (attack, isCritical = false, damageIndex = null) => {
+  const handleDamageRoll = async (
+    attack,
+    isCritical = false,
+    damageIndex = null
+  ) => {
     if (!character) return;
 
     // Check if there are multiple damage types
@@ -371,7 +375,9 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
         };
       } else {
         // Additional damage
-        const additionalIndex = hasPrimaryDamage ? damageIndex - 1 : damageIndex;
+        const additionalIndex = hasPrimaryDamage
+          ? damageIndex - 1
+          : damageIndex;
         const addDmg = attack.additional_damage[additionalIndex];
         selectedDamage = {
           dice_count: parseInt(addDmg.dice_count),
@@ -412,7 +418,10 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
       const abilityMod = selectedDamage.isPrimary
         ? getAbilityModifier(character, attack.attack_ability_modifier)
         : 0;
-      const totalBonus = abilityMod + selectedDamage.modifier;
+      const magicBonus = selectedDamage.isPrimary
+        ? attack.magical_bonus || 0
+        : 0;
+      const totalBonus = abilityMod + selectedDamage.modifier + magicBonus;
 
       let total = totalBonus;
       const rolls = [];
@@ -905,8 +914,17 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                       marginTop: "4px",
                     }}
                   >
-                    Modifier: {getAbilityModifier(character, formData.attack_ability_modifier) >= 0 ? "+" : ""}
-                    {getAbilityModifier(character, formData.attack_ability_modifier)}
+                    Modifier:{" "}
+                    {getAbilityModifier(
+                      character,
+                      formData.attack_ability_modifier
+                    ) >= 0
+                      ? "+"
+                      : ""}
+                    {getAbilityModifier(
+                      character,
+                      formData.attack_ability_modifier
+                    )}
                   </div>
                 </div>
                 <div style={styles.formGroup}>
@@ -926,7 +944,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                 </div>
               </div>
 
-              {/* Attack Bonus Preview */}
               {character && (
                 <div
                   style={{
@@ -941,15 +958,42 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                   }}
                 >
                   Attack Bonus: +
-                  {getAbilityModifier(character, formData.attack_ability_modifier) +
-                    (formData.has_proficiency ? character.proficiencyBonus || 0 : 0) +
+                  {getAbilityModifier(
+                    character,
+                    formData.attack_ability_modifier
+                  ) +
+                    (formData.has_proficiency
+                      ? character.proficiencyBonus || 0
+                      : 0) +
                     (parseInt(formData.magical_bonus) || 0)}
-                  <span style={{ fontSize: "12px", color: theme.textSecondary, marginLeft: "8px" }}>
-                    ({abilityModifiers.find(m => m.value === formData.attack_ability_modifier)?.label.slice(0, 3)} {
-                      getAbilityModifier(character, formData.attack_ability_modifier) >= 0 ? "+" : ""
-                    }{getAbilityModifier(character, formData.attack_ability_modifier)}
-                    {formData.has_proficiency && ` + Prof +${character.proficiencyBonus || 0}`}
-                    {(parseInt(formData.magical_bonus) || 0) !== 0 && ` + Magic ${parseInt(formData.magical_bonus) >= 0 ? "+" : ""}${parseInt(formData.magical_bonus) || 0}`})
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: theme.textSecondary,
+                      marginLeft: "8px",
+                    }}
+                  >
+                    (
+                    {abilityModifiers
+                      .find((m) => m.value === formData.attack_ability_modifier)
+                      ?.label.slice(0, 3)}{" "}
+                    {getAbilityModifier(
+                      character,
+                      formData.attack_ability_modifier
+                    ) >= 0
+                      ? "+"
+                      : ""}
+                    {getAbilityModifier(
+                      character,
+                      formData.attack_ability_modifier
+                    )}
+                    {formData.has_proficiency &&
+                      ` + Prof +${character.proficiencyBonus || 0}`}
+                    {(parseInt(formData.magical_bonus) || 0) !== 0 &&
+                      ` + Magic ${
+                        parseInt(formData.magical_bonus) >= 0 ? "+" : ""
+                      }${parseInt(formData.magical_bonus) || 0}`}
+                    )
                   </span>
                 </div>
               )}
@@ -983,7 +1027,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                 </div>
               </div>
 
-              {/* Damage Section Divider */}
               <div
                 style={{
                   marginTop: "20px",
@@ -1003,7 +1046,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                 </label>
               </div>
 
-              {/* Damage Cards Container */}
               <div
                 style={{
                   display: "flex",
@@ -1013,139 +1055,154 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                   justifyContent: "center",
                 }}
               >
-                {/* Primary Damage Section */}
                 <div style={styles.additionalDamageSection}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <label style={styles.label}>Primary Damage</label>
-                </div>
-                <div style={{ ...styles.formGroup, marginBottom: "12px" }}>
-                  <label style={{ ...styles.label, fontSize: "11px" }}>
-                    Name (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.damage_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, damage_name: e.target.value })
-                    }
-                    style={styles.input}
-                    placeholder="e.g., 2-Hand, Topple, Versatile"
-                  />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <div style={{ ...styles.formGroup, flex: "0 0 80px" }}>
-                    <label style={{ ...styles.label, fontSize: "11px" }}>
-                      Dice Count
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.damage_dice_count}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          damage_dice_count: e.target.value,
-                        })
-                      }
-                      style={styles.input}
-                      placeholder="2"
-                      min="0"
-                    />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <label style={styles.label}>Primary Damage</label>
                   </div>
-                  <div style={{ ...styles.formGroup, flex: "0 0 100px" }}>
+                  <div style={{ ...styles.formGroup, marginBottom: "12px" }}>
                     <label style={{ ...styles.label, fontSize: "11px" }}>
-                      Dice Type
-                    </label>
-                    <select
-                      value={formData.damage_dice_type}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          damage_dice_type: e.target.value,
-                        })
-                      }
-                      style={styles.input}
-                    >
-                      {diceTypes.map((dice) => (
-                        <option key={dice} value={dice}>
-                          {dice}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ ...styles.formGroup, flex: "0 0 100px" }}>
-                    <label style={{ ...styles.label, fontSize: "11px" }}>
-                      Modifier
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.damage_modifier}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          damage_modifier: e.target.value,
-                        })
-                      }
-                      style={styles.input}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div style={{ ...styles.formGroup, flex: "1 1 200px", minWidth: "200px" }}>
-                    <label style={{ ...styles.label, fontSize: "11px" }}>
-                      Damage Type
+                      Name (optional)
                     </label>
                     <input
                       type="text"
-                      value={formData.damage_type}
+                      value={formData.damage_name}
                       onChange={(e) =>
-                        setFormData({ ...formData, damage_type: e.target.value })
+                        setFormData({
+                          ...formData,
+                          damage_name: e.target.value,
+                        })
                       }
                       style={styles.input}
-                      placeholder="e.g., Slashing, Piercing, Fire"
+                      placeholder="e.g., 2-Hand, Topple, Versatile"
                     />
                   </div>
-                </div>
-
-                {/* Damage Preview */}
-                {formData.damage_dice_count && (
                   <div
                     style={{
-                      padding: "8px 12px",
-                      backgroundColor: theme.surface,
-                      border: `1px solid ${theme.border}`,
-                      borderRadius: "4px",
-                      marginBottom: "0",
-                      fontStyle: "italic",
-                      color: theme.primary,
-                      fontSize: "12px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                      marginBottom: "12px",
                     }}
                   >
-                    Damage: {formData.damage_dice_count}
-                    {formData.damage_dice_type}
-                    {formData.damage_modifier && formData.damage_modifier != 0
-                      ? ` ${
-                          parseInt(formData.damage_modifier) >= 0 ? "+" : ""
-                        }${formData.damage_modifier}`
-                      : ""}
-                    {formData.damage_type && ` ${formData.damage_type}`} damage
+                    <div style={{ ...styles.formGroup, flex: "0 0 80px" }}>
+                      <label style={{ ...styles.label, fontSize: "11px" }}>
+                        Dice Count
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.damage_dice_count}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            damage_dice_count: e.target.value,
+                          })
+                        }
+                        style={styles.input}
+                        placeholder="2"
+                        min="0"
+                      />
+                    </div>
+                    <div style={{ ...styles.formGroup, flex: "0 0 100px" }}>
+                      <label style={{ ...styles.label, fontSize: "11px" }}>
+                        Dice Type
+                      </label>
+                      <select
+                        value={formData.damage_dice_type}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            damage_dice_type: e.target.value,
+                          })
+                        }
+                        style={styles.input}
+                      >
+                        {diceTypes.map((dice) => (
+                          <option key={dice} value={dice}>
+                            {dice}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ ...styles.formGroup, flex: "0 0 100px" }}>
+                      <label style={{ ...styles.label, fontSize: "11px" }}>
+                        Modifier
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.damage_modifier}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            damage_modifier: e.target.value,
+                          })
+                        }
+                        style={styles.input}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div
+                      style={{
+                        ...styles.formGroup,
+                        flex: "1 1 200px",
+                        minWidth: "200px",
+                      }}
+                    >
+                      <label style={{ ...styles.label, fontSize: "11px" }}>
+                        Damage Type
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.damage_type}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            damage_type: e.target.value,
+                          })
+                        }
+                        style={styles.input}
+                        placeholder="e.g., Slashing, Piercing, Fire"
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
 
-                {/* Additional Damage Section */}
+                  {formData.damage_dice_count && (
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        backgroundColor: theme.surface,
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "4px",
+                        marginBottom: "0",
+                        fontStyle: "italic",
+                        color: theme.primary,
+                        fontSize: "12px",
+                      }}
+                    >
+                      Damage: {formData.damage_dice_count}
+                      {formData.damage_dice_type}
+                      {(() => {
+                        const totalMod =
+                          (parseInt(formData.damage_modifier) || 0) +
+                          (parseInt(formData.magical_bonus) || 0);
+                        return totalMod !== 0
+                          ? ` ${totalMod >= 0 ? "+" : ""}${totalMod}`
+                          : "";
+                      })()}
+                      {(parseInt(formData.magical_bonus) || 0) !== 0 &&
+                        ` (+${formData.magical_bonus} magic bonus)`}
+                      {formData.damage_type && ` ${formData.damage_type}`}{" "}
+                      damage
+                    </div>
+                  )}
+                </div>
+
                 {formData.additional_damage.map((damage, index) => (
                   <div key={index} style={styles.additionalDamageSection}>
                     <div
@@ -1243,7 +1300,13 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                           placeholder="0"
                         />
                       </div>
-                      <div style={{ ...styles.formGroup, flex: "1 1 150px", minWidth: "150px" }}>
+                      <div
+                        style={{
+                          ...styles.formGroup,
+                          flex: "1 1 150px",
+                          minWidth: "150px",
+                        }}
+                      >
                         <label style={{ ...styles.label, fontSize: "11px" }}>
                           Damage Type
                         </label>
@@ -1262,34 +1325,33 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                         />
                       </div>
                     </div>
-                  {damage.dice_count && (
-                    <div
-                      style={{
-                        padding: "8px 12px",
-                        backgroundColor: theme.surface,
-                        border: `1px solid ${theme.border}`,
-                        borderRadius: "4px",
-                        marginBottom: "0",
-                        fontStyle: "italic",
-                        color: theme.primary,
-                        fontSize: "12px",
-                      }}
-                    >
-                      {damage.dice_count}
-                      {damage.dice_type}
-                      {damage.modifier && damage.modifier != 0
-                        ? ` ${
-                            parseInt(damage.modifier) >= 0 ? "+" : ""
-                          }${damage.modifier}`
-                        : ""}{" "}
-                      {damage.damage_type || ""} damage
-                    </div>
-                  )}
+                    {damage.dice_count && (
+                      <div
+                        style={{
+                          padding: "8px 12px",
+                          backgroundColor: theme.surface,
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: "4px",
+                          marginBottom: "0",
+                          fontStyle: "italic",
+                          color: theme.primary,
+                          fontSize: "12px",
+                        }}
+                      >
+                        {damage.dice_count}
+                        {damage.dice_type}
+                        {damage.modifier && damage.modifier != 0
+                          ? ` ${parseInt(damage.modifier) >= 0 ? "+" : ""}${
+                              damage.modifier
+                            }`
+                          : ""}{" "}
+                        {damage.damage_type || ""} damage
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
 
-              {/* Add Damage Type Button */}
               <div
                 style={{
                   display: "flex",
@@ -1313,7 +1375,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                 </button>
               </div>
 
-              {/* Save Type & Effects Section */}
               <div style={{ marginTop: "20px", marginBottom: "24px" }}>
                 <div
                   style={{
@@ -1356,7 +1417,10 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                       type="text"
                       value={formData.save_effect}
                       onChange={(e) =>
-                        setFormData({ ...formData, save_effect: e.target.value })
+                        setFormData({
+                          ...formData,
+                          save_effect: e.target.value,
+                        })
                       }
                       style={styles.input}
                       placeholder="Describe what happens on a failed save"
@@ -1500,36 +1564,35 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                           </div>
                         </>
                       )}
-                      {attack.additional_damage && attack.additional_damage.length > 0 && (
-                        <>
-                          {attack.additional_damage.map((damage, index) => (
-                            <div
-                              key={index}
-                              style={{
-                                padding: "4px 12px",
-                                border: "1px solid #dc2626",
-                                borderRadius: "12px",
-                                color: "#dc2626",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                                fontStyle: "normal",
-                              }}
-                            >
-                              {damage.name && `${damage.name}: `}
-                              {damage.dice_count}
-                              {damage.dice_type}
-                              {damage.modifier && damage.modifier != 0
-                                ? ` ${
-                                    parseInt(damage.modifier) >= 0
-                                      ? "+"
-                                      : ""
-                                  }${damage.modifier}`
-                                : ""}{" "}
-                              {damage.damage_type}
-                            </div>
-                          ))}
-                        </>
-                      )}
+                      {attack.additional_damage &&
+                        attack.additional_damage.length > 0 && (
+                          <>
+                            {attack.additional_damage.map((damage, index) => (
+                              <div
+                                key={index}
+                                style={{
+                                  padding: "4px 12px",
+                                  border: "1px solid #dc2626",
+                                  borderRadius: "12px",
+                                  color: "#dc2626",
+                                  fontSize: "12px",
+                                  fontWeight: "500",
+                                  fontStyle: "normal",
+                                }}
+                              >
+                                {damage.name && `${damage.name}: `}
+                                {damage.dice_count}
+                                {damage.dice_type}
+                                {damage.modifier && damage.modifier != 0
+                                  ? ` ${
+                                      parseInt(damage.modifier) >= 0 ? "+" : ""
+                                    }${damage.modifier}`
+                                  : ""}{" "}
+                                {damage.damage_type}
+                              </div>
+                            ))}
+                          </>
+                        )}
                       {attack.save_type && (
                         <>
                           <span style={{ color: theme.text }}>•</span>
@@ -1674,7 +1737,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
         </div>
       )}
 
-      {/* Damage Selection Modal */}
       {showDamageModal && selectedAttackForDamage && (
         <div
           style={{
@@ -1714,11 +1776,17 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
             >
               Select Damage Type{damageModalIsCritical && " (Critical)"}
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
               {selectedAttackForDamage.damage_dice_count && (
                 <button
                   onClick={() => {
-                    handleDamageRoll(selectedAttackForDamage, damageModalIsCritical, 0);
+                    handleDamageRoll(
+                      selectedAttackForDamage,
+                      damageModalIsCritical,
+                      0
+                    );
                     setShowDamageModal(false);
                   }}
                   style={{
@@ -1766,61 +1834,66 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                   </div>
                 </button>
               )}
-              {selectedAttackForDamage.additional_damage?.map((damage, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    const damageIndex = selectedAttackForDamage.damage_dice_count
-                      ? index + 1
-                      : index;
-                    handleDamageRoll(
-                      selectedAttackForDamage,
-                      damageModalIsCritical,
-                      damageIndex
-                    );
-                    setShowDamageModal(false);
-                  }}
-                  style={{
-                    padding: "16px",
-                    backgroundColor: theme.background,
-                    border: `2px solid ${theme.border}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    color: theme.text,
-                    fontSize: "14px",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = theme.primary;
-                    e.currentTarget.style.backgroundColor = theme.surface;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = theme.border;
-                    e.currentTarget.style.backgroundColor = theme.background;
-                  }}
-                >
-                  <div style={{ fontWeight: "600", marginBottom: "4px" }}>
-                    {damage.name || `Additional Damage ${index + 1}`}
-                  </div>
-                  <div style={{ color: theme.textSecondary }}>
-                    {damageModalIsCritical && (
-                      <>
-                        (2 x {damage.dice_count}
-                        {damage.dice_type})
-                      </>
-                    )}
-                    {!damageModalIsCritical && (
-                      <>
-                        {damage.dice_count}
-                        {damage.dice_type}
-                      </>
-                    )}
-                    {damage.modifier ? ` ${damage.modifier > 0 ? "+" : ""}${damage.modifier}` : ""}{" "}
-                    {damage.damage_type || ""}
-                  </div>
-                </button>
-              ))}
+              {selectedAttackForDamage.additional_damage?.map(
+                (damage, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      const damageIndex =
+                        selectedAttackForDamage.damage_dice_count
+                          ? index + 1
+                          : index;
+                      handleDamageRoll(
+                        selectedAttackForDamage,
+                        damageModalIsCritical,
+                        damageIndex
+                      );
+                      setShowDamageModal(false);
+                    }}
+                    style={{
+                      padding: "16px",
+                      backgroundColor: theme.background,
+                      border: `2px solid ${theme.border}`,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      color: theme.text,
+                      fontSize: "14px",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = theme.primary;
+                      e.currentTarget.style.backgroundColor = theme.surface;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = theme.border;
+                      e.currentTarget.style.backgroundColor = theme.background;
+                    }}
+                  >
+                    <div style={{ fontWeight: "600", marginBottom: "4px" }}>
+                      {damage.name || `Additional Damage ${index + 1}`}
+                    </div>
+                    <div style={{ color: theme.textSecondary }}>
+                      {damageModalIsCritical && (
+                        <>
+                          (2 x {damage.dice_count}
+                          {damage.dice_type})
+                        </>
+                      )}
+                      {!damageModalIsCritical && (
+                        <>
+                          {damage.dice_count}
+                          {damage.dice_type}
+                        </>
+                      )}
+                      {damage.modifier
+                        ? ` ${damage.modifier > 0 ? "+" : ""}${damage.modifier}`
+                        : ""}{" "}
+                      {damage.damage_type || ""}
+                    </div>
+                  </button>
+                )
+              )}
             </div>
             <button
               onClick={() => setShowDamageModal(false)}
