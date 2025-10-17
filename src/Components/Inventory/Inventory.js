@@ -42,6 +42,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const [isSendingItem, setIsSendingItem] = useState(false);
   const [activeTab, setActiveTab] = useState("inventory");
   const [unreadOwlMailCount, setUnreadOwlMailCount] = useState(0);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [filterAttunement, setFilterAttunement] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,6 +52,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     value: "",
     category: "General",
     attunement_required: false,
+    is_attuned: false,
   });
 
   const categories = [
@@ -206,6 +209,19 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     }
   }, [items]);
 
+  // Auto-expand all categories when searching
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      // When there's a search term, expand all categories
+      const allCategories = [...new Set(items.map((item) => item.category))];
+      const expandedState = {};
+      allCategories.forEach((category) => {
+        expandedState[category] = false; // false means expanded
+      });
+      setCollapsedCategories(expandedState);
+    }
+  }, [searchTerm, items]);
+
   const addItem = useCallback(async () => {
     if (!formData.name.trim() || !supabase || !selectedCharacter?.id) return;
 
@@ -291,6 +307,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       value: item.value || "",
       category: item.category,
       attunement_required: item.attunement_required,
+      is_attuned: item.is_attuned || false,
     });
   }, []);
 
@@ -308,6 +325,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         value: formData.value.trim() || null,
         category: formData.category,
         attunement_required: formData.attunement_required,
+        is_attuned: formData.is_attuned || false,
       };
 
       const { data, error: updateError } = await supabase
@@ -324,6 +342,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       );
 
       setEditingId(null);
+      setExpandedStack(null);
       setFormData({
         name: "",
         description: "",
@@ -353,6 +372,30 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     setShowAddForm(false);
     setError(null);
   }, []);
+
+  const toggleAttunement = useCallback(async (item) => {
+    if (!supabase || !item.attunement_required) return;
+
+    try {
+      const newAttunementStatus = !item.is_attuned;
+
+      const { data, error: updateError } = await supabase
+        .from("inventory_items")
+        .update({ is_attuned: newAttunementStatus })
+        .eq("id", item.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      setItems((prev) =>
+        prev.map((i) => (i.id === item.id ? data : i))
+      );
+    } catch (err) {
+      console.error("Error toggling attunement:", err);
+      setError("Failed to toggle attunement. Please try again.");
+    }
+  }, [supabase]);
 
   const sendItem = useCallback(async () => {
     if (!sendItemModal || !selectedRecipient || !supabase) return;
@@ -434,15 +477,25 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const filteredItems = useMemo(
     () =>
       items.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (item.description &&
-            item.description
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())) ||
-          item.category.toLowerCase().includes(searchTerm.toLowerCase())
+        (item) => {
+          const lowerSearchTerm = searchTerm.toLowerCase();
+          const isAttunementSearch = "attunement".includes(lowerSearchTerm) && lowerSearchTerm.length >= 3;
+
+          const matchesSearch =
+            item.name.toLowerCase().includes(lowerSearchTerm) ||
+            (item.description &&
+              item.description
+                .toLowerCase()
+                .includes(lowerSearchTerm)) ||
+            item.category.toLowerCase().includes(lowerSearchTerm) ||
+            (isAttunementSearch && (item.attunement_required || item.is_attuned));
+
+          const matchesAttunement = !filterAttunement || item.is_attuned;
+
+          return matchesSearch && matchesAttunement;
+        }
       ),
-    [items, searchTerm]
+    [items, searchTerm, filterAttunement]
   );
 
   const groupedItems = useMemo(
@@ -472,12 +525,26 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
             description: item.description,
             value: item.value,
             attunement_required: item.attunement_required,
+            has_attuned_items: false,
+            all_items_attuned: false,
             totalQuantity: 0,
             items: [],
           };
         }
         itemStacks[key].totalQuantity += item.quantity;
         itemStacks[key].items.push(item);
+
+        // Track if any items are attuned
+        if (item.is_attuned) {
+          itemStacks[key].has_attuned_items = true;
+        }
+      });
+
+      // Check if all items in stack are attuned
+      Object.values(itemStacks).forEach(stack => {
+        if (stack.attunement_required && stack.items.length > 0) {
+          stack.all_items_attuned = stack.items.every(item => item.is_attuned);
+        }
       });
 
       stacked[category] = Object.values(itemStacks);
@@ -489,6 +556,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     const totalItems = items.length;
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const attunementItems = items.filter(
+      (item) => item.is_attuned
+    ).length;
+    const requiresAttunementItems = items.filter(
       (item) => item.attunement_required
     ).length;
     const categories = new Set(items.map((item) => item.category)).size;
@@ -497,6 +567,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       totalItems,
       totalQuantity,
       attunementItems,
+      requiresAttunementItems,
       categories,
     };
   }, [items]);
@@ -515,132 +586,199 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.mainLayout}>
-        <Bank
-          user={user}
-          selectedCharacter={selectedCharacter}
-          supabase={supabase}
-          adminMode={adminMode}
-        />
-
-        <div style={styles.inventorySection}>
-          {activeTab === "inventory" && (
-            <>
-              <div style={{
-                ...styles.header,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-              }}>
-                <div>
-                  <h1 style={styles.title}>
-                    <Package size={28} color={theme.primary} />
-                    Inventory Management
-                  </h1>
-                  <p style={styles.subtitle}>
-                    Manage your character's items, equipment, and possessions
-                  </p>
+      {activeTab === "inventory" && (
+        <>
+          {/* New Header Row with Attuned Items, Bank and Owl Icon */}
+          <div style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "16px",
+            padding: "16px",
+            backgroundColor: theme.surface,
+            borderRadius: "12px",
+            border: `1px solid ${theme.border}`,
+          }}>
+            {/* Attuned Items Filter (Absolute positioned to left) */}
+            {items.length > 0 && !isLoading && stats.requiresAttunementItems > 0 && (
+              <div
+                onClick={() => setFilterAttunement(!filterAttunement)}
+                style={{
+                  position: "absolute",
+                  left: "16px",
+                  padding: "12px 16px",
+                  backgroundColor: filterAttunement ? theme.warning || "#F59E0B" : theme.background,
+                  borderRadius: "8px",
+                  border: `2px solid ${filterAttunement ? theme.warning || "#F59E0B" : theme.border}`,
+                  textAlign: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!filterAttunement) {
+                    e.currentTarget.style.backgroundColor = theme.surface;
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!filterAttunement) {
+                    e.currentTarget.style.backgroundColor = theme.background;
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
+                }}
+              >
+                <div style={{
+                  fontSize: "12px",
+                  color: filterAttunement ? "white" : theme.textSecondary,
+                  marginBottom: "4px",
+                }}>
+                  Attuned Items
                 </div>
-                <button
-                  onClick={() => setActiveTab("owlmail")}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    opacity: unreadOwlMailCount > 0 ? 1 : 0.3,
-                    transition: "opacity 0.2s, transform 0.2s, color 0.2s",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    color: unreadOwlMailCount > 0 ? "black" : theme.textSecondary,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                    e.currentTarget.style.transform = "scale(1.1)";
-                    e.currentTarget.style.color = theme.text;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = unreadOwlMailCount > 0 ? "1" : "0.3";
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.color = unreadOwlMailCount > 0 ? "black" : theme.textSecondary;
-                  }}
-                  title={unreadOwlMailCount > 0 ? `Owl Post (${unreadOwlMailCount} unread)` : "Owl Post"}
-                >
-                  <OwlIcon style={{
-                    width: "36px",
-                    height: "36px",
-                  }} />
-                </button>
+                <div style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  color: filterAttunement ? "white" : theme.warning || "#F59E0B",
+                }}>
+                  {stats.attunementItems}/{stats.requiresAttunementItems}
+                </div>
               </div>
-              {isLoading && !isRefreshing && (
-                <div style={styles.loadingMessage}>
-                  <Loader size={16} />
-                  Loading inventory items...
-                </div>
+            )}
+
+            {/* Bank Totals - Clickable (Centered) */}
+            <div
+              onClick={() => setShowBankModal(true)}
+              style={{
+                padding: "16px 24px",
+                backgroundColor: theme.background,
+                borderRadius: "8px",
+                border: `1px solid ${theme.border}`,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                minWidth: "280px",
+                textAlign: "center",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.surface;
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.background;
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+              }}>
+                <Bank
+                  user={user}
+                  selectedCharacter={selectedCharacter}
+                  supabase={supabase}
+                  adminMode={adminMode}
+                  displayOnly={true}
+                />
+              </div>
+            </div>
+
+            {/* Owl Icon (Absolute positioned to right) */}
+            <button
+              onClick={() => setActiveTab("owlmail")}
+              style={{
+                position: "absolute",
+                right: "16px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                opacity: unreadOwlMailCount > 0 ? 1 : 0.3,
+                transition: "opacity 0.2s, transform 0.2s, color 0.2s",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                color: unreadOwlMailCount > 0 ? "black" : theme.textSecondary,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = "1";
+                e.currentTarget.style.transform = "scale(1.1)";
+                e.currentTarget.style.color = theme.text;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = unreadOwlMailCount > 0 ? "1" : "0.3";
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.color = unreadOwlMailCount > 0 ? "black" : theme.textSecondary;
+              }}
+              title={unreadOwlMailCount > 0 ? `Owl Post (${unreadOwlMailCount} unread)` : "Owl Post"}
+            >
+              <OwlIcon style={{
+                width: "36px",
+                height: "36px",
+              }} />
+            </button>
+          </div>
+
+          {isLoading && !isRefreshing && (
+            <div style={styles.loadingMessage}>
+              <Loader size={16} />
+              Loading inventory items...
+            </div>
+          )}
+
+          {error && (
+            <div style={styles.errorMessage}>
+              {error}
+              <button
+                onClick={() => setError(null)}
+                style={{
+                  marginLeft: "12px",
+                  background: "none",
+                  border: "none",
+                  color: theme.error || "#EF4444",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {/* Controls - Add New and Search */}
+          {!isLoading && (
+            <div style={styles.controls}>
+              {!showAddForm && !editingId && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  style={styles.addButton}
+                >
+                  <Plus size={18} />
+                  Add New Item
+                </button>
               )}
 
-              {error && (
-                <div style={styles.errorMessage}>
-                  {error}
-                  <button
-                    onClick={() => setError(null)}
-                    style={{
-                      marginLeft: "12px",
-                      background: "none",
-                      border: "none",
-                      color: theme.error || "#EF4444",
-                      cursor: "pointer",
-                      textDecoration: "underline",
+              {items.length > 0 && (
+                <div style={styles.searchContainer}>
+                  <Search size={18} style={styles.searchIcon} />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search items..."
+                    style={styles.searchInput}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
                     }}
-                  >
-                    Dismiss
-                  </button>
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
+                  />
                 </div>
               )}
-
-              {items.length > 0 && !isLoading && (
-                <div style={styles.statsCard}>
-                  <span>
-                    Attunement Required:{" "}
-                    <strong>{stats.attunementItems}</strong>
-                  </span>
-                </div>
-              )}
-
-              {!isLoading && (
-                <div style={styles.controls}>
-                  {!showAddForm && !editingId && (
-                    <>
-                      <button
-                        onClick={() => setShowAddForm(true)}
-                        style={styles.addButton}
-                      >
-                        <Plus size={18} />
-                        Add New Item
-                      </button>
-                    </>
-                  )}
-
-                  {items.length > 0 && (
-                    <div style={styles.searchContainer}>
-                      <Search size={18} style={styles.searchIcon} />
-                      <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search items..."
-                        style={styles.searchInput}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = theme.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = theme.border;
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+            </div>
+          )}
 
               {showAddForm && (
                 <div style={styles.formCard}>
@@ -838,14 +976,21 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
               {!isLoading && (
                 <>
                   {filteredItems.length > 0 ? (
-                    Object.entries(stackedItems).map(([category, stacks]) => {
-                      const attunementCount = stacks.filter(
-                        (stack) => stack.attunement_required
-                      ).length;
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "16px",
+                      gridAutoRows: "auto",
+                    }}>
+                    {Object.entries(stackedItems).map(([category, stacks]) => {
                       const isCollapsed = collapsedCategories[category];
 
                       return (
-                        <div key={category} style={{ marginBottom: "32px" }}>
+                        <div key={category} style={{
+                          gridColumn: isCollapsed ? "auto" : "1 / -1",
+                          display: "flex",
+                          flexDirection: "column",
+                        }}>
                           <div
                             style={{
                               ...styles.categoryHeader,
@@ -853,7 +998,11 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                               userSelect: "none",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between",
+                              justifyContent: "flex-start",
+                              height: "60px",
+                              padding: "12px 16px",
+                              overflow: "hidden",
+                              gap: "8px",
                             }}
                             onClick={() =>
                               setCollapsedCategories({
@@ -862,31 +1011,26 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                               })
                             }
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
-                            >
-                              {isCollapsed ? (
-                                <ChevronDown size={20} />
-                              ) : (
-                                <ChevronUp size={20} />
-                              )}
-                              <span>
-                                {category} ({stacks.length}{" "}
-                                {stacks.length === 1 ? "type" : "types"})
-                              </span>
-                              {attunementCount > 0 && (
-                                <span style={styles.categoryStats}>
-                                  {attunementCount} require attunement
-                                </span>
-                              )}
-                            </div>
+                            {isCollapsed ? (
+                              <ChevronDown size={16} style={{ flexShrink: 0 }} />
+                            ) : (
+                              <ChevronUp size={16} style={{ flexShrink: 0 }} />
+                            )}
+                            <span style={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              fontSize: "14px",
+                            }}>
+                              {category} ({stacks.length}{" "}
+                              {stacks.length === 1 ? "type" : "types"})
+                            </span>
                           </div>
                           {!isCollapsed && (
-                            <div style={styles.itemsGrid}>
+                            <div style={{
+                              ...styles.itemsGrid,
+                              marginTop: "12px",
+                            }}>
                               {stacks.map((stack) => {
                                 const isExpanded =
                                   expandedStack === stack.stackKey;
@@ -1111,6 +1255,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                           ...formData,
                                                           attunement_required:
                                                             e.target.checked,
+                                                          is_attuned: e.target.checked ? formData.is_attuned : false,
                                                         })
                                                       }
                                                       style={styles.checkbox}
@@ -1123,6 +1268,34 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                     Requires Attunement
                                                   </label>
                                                 </div>
+
+                                                {formData.attunement_required && (
+                                                  <div
+                                                    style={styles.checkboxField}
+                                                  >
+                                                    <label
+                                                      style={styles.checkboxLabel}
+                                                    >
+                                                      <input
+                                                        type="checkbox"
+                                                        checked={formData.is_attuned || false}
+                                                        onChange={(e) =>
+                                                          setFormData({
+                                                            ...formData,
+                                                            is_attuned: e.target.checked,
+                                                          })
+                                                        }
+                                                        style={styles.checkbox}
+                                                        disabled={isSaving}
+                                                      />
+                                                      <Check
+                                                        size={16}
+                                                        color={theme.success || "#10B981"}
+                                                      />
+                                                      Is Attuned
+                                                    </label>
+                                                  </div>
+                                                )}
 
                                                 <div style={styles.formActions}>
                                                   <button
@@ -1197,6 +1370,42 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                       item.value !== "0" &&
                                                       ` • Value: ${item.value}`}
                                                   </div>
+                                                  {item.attunement_required && (
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleAttunement(item);
+                                                      }}
+                                                      style={{
+                                                        marginTop: "8px",
+                                                        padding: "4px 10px",
+                                                        backgroundColor: item.is_attuned ? theme.success || "#10B981" : theme.background,
+                                                        color: item.is_attuned ? "white" : theme.text,
+                                                        border: `2px solid ${item.is_attuned ? theme.success || "#10B981" : theme.border}`,
+                                                        borderRadius: "12px",
+                                                        fontSize: "11px",
+                                                        fontWeight: "500",
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "4px",
+                                                        cursor: "pointer",
+                                                        transition: "all 0.2s ease",
+                                                      }}
+                                                      onMouseEnter={(e) => {
+                                                        if (!item.is_attuned) {
+                                                          e.currentTarget.style.backgroundColor = theme.surface;
+                                                        }
+                                                      }}
+                                                      onMouseLeave={(e) => {
+                                                        if (!item.is_attuned) {
+                                                          e.currentTarget.style.backgroundColor = theme.background;
+                                                        }
+                                                      }}
+                                                    >
+                                                      <Check size={12} />
+                                                      {item.is_attuned ? "Attuned" : "Not Attuned"}
+                                                    </button>
+                                                  )}
                                                   {item.description && (
                                                     <div
                                                       style={{
@@ -1275,13 +1484,33 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                               {stack.name}
                                               {stack.attunement_required && (
                                                 <span
-                                                  style={styles.attunementBadge}
+                                                  style={{
+                                                    ...styles.attunementBadge,
+                                                    backgroundColor: stack.all_items_attuned
+                                                      ? (theme.success || "#10B981") + "20"
+                                                      : (theme.warning || "#F59E0B") + "20",
+                                                    color: stack.all_items_attuned
+                                                      ? theme.success || "#10B981"
+                                                      : theme.warning || "#F59E0B",
+                                                  }}
                                                 >
-                                                  <Star
-                                                    size={12}
-                                                    color={theme.warning}
-                                                  />
-                                                  Attunement
+                                                  {stack.all_items_attuned ? (
+                                                    <>
+                                                      <Check
+                                                        size={12}
+                                                        color={theme.success || "#10B981"}
+                                                      />
+                                                      Attuned
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <Star
+                                                        size={12}
+                                                        color={theme.warning}
+                                                      />
+                                                      Requires Attunement
+                                                    </>
+                                                  )}
                                                 </span>
                                               )}
                                             </div>
@@ -1323,9 +1552,10 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                               </button>
                                             )}
                                             <button
-                                              onClick={() =>
-                                                setExpandedStack(stack.stackKey)
-                                              }
+                                              onClick={() => {
+                                                setExpandedStack(stack.stackKey);
+                                                startEdit(stack.items[0]);
+                                              }}
                                               disabled={
                                                 expandedStack ||
                                                 showAddForm ||
@@ -1372,7 +1602,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                           )}
                         </div>
                       );
-                    })
+                    })}
+                    </div>
                   ) : items.length > 0 ? (
                     <div style={styles.emptyState}>
                       <Search
@@ -1411,18 +1642,16 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
             </>
           )}
 
-          {activeTab === "owlmail" && (
-            <OwlMail
-              user={user}
-              selectedCharacter={selectedCharacter}
-              supabase={supabase}
-              sessionCharacters={sessionCharacters}
-              onBack={() => setActiveTab("inventory")}
-              onMailRead={fetchUnreadOwlMailCount}
-            />
-          )}
-        </div>
-      </div>
+      {activeTab === "owlmail" && (
+        <OwlMail
+          user={user}
+          selectedCharacter={selectedCharacter}
+          supabase={supabase}
+          sessionCharacters={sessionCharacters}
+          onBack={() => setActiveTab("inventory")}
+          onMailRead={fetchUnreadOwlMailCount}
+        />
+      )}
 
       {sendItemModal && (
         <div
@@ -1748,6 +1977,77 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bank Modal */}
+      {showBankModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+          onClick={() => setShowBankModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: theme.background,
+              borderRadius: "12px",
+              maxWidth: "500px",
+              width: "100%",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+              border: `1px solid ${theme.border}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: `2px solid ${theme.border}`,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: theme.surface,
+                borderTopLeftRadius: "12px",
+                borderTopRightRadius: "12px",
+              }}
+            >
+              <h2 style={{ margin: 0, color: theme.text, fontSize: "20px" }}>
+                Bank Management
+              </h2>
+              <button
+                onClick={() => setShowBankModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: theme.textSecondary,
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ padding: "24px" }}>
+              <Bank
+                user={user}
+                selectedCharacter={selectedCharacter}
+                supabase={supabase}
+                adminMode={adminMode}
+                displayOnly={false}
+              />
             </div>
           </div>
         </div>

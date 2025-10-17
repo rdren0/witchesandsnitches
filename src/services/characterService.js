@@ -43,6 +43,10 @@ const getCharacters = async (discordUserId) => {
     const resources = resourcesMap[character.id] || {};
     return {
       ...character,
+      imageUrl: character.image_url || "",
+      castingStyle: character.casting_style || "",
+      gameSession: character.game_session || "",
+      schoolYear: character.school_year || character.level,
       inspiration: resources.inspiration ?? false,
       sorceryPoints: resources.sorcery_points || 0,
       corruptionPoints: resources.corruption_points || 0,
@@ -113,6 +117,10 @@ const getAllCharacters = async () => {
         return {
           ...character,
           character_resources: undefined,
+          imageUrl: character.image_url || "",
+          castingStyle: character.casting_style || "",
+          gameSession: character.game_session || "",
+          schoolYear: character.school_year || character.level,
           inspiration: resources.inspiration ?? false,
           sorceryPoints: resources.sorcery_points || 0,
           corruptionPoints: resources.corruption_points || 0,
@@ -207,6 +215,10 @@ const getAllCharacters = async () => {
       return {
         ...character,
         discord_users: userMap[character.discord_user_id] || null,
+        imageUrl: character.image_url || "",
+        castingStyle: character.casting_style || "",
+        gameSession: character.game_session || "",
+        schoolYear: character.school_year || character.level,
         inspiration: resources.inspiration || 0,
         sorceryPoints: resources.sorcery_points || 0,
         corruptionPoints: resources.corruption_points || 0,
