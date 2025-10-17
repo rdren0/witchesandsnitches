@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  User,
   Shield,
   Heart,
   Swords,
@@ -11,7 +10,6 @@ import {
   Star,
   Sparkles,
   Target,
-  Plus,
 } from "lucide-react";
 import { Skills } from "./Skills/Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -122,12 +120,6 @@ const CharacterSheet = ({
   const [error, setError] = useState(null);
 
   const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
-
-  const handleAvatarClick = () => {
-    if (!character.imageUrl && onNavigateToCharacterManagement) {
-      onNavigateToCharacterManagement(character.id, "basicInfo");
-    }
-  };
 
   const getHitDie = useCallback((castingStyle) => {
     return hitDiceData[castingStyle] || hitDiceData.default;
@@ -697,7 +689,7 @@ const CharacterSheet = ({
         );
 
         const resources = data.character_resources?.[0] || {};
-
+        console.log(data);
         const transformedCharacter = {
           abilityScores: effectiveAbilityScores,
           ac: data.ac || { override: null, modifier: 0 },
@@ -1154,122 +1146,34 @@ const CharacterSheet = ({
           )}
         {character && !characterLoading && (
           <>
-            <div style={styles.headerCard}>
+            <div
+              style={{
+                backgroundColor: theme.surface,
+                borderRadius: "0px",
+                padding: "16px",
+                marginTop: "calc(-1.5rem - 20px)",
+                marginLeft: "-1.5rem",
+                marginRight: "-1.5rem",
+                marginBottom: "20px",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                borderBottom: `2px solid ${theme.border}`,
+              }}
+            >
               <div
                 style={{
                   display: "flex",
-                  alignItems: "flex-start",
-                  gap: "20px",
-                  marginBottom: "20px",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                  flexWrap: "wrap",
                 }}
               >
-                <div
-                  style={{
-                    ...styles.avatar,
-                    position: "relative",
-                    cursor: !character.imageUrl ? "pointer" : "default",
-                    transition: "all 0.2s ease",
-                    flexShrink: 0,
-                  }}
-                  onClick={handleAvatarClick}
-                  title={
-                    !character.imageUrl ? "Click to add character image" : ""
-                  }
-                >
-                  {character.imageUrl ? (
-                    <>
-                      <img
-                        src={character.imageUrl}
-                        alt={`${character.name}'s portrait`}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          borderRadius: "50%",
-                          border: `2px solid ${theme.primary || "#6366f1"}`,
-                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                        }}
-                        onError={(e) => {
-                          console.error(
-                            "Failed to load character image:",
-                            character.imageUrl
-                          );
-                          e.target.style.display = "none";
-                          e.target.parentNode.querySelector(
-                            ".fallback-icon"
-                          ).style.display = "flex";
-                        }}
-                      />
-                    </>
-                  ) : null}
-
-                  <div
-                    className="fallback-icon"
-                    style={{
-                      display: character.imageUrl ? "none" : "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: theme.surface || "#f8fafc",
-                      borderRadius: "50%",
-                      border: `2px dashed ${theme.border || "#e2e8f0"}`,
-                      transition: "all 0.2s ease",
-                      position: "relative",
-                    }}
-                  >
-                    <User
-                      style={{
-                        color: theme.textSecondary || "#64748b",
-                        width: "50%",
-                        height: "50%",
-                      }}
-                    />
-                    {!character.imageUrl && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: "-8px",
-                          right: "-8px",
-                          backgroundColor: theme.primary || "#6366f1",
-                          color: "white",
-                          borderRadius: "50%",
-                          width: "32px",
-                          height: "32px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          border: `2px solid ${theme.background || "white"}`,
-                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                          transition: "all 0.2s ease",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Plus size={16} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h1
-                    style={{
-                      ...styles.characterName,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    {character.name}
-                  </h1>
-                </div>
-
+                {/* Left side - Resources */}
                 <div
                   style={{
                     display: "flex",
                     gap: "8px",
                     alignItems: "center",
-                    flexShrink: 0,
                     flexWrap: "wrap",
                   }}
                 >
@@ -1296,6 +1200,17 @@ const CharacterSheet = ({
                     selectedCharacterId={selectedCharacter.id}
                     isAdmin={adminMode}
                   />
+                </div>
+
+                {/* Right side - Actions */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <button
                     style={{
                       backgroundColor: "#9d4edd",
@@ -1376,78 +1291,9 @@ const CharacterSheet = ({
                   </button>
                 </div>
               </div>
+            </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "8px 16px",
-                  fontSize: "14px",
-                  color: theme.textSecondary,
-                  marginBottom: "12px",
-                }}
-              >
-                {(() => {
-                  const allInfo = [];
-
-                  allInfo.push(
-                    `Level ${character.level} ${character.castingStyle}`
-                  );
-
-                  if (character.house) {
-                    allInfo.push(
-                      `${character.house} (Year ${
-                        character.schoolYear || character.level
-                      })`
-                    );
-                  }
-
-                  if (character.subclass) {
-                    allInfo.push(`Subclass: ${character.subclass}`);
-                  }
-
-                  if (
-                    character.bloodStatus &&
-                    character.bloodStatus !== "Unknown"
-                  ) {
-                    allInfo.push(character.bloodStatus);
-                  }
-
-                  if (
-                    character.background &&
-                    character.background !== "Unknown"
-                  ) {
-                    allInfo.push(`Background: ${character.background}`);
-                  }
-
-                  if (character.wand && character.wand !== "Unknown wand") {
-                    allInfo.push(character.wand);
-                  }
-
-                  if (character.castingStyle === "Intellect Caster") {
-                    allInfo.push(
-                      `Initiative: ${
-                        character.initiativeAbility === "intelligence"
-                          ? "Intelligence"
-                          : "Dexterity"
-                      }`
-                    );
-                  }
-
-                  if (character.gameSession) {
-                    allInfo.push(`Session: ${character.gameSession}`);
-                  }
-
-                  return allInfo.map((info, index) => (
-                    <span key={index}>
-                      {index === 0 ? <strong>{info}</strong> : info}
-                      {index < allInfo.length - 1 && (
-                        <span style={{ marginLeft: "16px" }}>•</span>
-                      )}
-                    </span>
-                  ));
-                })()}
-              </div>
+            <div style={styles.headerCard}>
 
               <div
                 style={{
@@ -1859,19 +1705,21 @@ const CharacterSheet = ({
                 modifiers={modifiers(character)}
               />
 
-              <CharacterTabbedPanel
-                supabase={supabase}
-                user={user}
-                selectedCharacter={character}
-                characters={characters}
-                setCharacter={setCharacter}
-                discordUserId={discordUserId}
-                adminMode={adminMode}
-                isUserAdmin={isUserAdmin}
-                onNavigateToCharacterManagement={
-                  onNavigateToCharacterManagement
-                }
-              />
+              <div style={{ marginTop: "20px" }}>
+                <CharacterTabbedPanel
+                  supabase={supabase}
+                  user={user}
+                  selectedCharacter={character}
+                  characters={characters}
+                  setCharacter={setCharacter}
+                  discordUserId={discordUserId}
+                  adminMode={adminMode}
+                  isUserAdmin={isUserAdmin}
+                  onNavigateToCharacterManagement={
+                    onNavigateToCharacterManagement
+                  }
+                />
+              </div>
             </div>
           </>
         )}

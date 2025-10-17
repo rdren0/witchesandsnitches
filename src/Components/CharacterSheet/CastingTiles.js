@@ -88,7 +88,7 @@ const CastingTiles = ({ character }) => {
   });
 
   return (
-    <div style={styles.abilityCard}>
+    <div style={{ ...styles.abilityCard, marginTop: "20px", marginLeft: "20px", marginRight: "20px" }}>
       <div
         style={{
           display: "flex",

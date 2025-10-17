@@ -17,15 +17,15 @@ export const createCharacterSelectorStyles = (theme) => {
       padding: "20px",
       backgroundColor: safeTheme.surface,
       borderBottom: `2px solid ${safeTheme.border}`,
-      marginBottom: "20px",
       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
     },
     innerContainer: {
       display: "flex",
       flexDirection: "column",
-      alignItems: "center",
+      alignItems: "stretch",
       gap: "20px",
-
+      width: "100%",
+      maxWidth: "1400px",
       margin: "0 auto",
     },
     selectorRow: {

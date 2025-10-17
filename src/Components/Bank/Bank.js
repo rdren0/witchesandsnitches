@@ -2,7 +2,19 @@ import { useState, useEffect } from "react";
 import { Plus, Minus, Coins } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
+const SICKLES_PER_GALLEON = 17;
+const KNUTS_PER_SICKLE = 29;
+const KNUTS_PER_GALLEON = SICKLES_PER_GALLEON * KNUTS_PER_SICKLE;
+
+const getBreakdown = (knuts) => {
+  const galleons = Math.floor(knuts / KNUTS_PER_GALLEON);
+  const remainingAfterGalleons = knuts % KNUTS_PER_GALLEON;
+  const sickles = Math.floor(remainingAfterGalleons / KNUTS_PER_SICKLE);
+  const finalKnuts = remainingAfterGalleons % KNUTS_PER_SICKLE;
+  return { galleons, sickles, knuts: finalKnuts };
+};
+
+const Bank = ({ user, selectedCharacter, supabase, adminMode, displayOnly = false }) => {
   const { theme } = useTheme();
 
   const [totalKnuts, setTotalKnuts] = useState(0);
@@ -14,10 +26,6 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
   const [error, setError] = useState(null);
 
   const discordUserId = user?.user_metadata?.provider_id;
-
-  const SICKLES_PER_GALLEON = 17;
-  const KNUTS_PER_SICKLE = 29;
-  const KNUTS_PER_GALLEON = SICKLES_PER_GALLEON * KNUTS_PER_SICKLE;
 
   useEffect(() => {
     if (selectedCharacter?.id && discordUserId) {
@@ -48,15 +56,9 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
 
       const { data, error } = await query.maybeSingle();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      if (data) {
-        setTotalKnuts(data.total_knuts || 0);
-      } else {
-        setTotalKnuts(0);
-      }
+      setTotalKnuts(data?.total_knuts || 0);
     } catch (err) {
       console.error("Error loading money data:", err);
       setError("Failed to load money data: " + err.message);
@@ -79,6 +81,7 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
       if (isNaN(characterId)) {
         throw new Error("Invalid character ID");
       }
+
       let query = supabase
         .from("character_money")
         .select("id")
@@ -91,9 +94,7 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
       const { data: existingData, error: fetchError } =
         await query.maybeSingle();
 
-      if (fetchError) {
-        throw fetchError;
-      }
+      if (fetchError) throw fetchError;
 
       if (existingData) {
         const { error: updateError } = await supabase
@@ -133,16 +134,7 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
     }
   };
 
-  const getBreakdown = (knuts) => {
-    const galleons = Math.floor(knuts / KNUTS_PER_GALLEON);
-    const remainingAfterGalleons = knuts % KNUTS_PER_GALLEON;
-    const sickles = Math.floor(remainingAfterGalleons / KNUTS_PER_SICKLE);
-    const finalKnuts = remainingAfterGalleons % KNUTS_PER_SICKLE;
-
-    return { galleons, sickles, knuts: finalKnuts };
-  };
-
-  const calculateTotalInputKnuts = () => {
+  const calculateInputKnuts = () => {
     const galleons = parseFloat(inputGalleons) || 0;
     const sickles = parseFloat(inputSickles) || 0;
     const knuts = parseFloat(inputKnuts) || 0;
@@ -152,40 +144,18 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
     );
   };
 
-  const addMoney = async () => {
-    const knutsToAdd = calculateTotalInputKnuts();
-    if (knutsToAdd > 0) {
-      const newTotal = totalKnuts + knutsToAdd;
-      const success = await saveMoneyData(newTotal);
+  const handleTransaction = async (isAdding) => {
+    const knutsToChange = calculateInputKnuts();
+    if (knutsToChange <= 0) return;
 
-      if (success) {
-        setTotalKnuts(newTotal);
-        clearInputs();
-      }
-    }
-  };
+    const newTotal = isAdding
+      ? totalKnuts + knutsToChange
+      : Math.max(0, totalKnuts - knutsToChange);
 
-  const subtractMoney = async () => {
-    const knutsToSubtract = calculateTotalInputKnuts();
-    if (knutsToSubtract > 0) {
-      const newTotal = Math.max(0, totalKnuts - knutsToSubtract);
-      const success = await saveMoneyData(newTotal);
-
-      if (success) {
-        setTotalKnuts(newTotal);
-        clearInputs();
-      }
-    }
-  };
-
-  const resetMoney = async () => {
-    if (window.confirm("Are you sure you want to reset your money to 0?")) {
-      const success = await saveMoneyData(0);
-
-      if (success) {
-        setTotalKnuts(0);
-        clearInputs();
-      }
+    const success = await saveMoneyData(newTotal);
+    if (success) {
+      setTotalKnuts(newTotal);
+      clearInputs();
     }
   };
 
@@ -198,37 +168,26 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
   const hasInput = inputGalleons || inputSickles || inputKnuts;
   const { galleons, sickles, knuts } = getBreakdown(totalKnuts);
 
-  const containerStyle = {
-    backgroundColor: theme.surface,
-    borderRadius: "16px",
-    padding: "24px",
-    border: `2px solid ${theme.border}`,
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    maxWidth: "600px",
-  };
+  // Display-only mode for header preview
+  if (displayOnly) {
+    if (isLoading) {
+      return <div style={{ fontSize: "12px", color: theme.textSecondary }}>Loading...</div>;
+    }
+    return (
+      <div style={{ display: "flex", gap: "20px", alignItems: "center", fontSize: "18px" }}>
+        <span>🥇 Galleons: <strong style={{ fontWeight: "700", color: theme.text }}>{galleons}</strong></span>
+        <span>🥈 Sickles: <strong style={{ fontWeight: "700", color: theme.text }}>{sickles}</strong></span>
+        <span>🥉 Knuts: <strong style={{ fontWeight: "700", color: theme.text }}>{knuts}</strong></span>
+      </div>
+    );
+  }
 
+  // Early returns for edge cases
   if (!user || !discordUserId) {
     return (
-      <div style={containerStyle}>
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <h2
-            style={{
-              fontSize: "20px",
-              fontWeight: "600",
-              color: theme.text,
-              marginBottom: "12px",
-            }}
-          >
-            Authentication Required
-          </h2>
-          <p
-            style={{
-              fontSize: "14px",
-              color: theme.textSecondary,
-            }}
-          >
-            Please log in with Discord to manage your wizarding bank account.
-          </p>
+      <div style={styles.container(theme)}>
+        <div style={styles.message}>
+          Please log in to manage your bank account.
         </div>
       </div>
     );
@@ -236,524 +195,263 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode }) => {
 
   if (!selectedCharacter) {
     return (
-      <div style={containerStyle}>
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <h2
-            style={{
-              fontSize: "20px",
-              fontWeight: "600",
-              color: theme.text,
-              marginBottom: "12px",
-            }}
-          >
-            No Character Selected
-          </h2>
-          <p
-            style={{
-              fontSize: "14px",
-              color: theme.textSecondary,
-            }}
-          >
-            Please select a character to manage their bank account.
-          </p>
-        </div>
+      <div style={styles.container(theme)}>
+        <div style={styles.message}>Please select a character.</div>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div style={containerStyle}>
-        <div
-          style={{
-            textAlign: "center",
-            padding: "20px",
-            color: theme.textSecondary,
-            fontStyle: "italic",
-          }}
-        >
-          Loading bank account...
-        </div>
+      <div style={styles.container(theme)}>
+        <div style={styles.message}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={{ textAlign: "center", marginBottom: "24px" }}>
-        <h2
-          style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            color: theme.text,
-            margin: "0 0 8px 0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "12px",
-          }}
-        >
-          <Coins size={28} color={theme.primary} />
-          Wizarding Bank
-        </h2>
-        <p
-          style={{
-            fontSize: "14px",
-            color: theme.textSecondary,
-            margin: 0,
-          }}
-        >
-          Manage your magical currency with precision
-        </p>
-        <p
-          style={{
-            fontSize: "12px",
-            color: theme.primary,
-            marginTop: "4px",
-            fontWeight: "500",
-          }}
-        >
-          Account for: {selectedCharacter.name}
-        </p>
+    <div style={styles.container(theme)}>
+      {/* Compact Header */}
+      <div style={styles.header(theme)}>
+        <Coins size={20} color={theme.primary} />
+        <span style={styles.headerText(theme)}>
+          Bank • {selectedCharacter.name}
+        </span>
       </div>
 
-      {error && (
-        <div
-          style={{
-            backgroundColor: "#FEE2E2",
-            border: "1px solid #FECACA",
-            color: "#DC2626",
-            padding: "12px",
-            borderRadius: "8px",
-            marginBottom: "16px",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          {error}
+      {error && <div style={styles.error}>{error}</div>}
+
+      {/* Balance Display */}
+      <div style={styles.balance(theme)}>
+        <div style={styles.balanceItem}>
+          <div style={styles.balanceNumber}>{galleons}</div>
+          <div style={styles.balanceLabel}>Galleons</div>
         </div>
-      )}
-
-      <div
-        style={{
-          background:
-            theme.gradient ||
-            `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`,
-          color: "white",
-          padding: "20px",
-          borderRadius: "12px",
-          marginBottom: "24px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "18px",
-            fontWeight: "600",
-            marginBottom: "16px",
-            textAlign: "center",
-            color: "white",
-            opacity: 0.9,
-          }}
-        >
-          Current Balance
-        </h3>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "12px",
-          }}
-        >
-          <span
-            style={{
-              fontWeight: "500",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            🥇 Galleons
-          </span>
-          <span
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-            }}
-          >
-            {galleons}
-          </span>
+        <div style={styles.balanceItem}>
+          <div style={styles.balanceNumber}>{sickles}</div>
+          <div style={styles.balanceLabel}>Sickles</div>
         </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "12px",
-          }}
-        >
-          <span
-            style={{
-              fontWeight: "500",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            🥈 Sickles
-          </span>
-          <span
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-            }}
-          >
-            {sickles}
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "12px",
-          }}
-        >
-          <span
-            style={{
-              fontWeight: "500",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            🥉 Knuts
-          </span>
-          <span
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-            }}
-          >
-            {knuts}
-          </span>
+        <div style={styles.balanceItem}>
+          <div style={styles.balanceNumber}>{knuts}</div>
+          <div style={styles.balanceLabel}>Knuts</div>
         </div>
       </div>
 
-      <div
-        style={{
-          backgroundColor: theme.background,
-          padding: "20px",
-          borderRadius: "12px",
-          border: `1px solid ${theme.border}`,
-          marginBottom: "16px",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: "600",
-            color: theme.text,
-            margin: "0 0 16px 0",
-          }}
-        >
-          Add/Remove Money
-        </h3>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "12px",
-            marginBottom: "16px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "14px",
-                fontWeight: "500",
-                color: theme.text,
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
-              🥇 G
-            </span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={inputGalleons}
-              onChange={(e) => setInputGalleons(e.target.value)}
-              placeholder="0"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: `2px solid ${theme.border}`,
-                borderRadius: "8px",
-                backgroundColor: theme.surface,
-                color: theme.text,
-                fontSize: "16px",
-                transition: "border-color 0.2s ease",
-                textAlign: "center",
-              }}
-              disabled={isSaving}
-              onFocus={(e) => {
-                e.target.style.borderColor = theme.primary;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = theme.border;
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "14px",
-                fontWeight: "500",
-                color: theme.text,
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
-              🥈 S
-            </span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={inputSickles}
-              onChange={(e) => setInputSickles(e.target.value)}
-              placeholder="0"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: `2px solid ${theme.border}`,
-                borderRadius: "8px",
-                backgroundColor: theme.surface,
-                color: theme.text,
-                fontSize: "16px",
-                transition: "border-color 0.2s ease",
-                textAlign: "center",
-              }}
-              disabled={isSaving}
-              onFocus={(e) => {
-                e.target.style.borderColor = theme.primary;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = theme.border;
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "14px",
-                fontWeight: "500",
-                color: theme.text,
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
-              🥉 K
-            </span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={inputKnuts}
-              onChange={(e) => setInputKnuts(e.target.value)}
-              placeholder="0"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: `2px solid ${theme.border}`,
-                borderRadius: "8px",
-                backgroundColor: theme.surface,
-                color: theme.text,
-                fontSize: "16px",
-                transition: "border-color 0.2s ease",
-                textAlign: "center",
-              }}
-              disabled={isSaving}
-              onFocus={(e) => {
-                e.target.style.borderColor = theme.primary;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = theme.border;
-              }}
-            />
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-          }}
-        >
-          <button
-            onClick={addMoney}
-            disabled={!hasInput || isSaving}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              borderRadius: "8px",
-              border: "none",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: hasInput && !isSaving ? "pointer" : "not-allowed",
-              transition: "all 0.2s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              backgroundColor:
-                hasInput && !isSaving
-                  ? theme.success || "#10B981"
-                  : theme.textSecondary,
-              color: "white",
-              opacity: hasInput && !isSaving ? 1 : 0.6,
-            }}
-          >
-            <Plus size={18} />
-            {isSaving ? "Saving..." : "Add"}
-          </button>
-
-          <button
-            onClick={subtractMoney}
-            disabled={!hasInput || isSaving}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              borderRadius: "8px",
-              border: "none",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: hasInput && !isSaving ? "pointer" : "not-allowed",
-              transition: "all 0.2s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              backgroundColor:
-                hasInput && !isSaving
-                  ? theme.error || "#EF4444"
-                  : theme.textSecondary,
-              color: "white",
-              opacity: hasInput && !isSaving ? 1 : 0.6,
-            }}
-          >
-            <Minus size={18} />
-            {isSaving ? "Saving..." : "Remove"}
-          </button>
-        </div>
+      {/* Transaction Inputs */}
+      <div style={styles.inputRow}>
+        <input
+          type="number"
+          step="1"
+          min="0"
+          value={inputGalleons}
+          onChange={(e) => setInputGalleons(e.target.value)}
+          placeholder="0"
+          style={styles.input(theme)}
+          disabled={isSaving}
+          className="bank-input"
+        />
+        <input
+          type="number"
+          step="1"
+          min="0"
+          value={inputSickles}
+          onChange={(e) => setInputSickles(e.target.value)}
+          placeholder="0"
+          style={styles.input(theme)}
+          disabled={isSaving}
+          className="bank-input"
+        />
+        <input
+          type="number"
+          step="1"
+          min="0"
+          value={inputKnuts}
+          onChange={(e) => setInputKnuts(e.target.value)}
+          placeholder="0"
+          style={styles.input(theme)}
+          disabled={isSaving}
+          className="bank-input"
+        />
       </div>
 
-      <button
-        onClick={resetMoney}
-        disabled={isSaving || totalKnuts === 0}
-        style={{
-          width: "100%",
-          padding: "12px 16px",
-          backgroundColor:
-            isSaving || totalKnuts === 0 ? theme.textSecondary : theme.primary,
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          fontSize: "14px",
-          fontWeight: "600",
-          cursor: isSaving || totalKnuts === 0 ? "not-allowed" : "pointer",
-          transition: "all 0.2s ease",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          marginBottom: "16px",
-          opacity: isSaving || totalKnuts === 0 ? 0.6 : 1,
-        }}
-      >
-        <Coins size={18} />
-        {isSaving && "Saving..."}
-      </button>
+      <style>{`
+        .bank-input::-webkit-outer-spin-button,
+        .bank-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .bank-input {
+          -moz-appearance: textfield;
+          text-align: center !important;
+        }
+        .bank-input::placeholder {
+          text-align: center;
+        }
+      `}</style>
 
-      <div
-        style={{
-          backgroundColor: theme.background,
-          padding: "16px",
-          borderRadius: "8px",
-          border: `1px solid ${theme.border}`,
-        }}
-      >
-        <div
-          style={{
-            fontSize: "12px",
-            fontWeight: "600",
-            color: theme.text,
-            marginBottom: "8px",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-          }}
+      {/* Action Buttons */}
+      <div style={styles.buttonRow}>
+        <button
+          onClick={() => handleTransaction(true)}
+          disabled={!hasInput || isSaving}
+          style={styles.actionBtn(theme, "add", hasInput && !isSaving)}
         >
-          Exchange Rates
-        </div>
-        <div
-          style={{
-            fontSize: "12px",
-            color: theme.textSecondary,
-            lineHeight: "1.4",
-            margin: "0 0 4px 0",
-          }}
+          <Plus size={16} />
+          Add
+        </button>
+        <button
+          onClick={() => handleTransaction(false)}
+          disabled={!hasInput || isSaving}
+          style={styles.actionBtn(theme, "remove", hasInput && !isSaving)}
         >
-          1 Galleon = 17 Sickles = 493 Knuts
-        </div>
-        <div
-          style={{
-            fontSize: "12px",
-            color: theme.textSecondary,
-            lineHeight: "1.4",
-            margin: "0 0 4px 0",
-          }}
-        >
-          1 Sickle = 29 Knuts
-        </div>
+          <Minus size={16} />
+          Remove
+        </button>
+      </div>
+
+      {/* Exchange rate hints */}
+      <div style={styles.exchangeRates}>
+        <div style={styles.hint(theme)}>1 Galleon = 17 Sickles = 493 Knuts</div>
+        <div style={styles.hint(theme)}>1 Sickle = 29 Knuts</div>
       </div>
     </div>
   );
+};
+
+const styles = {
+  container: (theme) => ({
+    backgroundColor: theme.surface,
+    borderRadius: "12px",
+    padding: "16px",
+    border: `1px solid ${theme.border}`,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+    maxWidth: "400px",
+  }),
+
+  header: (theme) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "12px",
+    paddingBottom: "8px",
+    borderBottom: `1px solid ${theme.border}`,
+  }),
+
+  headerText: (theme) => ({
+    fontSize: "14px",
+    fontWeight: "600",
+    color: theme.text,
+  }),
+
+  message: {
+    textAlign: "center",
+    padding: "20px",
+    fontSize: "14px",
+    color: "#666",
+  },
+
+  error: {
+    backgroundColor: "#FEE2E2",
+    border: "1px solid #FECACA",
+    color: "#DC2626",
+    padding: "8px 12px",
+    borderRadius: "6px",
+    marginBottom: "12px",
+    fontSize: "13px",
+  },
+
+  balance: (theme) => ({
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: "12px 24px",
+    borderRadius: "8px",
+    border: `1px solid ${theme.border}`,
+    marginBottom: "12px",
+  }),
+
+  balanceItem: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "4px",
+    flex: 1,
+  },
+
+  balanceNumber: {
+    fontSize: "20px",
+    fontWeight: "700",
+  },
+
+  balanceLabel: {
+    fontSize: "11px",
+    fontWeight: "500",
+    opacity: 0.8,
+  },
+
+  inputRow: {
+    display: "flex",
+    justifyContent: "space-around",
+    padding: "0 24px",
+    marginBottom: "8px",
+  },
+
+  input: (theme) => ({
+    width: "60px",
+    padding: "8px 4px",
+    border: `1px solid ${theme.border}`,
+    borderRadius: "6px",
+    backgroundColor: theme.surface,
+    color: theme.text,
+    fontSize: "14px",
+    textAlign: "center",
+    boxSizing: "border-box",
+    flex: 1,
+    maxWidth: "60px",
+  }),
+
+  buttonRow: {
+    display: "flex",
+    gap: "8px",
+    justifyContent: "center",
+    marginBottom: "12px",
+  },
+
+  actionBtn: (theme, type, isEnabled) => ({
+    flex: 1,
+    maxWidth: "120px",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "none",
+    fontSize: "14px",
+    fontWeight: "600",
+    cursor: isEnabled ? "pointer" : "not-allowed",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    backgroundColor: isEnabled
+      ? type === "add"
+        ? theme.success || "#10B981"
+        : theme.error || "#EF4444"
+      : theme.textSecondary,
+    color: "white",
+    opacity: isEnabled ? 1 : 0.5,
+  }),
+
+  exchangeRates: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  },
+
+  hint: (theme) => ({
+    fontSize: "11px",
+    color: theme.textSecondary,
+    textAlign: "center",
+    fontStyle: "italic",
+  }),
 };
 
 export default Bank;

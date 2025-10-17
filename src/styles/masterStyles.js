@@ -2586,7 +2586,7 @@ export const createCharacterSheetStyles = (theme) => ({
     boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
     marginBottom: "1.5rem",
     padding: "1.5rem",
-    border: `2px solid ${theme.primary}30`,
+    border: `2px solid ${theme.border}`,
   },
   headerFlex: {
     display: "flex",
