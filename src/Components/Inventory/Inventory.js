@@ -44,6 +44,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const [unreadOwlMailCount, setUnreadOwlMailCount] = useState(0);
   const [showBankModal, setShowBankModal] = useState(false);
   const [filterAttunement, setFilterAttunement] = useState(false);
+  const [bankKey, setBankKey] = useState(0);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -676,6 +677,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                 justifyContent: "center",
               }}>
                 <Bank
+                  key={bankKey}
                   user={user}
                   selectedCharacter={selectedCharacter}
                   supabase={supabase}
@@ -1574,6 +1576,29 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                             >
                                               <Edit2 size={16} />
                                             </button>
+                                            <button
+                                              onClick={() => {
+                                                // Delete all items in the stack
+                                                stack.items.forEach(item => deleteItem(item.id));
+                                              }}
+                                              disabled={
+                                                expandedStack ||
+                                                showAddForm ||
+                                                isSaving
+                                              }
+                                              style={{
+                                                ...styles.actionButton,
+                                                ...styles.deleteButton,
+                                                opacity:
+                                                  expandedStack ||
+                                                  showAddForm ||
+                                                  isSaving
+                                                    ? 0.5
+                                                    : 1,
+                                              }}
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
                                           </div>
                                         </div>
 
@@ -1998,7 +2023,10 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
             zIndex: 1000,
             padding: "20px",
           }}
-          onClick={() => setShowBankModal(false)}
+          onClick={() => {
+            setShowBankModal(false);
+            setBankKey(prev => prev + 1);
+          }}
         >
           <div
             style={{
@@ -2027,7 +2055,10 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                 Bank Management
               </h2>
               <button
-                onClick={() => setShowBankModal(false)}
+                onClick={() => {
+            setShowBankModal(false);
+            setBankKey(prev => prev + 1);
+          }}
                 style={{
                   background: "none",
                   border: "none",
