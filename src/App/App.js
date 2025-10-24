@@ -1447,8 +1447,6 @@ function AppContent() {
                   <CharacterGallery
                     selectedCharacter={selectedCharacter}
                     supabase={supabase}
-                    user={user}
-                    adminMode={adminMode}
                   />
                 </ProtectedRoute>
               }
