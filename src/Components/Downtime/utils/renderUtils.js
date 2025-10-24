@@ -740,7 +740,8 @@ export const renderDiceAssignment = ({
                 {diceManager.functions.getSortedDiceOptions
                   .filter(
                     ({ index: diceIndex }) =>
-                      !diceManager.functions.isDiceAssigned(diceIndex)
+                      !diceManager.functions.isDiceAssigned(diceIndex) &&
+                      diceIndex !== assignment.secondDiceIndex
                   )
                   .map(({ value, index: diceIndex }) => (
                     <option key={diceIndex} value={diceIndex}>
@@ -823,7 +824,8 @@ export const renderDiceAssignment = ({
                     <option value="">
                       {diceManager.functions.getSortedDiceOptions.filter(
                         ({ index: diceIndex }) =>
-                          !diceManager.functions.isDiceAssigned(diceIndex)
+                          !diceManager.functions.isDiceAssigned(diceIndex) &&
+                          diceIndex !== assignment.diceIndex
                       ).length === 0
                         ? "No dice available - add extra die above"
                         : "Select die..."}
@@ -831,7 +833,8 @@ export const renderDiceAssignment = ({
                     {diceManager.functions.getSortedDiceOptions
                       .filter(
                         ({ index: diceIndex }) =>
-                          !diceManager.functions.isDiceAssigned(diceIndex)
+                          !diceManager.functions.isDiceAssigned(diceIndex) &&
+                          diceIndex !== assignment.diceIndex
                       )
                       .map(({ value, index: diceIndex }) => (
                         <option key={diceIndex} value={diceIndex}>
