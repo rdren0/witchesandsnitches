@@ -1226,6 +1226,7 @@ export const CharacterGallery = ({
   selectedCharacter,
   supabase,
   user,
+  adminMode = false,
 }) => {
   const { theme } = useTheme();
   const [expandedSchools, setExpandedSchools] = useState(() => {
@@ -1271,7 +1272,9 @@ export const CharacterGallery = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [npcNotes, setNpcNotes] = useState({});
 
-  const discordUserId = user?.user_metadata?.provider_id;
+  const discordUserId = adminMode
+    ? selectedCharacter?.discord_user_id
+    : user?.user_metadata?.provider_id;
 
   useEffect(() => {
     if (!selectedCharacter?.gameSession) {
@@ -1305,7 +1308,7 @@ export const CharacterGallery = ({
     if (selectedCharacter && discordUserId && supabase) {
       loadNpcNotes();
     }
-  }, [selectedCharacter?.id, discordUserId]);
+  }, [selectedCharacter?.id, discordUserId, adminMode]);
 
   const loadNpcNotes = async () => {
     try {
