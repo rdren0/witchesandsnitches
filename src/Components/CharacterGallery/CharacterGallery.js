@@ -554,7 +554,6 @@ const CharacterCard = ({
   npcNote,
   onUpdateNote,
   supabase,
-  discordUserId,
   characters,
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -582,13 +581,12 @@ const CharacterCard = ({
   }, [npcNote]);
 
   const handleSaveNote = async () => {
-    if (!selectedCharacter || !discordUserId) return;
+    if (!selectedCharacter) return;
 
     setIsSaving(true);
     try {
       const noteData = {
         character_id: selectedCharacter.id,
-        discord_user_id: discordUserId,
         npc_name: character.name,
         npc_school: character.school,
         npc_type: character.type,
@@ -603,7 +601,7 @@ const CharacterCard = ({
       const { data, error } = await supabase
         .from("character_npc_notes")
         .upsert(noteData, {
-          onConflict: "character_id,discord_user_id,npc_name",
+          onConflict: "character_id,npc_name",
           ignoreDuplicates: false,
         })
         .select()
@@ -1095,7 +1093,6 @@ const TypeSection = ({
   npcNotes,
   onUpdateNote,
   supabase,
-  discordUserId,
   allCharacters,
 }) => {
   return (
@@ -1137,7 +1134,6 @@ const TypeSection = ({
               npcNote={npcNotes[character.name]}
               onUpdateNote={onUpdateNote}
               supabase={supabase}
-              discordUserId={discordUserId}
               characters={allCharacters}
             />
           ))}
@@ -1160,7 +1156,6 @@ const SchoolSection = ({
   npcNotes,
   onUpdateNote,
   supabase,
-  discordUserId,
   allCharacters,
 }) => {
   const totalCharacters = Object.values(schoolData).reduce(
@@ -1211,7 +1206,6 @@ const SchoolSection = ({
               npcNotes={npcNotes}
               onUpdateNote={onUpdateNote}
               supabase={supabase}
-              discordUserId={discordUserId}
               allCharacters={allCharacters}
             />
           ))}
@@ -1225,8 +1219,6 @@ export const CharacterGallery = ({
   characters = ALL_CHARACTERS,
   selectedCharacter,
   supabase,
-  user,
-  adminMode = false,
 }) => {
   const { theme } = useTheme();
   const [expandedSchools, setExpandedSchools] = useState(() => {
@@ -1272,10 +1264,6 @@ export const CharacterGallery = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [npcNotes, setNpcNotes] = useState({});
 
-  const discordUserId = adminMode
-    ? selectedCharacter?.discord_user_id
-    : user?.user_metadata?.provider_id;
-
   useEffect(() => {
     if (!selectedCharacter?.gameSession) {
       setExpandedSchools(new Set());
@@ -1305,18 +1293,17 @@ export const CharacterGallery = ({
   }, [selectedCharacter?.gameSession]);
 
   useEffect(() => {
-    if (selectedCharacter && discordUserId && supabase) {
+    if (selectedCharacter && supabase) {
       loadNpcNotes();
     }
-  }, [selectedCharacter?.id, discordUserId, adminMode]);
+  }, [selectedCharacter?.id]);
 
   const loadNpcNotes = async () => {
     try {
       const { data, error } = await supabase
         .from("character_npc_notes")
         .select("*")
-        .eq("character_id", selectedCharacter.id)
-        .eq("discord_user_id", discordUserId);
+        .eq("character_id", selectedCharacter.id);
 
       if (error) throw error;
 
@@ -1508,7 +1495,6 @@ export const CharacterGallery = ({
                     npcNote={npcNotes[character.name]}
                     onUpdateNote={updateNpcNote}
                     supabase={supabase}
-                    discordUserId={discordUserId}
                     characters={characters}
                   />
                 ))}
@@ -1543,7 +1529,6 @@ export const CharacterGallery = ({
             npcNotes={npcNotes}
             onUpdateNote={updateNpcNote}
             supabase={supabase}
-            discordUserId={discordUserId}
             allCharacters={characters}
           />
         ))}
