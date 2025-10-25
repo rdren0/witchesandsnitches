@@ -838,10 +838,8 @@ const CharacterSheet = ({
       (level) => (character?.[`maxSpellSlots${level}`] || 0) > 0
     );
 
-    if (currentHP >= maxHP && currentHitDice >= maxHitDice && !hasSpellSlots) {
-      alert("Character is already at full health and hit dice!");
-      return;
-    }
+    const maxSorceryPoints = character?.maxSorceryPoints || 0;
+    const hasSorceryPoints = maxSorceryPoints > 0;
 
     const featBenefits = calculateFeatBenefits(character);
     const hasLuckyFeat = featBenefits.resources.luckPoints > 0;
@@ -851,7 +849,7 @@ const CharacterSheet = ({
         character.name
       }?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}${
         hasSpellSlots ? "\n• All Spell Slots" : ""
-      }${hasLuckyFeat ? "\n• All Luck Points" : ""}`
+      }${hasSorceryPoints ? "\n• All Sorcery Points" : ""}${hasLuckyFeat ? "\n• All Luck Points" : ""}`
     );
     if (!confirmed) return;
 
@@ -879,7 +877,7 @@ const CharacterSheet = ({
         return;
       }
 
-      if (hasSpellSlots || hasLuckyFeat) {
+      if (hasSpellSlots || hasSorceryPoints || hasLuckyFeat) {
         const resourceUpdates = {
           character_id: character.id,
           discord_user_id: characterOwnerId,
@@ -893,6 +891,10 @@ const CharacterSheet = ({
               resourceUpdates[`spell_slots_${level}`] = maxSlots;
             }
           });
+        }
+
+        if (hasSorceryPoints) {
+          resourceUpdates.sorcery_points = maxSorceryPoints;
         }
 
         if (hasLuckyFeat) {
@@ -921,7 +923,7 @@ const CharacterSheet = ({
         type: "longrest",
         description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored${
           hasSpellSlots ? " • All spell slots restored" : ""
-        } • ${character.name} is fully rested!`,
+        }${hasSorceryPoints ? " • All sorcery points restored" : ""} • ${character.name} is fully rested!`,
       });
 
       const additionalFields = [
@@ -939,7 +941,7 @@ const CharacterSheet = ({
           name: "Current Status",
           value: `${maxHP}/${maxHP} HP • ${maxHitDice}/${maxHitDice} Hit Dice${
             hasSpellSlots ? " • All spell slots restored" : ""
-          }`,
+          }${hasSorceryPoints ? " • All sorcery points restored" : ""}`,
           inline: false,
         },
       ];

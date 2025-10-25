@@ -224,17 +224,9 @@ const SpellSlotTracker = ({
           character_id: selectedCharacterId,
           discord_user_id: discordUserId,
           max_sorcery_points: maxSorceryPoints,
+          sorcery_points: maxSorceryPoints,
           updated_at: new Date().toISOString(),
         };
-
-        const currentSorceryPoints = character?.sorceryPoints;
-        if (
-          currentSorceryPoints === undefined ||
-          currentSorceryPoints === null ||
-          currentSorceryPoints < maxSorceryPoints
-        ) {
-          updateData.sorcery_points = maxSorceryPoints;
-        }
 
         const { error } = await supabase
           .from("character_resources")
@@ -249,14 +241,7 @@ const SpellSlotTracker = ({
 
         const newCharacterState = { ...character };
         newCharacterState.maxSorceryPoints = maxSorceryPoints;
-
-        if (
-          currentSorceryPoints === undefined ||
-          currentSorceryPoints === null ||
-          currentSorceryPoints < maxSorceryPoints
-        ) {
-          newCharacterState.sorceryPoints = maxSorceryPoints;
-        }
+        newCharacterState.sorceryPoints = maxSorceryPoints;
 
         setCharacter(newCharacterState);
       } catch (error) {
