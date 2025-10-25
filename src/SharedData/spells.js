@@ -2824,7 +2824,7 @@ export const spellsData = {
       ],
       "5th Level": [
         {
-          name: "Insectum Maxima",
+          name: "Insectum Maxima*",
           class: ["Defense Against the Dark Arts"],
           level: "5th Level",
           castingTime: "Action",
@@ -2901,7 +2901,7 @@ export const spellsData = {
             "You create a sound or an image of an object within range that lasts for the duration. The illusion also ends if you dismiss it as an action or cast this spell again. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a lion's roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, because things can pass through it. If a creature uses its action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature.",
         },
         {
-          name: "Ignis Lunalis",
+          name: "Ignis Lunalis*",
           class: ["Divinations"],
           level: "Cantrip",
           castingTime: "Action",
@@ -2918,7 +2918,7 @@ export const spellsData = {
       ],
       "1st Level": [
         {
-          name: "Formidulosus",
+          name: "Formidulosus*",
           class: [],
           level: "1st Level",
           castingTime: "Action",
@@ -2977,7 +2977,7 @@ export const spellsData = {
       ],
       "4th Level": [
         {
-          name: "Relicuum",
+          name: "Relicuum*",
           class: [],
           level: "4th Level",
           castingTime: "Action",
@@ -3324,7 +3324,7 @@ export const spellsData = {
     levels: {
       Cantrips: [
         {
-          name: "Lux",
+          name: "Lux*",
           class: [],
           level: "Cantrip",
           castingTime: "Action",
@@ -3337,7 +3337,7 @@ export const spellsData = {
             "You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice. It can roll the die before or after making the ability check. The spell then ends.",
         },
         {
-          name: "Ignis Lunalis",
+          name: "Ignis Lunalis*",
           class: [],
           level: "Cantrip",
           castingTime: "Action",
@@ -3354,7 +3354,7 @@ export const spellsData = {
       ],
       "1st Level": [
         {
-          name: "Lux Maxima",
+          name: "Lux Maxima*",
           class: ["Divinations"],
           level: "1st Level",
           castingTime: "Action",
@@ -3371,7 +3371,7 @@ export const spellsData = {
       ],
       "2nd Level": [
         {
-          name: "Trabem",
+          name: "Trabem*",
           class: [],
           level: "2nd Level",
           castingTime: "Action",
@@ -3386,7 +3386,7 @@ export const spellsData = {
       ],
       "3rd Level": [
         {
-          name: "Stellaro",
+          name: "Stellaro*",
           class: [],
           level: "3rd Level",
           castingTime: "Action",
@@ -3521,7 +3521,7 @@ export const spellsData = {
     levels: {
       "1st Level": [
         {
-          name: "Diffindo (Ritual",
+          name: "Diffindo*",
           class: [],
           level: "1st Level",
           castingTime: "1 action",
@@ -3538,7 +3538,7 @@ export const spellsData = {
       ],
       "2nd Level": [
         {
-          name: "Immobulus",
+          name: "Immobulus*",
           class: [],
           level: "2nd Level",
           castingTime: "1 action",
@@ -3553,7 +3553,7 @@ export const spellsData = {
       ],
       "3rd Level": [
         {
-          name: "Deprimo (Ritual)",
+          name: "Deprimo*",
           class: [],
           level: "3rd Level",
           castingTime: "1 action",
@@ -3568,7 +3568,7 @@ export const spellsData = {
       ],
       "4th Level": [
         {
-          name: "Confundo (Ritual)",
+          name: "Confundo*",
           class: [],
           level: "4th Level",
           castingTime: "1 action",
@@ -3826,7 +3826,7 @@ export const spellsData = {
       ],
       "3rd Level": [
         {
-          name: "Gehennus Conjurus",
+          name: "Gehennus Conjurus*",
           class: [],
           level: "3rd Level",
           castingTime: "Action",
