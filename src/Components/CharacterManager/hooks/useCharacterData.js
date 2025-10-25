@@ -6,6 +6,13 @@ import {
   transformCharacterFromDB,
 } from "../components/CharacterForm/utils/characterTransformUtils";
 import { getAllAbilityModifiers } from "../utils/characterUtils";
+import { SORCERY_POINT_PROGRESSION } from "../../../SharedData/data";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
 
 export const useCharacterData = (
   characterId = null,
@@ -191,6 +198,27 @@ export const useCharacterData = (
       }
 
       if (result) {
+        const oldLevel = originalCharacter.level;
+        const newLevel = result.level;
+
+        if (oldLevel !== newLevel && newLevel >= 1 && newLevel <= 20) {
+          const maxSorceryPoints = SORCERY_POINT_PROGRESSION[newLevel];
+
+          if (maxSorceryPoints !== undefined) {
+            const resourceUpdates = {
+              character_id: result.id,
+              discord_user_id: effectiveUserId,
+              max_sorcery_points: maxSorceryPoints,
+              sorcery_points: maxSorceryPoints,
+              updated_at: new Date().toISOString(),
+            };
+
+            await supabase.from("character_resources").upsert(resourceUpdates, {
+              onConflict: "character_id,discord_user_id",
+            });
+          }
+        }
+
         const transformedResult = transformCharacterFromDB(result);
 
         if (result.base_ability_scores) {
