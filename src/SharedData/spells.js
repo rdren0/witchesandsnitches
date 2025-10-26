@@ -2673,7 +2673,7 @@ export const spellsData = {
         {
           name: "Protego Totalum",
           level: "6th Level",
-          class: ["Defense Against the Dark Arts"],
+          class: ["Charms"],
           castingTime: "Action",
           range: "Self (10-foot-radius sphere)",
           duration: "Concentration, up to 1 minute",
@@ -3960,6 +3960,15 @@ export const INDIVIDUAL_SPELL_MODIFIERS = {
   "Glacius Maxima": SUBJECT_TO_MODIFIER_MAP.charms,
   Tempestus: SUBJECT_TO_MODIFIER_MAP.transfiguration,
   "Fulgur Maxima": SUBJECT_TO_MODIFIER_MAP.transfiguration,
+
+  "Lumos Ruptis": SUBJECT_TO_MODIFIER_MAP.charms,
+  Increpa: SUBJECT_TO_MODIFIER_MAP.charms,
+  "Protego Fidelia": SUBJECT_TO_MODIFIER_MAP.charms,
+  Tholus: SUBJECT_TO_MODIFIER_MAP.charms,
+  Expello: SUBJECT_TO_MODIFIER_MAP.charms,
+  "Nulla Magica": SUBJECT_TO_MODIFIER_MAP.charms,
+  Ostium: SUBJECT_TO_MODIFIER_MAP.transfiguration,
+  "Incarcerous Maxima": SUBJECT_TO_MODIFIER_MAP.transfiguration,
 };
 
 export const TRADITIONAL_SCHOOL_MAPPINGS = {
