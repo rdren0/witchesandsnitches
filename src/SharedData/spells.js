@@ -968,7 +968,23 @@ export const spellsData = {
             "Each creature within the spell's area gains temporary hit points equal to your spellcasting modifier at the beginning of its turn and advantage on all saving throws against spells.",
         },
       ],
-      "6th Level": [],
+      "6th Level": [
+        {
+          name: "Protego Totalum",
+          level: "6th Level",
+          class: ["Charms"],
+          castingTime: "Action",
+          range: "Self (10-foot-radius sphere)",
+          duration: "Concentration, up to 1 minute",
+          year: 7,
+          restriction: true,
+
+          description:
+            "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
+          higherLevels:
+            "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th.",
+        },
+      ],
       "7th Level": [
         {
           name: "Herbarifors",
@@ -2670,21 +2686,6 @@ export const spellsData = {
         },
       ],
       "6th Level": [
-        {
-          name: "Protego Totalum",
-          level: "6th Level",
-          class: ["Charms"],
-          castingTime: "Action",
-          range: "Self (10-foot-radius sphere)",
-          duration: "Concentration, up to 1 minute",
-          year: 7,
-          restriction: true,
-
-          description:
-            "An immobile, faintly shimmering barrier springs into existence in a 10-foot radius around you and remains for the duration. Any attack or spell of 5th level or lower cast from outside the barrier can't affect creatures or objects within it, even if the spell is cast using a higher level spell slot. Such a spell can target creatures and objects within the barrier, but the spell has no effect on them. Similarly, the area within the barrier is excluded from the areas affected by such spells.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 7th level or higher, the barrier blocks spells of one level higher for each slot level above 6th.",
-        },
         {
           name: "Vulnera Sanentur",
           class: [],
