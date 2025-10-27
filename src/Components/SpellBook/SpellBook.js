@@ -132,6 +132,7 @@ const SpellBook = ({
 
   useEffect(() => {
     loadSpellProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadSpellProgress]);
 
   const attemptFilterOptions = [
