@@ -441,9 +441,21 @@ export const rollCreatureSkill = async ({
     // Roll with advantage if applicable
     const rollFormula = hasAdvantage ? "2d20kh1" : "1d20";
     const roll = roller.roll(rollFormula);
-    const d20Value = hasAdvantage ? Math.max(...roll.rolls[0].rolls.map(r => r.value)) : roll.total;
 
-    const totalModifier = abilityModifier + (isProficient ? proficiencyBonus : 0);
+    let d20Value;
+    let rollDetailsDisplay;
+
+    if (hasAdvantage) {
+      const dice = roll.rolls[0].rolls.map((r) => r.value);
+      d20Value = Math.max(...dice);
+      rollDetailsDisplay = `2d20 (${dice.join(", ")}) = ${d20Value}`;
+    } else {
+      d20Value = roll.total;
+      rollDetailsDisplay = null;
+    }
+
+    const totalModifier =
+      abilityModifier + (isProficient ? proficiencyBonus : 0);
     const total = d20Value + totalModifier;
 
     const isCriticalSuccess = d20Value === 20;
@@ -458,7 +470,9 @@ export const rollCreatureSkill = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "skill",
-        description: `Rolling ${skillName} check for ${creature.name}${hasAdvantage ? " (with advantage)" : ""}`,
+        description: `Rolling ${skillName} check for ${creature.name}${
+          hasAdvantage ? " (with advantage)" : ""
+        }`,
       });
     }
 
@@ -469,6 +483,7 @@ export const rollCreatureSkill = async ({
       isCriticalSuccess,
       isCriticalFailure,
       hasAdvantage,
+      rollDetailsDisplay,
     };
 
     const fields = [];

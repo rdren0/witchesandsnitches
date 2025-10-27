@@ -201,10 +201,12 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
 
     try {
       const modifier = getModifier(abilityScore);
-      const isProficientInSave = creature.saving_throw_proficiencies?.includes(abilityKey) || false;
+      const isProficientInSave =
+        creature.saving_throw_proficiencies?.includes(abilityKey) || false;
       const characterLevel = selectedCharacter?.level || 1;
       const proficiencyBonus = Math.floor((characterLevel - 1) / 4) + 2;
-      const saveModifier = modifier + (isProficientInSave ? proficiencyBonus : 0);
+      const saveModifier =
+        modifier + (isProficientInSave ? proficiencyBonus : 0);
 
       await rollCreatureSavingThrow({
         creature,
@@ -278,7 +280,12 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
     }
   };
 
-  const handleSkillClick = async (creature, skillInfo, selectedSkill, abilityModifier) => {
+  const handleSkillClick = async (
+    creature,
+    skillInfo,
+    selectedSkill,
+    abilityModifier
+  ) => {
     if (isRolling) return;
     setIsRolling(true);
 
@@ -485,7 +492,9 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
   const removeSkill = (skillKey) => {
     setFormData({
       ...formData,
-      selected_skills: formData.selected_skills.filter((s) => s.key !== skillKey),
+      selected_skills: formData.selected_skills.filter(
+        (s) => s.key !== skillKey
+      ),
     });
   };
 
@@ -522,9 +531,9 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
       if (error) throw error;
 
       // Normalize attack data to ensure proper types
-      const normalizedCreatures = (data || []).map(creature => ({
+      const normalizedCreatures = (data || []).map((creature) => ({
         ...creature,
-        attacks: (creature.attacks || []).map(attack => ({
+        attacks: (creature.attacks || []).map((attack) => ({
           ...attack,
           attack_bonus: parseInt(attack.attack_bonus) || 0,
           damage_quantity: parseInt(attack.damage_quantity) || 1,
@@ -644,18 +653,21 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
         wisdom: parseInt(formData.wisdom),
         charisma: parseInt(formData.charisma),
         initiative_modifier: parseInt(formData.initiative_modifier) || 0,
-        attacks: formData.attacks.length > 0 ? formData.attacks.map(attack => ({
-          name: attack.name,
-          attack_bonus: parseInt(attack.attack_bonus) || 0,
-          damage_quantity: parseInt(attack.damage_quantity) || 1,
-          damage_die: attack.damage_die,
-          damage_modifier: parseInt(attack.damage_modifier) || 0,
-          damage_type: attack.damage_type,
-          reach: parseInt(attack.reach) || 5,
-          description: attack.description,
-          save_dc: attack.save_dc ? parseInt(attack.save_dc) : null,
-          save_ability: attack.save_ability,
-        })) : null,
+        attacks:
+          formData.attacks.length > 0
+            ? formData.attacks.map((attack) => ({
+                name: attack.name,
+                attack_bonus: parseInt(attack.attack_bonus) || 0,
+                damage_quantity: parseInt(attack.damage_quantity) || 1,
+                damage_die: attack.damage_die,
+                damage_modifier: parseInt(attack.damage_modifier) || 0,
+                damage_type: attack.damage_type,
+                reach: parseInt(attack.reach) || 5,
+                description: attack.description,
+                save_dc: attack.save_dc ? parseInt(attack.save_dc) : null,
+                save_ability: attack.save_ability,
+              }))
+            : null,
         selected_skills: formData.selected_skills,
         saving_throw_proficiencies: formData.saving_throw_proficiencies,
         resistances: formData.resistances,
@@ -711,7 +723,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
       wisdom: creature.wisdom,
       charisma: creature.charisma,
       initiative_modifier: creature.initiative_modifier || 0,
-      attacks: (creature.attacks || []).map(attack => ({
+      attacks: (creature.attacks || []).map((attack) => ({
         name: attack.name || "",
         attack_bonus: parseInt(attack.attack_bonus) || 0,
         damage_quantity: parseInt(attack.damage_quantity) || 1,
@@ -723,7 +735,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
         save_dc: attack.save_dc ? parseInt(attack.save_dc) : null,
         save_ability: attack.save_ability || "",
       })),
-      selected_skills: (creature.selected_skills || []).map(skill => ({
+      selected_skills: (creature.selected_skills || []).map((skill) => ({
         key: skill.key,
         isProficient: skill.isProficient || false,
         proficiencyNote: skill.proficiencyNote || "",
@@ -1644,12 +1656,19 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                     fontStyle: "italic",
                   }}
                 >
-                  Select skills to add proficiency and/or advantage. Add notes for conditional bonuses (e.g., "only when using smell").
+                  Select skills to add proficiency and/or advantage. Add notes
+                  for conditional bonuses (e.g., "only when using smell").
                 </div>
 
                 {/* Skill Dropdown */}
                 <div style={{ marginBottom: "16px" }}>
-                  <label style={{ ...styles.label, display: "block", marginBottom: "8px" }}>
+                  <label
+                    style={{
+                      ...styles.label,
+                      display: "block",
+                      marginBottom: "8px",
+                    }}
+                  >
                     Add Skill
                   </label>
                   <select
@@ -1669,10 +1688,14 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                       Select a skill...
                     </option>
                     {SKILL_LIST.filter(
-                      (skill) => !formData.selected_skills.some((s) => s.key === skill.key)
+                      (skill) =>
+                        !formData.selected_skills.some(
+                          (s) => s.key === skill.key
+                        )
                     ).map((skill) => (
                       <option key={skill.key} value={skill.key}>
-                        {skill.label} ({skill.ability.substring(0, 3).toUpperCase()})
+                        {skill.label} (
+                        {skill.ability.substring(0, 3).toUpperCase()})
                       </option>
                     ))}
                   </select>
@@ -1680,9 +1703,17 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
 
                 {/* Selected Skills List */}
                 {formData.selected_skills.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                    }}
+                  >
                     {formData.selected_skills.map((selectedSkill) => {
-                      const skillInfo = SKILL_LIST.find((s) => s.key === selectedSkill.key);
+                      const skillInfo = SKILL_LIST.find(
+                        (s) => s.key === selectedSkill.key
+                      );
                       return (
                         <div
                           key={selectedSkill.key}
@@ -1701,10 +1732,26 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                               marginBottom: "12px",
                             }}
                           >
-                            <span style={{ fontSize: "14px", fontWeight: "600", color: theme.text }}>
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: theme.text,
+                              }}
+                            >
                               {skillInfo?.label || selectedSkill.key}
-                              <span style={{ fontSize: "12px", color: theme.textSecondary, marginLeft: "6px" }}>
-                                ({skillInfo?.ability.substring(0, 3).toUpperCase()})
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  color: theme.textSecondary,
+                                  marginLeft: "6px",
+                                }}
+                              >
+                                (
+                                {skillInfo?.ability
+                                  .substring(0, 3)
+                                  .toUpperCase()}
+                                )
                               </span>
                             </span>
                             <button
@@ -1721,7 +1768,13 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                             </button>
                           </div>
 
-                          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "12px",
+                            }}
+                          >
                             {/* Proficiency Section */}
                             <div>
                               <label
@@ -1736,16 +1789,36 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                                 <input
                                   type="checkbox"
                                   checked={selectedSkill.isProficient}
-                                  onChange={(e) => updateSkill(selectedSkill.key, "isProficient", e.target.checked)}
+                                  onChange={(e) =>
+                                    updateSkill(
+                                      selectedSkill.key,
+                                      "isProficient",
+                                      e.target.checked
+                                    )
+                                  }
                                   style={{ cursor: "pointer" }}
                                 />
-                                <span style={{ fontSize: "13px", fontWeight: "600", color: theme.text }}>Proficiency</span>
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    color: theme.text,
+                                  }}
+                                >
+                                  Proficiency
+                                </span>
                               </label>
                               {selectedSkill.isProficient && (
                                 <input
                                   type="text"
                                   value={selectedSkill.proficiencyNote || ""}
-                                  onChange={(e) => updateSkill(selectedSkill.key, "proficiencyNote", e.target.value)}
+                                  onChange={(e) =>
+                                    updateSkill(
+                                      selectedSkill.key,
+                                      "proficiencyNote",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="e.g., when tracking, in forests, etc."
                                   style={{
                                     ...styles.input,
@@ -1771,16 +1844,36 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                                 <input
                                   type="checkbox"
                                   checked={selectedSkill.hasAdvantage}
-                                  onChange={(e) => updateSkill(selectedSkill.key, "hasAdvantage", e.target.checked)}
+                                  onChange={(e) =>
+                                    updateSkill(
+                                      selectedSkill.key,
+                                      "hasAdvantage",
+                                      e.target.checked
+                                    )
+                                  }
                                   style={{ cursor: "pointer" }}
                                 />
-                                <span style={{ fontSize: "13px", fontWeight: "600", color: theme.text }}>Advantage</span>
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    color: theme.text,
+                                  }}
+                                >
+                                  Advantage
+                                </span>
                               </label>
                               {selectedSkill.hasAdvantage && (
                                 <input
                                   type="text"
                                   value={selectedSkill.advantageNote || ""}
-                                  onChange={(e) => updateSkill(selectedSkill.key, "advantageNote", e.target.value)}
+                                  onChange={(e) =>
+                                    updateSkill(
+                                      selectedSkill.key,
+                                      "advantageNote",
+                                      e.target.value
+                                    )
+                                  }
                                   placeholder="e.g., only when using smell, in dim light, etc."
                                   style={{
                                     ...styles.input,
@@ -1800,10 +1893,22 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
 
                 {/* Saving Throw Proficiencies */}
                 <div style={{ marginTop: "24px" }}>
-                  <label style={{ ...styles.label, display: "block", marginBottom: "12px" }}>
+                  <label
+                    style={{
+                      ...styles.label,
+                      display: "block",
+                      marginBottom: "12px",
+                    }}
+                  >
                     Saving Throw Proficiencies
                   </label>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: "8px",
+                    }}
+                  >
                     {[
                       { key: "strength", label: "STR" },
                       { key: "dexterity", label: "DEX" },
@@ -1812,7 +1917,10 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                       { key: "wisdom", label: "WIS" },
                       { key: "charisma", label: "CHA" },
                     ].map((ability) => {
-                      const isProficient = formData.saving_throw_proficiencies.includes(ability.key);
+                      const isProficient =
+                        formData.saving_throw_proficiencies.includes(
+                          ability.key
+                        );
                       return (
                         <label
                           key={ability.key}
@@ -1821,9 +1929,13 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                             alignItems: "center",
                             gap: "6px",
                             padding: "8px",
-                            backgroundColor: isProficient ? theme.primary + "15" : theme.background,
+                            backgroundColor: isProficient
+                              ? theme.primary + "15"
+                              : theme.background,
                             borderRadius: "6px",
-                            border: `1px solid ${isProficient ? theme.primary : theme.border}`,
+                            border: `1px solid ${
+                              isProficient ? theme.primary : theme.border
+                            }`,
                             cursor: "pointer",
                           }}
                         >
@@ -1832,13 +1944,27 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                             checked={isProficient}
                             onChange={(e) => {
                               const updated = e.target.checked
-                                ? [...formData.saving_throw_proficiencies, ability.key]
-                                : formData.saving_throw_proficiencies.filter((a) => a !== ability.key);
-                              setFormData({ ...formData, saving_throw_proficiencies: updated });
+                                ? [
+                                    ...formData.saving_throw_proficiencies,
+                                    ability.key,
+                                  ]
+                                : formData.saving_throw_proficiencies.filter(
+                                    (a) => a !== ability.key
+                                  );
+                              setFormData({
+                                ...formData,
+                                saving_throw_proficiencies: updated,
+                              });
                             }}
                             style={{ cursor: "pointer" }}
                           />
-                          <span style={{ fontSize: "13px", fontWeight: "500", color: theme.text }}>
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "500",
+                              color: theme.text,
+                            }}
+                          >
                             {ability.label}
                           </span>
                         </label>
@@ -2019,7 +2145,11 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                           type="number"
                           value={attack.save_dc || ""}
                           onChange={(e) =>
-                            updateAttack(index, "save_dc", e.target.value ? parseInt(e.target.value) : null)
+                            updateAttack(
+                              index,
+                              "save_dc",
+                              e.target.value ? parseInt(e.target.value) : null
+                            )
                           }
                           style={styles.input}
                           placeholder="e.g., 13"
@@ -2027,7 +2157,9 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                         />
                       </div>
                       <div style={styles.formGroup}>
-                        <label style={styles.label}>Save Ability (optional)</label>
+                        <label style={styles.label}>
+                          Save Ability (optional)
+                        </label>
                         <select
                           value={attack.save_ability || ""}
                           onChange={(e) =>
@@ -2383,10 +2515,15 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                     },
                   ].map((ability) => {
                     const modifier = getModifier(ability.value);
-                    const isProficientInSave = creature.saving_throw_proficiencies?.includes(ability.key) || false;
+                    const isProficientInSave =
+                      creature.saving_throw_proficiencies?.includes(
+                        ability.key
+                      ) || false;
                     const characterLevel = selectedCharacter?.level || 1;
-                    const proficiencyBonus = Math.floor((characterLevel - 1) / 4) + 2;
-                    const saveModifier = modifier + (isProficientInSave ? proficiencyBonus : 0);
+                    const proficiencyBonus =
+                      Math.floor((characterLevel - 1) / 4) + 2;
+                    const saveModifier =
+                      modifier + (isProficientInSave ? proficiencyBonus : 0);
                     return (
                       <div
                         key={ability.key}
@@ -2476,7 +2613,9 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                         <div
                           style={{
                             fontSize: "0.75rem",
-                            color: isProficientInSave ? "white" : theme.textSecondary,
+                            color: isProficientInSave
+                              ? "white"
+                              : theme.textSecondary,
                             textAlign: "center",
                             padding: "6px 8px",
                             fontWeight: isProficientInSave ? "600" : "500",
@@ -2486,7 +2625,9 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                             width: "100%",
                             cursor: isRolling ? "not-allowed" : "pointer",
                             transition: "all 0.2s ease",
-                            backgroundColor: isProficientInSave ? "#3b82f6" : theme.background,
+                            backgroundColor: isProficientInSave
+                              ? "#3b82f6"
+                              : theme.background,
                           }}
                           onClick={(e) =>
                             !isRolling &&
@@ -2501,9 +2642,11 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                           onMouseEnter={(e) => {
                             if (!isRolling) {
                               if (isProficientInSave) {
-                                e.currentTarget.style.backgroundColor = "#2563eb";
+                                e.currentTarget.style.backgroundColor =
+                                  "#2563eb";
                               } else {
-                                e.currentTarget.style.backgroundColor = theme.surface;
+                                e.currentTarget.style.backgroundColor =
+                                  theme.surface;
                                 e.currentTarget.style.color = theme.primary;
                               }
                             }
@@ -2513,13 +2656,16 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                               e.currentTarget.style.backgroundColor = "#3b82f6";
                               e.currentTarget.style.color = "white";
                             } else {
-                              e.currentTarget.style.backgroundColor = theme.background;
+                              e.currentTarget.style.backgroundColor =
+                                theme.background;
                               e.currentTarget.style.color = theme.textSecondary;
                             }
                           }}
                           title={`Click to roll ${ability.name} saving throw${
                             isProficientInSave ? " (PROFICIENT)" : ""
-                          } (d20 ${saveModifier >= 0 ? "+" : ""}${saveModifier})`}
+                          } (d20 ${
+                            saveModifier >= 0 ? "+" : ""
+                          }${saveModifier})`}
                         >
                           Save: {saveModifier >= 0 ? "+" : ""}
                           {saveModifier}
@@ -2530,7 +2676,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                 </div>
 
                 {/* Skills and Attacks Two-Column Layout */}
-                {((creature.selected_skills && creature.selected_skills.length > 0) ||
+                {((creature.selected_skills &&
+                  creature.selected_skills.length > 0) ||
                   (creature.attacks && creature.attacks.length > 0)) && (
                   <div
                     style={{
@@ -2541,11 +2688,196 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                     }}
                   >
                     {/* Skills Column */}
-                    {creature.selected_skills && creature.selected_skills.length > 0 && (
+                    {creature.selected_skills &&
+                      creature.selected_skills.length > 0 && (
+                        <div
+                          style={{
+                            flex:
+                              creature.attacks && creature.attacks.length > 0
+                                ? "1"
+                                : "1 1 100%",
+                            minWidth:
+                              creature.attacks && creature.attacks.length > 0
+                                ? "250px"
+                                : "auto",
+                            padding: "12px",
+                            backgroundColor: theme.background,
+                            borderRadius: "6px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "1rem",
+                              fontWeight: "600",
+                              color: theme.text,
+                              marginBottom: "8px",
+                              paddingBottom: "8px",
+                              borderBottom: `1px solid ${theme.border}`,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            <Zap size={16} />
+                            Skills
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "6px",
+                            }}
+                          >
+                            {creature.selected_skills.map(
+                              (selectedSkill, idx) => {
+                                const skillInfo = SKILL_LIST.find(
+                                  (s) => s.key === selectedSkill.key
+                                );
+                                if (!skillInfo) return null;
+
+                                const abilityScore =
+                                  creature[skillInfo.ability];
+                                const abilityModifier =
+                                  getModifier(abilityScore);
+                                const characterLevel =
+                                  selectedCharacter?.level || 1;
+                                const proficiencyBonus =
+                                  Math.floor((characterLevel - 1) / 4) + 2;
+                                const totalModifier =
+                                  abilityModifier +
+                                  (selectedSkill.isProficient
+                                    ? proficiencyBonus
+                                    : 0);
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                      padding: "8px",
+                                      backgroundColor: theme.surface,
+                                      borderRadius: "4px",
+                                      border: `1px solid ${theme.border}`,
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        flex: 1,
+                                        fontSize: "0.875rem",
+                                        fontWeight: "500",
+                                        color: theme.text,
+                                      }}
+                                    >
+                                      {skillInfo.label}
+                                    </div>
+                                    <div
+                                      style={{ display: "flex", gap: "4px" }}
+                                    >
+                                      {selectedSkill.isProficient && (
+                                        <button
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "4px",
+                                            padding: "6px 12px",
+                                            fontSize: "11px",
+                                            fontWeight: "600",
+                                            border: "none",
+                                            borderRadius: "4px",
+                                            cursor: isRolling
+                                              ? "not-allowed"
+                                              : "pointer",
+                                            transition: "all 0.2s ease",
+                                            backgroundColor: "#3b82f6",
+                                            color: "white",
+                                            opacity: isRolling ? 0.6 : 1,
+                                            minWidth: "70px",
+                                          }}
+                                          onClick={() =>
+                                            handleSkillClick(
+                                              creature,
+                                              skillInfo,
+                                              selectedSkill,
+                                              abilityModifier
+                                            )
+                                          }
+                                          disabled={isRolling}
+                                          title={
+                                            selectedSkill.proficiencyNote
+                                              ? `Proficiency: ${selectedSkill.proficiencyNote}`
+                                              : `Roll with proficiency (+${proficiencyBonus})`
+                                          }
+                                        >
+                                          PROF {totalModifier >= 0 ? "+" : ""}
+                                          {totalModifier}
+                                        </button>
+                                      )}
+                                      {selectedSkill.hasAdvantage && (
+                                        <button
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "4px",
+                                            padding: "6px 12px",
+                                            fontSize: "11px",
+                                            fontWeight: "600",
+                                            border: "none",
+                                            borderRadius: "4px",
+                                            cursor: isRolling
+                                              ? "not-allowed"
+                                              : "pointer",
+                                            transition: "all 0.2s ease",
+                                            backgroundColor: "#10b981",
+                                            color: "white",
+                                            opacity: isRolling ? 0.6 : 1,
+                                            minWidth: "70px",
+                                          }}
+                                          onClick={() =>
+                                            handleSkillClick(
+                                              creature,
+                                              skillInfo,
+                                              selectedSkill,
+                                              abilityModifier
+                                            )
+                                          }
+                                          disabled={isRolling}
+                                          title={
+                                            selectedSkill.advantageNote
+                                              ? `Advantage: ${selectedSkill.advantageNote}`
+                                              : "Roll with advantage"
+                                          }
+                                        >
+                                          ADV {abilityModifier >= 0 ? "+" : ""}
+                                          {abilityModifier}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Attacks Column */}
+                    {creature.attacks && creature.attacks.length > 0 && (
                       <div
                         style={{
-                          flex: creature.attacks && creature.attacks.length > 0 ? "1" : "1 1 100%",
-                          minWidth: creature.attacks && creature.attacks.length > 0 ? "250px" : "auto",
+                          flex:
+                            creature.selected_skills &&
+                            creature.selected_skills.length > 0
+                              ? "1"
+                              : "1 1 100%",
+                          minWidth:
+                            creature.selected_skills &&
+                            creature.selected_skills.length > 0
+                              ? "250px"
+                              : "auto",
                           padding: "12px",
                           backgroundColor: theme.background,
                           borderRadius: "6px",
@@ -2564,294 +2896,187 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                             gap: "6px",
                           }}
                         >
-                          <Zap size={16} />
-                          Skills
+                          <Sword size={16} />
+                          Attacks
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {creature.selected_skills.map((selectedSkill, idx) => {
-                            const skillInfo = SKILL_LIST.find((s) => s.key === selectedSkill.key);
-                            if (!skillInfo) return null;
-
-                            const abilityScore = creature[skillInfo.ability];
-                            const abilityModifier = getModifier(abilityScore);
-                            const characterLevel = selectedCharacter?.level || 1;
-                            const proficiencyBonus = Math.floor((characterLevel - 1) / 4) + 2;
-                            const totalModifier = abilityModifier + (selectedSkill.isProficient ? proficiencyBonus : 0);
-
-                            return (
+                        {creature.attacks.map((attack, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              marginBottom: "8px",
+                              paddingBottom: "8px",
+                              padding: "8px",
+                              borderRadius: "4px",
+                              borderBottom:
+                                idx < creature.attacks.length - 1
+                                  ? `1px solid ${theme.border}`
+                                  : "none",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: "12px",
+                            }}
+                          >
+                            <div style={{ flex: 1 }}>
                               <div
-                                key={idx}
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  padding: "8px",
-                                  backgroundColor: theme.surface,
-                                  borderRadius: "4px",
-                                  border: `1px solid ${theme.border}`,
-                                }}
-                              >
-                                <div style={{ flex: 1, fontSize: "0.875rem", fontWeight: "500", color: theme.text }}>
-                                  {skillInfo.label}
-                                </div>
-                                <div style={{ display: "flex", gap: "4px" }}>
-                                  {selectedSkill.isProficient && (
-                                    <button
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: "4px",
-                                        padding: "6px 12px",
-                                        fontSize: "11px",
-                                        fontWeight: "600",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: isRolling ? "not-allowed" : "pointer",
-                                        transition: "all 0.2s ease",
-                                        backgroundColor: "#3b82f6",
-                                        color: "white",
-                                        opacity: isRolling ? 0.6 : 1,
-                                        minWidth: "70px",
-                                      }}
-                                      onClick={() => handleSkillClick(creature, skillInfo, selectedSkill, abilityModifier)}
-                                      disabled={isRolling}
-                                      title={selectedSkill.proficiencyNote ? `Proficiency: ${selectedSkill.proficiencyNote}` : `Roll with proficiency (+${proficiencyBonus})`}
-                                    >
-                                      PROF {totalModifier >= 0 ? "+" : ""}{totalModifier}
-                                    </button>
-                                  )}
-                                  {selectedSkill.hasAdvantage && (
-                                    <button
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: "4px",
-                                        padding: "6px 12px",
-                                        fontSize: "11px",
-                                        fontWeight: "600",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: isRolling ? "not-allowed" : "pointer",
-                                        transition: "all 0.2s ease",
-                                        backgroundColor: "#10b981",
-                                        color: "white",
-                                        opacity: isRolling ? 0.6 : 1,
-                                        minWidth: "70px",
-                                      }}
-                                      onClick={() => handleSkillClick(creature, skillInfo, selectedSkill, abilityModifier)}
-                                      disabled={isRolling}
-                                      title={selectedSkill.advantageNote ? `Advantage: ${selectedSkill.advantageNote}` : "Roll with advantage"}
-                                    >
-                                      ADV {abilityModifier >= 0 ? "+" : ""}{abilityModifier}
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Attacks Column */}
-                    {creature.attacks && creature.attacks.length > 0 && (
-                      <div
-                        style={{
-                          flex: creature.selected_skills && creature.selected_skills.length > 0 ? "1" : "1 1 100%",
-                          minWidth: creature.selected_skills && creature.selected_skills.length > 0 ? "250px" : "auto",
-                          padding: "12px",
-                          backgroundColor: theme.background,
-                          borderRadius: "6px",
-                        }}
-                      >
-                    <div
-                      style={{
-                        fontSize: "1rem",
-                        fontWeight: "600",
-                        color: theme.text,
-                        marginBottom: "8px",
-                        paddingBottom: "8px",
-                        borderBottom: `1px solid ${theme.border}`,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <Sword size={16} />
-                      Attacks
-                    </div>
-                    {creature.attacks.map((attack, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          marginBottom: "8px",
-                          paddingBottom: "8px",
-                          padding: "8px",
-                          borderRadius: "4px",
-                          borderBottom:
-                            idx < creature.attacks.length - 1
-                              ? `1px solid ${theme.border}`
-                              : "none",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              fontSize: "0.9375rem",
-                              fontWeight: "600",
-                              color: theme.text,
-                            }}
-                          >
-                            {attack.name || "Attack - Not Named"}
-                            {attack.attack_bonus > 0 && (
-                              <span
-                                style={{
-                                  marginLeft: "8px",
-                                  color: theme.primary,
-                                }}
-                              >
-                                +{attack.attack_bonus}
-                              </span>
-                            )}
-                            {attack.save_dc && attack.save_ability && (
-                              <span
-                                style={{
-                                  marginLeft: "8px",
-                                  color: "#ef4444",
+                                  fontSize: "0.9375rem",
                                   fontWeight: "600",
-                                  fontSize: "0.8125rem",
+                                  color: theme.text,
                                 }}
                               >
-                                DC {attack.save_dc} {attack.save_ability.substring(0, 3).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "0.9375rem",
-                              color: theme.textSecondary,
-                              marginTop: "2px",
-                            }}
-                          >
-                            {attack.reach && `Reach ${attack.reach} ft.`}
-                            {(attack.damage_quantity ||
-                              attack.damage_die ||
-                              attack.damage_dice) &&
-                              (() => {
-                                let damageString = "";
-                                if (
-                                  attack.damage_quantity &&
-                                  attack.damage_die
-                                ) {
-                                  damageString = `${attack.damage_quantity}${attack.damage_die}`;
-                                  if (
-                                    attack.damage_modifier &&
-                                    attack.damage_modifier !== 0
-                                  ) {
-                                    damageString +=
-                                      attack.damage_modifier > 0
-                                        ? ` + ${attack.damage_modifier}`
-                                        : ` - ${Math.abs(
-                                            attack.damage_modifier
-                                          )}`;
-                                  }
-                                } else if (attack.damage_dice) {
-                                  damageString = attack.damage_dice;
-                                }
-                                return ` ${damageString} ${
-                                  attack.damage_type || ""
-                                } damage`;
-                              })()}
-                          </div>
-                          {attack.description && (
+                                {attack.name || "Attack - Not Named"}
+                                {attack.attack_bonus > 0 && (
+                                  <span
+                                    style={{
+                                      marginLeft: "8px",
+                                      color: theme.primary,
+                                    }}
+                                  >
+                                    +{attack.attack_bonus}
+                                  </span>
+                                )}
+                                {attack.save_dc && attack.save_ability && (
+                                  <span
+                                    style={{
+                                      marginLeft: "8px",
+                                      color: "#ef4444",
+                                      fontWeight: "600",
+                                      fontSize: "0.8125rem",
+                                    }}
+                                  >
+                                    DC {attack.save_dc}{" "}
+                                    {attack.save_ability
+                                      .substring(0, 3)
+                                      .toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.9375rem",
+                                  color: theme.textSecondary,
+                                  marginTop: "2px",
+                                }}
+                              >
+                                {attack.reach && `Reach ${attack.reach} ft.`}
+                                {(attack.damage_quantity ||
+                                  attack.damage_die ||
+                                  attack.damage_dice) &&
+                                  (() => {
+                                    let damageString = "";
+                                    if (
+                                      attack.damage_quantity &&
+                                      attack.damage_die
+                                    ) {
+                                      damageString = `${attack.damage_quantity}${attack.damage_die}`;
+                                      if (
+                                        attack.damage_modifier &&
+                                        attack.damage_modifier !== 0
+                                      ) {
+                                        damageString +=
+                                          attack.damage_modifier > 0
+                                            ? ` + ${attack.damage_modifier}`
+                                            : ` - ${Math.abs(
+                                                attack.damage_modifier
+                                              )}`;
+                                      }
+                                    } else if (attack.damage_dice) {
+                                      damageString = attack.damage_dice;
+                                    }
+                                    return ` ${damageString} ${
+                                      attack.damage_type || ""
+                                    } damage`;
+                                  })()}
+                              </div>
+                              {attack.description && (
+                                <div
+                                  style={{
+                                    fontSize: "0.875rem",
+                                    color: theme.text,
+                                    marginTop: "4px",
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {attack.description}
+                                </div>
+                              )}
+                            </div>
                             <div
                               style={{
-                                fontSize: "0.875rem",
-                                color: theme.text,
-                                marginTop: "4px",
-                                fontStyle: "italic",
+                                display: "flex",
+                                gap: "6px",
+                                flexShrink: 0,
                               }}
                             >
-                              {attack.description}
+                              {!attack.save_dc && (
+                                <button
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    padding: "4px 10px",
+                                    fontSize: "10px",
+                                    fontWeight: "500",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: isRolling
+                                      ? "not-allowed"
+                                      : "pointer",
+                                    transition: "all 0.2s ease",
+                                    backgroundColor: "#b27424",
+                                    color: "white",
+                                    opacity: isRolling ? 0.6 : 1,
+                                  }}
+                                  onClick={(e) =>
+                                    !isRolling &&
+                                    handleAttackRoll(creature, attack, e)
+                                  }
+                                  disabled={isRolling}
+                                  title={`Roll attack (d20${
+                                    attack.attack_bonus
+                                      ? ` + ${attack.attack_bonus}`
+                                      : ""
+                                  })`}
+                                >
+                                  <Sword size={12} />
+                                  Attack
+                                </button>
+                              )}
+                              {(attack.damage_quantity ||
+                                attack.damage_die) && (
+                                <button
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    padding: "4px 10px",
+                                    fontSize: "10px",
+                                    fontWeight: "500",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: isRolling
+                                      ? "not-allowed"
+                                      : "pointer",
+                                    transition: "all 0.2s ease",
+                                    backgroundColor: "#EF4444",
+                                    color: "white",
+                                    opacity: isRolling ? 0.6 : 1,
+                                  }}
+                                  onClick={(e) =>
+                                    !isRolling &&
+                                    handleDamageRoll(creature, attack, e, false)
+                                  }
+                                  disabled={isRolling}
+                                  title="Roll damage"
+                                >
+                                  <Zap size={12} />
+                                  Damage
+                                </button>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "6px",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {!attack.save_dc && (
-                            <button
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: "4px 10px",
-                                fontSize: "10px",
-                                fontWeight: "500",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: isRolling ? "not-allowed" : "pointer",
-                                transition: "all 0.2s ease",
-                                backgroundColor: "#b27424",
-                                color: "white",
-                                opacity: isRolling ? 0.6 : 1,
-                              }}
-                              onClick={(e) =>
-                                !isRolling &&
-                                handleAttackRoll(creature, attack, e)
-                              }
-                              disabled={isRolling}
-                              title={`Roll attack (d20${
-                                attack.attack_bonus
-                                  ? ` + ${attack.attack_bonus}`
-                                  : ""
-                              })`}
-                            >
-                              <Sword size={12} />
-                              Attack
-                            </button>
-                          )}
-                          {(attack.damage_quantity || attack.damage_die) && (
-                            <button
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: "4px 10px",
-                                fontSize: "10px",
-                                fontWeight: "500",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: isRolling ? "not-allowed" : "pointer",
-                                transition: "all 0.2s ease",
-                                backgroundColor: "#EF4444",
-                                color: "white",
-                                opacity: isRolling ? 0.6 : 1,
-                              }}
-                              onClick={(e) =>
-                                !isRolling &&
-                                handleDamageRoll(creature, attack, e, false)
-                              }
-                              disabled={isRolling}
-                              title="Roll damage"
-                            >
-                              <Zap size={12} />
-                              Damage
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -2886,8 +3111,10 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                       <div
                         key={idx}
                         style={{
-                          marginBottom: idx < creature.traits.length - 1 ? "12px" : "0",
-                          paddingBottom: idx < creature.traits.length - 1 ? "12px" : "0",
+                          marginBottom:
+                            idx < creature.traits.length - 1 ? "12px" : "0",
+                          paddingBottom:
+                            idx < creature.traits.length - 1 ? "12px" : "0",
                           borderBottom:
                             idx < creature.traits.length - 1
                               ? `1px solid ${theme.border}`
