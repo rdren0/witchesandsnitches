@@ -164,7 +164,8 @@ const AdminDashboard = ({ supabase }) => {
       const { data: allCharacters } = await supabase
         .from("characters")
         .select("discord_user_id, game_session")
-        .eq("active", true);
+        .eq("active", true)
+        .limit(500); // Safety limit for stats calculation
 
       const validCharacters =
         allCharacters?.filter(
@@ -185,7 +186,8 @@ const AdminDashboard = ({ supabase }) => {
       const { data: downtimeSheets } = await supabase
         .from("character_downtime")
         .select("review_status, is_draft")
-        .eq("archived", false);
+        .eq("archived", false)
+        .limit(500); // Safety limit for stats calculation
 
       const pendingReviewCount =
         downtimeSheets?.filter(

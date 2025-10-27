@@ -34,7 +34,20 @@ const SessionManagement = ({ supabase }) => {
         .from("characters")
         .select(
           `
-          *,
+          id,
+          name,
+          level,
+          game_session,
+          discord_user_id,
+          house,
+          subclass,
+          background,
+          casting_style,
+          hit_points,
+          current_hit_points,
+          current_hit_dice,
+          created_at,
+          active,
           character_resources (
             inspiration,
             corruption_points
@@ -43,7 +56,8 @@ const SessionManagement = ({ supabase }) => {
         )
         .eq("active", true)
         .order("game_session")
-        .order("name");
+        .order("name")
+        .limit(200); // Safety limit to prevent excessive data transfer
 
       if (charactersError) {
         throw charactersError;

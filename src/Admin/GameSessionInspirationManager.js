@@ -359,7 +359,8 @@ const GameSessionInspirationManager = ({ supabase }) => {
         )
         .eq("active", true)
         .order("game_session")
-        .order("name");
+        .order("name")
+        .limit(200); // Safety limit to prevent excessive data transfer
 
       if (charactersError) {
         throw charactersError;
@@ -367,7 +368,8 @@ const GameSessionInspirationManager = ({ supabase }) => {
 
       const { data: resources, error: resourcesError } = await supabase
         .from("character_resources")
-        .select("character_id, discord_user_id, inspiration");
+        .select("character_id, discord_user_id, inspiration")
+        .limit(200); // Safety limit to prevent excessive data transfer
 
       if (resourcesError) {
         throw resourcesError;
