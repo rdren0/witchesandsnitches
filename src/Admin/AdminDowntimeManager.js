@@ -302,7 +302,16 @@ const AdminDowntimeManager = ({ supabase }) => {
         .from("character_downtime")
         .select(
           `
-          *,
+          id,
+          character_id,
+          character_name,
+          is_draft,
+          review_status,
+          submitted_at,
+          year,
+          school_year,
+          semester,
+          archived,
           characters (
             id,
             name,
@@ -313,7 +322,8 @@ const AdminDowntimeManager = ({ supabase }) => {
         `
         )
         .eq("archived", false)
-        .order("submitted_at", { ascending: false });
+        .order("submitted_at", { ascending: false })
+        .limit(300); // Safety limit: load most recent 300 sheets
 
       if (sheetsError) throw sheetsError;
 

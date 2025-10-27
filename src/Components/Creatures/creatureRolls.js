@@ -22,7 +22,7 @@ export const rollCreatureInitiative = async ({
 
     if (showRollResult) {
       showRollResult({
-        title: "Initiative",
+        title: `${creature.name} - Initiative`,
         rollValue: d20Value,
         modifier: initiativeModifier,
         total: total,
@@ -53,11 +53,11 @@ export const rollCreatureInitiative = async ({
     await sendDiscordRollWebhook({
       character: {
         name: creature.name,
-        gameSession: creature.gameSession || "default",
+        gameSession: ownerCharacter?.gameSession || "default",
         image_url: creature.image_url,
       },
       rollType: "Initiative",
-      title: "Initiative",
+      title: `${creature.name} - Initiative`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
@@ -83,6 +83,7 @@ export const rollCreatureSavingThrow = async ({
   savingThrowModifier,
   showRollResult,
   ownerCharacter,
+  isProficient = false,
 }) => {
   try {
     const roller = new DiceRoller();
@@ -95,7 +96,7 @@ export const rollCreatureSavingThrow = async ({
 
     if (showRollResult) {
       showRollResult({
-        title: `${abilityName} Save`,
+        title: `${creature.name} - ${abilityName} Save`,
         rollValue: d20Value,
         modifier: savingThrowModifier,
         total: total,
@@ -123,20 +124,28 @@ export const rollCreatureSavingThrow = async ({
       });
     }
 
+    if (isProficient) {
+      fields.push({
+        name: "Proficient",
+        value: "This creature is proficient in this saving throw",
+        inline: false,
+      });
+    }
+
     await sendDiscordRollWebhook({
       character: {
         name: creature.name,
-        gameSession: creature.gameSession || "default",
+        gameSession: ownerCharacter?.gameSession || "default",
         image_url: creature.image_url,
       },
       rollType: "Saving Throw",
-      title: `${abilityName} Save`,
+      title: `${creature.name} - ${abilityName} Save`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
         ? "Natural 1!"
         : "",
-      embedColor: getRollResultColor(rollResult, ROLL_COLORS.SAVE),
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.saving_throw),
       rollResult,
       fields,
       useCharacterAvatar: true,
@@ -168,7 +177,7 @@ export const rollCreatureAbility = async ({
 
     if (showRollResult) {
       showRollResult({
-        title: `${abilityName} Check`,
+        title: `${creature.name} - ${abilityName} Check`,
         rollValue: d20Value,
         modifier: abilityModifier,
         total: total,
@@ -199,17 +208,17 @@ export const rollCreatureAbility = async ({
     await sendDiscordRollWebhook({
       character: {
         name: creature.name,
-        gameSession: creature.gameSession || "default",
+        gameSession: ownerCharacter?.gameSession || "default",
         image_url: creature.image_url,
       },
       rollType: "Ability Check",
-      title: `${abilityName} Check`,
+      title: `${creature.name} - ${abilityName} Check`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
         ? "Natural 1!"
         : "",
-      embedColor: getRollResultColor(rollResult, ROLL_COLORS.ABILITY),
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
       rollResult,
       fields,
       useCharacterAvatar: true,
@@ -240,7 +249,7 @@ export const rollCreatureAttackOnly = async ({
 
     if (showRollResult) {
       showRollResult({
-        title: `${attack.name} - Attack Roll`,
+        title: `${creature.name} - ${attack.name} - Attack Roll`,
         rollValue: d20Value,
         modifier: attackBonus,
         total: attackTotal,
@@ -288,17 +297,17 @@ export const rollCreatureAttackOnly = async ({
     await sendDiscordRollWebhook({
       character: {
         name: creature.name,
-        gameSession: creature.gameSession || "default",
+        gameSession: ownerCharacter?.gameSession || "default",
         image_url: creature.image_url,
       },
       rollType: "Attack Roll",
-      title: `${attack.name} - Attack Roll`,
+      title: `${creature.name} - ${attack.name} - Attack Roll`,
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
         ? "Natural 1!"
         : "",
-      embedColor: getRollResultColor(attackRollResult, ROLL_COLORS.DAMAGE),
+      embedColor: getRollResultColor(attackRollResult, ROLL_COLORS.damage),
       rollResult: attackRollResult,
       fields,
       useCharacterAvatar: true,
@@ -348,7 +357,7 @@ export const rollCreatureDamage = async ({
 
     if (showRollResult) {
       showRollResult({
-        title: `${attack.name} - Damage`,
+        title: `${creature.name} - ${attack.name} - Damage`,
         rollValue: damageTotal,
         modifier: 0,
         total: damageTotal,
@@ -376,14 +385,6 @@ export const rollCreatureDamage = async ({
       damageDescription += ` (Critical Hit - doubled dice!)`;
     }
 
-    fields.push({
-      name: "💥 Damage Roll",
-      value: `**${damageTotal}** ${
-        attack.damage_type || ""
-      } damage\n_${damageDescription}_`,
-      inline: false,
-    });
-
     if (attack.description) {
       fields.push({
         name: "Special",
@@ -392,17 +393,24 @@ export const rollCreatureDamage = async ({
       });
     }
 
+    const damageRollResult = {
+      rollDetailsDisplay: `${damageFormula} = ${damageTotal}`,
+      total: damageTotal,
+      isCriticalSuccess: isCritical,
+      isCriticalFailure: false,
+    };
+
     await sendDiscordRollWebhook({
       character: {
         name: creature.name,
-        gameSession: creature.gameSession || "default",
+        gameSession: ownerCharacter?.gameSession || "default",
         image_url: creature.image_url,
       },
       rollType: "Damage Roll",
-      title: `${attack.name} - Damage`,
+      title: `${creature.name} - ${attack.name} - Damage`,
       description: isCritical ? "Critical Hit - Damage Doubled!" : "",
-      embedColor: ROLL_COLORS.DAMAGE,
-      rollResult: null,
+      embedColor: ROLL_COLORS.damage,
+      rollResult: damageRollResult,
       fields,
       useCharacterAvatar: true,
     });
@@ -410,6 +418,115 @@ export const rollCreatureDamage = async ({
     return damageTotal;
   } catch (error) {
     console.error("Error rolling creature damage:", error);
+    return null;
+  }
+};
+
+export const rollCreatureSkill = async ({
+  creature,
+  skillName,
+  skillKey,
+  abilityModifier,
+  proficiencyBonus = 0,
+  isProficient = false,
+  hasAdvantage = false,
+  proficiencyNote = "",
+  advantageNote = "",
+  showRollResult,
+  ownerCharacter,
+}) => {
+  try {
+    const roller = new DiceRoller();
+
+    // Roll with advantage if applicable
+    const rollFormula = hasAdvantage ? "2d20kh1" : "1d20";
+    const roll = roller.roll(rollFormula);
+    const d20Value = hasAdvantage ? Math.max(...roll.rolls[0].rolls.map(r => r.value)) : roll.total;
+
+    const totalModifier = abilityModifier + (isProficient ? proficiencyBonus : 0);
+    const total = d20Value + totalModifier;
+
+    const isCriticalSuccess = d20Value === 20;
+    const isCriticalFailure = d20Value === 1;
+
+    if (showRollResult) {
+      showRollResult({
+        title: `${creature.name} - ${skillName}`,
+        rollValue: d20Value,
+        modifier: totalModifier,
+        total: total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "skill",
+        description: `Rolling ${skillName} check for ${creature.name}${hasAdvantage ? " (with advantage)" : ""}`,
+      });
+    }
+
+    const rollResult = {
+      d20Roll: d20Value,
+      modifier: totalModifier,
+      total: total,
+      isCriticalSuccess,
+      isCriticalFailure,
+      hasAdvantage,
+    };
+
+    const fields = [];
+    if (ownerCharacter) {
+      fields.push({
+        name: "Belongs to",
+        value: ownerCharacter.name,
+        inline: true,
+      });
+    }
+
+    // Add proficiency/advantage notes
+    const notes = [];
+    if (isProficient) {
+      if (proficiencyNote) {
+        notes.push(`Proficiency: ${proficiencyNote}`);
+      } else {
+        notes.push("Proficient");
+      }
+    }
+    if (hasAdvantage) {
+      if (advantageNote) {
+        notes.push(`Advantage: ${advantageNote}`);
+      } else {
+        notes.push("Rolling with advantage");
+      }
+    }
+
+    if (notes.length > 0) {
+      fields.push({
+        name: "Notes",
+        value: notes.join("\n"),
+        inline: false,
+      });
+    }
+
+    await sendDiscordRollWebhook({
+      character: {
+        name: creature.name,
+        gameSession: ownerCharacter?.gameSession || "default",
+        image_url: creature.image_url,
+      },
+      rollType: "Skill Check",
+      title: `${creature.name} - ${skillName}`,
+      description: isCriticalSuccess
+        ? "Natural 20!"
+        : isCriticalFailure
+        ? "Natural 1!"
+        : "",
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
+      rollResult,
+      fields,
+      useCharacterAvatar: true,
+    });
+
+    return total;
+  } catch (error) {
+    console.error("Error rolling creature skill:", error);
     return null;
   }
 };
