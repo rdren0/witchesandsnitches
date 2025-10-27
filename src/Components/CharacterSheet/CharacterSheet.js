@@ -803,14 +803,10 @@ const CharacterSheet = ({
 
   useEffect(() => {
     fetchCharacterDetails();
-  }, [
-    selectedCharacter?.id,
-    discordUserId,
-    supabase,
-    adminMode,
-    isUserAdmin,
-    fetchCharacterDetails,
-  ]);
+    // Only depend on fetchCharacterDetails - it already includes all necessary dependencies
+    // Having both the callback AND its dependencies is redundant and can cause extra renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchCharacterDetails]);
 
   const handleShortRestClick = () => {
     if (!character || character.currentHitDice <= 0) {
@@ -849,7 +845,9 @@ const CharacterSheet = ({
         character.name
       }?\n\nThis will restore:\n• HP: ${currentHP} → ${maxHP}\n• Hit Dice: ${currentHitDice} → ${maxHitDice}${
         hasSpellSlots ? "\n• All Spell Slots" : ""
-      }${hasSorceryPoints ? "\n• All Sorcery Points" : ""}${hasLuckyFeat ? "\n• All Luck Points" : ""}`
+      }${hasSorceryPoints ? "\n• All Sorcery Points" : ""}${
+        hasLuckyFeat ? "\n• All Luck Points" : ""
+      }`
     );
     if (!confirmed) return;
 
@@ -923,7 +921,9 @@ const CharacterSheet = ({
         type: "longrest",
         description: `${hpRestored} HP restored • ${hitDiceRestored} Hit Dice restored${
           hasSpellSlots ? " • All spell slots restored" : ""
-        }${hasSorceryPoints ? " • All sorcery points restored" : ""} • ${character.name} is fully rested!`,
+        }${hasSorceryPoints ? " • All sorcery points restored" : ""} • ${
+          character.name
+        } is fully rested!`,
       });
 
       const additionalFields = [
@@ -1296,7 +1296,6 @@ const CharacterSheet = ({
             </div>
 
             <div style={styles.headerCard}>
-
               <div
                 style={{
                   ...styles.combatStats,
