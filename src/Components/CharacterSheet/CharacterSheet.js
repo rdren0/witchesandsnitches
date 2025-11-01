@@ -687,7 +687,6 @@ const CharacterSheet = ({
         );
 
         const resources = data.character_resources?.[0] || {};
-        console.log(data);
 
         const transformedCharacter = {
           ac: data.ac || { override: null, modifier: 0 },
