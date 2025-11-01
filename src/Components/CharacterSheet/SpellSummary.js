@@ -33,8 +33,21 @@ const SpellSummary = ({
     error: spellsError,
   } = useSpells({ realtime: false });
 
+  // DEBUG: Log spells loading
+  console.log('[SPELL PROGRESS DEBUG] useSpells hook result:', {
+    spellsCount: spells?.length || 0,
+    spellsLoading,
+    spellsError,
+    firstFewSpells: spells?.slice(0, 3).map(s => s.name)
+  });
+
   const spellsData = useMemo(() => {
-    return transformSpellsToNestedStructure(spells);
+    const transformed = transformSpellsToNestedStructure(spells);
+    console.log('[SPELL PROGRESS DEBUG] Transformed spellsData:', {
+      schools: Object.keys(transformed || {}),
+      totalSchools: Object.keys(transformed || {}).length
+    });
+    return transformed;
   }, [spells]);
 
   const [spellAttempts, setSpellAttempts] = useState({});
@@ -924,6 +937,15 @@ const SpellSummary = ({
       const isMastered = successfulAttempts >= 2;
       const level = spell.level || "Unknown";
 
+      // DEBUG: Log mastered spell matching
+      if (isMastered) {
+        console.log('[SPELL PROGRESS DEBUG] Found mastered spell:', {
+          spellName,
+          successfulAttempts,
+          attempts
+        });
+      }
+
       if (isMastered) {
         stats.mastered.push(spell);
         if (!stats.masteredByLevel[level]) {
@@ -952,6 +974,10 @@ const SpellSummary = ({
     });
 
     // DEBUG: Log computed spell stats
+    const allSpellNames = allSpells.map(s => s.name);
+    const unmatchedProgressSpells = spellProgressNames.filter(
+      name => !allSpellNames.includes(name)
+    );
     console.log('[SPELL PROGRESS DEBUG] Computed spell stats:', {
       masteredCount: stats.mastered.length,
       attemptedCount: stats.attempted.length,
@@ -960,7 +986,8 @@ const SpellSummary = ({
       masteredSpells: stats.mastered.map(s => s.name),
       attemptedSpells: stats.attempted.map(s => s.name),
       totalSpellsInData: allSpells.length,
-      spellProgressNamesCount: spellProgressNames.length
+      spellProgressNamesCount: spellProgressNames.length,
+      unmatchedProgressSpells
     });
 
     return stats;
