@@ -23,7 +23,7 @@ import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
 
-import { createAppStyles } from "../styles/masterStyles";
+import { createAppStyles } from "../utils/styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManager from "../Components/CharacterManager/CharacterManager";

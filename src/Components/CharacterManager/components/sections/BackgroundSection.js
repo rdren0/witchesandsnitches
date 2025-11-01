@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { backgroundsData } from "../../../../SharedData/backgroundsData";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 
 const applyBackgroundProficiencies = (character, backgroundName) => {
   const updatedCharacter = { ...character };

@@ -16,7 +16,7 @@ import AbilityScores from "../AbilityScores/AbilityScores";
 import CharacterSheetModals from "./CharacterSheetModals";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getCharacterSheetStyles } from "../../styles/masterStyles";
+import { getCharacterSheetStyles } from "../../utils/styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import { useCallback } from "react";
 import { getDiscordWebhook } from "../../App/const";

@@ -8,7 +8,7 @@ import {
   getAllCharacterSkills,
   parseFeatSkills,
 } from "./skillsUtils";
-import { createBackgroundStyles } from "../../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../../utils/styles/masterStyles";
 import { useTheme } from "../../../../../contexts/ThemeContext";
 
 const SkillsSection = ({ character, onChange, disabled = false }) => {

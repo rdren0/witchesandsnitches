@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { standardFeats } from "../../../../SharedData/standardFeatData";
 import { calculateFinalAbilityScores } from "../../utils/characterUtils";
 
@@ -39,19 +39,24 @@ const AdditionalFeatsASISection = ({
     const selections = [];
     const featChoices = character.featChoices || character.feat_choices || {};
 
-    if (character.level1ChoiceType === "feat" && character.standardFeats?.includes("Resilient")) {
-      const ability = featChoices["Resilient_level1_abilityChoice"] ||
-                     featChoices["Resilient_level1_ability_0"] ||
-                     featChoices["Resilient_levellevel1_abilityChoice"] ||
-                     featChoices["Resilient_levellevel1_ability_0"];
+    if (
+      character.level1ChoiceType === "feat" &&
+      character.standardFeats?.includes("Resilient")
+    ) {
+      const ability =
+        featChoices["Resilient_level1_abilityChoice"] ||
+        featChoices["Resilient_level1_ability_0"] ||
+        featChoices["Resilient_levellevel1_abilityChoice"] ||
+        featChoices["Resilient_levellevel1_ability_0"];
       if (ability) selections.push(ability);
     }
 
     const asiChoices = character.asiChoices || character.asi_choices || {};
     Object.entries(asiChoices).forEach(([level, choice]) => {
       if (choice.type === "feat" && choice.selectedFeat === "Resilient") {
-        const ability = choice.featChoices?.[`Resilient_level${level}_abilityChoice`] ||
-                       choice.featChoices?.[`Resilient_level${level}_ability_0`];
+        const ability =
+          choice.featChoices?.[`Resilient_level${level}_abilityChoice`] ||
+          choice.featChoices?.[`Resilient_level${level}_ability_0`];
         if (ability) selections.push(ability);
       }
     });
@@ -59,7 +64,9 @@ const AdditionalFeatsASISection = ({
     additionalFeats.forEach((featName, index) => {
       if (featName === "Resilient") {
         const key = index === 0 ? "Resilient" : `Resilient_additional_${index}`;
-        const ability = featChoices[`${key}_abilityChoice`] || featChoices[`${key}_ability_0`];
+        const ability =
+          featChoices[`${key}_abilityChoice`] ||
+          featChoices[`${key}_ability_0`];
         if (ability) selections.push(ability);
       }
     });
@@ -74,7 +81,7 @@ const AdditionalFeatsASISection = ({
 
     if (feat.benefits.abilityScoreIncrease) {
       const increase = feat.benefits.abilityScoreIncrease;
-      if ((increase.type === "choice" || increase.type === "choice_any")) {
+      if (increase.type === "choice" || increase.type === "choice_any") {
         let abilityOptions = increase.abilities || [
           "strength",
           "dexterity",
@@ -86,13 +93,19 @@ const AdditionalFeatsASISection = ({
 
         if (feat.name === "Resilient") {
           const allSelections = getAllResilientSelections();
-          const currentKey = featIndex !== null
-            ? (featIndex === 0 ? "Resilient" : `Resilient_additional_${featIndex}`)
-            : "Resilient";
-          const featChoices = character.featChoices || character.feat_choices || {};
-          const currentSelection = featChoices[`${currentKey}_abilityChoice`] || featChoices[`${currentKey}_ability_0`];
+          const currentKey =
+            featIndex !== null
+              ? featIndex === 0
+                ? "Resilient"
+                : `Resilient_additional_${featIndex}`
+              : "Resilient";
+          const featChoices =
+            character.featChoices || character.feat_choices || {};
+          const currentSelection =
+            featChoices[`${currentKey}_abilityChoice`] ||
+            featChoices[`${currentKey}_ability_0`];
 
-          abilityOptions = abilityOptions.filter(ability => {
+          abilityOptions = abilityOptions.filter((ability) => {
             if (ability === currentSelection) return true;
             return !allSelections.includes(ability);
           });
@@ -152,12 +165,13 @@ const AdditionalFeatsASISection = ({
         ? value.toLowerCase()
         : value;
 
-    const feat = standardFeats.find(f => f.name === featName);
+    const feat = standardFeats.find((f) => f.name === featName);
     const isRepeatable = feat?.repeatable;
 
     let actualChoiceId = choiceId;
     if (isRepeatable && featIndex !== null) {
-      const instanceKey = featIndex === 0 ? featName : `${featName}_additional_${featIndex}`;
+      const instanceKey =
+        featIndex === 0 ? featName : `${featName}_additional_${featIndex}`;
       actualChoiceId = choiceId.replace(featName, instanceKey);
     }
 
@@ -315,16 +329,27 @@ const AdditionalFeatsASISection = ({
 
                     const characterWithoutThisFeat = {
                       ...character,
-                      additionalFeats: (character.additionalFeats || []).filter((_, i) => i !== index),
-                      additional_feats: (character.additional_feats || []).filter((_, i) => i !== index),
+                      additionalFeats: (character.additionalFeats || []).filter(
+                        (_, i) => i !== index
+                      ),
+                      additional_feats: (
+                        character.additional_feats || []
+                      ).filter((_, i) => i !== index),
                     };
-                    const finalAbilityScores = calculateFinalAbilityScores(characterWithoutThisFeat);
+                    const finalAbilityScores = calculateFinalAbilityScores(
+                      characterWithoutThisFeat
+                    );
 
-                    const instanceKey = index === 0 ? featName : `${featName}_additional_${index}`;
+                    const instanceKey =
+                      index === 0
+                        ? featName
+                        : `${featName}_additional_${index}`;
                     const actualChoiceId = feat.repeatable
                       ? `${instanceKey}_ability_0`
                       : `${featName}_ability_0`;
-                    const storedAbilityValue = featChoicesData[actualChoiceId] || featChoicesData[`${instanceKey}_abilityChoice`];
+                    const storedAbilityValue =
+                      featChoicesData[actualChoiceId] ||
+                      featChoicesData[`${instanceKey}_abilityChoice`];
 
                     return (
                       <div
@@ -397,12 +422,16 @@ const AdditionalFeatsASISection = ({
                                 >
                                   {choice.options.map((option) => {
                                     const storedValue =
-                                      featChoicesData[actualChoiceId] || featChoicesData[`${instanceKey}_abilityChoice`];
+                                      featChoicesData[actualChoiceId] ||
+                                      featChoicesData[
+                                        `${instanceKey}_abilityChoice`
+                                      ];
                                     const isSelected =
                                       storedValue === option ||
                                       storedValue === option.toLowerCase();
 
-                                    const isAbilityChoice = choice.type === "ability";
+                                    const isAbilityChoice =
+                                      choice.type === "ability";
                                     const abilityKey = option.toLowerCase();
                                     const currentScore = isAbilityChoice
                                       ? finalAbilityScores[abilityKey] || 10
@@ -410,16 +439,23 @@ const AdditionalFeatsASISection = ({
                                     const newScore = isAbilityChoice
                                       ? currentScore + 1
                                       : null;
-                                    const exceedsMax = isAbilityChoice && newScore > 20;
+                                    const exceedsMax =
+                                      isAbilityChoice && newScore > 20;
 
                                     return (
                                       <label
                                         key={option}
                                         style={{
                                           display: "flex",
-                                          flexDirection: isAbilityChoice ? "column" : "row",
-                                          alignItems: isAbilityChoice ? "flex-start" : "center",
-                                          padding: isAbilityChoice ? "8px 12px" : "6px 12px",
+                                          flexDirection: isAbilityChoice
+                                            ? "column"
+                                            : "row",
+                                          alignItems: isAbilityChoice
+                                            ? "flex-start"
+                                            : "center",
+                                          padding: isAbilityChoice
+                                            ? "8px 12px"
+                                            : "6px 12px",
                                           border: `2px solid ${
                                             isSelected
                                               ? theme.primary
@@ -444,7 +480,13 @@ const AdditionalFeatsASISection = ({
                                           transition: "all 0.2s ease",
                                         }}
                                       >
-                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            width: "100%",
+                                          }}
+                                        >
                                           <input
                                             type="radio"
                                             name={`${actualChoiceId}_${index}`}
@@ -457,18 +499,18 @@ const AdditionalFeatsASISection = ({
                                                 choice.id,
                                                 option,
                                                 index
-                                            )
-                                          }
-                                          disabled={disabled}
-                                          style={{
-                                            marginRight: "6px",
-                                            accentColor: theme.primary,
-                                            cursor: disabled
-                                              ? "not-allowed"
-                                              : "pointer",
-                                          }}
-                                        />
-                                        <span>{option}</span>
+                                              )
+                                            }
+                                            disabled={disabled}
+                                            style={{
+                                              marginRight: "6px",
+                                              accentColor: theme.primary,
+                                              cursor: disabled
+                                                ? "not-allowed"
+                                                : "pointer",
+                                            }}
+                                          />
+                                          <span>{option}</span>
                                         </div>
                                         {isAbilityChoice && (
                                           <div
@@ -483,7 +525,8 @@ const AdditionalFeatsASISection = ({
                                             {exceedsMax && (
                                               <span
                                                 style={{
-                                                  color: theme.warning || "#f59e0b",
+                                                  color:
+                                                    theme.warning || "#f59e0b",
                                                   fontWeight: "600",
                                                   marginLeft: "4px",
                                                 }}

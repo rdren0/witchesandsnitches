@@ -9,7 +9,8 @@ import {
   X,
   Dice6,
 } from "lucide-react";
-import { spellsData } from "../../SharedData/spells";
+import { useSpells } from "../../hooks/useSpells";
+import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { useRollModal, useRollFunctions } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 import { getSpellModifier } from "../SpellBook/utils";
@@ -25,6 +26,17 @@ const SpellSummary = ({
   const { theme } = useTheme();
   const { showRollResult } = useRollModal();
   const { attemptSpell } = useRollFunctions();
+
+  const {
+    spells,
+    loading: spellsLoading,
+    error: spellsError,
+  } = useSpells({ realtime: false });
+
+  const spellsData = useMemo(() => {
+    return transformSpellsToNestedStructure(spells);
+  }, [spells]);
+
   const [spellAttempts, setSpellAttempts] = useState({});
   const [criticalSuccesses, setCriticalSuccesses] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
@@ -856,11 +868,13 @@ const SpellSummary = ({
 
     const allSpells = [];
     Object.values(spellsData).forEach((subjectData) => {
-      Object.values(subjectData.levels).forEach((spells) => {
-        spells.forEach((spell) => {
-          allSpells.push(spell);
+      if (subjectData && subjectData.levels) {
+        Object.values(subjectData.levels).forEach((spells) => {
+          spells.forEach((spell) => {
+            allSpells.push(spell);
+          });
         });
-      });
+      }
     });
 
     const spellProgressNames = Object.keys(spellAttempts);

@@ -1,5 +1,5 @@
 import React from "react";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import {
   backgroundsData,

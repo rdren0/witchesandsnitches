@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { subclassesData } from "../../../../SharedData/subclassesData";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 
 const SubclassSection = ({ character, onChange, disabled = false }) => {

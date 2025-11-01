@@ -25,7 +25,6 @@ import {
   Lock,
 } from "lucide-react";
 
-import { spellsData } from "../../SharedData/spells";
 import { getSpellModifier, getModifierInfo, hasSubclassFeature } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
@@ -550,6 +549,7 @@ export const SubjectCard = ({
   selectedLevels = [],
   selectedAttemptFilters = [],
   onSpellProgressUpdate,
+  allSpellsData,
 }) => {
   const {
     attemptSpell,
@@ -812,7 +812,7 @@ export const SubjectCard = ({
   const getSpellData = (spellName) => {
     if (!spellName) return null;
 
-    for (const [subject, subjectData] of Object.entries(spellsData)) {
+    for (const [subject, subjectData] of Object.entries(allSpellsData || {})) {
       if (subjectData.levels) {
         for (const [, levelSpells] of Object.entries(subjectData.levels)) {
           const spell = levelSpells.find((s) => s.name === spellName);
@@ -865,6 +865,7 @@ export const SubjectCard = ({
       supabase,
       showBonusDiceModal,
       hideBonusDiceModal,
+      spellsData: allSpellsData,
     });
   };
 
@@ -917,7 +918,7 @@ export const SubjectCard = ({
   };
 
   const getSubjectStats = (subject) => {
-    const levels = spellsData[subject].levels;
+    const levels = allSpellsData[subject].levels;
     const totalSpells = Object.values(levels).reduce(
       (total, spells) => total + spells.length,
       0
@@ -2209,7 +2210,15 @@ export const SubjectCard = ({
 
   const filteredLevels = useMemo(() => {
     if (!activeSearchTerm || activeSearchTerm.trim() === "") {
-      return Object.entries(subjectData.levels);
+      return Object.entries(subjectData.levels).sort(([levelA], [levelB]) => {
+        if (levelA === "Cantrips") return -1;
+        if (levelB === "Cantrips") return 1;
+
+        const numA = parseInt(levelA.match(/(\d+)/)?.[1] || "0");
+        const numB = parseInt(levelB.match(/(\d+)/)?.[1] || "0");
+
+        return numA - numB;
+      });
     }
     return [];
   }, [subjectData.levels, activeSearchTerm]);

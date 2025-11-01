@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+import { useSpells } from "../hooks/useSpells";
+import { transformSpellsToNestedStructure } from "../utils/spellsTransform";
 import {
   calculateModifier,
   activityRequiresDualChecks,
@@ -10,7 +12,6 @@ import {
   activityRequiresAbilitySelection,
 } from "../Components/Downtime/downtimeHelpers";
 import { getSpellModifier } from "../Components/SpellBook/utils";
-import { spellsData } from "../SharedData/spells";
 import {
   Check,
   X,
@@ -28,6 +29,17 @@ export const formatModifier = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
 const AdminDowntimeReviewForm = React.memo(
   ({ supabase, sheetId, onClose, onReviewComplete }) => {
     const { theme } = useTheme();
+
+    const {
+      spells,
+      loading: spellsLoading,
+      error: spellsError,
+    } = useSpells({ realtime: false });
+
+    const spellsData = useMemo(() => {
+      return transformSpellsToNestedStructure(spells);
+    }, [spells]);
+
     const [downtimeSheet, setDowntimeSheet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -431,24 +443,27 @@ const AdminDowntimeReviewForm = React.memo(
       [styles.reviewButton, reviewStatus, theme]
     );
 
-    const getSpellData = useCallback((spellName) => {
-      if (!spellName) return null;
+    const getSpellData = useCallback(
+      (spellName) => {
+        if (!spellName || !spellsData) return null;
 
-      for (const [subject, subjectData] of Object.entries(spellsData)) {
-        if (subjectData.levels) {
-          for (const [, levelSpells] of Object.entries(subjectData.levels)) {
-            const spell = levelSpells.find((s) => s.name === spellName);
-            if (spell) {
-              return {
-                ...spell,
-                subject: subject,
-              };
+        for (const [subject, subjectData] of Object.entries(spellsData)) {
+          if (subjectData.levels) {
+            for (const [, levelSpells] of Object.entries(subjectData.levels)) {
+              const spell = levelSpells.find((s) => s.name === spellName);
+              if (spell) {
+                return {
+                  ...spell,
+                  subject: subject,
+                };
+              }
             }
           }
         }
-      }
-      return null;
-    }, []);
+        return null;
+      },
+      [spellsData]
+    );
 
     const calculateResearchDC = useCallback(
       (playerYear, spellYear, spellName) => {
