@@ -149,10 +149,6 @@ export const getAvailableASILevels = (currentLevel) => {
 };
 
 export const calculateFinalAbilityScores = (character) => {
-  console.log('[DEBUG calculateFinalAbilityScores] Called with character');
-  console.log('[DEBUG] base_ability_scores:', character?.base_ability_scores);
-  console.log('[DEBUG] baseAbilityScores:', character?.baseAbilityScores);
-
   const abilities = [
     "strength",
     "dexterity",
@@ -202,11 +198,6 @@ export const calculateFinalAbilityScores = (character) => {
         character.abilityScores?.[ability] || character[ability] || 10;
     }
 
-    if (ability === 'constitution') {
-      console.log('[DEBUG CON] Starting constitution calculation');
-      console.log('[DEBUG CON] baseScore:', baseScore);
-    }
-
     let finalScore = baseScore;
 
     const { totalModifiers: nonASIModifiers } =
@@ -217,19 +208,8 @@ export const calculateFinalAbilityScores = (character) => {
         heritageChoices
       );
 
-    if (ability === 'constitution') {
-      console.log('[DEBUG CON] nonASIModifiers:', nonASIModifiers);
-    }
-
     if (nonASIModifiers[ability]) {
-      if (ability === 'constitution') {
-        console.log('[DEBUG CON] Adding nonASIModifiers:', nonASIModifiers[ability]);
-      }
       finalScore += nonASIModifiers[ability];
-    }
-
-    if (ability === 'constitution') {
-      console.log('[DEBUG CON] After nonASI modifiers, finalScore:', finalScore);
     }
 
     if (asiChoices) {
@@ -237,9 +217,6 @@ export const calculateFinalAbilityScores = (character) => {
         if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
           choice.abilityScoreIncreases.forEach((increase) => {
             if (increase.ability === ability && increase.increase) {
-              if (ability === 'constitution') {
-                console.log('[DEBUG CON] Adding ASI increase:', increase.increase);
-              }
               finalScore += increase.increase;
             }
           });
@@ -247,15 +224,8 @@ export const calculateFinalAbilityScores = (character) => {
       });
     }
 
-    if (ability === 'constitution') {
-      console.log('[DEBUG CON] After ASI choices, finalScore:', finalScore);
-    }
-
     const additionalASI = character.additionalASI || character.additional_asi;
     if (additionalASI && Array.isArray(additionalASI)) {
-      if (ability === 'constitution') {
-        console.log('[DEBUG CON] additionalASI:', additionalASI);
-      }
       additionalASI.forEach((asi) => {
         if (
           asi.abilityScoreIncreases &&
@@ -263,18 +233,11 @@ export const calculateFinalAbilityScores = (character) => {
         ) {
           asi.abilityScoreIncreases.forEach((increase) => {
             if (increase.ability === ability && increase.increase) {
-              if (ability === 'constitution') {
-                console.log('[DEBUG CON] Adding additional ASI:', increase.increase);
-              }
               finalScore += increase.increase;
             }
           });
         }
       });
-    }
-
-    if (ability === 'constitution') {
-      console.log('[DEBUG CON] FINAL constitution score:', finalScore);
     }
 
     finalScores[ability] = finalScore;
@@ -603,11 +566,6 @@ export const getAllAbilityModifiers = (character) => {
 };
 
 export const calculateFeatModifiers = (character, featChoices = {}) => {
-  console.log('[DEBUG calculateFeatModifiers] Called');
-  console.log('[DEBUG] character.level1ChoiceType:', character?.level1ChoiceType);
-  console.log('[DEBUG] character.standardFeats:', character?.standardFeats);
-  console.log('[DEBUG] character.standard_feats:', character?.standard_feats);
-  console.log('[DEBUG] featChoices:', featChoices);
   if (!character) {
     return {
       modifiers: {
@@ -697,7 +655,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     }
 
     if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
-      console.log(`[DEBUG processFeatInstance] Applying +${increase.amount} to ${abilityToIncrease} from ${featName} (instanceKey: ${instanceKey})`);
       modifiers[abilityToIncrease] += increase.amount;
 
       if (!featDetails[abilityToIncrease]) {
@@ -712,26 +669,20 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
   };
 
   const allSelectedFeats = getAllSelectedFeats(character);
-  console.log('[DEBUG] allSelectedFeats from getAllSelectedFeats:', allSelectedFeats);
   if (character.level1ChoiceType === "feat" && character.standardFeats) {
-    console.log('[DEBUG] Adding standardFeats:', character.standardFeats);
     allSelectedFeats.push(...character.standardFeats);
   }
   const uniqueFeats = [...new Set(allSelectedFeats)];
-  console.log('[DEBUG] uniqueFeats:', uniqueFeats);
 
   uniqueFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
 
     if (feat?.repeatable) {
-      console.log(`[DEBUG] Processing repeatable feat: ${featName}`);
       if (character.level1ChoiceType === "feat" && character.standardFeats?.includes(featName)) {
-        console.log(`[DEBUG] Processing level 1 instance of ${featName}`);
         processFeatInstance(featName, `${featName}_level1`);
       }
 
       const asiChoices = character.asiChoices || character.asi_choices || {};
-      console.log(`[DEBUG] Checking ASI choices for ${featName}:`, asiChoices);
       Object.entries(asiChoices).forEach(([level, choice]) => {
         if (choice.type === "feat" && choice.selectedFeat === featName) {
           const mergedChoices = { ...featChoices, ...(choice.featChoices || choice.feat_choices || {}) };
@@ -764,7 +715,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
             }
 
             if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
-              console.log(`[DEBUG ASI inline] Applying +${increase.amount} to ${abilityToIncrease} from ${featName} at level ${level}`);
               modifiers[abilityToIncrease] += increase.amount;
               if (!featDetails[abilityToIncrease]) {
                 featDetails[abilityToIncrease] = [];
@@ -791,8 +741,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     }
   });
 
-  console.log('[DEBUG calculateFeatModifiers] Final modifiers:', modifiers);
-  console.log('[DEBUG calculateFeatModifiers] Final featDetails:', featDetails);
   return { modifiers, featDetails };
 };
 
@@ -1081,11 +1029,6 @@ export const calculateTotalModifiersExcludingASI = (
   const houseResult = calculateHouseModifiers(character, houseChoices);
   const heritageResult = calculateHeritageModifiers(character, heritageChoices);
 
-  console.log('[DEBUG ExcludingASI] featResult.modifiers:', featResult.modifiers);
-  console.log('[DEBUG ExcludingASI] backgroundResult.modifiers:', backgroundResult.modifiers);
-  console.log('[DEBUG ExcludingASI] houseResult.modifiers:', houseResult.modifiers);
-  console.log('[DEBUG ExcludingASI] heritageResult.modifiers:', heritageResult.modifiers);
-
   const asiResult = {
     modifiers: {
       strength: 0,
@@ -1136,8 +1079,6 @@ export const calculateTotalModifiersExcludingASI = (
       heritageResult.modifiers.charisma +
       asiResult.modifiers.charisma,
   };
-
-  console.log('[DEBUG ExcludingASI] totalModifiers:', totalModifiers);
 
   const allDetails = {};
   Object.keys(totalModifiers).forEach((ability) => {
