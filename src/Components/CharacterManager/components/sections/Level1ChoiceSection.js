@@ -186,7 +186,7 @@ const Level1ChoiceSection = ({
               isLevel1Choice={true}
               characterLevel={character.level}
               disabled={disabled}
-              contextLevel="level1"
+              contextLevel={1}
             />
           </div>
         )}

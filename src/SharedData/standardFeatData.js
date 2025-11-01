@@ -1280,6 +1280,7 @@ export const standardFeats = [
   },
   {
     name: "Resilient",
+    repeatable: true,
     preview: "Gain proficiency in one saving throw. +1 to that ability.",
     description: [
       "Ability Score Increase: Choose one ability in which you lack saving throw proficiency. Increase the chosen ability score by 1, to a maximum of 20.",

@@ -505,5 +505,5 @@ export const createCharacterNotesStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
-export const getCharacterNotesStyles = (theme) => createCharacterNotesStyles(theme);
+export const getCharacterNotesStyles = (theme) =>
+  createCharacterNotesStyles(theme);

@@ -1187,7 +1187,6 @@ describe("RollModal Components and Functions", () => {
     });
 
     it("should apply Ravenclaw bonus when applicable", async () => {
-      // Mock low roll for Ravenclaw bonus
       DiceRoller.mockImplementation(() => ({
         roll: jest.fn(() => ({ total: 3 })),
       }));
@@ -1200,7 +1199,7 @@ describe("RollModal Components and Functions", () => {
       expect(abilityCheckParams.showRollResult).toHaveBeenCalledWith(
         expect.objectContaining({
           ravenclawBonusApplied: true,
-          rollValue: 6, // 3 boosted to 6
+          rollValue: 6,
           originalRoll: 3,
         })
       );
@@ -1216,7 +1215,7 @@ describe("RollModal Components and Functions", () => {
       await rollAbilityCheckWithProficiency({
         ...abilityCheckParams,
         character: hornedSerpentCharacter,
-        hasProficiency: false, // Required for Horned Serpent bonus
+        hasProficiency: false,
         abilityType: "charisma",
       });
 

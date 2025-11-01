@@ -939,7 +939,6 @@ const SpellSelector = ({
       {isModalOpen && (
         <div style={styles.modalOverlay} onClick={handleCancelSelection}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>
                 {isResearch
@@ -948,10 +947,8 @@ const SpellSelector = ({
               </h3>
             </div>
 
-            {/* Filter Section */}
             <div style={styles.filterSection}>
               <div style={styles.filterGrid}>
-                {/* Search */}
                 <div>
                   <label style={styles.filterLabel}>Search</label>
                   <div style={{ position: "relative" }}>
@@ -983,7 +980,6 @@ const SpellSelector = ({
                   </div>
                 </div>
 
-                {/* Subject Filter */}
                 <div>
                   <label style={styles.filterLabel}>Subject</label>
                   <select
@@ -1011,7 +1007,6 @@ const SpellSelector = ({
                   </select>
                 </div>
 
-                {/* Year Filter */}
                 <div>
                   <label style={styles.filterLabel}>Year</label>
                   <select
@@ -1028,7 +1023,6 @@ const SpellSelector = ({
                   </select>
                 </div>
 
-                {/* Level Filter */}
                 <div>
                   <label style={styles.filterLabel}>Level</label>
                   <select
@@ -1046,7 +1040,6 @@ const SpellSelector = ({
                 </div>
               </div>
 
-              {/* Clear Filters Button */}
               {(searchTerm ||
                 filterSubject !== "all" ||
                 filterYear !== "all" ||
@@ -1071,7 +1064,6 @@ const SpellSelector = ({
                 </button>
               )}
 
-              {/* Sort Controls */}
               <div style={styles.sortGrid}>
                 <div>
                   <label style={styles.filterLabel}>Sort By</label>
@@ -1100,7 +1092,6 @@ const SpellSelector = ({
               </div>
             </div>
 
-            {/* Spell List */}
             <div style={styles.spellListContainer}>
               {availableSpells.length > 0 ? (
                 [...availableSpells].map((spell, index) => {
@@ -1304,7 +1295,6 @@ const SpellSelector = ({
               )}
             </div>
 
-            {/* Footer */}
             <div style={styles.modalFooter}>
               <div style={styles.spellCount}>
                 Showing {availableSpells.length} spell

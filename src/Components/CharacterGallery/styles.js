@@ -285,6 +285,5 @@ export const createCharacterGalleryStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
 export const getCharacterGalleryStyles = (theme) =>
   createCharacterGalleryStyles(theme);

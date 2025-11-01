@@ -57,7 +57,7 @@ const SessionManagement = ({ supabase }) => {
         .eq("active", true)
         .order("game_session")
         .order("name")
-        .limit(200); // Safety limit to prevent excessive data transfer
+        .limit(200); 
 
       if (charactersError) {
         throw charactersError;

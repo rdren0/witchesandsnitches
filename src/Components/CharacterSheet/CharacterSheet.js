@@ -681,8 +681,6 @@ const CharacterSheet = ({
           data.base_ability_scores || data.ability_scores || {};
         const heritageChoices = data.heritage_choices || {};
 
-        const effectiveAbilityScores = calculateFinalAbilityScores(data);
-
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],
           data.asi_choices || {}
@@ -690,25 +688,20 @@ const CharacterSheet = ({
 
         const resources = data.character_resources?.[0] || {};
         console.log(data);
+
         const transformedCharacter = {
-          abilityScores: effectiveAbilityScores,
           ac: data.ac || { override: null, modifier: 0 },
           spellAttack: data.spell_attack || { override: null, modifier: 0 },
           allFeats: allFeats,
-          armorClass:
-            getBaseArmorClass(data.casting_style) +
-            getArmorClassModifier(effectiveAbilityScores),
           asiChoices: data.asi_choices || {},
+          asi_choices: data.asi_choices || {},
           background: data.background || "Unknown",
           baseAbilityScores: baseAbilityScores,
           bloodStatus: data.innate_heritage || "Unknown",
           castingStyle: data.casting_style,
-          charisma: effectiveAbilityScores.charisma || 10,
-          constitution: effectiveAbilityScores.constitution || 10,
           corruptionPoints: resources.corruption_points || 0,
           currentHitDice: data.current_hit_dice || data.level,
           currentHitPoints: data.current_hit_points ?? (data.hit_points || 1),
-          dexterity: effectiveAbilityScores.dexterity || 10,
           discord_user_id: data.discord_user_id,
           gameSession: data.game_session || "",
           hitDie: getHitDie(data.casting_style),
@@ -720,16 +713,11 @@ const CharacterSheet = ({
           imageUrl: data.image_url || "",
           initiative: data.initiative || { modifier: 0, override: null },
           initiativeAbility: data.initiative_ability,
-          initiativeModifier: getInitiativeModifier(
-            data.initiative_ability,
-            effectiveAbilityScores,
-            data
-          ),
           innateHeritage: data.innate_heritage,
           inspiration: resources.inspiration ?? 0,
           luck: resources.luck,
-          intelligence: effectiveAbilityScores.intelligence || 10,
           level: data.level || 1,
+          level1ChoiceType: data.level1_choice_type,
           magicModifiers: data.magic_modifiers || {},
           maxHitDice: data.level,
           maxHitPoints: data.hit_points || 1,
@@ -766,19 +754,42 @@ const CharacterSheet = ({
           spellSlots8: resources.spell_slots_8 || 0,
           spellSlots9: resources.spell_slots_9 || 0,
           standardFeats: data.standard_feats || [],
-          strength: effectiveAbilityScores.strength || 10,
+          standard_feats: data.standard_feats || [],
           subclass: data.subclass,
           subclassChoices: data.subclass_choices || {},
           tempHP: data.temp_hp || 0,
           toolProficiencies: data.tool_proficiencies || [],
           wand: data.wand_type || "Unknown wand",
           wandType: data.wand_type,
-          wisdom: effectiveAbilityScores.wisdom || 10,
           metamagicChoices: data.metamagic_choices || {},
           heritageChoices: heritageChoices,
           castingStyleChoices: data.casting_style_choices || {},
           additional_feats: data.additional_feats || [],
+          feat_choices: data.feat_choices || {},
+          featChoices: data.feat_choices || {},
         };
+
+        const effectiveAbilityScores =
+          calculateFinalAbilityScores(transformedCharacter);
+
+        transformedCharacter.abilityScores = effectiveAbilityScores;
+        transformedCharacter.strength = effectiveAbilityScores.strength || 10;
+        transformedCharacter.dexterity = effectiveAbilityScores.dexterity || 10;
+        transformedCharacter.constitution =
+          effectiveAbilityScores.constitution || 10;
+        transformedCharacter.intelligence =
+          effectiveAbilityScores.intelligence || 10;
+        transformedCharacter.wisdom = effectiveAbilityScores.wisdom || 10;
+        transformedCharacter.charisma = effectiveAbilityScores.charisma || 10;
+        transformedCharacter.armorClass =
+          getBaseArmorClass(data.casting_style) +
+          getArmorClassModifier(effectiveAbilityScores);
+        transformedCharacter.initiativeModifier = getInitiativeModifier(
+          data.initiative_ability,
+          effectiveAbilityScores,
+          data
+        );
+
         setCharacter(transformedCharacter);
       }
     } catch (err) {
@@ -803,9 +814,6 @@ const CharacterSheet = ({
 
   useEffect(() => {
     fetchCharacterDetails();
-    // Only depend on fetchCharacterDetails - it already includes all necessary dependencies
-    // Having both the callback AND its dependencies is redundant and can cause extra renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchCharacterDetails]);
 
   const handleShortRestClick = () => {
@@ -1170,7 +1178,6 @@ const CharacterSheet = ({
                   flexWrap: "wrap",
                 }}
               >
-                {/* Left side - Resources */}
                 <div
                   style={{
                     display: "flex",
@@ -1204,7 +1211,6 @@ const CharacterSheet = ({
                   />
                 </div>
 
-                {/* Right side - Actions */}
                 <div
                   style={{
                     display: "flex",
@@ -1706,7 +1712,7 @@ const CharacterSheet = ({
                 modifiers={modifiers(character)}
               />
 
-              <div style={{ marginTop: "20px" }}>
+              <div>
                 <CharacterTabbedPanel
                   supabase={supabase}
                   user={user}

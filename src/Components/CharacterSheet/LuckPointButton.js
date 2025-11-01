@@ -28,7 +28,6 @@ const LuckPointButton = ({
 
   if (!character) return null;
 
-  // Use the comprehensive feat benefits calculator to check for luck points
   const featBenefits = calculateFeatBenefits(character);
   const maxLuckPoints = featBenefits.resources.luckPoints;
 
@@ -273,7 +272,6 @@ const LuckPointButton = ({
               </div>
             </div>
 
-            {/* Spend Luck Point Section */}
             <button
               style={{
                 ...modalButtonStyle,
@@ -300,7 +298,6 @@ const LuckPointButton = ({
               {isUpdating ? "Spending..." : "Spend Luck Point"}
             </button>
 
-            {/* Manual Adjustment Section */}
             <div
               style={{
                 borderTop: `1px solid ${theme.border}`,
@@ -429,7 +426,6 @@ const LuckPointButton = ({
               </div>
             </div>
 
-            {/* Close Button */}
             <button
               style={{
                 ...modalButtonStyle,

@@ -132,7 +132,6 @@ const SpellBook = ({
 
   useEffect(() => {
     loadSpellProgress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadSpellProgress]);
 
   const attemptFilterOptions = [
@@ -145,7 +144,6 @@ const SpellBook = ({
 
   const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
 
-  // Define core subjects that are always visible
   const coreSubjects = [
     "Charms",
     "Jinxes, Hexes & Curses",
@@ -556,8 +554,6 @@ const SpellBook = ({
     return Array.from(allSpellNames).filter((spellName) => {
       if (!spellExistsInSpellsData(spellName)) return false;
       const status = getSpellAttemptStatus(spellName);
-      // Only count as researched if not mastered and not attempted
-      // Researched trumps failed
       return status.isResearched && !status.isMastered && !status.isAttempted;
     }).length;
   };
@@ -572,8 +568,6 @@ const SpellBook = ({
     return Array.from(allSpellNames).filter((spellName) => {
       if (!spellExistsInSpellsData(spellName)) return false;
       const status = getSpellAttemptStatus(spellName);
-      // Only count as failed if not mastered, not attempted, and not researched
-      // Failed is lowest priority
       return (
         status.hasFailed &&
         !status.isMastered &&

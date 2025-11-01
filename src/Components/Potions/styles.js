@@ -528,5 +528,4 @@ export const createPotionsStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
 export const getPotionsStyles = (theme) => createPotionsStyles(theme);

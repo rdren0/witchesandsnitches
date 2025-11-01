@@ -1067,7 +1067,6 @@ function AppContent() {
       setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, setThemeSelectedCharacter]);
 
   useEffect(() => {

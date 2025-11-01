@@ -117,7 +117,6 @@ const OwlMail = ({
           )
         );
 
-        // Notify parent to update unread count
         if (onMailRead) {
           onMailRead();
         }
@@ -145,7 +144,6 @@ const OwlMail = ({
           setExpandedMail(null);
         }
 
-        // Notify parent to update unread count
         if (onMailRead) {
           onMailRead();
         }

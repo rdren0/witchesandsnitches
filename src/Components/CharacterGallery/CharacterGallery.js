@@ -1272,7 +1272,6 @@ export const CharacterGallery = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [npcNotes, setNpcNotes] = useState({});
 
-  // In admin mode, use the character owner's discord_user_id, otherwise use the logged-in user's
   const discordUserId = adminMode
     ? selectedCharacter?.discord_user_id
     : user?.user_metadata?.provider_id;

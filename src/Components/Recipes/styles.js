@@ -478,5 +478,4 @@ export const createRecipesStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
 export const getRecipesStyles = (theme) => createRecipesStyles(theme);

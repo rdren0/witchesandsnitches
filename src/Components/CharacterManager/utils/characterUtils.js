@@ -605,7 +605,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     const choiceKey2 = `${instanceKey}_abilityChoice`;
     const choiceKey3 = `${instanceKey}_ability`;
 
-    // Support malformed keys from database (e.g., Resilient_levellevel1 instead of Resilient_level1)
     const malformedKey1 = instanceKey.includes('_level1') ? `${featName}_levellevel1_ability_0` : null;
     const malformedKey2 = instanceKey.includes('_level1') ? `${featName}_levellevel1_abilityChoice` : null;
 

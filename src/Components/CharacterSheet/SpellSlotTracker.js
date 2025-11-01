@@ -109,14 +109,8 @@ const SpellSlotTracker = ({
         setIsUpdating(false);
       }
     },
-    // These dependencies don't need character since we check it inside the function
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      selectedCharacterId,
-      discordUserId,
-      supabase,
-      setCharacter,
-    ]
+
+    [selectedCharacterId, discordUserId, supabase, setCharacter]
   );
 
   const [customSlots, setCustomSlots] = useState({
@@ -187,15 +181,8 @@ const SpellSlotTracker = ({
         setIsUpdating(false);
       }
     },
-    // These dependencies don't need character since we check it inside the function
-    // and having character here causes infinite loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      selectedCharacterId,
-      discordUserId,
-      supabase,
-      setCharacter,
-    ]
+
+    [selectedCharacterId, discordUserId, supabase, setCharacter]
   );
 
   const updateSorceryPointsOnLevelUp = useCallback(
@@ -251,15 +238,8 @@ const SpellSlotTracker = ({
         setIsUpdating(false);
       }
     },
-    // These dependencies don't need character since we check it inside the function
-    // and having character here causes infinite loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      selectedCharacterId,
-      discordUserId,
-      supabase,
-      setCharacter,
-    ]
+
+    [selectedCharacterId, discordUserId, supabase, setCharacter]
   );
 
   useEffect(() => {
@@ -272,13 +252,7 @@ const SpellSlotTracker = ({
       updateSorceryPointsOnLevelUp(character.level);
     }
     setLastKnownLevel(character?.level);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    character?.level,
-    lastKnownLevel,
-    // Removed updateMaxSpellSlotsOnLevelUp and updateSorceryPointsOnLevelUp
-    // to prevent infinite re-creation of callbacks
-  ]);
+  }, [character?.level, lastKnownLevel]);
 
   useEffect(() => {
     const autoSetupSpellSlots = async () => {
@@ -294,13 +268,7 @@ const SpellSlotTracker = ({
     };
 
     autoSetupSpellSlots();
-    // Only run when level or character ID changes, not on every character update
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    character?.level,
-    selectedCharacterId,
-    // Removed: character, isUpdating, setupStandardSpellSlots
-  ]);
+  }, [character?.level, selectedCharacterId]);
 
   useEffect(() => {
     const autoSetupSorceryPoints = async () => {
@@ -321,14 +289,7 @@ const SpellSlotTracker = ({
     };
 
     autoSetupSorceryPoints();
-    // Only run when level, character ID, or maxSorceryPoints changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    character?.level,
-    selectedCharacterId,
-    character?.maxSorceryPoints,
-    // Removed: character, isUpdating, updateSorceryPointsOnLevelUp
-  ]);
+  }, [character?.level, selectedCharacterId, character?.maxSorceryPoints]);
 
   const getSpellSlotData = () => {
     const slots = [];
