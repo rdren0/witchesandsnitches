@@ -160,12 +160,12 @@ export const calculateFinalAbilityScores = (character) => {
 
   const finalScores = {};
 
-  const featChoices = { ...character.featChoices };
+  const featChoices = { ...(character.featChoices || character.feat_choices || {}) };
   const asiChoices = character.asiChoices || character.asi_choices;
   if (asiChoices) {
     Object.values(asiChoices).forEach((choice) => {
-      if (choice.type === "feat" && choice.featChoices) {
-        Object.assign(featChoices, choice.featChoices);
+      if (choice.type === "feat" && (choice.featChoices || choice.feat_choices)) {
+        Object.assign(featChoices, choice.featChoices || choice.feat_choices);
       }
     });
   }
@@ -561,6 +561,11 @@ export const getAllAbilityModifiers = (character) => {
 };
 
 export const calculateFeatModifiers = (character, featChoices = {}) => {
+  console.log('[DEBUG calculateFeatModifiers] Called');
+  console.log('[DEBUG] character.level1ChoiceType:', character?.level1ChoiceType);
+  console.log('[DEBUG] character.standardFeats:', character?.standardFeats);
+  console.log('[DEBUG] character.standard_feats:', character?.standard_feats);
+  console.log('[DEBUG] featChoices:', featChoices);
   if (!character) {
     return {
       modifiers: {
@@ -586,15 +591,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
 
   const featDetails = {};
 
-  const allSelectedFeats = getAllSelectedFeats(character);
-
-  if (character.level1ChoiceType === "feat" && character.standardFeats) {
-    allSelectedFeats.push(...character.standardFeats);
-  }
-
-  const uniqueFeats = [...new Set(allSelectedFeats)];
-
-  uniqueFeats.forEach((featName) => {
+  const processFeatInstance = (featName, instanceKey) => {
     const feat = standardFeats.find((f) => f.name === featName);
 
     if (!feat?.benefits?.abilityScoreIncrease) {
@@ -602,12 +599,15 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     }
 
     const increase = feat.benefits.abilityScoreIncrease;
-
     let abilityToIncrease;
 
-    const choiceKey1 = `${featName}_ability_0`;
-    const choiceKey2 = `${featName}_abilityChoice`;
-    const choiceKey3 = `${featName}_ability`;
+    const choiceKey1 = `${instanceKey}_ability_0`;
+    const choiceKey2 = `${instanceKey}_abilityChoice`;
+    const choiceKey3 = `${instanceKey}_ability`;
+
+    // Support malformed keys from database (e.g., Resilient_levellevel1 instead of Resilient_level1)
+    const malformedKey1 = instanceKey.includes('_level1') ? `${featName}_levellevel1_ability_0` : null;
+    const malformedKey2 = instanceKey.includes('_level1') ? `${featName}_levellevel1_abilityChoice` : null;
 
     switch (increase.type) {
       case "fixed":
@@ -616,11 +616,12 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
       case "choice":
       case "choice_any":
         abilityToIncrease =
-          featChoices[choiceKey1] ||
           featChoices[choiceKey2] ||
+          featChoices[choiceKey1] ||
+          (malformedKey2 && featChoices[malformedKey2]) ||
+          (malformedKey1 && featChoices[malformedKey1]) ||
           featChoices[choiceKey3] ||
           increase.abilities?.[0];
-
         break;
       case "spellcasting_ability":
         abilityToIncrease = getSpellcastingAbility(character);
@@ -654,6 +655,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     }
 
     if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
+      console.log(`[DEBUG processFeatInstance] Applying +${increase.amount} to ${abilityToIncrease} from ${featName} (instanceKey: ${instanceKey})`);
       modifiers[abilityToIncrease] += increase.amount;
 
       if (!featDetails[abilityToIncrease]) {
@@ -665,8 +667,90 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         amount: increase.amount,
       });
     }
+  };
+
+  const allSelectedFeats = getAllSelectedFeats(character);
+  console.log('[DEBUG] allSelectedFeats from getAllSelectedFeats:', allSelectedFeats);
+  if (character.level1ChoiceType === "feat" && character.standardFeats) {
+    console.log('[DEBUG] Adding standardFeats:', character.standardFeats);
+    allSelectedFeats.push(...character.standardFeats);
+  }
+  const uniqueFeats = [...new Set(allSelectedFeats)];
+  console.log('[DEBUG] uniqueFeats:', uniqueFeats);
+
+  uniqueFeats.forEach((featName) => {
+    const feat = standardFeats.find((f) => f.name === featName);
+
+    if (feat?.repeatable) {
+      console.log(`[DEBUG] Processing repeatable feat: ${featName}`);
+      if (character.level1ChoiceType === "feat" && character.standardFeats?.includes(featName)) {
+        console.log(`[DEBUG] Processing level 1 instance of ${featName}`);
+        processFeatInstance(featName, `${featName}_level1`);
+      }
+
+      const asiChoices = character.asiChoices || character.asi_choices || {};
+      console.log(`[DEBUG] Checking ASI choices for ${featName}:`, asiChoices);
+      Object.entries(asiChoices).forEach(([level, choice]) => {
+        if (choice.type === "feat" && choice.selectedFeat === featName) {
+          const mergedChoices = { ...featChoices, ...(choice.featChoices || choice.feat_choices || {}) };
+          const instanceKey = `${featName}_level${level}`;
+          const tempFeat = standardFeats.find((f) => f.name === featName);
+          if (tempFeat?.benefits?.abilityScoreIncrease) {
+            const increase = tempFeat.benefits.abilityScoreIncrease;
+            let abilityToIncrease;
+            const choiceKey1 = `${instanceKey}_ability_0`;
+            const choiceKey2 = `${instanceKey}_abilityChoice`;
+            const choiceKey3 = `${instanceKey}_ability`;
+
+            switch (increase.type) {
+              case "choice":
+              case "choice_any":
+                abilityToIncrease =
+                  mergedChoices[choiceKey2] ||
+                  mergedChoices[choiceKey1] ||
+                  mergedChoices[choiceKey3] ||
+                  increase.abilities?.[0];
+                break;
+              case "fixed":
+                abilityToIncrease = increase.ability;
+                break;
+              default:
+                if (increase.ability && !increase.type) {
+                  abilityToIncrease = increase.ability;
+                }
+                break;
+            }
+
+            if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
+              console.log(`[DEBUG ASI inline] Applying +${increase.amount} to ${abilityToIncrease} from ${featName} at level ${level}`);
+              modifiers[abilityToIncrease] += increase.amount;
+              if (!featDetails[abilityToIncrease]) {
+                featDetails[abilityToIncrease] = [];
+              }
+              featDetails[abilityToIncrease].push({
+                source: "feat",
+                featName,
+                amount: increase.amount,
+              });
+            }
+          }
+        }
+      });
+
+      const additionalFeats = character.additionalFeats || character.additional_feats || [];
+      additionalFeats.forEach((fname, index) => {
+        if (fname === featName) {
+          const instanceKey = index === 0 ? featName : `${featName}_additional_${index}`;
+          processFeatInstance(featName, instanceKey);
+        }
+      });
+    } else {
+      processFeatInstance(featName, featName);
+    }
   });
 
+  console.log('[DEBUG calculateFeatModifiers] Final modifiers:', modifiers);
+  console.log('[DEBUG calculateFeatModifiers] Final featDetails:', featDetails);
   return { modifiers, featDetails };
 };
 
