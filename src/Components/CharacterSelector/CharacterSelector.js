@@ -41,35 +41,6 @@ export const CharacterSelector = ({
   const shouldShowDropdown = characters.length > 1;
   const singleCharacter = characters.length === 1 ? characters[0] : null;
 
-  useEffect(() => {
-    if (selectedCharacter) {
-      console.log("CharacterSelector - selectedCharacter:", {
-        id: selectedCharacter.id,
-        name: selectedCharacter.name,
-        imageUrl: selectedCharacter.imageUrl,
-        image_url: selectedCharacter.image_url,
-        hasImageUrl: !!selectedCharacter.imageUrl,
-        hasImage_url: !!selectedCharacter.image_url,
-      });
-    }
-  }, [selectedCharacter]);
-
-  useEffect(() => {
-    console.log("CharacterSelector - render state:", {
-      shouldShowDropdown,
-      isDropdownOpen,
-      hasSelectedCharacter: !!selectedCharacter,
-      charactersLength: characters.length,
-      willShowImageCard:
-        shouldShowDropdown && !isDropdownOpen && !!selectedCharacter,
-    });
-  }, [
-    shouldShowDropdown,
-    isDropdownOpen,
-    selectedCharacter,
-    characters.length,
-  ]);
-
   const filteredCharacters = useMemo(() => {
     if (!isEditing || !searchTerm.trim()) return characters;
 
