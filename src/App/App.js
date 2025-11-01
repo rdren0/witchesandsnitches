@@ -22,13 +22,13 @@ import Creatures from "../Components/Creatures/Creatures";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
+import HelpResources from "../Components/HelpResources/HelpResources";
 
 import { createAppStyles } from "../styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManager from "../Components/CharacterManager/CharacterManager";
 import logo from "./../Images/logo/Thumbnail-01.png";
-import BetaBanner from "./BetaBanner";
 import { AdminProvider, useAdmin } from "../contexts/AdminContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
@@ -354,9 +354,8 @@ const Navigation = ({ characters }) => {
 
   const getVisibleTabs = () => {
     const baseTabs = [
-      { path: "/", label: "Home", key: "home" },
       {
-        path: "/character-management",
+        path: "/",
         label: "Character Management",
         key: "character-management",
       },
@@ -369,6 +368,13 @@ const Navigation = ({ characters }) => {
         key: "character",
       });
     }
+
+    baseTabs.push({
+      path: "/help-resources",
+      label: "Help & Resources",
+      key: "help-resources",
+      isNew: true, // Set to false to remove the "NEW" badge
+    });
 
     if (adminMode) {
       return [
@@ -388,7 +394,11 @@ const Navigation = ({ characters }) => {
 
   const isActiveTab = (path) => {
     if (path === "/") {
-      return location.pathname === "/" || location.pathname === "/home";
+      return (
+        location.pathname === "/" ||
+        location.pathname === "/character-management" ||
+        location.pathname.startsWith("/character-management/")
+      );
     }
     if (path === "/character/sheet") {
       return location.pathname.startsWith("/character/");
@@ -477,10 +487,36 @@ const Navigation = ({ characters }) => {
               }}
               onClick={() => navigate(tab.path)}
             >
-              {isAdminTab && (
-                <Shield size={16} style={{ marginRight: "6px" }} />
-              )}
-              {tab.label}
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  justifyContent: "center",
+                }}
+              >
+                {isAdminTab && (
+                  <Shield size={16} style={{ marginRight: "6px" }} />
+                )}
+                {tab.label}
+                {tab.isNew && (
+                  <span
+                    style={{
+                      backgroundColor: theme.primary || "#10b981",
+                      color: "white",
+                      padding: "6px",
+                      borderRadius: "10px",
+                      fontSize: "9px",
+                      fontWeight: "700",
+                      letterSpacing: "0.5px",
+                      lineHeight: "1",
+                      marginLeft: "4px",
+                    }}
+                  >
+                    NEW
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}
@@ -637,71 +673,6 @@ const CharacterSubNavigation = () => {
           );
         })}
       </nav>
-    </div>
-  );
-};
-
-const HomePage = ({ user, customUsername, hasCharacters }) => {
-  const { theme } = useTheme();
-  const styles = createAppStyles(theme);
-  const navigate = useNavigate();
-  const displayName = customUsername || user?.user_metadata?.full_name;
-
-  const handleCardClick = (path) => {
-    navigate(path);
-  };
-
-  return (
-    <div style={styles.homePage}>
-      <div
-        style={{ textAlign: "center", marginBottom: "3rem", color: theme.text }}
-      >
-        <BetaBanner />
-        <h1>Welcome to Your D&D Character Manager</h1>
-        {user ? (
-          <p>Welcome back, {displayName}! Ready for your next adventure?</p>
-        ) : (
-          <p>
-            Create characters, manage spells, and enhance your tabletop
-            experience.
-          </p>
-        )}
-
-        <div style={styles.featureGrid}>
-          <a
-            href={RULE_BOOK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "none" }}
-          >
-            <div style={styles.featureCard}>
-              <h3>View Rulebook</h3>
-            </div>
-          </a>
-        </div>
-
-        {hasCharacters && (
-          <div style={styles.featureGrid}>
-            <div
-              style={styles.featureCard}
-              onClick={() => handleCardClick("/character/sheet")}
-            >
-              <h3>Character Sheet</h3>
-              <p>View and manage your character's stats and abilities.</p>
-            </div>
-          </div>
-        )}
-        <hr
-          style={{ border: `1px solid ${theme.border}`, marginBottom: "16px" }}
-        />
-        <div
-          style={styles.featureCard}
-          onClick={() => handleCardClick("/character-management")}
-        >
-          <h3>Character Management</h3>
-          <p>Build, edit, and manage your D&D characters.</p>
-        </div>
-      </div>
     </div>
   );
 };
@@ -1259,17 +1230,6 @@ function AppContent() {
             <Route
               path="/"
               element={
-                <HomePage
-                  user={user}
-                  customUsername={customUsername}
-                  hasCharacters={characters.length > 0}
-                />
-              }
-            />
-            <Route path="/home" element={<Navigate to="/" replace />} />
-            <Route
-              path="/character-management"
-              element={
                 <ProtectedRoute user={user}>
                   <CharacterManager
                     user={user}
@@ -1283,6 +1243,11 @@ function AppContent() {
                   />
                 </ProtectedRoute>
               }
+            />
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route
+              path="/character-management"
+              element={<Navigate to="/" replace />}
             />
             <Route
               path="/character-management/create"
@@ -1480,6 +1445,7 @@ function AppContent() {
               }
             />
             <Route path="/theme-settings" element={<ThemeSettings />} />
+            <Route path="/help-resources" element={<HelpResources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
