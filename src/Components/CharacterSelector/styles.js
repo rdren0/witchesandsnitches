@@ -95,5 +95,5 @@ export const createCharacterSelectorStyles = (theme) => {
   };
 };
 
-// Helper function for backward compatibility
-export const getCharacterSelectorStyles = (theme) => createCharacterSelectorStyles(theme);
+export const getCharacterSelectorStyles = (theme) =>
+  createCharacterSelectorStyles(theme);

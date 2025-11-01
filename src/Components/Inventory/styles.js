@@ -406,5 +406,4 @@ export const createInventoryStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
 export const getInventoryStyles = (theme) => createInventoryStyles(theme);

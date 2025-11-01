@@ -854,8 +854,6 @@ export const createDowntimeStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
 export const getDowntimeStyles = (theme) => createDowntimeStyles(theme);
 
-// Keeping the old export for backward compatibility
 export const downtimeStyles = (theme) => createDowntimeStyles(theme);

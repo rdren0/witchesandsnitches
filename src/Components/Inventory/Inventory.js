@@ -174,7 +174,6 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   useEffect(() => {
     fetchUnreadOwlMailCount();
 
-    // Set up polling to check for new messages every 30 seconds
     const interval = setInterval(() => {
       fetchUnreadOwlMailCount();
     }, 30000);
@@ -194,7 +193,6 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchItems, selectedCharacter?.id]);
 
-  // Initialize categories as collapsed by default
   useEffect(() => {
     if (items.length > 0) {
       const uniqueCategories = [...new Set(items.map((item) => item.category))];
@@ -210,14 +208,12 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     }
   }, [items]);
 
-  // Auto-expand all categories when searching
   useEffect(() => {
     if (searchTerm.trim()) {
-      // When there's a search term, expand all categories
       const allCategories = [...new Set(items.map((item) => item.category))];
       const expandedState = {};
       allCategories.forEach((category) => {
-        expandedState[category] = false; // false means expanded
+        expandedState[category] = false;
       });
       setCollapsedCategories(expandedState);
     }
@@ -374,29 +370,30 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     setError(null);
   }, []);
 
-  const toggleAttunement = useCallback(async (item) => {
-    if (!supabase || !item.attunement_required) return;
+  const toggleAttunement = useCallback(
+    async (item) => {
+      if (!supabase || !item.attunement_required) return;
 
-    try {
-      const newAttunementStatus = !item.is_attuned;
+      try {
+        const newAttunementStatus = !item.is_attuned;
 
-      const { data, error: updateError } = await supabase
-        .from("inventory_items")
-        .update({ is_attuned: newAttunementStatus })
-        .eq("id", item.id)
-        .select()
-        .single();
+        const { data, error: updateError } = await supabase
+          .from("inventory_items")
+          .update({ is_attuned: newAttunementStatus })
+          .eq("id", item.id)
+          .select()
+          .single();
 
-      if (updateError) throw updateError;
+        if (updateError) throw updateError;
 
-      setItems((prev) =>
-        prev.map((i) => (i.id === item.id ? data : i))
-      );
-    } catch (err) {
-      console.error("Error toggling attunement:", err);
-      setError("Failed to toggle attunement. Please try again.");
-    }
-  }, [supabase]);
+        setItems((prev) => prev.map((i) => (i.id === item.id ? data : i)));
+      } catch (err) {
+        console.error("Error toggling attunement:", err);
+        setError("Failed to toggle attunement. Please try again.");
+      }
+    },
+    [supabase]
+  );
 
   const sendItem = useCallback(async () => {
     if (!sendItemModal || !selectedRecipient || !supabase) return;
@@ -477,25 +474,22 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
 
   const filteredItems = useMemo(
     () =>
-      items.filter(
-        (item) => {
-          const lowerSearchTerm = searchTerm.toLowerCase();
-          const isAttunementSearch = "attunement".includes(lowerSearchTerm) && lowerSearchTerm.length >= 3;
+      items.filter((item) => {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const isAttunementSearch =
+          "attunement".includes(lowerSearchTerm) && lowerSearchTerm.length >= 3;
 
-          const matchesSearch =
-            item.name.toLowerCase().includes(lowerSearchTerm) ||
-            (item.description &&
-              item.description
-                .toLowerCase()
-                .includes(lowerSearchTerm)) ||
-            item.category.toLowerCase().includes(lowerSearchTerm) ||
-            (isAttunementSearch && (item.attunement_required || item.is_attuned));
+        const matchesSearch =
+          item.name.toLowerCase().includes(lowerSearchTerm) ||
+          (item.description &&
+            item.description.toLowerCase().includes(lowerSearchTerm)) ||
+          item.category.toLowerCase().includes(lowerSearchTerm) ||
+          (isAttunementSearch && (item.attunement_required || item.is_attuned));
 
-          const matchesAttunement = !filterAttunement || item.is_attuned;
+        const matchesAttunement = !filterAttunement || item.is_attuned;
 
-          return matchesSearch && matchesAttunement;
-        }
-      ),
+        return matchesSearch && matchesAttunement;
+      }),
     [items, searchTerm, filterAttunement]
   );
 
@@ -535,16 +529,16 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         itemStacks[key].totalQuantity += item.quantity;
         itemStacks[key].items.push(item);
 
-        // Track if any items are attuned
         if (item.is_attuned) {
           itemStacks[key].has_attuned_items = true;
         }
       });
 
-      // Check if all items in stack are attuned
-      Object.values(itemStacks).forEach(stack => {
+      Object.values(itemStacks).forEach((stack) => {
         if (stack.attunement_required && stack.items.length > 0) {
-          stack.all_items_attuned = stack.items.every(item => item.is_attuned);
+          stack.all_items_attuned = stack.items.every(
+            (item) => item.is_attuned
+          );
         }
       });
 
@@ -556,9 +550,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   const stats = useMemo(() => {
     const totalItems = items.length;
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-    const attunementItems = items.filter(
-      (item) => item.is_attuned
-    ).length;
+    const attunementItems = items.filter((item) => item.is_attuned).length;
     const requiresAttunementItems = items.filter(
       (item) => item.attunement_required
     ).length;
@@ -589,66 +581,80 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     <div style={styles.container}>
       {activeTab === "inventory" && (
         <>
-          {/* New Header Row with Attuned Items, Bank and Owl Icon */}
-          <div style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "16px",
-            padding: "16px",
-            backgroundColor: theme.surface,
-            borderRadius: "12px",
-            border: `1px solid ${theme.border}`,
-          }}>
-            {/* Attuned Items Filter (Absolute positioned to left) */}
-            {items.length > 0 && !isLoading && stats.requiresAttunementItems > 0 && (
-              <div
-                onClick={() => setFilterAttunement(!filterAttunement)}
-                style={{
-                  position: "absolute",
-                  left: "16px",
-                  padding: "12px 16px",
-                  backgroundColor: filterAttunement ? theme.warning || "#F59E0B" : theme.background,
-                  borderRadius: "8px",
-                  border: `2px solid ${filterAttunement ? theme.warning || "#F59E0B" : theme.border}`,
-                  textAlign: "center",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (!filterAttunement) {
-                    e.currentTarget.style.backgroundColor = theme.surface;
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!filterAttunement) {
-                    e.currentTarget.style.backgroundColor = theme.background;
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }
-                }}
-              >
-                <div style={{
-                  fontSize: "12px",
-                  color: filterAttunement ? "white" : theme.textSecondary,
-                  marginBottom: "4px",
-                }}>
-                  Attuned Items
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "16px",
+              padding: "16px",
+              backgroundColor: theme.surface,
+              borderRadius: "12px",
+              border: `1px solid ${theme.border}`,
+            }}
+          >
+            {items.length > 0 &&
+              !isLoading &&
+              stats.requiresAttunementItems > 0 && (
+                <div
+                  onClick={() => setFilterAttunement(!filterAttunement)}
+                  style={{
+                    position: "absolute",
+                    left: "16px",
+                    padding: "12px 16px",
+                    backgroundColor: filterAttunement
+                      ? theme.warning || "#F59E0B"
+                      : theme.background,
+                    borderRadius: "8px",
+                    border: `2px solid ${
+                      filterAttunement
+                        ? theme.warning || "#F59E0B"
+                        : theme.border
+                    }`,
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!filterAttunement) {
+                      e.currentTarget.style.backgroundColor = theme.surface;
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!filterAttunement) {
+                      e.currentTarget.style.backgroundColor = theme.background;
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: filterAttunement ? "white" : theme.textSecondary,
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Attuned Items
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "20px",
+                      fontWeight: "700",
+                      color: filterAttunement
+                        ? "white"
+                        : theme.warning || "#F59E0B",
+                    }}
+                  >
+                    {stats.attunementItems}/{stats.requiresAttunementItems}
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: "20px",
-                  fontWeight: "700",
-                  color: filterAttunement ? "white" : theme.warning || "#F59E0B",
-                }}>
-                  {stats.attunementItems}/{stats.requiresAttunementItems}
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* Bank Totals - Clickable (Centered) */}
             <div
               onClick={() => setShowBankModal(true)}
               style={{
@@ -664,7 +670,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.surface;
                 e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 8px rgba(0, 0, 0, 0.1)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = theme.background;
@@ -672,10 +679,12 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
                 <Bank
                   key={bankKey}
                   user={user}
@@ -687,7 +696,6 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
               </div>
             </div>
 
-            {/* Owl Icon (Absolute positioned to right) */}
             <button
               onClick={() => setActiveTab("owlmail")}
               style={{
@@ -709,16 +717,24 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                 e.currentTarget.style.color = theme.text;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = unreadOwlMailCount > 0 ? "1" : "0.3";
+                e.currentTarget.style.opacity =
+                  unreadOwlMailCount > 0 ? "1" : "0.3";
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.color = unreadOwlMailCount > 0 ? "black" : theme.textSecondary;
+                e.currentTarget.style.color =
+                  unreadOwlMailCount > 0 ? "black" : theme.textSecondary;
               }}
-              title={unreadOwlMailCount > 0 ? `Owl Post (${unreadOwlMailCount} unread)` : "Owl Post"}
+              title={
+                unreadOwlMailCount > 0
+                  ? `Owl Post (${unreadOwlMailCount} unread)`
+                  : "Owl Post"
+              }
             >
-              <OwlIcon style={{
-                width: "36px",
-                height: "36px",
-              }} />
+              <OwlIcon
+                style={{
+                  width: "36px",
+                  height: "36px",
+                }}
+              />
             </button>
           </div>
 
@@ -748,7 +764,6 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
             </div>
           )}
 
-          {/* Controls - Add New and Search */}
           {!isLoading && (
             <div style={styles.controls}>
               {!showAddForm && !editingId && (
@@ -782,453 +797,348 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
             </div>
           )}
 
-              {showAddForm && (
-                <div style={styles.formCard}>
-                  <h3 style={styles.formTitle}>Add New Item</h3>
+          {showAddForm && (
+            <div style={styles.formCard}>
+              <h3 style={styles.formTitle}>Add New Item</h3>
 
-                  <div style={styles.formGrid}>
-                    <div style={styles.formField}>
-                      <label style={styles.label}>Item Name *</label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g., Wizard's Hat, Health Potion"
-                        style={styles.input}
-                        disabled={isSaving}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = theme.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = theme.border;
-                        }}
-                      />
-                    </div>
-
-                    <div style={styles.formField}>
-                      <label style={styles.label}>Category</label>
-                      <select
-                        value={formData.category}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            category: e.target.value,
-                          }))
-                        }
-                        style={styles.select}
-                        disabled={isSaving}
-                      >
-                        {categories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div style={styles.formField}>
-                      <label style={styles.label}>Quantity</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.quantity}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            quantity: e.target.value,
-                          }))
-                        }
-                        style={styles.input}
-                        disabled={isSaving}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = theme.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = theme.border;
-                        }}
-                      />
-                    </div>
-
-                    <div style={styles.formField}>
-                      <label style={styles.label}>Value</label>
-                      <input
-                        type="text"
-                        value={formData.value}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            value: e.target.value,
-                          }))
-                        }
-                        placeholder="5 Galleons, 10 Sickles, etc."
-                        style={styles.input}
-                        disabled={isSaving}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = theme.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = theme.border;
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      style={{ ...styles.formField, ...styles.formFieldFull }}
-                    >
-                      <label style={styles.label}>Description</label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            description: e.target.value,
-                          }))
-                        }
-                        placeholder="Item description, magical properties, etc."
-                        style={styles.textarea}
-                        disabled={isSaving}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = theme.primary;
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = theme.border;
-                        }}
-                      />
-                    </div>
-
-                    <div style={styles.checkboxField}>
-                      <label style={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={formData.attunement_required}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              attunement_required: e.target.checked,
-                            }))
-                          }
-                          style={styles.checkbox}
-                          disabled={isSaving}
-                        />
-                        <Star size={16} color="#F59E0B" />
-                        Requires Attunement
-                      </label>
-                      <small
-                        style={{ color: theme.textSecondary, fontSize: "12px" }}
-                      >
-                        Check this if the item requires magical attunement to
-                        use
-                      </small>
-                    </div>
-                  </div>
-
-                  <div style={styles.formActions}>
-                    <button
-                      onClick={addItem}
-                      disabled={!formData.name.trim() || isSaving}
-                      style={{
-                        ...styles.saveButton,
-                        opacity: !formData.name.trim() || isSaving ? 0.5 : 1,
-                        cursor:
-                          !formData.name.trim() || isSaving
-                            ? "not-allowed"
-                            : "pointer",
-                      }}
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader size={18} />
-                          Adding...
-                        </>
-                      ) : (
-                        <>
-                          <Check size={18} />
-                          Add Item
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setFormData({
-                          name: "",
-                          description: "",
-                          quantity: 1,
-                          value: "",
-                          category: "General",
-                          attunement_required: false,
-                        });
-                      }}
-                      style={styles.cancelButton}
-                      disabled={isSaving}
-                    >
-                      <X size={18} />
-                      Cancel
-                    </button>
-                  </div>
+              <div style={styles.formGrid}>
+                <div style={styles.formField}>
+                  <label style={styles.label}>Item Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g., Wizard's Hat, Health Potion"
+                    style={styles.input}
+                    disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
+                  />
                 </div>
-              )}
 
-              {!isLoading && (
-                <>
-                  {filteredItems.length > 0 ? (
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                      gap: "16px",
-                      gridAutoRows: "auto",
-                    }}>
-                    {Object.entries(stackedItems).map(([category, stacks]) => {
-                      const isCollapsed = collapsedCategories[category];
+                <div style={styles.formField}>
+                  <label style={styles.label}>Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
+                    }
+                    style={styles.select}
+                    disabled={isSaving}
+                  >
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                      return (
-                        <div key={category} style={{
+                <div style={styles.formField}>
+                  <label style={styles.label}>Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        quantity: e.target.value,
+                      }))
+                    }
+                    style={styles.input}
+                    disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
+                  />
+                </div>
+
+                <div style={styles.formField}>
+                  <label style={styles.label}>Value</label>
+                  <input
+                    type="text"
+                    value={formData.value}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        value: e.target.value,
+                      }))
+                    }
+                    placeholder="5 Galleons, 10 Sickles, etc."
+                    style={styles.input}
+                    disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
+                  />
+                </div>
+
+                <div style={{ ...styles.formField, ...styles.formFieldFull }}>
+                  <label style={styles.label}>Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder="Item description, magical properties, etc."
+                    style={styles.textarea}
+                    disabled={isSaving}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = theme.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = theme.border;
+                    }}
+                  />
+                </div>
+
+                <div style={styles.checkboxField}>
+                  <label style={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={formData.attunement_required}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          attunement_required: e.target.checked,
+                        }))
+                      }
+                      style={styles.checkbox}
+                      disabled={isSaving}
+                    />
+                    <Star size={16} color="#F59E0B" />
+                    Requires Attunement
+                  </label>
+                  <small
+                    style={{ color: theme.textSecondary, fontSize: "12px" }}
+                  >
+                    Check this if the item requires magical attunement to use
+                  </small>
+                </div>
+              </div>
+
+              <div style={styles.formActions}>
+                <button
+                  onClick={addItem}
+                  disabled={!formData.name.trim() || isSaving}
+                  style={{
+                    ...styles.saveButton,
+                    opacity: !formData.name.trim() || isSaving ? 0.5 : 1,
+                    cursor:
+                      !formData.name.trim() || isSaving
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader size={18} />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Add Item
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setFormData({
+                      name: "",
+                      description: "",
+                      quantity: 1,
+                      value: "",
+                      category: "General",
+                      attunement_required: false,
+                    });
+                  }}
+                  style={styles.cancelButton}
+                  disabled={isSaving}
+                >
+                  <X size={18} />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isLoading && (
+            <>
+              {filteredItems.length > 0 ? (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: "16px",
+                    gridAutoRows: "auto",
+                  }}
+                >
+                  {Object.entries(stackedItems).map(([category, stacks]) => {
+                    const isCollapsed = collapsedCategories[category];
+
+                    return (
+                      <div
+                        key={category}
+                        style={{
                           gridColumn: isCollapsed ? "auto" : "1 / -1",
                           display: "flex",
                           flexDirection: "column",
-                        }}>
-                          <div
+                        }}
+                      >
+                        <div
+                          style={{
+                            ...styles.categoryHeader,
+                            cursor: "pointer",
+                            userSelect: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            height: "60px",
+                            padding: "12px 16px",
+                            overflow: "hidden",
+                            gap: "8px",
+                          }}
+                          onClick={() =>
+                            setCollapsedCategories({
+                              ...collapsedCategories,
+                              [category]: !isCollapsed,
+                            })
+                          }
+                        >
+                          {isCollapsed ? (
+                            <ChevronDown size={16} style={{ flexShrink: 0 }} />
+                          ) : (
+                            <ChevronUp size={16} style={{ flexShrink: 0 }} />
+                          )}
+                          <span
                             style={{
-                              ...styles.categoryHeader,
-                              cursor: "pointer",
-                              userSelect: "none",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-start",
-                              height: "60px",
-                              padding: "12px 16px",
-                              overflow: "hidden",
-                              gap: "8px",
-                            }}
-                            onClick={() =>
-                              setCollapsedCategories({
-                                ...collapsedCategories,
-                                [category]: !isCollapsed,
-                              })
-                            }
-                          >
-                            {isCollapsed ? (
-                              <ChevronDown size={16} style={{ flexShrink: 0 }} />
-                            ) : (
-                              <ChevronUp size={16} style={{ flexShrink: 0 }} />
-                            )}
-                            <span style={{
                               whiteSpace: "nowrap",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               fontSize: "14px",
-                            }}>
-                              {category} ({stacks.length}{" "}
-                              {stacks.length === 1 ? "type" : "types"})
-                            </span>
-                          </div>
-                          {!isCollapsed && (
-                            <div style={{
+                            }}
+                          >
+                            {category} ({stacks.length}{" "}
+                            {stacks.length === 1 ? "type" : "types"})
+                          </span>
+                        </div>
+                        {!isCollapsed && (
+                          <div
+                            style={{
                               ...styles.itemsGrid,
                               marginTop: "12px",
-                            }}>
-                              {stacks.map((stack) => {
-                                const isExpanded =
-                                  expandedStack === stack.stackKey;
+                            }}
+                          >
+                            {stacks.map((stack) => {
+                              const isExpanded =
+                                expandedStack === stack.stackKey;
 
-                                return (
-                                  <div
-                                    key={stack.stackKey}
-                                    style={{
-                                      ...styles.itemCard,
-                                      ...(isExpanded && {
-                                        gridColumn: "1 / -1",
-                                      }),
-                                    }}
-                                  >
-                                    {isExpanded ? (
-                                      <div>
-                                        <div
+                              return (
+                                <div
+                                  key={stack.stackKey}
+                                  style={{
+                                    ...styles.itemCard,
+                                    ...(isExpanded && {
+                                      gridColumn: "1 / -1",
+                                    }),
+                                  }}
+                                >
+                                  {isExpanded ? (
+                                    <div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          alignItems: "center",
+                                          marginBottom: "16px",
+                                        }}
+                                      >
+                                        <h4
                                           style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            marginBottom: "16px",
+                                            margin: 0,
+                                            fontSize: "16px",
+                                            fontWeight: "600",
                                           }}
                                         >
-                                          <h4
-                                            style={{
-                                              margin: 0,
-                                              fontSize: "16px",
-                                              fontWeight: "600",
-                                            }}
-                                          >
-                                            {stack.name}
-                                          </h4>
-                                          <button
-                                            onClick={() => {
-                                              setExpandedStack(null);
-                                              setEditingId(null);
-                                            }}
-                                            style={{
-                                              ...styles.actionButton,
-                                              backgroundColor:
-                                                theme.warning || "#F97316",
-                                              color: "white",
-                                            }}
-                                          >
-                                            <X size={16} />
-                                          </button>
-                                        </div>
-                                        {stack.items.map((item, index) => (
-                                          <div
-                                            key={item.id}
-                                            style={{
-                                              marginBottom:
-                                                index < stack.items.length - 1
-                                                  ? "16px"
-                                                  : 0,
-                                              paddingBottom:
-                                                index < stack.items.length - 1
-                                                  ? "16px"
-                                                  : 0,
-                                              borderBottom:
-                                                index < stack.items.length - 1
-                                                  ? `1px solid ${theme.border}`
-                                                  : "none",
-                                            }}
-                                          >
-                                            {editingId === item.id ? (
-                                              <div style={styles.form}>
-                                                <div style={styles.formRow}>
-                                                  <div style={styles.formGroup}>
-                                                    <label style={styles.label}>
-                                                      Name *
-                                                    </label>
-                                                    <input
-                                                      type="text"
-                                                      value={formData.name}
-                                                      onChange={(e) =>
-                                                        setFormData({
-                                                          ...formData,
-                                                          name: e.target.value,
-                                                        })
-                                                      }
-                                                      style={styles.input}
-                                                      placeholder="Item name"
-                                                      disabled={isSaving}
-                                                      onFocus={(e) => {
-                                                        e.target.style.borderColor =
-                                                          theme.primary;
-                                                      }}
-                                                      onBlur={(e) => {
-                                                        e.target.style.borderColor =
-                                                          theme.border;
-                                                      }}
-                                                    />
-                                                  </div>
-                                                  <div style={styles.formGroup}>
-                                                    <label style={styles.label}>
-                                                      Category
-                                                    </label>
-                                                    <select
-                                                      value={formData.category}
-                                                      onChange={(e) =>
-                                                        setFormData({
-                                                          ...formData,
-                                                          category:
-                                                            e.target.value,
-                                                        })
-                                                      }
-                                                      style={styles.select}
-                                                      disabled={isSaving}
-                                                    >
-                                                      {categories.map((cat) => (
-                                                        <option
-                                                          key={cat}
-                                                          value={cat}
-                                                        >
-                                                          {cat}
-                                                        </option>
-                                                      ))}
-                                                    </select>
-                                                  </div>
-                                                </div>
-
-                                                <div style={styles.formRow}>
-                                                  <div style={styles.formGroup}>
-                                                    <label style={styles.label}>
-                                                      Quantity
-                                                    </label>
-                                                    <input
-                                                      type="number"
-                                                      value={formData.quantity}
-                                                      onChange={(e) =>
-                                                        setFormData({
-                                                          ...formData,
-                                                          quantity:
-                                                            parseInt(
-                                                              e.target.value
-                                                            ) || 0,
-                                                        })
-                                                      }
-                                                      style={styles.input}
-                                                      min="0"
-                                                      disabled={isSaving}
-                                                      onFocus={(e) => {
-                                                        e.target.style.borderColor =
-                                                          theme.primary;
-                                                      }}
-                                                      onBlur={(e) => {
-                                                        e.target.style.borderColor =
-                                                          theme.border;
-                                                      }}
-                                                    />
-                                                  </div>
-                                                  <div style={styles.formGroup}>
-                                                    <label style={styles.label}>
-                                                      Value
-                                                    </label>
-                                                    <input
-                                                      type="text"
-                                                      value={formData.value}
-                                                      onChange={(e) =>
-                                                        setFormData({
-                                                          ...formData,
-                                                          value: e.target.value,
-                                                        })
-                                                      }
-                                                      style={styles.input}
-                                                      placeholder="5 Galleons, 10 Sickles, etc."
-                                                      disabled={isSaving}
-                                                      onFocus={(e) => {
-                                                        e.target.style.borderColor =
-                                                          theme.primary;
-                                                      }}
-                                                      onBlur={(e) => {
-                                                        e.target.style.borderColor =
-                                                          theme.border;
-                                                      }}
-                                                    />
-                                                  </div>
-                                                </div>
-
+                                          {stack.name}
+                                        </h4>
+                                        <button
+                                          onClick={() => {
+                                            setExpandedStack(null);
+                                            setEditingId(null);
+                                          }}
+                                          style={{
+                                            ...styles.actionButton,
+                                            backgroundColor:
+                                              theme.warning || "#F97316",
+                                            color: "white",
+                                          }}
+                                        >
+                                          <X size={16} />
+                                        </button>
+                                      </div>
+                                      {stack.items.map((item, index) => (
+                                        <div
+                                          key={item.id}
+                                          style={{
+                                            marginBottom:
+                                              index < stack.items.length - 1
+                                                ? "16px"
+                                                : 0,
+                                            paddingBottom:
+                                              index < stack.items.length - 1
+                                                ? "16px"
+                                                : 0,
+                                            borderBottom:
+                                              index < stack.items.length - 1
+                                                ? `1px solid ${theme.border}`
+                                                : "none",
+                                          }}
+                                        >
+                                          {editingId === item.id ? (
+                                            <div style={styles.form}>
+                                              <div style={styles.formRow}>
                                                 <div style={styles.formGroup}>
                                                   <label style={styles.label}>
-                                                    Description
+                                                    Name *
                                                   </label>
-                                                  <textarea
-                                                    value={formData.description}
+                                                  <input
+                                                    type="text"
+                                                    value={formData.name}
                                                     onChange={(e) =>
                                                       setFormData({
                                                         ...formData,
-                                                        description:
-                                                          e.target.value,
+                                                        name: e.target.value,
                                                       })
                                                     }
-                                                    style={styles.textarea}
-                                                    placeholder="Item description, magical properties, etc."
+                                                    style={styles.input}
+                                                    placeholder="Item name"
                                                     disabled={isSaving}
                                                     onFocus={(e) => {
                                                       e.target.style.borderColor =
@@ -1240,7 +1150,151 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                     }}
                                                   />
                                                 </div>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Category
+                                                  </label>
+                                                  <select
+                                                    value={formData.category}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        category:
+                                                          e.target.value,
+                                                      })
+                                                    }
+                                                    style={styles.select}
+                                                    disabled={isSaving}
+                                                  >
+                                                    {categories.map((cat) => (
+                                                      <option
+                                                        key={cat}
+                                                        value={cat}
+                                                      >
+                                                        {cat}
+                                                      </option>
+                                                    ))}
+                                                  </select>
+                                                </div>
+                                              </div>
 
+                                              <div style={styles.formRow}>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Quantity
+                                                  </label>
+                                                  <input
+                                                    type="number"
+                                                    value={formData.quantity}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        quantity:
+                                                          parseInt(
+                                                            e.target.value
+                                                          ) || 0,
+                                                      })
+                                                    }
+                                                    style={styles.input}
+                                                    min="0"
+                                                    disabled={isSaving}
+                                                    onFocus={(e) => {
+                                                      e.target.style.borderColor =
+                                                        theme.primary;
+                                                    }}
+                                                    onBlur={(e) => {
+                                                      e.target.style.borderColor =
+                                                        theme.border;
+                                                    }}
+                                                  />
+                                                </div>
+                                                <div style={styles.formGroup}>
+                                                  <label style={styles.label}>
+                                                    Value
+                                                  </label>
+                                                  <input
+                                                    type="text"
+                                                    value={formData.value}
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        value: e.target.value,
+                                                      })
+                                                    }
+                                                    style={styles.input}
+                                                    placeholder="5 Galleons, 10 Sickles, etc."
+                                                    disabled={isSaving}
+                                                    onFocus={(e) => {
+                                                      e.target.style.borderColor =
+                                                        theme.primary;
+                                                    }}
+                                                    onBlur={(e) => {
+                                                      e.target.style.borderColor =
+                                                        theme.border;
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+
+                                              <div style={styles.formGroup}>
+                                                <label style={styles.label}>
+                                                  Description
+                                                </label>
+                                                <textarea
+                                                  value={formData.description}
+                                                  onChange={(e) =>
+                                                    setFormData({
+                                                      ...formData,
+                                                      description:
+                                                        e.target.value,
+                                                    })
+                                                  }
+                                                  style={styles.textarea}
+                                                  placeholder="Item description, magical properties, etc."
+                                                  disabled={isSaving}
+                                                  onFocus={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.primary;
+                                                  }}
+                                                  onBlur={(e) => {
+                                                    e.target.style.borderColor =
+                                                      theme.border;
+                                                  }}
+                                                />
+                                              </div>
+
+                                              <div style={styles.checkboxField}>
+                                                <label
+                                                  style={styles.checkboxLabel}
+                                                >
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={
+                                                      formData.attunement_required
+                                                    }
+                                                    onChange={(e) =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        attunement_required:
+                                                          e.target.checked,
+                                                        is_attuned: e.target
+                                                          .checked
+                                                          ? formData.is_attuned
+                                                          : false,
+                                                      })
+                                                    }
+                                                    style={styles.checkbox}
+                                                    disabled={isSaving}
+                                                  />
+                                                  <Star
+                                                    size={16}
+                                                    color="#F59E0B"
+                                                  />
+                                                  Requires Attunement
+                                                </label>
+                                              </div>
+
+                                              {formData.attunement_required && (
                                                 <div
                                                   style={styles.checkboxField}
                                                 >
@@ -1250,314 +1304,283 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                     <input
                                                       type="checkbox"
                                                       checked={
-                                                        formData.attunement_required
+                                                        formData.is_attuned ||
+                                                        false
                                                       }
                                                       onChange={(e) =>
                                                         setFormData({
                                                           ...formData,
-                                                          attunement_required:
+                                                          is_attuned:
                                                             e.target.checked,
-                                                          is_attuned: e.target.checked ? formData.is_attuned : false,
                                                         })
                                                       }
                                                       style={styles.checkbox}
                                                       disabled={isSaving}
                                                     />
-                                                    <Star
+                                                    <Check
                                                       size={16}
-                                                      color="#F59E0B"
+                                                      color={
+                                                        theme.success ||
+                                                        "#10B981"
+                                                      }
                                                     />
-                                                    Requires Attunement
+                                                    Is Attuned
                                                   </label>
                                                 </div>
+                                              )}
 
-                                                {formData.attunement_required && (
-                                                  <div
-                                                    style={styles.checkboxField}
-                                                  >
-                                                    <label
-                                                      style={styles.checkboxLabel}
-                                                    >
-                                                      <input
-                                                        type="checkbox"
-                                                        checked={formData.is_attuned || false}
-                                                        onChange={(e) =>
-                                                          setFormData({
-                                                            ...formData,
-                                                            is_attuned: e.target.checked,
-                                                          })
-                                                        }
-                                                        style={styles.checkbox}
-                                                        disabled={isSaving}
-                                                      />
-                                                      <Check
-                                                        size={16}
-                                                        color={theme.success || "#10B981"}
-                                                      />
-                                                      Is Attuned
-                                                    </label>
-                                                  </div>
-                                                )}
-
-                                                <div style={styles.formActions}>
-                                                  <button
-                                                    onClick={saveEdit}
-                                                    disabled={
+                                              <div style={styles.formActions}>
+                                                <button
+                                                  onClick={saveEdit}
+                                                  disabled={
+                                                    !formData.name.trim() ||
+                                                    isSaving
+                                                  }
+                                                  style={{
+                                                    ...styles.saveButton,
+                                                    opacity:
                                                       !formData.name.trim() ||
                                                       isSaving
-                                                    }
-                                                    style={{
-                                                      ...styles.saveButton,
-                                                      opacity:
-                                                        !formData.name.trim() ||
-                                                        isSaving
-                                                          ? 0.5
-                                                          : 1,
-                                                      cursor:
-                                                        !formData.name.trim() ||
-                                                        isSaving
-                                                          ? "not-allowed"
-                                                          : "pointer",
-                                                    }}
-                                                  >
-                                                    {isSaving ? (
-                                                      <>
-                                                        <Loader size={18} />
-                                                        Saving...
-                                                      </>
-                                                    ) : (
-                                                      <>
-                                                        <Check size={18} />
-                                                        Save Changes
-                                                      </>
-                                                    )}
-                                                  </button>
-                                                  <button
-                                                    onClick={cancelEdit}
-                                                    disabled={isSaving}
-                                                    style={{
-                                                      ...styles.cancelButton,
-                                                      opacity: isSaving
                                                         ? 0.5
                                                         : 1,
-                                                      cursor: isSaving
+                                                    cursor:
+                                                      !formData.name.trim() ||
+                                                      isSaving
                                                         ? "not-allowed"
                                                         : "pointer",
-                                                    }}
-                                                  >
-                                                    <X size={18} />
-                                                    Cancel
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            ) : (
-                                              <div
-                                                style={{
-                                                  display: "flex",
-                                                  justifyContent:
-                                                    "space-between",
-                                                  alignItems: "flex-start",
-                                                }}
-                                              >
-                                                <div style={{ flex: 1 }}>
-                                                  <div
-                                                    style={{
-                                                      fontWeight: "600",
-                                                      marginBottom: "4px",
-                                                    }}
-                                                  >
-                                                    Qty: {item.quantity}
-                                                    {item.value &&
-                                                      item.value !== 0 &&
-                                                      item.value !== "0" &&
-                                                      ` • Value: ${item.value}`}
-                                                  </div>
-                                                  {item.attunement_required && (
-                                                    <button
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleAttunement(item);
-                                                      }}
-                                                      style={{
-                                                        marginTop: "8px",
-                                                        padding: "4px 10px",
-                                                        backgroundColor: item.is_attuned ? theme.success || "#10B981" : theme.background,
-                                                        color: item.is_attuned ? "white" : theme.text,
-                                                        border: `2px solid ${item.is_attuned ? theme.success || "#10B981" : theme.border}`,
-                                                        borderRadius: "12px",
-                                                        fontSize: "11px",
-                                                        fontWeight: "500",
-                                                        display: "inline-flex",
-                                                        alignItems: "center",
-                                                        gap: "4px",
-                                                        cursor: "pointer",
-                                                        transition: "all 0.2s ease",
-                                                      }}
-                                                      onMouseEnter={(e) => {
-                                                        if (!item.is_attuned) {
-                                                          e.currentTarget.style.backgroundColor = theme.surface;
-                                                        }
-                                                      }}
-                                                      onMouseLeave={(e) => {
-                                                        if (!item.is_attuned) {
-                                                          e.currentTarget.style.backgroundColor = theme.background;
-                                                        }
-                                                      }}
-                                                    >
-                                                      <Check size={12} />
-                                                      {item.is_attuned ? "Attuned" : "Not Attuned"}
-                                                    </button>
-                                                  )}
-                                                  {item.description && (
-                                                    <div
-                                                      style={{
-                                                        fontSize: "13px",
-                                                        color:
-                                                          theme.textSecondary,
-                                                        marginTop: "4px",
-                                                      }}
-                                                    >
-                                                      {item.description}
-                                                    </div>
-                                                  )}
-                                                </div>
-                                                <div
-                                                  style={{
-                                                    display: "flex",
-                                                    gap: "8px",
-                                                    marginLeft: "12px",
                                                   }}
                                                 >
-                                                  {sessionCharacters.length >
-                                                    0 && (
-                                                    <button
-                                                      onClick={() =>
-                                                        setSendItemModal({
-                                                          stack: null,
-                                                          items: [item],
-                                                          selectedItem: item,
-                                                          quantityToSend: 1,
-                                                        })
-                                                      }
-                                                      style={{
-                                                        ...styles.actionButton,
-                                                        backgroundColor:
-                                                          theme.primary,
-                                                        color: "white",
-                                                      }}
-                                                      title="Send to another character"
-                                                    >
-                                                      <Gift size={16} />
-                                                    </button>
-                                                  )}
-                                                  <button
-                                                    onClick={() =>
-                                                      startEdit(item)
-                                                    }
-                                                    style={{
-                                                      ...styles.actionButton,
-                                                      ...styles.editButton,
-                                                    }}
-                                                  >
-                                                    <Edit2 size={16} />
-                                                  </button>
-                                                  <button
-                                                    onClick={() =>
-                                                      deleteItem(item.id)
-                                                    }
-                                                    style={{
-                                                      ...styles.actionButton,
-                                                      ...styles.deleteButton,
-                                                    }}
-                                                  >
-                                                    <Trash2 size={16} />
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            )}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <div style={styles.itemHeader}>
-                                          <div>
-                                            <div style={styles.itemName}>
-                                              {stack.name}
-                                              {stack.attunement_required && (
-                                                <span
-                                                  style={{
-                                                    ...styles.attunementBadge,
-                                                    backgroundColor: stack.all_items_attuned
-                                                      ? (theme.success || "#10B981") + "20"
-                                                      : (theme.warning || "#F59E0B") + "20",
-                                                    color: stack.all_items_attuned
-                                                      ? theme.success || "#10B981"
-                                                      : theme.warning || "#F59E0B",
-                                                  }}
-                                                >
-                                                  {stack.all_items_attuned ? (
+                                                  {isSaving ? (
                                                     <>
-                                                      <Check
-                                                        size={12}
-                                                        color={theme.success || "#10B981"}
-                                                      />
-                                                      Attuned
+                                                      <Loader size={18} />
+                                                      Saving...
                                                     </>
                                                   ) : (
                                                     <>
-                                                      <Star
-                                                        size={12}
-                                                        color={theme.warning}
-                                                      />
-                                                      Requires Attunement
+                                                      <Check size={18} />
+                                                      Save Changes
                                                     </>
                                                   )}
-                                                </span>
-                                              )}
+                                                </button>
+                                                <button
+                                                  onClick={cancelEdit}
+                                                  disabled={isSaving}
+                                                  style={{
+                                                    ...styles.cancelButton,
+                                                    opacity: isSaving ? 0.5 : 1,
+                                                    cursor: isSaving
+                                                      ? "not-allowed"
+                                                      : "pointer",
+                                                  }}
+                                                >
+                                                  <X size={18} />
+                                                  Cancel
+                                                </button>
+                                              </div>
                                             </div>
-                                          </div>
-                                          <div style={styles.itemActions}>
-                                            {sessionCharacters.length > 0 && (
-                                              <button
-                                                onClick={() =>
-                                                  setSendItemModal({
-                                                    stack,
-                                                    items: stack.items,
-                                                    selectedItem:
-                                                      stack.items.length === 1
-                                                        ? stack.items[0]
-                                                        : null,
-                                                    quantityToSend: 1,
-                                                  })
-                                                }
-                                                disabled={
-                                                  expandedStack ||
-                                                  showAddForm ||
-                                                  isSaving
-                                                }
+                                          ) : (
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "flex-start",
+                                              }}
+                                            >
+                                              <div style={{ flex: 1 }}>
+                                                <div
+                                                  style={{
+                                                    fontWeight: "600",
+                                                    marginBottom: "4px",
+                                                  }}
+                                                >
+                                                  Qty: {item.quantity}
+                                                  {item.value &&
+                                                    item.value !== 0 &&
+                                                    item.value !== "0" &&
+                                                    ` • Value: ${item.value}`}
+                                                </div>
+                                                {item.attunement_required && (
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      toggleAttunement(item);
+                                                    }}
+                                                    style={{
+                                                      marginTop: "8px",
+                                                      padding: "4px 10px",
+                                                      backgroundColor:
+                                                        item.is_attuned
+                                                          ? theme.success ||
+                                                            "#10B981"
+                                                          : theme.background,
+                                                      color: item.is_attuned
+                                                        ? "white"
+                                                        : theme.text,
+                                                      border: `2px solid ${
+                                                        item.is_attuned
+                                                          ? theme.success ||
+                                                            "#10B981"
+                                                          : theme.border
+                                                      }`,
+                                                      borderRadius: "12px",
+                                                      fontSize: "11px",
+                                                      fontWeight: "500",
+                                                      display: "inline-flex",
+                                                      alignItems: "center",
+                                                      gap: "4px",
+                                                      cursor: "pointer",
+                                                      transition:
+                                                        "all 0.2s ease",
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                      if (!item.is_attuned) {
+                                                        e.currentTarget.style.backgroundColor =
+                                                          theme.surface;
+                                                      }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                      if (!item.is_attuned) {
+                                                        e.currentTarget.style.backgroundColor =
+                                                          theme.background;
+                                                      }
+                                                    }}
+                                                  >
+                                                    <Check size={12} />
+                                                    {item.is_attuned
+                                                      ? "Attuned"
+                                                      : "Not Attuned"}
+                                                  </button>
+                                                )}
+                                                {item.description && (
+                                                  <div
+                                                    style={{
+                                                      fontSize: "13px",
+                                                      color:
+                                                        theme.textSecondary,
+                                                      marginTop: "4px",
+                                                    }}
+                                                  >
+                                                    {item.description}
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div
                                                 style={{
-                                                  ...styles.actionButton,
-                                                  backgroundColor:
-                                                    theme.primary,
-                                                  color: "white",
-                                                  opacity:
-                                                    expandedStack ||
-                                                    showAddForm ||
-                                                    isSaving
-                                                      ? 0.5
-                                                      : 1,
+                                                  display: "flex",
+                                                  gap: "8px",
+                                                  marginLeft: "12px",
                                                 }}
-                                                title="Send to another character"
                                               >
-                                                <Gift size={16} />
-                                              </button>
+                                                {sessionCharacters.length >
+                                                  0 && (
+                                                  <button
+                                                    onClick={() =>
+                                                      setSendItemModal({
+                                                        stack: null,
+                                                        items: [item],
+                                                        selectedItem: item,
+                                                        quantityToSend: 1,
+                                                      })
+                                                    }
+                                                    style={{
+                                                      ...styles.actionButton,
+                                                      backgroundColor:
+                                                        theme.primary,
+                                                      color: "white",
+                                                    }}
+                                                    title="Send to another character"
+                                                  >
+                                                    <Gift size={16} />
+                                                  </button>
+                                                )}
+                                                <button
+                                                  onClick={() =>
+                                                    startEdit(item)
+                                                  }
+                                                  style={{
+                                                    ...styles.actionButton,
+                                                    ...styles.editButton,
+                                                  }}
+                                                >
+                                                  <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                  onClick={() =>
+                                                    deleteItem(item.id)
+                                                  }
+                                                  style={{
+                                                    ...styles.actionButton,
+                                                    ...styles.deleteButton,
+                                                  }}
+                                                >
+                                                  <Trash2 size={16} />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div style={styles.itemHeader}>
+                                        <div>
+                                          <div style={styles.itemName}>
+                                            {stack.name}
+                                            {stack.attunement_required && (
+                                              <span
+                                                style={{
+                                                  ...styles.attunementBadge,
+                                                  backgroundColor:
+                                                    stack.all_items_attuned
+                                                      ? (theme.success ||
+                                                          "#10B981") + "20"
+                                                      : (theme.warning ||
+                                                          "#F59E0B") + "20",
+                                                  color: stack.all_items_attuned
+                                                    ? theme.success || "#10B981"
+                                                    : theme.warning ||
+                                                      "#F59E0B",
+                                                }}
+                                              >
+                                                {stack.all_items_attuned ? (
+                                                  <>
+                                                    <Check
+                                                      size={12}
+                                                      color={
+                                                        theme.success ||
+                                                        "#10B981"
+                                                      }
+                                                    />
+                                                    Attuned
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Star
+                                                      size={12}
+                                                      color={theme.warning}
+                                                    />
+                                                    Requires Attunement
+                                                  </>
+                                                )}
+                                              </span>
                                             )}
+                                          </div>
+                                        </div>
+                                        <div style={styles.itemActions}>
+                                          {sessionCharacters.length > 0 && (
                                             <button
-                                              onClick={() => {
-                                                setExpandedStack(stack.stackKey);
-                                                startEdit(stack.items[0]);
-                                              }}
+                                              onClick={() =>
+                                                setSendItemModal({
+                                                  stack,
+                                                  items: stack.items,
+                                                  selectedItem:
+                                                    stack.items.length === 1
+                                                      ? stack.items[0]
+                                                      : null,
+                                                  quantityToSend: 1,
+                                                })
+                                              }
                                               disabled={
                                                 expandedStack ||
                                                 showAddForm ||
@@ -1565,7 +1588,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                               }
                                               style={{
                                                 ...styles.actionButton,
-                                                ...styles.editButton,
+                                                backgroundColor: theme.primary,
+                                                color: "white",
                                                 opacity:
                                                   expandedStack ||
                                                   showAddForm ||
@@ -1573,99 +1597,123 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                     ? 0.5
                                                     : 1,
                                               }}
+                                              title="Send to another character"
                                             >
-                                              <Edit2 size={16} />
+                                              <Gift size={16} />
                                             </button>
-                                            <button
-                                              onClick={() => {
-                                                // Delete all items in the stack
-                                                stack.items.forEach(item => deleteItem(item.id));
-                                              }}
-                                              disabled={
+                                          )}
+                                          <button
+                                            onClick={() => {
+                                              setExpandedStack(stack.stackKey);
+                                              startEdit(stack.items[0]);
+                                            }}
+                                            disabled={
+                                              expandedStack ||
+                                              showAddForm ||
+                                              isSaving
+                                            }
+                                            style={{
+                                              ...styles.actionButton,
+                                              ...styles.editButton,
+                                              opacity:
                                                 expandedStack ||
                                                 showAddForm ||
                                                 isSaving
-                                              }
-                                              style={{
-                                                ...styles.actionButton,
-                                                ...styles.deleteButton,
-                                                opacity:
-                                                  expandedStack ||
-                                                  showAddForm ||
-                                                  isSaving
-                                                    ? 0.5
-                                                    : 1,
-                                              }}
-                                            >
-                                              <Trash2 size={16} />
-                                            </button>
-                                          </div>
+                                                  ? 0.5
+                                                  : 1,
+                                            }}
+                                          >
+                                            <Edit2 size={16} />
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              stack.items.forEach((item) =>
+                                                deleteItem(item.id)
+                                              );
+                                            }}
+                                            disabled={
+                                              expandedStack ||
+                                              showAddForm ||
+                                              isSaving
+                                            }
+                                            style={{
+                                              ...styles.actionButton,
+                                              ...styles.deleteButton,
+                                              opacity:
+                                                expandedStack ||
+                                                showAddForm ||
+                                                isSaving
+                                                  ? 0.5
+                                                  : 1,
+                                            }}
+                                          >
+                                            <Trash2 size={16} />
+                                          </button>
                                         </div>
+                                      </div>
 
-                                        {stack.description && (
-                                          <div style={styles.itemDescription}>
-                                            {stack.description}
-                                          </div>
-                                        )}
-
-                                        <div style={styles.itemMeta}>
-                                          <span style={styles.quantityBadge}>
-                                            Qty: {stack.totalQuantity}
-                                          </span>
-                                          {stack.value &&
-                                            stack.value !== 0 &&
-                                            stack.value !== "0" && (
-                                              <span>Value: {stack.value}</span>
-                                            )}
+                                      {stack.description && (
+                                        <div style={styles.itemDescription}>
+                                          {stack.description}
                                         </div>
-                                      </>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                    </div>
-                  ) : items.length > 0 ? (
-                    <div style={styles.emptyState}>
-                      <Search
-                        size={48}
-                        color={theme.textSecondary}
-                        style={styles.emptyIcon}
-                      />
-                      <p style={styles.emptyText}>
-                        No items match your search.
-                      </p>
-                    </div>
-                  ) : (
-                    <div style={styles.emptyState}>
-                      <Package
-                        size={48}
-                        color={theme.textSecondary}
-                        style={styles.emptyIcon}
-                      />
-                      <p style={styles.emptyText}>
-                        Your inventory is empty. Add some items to get started!
-                      </p>
-                      <p
-                        style={{
-                          ...styles.emptyText,
-                          fontSize: "14px",
-                          marginTop: "8px",
-                        }}
-                      >
-                        💡 Items from your character's background will appear
-                        here automatically when you create or edit characters.
-                      </p>
-                    </div>
-                  )}
-                </>
+                                      )}
+
+                                      <div style={styles.itemMeta}>
+                                        <span style={styles.quantityBadge}>
+                                          Qty: {stack.totalQuantity}
+                                        </span>
+                                        {stack.value &&
+                                          stack.value !== 0 &&
+                                          stack.value !== "0" && (
+                                            <span>Value: {stack.value}</span>
+                                          )}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : items.length > 0 ? (
+                <div style={styles.emptyState}>
+                  <Search
+                    size={48}
+                    color={theme.textSecondary}
+                    style={styles.emptyIcon}
+                  />
+                  <p style={styles.emptyText}>No items match your search.</p>
+                </div>
+              ) : (
+                <div style={styles.emptyState}>
+                  <Package
+                    size={48}
+                    color={theme.textSecondary}
+                    style={styles.emptyIcon}
+                  />
+                  <p style={styles.emptyText}>
+                    Your inventory is empty. Add some items to get started!
+                  </p>
+                  <p
+                    style={{
+                      ...styles.emptyText,
+                      fontSize: "14px",
+                      marginTop: "8px",
+                    }}
+                  >
+                    💡 Items from your character's background will appear here
+                    automatically when you create or edit characters.
+                  </p>
+                </div>
               )}
             </>
           )}
+        </>
+      )}
 
       {activeTab === "owlmail" && (
         <OwlMail
@@ -2007,7 +2055,6 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         </div>
       )}
 
-      {/* Bank Modal */}
       {showBankModal && (
         <div
           style={{
@@ -2025,7 +2072,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
           }}
           onClick={() => {
             setShowBankModal(false);
-            setBankKey(prev => prev + 1);
+            setBankKey((prev) => prev + 1);
           }}
         >
           <div
@@ -2056,9 +2103,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
               </h2>
               <button
                 onClick={() => {
-            setShowBankModal(false);
-            setBankKey(prev => prev + 1);
-          }}
+                  setShowBankModal(false);
+                  setBankKey((prev) => prev + 1);
+                }}
                 style={{
                   background: "none",
                   border: "none",

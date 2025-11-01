@@ -73,8 +73,8 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
     charisma: 10,
     initiative_modifier: 0,
     attacks: [],
-    selected_skills: [], // Array: [{ key: "perception", isProficient: true, proficiencyNote: "", hasAdvantage: true, advantageNote: "only when using smell" }]
-    saving_throw_proficiencies: [], // Array of abilities: ["dexterity", "wisdom"]
+    selected_skills: [],
+    saving_throw_proficiencies: [],
     resistances: {
       damage_resistances: [],
       damage_immunities: [],
@@ -290,7 +290,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
     setIsRolling(true);
 
     try {
-      // Calculate proficiency bonus based on character level
       const characterLevel = selectedCharacter?.level || 1;
       const proficiencyBonus = Math.floor((characterLevel - 1) / 4) + 2;
 
@@ -467,9 +466,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
     setFormData({ ...formData, attacks: updatedAttacks });
   };
 
-  // Helper functions for managing selected skills
   const addSkill = (skillKey) => {
-    // Check if skill already exists
     if (formData.selected_skills.some((s) => s.key === skillKey)) {
       return;
     }
@@ -530,7 +527,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
 
       if (error) throw error;
 
-      // Normalize attack data to ensure proper types
       const normalizedCreatures = (data || []).map((creature) => ({
         ...creature,
         attacks: (creature.attacks || []).map((attack) => ({
@@ -740,7 +736,7 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
         isProficient: skill.isProficient || false,
         proficiencyNote: skill.proficiencyNote || "",
         hasAdvantage: skill.hasAdvantage || false,
-        advantageNote: skill.advantageNote || skill.note || "", // Migrate old 'note' field
+        advantageNote: skill.advantageNote || skill.note || "",
       })),
       saving_throw_proficiencies: creature.saving_throw_proficiencies || [],
       resistances: creature.resistances || {
@@ -1660,7 +1656,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                   for conditional bonuses (e.g., "only when using smell").
                 </div>
 
-                {/* Skill Dropdown */}
                 <div style={{ marginBottom: "16px" }}>
                   <label
                     style={{
@@ -1701,7 +1696,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                   </select>
                 </div>
 
-                {/* Selected Skills List */}
                 {formData.selected_skills.length > 0 && (
                   <div
                     style={{
@@ -1775,7 +1769,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                               gap: "12px",
                             }}
                           >
-                            {/* Proficiency Section */}
                             <div>
                               <label
                                 style={{
@@ -1830,7 +1823,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                               )}
                             </div>
 
-                            {/* Advantage Section */}
                             <div>
                               <label
                                 style={{
@@ -1891,7 +1883,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                   </div>
                 )}
 
-                {/* Saving Throw Proficiencies */}
                 <div style={{ marginTop: "24px" }}>
                   <label
                     style={{
@@ -2675,7 +2666,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                   })}
                 </div>
 
-                {/* Skills and Attacks Two-Column Layout */}
                 {((creature.selected_skills &&
                   creature.selected_skills.length > 0) ||
                   (creature.attacks && creature.attacks.length > 0)) && (
@@ -2687,7 +2677,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                       flexWrap: "wrap",
                     }}
                   >
-                    {/* Skills Column */}
                     {creature.selected_skills &&
                       creature.selected_skills.length > 0 && (
                         <div
@@ -2864,7 +2853,6 @@ const Creatures = ({ supabase, user, characters, selectedCharacter }) => {
                         </div>
                       )}
 
-                    {/* Attacks Column */}
                     {creature.attacks && creature.attacks.length > 0 && (
                       <div
                         style={{

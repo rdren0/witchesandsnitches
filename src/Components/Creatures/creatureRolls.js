@@ -438,7 +438,6 @@ export const rollCreatureSkill = async ({
   try {
     const roller = new DiceRoller();
 
-    // Roll with advantage if applicable
     const rollFormula = hasAdvantage ? "2d20kh1" : "1d20";
     const roll = roller.roll(rollFormula);
 
@@ -495,7 +494,6 @@ export const rollCreatureSkill = async ({
       });
     }
 
-    // Add proficiency/advantage notes
     const notes = [];
     if (isProficient) {
       if (proficiencyNote) {

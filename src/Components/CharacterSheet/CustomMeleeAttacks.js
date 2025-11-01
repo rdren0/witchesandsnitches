@@ -327,20 +327,17 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
   };
 
   const openDamageModal = (attack, isCritical = false) => {
-    // Check if there are multiple damage types
     const hasAdditionalDamage =
       attack.additional_damage && attack.additional_damage.length > 0;
     const hasPrimaryDamage = attack.damage_dice_count;
 
     if (!hasPrimaryDamage && !hasAdditionalDamage) return;
 
-    // If there are multiple damage types, show modal
     if (hasPrimaryDamage && hasAdditionalDamage) {
       setSelectedAttackForDamage(attack);
       setDamageModalIsCritical(isCritical);
       setShowDamageModal(true);
     } else {
-      // Only one damage type, roll directly
       handleDamageRoll(attack, isCritical, null);
     }
   };
@@ -352,7 +349,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
   ) => {
     if (!character) return;
 
-    // Check if there are multiple damage types
     const hasAdditionalDamage =
       attack.additional_damage && attack.additional_damage.length > 0;
     const hasPrimaryDamage = attack.damage_dice_count;
@@ -361,10 +357,8 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
 
     let selectedDamage = null;
 
-    // If damageIndex is provided, use that specific damage type
     if (damageIndex !== null) {
       if (damageIndex === 0 && hasPrimaryDamage) {
-        // Primary damage
         selectedDamage = {
           dice_count: attack.damage_dice_count,
           dice_type: attack.damage_dice_type,
@@ -374,7 +368,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
           isPrimary: true,
         };
       } else {
-        // Additional damage
         const additionalIndex = hasPrimaryDamage
           ? damageIndex - 1
           : damageIndex;
@@ -398,7 +391,6 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
         isPrimary: true,
       };
     } else {
-      // Only additional damage, use the first one
       const addDmg = attack.additional_damage[0];
       selectedDamage = {
         dice_count: parseInt(addDmg.dice_count),

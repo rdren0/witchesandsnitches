@@ -932,6 +932,5 @@ export const searchStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
 export const getSpellBookStyles = (theme) => createSpellBookStyles(theme);
 export const getSearchStyles = (theme) => searchStyles(theme);

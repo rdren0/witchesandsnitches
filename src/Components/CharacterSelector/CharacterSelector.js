@@ -41,37 +41,6 @@ export const CharacterSelector = ({
   const shouldShowDropdown = characters.length > 1;
   const singleCharacter = characters.length === 1 ? characters[0] : null;
 
-  // Debug: Log character data to help diagnose image issue
-  useEffect(() => {
-    if (selectedCharacter) {
-      console.log("CharacterSelector - selectedCharacter:", {
-        id: selectedCharacter.id,
-        name: selectedCharacter.name,
-        imageUrl: selectedCharacter.imageUrl,
-        image_url: selectedCharacter.image_url,
-        hasImageUrl: !!selectedCharacter.imageUrl,
-        hasImage_url: !!selectedCharacter.image_url,
-      });
-    }
-  }, [selectedCharacter]);
-
-  // Debug: Log render state
-  useEffect(() => {
-    console.log("CharacterSelector - render state:", {
-      shouldShowDropdown,
-      isDropdownOpen,
-      hasSelectedCharacter: !!selectedCharacter,
-      charactersLength: characters.length,
-      willShowImageCard:
-        shouldShowDropdown && !isDropdownOpen && !!selectedCharacter,
-    });
-  }, [
-    shouldShowDropdown,
-    isDropdownOpen,
-    selectedCharacter,
-    characters.length,
-  ]);
-
   const filteredCharacters = useMemo(() => {
     if (!isEditing || !searchTerm.trim()) return characters;
 
@@ -384,7 +353,6 @@ export const CharacterSelector = ({
       <div style={enhancedStyles.innerContainer}>
         {shouldShowDropdown ? (
           !isDropdownOpen && selectedCharacter ? (
-            // Show selected character display when dropdown is closed
             <div
               onClick={() => setIsDropdownOpen(true)}
               style={{
@@ -407,7 +375,6 @@ export const CharacterSelector = ({
                 e.currentTarget.style.backgroundColor = theme.background;
               }}
             >
-              {/* Avatar */}
               <div
                 style={{
                   width: "64px",
@@ -454,7 +421,6 @@ export const CharacterSelector = ({
                 />
               </div>
 
-              {/* Character Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
@@ -539,13 +505,11 @@ export const CharacterSelector = ({
                 </div>
               </div>
 
-              {/* Dropdown indicator */}
               <div style={{ flexShrink: 0, color: theme.textSecondary }}>
                 <ChevronDown size={24} />
               </div>
             </div>
           ) : (
-            // Show search input when dropdown is open
             <div
               style={enhancedStyles.searchDropdownContainer}
               ref={dropdownRef}
@@ -650,7 +614,6 @@ export const CharacterSelector = ({
               alignItems: "center",
             }}
           >
-            {/* Avatar */}
             <div
               style={{
                 width: "64px",
@@ -695,7 +658,6 @@ export const CharacterSelector = ({
               />
             </div>
 
-            {/* Character Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{

@@ -323,7 +323,7 @@ const AdminDowntimeManager = ({ supabase }) => {
         )
         .eq("archived", false)
         .order("submitted_at", { ascending: false })
-        .limit(300); // Safety limit: load most recent 300 sheets
+        .limit(300);
 
       if (sheetsError) throw sheetsError;
 

@@ -521,15 +521,12 @@ const SpellSummary = ({
 
                             let diceFormula = damageData.dice;
 
-                            // Scale cantrip damage
                             if (spell.level === "Cantrip") {
                               diceFormula = getCantripScaledDamage(
                                 diceFormula,
                                 character?.level || 1
                               );
-                            }
-                            // Scale spell damage if cast at higher level
-                            else if (
+                            } else if (
                               selectedSpellLevels[spell.name] &&
                               spell.higherLevels
                             ) {

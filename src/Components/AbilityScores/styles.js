@@ -66,5 +66,5 @@ export const createAbilityScoresStyles = (theme) => ({
   },
 });
 
-// Helper function for backward compatibility
-export const getAbilityScoresStyles = (theme) => createAbilityScoresStyles(theme);
+export const getAbilityScoresStyles = (theme) =>
+  createAbilityScoresStyles(theme);

@@ -14,8 +14,6 @@ const Tooltip = ({ children, content, delay = 200, position = "top" }) => {
       clearTimeout(timeoutRef.current);
     }
 
-    // Get the actual element we want to position relative to
-    // e.target is the element that triggered the event
     const target = e.target || e.currentTarget || triggerRef.current;
     if (!target) return;
 
@@ -68,23 +66,17 @@ const Tooltip = ({ children, content, delay = 200, position = "top" }) => {
       wordWrap: "break-word",
     };
 
-    // Calculate if tooltip would overflow on the left or right
-    const tooltipWidth = 300; // maxWidth
+    const tooltipWidth = 300;
     const centerX = coords.x;
     const halfWidth = tooltipWidth / 2;
 
     let tooltipX = centerX;
     let transform = "translateX(-50%)";
 
-    // Check if tooltip would overflow left
     if (centerX - halfWidth < 10) {
-      // Align to left edge with small margin
       tooltipX = 10;
       transform = "none";
-    }
-    // Check if tooltip would overflow right
-    else if (centerX + halfWidth > window.innerWidth - 10) {
-      // Align to right edge with small margin
+    } else if (centerX + halfWidth > window.innerWidth - 10) {
       tooltipX = window.innerWidth - 10;
       transform = "translateX(-100%)";
     }
@@ -121,12 +113,10 @@ const Tooltip = ({ children, content, delay = 200, position = "top" }) => {
   };
 
   const renderContent = () => {
-    // If content is a string, just render it
     if (typeof content === "string") {
       return content;
     }
 
-    // If content is an object with structured data
     if (content && typeof content === "object") {
       return (
         <div>
