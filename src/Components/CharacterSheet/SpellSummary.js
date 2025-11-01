@@ -113,6 +113,18 @@ const SpellSummary = ({
             user?.user_metadata?.provider_id || discordUserId;
         }
 
+        // DEBUG: Log query parameters
+        console.log('[SPELL PROGRESS DEBUG] Query params:', {
+          character_id: character.id,
+          discord_user_id: characterOwnerDiscordId,
+          adminMode,
+          isUserAdmin,
+          character_discord_user_id: character.discord_user_id,
+          character_ownerId: character.ownerId,
+          user_provider_id: user?.user_metadata?.provider_id,
+          discordUserId
+        });
+
         const { data, error } = await supabase
           .from("spell_progress_summary")
           .select("*")
@@ -122,6 +134,10 @@ const SpellSummary = ({
           console.error("Error fetching spell progress:", error);
           return;
         }
+
+        // DEBUG: Log raw data returned
+        console.log('[SPELL PROGRESS DEBUG] Raw data from DB:', data);
+        console.log('[SPELL PROGRESS DEBUG] Number of records:', data?.length || 0);
 
         const newSpellAttempts = {};
         const newCriticalSuccesses = {};
@@ -160,6 +176,18 @@ const SpellSummary = ({
             }
           });
         }
+
+        // DEBUG: Log processed data
+        const masteredCount = Object.values(newSpellAttempts).filter(attempt => attempt[2]).length;
+        console.log('[SPELL PROGRESS DEBUG] Processed spell attempts:', {
+          totalSpellsWithProgress: Object.keys(newSpellAttempts).length,
+          masteredSpells: masteredCount,
+          spellAttempts: newSpellAttempts,
+          successfulAttemptsCounts: data?.map(s => ({
+            name: s.spell_name,
+            attempts: s.successful_attempts
+          }))
+        });
 
         setSpellAttempts(newSpellAttempts);
         setCriticalSuccesses(newCriticalSuccesses);
@@ -922,8 +950,21 @@ const SpellSummary = ({
         stats.failedByLevel[level].push(spell);
       }
     });
+
+    // DEBUG: Log computed spell stats
+    console.log('[SPELL PROGRESS DEBUG] Computed spell stats:', {
+      masteredCount: stats.mastered.length,
+      attemptedCount: stats.attempted.length,
+      failedCount: stats.failed.length,
+      researchedCount: stats.researched.length,
+      masteredSpells: stats.mastered.map(s => s.name),
+      attemptedSpells: stats.attempted.map(s => s.name),
+      totalSpellsInData: allSpells.length,
+      spellProgressNamesCount: spellProgressNames.length
+    });
+
     return stats;
-  }, [spellAttempts, failedAttempts, researchedSpells, isLoading]);
+  }, [spellAttempts, failedAttempts, researchedSpells, isLoading, spellsData]);
 
   const styles = {
     container: {
