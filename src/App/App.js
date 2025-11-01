@@ -657,7 +657,7 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
         style={{ textAlign: "center", marginBottom: "3rem", color: theme.text }}
       >
         <BetaBanner />
-        <h1>Welcome to Your D&D Character Manager</h1>
+        <h1>Welcome to Your W&S Character Manager</h1>
         {user ? (
           <p>Welcome back, {displayName}! Ready for your next adventure?</p>
         ) : (
@@ -687,7 +687,9 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
               onClick={() => handleCardClick("/character/sheet")}
             >
               <h3>Character Sheet</h3>
-              <p>View and manage your character's stats and abilities.</p>
+              <p>
+                View and interact with your character's stats and abilities.
+              </p>
             </div>
           </div>
         )}
@@ -699,7 +701,7 @@ const HomePage = ({ user, customUsername, hasCharacters }) => {
           onClick={() => handleCardClick("/character-management")}
         >
           <h3>Character Management</h3>
-          <p>Build, edit, and manage your D&D characters.</p>
+          <p>Build, edit, and manage your W&S characters.</p>
         </div>
       </div>
     </div>
