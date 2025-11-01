@@ -149,6 +149,10 @@ export const getAvailableASILevels = (currentLevel) => {
 };
 
 export const calculateFinalAbilityScores = (character) => {
+  console.log('[DEBUG calculateFinalAbilityScores] Called with character');
+  console.log('[DEBUG] base_ability_scores:', character?.base_ability_scores);
+  console.log('[DEBUG] baseAbilityScores:', character?.baseAbilityScores);
+
   const abilities = [
     "strength",
     "dexterity",
@@ -193,6 +197,11 @@ export const calculateFinalAbilityScores = (character) => {
         character.abilityScores?.[ability] || character[ability] || 10;
     }
 
+    if (ability === 'constitution') {
+      console.log('[DEBUG CON] Starting constitution calculation');
+      console.log('[DEBUG CON] baseScore:', baseScore);
+    }
+
     let finalScore = baseScore;
 
     const { totalModifiers: nonASIModifiers } =
@@ -203,8 +212,19 @@ export const calculateFinalAbilityScores = (character) => {
         heritageChoices
       );
 
+    if (ability === 'constitution') {
+      console.log('[DEBUG CON] nonASIModifiers:', nonASIModifiers);
+    }
+
     if (nonASIModifiers[ability]) {
+      if (ability === 'constitution') {
+        console.log('[DEBUG CON] Adding nonASIModifiers:', nonASIModifiers[ability]);
+      }
       finalScore += nonASIModifiers[ability];
+    }
+
+    if (ability === 'constitution') {
+      console.log('[DEBUG CON] After nonASI modifiers, finalScore:', finalScore);
     }
 
     if (asiChoices) {
@@ -212,6 +232,9 @@ export const calculateFinalAbilityScores = (character) => {
         if (choice?.type === "asi" && choice?.abilityScoreIncreases) {
           choice.abilityScoreIncreases.forEach((increase) => {
             if (increase.ability === ability && increase.increase) {
+              if (ability === 'constitution') {
+                console.log('[DEBUG CON] Adding ASI increase:', increase.increase);
+              }
               finalScore += increase.increase;
             }
           });
@@ -219,8 +242,15 @@ export const calculateFinalAbilityScores = (character) => {
       });
     }
 
+    if (ability === 'constitution') {
+      console.log('[DEBUG CON] After ASI choices, finalScore:', finalScore);
+    }
+
     const additionalASI = character.additionalASI || character.additional_asi;
     if (additionalASI && Array.isArray(additionalASI)) {
+      if (ability === 'constitution') {
+        console.log('[DEBUG CON] additionalASI:', additionalASI);
+      }
       additionalASI.forEach((asi) => {
         if (
           asi.abilityScoreIncreases &&
@@ -228,11 +258,18 @@ export const calculateFinalAbilityScores = (character) => {
         ) {
           asi.abilityScoreIncreases.forEach((increase) => {
             if (increase.ability === ability && increase.increase) {
+              if (ability === 'constitution') {
+                console.log('[DEBUG CON] Adding additional ASI:', increase.increase);
+              }
               finalScore += increase.increase;
             }
           });
         }
       });
+    }
+
+    if (ability === 'constitution') {
+      console.log('[DEBUG CON] FINAL constitution score:', finalScore);
     }
 
     finalScores[ability] = finalScore;
@@ -1039,6 +1076,11 @@ export const calculateTotalModifiersExcludingASI = (
   const houseResult = calculateHouseModifiers(character, houseChoices);
   const heritageResult = calculateHeritageModifiers(character, heritageChoices);
 
+  console.log('[DEBUG ExcludingASI] featResult.modifiers:', featResult.modifiers);
+  console.log('[DEBUG ExcludingASI] backgroundResult.modifiers:', backgroundResult.modifiers);
+  console.log('[DEBUG ExcludingASI] houseResult.modifiers:', houseResult.modifiers);
+  console.log('[DEBUG ExcludingASI] heritageResult.modifiers:', heritageResult.modifiers);
+
   const asiResult = {
     modifiers: {
       strength: 0,
@@ -1089,6 +1131,8 @@ export const calculateTotalModifiersExcludingASI = (
       heritageResult.modifiers.charisma +
       asiResult.modifiers.charisma,
   };
+
+  console.log('[DEBUG ExcludingASI] totalModifiers:', totalModifiers);
 
   const allDetails = {};
   Object.keys(totalModifiers).forEach((ability) => {
