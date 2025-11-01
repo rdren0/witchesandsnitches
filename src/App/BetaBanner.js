@@ -1,74 +1,58 @@
 import React from "react";
+import { useTheme } from "../contexts/ThemeContext";
 
 const BetaBanner = () => {
+  const { theme } = useTheme();
+
   return (
     <div
       className="beta-banner"
       style={{
-        backgroundColor: "var(--warning-bg, #fef3c7)",
-        color: "var(--warning-text, #92400e)",
-        border: "1px solid var(--warning-border, #fbbf24)",
-        padding: "12px 20px",
-        textAlign: "center",
-        borderRadius: "var(--border-radius, 6px)",
-        marginBottom: "20px",
+        backgroundColor: theme.surface,
+        border: `3px solid ${theme.primary}`,
+        borderLeft: `8px solid ${theme.primary}`,
+        padding: "24px 32px",
+        borderRadius: "8px",
+        marginBottom: "24px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
       }}
     >
       <div
-        className="beta-banner-content"
         style={{
+          maxWidth: "900px",
           margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexWrap: "wrap",
-          gap: "12px",
+          textAlign: "center",
         }}
       >
         <div
           style={{
-            backgroundColor: "var(--primary-bg, #3b82f6)",
-            color: "var(--primary-text, white)",
-            padding: "4px 12px",
-            borderRadius: "20px",
-            fontWeight: "bold",
-            fontSize: "12px",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
+            color: theme.text,
+            fontSize: "17px",
+            lineHeight: "1.8",
+            marginBottom: "12px",
           }}
         >
-          Beta
+          This website is now <strong>stable</strong> and will not receive
+          regular updates. This is a <strong>free service</strong> created and
+          maintained as a gift to the community—built in my spare time and
+          funded personally.
         </div>
 
         <div
-          className="beta-banner-text"
           style={{
-            flex: 1,
-            minWidth: "300px",
-            lineHeight: "1.4",
+            fontSize: "14px",
+            color: theme.textSecondary,
+            fontStyle: "italic",
           }}
         >
-          This website is currently in <strong>beta</strong>. <br /> Please
-          report any <strong>bugs or technical issues</strong> you encounter in{" "}
-          <strong>#website</strong>, but note that content may still be
-          incomplete. <br /> Thank you for your patience as I work to improve
-          the experience!
+          - r8chael
         </div>
       </div>
 
       <style>{`
         @media (max-width: 768px) {
-          .beta-banner-content {
-            flex-direction: column !important;
-            text-align: center !important;
-          }
-
-          .beta-banner-text {
-            min-width: auto !important;
-          }
-
           .beta-banner {
-            padding: 10px 16px !important;
+            padding: 20px !important;
           }
         }
       `}</style>
