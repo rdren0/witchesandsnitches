@@ -1488,7 +1488,13 @@ const SpellSummary = ({
               </>
             )}
 
-            {!showCanAttempt && spellStats.mastered.length === 0 && (
+            {spellsLoading && (
+              <div style={styles.emptyState}>
+                <div>Loading spells...</div>
+              </div>
+            )}
+
+            {!showCanAttempt && spellStats.mastered.length === 0 && !spellsLoading && (
               <div style={styles.emptyState}>
                 <BookOpen
                   size={24}
