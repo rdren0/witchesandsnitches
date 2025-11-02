@@ -10,6 +10,7 @@ import {
   Star,
   Sparkles,
   Target,
+  Crown,
 } from "lucide-react";
 import { Skills } from "./Skills/Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
@@ -1139,18 +1140,24 @@ const CharacterSheet = ({
           selectedCharacter?.ownerId !== discordUserId && (
             <div
               style={{
-                background: "linear-gradient(135deg, #ff6b6b, #ffa500)",
-                color: "white",
-                padding: "8px 16px",
+                background: "linear-gradient(135deg, #ffd700, #ffed4e)",
+                color: "#8b4513",
+                padding: "12px 20px",
                 borderRadius: "8px",
-                marginBottom: "16px",
+                marginBottom: "20px",
                 textAlign: "center",
                 fontWeight: "bold",
-                border: "2px solid #ff4757",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                border: "2px solid #ffd700",
               }}
             >
-              ADMIN MODE: Viewing {selectedCharacter.name} (Session:{" "}
-              {selectedCharacter?.gameSession || "Unknown"})
+              <Crown size={18} />
+              ADMIN MODE: Viewing {selectedCharacter.name}
+              {selectedCharacter?.gameSession &&
+                ` (Session: ${selectedCharacter.gameSession})`}
             </div>
           )}
         {character && !characterLoading && (
@@ -1160,7 +1167,12 @@ const CharacterSheet = ({
                 backgroundColor: theme.surface,
                 borderRadius: "0px",
                 padding: "16px",
-                marginTop: "calc(-1.5rem - 20px)",
+                marginTop:
+                  adminMode &&
+                  isUserAdmin &&
+                  selectedCharacter?.ownerId !== discordUserId
+                    ? "0px"
+                    : "calc(-1.5rem - 20px)",
                 marginLeft: "-1.5rem",
                 marginRight: "-1.5rem",
                 marginBottom: "20px",
