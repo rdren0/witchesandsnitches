@@ -171,7 +171,6 @@ const HelpResources = () => {
           backgroundColor: theme.surface,
           borderRadius: "12px",
           border: `2px solid ${theme.primary}`,
-          borderLeft: `8px solid ${theme.primary}`,
         }}
       >
         <h2
