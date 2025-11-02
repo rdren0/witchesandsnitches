@@ -299,4 +299,4 @@ The project uses Google Apps Script to sync spell data from Google Sheets to Sup
 
 ---
 
-Thank you for contributing to Witches & Snitches! Your help makes this project better for everyone. 🎲✨
+Thank you for contributing to Witches & Snitches! Your help makes this project better for everyone.

@@ -15,6 +15,7 @@ import CharacterList from "./CharacterList";
 
 const CharacterManager = ({
   user,
+  customUsername,
   onCharacterSaved,
   supabase,
   adminMode = false,
@@ -304,6 +305,41 @@ const CharacterManager = ({
     );
   };
 
+  const displayName = customUsername || user?.user_metadata?.custom_claims?.global_name || user?.user_metadata?.full_name || "Adventurer";
+
+  const renderWelcomeSection = () => {
+    return (
+      <div style={{ marginBottom: "24px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "24px 20px",
+          }}
+        >
+          <h1
+            style={{
+              color: theme.text,
+              fontSize: "32px",
+              fontWeight: "700",
+              marginBottom: "8px",
+            }}
+          >
+            Welcome to Your W&S Character Manager
+          </h1>
+          <p
+            style={{
+              color: theme.textSecondary,
+              fontSize: "18px",
+              margin: 0,
+            }}
+          >
+            Welcome back, {displayName}! Ready for your next adventure?
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       style={{
@@ -315,6 +351,7 @@ const CharacterManager = ({
       }}
     >
       {renderAdminModeIndicator()}
+      {renderWelcomeSection()}
       {renderTabNavigation()}
 
       {currentMode === "list" && (
