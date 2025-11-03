@@ -71,29 +71,14 @@ const DEFAULT_METADATA = {
   icon: "BookOpen",
 };
 
-/**
- * Get color for a school/subject
- * @param {string} schoolName - Name of the school
- * @returns {string} Hex color code
- */
 export function getSchoolColor(schoolName) {
   return SCHOOL_METADATA[schoolName]?.color || DEFAULT_METADATA.color;
 }
 
-/**
- * Get icon for a school/subject
- * @param {string} schoolName - Name of the school
- * @returns {string} Icon name
- */
 export function getSchoolIcon(schoolName) {
   return SCHOOL_METADATA[schoolName]?.icon || DEFAULT_METADATA.icon;
 }
 
-/**
- * Get full metadata for a school/subject
- * @param {string} schoolName - Name of the school
- * @returns {Object} { color, icon }
- */
 export function getSchoolMetadata(schoolName) {
   return SCHOOL_METADATA[schoolName] || DEFAULT_METADATA;
 }

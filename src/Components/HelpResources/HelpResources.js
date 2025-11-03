@@ -1,6 +1,6 @@
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ExternalLink, BookOpen, Bug, Code } from "lucide-react";
+import { ExternalLink, BookOpen, Bug, Code, Lightbulb } from "lucide-react";
 
 const HelpResources = () => {
   const { theme } = useTheme();
@@ -11,7 +11,7 @@ const HelpResources = () => {
       description: "Complete game rules and mechanics",
       url: "https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde",
       icon: BookOpen,
-      color: theme.primary,
+      color: "#8b5cf6",
     },
     {
       title: "Classes & Spells",
@@ -26,6 +26,13 @@ const HelpResources = () => {
       url: "https://docs.google.com/forms/d/e/1FAIpQLSeneXyqmUHCqmQi9cmDh2wNOR1m62uBZCGFLc8eXmpYxmD0tQ/viewform?usp=header",
       icon: Bug,
       color: theme.error,
+    },
+    {
+      title: "Feature Requests",
+      description: "Have an idea? Share it here!",
+      url: "https://docs.google.com/forms/d/e/1FAIpQLSdGSKv_9eoJW8cszuuF4az-Opm7XtOwievBlLQTQ-qh85Dgfg/viewform?usp=publish-editor",
+      icon: Lightbulb,
+      color: "#3b82f6",
     },
     {
       title: "Contributing Guidelines",
@@ -78,7 +85,7 @@ const HelpResources = () => {
         className="help-resources-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(6, 1fr)",
           gap: "20px",
           maxWidth: "1100px",
           margin: "0 auto",
@@ -107,6 +114,7 @@ const HelpResources = () => {
                 cursor: "pointer",
                 position: "relative",
                 overflow: "hidden",
+                gridColumn: index < 2 ? "span 3" : "span 2",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
@@ -248,11 +256,17 @@ const HelpResources = () => {
           .help-resources-grid {
             grid-template-columns: repeat(2, 1fr) !important;
           }
+          .help-resources-grid a {
+            grid-column: span 1 !important;
+          }
         }
 
         @media (max-width: 640px) {
           .help-resources-grid {
             grid-template-columns: 1fr !important;
+          }
+          .help-resources-grid a {
+            grid-column: span 1 !important;
           }
         }
       `}</style>

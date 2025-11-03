@@ -33,20 +33,8 @@ const SpellSummary = ({
     error: spellsError,
   } = useSpells({ realtime: false });
 
-  // DEBUG: Log spells loading
-  console.log('[SPELL PROGRESS DEBUG] useSpells hook result:', {
-    spellsCount: spells?.length || 0,
-    spellsLoading,
-    spellsError,
-    firstFewSpells: spells?.slice(0, 3).map(s => s.name)
-  });
-
   const spellsData = useMemo(() => {
     const transformed = transformSpellsToNestedStructure(spells);
-    console.log('[SPELL PROGRESS DEBUG] Transformed spellsData:', {
-      schools: Object.keys(transformed || {}),
-      totalSchools: Object.keys(transformed || {}).length
-    });
     return transformed;
   }, [spells]);
 
@@ -126,18 +114,6 @@ const SpellSummary = ({
             user?.user_metadata?.provider_id || discordUserId;
         }
 
-        // DEBUG: Log query parameters
-        console.log('[SPELL PROGRESS DEBUG] Query params:', {
-          character_id: character.id,
-          discord_user_id: characterOwnerDiscordId,
-          adminMode,
-          isUserAdmin,
-          character_discord_user_id: character.discord_user_id,
-          character_ownerId: character.ownerId,
-          user_provider_id: user?.user_metadata?.provider_id,
-          discordUserId
-        });
-
         const { data, error } = await supabase
           .from("spell_progress_summary")
           .select("*")
@@ -147,10 +123,6 @@ const SpellSummary = ({
           console.error("Error fetching spell progress:", error);
           return;
         }
-
-        // DEBUG: Log raw data returned
-        console.log('[SPELL PROGRESS DEBUG] Raw data from DB:', data);
-        console.log('[SPELL PROGRESS DEBUG] Number of records:', data?.length || 0);
 
         const newSpellAttempts = {};
         const newCriticalSuccesses = {};
@@ -191,16 +163,9 @@ const SpellSummary = ({
         }
 
         // DEBUG: Log processed data
-        const masteredCount = Object.values(newSpellAttempts).filter(attempt => attempt[2]).length;
-        console.log('[SPELL PROGRESS DEBUG] Processed spell attempts:', {
-          totalSpellsWithProgress: Object.keys(newSpellAttempts).length,
-          masteredSpells: masteredCount,
-          spellAttempts: newSpellAttempts,
-          successfulAttemptsCounts: data?.map(s => ({
-            name: s.spell_name,
-            attempts: s.successful_attempts
-          }))
-        });
+        const masteredCount = Object.values(newSpellAttempts).filter(
+          (attempt) => attempt[2]
+        ).length;
 
         setSpellAttempts(newSpellAttempts);
         setCriticalSuccesses(newCriticalSuccesses);
@@ -937,15 +902,6 @@ const SpellSummary = ({
       const isMastered = successfulAttempts >= 2;
       const level = spell.level || "Unknown";
 
-      // DEBUG: Log mastered spell matching
-      if (isMastered) {
-        console.log('[SPELL PROGRESS DEBUG] Found mastered spell:', {
-          spellName,
-          successfulAttempts,
-          attempts
-        });
-      }
-
       if (isMastered) {
         stats.mastered.push(spell);
         if (!stats.masteredByLevel[level]) {
@@ -974,21 +930,10 @@ const SpellSummary = ({
     });
 
     // DEBUG: Log computed spell stats
-    const allSpellNames = allSpells.map(s => s.name);
+    const allSpellNames = allSpells.map((s) => s.name);
     const unmatchedProgressSpells = spellProgressNames.filter(
-      name => !allSpellNames.includes(name)
+      (name) => !allSpellNames.includes(name)
     );
-    console.log('[SPELL PROGRESS DEBUG] Computed spell stats:', {
-      masteredCount: stats.mastered.length,
-      attemptedCount: stats.attempted.length,
-      failedCount: stats.failed.length,
-      researchedCount: stats.researched.length,
-      masteredSpells: stats.mastered.map(s => s.name),
-      attemptedSpells: stats.attempted.map(s => s.name),
-      totalSpellsInData: allSpells.length,
-      spellProgressNamesCount: spellProgressNames.length,
-      unmatchedProgressSpells
-    });
 
     return stats;
   }, [spellAttempts, failedAttempts, researchedSpells, isLoading, spellsData]);
@@ -1494,26 +1439,32 @@ const SpellSummary = ({
               </div>
             )}
 
-            {!showCanAttempt && spellStats.mastered.length === 0 && !spellsLoading && (
-              <div style={styles.emptyState}>
-                <BookOpen
-                  size={24}
-                  style={{ marginBottom: "8px", opacity: 0.5 }}
-                />
-                <div>No spell progress yet</div>
-                <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                  Visit the SpellBook to start learning spells
-                </div>
-                {!isLoading && (
-                  <div
-                    style={{ fontSize: "10px", marginTop: "8px", opacity: 0.7 }}
-                  >
-                    Debug: Loaded {Object.keys(spellAttempts).length} spells
-                    from database
+            {!showCanAttempt &&
+              spellStats.mastered.length === 0 &&
+              !spellsLoading && (
+                <div style={styles.emptyState}>
+                  <BookOpen
+                    size={24}
+                    style={{ marginBottom: "8px", opacity: 0.5 }}
+                  />
+                  <div>No spell progress yet</div>
+                  <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                    Visit the SpellBook to start learning spells
                   </div>
-                )}
-              </div>
-            )}
+                  {!isLoading && (
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        marginTop: "8px",
+                        opacity: 0.7,
+                      }}
+                    >
+                      Debug: Loaded {Object.keys(spellAttempts).length} spells
+                      from database
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         </>
       )}

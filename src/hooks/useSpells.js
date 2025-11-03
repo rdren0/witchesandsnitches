@@ -50,7 +50,6 @@ export function useSpells(options = {}) {
           "postgres_changes",
           { event: "*", schema: "public", table: "spells" },
           (payload) => {
-            console.log("Spell changed:", payload);
             fetchSpells();
           }
         )
@@ -106,10 +105,6 @@ export function useSpells(options = {}) {
   };
 }
 
-/**
- * Hook to fetch spell schools metadata
- * @returns {Object} { schools, loading, error }
- */
 export function useSpellSchools() {
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
