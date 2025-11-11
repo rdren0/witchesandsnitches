@@ -801,7 +801,7 @@ export const Skills = ({
               <thead>
                 <tr style={skillStyles.headerRow}>
                   <th
-                    style={skillStyles.headerCell}
+                    style={{...skillStyles.headerCell, width: "60px"}}
                     onClick={() => handleSort("proficiency")}
                     title="Click to sort by proficiency level"
                   >
@@ -811,7 +811,7 @@ export const Skills = ({
                     </div>
                   </th>
                   <th
-                    style={skillStyles.headerCell}
+                    style={{...skillStyles.headerCell, width: "70px"}}
                     onClick={() => handleSort("modifier")}
                     title="Click to sort by ability modifier"
                   >
@@ -831,7 +831,7 @@ export const Skills = ({
                     </div>
                   </th>
                   <th
-                    style={skillStyles.headerCell}
+                    style={{...skillStyles.headerCell, width: "90px"}}
                     onClick={() => handleSort("bonus")}
                     title="Click to sort by total bonus"
                   >
@@ -1059,10 +1059,10 @@ export const Skills = ({
                   <table style={skillStyles.table}>
                     <thead>
                       <tr style={skillStyles.headerRow}>
-                        <th style={skillStyles.headerCell}>
+                        <th style={{...skillStyles.headerCell, width: "60px"}}>
                           <div style={skillStyles.sortableHeader}>PROF</div>
                         </th>
-                        <th style={skillStyles.headerCell}>
+                        <th style={{...skillStyles.headerCell, width: "70px"}}>
                           <div style={skillStyles.sortableHeader}>MOD</div>
                         </th>
                         <th style={skillStyles.headerCell}>
@@ -1070,7 +1070,7 @@ export const Skills = ({
                             TOOL PROFICIENCY
                           </div>
                         </th>
-                        <th style={skillStyles.headerCell}>
+                        <th style={{...skillStyles.headerCell, width: "90px"}}>
                           <div style={skillStyles.sortableHeader}>BONUS</div>
                         </th>
                       </tr>
