@@ -77,10 +77,9 @@ export const Skills = ({
       backgroundColor: theme.surface,
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
-      height: "1200px",
       display: "flex",
       flexDirection: "column",
-      overflow: "visible",
+      overflow: "hidden",
     },
     header: {
       padding: "20px 24px",
@@ -103,20 +102,20 @@ export const Skills = ({
       fontStyle: "italic",
     },
     contentContainer: {
-      flex: 1,
-      overflow: "auto",
       padding: "20px",
     },
     tableContainer: {
       backgroundColor: theme.surface,
       borderRadius: "8px",
       border: `1px solid ${theme.border}`,
-      overflow: "visible",
+      overflow: "hidden",
+      maxWidth: "100%",
     },
     table: {
       width: "100%",
       borderCollapse: "separate",
       borderSpacing: 0,
+      tableLayout: "fixed",
     },
     headerRow: {
       backgroundColor: theme.background,
