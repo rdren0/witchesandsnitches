@@ -596,56 +596,9 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     return allPotions;
   };
 
-  const debugModifier = useMemo(() => {
-    if (!currentCharacter) return 0;
-
-    const level = currentCharacter.level || 1;
-    const proficiencyBonus = Math.ceil(level / 4) + 1;
-    const skillProficiencies = currentCharacter.skillProficiencies || [];
-    const skillExpertise = currentCharacter.skillExpertise || [];
-
-    const hasExpertiseInPotionMaking =
-      skillExpertise.includes("Potion Making") ||
-      skillExpertise.includes("Potion-Making") ||
-      skillExpertise.includes("potionMaking");
-
-    const potionMakingSkillBonus = hasExpertiseInPotionMaking
-      ? proficiencyBonus * 2
-      : 0;
-
-    const isProficientInMedicine =
-      skillProficiencies.includes("Medicine") ||
-      skillProficiencies.includes("medicine");
-
-    const hasExpertiseInMedicine =
-      skillExpertise.includes("Medicine") ||
-      skillExpertise.includes("medicine");
-
-    const medicineSkillBonus = hasExpertiseInMedicine
-      ? proficiencyBonus * 2
-      : isProficientInMedicine
-      ? proficiencyBonus
-      : 0;
-
-    const wisdomModifier = Math.floor(
-      ((currentCharacter.abilityScores?.wisdom || 10) - 10) / 2
-    );
-    const intelligenceModifier = Math.floor(
-      ((currentCharacter.abilityScores?.intelligence || 10) - 10) / 2
-    );
-
-    if (healingSkillChoice === "wisdomMedicine") {
-      return wisdomModifier + medicineSkillBonus;
-    } else if (healingSkillChoice === "intelligencePotionMaking") {
-      return intelligenceModifier + potionMakingSkillBonus;
-    } else {
-      return wisdomModifier + potionMakingSkillBonus;
-    }
-  }, [currentCharacter, healingSkillChoice]);
-
   const filteredPotions = getFilteredPotions();
   const preparedQuality = getPreparedIngredientQuality();
-  const characterModifier = debugModifier;
+  const characterModifier = getCharacterPotionModifier;
   const displayInfo = getSkillDisplayInfo;
 
   return (
@@ -899,7 +852,12 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
                       {isExpanded && (
                         <div style={styles.longDescription}>
-                          <p style={{...styles.longDescriptionText, whiteSpace: 'pre-line'}}>
+                          <p
+                            style={{
+                              ...styles.longDescriptionText,
+                              whiteSpace: "pre-line",
+                            }}
+                          >
                             {potion.longDescription}
                           </p>
                         </div>
