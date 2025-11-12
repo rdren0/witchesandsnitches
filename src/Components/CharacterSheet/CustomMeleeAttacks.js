@@ -407,13 +407,8 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
       if (isCritical) numDice *= 2;
 
       const diceSize = parseInt(selectedDamage.dice_type.substring(1));
-      const abilityMod = selectedDamage.isPrimary
-        ? getAbilityModifier(character, attack.attack_ability_modifier)
-        : 0;
-      const magicBonus = selectedDamage.isPrimary
-        ? attack.magical_bonus || 0
-        : 0;
-      const totalBonus = abilityMod + selectedDamage.modifier + magicBonus;
+      // Only use the damage modifier entered by the user, not the attack ability modifier
+      const totalBonus = selectedDamage.modifier || 0;
 
       let total = totalBonus;
       const rolls = [];
