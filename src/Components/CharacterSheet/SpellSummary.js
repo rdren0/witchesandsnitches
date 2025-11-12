@@ -9,7 +9,8 @@ import {
   X,
   Dice6,
 } from "lucide-react";
-import { spellsData } from "../../SharedData/spells";
+import { useSpells } from "../../hooks/useSpells";
+import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { useRollModal, useRollFunctions } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 import { getSpellModifier } from "../SpellBook/utils";
@@ -25,6 +26,18 @@ const SpellSummary = ({
   const { theme } = useTheme();
   const { showRollResult } = useRollModal();
   const { attemptSpell } = useRollFunctions();
+
+  const {
+    spells,
+    loading: spellsLoading,
+    error: spellsError,
+  } = useSpells({ realtime: false });
+
+  const spellsData = useMemo(() => {
+    const transformed = transformSpellsToNestedStructure(spells);
+    return transformed;
+  }, [spells]);
+
   const [spellAttempts, setSpellAttempts] = useState({});
   const [criticalSuccesses, setCriticalSuccesses] = useState({});
   const [failedAttempts, setFailedAttempts] = useState({});
@@ -148,6 +161,11 @@ const SpellSummary = ({
             }
           });
         }
+
+        // DEBUG: Log processed data
+        const masteredCount = Object.values(newSpellAttempts).filter(
+          (attempt) => attempt[2]
+        ).length;
 
         setSpellAttempts(newSpellAttempts);
         setCriticalSuccesses(newCriticalSuccesses);
@@ -856,11 +874,13 @@ const SpellSummary = ({
 
     const allSpells = [];
     Object.values(spellsData).forEach((subjectData) => {
-      Object.values(subjectData.levels).forEach((spells) => {
-        spells.forEach((spell) => {
-          allSpells.push(spell);
+      if (subjectData && subjectData.levels) {
+        Object.values(subjectData.levels).forEach((spells) => {
+          spells.forEach((spell) => {
+            allSpells.push(spell);
+          });
         });
-      });
+      }
     });
 
     const spellProgressNames = Object.keys(spellAttempts);
@@ -908,8 +928,15 @@ const SpellSummary = ({
         stats.failedByLevel[level].push(spell);
       }
     });
+
+    // DEBUG: Log computed spell stats
+    const allSpellNames = allSpells.map((s) => s.name);
+    const unmatchedProgressSpells = spellProgressNames.filter(
+      (name) => !allSpellNames.includes(name)
+    );
+
     return stats;
-  }, [spellAttempts, failedAttempts, researchedSpells, isLoading]);
+  }, [spellAttempts, failedAttempts, researchedSpells, isLoading, spellsData]);
 
   const styles = {
     container: {
@@ -1406,26 +1433,38 @@ const SpellSummary = ({
               </>
             )}
 
-            {!showCanAttempt && spellStats.mastered.length === 0 && (
+            {spellsLoading && (
               <div style={styles.emptyState}>
-                <BookOpen
-                  size={24}
-                  style={{ marginBottom: "8px", opacity: 0.5 }}
-                />
-                <div>No spell progress yet</div>
-                <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                  Visit the SpellBook to start learning spells
-                </div>
-                {!isLoading && (
-                  <div
-                    style={{ fontSize: "10px", marginTop: "8px", opacity: 0.7 }}
-                  >
-                    Debug: Loaded {Object.keys(spellAttempts).length} spells
-                    from database
-                  </div>
-                )}
+                <div>Loading spells...</div>
               </div>
             )}
+
+            {!showCanAttempt &&
+              spellStats.mastered.length === 0 &&
+              !spellsLoading && (
+                <div style={styles.emptyState}>
+                  <BookOpen
+                    size={24}
+                    style={{ marginBottom: "8px", opacity: 0.5 }}
+                  />
+                  <div>No spell progress yet</div>
+                  <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                    Visit the SpellBook to start learning spells
+                  </div>
+                  {!isLoading && (
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        marginTop: "8px",
+                        opacity: 0.7,
+                      }}
+                    >
+                      Debug: Loaded {Object.keys(spellAttempts).length} spells
+                      from database
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         </>
       )}

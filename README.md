@@ -499,7 +499,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 - **Project Lead**: Rachael Drennan
-- **Email**: rachael.drennan@yahoo.com
+- **Email**: rdrennan0@gmail.com
 - **Issues**: [GitHub Issues](https://github.com/yourusername/witches-and-snitches/issues)
 
 ---

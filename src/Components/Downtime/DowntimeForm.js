@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useSpells } from "../../hooks/useSpells";
+import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { classes } from "../../SharedData/downtime";
 import { downtimeStyles } from "./styles";
 import DicePoolManager from "./DicePoolManager";
@@ -82,6 +84,16 @@ const DowntimeForm = ({
 }) => {
   const { theme } = useTheme();
   const styles = useMemo(() => downtimeStyles(theme), [theme]);
+
+  const {
+    spells,
+    loading: spellsLoading,
+    error: spellsError,
+  } = useSpells({ realtime: false });
+
+  const spellsData = useMemo(() => {
+    return transformSpellsToNestedStructure(spells);
+  }, [spells]);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [dicePool, setDicePool] = useState(initialDicePool || []);
   const [rollAssignments, setRollAssignments] = useState(
@@ -706,7 +718,8 @@ const DowntimeForm = ({
         dicePool,
         selectedCharacter,
         user,
-        supabase
+        supabase,
+        spellsData
       );
 
     await submitDowntimeSheet({

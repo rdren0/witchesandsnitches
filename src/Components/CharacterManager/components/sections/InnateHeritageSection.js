@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import {
   heritageDescriptions,
   innateHeritages,

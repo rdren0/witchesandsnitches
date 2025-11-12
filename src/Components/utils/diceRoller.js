@@ -2,7 +2,6 @@ import React, { useState, createContext, useContext } from "react";
 import { DiceRoller } from "@dice-roller/rpg-dice-roller";
 import { X, Dice6 } from "lucide-react";
 import { getModifierInfo } from "../SpellBook/utils";
-import { spellsData } from "../../SharedData/spells";
 import { getDiscordWebhook } from "../../App/const";
 import {
   sendDiscordRollWebhook,
@@ -2020,8 +2019,8 @@ export const rollSkill = async ({
   }
 };
 
-const getSpellLevel = (spellName, subject) => {
-  const subjectData = spellsData[subject];
+const getSpellLevel = (spellName, subject, spellsData) => {
+  const subjectData = spellsData?.[subject];
   if (!subjectData) return 0;
 
   for (const [levelKey, spells] of Object.entries(subjectData.levels)) {
@@ -2039,8 +2038,8 @@ const getSpellCastingDC = (spellLevel) => {
   return 10 + spellLevel;
 };
 
-const getSpellData = (spellName) => {
-  if (!spellName) return null;
+const getSpellData = (spellName, spellsData) => {
+  if (!spellName || !spellsData) return null;
 
   for (const [subject, subjectData] of Object.entries(spellsData)) {
     if (subjectData.levels) {
@@ -2152,13 +2151,14 @@ export const attemptSpell = async ({
   supabase,
   showBonusDiceModal,
   hideBonusDiceModal,
+  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
     return;
   }
 
-  const spellData = getSpellData(spellName);
+  const spellData = getSpellData(spellName, spellsData);
 
   setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
 
@@ -2179,7 +2179,7 @@ export const attemptSpell = async ({
     );
     let total = d20Roll + totalModifier;
 
-    const spellLevel = getSpellLevel(spellName, subject);
+    const spellLevel = getSpellLevel(spellName, subject, spellsData);
     const goal = getSpellCastingDC(spellLevel);
 
     let isCriticalSuccess = d20Roll === 20;
@@ -2399,6 +2399,7 @@ export const attemptArithmancySpell = async ({
   setCriticalSuccesses,
   setFailedAttempts,
   updateSpellProgressSummary,
+  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -2420,7 +2421,7 @@ export const attemptArithmancySpell = async ({
 
     const total = d20Roll + totalModifier;
 
-    const spellLevel = getSpellLevel(spellName, subject);
+    const spellLevel = getSpellLevel(spellName, subject, spellsData);
     const goal = getSpellCastingDC(spellLevel);
 
     const isCriticalSuccess = d20Roll === 20;
@@ -2550,6 +2551,7 @@ export const attemptRunesSpell = async ({
   setCriticalSuccesses,
   setFailedAttempts,
   updateSpellProgressSummary,
+  spellsData,
 }) => {
   if (!selectedCharacter || !discordUserId) {
     alert("Please select a character first!");
@@ -2571,7 +2573,7 @@ export const attemptRunesSpell = async ({
 
     const total = d20Roll + totalModifier;
 
-    const spellLevel = getSpellLevel(spellName, subject);
+    const spellLevel = getSpellLevel(spellName, subject, spellsData);
     const goal = getSpellCastingDC(spellLevel);
 
     const isCriticalSuccess = d20Roll === 20;

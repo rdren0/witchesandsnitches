@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 
 const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();

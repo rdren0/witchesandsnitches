@@ -24,7 +24,7 @@ import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
 import HelpResources from "../Components/HelpResources/HelpResources";
 
-import { createAppStyles } from "../styles/masterStyles";
+import { createAppStyles } from "../utils/styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManager from "../Components/CharacterManager/CharacterManager";

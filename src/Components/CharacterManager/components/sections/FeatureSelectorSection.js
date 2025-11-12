@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { standardFeats } from "../../../../SharedData/standardFeatData";
 import { getAllSelectedFeats } from "../../utils/characterUtils";
 

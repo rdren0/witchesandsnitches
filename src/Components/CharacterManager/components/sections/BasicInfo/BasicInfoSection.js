@@ -1,7 +1,7 @@
 import React from "react";
 import { gameSessionGroups } from "../../../../../App/const";
 import { useTheme } from "../../../../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../../../../styles/masterStyles";
+import { createCharacterCreationStyles } from "../../../../../utils/styles/masterStyles";
 import OptimizedImageUpload from "./OptimizedImageUpload";
 import SchoolYearSelector from "./SchoolYearSelector";
 import EnhancedCastingStyleSelector from "./EnhancedCastingStyleSelector";

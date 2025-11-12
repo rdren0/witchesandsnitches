@@ -189,13 +189,509 @@ The app will open at `http://localhost:3000`
 
 ## Database & Supabase
 
-### Key Tables
+### Database Schema Setup
 
-- `characters` - Character data
-- `spells` - Spell definitions
-- `spell_progress_summary` - Character spell progress
-- `inventory` - Character inventories
-- And more...
+To set up your development database, follow these steps:
+
+#### 1. Create Your Supabase Project
+
+1. Go to [supabase.com](https://supabase.com) and create a free account
+2. Create a new project for development
+3. Note your project URL and anon key for your `.env` file
+
+#### 2. Create Database Tables
+
+Copy and paste the following SQL into your Supabase SQL Editor (Database → SQL Editor → New Query):
+
+<details>
+<summary><strong>📋 Click to expand complete database schema SQL</strong></summary>
+
+```sql
+-- ============================================================
+-- Create all tables
+-- ============================================================
+
+-- Helper function for automatic updated_at timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TABLE character_activity_progress (
+  id bigint NOT NULL PRIMARY KEY,
+  character_id bigint NOT NULL,
+  semester text NOT NULL,
+  activity_name text NOT NULL,
+  year integer NOT NULL,
+  success_count integer NOT NULL,
+  attempt_count integer NOT NULL,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE character_downtime (
+  id bigint NOT NULL PRIMARY KEY,
+  character_id bigint NOT NULL,
+  user_id uuid NOT NULL,
+  semester integer NOT NULL,
+  character_name text NOT NULL,
+  year text,
+  school_year text,
+  subjects jsonb,
+  activities jsonb,
+  extra_activity jsonb,
+  activity_progress jsonb,
+  selected_spells jsonb,
+  selected_magic_school text,
+  magic_school_choices jsonb,
+  spell_research_data jsonb,
+  relationships jsonb,
+  roll_assignments jsonb,
+  dice_pool text[],
+  is_draft boolean NOT NULL,
+  archived boolean NOT NULL,
+  extra_fields_unlocked boolean,
+  review_status text,
+  admin_feedback text,
+  admin_notes text,
+  reviewed_by uuid,
+  reviewed_at timestamp with time zone,
+  submitted_at timestamp with time zone,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone,
+  last_edited_at timestamp with time zone,
+  last_edited_by uuid
+);
+
+CREATE TABLE character_money (
+  id integer NOT NULL PRIMARY KEY,
+  character_id integer NOT NULL,
+  discord_user_id text NOT NULL,
+  total_knuts integer NOT NULL,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE character_notes (
+  id integer NOT NULL PRIMARY KEY,
+  character_id integer NOT NULL,
+  user_id text NOT NULL,
+  notes text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE character_npc_notes (
+  id bigint NOT NULL PRIMARY KEY,
+  character_id bigint NOT NULL,
+  discord_user_id text NOT NULL,
+  npc_name text NOT NULL,
+  npc_school text,
+  npc_type text,
+  relationship text,
+  notes text,
+  last_interaction text,
+  custom_tags jsonb,
+  connections jsonb,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE character_pc_notes (
+  id bigint NOT NULL PRIMARY KEY,
+  character_id bigint NOT NULL,
+  discord_user_id text NOT NULL,
+  pc_name text NOT NULL,
+  pc_school text,
+  pc_clan text,
+  relationship text,
+  notes text,
+  last_interaction text,
+  custom_tags jsonb,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE character_resources (
+  id bigint NOT NULL PRIMARY KEY,
+  character_id bigint,
+  discord_user_id text NOT NULL,
+  sorcery_points integer,
+  max_sorcery_points integer,
+  corruption_points integer,
+  inspiration boolean,
+  luck integer,
+  spell_slots_1 integer,
+  spell_slots_2 integer,
+  spell_slots_3 integer,
+  spell_slots_4 integer,
+  spell_slots_5 integer,
+  spell_slots_6 integer,
+  spell_slots_7 integer,
+  spell_slots_8 integer,
+  spell_slots_9 integer,
+  max_spell_slots_1 integer,
+  max_spell_slots_2 integer,
+  max_spell_slots_3 integer,
+  max_spell_slots_4 integer,
+  max_spell_slots_5 integer,
+  max_spell_slots_6 integer,
+  max_spell_slots_7 integer,
+  max_spell_slots_8 integer,
+  max_spell_slots_9 integer,
+  spell_bonus_dice jsonb,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE characters (
+  id bigint NOT NULL PRIMARY KEY,
+  discord_user_id text NOT NULL,
+  name text NOT NULL,
+  level integer,
+  house text,
+  school_year integer,
+  casting_style text,
+  subclass text,
+  innate_heritage text,
+  background text,
+  game_session character varying,
+  level1_choice_type character varying,
+  initiative_ability character varying,
+  wand_type text,
+  wand_info text,
+  image_url text,
+  notes text,
+  ability_scores jsonb NOT NULL,
+  base_ability_scores jsonb,
+  calculated_ability_scores jsonb,
+  hit_points integer,
+  current_hit_points integer,
+  temp_hp integer,
+  current_hit_dice integer,
+  corruption_points integer NOT NULL,
+  active boolean,
+  archived_at timestamp with time zone,
+  skill_proficiencies text[],
+  base_skill_proficiencies text[],
+  calculated_skill_proficiencies text[],
+  innate_heritage_skills text[],
+  skill_expertise text[],
+  language_proficiencies text[],
+  tool_proficiencies jsonb,
+  asi_choices jsonb,
+  additional_asi jsonb,
+  subclass_choices jsonb,
+  house_choices jsonb,
+  feat_choices jsonb,
+  additional_feats jsonb,
+  standard_feats jsonb,
+  heritage_choices jsonb,
+  casting_style_choices jsonb,
+  metamagic_choices jsonb,
+  subclass_features jsonb,
+  subclass_level integer,
+  feature_uses jsonb,
+  magic_modifiers jsonb,
+  ac jsonb,
+  spell_attack jsonb,
+  initiative jsonb,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE creatures (
+  id uuid NOT NULL PRIMARY KEY,
+  discord_user_id text NOT NULL,
+  character_id integer,
+  name text NOT NULL,
+  type text NOT NULL,
+  size text NOT NULL,
+  alignment text,
+  description text,
+  source text,
+  notes text,
+  armor_class integer NOT NULL,
+  armor_type text,
+  hit_points integer NOT NULL,
+  current_hit_points integer NOT NULL,
+  hit_dice text,
+  speed jsonb,
+  strength integer NOT NULL,
+  dexterity integer NOT NULL,
+  constitution integer NOT NULL,
+  intelligence integer NOT NULL,
+  wisdom integer NOT NULL,
+  charisma integer NOT NULL,
+  saving_throws jsonb,
+  saving_throw_proficiencies jsonb,
+  skills jsonb,
+  selected_skills jsonb,
+  skill_proficiencies jsonb,
+  proficiencies jsonb,
+  senses jsonb,
+  languages text[],
+  damage_vulnerabilities text[],
+  damage_resistances text[],
+  damage_immunities text[],
+  condition_immunities text[],
+  resistances jsonb,
+  special_traits jsonb,
+  traits jsonb,
+  actions jsonb,
+  attacks jsonb,
+  reactions jsonb,
+  legendary_actions jsonb,
+  legendary_actions_per_round integer,
+  lair_actions jsonb,
+  initiative_modifier integer,
+  image_url text,
+  created_at timestamp with time zone NOT NULL,
+  updated_at timestamp with time zone NOT NULL
+);
+
+CREATE TABLE custom_melee_attacks (
+  id uuid NOT NULL PRIMARY KEY,
+  character_id integer NOT NULL,
+  discord_user_id text NOT NULL,
+  name text NOT NULL,
+  description text,
+  attack_ability_modifier text NOT NULL,
+  damage_dice_count integer,
+  damage_dice_type text,
+  damage_modifier integer,
+  damage_type text,
+  damage_name text,
+  bonus_damage integer,
+  additional_damage jsonb,
+  range text,
+  has_proficiency boolean,
+  magical_bonus integer,
+  crit_range integer,
+  save_type text,
+  save_effect text,
+  higher_levels text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE custom_recipes (
+  id integer NOT NULL PRIMARY KEY,
+  created_by_character_id integer NOT NULL,
+  name character varying NOT NULL,
+  category character varying,
+  description text,
+  duration character varying,
+  eating_time character varying,
+  qualities jsonb NOT NULL,
+  created_at timestamp without time zone
+);
+
+CREATE TABLE custom_spells (
+  id uuid NOT NULL PRIMARY KEY,
+  character_id bigint NOT NULL,
+  discord_user_id text NOT NULL,
+  name text NOT NULL,
+  spell_class text NOT NULL,
+  level text NOT NULL,
+  casting_time text NOT NULL,
+  range text NOT NULL,
+  duration text,
+  components text,
+  description text NOT NULL,
+  higher_levels text,
+  concentration boolean,
+  damage_dice_count integer,
+  damage_dice_type text,
+  damage_modifier integer,
+  damage_type text,
+  scaling_dice_count integer,
+  scaling_dice_type character varying,
+  scaling_per_level boolean,
+  check_type text,
+  save_type text,
+  tags text,
+  status text,
+  created_at timestamp with time zone NOT NULL,
+  updated_at timestamp with time zone NOT NULL
+);
+
+CREATE TABLE discord_users (
+  discord_user_id text NOT NULL PRIMARY KEY,
+  username text,
+  display_name text,
+  avatar_url text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE enhanced_spells (
+  id integer PRIMARY KEY,
+  character_id integer,
+  discord_user_id text,
+  character_name text,
+  spell_name text,
+  subclass text,
+  subclass_features jsonb,
+  enhancement_level text,
+  researched boolean,
+  successful_attempts integer,
+  has_failed_attempt boolean,
+  has_natural_twenty boolean,
+  has_arithmantic_tag boolean,
+  has_runic_tag boolean,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE inventory_items (
+  id bigint NOT NULL PRIMARY KEY,
+  character_id bigint NOT NULL,
+  discord_user_id text NOT NULL,
+  name text NOT NULL,
+  description text,
+  category text NOT NULL,
+  quantity integer NOT NULL,
+  value text,
+  attunement_required boolean,
+  is_attuned boolean,
+  created_at timestamp with time zone NOT NULL,
+  updated_at timestamp with time zone NOT NULL
+);
+
+CREATE TABLE owl_mail (
+  id bigint NOT NULL PRIMARY KEY,
+  sender_character_id bigint,
+  recipient_character_id bigint,
+  subject text NOT NULL,
+  message text,
+  read boolean,
+  created_at timestamp with time zone
+);
+
+CREATE TABLE spells (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  school text NOT NULL,
+  level text NOT NULL,
+  casting_time text,
+  range text,
+  duration text,
+  year integer,
+  description text NOT NULL,
+  higher_levels text,
+  check_type text,
+  attack_type text,
+  saving_throw jsonb,
+  damage jsonb,
+  class jsonb,
+  tags jsonb DEFAULT '[]'::jsonb,
+  ritual boolean DEFAULT false,
+  restriction boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT spells_pkey PRIMARY KEY (id),
+  CONSTRAINT spells_name_key UNIQUE (name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_spells_school ON spells (school);
+CREATE INDEX IF NOT EXISTS idx_spells_level ON spells (level);
+CREATE INDEX IF NOT EXISTS idx_spells_year ON spells (year);
+CREATE INDEX IF NOT EXISTS idx_spells_name ON spells (name);
+
+-- Trigger to auto-update updated_at on spells table
+CREATE TRIGGER update_spells_updated_at
+  BEFORE UPDATE ON spells
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE spell_progress_summary (
+  id integer NOT NULL PRIMARY KEY,
+  character_id integer NOT NULL,
+  discord_user_id text NOT NULL,
+  spell_name text NOT NULL,
+  researched boolean NOT NULL,
+  successful_attempts integer,
+  has_failed_attempt boolean NOT NULL,
+  has_natural_twenty boolean,
+  has_arithmantic_tag boolean,
+  has_runic_tag boolean,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE user_profiles (
+  id uuid NOT NULL PRIMARY KEY,
+  discord_user_id text NOT NULL,
+  username text,
+  discord_name text,
+  avatar_url text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+);
+
+CREATE TABLE user_role_status (
+  discord_user_id text,
+  roles text[],
+  effective_role text
+);
+
+CREATE TABLE user_roles (
+  id integer NOT NULL PRIMARY KEY,
+  discord_user_id text NOT NULL,
+  role text NOT NULL,
+  granted_by text,
+  granted_at timestamp with time zone,
+  created_at timestamp with time zone
+);
+```
+
+</details>
+
+**Note on Spell Data:** The `spells` table will be empty after creation. Spell data is managed via Google Sheets and synced automatically. To populate your development database with spell data, you'll need access to the W&S spell management Google Sheet. **Contact the project maintainers (r8chael) to request access.** Alternatively, you can create test spell data manually for development purposes.
+
+#### 3. Set Up Authentication
+
+The app uses Discord OAuth for authentication. In your Supabase project:
+
+1. Go to Authentication → Providers
+2. Enable Discord provider
+3. Add your Discord OAuth credentials (get these from [Discord Developer Portal](https://discord.com/developers/applications))
+4. Add your local development URL (`http://localhost:3000/auth/callback`) to the allowed redirect URLs
+
+#### 4. Configure Row Level Security (Optional)
+
+The production database uses Row Level Security (RLS) policies. For development, you can either:
+
+- **Disable RLS** (easier for testing, but less secure)
+- **Set up basic RLS policies** (contact maintainer for complete policy SQL)
+
+Example basic policy:
+
+```sql
+-- Example: Allow users to read their own characters
+ALTER TABLE characters ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own characters" ON characters
+  FOR SELECT USING (discord_user_id = auth.uid()::text);
+```
+
+### Key Tables Overview
+
+- **`characters`** - Main character data (abilities, stats, house, subclass, etc.)
+- **`character_resources`** - Spell slots, sorcery points, hit points, inspiration
+- **`discord_users`** - Discord user information for auth
+- **`spells`** - Master spell definitions and data (synced from Google Sheets)
+- **`spell_progress_summary`** - Character spell learning progress
+- **`inventory_items`** - Character items and equipment
+- **`character_downtime`** - Downtime activity submissions
+- **`creatures`** - NPC and creature database
+- **`custom_spells`** - Player-created custom spells
+- **`owl_mail`** - In-game mail system
+- And many more...
 
 ### Making Database Changes
 
@@ -203,6 +699,7 @@ The app will open at `http://localhost:3000`
 2. Test database changes in a development Supabase project first
 3. Document schema changes in your PR
 4. Update TypeScript types if applicable
+5. Ensure Row Level Security (RLS) policies are properly configured
 
 ### Supabase Queries
 

@@ -12,9 +12,10 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { createSpellBookStyles, searchStyles } from "./styles";
 import { hasSubclassFeature } from "./utils";
 
-import { spellsData } from "../../SharedData/spells";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import CastingTiles from "../CharacterSheet/CastingTiles";
+import { useSpells } from "../../hooks/useSpells";
+import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 
 const SpellBook = ({
   supabase,
@@ -27,6 +28,17 @@ const SpellBook = ({
 }) => {
   const { theme } = useTheme();
   const styles = createSpellBookStyles(theme);
+
+  const {
+    spells,
+    loading: spellsLoading,
+    error: spellsError,
+  } = useSpells({ realtime: false });
+
+  const spellsData = useMemo(() => {
+    return transformSpellsToNestedStructure(spells);
+  }, [spells]);
+
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [showSpecializedSubjects, setShowSpecializedSubjects] = useState(false);
@@ -142,7 +154,10 @@ const SpellBook = ({
     { value: "researched", label: "Researched" },
   ];
 
-  const getAvailableSpellsData = useCallback(() => ({ ...spellsData }), []);
+  const getAvailableSpellsData = useCallback(
+    () => ({ ...spellsData }),
+    [spellsData]
+  );
 
   const coreSubjects = [
     "Charms",
@@ -730,6 +745,34 @@ const SpellBook = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  if (spellsLoading) {
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        <h2 style={{ color: "#6B7280", marginBottom: "16px" }}>
+          Loading Spells...
+        </h2>
+        <p style={{ color: "#6B7280" }}>
+          Please wait while we fetch the spell database.
+        </p>
+      </div>
+    );
+  }
+
+  if (spellsError) {
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        <h2 style={{ color: "#DC2626", marginBottom: "16px" }}>
+          Error Loading Spells
+        </h2>
+        <p style={{ color: "#6B7280" }}>{spellsError}</p>
+        <p style={{ color: "#6B7280", marginTop: "12px" }}>
+          Please try refreshing the page or contact support if the problem
+          persists.
+        </p>
+      </div>
+    );
+  }
 
   if (!user || !discordUserId) {
     return (
@@ -1561,6 +1604,7 @@ const SpellBook = ({
               selectedLevels={selectedLevels}
               selectedAttemptFilters={selectedAttemptFilters}
               onSpellProgressUpdate={loadSpellProgress}
+              allSpellsData={spellsData}
             />
           ))}
 
@@ -1698,6 +1742,7 @@ const SpellBook = ({
                       selectedLevels={selectedLevels}
                       selectedAttemptFilters={selectedAttemptFilters}
                       onSpellProgressUpdate={loadSpellProgress}
+                      allSpellsData={spellsData}
                     />
                   ))}
               </div>
