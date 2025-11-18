@@ -8,6 +8,7 @@ import {
   Edit3,
   ChevronDown,
   ChevronUp,
+  BarChart3,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getDiscordWebhook } from "../../App/const";
@@ -16,6 +17,417 @@ import {
   SPELL_SLOT_PROGRESSION,
   SORCERY_POINT_PROGRESSION,
 } from "../../SharedData/data";
+
+const CASTING_STYLE_PROGRESSION = {
+  "Willpower Caster": {
+    1: {
+      proficiencyBonus: 2,
+      sorceryPoints: 0,
+      metamagic: 0,
+      features: ["Spellcasting", "Sorcerous Resilience", "School of Magic"],
+    },
+    2: {
+      proficiencyBonus: 2,
+      sorceryPoints: 2,
+      metamagic: 0,
+      features: ["Font of Magic"],
+    },
+    3: {
+      proficiencyBonus: 2,
+      sorceryPoints: 3,
+      metamagic: 2,
+      features: ["Metamagic", "Fierce Spell", "Resistant Spell"],
+    },
+    4: {
+      proficiencyBonus: 2,
+      sorceryPoints: 4,
+      metamagic: 2,
+      features: ["Ability Score Improvement"],
+    },
+    5: { proficiencyBonus: 3, sorceryPoints: 5, metamagic: 2, features: [] },
+    6: {
+      proficiencyBonus: 3,
+      sorceryPoints: 6,
+      metamagic: 2,
+      features: ["School of Magic Feature"],
+    },
+    7: { proficiencyBonus: 3, sorceryPoints: 7, metamagic: 2, features: [] },
+    8: {
+      proficiencyBonus: 3,
+      sorceryPoints: 8,
+      metamagic: 2,
+      features: ["Ability Score Improvement"],
+    },
+    9: {
+      proficiencyBonus: 4,
+      sorceryPoints: 9,
+      metamagic: 2,
+      features: ["Apparition Lessons"],
+    },
+    10: {
+      proficiencyBonus: 4,
+      sorceryPoints: 10,
+      metamagic: 3,
+      features: ["School of Magic Feature", "Metamagic"],
+    },
+    11: { proficiencyBonus: 4, sorceryPoints: 11, metamagic: 3, features: [] },
+    12: {
+      proficiencyBonus: 4,
+      sorceryPoints: 12,
+      metamagic: 3,
+      features: ["Ability Score Improvement"],
+    },
+    13: { proficiencyBonus: 5, sorceryPoints: 13, metamagic: 3, features: [] },
+    14: {
+      proficiencyBonus: 5,
+      sorceryPoints: 14,
+      metamagic: 3,
+      features: ["School of Magic Feature"],
+    },
+    15: { proficiencyBonus: 5, sorceryPoints: 15, metamagic: 3, features: [] },
+    16: {
+      proficiencyBonus: 5,
+      sorceryPoints: 16,
+      metamagic: 3,
+      features: ["Ability Score Improvement"],
+    },
+    17: {
+      proficiencyBonus: 6,
+      sorceryPoints: 17,
+      metamagic: 4,
+      features: ["Metamagic"],
+    },
+    18: {
+      proficiencyBonus: 6,
+      sorceryPoints: 18,
+      metamagic: 4,
+      features: ["School of Magic Feature"],
+    },
+    19: {
+      proficiencyBonus: 6,
+      sorceryPoints: 19,
+      metamagic: 4,
+      features: ["Ability Score Improvement"],
+    },
+    20: {
+      proficiencyBonus: 6,
+      sorceryPoints: 20,
+      metamagic: 4,
+      features: ["Signature Spells"],
+    },
+  },
+  "Technique Caster": {
+    1: {
+      proficiencyBonus: 2,
+      sorceryPoints: 0,
+      metamagic: 0,
+      features: ["Spellcasting", "School of Magic"],
+    },
+    2: {
+      proficiencyBonus: 2,
+      sorceryPoints: 3,
+      metamagic: 0,
+      features: ["Font of Magic"],
+    },
+    3: {
+      proficiencyBonus: 2,
+      sorceryPoints: 4,
+      metamagic: 2,
+      features: ["Metamagic", "Spell Deflection"],
+    },
+    4: {
+      proficiencyBonus: 2,
+      sorceryPoints: 5,
+      metamagic: 2,
+      features: ["Ability Score Improvement"],
+    },
+    5: {
+      proficiencyBonus: 3,
+      sorceryPoints: 7,
+      metamagic: 3,
+      features: ["Metamagic"],
+    },
+    6: {
+      proficiencyBonus: 3,
+      sorceryPoints: 8,
+      metamagic: 3,
+      features: ["School of Magic Feature"],
+    },
+    7: {
+      proficiencyBonus: 3,
+      sorceryPoints: 9,
+      metamagic: 4,
+      features: ["Metamagic"],
+    },
+    8: {
+      proficiencyBonus: 3,
+      sorceryPoints: 10,
+      metamagic: 5,
+      features: ["Ability Score Improvement"],
+    },
+    9: {
+      proficiencyBonus: 4,
+      sorceryPoints: 12,
+      metamagic: 5,
+      features: ["Apparition Lessons", "Metamagic"],
+    },
+    10: {
+      proficiencyBonus: 4,
+      sorceryPoints: 13,
+      metamagic: 5,
+      features: ["School of Magic Feature"],
+    },
+    11: { proficiencyBonus: 4, sorceryPoints: 14, metamagic: 5, features: [] },
+    12: {
+      proficiencyBonus: 4,
+      sorceryPoints: 15,
+      metamagic: 6,
+      features: ["Ability Score Improvement", "Metamagic"],
+    },
+    13: { proficiencyBonus: 5, sorceryPoints: 17, metamagic: 6, features: [] },
+    14: {
+      proficiencyBonus: 5,
+      sorceryPoints: 18,
+      metamagic: 6,
+      features: ["School of Magic Feature"],
+    },
+    15: {
+      proficiencyBonus: 5,
+      sorceryPoints: 19,
+      metamagic: 7,
+      features: ["Metamagic"],
+    },
+    16: {
+      proficiencyBonus: 5,
+      sorceryPoints: 20,
+      metamagic: 7,
+      features: ["Ability Score Improvement"],
+    },
+    17: { proficiencyBonus: 6, sorceryPoints: 22, metamagic: 7, features: [] },
+    18: {
+      proficiencyBonus: 6,
+      sorceryPoints: 23,
+      metamagic: 8,
+      features: ["School of Magic Feature", "Metamagic"],
+    },
+    19: {
+      proficiencyBonus: 6,
+      sorceryPoints: 24,
+      metamagic: 8,
+      features: ["Ability Score Improvement"],
+    },
+    20: {
+      proficiencyBonus: 6,
+      sorceryPoints: 25,
+      metamagic: 8,
+      features: ["Sorcereous Restoration"],
+    },
+  },
+  "Intellect Caster": {
+    1: {
+      proficiencyBonus: 2,
+      sorceryPoints: 0,
+      metamagic: 0,
+      features: ["Spellcasting", "Ritual Casting", "School of Magic"],
+    },
+    2: {
+      proficiencyBonus: 2,
+      sorceryPoints: 2,
+      metamagic: 0,
+      features: ["Font of Magic"],
+    },
+    3: {
+      proficiencyBonus: 2,
+      sorceryPoints: 3,
+      metamagic: 1,
+      features: ["Metamagic", "Diverse Studies"],
+    },
+    4: {
+      proficiencyBonus: 2,
+      sorceryPoints: 4,
+      metamagic: 1,
+      features: ["Ability Score Improvement"],
+    },
+    5: { proficiencyBonus: 3, sorceryPoints: 4, metamagic: 1, features: [] },
+    6: {
+      proficiencyBonus: 3,
+      sorceryPoints: 5,
+      metamagic: 2,
+      features: ["School of Magic Feature"],
+    },
+    7: {
+      proficiencyBonus: 3,
+      sorceryPoints: 6,
+      metamagic: 2,
+      features: ["Metamagic"],
+    },
+    8: {
+      proficiencyBonus: 3,
+      sorceryPoints: 7,
+      metamagic: 2,
+      features: ["Ability Score Improvement"],
+    },
+    9: {
+      proficiencyBonus: 4,
+      sorceryPoints: 7,
+      metamagic: 2,
+      features: ["Apparition Lessons"],
+    },
+    10: {
+      proficiencyBonus: 4,
+      sorceryPoints: 8,
+      metamagic: 2,
+      features: ["School of Magic Feature"],
+    },
+    11: { proficiencyBonus: 4, sorceryPoints: 9, metamagic: 2, features: [] },
+    12: {
+      proficiencyBonus: 4,
+      sorceryPoints: 10,
+      metamagic: 2,
+      features: ["Ability Score Improvement"],
+    },
+    13: {
+      proficiencyBonus: 5,
+      sorceryPoints: 10,
+      metamagic: 3,
+      features: ["Metamagic"],
+    },
+    14: {
+      proficiencyBonus: 5,
+      sorceryPoints: 11,
+      metamagic: 3,
+      features: ["School of Magic Feature"],
+    },
+    15: { proficiencyBonus: 5, sorceryPoints: 12, metamagic: 3, features: [] },
+    16: {
+      proficiencyBonus: 5,
+      sorceryPoints: 13,
+      metamagic: 3,
+      features: ["Ability Score Improvement"],
+    },
+    17: { proficiencyBonus: 6, sorceryPoints: 13, metamagic: 3, features: [] },
+    18: {
+      proficiencyBonus: 6,
+      sorceryPoints: 14,
+      metamagic: 3,
+      features: ["School of Magic Feature"],
+    },
+    19: {
+      proficiencyBonus: 6,
+      sorceryPoints: 15,
+      metamagic: 3,
+      features: ["Ability Score Improvement"],
+    },
+    20: {
+      proficiencyBonus: 6,
+      sorceryPoints: 15,
+      metamagic: 3,
+      features: ["Arcane Recovery"],
+    },
+  },
+  "Vigor Caster": {
+    1: {
+      proficiencyBonus: 2,
+      sorceryPoints: 0,
+      metamagic: 0,
+      features: ["Spellcasting", "School of Magic", "Easy Target"],
+    },
+    2: {
+      proficiencyBonus: 2,
+      sorceryPoints: 2,
+      metamagic: 0,
+      features: ["Font of Magic"],
+    },
+    3: {
+      proficiencyBonus: 2,
+      sorceryPoints: 5,
+      metamagic: 1,
+      features: ["Metamagic", "Rage"],
+    },
+    4: {
+      proficiencyBonus: 2,
+      sorceryPoints: 5,
+      metamagic: 1,
+      features: ["Ability Score Improvement"],
+    },
+    5: { proficiencyBonus: 3, sorceryPoints: 5, metamagic: 1, features: [] },
+    6: {
+      proficiencyBonus: 3,
+      sorceryPoints: 10,
+      metamagic: 2,
+      features: ["School of Magic Feature", "Metamagic"],
+    },
+    7: { proficiencyBonus: 3, sorceryPoints: 10, metamagic: 2, features: [] },
+    8: {
+      proficiencyBonus: 3,
+      sorceryPoints: 10,
+      metamagic: 2,
+      features: ["Ability Score Improvement"],
+    },
+    9: {
+      proficiencyBonus: 4,
+      sorceryPoints: 10,
+      metamagic: 2,
+      features: ["Apparition Lessons"],
+    },
+    10: {
+      proficiencyBonus: 4,
+      sorceryPoints: 10,
+      metamagic: 2,
+      features: ["Relentless Rage"],
+    },
+    11: {
+      proficiencyBonus: 4,
+      sorceryPoints: 10,
+      metamagic: 2,
+      features: ["Ability Score Increase"],
+    },
+    12: {
+      proficiencyBonus: 4,
+      sorceryPoints: 15,
+      metamagic: 3,
+      features: ["Metamagic"],
+    },
+    13: {
+      proficiencyBonus: 5,
+      sorceryPoints: 15,
+      metamagic: 3,
+      features: ["School of Magic Feature"],
+    },
+    14: { proficiencyBonus: 5, sorceryPoints: 15, metamagic: 3, features: [] },
+    15: {
+      proficiencyBonus: 5,
+      sorceryPoints: 15,
+      metamagic: 3,
+      features: ["Ability Score Improvement"],
+    },
+    16: {
+      proficiencyBonus: 6,
+      sorceryPoints: 20,
+      metamagic: 4,
+      features: ["Metamagic"],
+    },
+    17: {
+      proficiencyBonus: 6,
+      sorceryPoints: 20,
+      metamagic: 4,
+      features: ["School of Magic Feature"],
+    },
+    18: {
+      proficiencyBonus: 6,
+      sorceryPoints: 20,
+      metamagic: 4,
+      features: ["Ability Score Improvement"],
+    },
+    19: {
+      proficiencyBonus: 6,
+      sorceryPoints: 20,
+      metamagic: 4,
+      features: ["Vigorous Perfection"],
+    },
+    20: { proficiencyBonus: 6, sorceryPoints: 20, metamagic: 4, features: [] },
+  },
+};
 
 const SpellSlotTracker = ({
   character,
@@ -31,6 +443,10 @@ const SpellSlotTracker = ({
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [showSorceryModal, setShowSorceryModal] = useState(false);
   const [showConversionTable, setShowConversionTable] = useState(false);
+  const [showProgressionTable, setShowProgressionTable] = useState(false);
+  const [showCastingStyleProgression, setShowCastingStyleProgression] =
+    useState(false);
+  const [expandedCastingStyles, setExpandedCastingStyles] = useState({});
   const [modalData, setModalData] = useState({
     level: 1,
     action: "use",
@@ -300,6 +716,17 @@ const SpellSlotTracker = ({
 
     autoSetupSorceryPoints();
   }, [character?.level, selectedCharacterId, character?.maxSorceryPoints]);
+
+  useEffect(() => {
+    if (character?.castingStyle) {
+      setExpandedCastingStyles((prev) => {
+        if (Object.keys(prev).length === 0) {
+          return { [character.castingStyle]: true };
+        }
+        return prev;
+      });
+    }
+  }, [character?.castingStyle]);
 
   const getSpellSlotData = () => {
     const slots = [];
@@ -1041,6 +1468,169 @@ const SpellSlotTracker = ({
           }}
         >
           <div
+            onClick={() => setShowProgressionTable(!showProgressionTable)}
+            style={{
+              padding: "12px 16px",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: theme.text,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              cursor: "pointer",
+              backgroundColor: theme.surface,
+              transition: "background-color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                theme.hover || theme.background;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.surface;
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <BookOpen size={16} style={{ color: theme.primary }} />
+              Spell Slots by Level (Progression Table)
+            </div>
+            {showProgressionTable ? (
+              <ChevronUp size={20} style={{ color: theme.textSecondary }} />
+            ) : (
+              <ChevronDown size={20} style={{ color: theme.textSecondary }} />
+            )}
+          </div>
+
+          {showProgressionTable && (
+            <div style={{ padding: "16px", overflowX: "auto" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: theme.textSecondary,
+                  marginBottom: "16px",
+                  lineHeight: "1.6",
+                }}
+              >
+                This table shows how many spell slots you gain at each character
+                level. Your current level is{" "}
+                <strong>Level {character?.level || 1}</strong>.
+              </div>
+
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "12px",
+                  minWidth: "600px",
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        padding: "8px",
+                        textAlign: "center",
+                        borderBottom: `2px solid ${theme.border}`,
+                        color: theme.textSecondary,
+                        fontWeight: "600",
+                        position: "sticky",
+                        left: 0,
+                        backgroundColor: theme.surface,
+                        zIndex: 1,
+                      }}
+                    >
+                      Level
+                    </th>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((slot) => (
+                      <th
+                        key={slot}
+                        style={{
+                          padding: "8px",
+                          textAlign: "center",
+                          borderBottom: `2px solid ${theme.border}`,
+                          color: theme.textSecondary,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {slot}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(SPELL_SLOT_PROGRESSION).map(
+                    ([level, slots]) => {
+                      const isCurrentLevel =
+                        parseInt(level) === (character?.level || 1);
+                      return (
+                        <tr
+                          key={level}
+                          style={{
+                            backgroundColor: isCurrentLevel
+                              ? `${theme.primary}15`
+                              : "transparent",
+                          }}
+                        >
+                          <td
+                            style={{
+                              padding: "8px",
+                              textAlign: "center",
+                              borderBottom: `1px solid ${theme.border}`,
+                              color: isCurrentLevel
+                                ? theme.primary
+                                : theme.text,
+                              fontWeight: isCurrentLevel ? "700" : "600",
+                              position: "sticky",
+                              left: 0,
+                              backgroundColor: isCurrentLevel
+                                ? `${theme.primary}15`
+                                : theme.surface,
+                              zIndex: 1,
+                            }}
+                          >
+                            {level}
+                          </td>
+                          {slots.map((count, idx) => (
+                            <td
+                              key={idx}
+                              style={{
+                                padding: "8px",
+                                textAlign: "center",
+                                borderBottom: `1px solid ${theme.border}`,
+                                color:
+                                  count === 0
+                                    ? theme.textSecondary
+                                    : isCurrentLevel
+                                    ? theme.primary
+                                    : theme.text,
+                                fontWeight:
+                                  isCurrentLevel && count > 0
+                                    ? "700"
+                                    : "normal",
+                              }}
+                            >
+                              {count === 0 ? "—" : count}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: "20px",
+            backgroundColor: theme.background,
+            border: `2px solid ${theme.border}`,
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <div
             onClick={() => setShowConversionTable(!showConversionTable)}
             style={{
               padding: "12px 16px",
@@ -1185,6 +1775,305 @@ const SpellSlotTracker = ({
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: "20px",
+            backgroundColor: theme.background,
+            border: `2px solid ${theme.border}`,
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            onClick={() =>
+              setShowCastingStyleProgression(!showCastingStyleProgression)
+            }
+            style={{
+              padding: "12px 16px",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: theme.text,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              cursor: "pointer",
+              backgroundColor: theme.surface,
+              transition: "background-color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                theme.hover || theme.background;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.surface;
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <BarChart3 size={16} style={{ color: theme.primary }} />
+              Casting Style Progression Tables
+            </div>
+            {showCastingStyleProgression ? (
+              <ChevronUp size={20} style={{ color: theme.textSecondary }} />
+            ) : (
+              <ChevronDown size={20} style={{ color: theme.textSecondary }} />
+            )}
+          </div>
+
+          {showCastingStyleProgression && (
+            <>
+              <div
+                style={{
+                  padding: "12px 16px",
+                  backgroundColor: theme.background,
+                  borderBottom: `1px solid ${theme.border}`,
+                }}
+              >
+                <div style={{ fontSize: "13px", color: theme.textSecondary }}>
+                  View sorcery points, metamagic, and features by casting style
+                  and level
+                </div>
+              </div>
+
+              {Object.entries(CASTING_STYLE_PROGRESSION).map(
+                ([castingStyle, progression]) => (
+                  <div
+                    key={castingStyle}
+                    style={{
+                      borderBottom: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div
+                      onClick={() =>
+                        setExpandedCastingStyles((prev) => ({
+                          ...prev,
+                          [castingStyle]: !prev[castingStyle],
+                        }))
+                      }
+                      style={{
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: theme.text,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: "pointer",
+                        backgroundColor: theme.surface,
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          theme.hover || theme.background;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = theme.surface;
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        {castingStyle}
+                      </div>
+                      {expandedCastingStyles[castingStyle] ? (
+                        <ChevronUp
+                          size={20}
+                          style={{ color: theme.textSecondary }}
+                        />
+                      ) : (
+                        <ChevronDown
+                          size={20}
+                          style={{ color: theme.textSecondary }}
+                        />
+                      )}
+                    </div>
+
+                    {expandedCastingStyles[castingStyle] && (
+                      <div style={{ padding: "16px", overflowX: "auto" }}>
+                        <table
+                          style={{
+                            width: "100%",
+                            borderCollapse: "collapse",
+                            fontSize: "12px",
+                            minWidth: "700px",
+                          }}
+                        >
+                          <thead>
+                            <tr>
+                              <th
+                                style={{
+                                  padding: "8px",
+                                  textAlign: "center",
+                                  borderBottom: `2px solid ${theme.border}`,
+                                  color: theme.textSecondary,
+                                  fontWeight: "600",
+                                  position: "sticky",
+                                  left: 0,
+                                  backgroundColor: theme.surface,
+                                  zIndex: 1,
+                                }}
+                              >
+                                Level
+                              </th>
+                              <th
+                                style={{
+                                  padding: "8px",
+                                  textAlign: "center",
+                                  borderBottom: `2px solid ${theme.border}`,
+                                  color: theme.textSecondary,
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Prof Bonus
+                              </th>
+                              <th
+                                style={{
+                                  padding: "8px",
+                                  textAlign: "center",
+                                  borderBottom: `2px solid ${theme.border}`,
+                                  color: theme.textSecondary,
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Sorcery Points
+                              </th>
+                              <th
+                                style={{
+                                  padding: "8px",
+                                  textAlign: "center",
+                                  borderBottom: `2px solid ${theme.border}`,
+                                  color: theme.textSecondary,
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Metamagic
+                              </th>
+                              <th
+                                style={{
+                                  padding: "8px",
+                                  textAlign: "left",
+                                  borderBottom: `2px solid ${theme.border}`,
+                                  color: theme.textSecondary,
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Features
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(progression).map(
+                              ([level, data]) => {
+                                const isCurrentLevel =
+                                  parseInt(level) === (character?.level || 1);
+                                return (
+                                  <tr
+                                    key={level}
+                                    style={{
+                                      backgroundColor: isCurrentLevel
+                                        ? `${theme.primary}15`
+                                        : "transparent",
+                                    }}
+                                  >
+                                    <td
+                                      style={{
+                                        padding: "8px",
+                                        textAlign: "center",
+                                        borderBottom: `1px solid ${theme.border}`,
+                                        color: isCurrentLevel
+                                          ? theme.primary
+                                          : theme.text,
+                                        fontWeight: isCurrentLevel
+                                          ? "700"
+                                          : "600",
+                                        position: "sticky",
+                                        left: 0,
+                                        backgroundColor: isCurrentLevel
+                                          ? `${theme.primary}15`
+                                          : theme.surface,
+                                        zIndex: 1,
+                                      }}
+                                    >
+                                      {level}
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "8px",
+                                        textAlign: "center",
+                                        borderBottom: `1px solid ${theme.border}`,
+                                        color: isCurrentLevel
+                                          ? theme.primary
+                                          : theme.text,
+                                        fontWeight: isCurrentLevel
+                                          ? "700"
+                                          : "normal",
+                                      }}
+                                    >
+                                      +{data.proficiencyBonus}
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "8px",
+                                        textAlign: "center",
+                                        borderBottom: `1px solid ${theme.border}`,
+                                        color: isCurrentLevel
+                                          ? theme.primary
+                                          : theme.text,
+                                        fontWeight: isCurrentLevel
+                                          ? "700"
+                                          : "normal",
+                                      }}
+                                    >
+                                      {data.sorceryPoints}
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "8px",
+                                        textAlign: "center",
+                                        borderBottom: `1px solid ${theme.border}`,
+                                        color: isCurrentLevel
+                                          ? theme.primary
+                                          : theme.text,
+                                        fontWeight: isCurrentLevel
+                                          ? "700"
+                                          : "normal",
+                                      }}
+                                    >
+                                      {data.metamagic}
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "8px",
+                                        textAlign: "left",
+                                        borderBottom: `1px solid ${theme.border}`,
+                                        color: isCurrentLevel
+                                          ? theme.primary
+                                          : theme.textSecondary,
+                                        fontSize: "11px",
+                                      }}
+                                    >
+                                      {data.features.length > 0
+                                        ? data.features.join(", ")
+                                        : "—"}
+                                    </td>
+                                  </tr>
+                                );
+                              }
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
+            </>
           )}
         </div>
 
