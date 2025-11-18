@@ -1,6 +1,6 @@
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ExternalLink, BookOpen, Bug, Code } from "lucide-react";
+import { ExternalLink, BookOpen, Bug, Code, ShoppingBag } from "lucide-react";
 
 const HelpResources = () => {
   const { theme } = useTheme();
@@ -19,6 +19,13 @@ const HelpResources = () => {
       url: "https://docs.google.com/document/d/1m-TbIj7gFzYUlA_ASa7pCrW8cbt5KOvV16r8CXF78NE/edit?tab=t.0#heading=h.camndhcqq8qn",
       icon: BookOpen,
       color: theme.secondary,
+    },
+    {
+      title: "Mirage Market Item Catalogue",
+      description: "Browse the complete catalogue of magical items",
+      url: "https://docs.google.com/document/d/1Y8t17AcnLnGuDX34xb5X0KrZ_mM4C1KlO_G8-ul6-64/edit?tab=t.0",
+      icon: ShoppingBag,
+      color: "#9333ea",
     },
     {
       title: "Report a Bug",
@@ -78,7 +85,7 @@ const HelpResources = () => {
         className="help-resources-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(6, 1fr)",
           gap: "20px",
           maxWidth: "1100px",
           margin: "0 auto",
@@ -245,9 +252,31 @@ const HelpResources = () => {
       </div>
 
       <style>{`
+        /* Each tile spans 2 columns in the 6-column grid (appears as 3 columns) */
+        .help-resources-grid > a {
+          grid-column: span 2;
+        }
+
+        /* Center the last two tiles on the second row */
+        .help-resources-grid > a:nth-child(4) {
+          grid-column: 2 / 4;
+        }
+
+        .help-resources-grid > a:nth-child(5) {
+          grid-column: 4 / 6;
+        }
+
         @media (max-width: 1024px) {
           .help-resources-grid {
             grid-template-columns: repeat(2, 1fr) !important;
+          }
+          /* Reset to normal grid for tablet */
+          .help-resources-grid > a {
+            grid-column: span 1 !important;
+          }
+          .help-resources-grid > a:nth-child(4),
+          .help-resources-grid > a:nth-child(5) {
+            grid-column: auto !important;
           }
         }
 
