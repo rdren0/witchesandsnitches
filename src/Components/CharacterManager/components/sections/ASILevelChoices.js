@@ -6,6 +6,7 @@ import {
   handleASIChoiceChange as utilsHandleASIChoiceChange,
   handleASIFeatChange as utilsHandleASIFeatChange,
   handleASIAbilityChange as utilsHandleASIAbilityChange,
+  calculateFinalAbilityScores,
 } from "../../utils/characterUtils";
 import FeatureSelectorSection from "./FeatureSelectorSection";
 
@@ -270,6 +271,21 @@ const AbilityScoreIncrementSection = ({
   ];
   const currentIncreases = choice.abilityScoreIncreases || [];
 
+  const characterWithoutThisASI = {
+    ...character,
+    asiChoices: {
+      ...(character.asiChoices || {}),
+    },
+  };
+
+  if (characterWithoutThisASI.asiChoices[level]) {
+    const { [level]: _, ...restChoices } = characterWithoutThisASI.asiChoices;
+    characterWithoutThisASI.asiChoices = restChoices;
+  }
+  const finalAbilityScores = calculateFinalAbilityScores(
+    characterWithoutThisASI
+  );
+
   const handleAbilityIncrement = (ability) => {
     if (disabled) return;
 
@@ -350,7 +366,8 @@ const AbilityScoreIncrementSection = ({
           );
           const increaseCount = abilityIncreases.length;
           const totalIncrease = increaseCount;
-          const currentScore = character.abilityScores?.[ability] || 10;
+
+          const currentScore = finalAbilityScores[ability] || 10;
 
           return (
             <div

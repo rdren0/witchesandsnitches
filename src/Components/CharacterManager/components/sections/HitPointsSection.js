@@ -35,18 +35,63 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
 
   const castingHpData = getCastingStyleHpData(character.castingStyle);
 
-  const totalModifiers = calculateTotalModifiers(character);
+  const calculateASIModifiers = () => {
+    const asiModifiers = {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    };
+
+    if (character.asiChoices) {
+      Object.values(character.asiChoices).forEach((choice) => {
+        if (choice.type === "asi" && choice.abilityScoreIncreases) {
+          choice.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability && increase.increase) {
+              asiModifiers[increase.ability] += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    if (character.additionalASI && Array.isArray(character.additionalASI)) {
+      character.additionalASI.forEach((asi) => {
+        if (
+          asi.abilityScoreIncreases &&
+          Array.isArray(asi.abilityScoreIncreases)
+        ) {
+          asi.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability && increase.increase) {
+              asiModifiers[increase.ability] += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    return asiModifiers;
+  };
+
+  const modifiersFromOtherSources = calculateTotalModifiers(character);
+  const asiModifiers = calculateASIModifiers();
   const baseConstitution = character.abilityScores?.constitution || 10;
-  const constitutionBonus = totalModifiers.constitution || 0;
+  const constitutionBonus =
+    (modifiersFromOtherSources.constitution || 0) +
+    (asiModifiers.constitution || 0);
   const effectiveConstitution = baseConstitution + constitutionBonus;
   const conMod = Math.floor((effectiveConstitution - 10) / 2);
 
   const calculateHitPoints = ({ character }) => {
     const level = character.level || 1;
 
-    const totalModifiers = calculateTotalModifiers(character);
+    const asiMods = calculateASIModifiers();
+    const otherModifiers = calculateTotalModifiers(character);
     const baseCon = character.abilityScores?.constitution || 8;
-    const conBonus = totalModifiers.constitution || 0;
+    const conBonus =
+      (otherModifiers.constitution || 0) + (asiMods.constitution || 0);
     const effectiveCon = baseCon + conBonus;
     const conMod = Math.floor((effectiveCon - 10) / 2);
 
@@ -65,9 +110,11 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const rollHp = () => {
     const level = character.level || 1;
 
-    const totalModifiers = calculateTotalModifiers(character);
+    const asiMods = calculateASIModifiers();
+    const otherModifiers = calculateTotalModifiers(character);
     const baseCon = character.abilityScores?.constitution || 8;
-    const conBonus = totalModifiers.constitution || 0;
+    const conBonus =
+      (otherModifiers.constitution || 0) + (asiMods.constitution || 0);
     const effectiveCon = baseCon + conBonus;
     const conMod = Math.floor((effectiveCon - 10) / 2);
 
