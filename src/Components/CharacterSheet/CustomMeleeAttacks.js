@@ -1545,7 +1545,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                             {attack.damage_name && `${attack.damage_name}: `}
                             {attack.damage_dice_count}
                             {attack.damage_dice_type}
-                            {attack.damage_modifier &&
+                            {attack.damage_modifier !== 0 && attack.damage_modifier != null &&
                               ` + ${attack.damage_modifier}`}
                             {attack.damage_type && ` ${attack.damage_type}`}
                           </div>

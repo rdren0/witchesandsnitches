@@ -156,6 +156,11 @@ const SpellSlotTracker = ({
         progression.forEach((maxSlots, index) => {
           const spellLevel = index + 1;
           updateData[`max_spell_slots_${spellLevel}`] = maxSlots;
+
+          const currentSlots = character?.[`spellSlots${spellLevel}`] || 0;
+          if (currentSlots < maxSlots) {
+            updateData[`spell_slots_${spellLevel}`] = maxSlots;
+          }
         });
 
         const { error } = await supabase
@@ -173,6 +178,11 @@ const SpellSlotTracker = ({
         progression.forEach((maxSlots, index) => {
           const spellLevel = index + 1;
           newCharacterState[`maxSpellSlots${spellLevel}`] = maxSlots;
+
+          const currentSlots = character?.[`spellSlots${spellLevel}`] || 0;
+          if (currentSlots < maxSlots) {
+            newCharacterState[`spellSlots${spellLevel}`] = maxSlots;
+          }
         });
         setCharacter(newCharacterState);
       } catch (error) {
