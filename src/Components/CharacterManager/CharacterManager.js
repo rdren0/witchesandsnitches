@@ -53,6 +53,7 @@ const CharacterManager = ({
       loadAllUsers();
       loadAllCharacters();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminMode, isUserAdmin]);
 
   const loadAllCharacters = async () => {
