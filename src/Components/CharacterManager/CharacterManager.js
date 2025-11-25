@@ -5,13 +5,14 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { Users, Plus, Crown } from "lucide-react";
+import { Users, Plus, Crown, Archive } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import { characterService } from "../../services/characterService";
 
 import CharacterForm from "./components/CharacterForm/CharacterForm";
 import CharacterList from "./CharacterList";
+import ArchivedCharactersList from "./ArchivedCharactersList";
 
 const CharacterManager = ({
   user,
@@ -165,6 +166,13 @@ const CharacterManager = ({
       icon: Plus,
       active: currentMode === "create",
       onClick: () => navigate("/character-management/create"),
+    },
+    {
+      key: "archived",
+      label: "Archived",
+      icon: Archive,
+      active: currentMode === "archived",
+      onClick: () => navigate("/character-management/archived"),
     },
   ];
 
@@ -400,6 +408,24 @@ const CharacterManager = ({
           adminMode={adminMode}
           isUserAdmin={isUserAdmin}
           initialSection={sectionToOpen}
+        />
+      )}
+
+      {currentMode === "archived" && (
+        <ArchivedCharactersList
+          user={user}
+          adminMode={adminMode}
+          isUserAdmin={isUserAdmin}
+          onCharacterRestored={() => {
+            setRefreshTrigger((prev) => prev + 1);
+            if (adminMode && isUserAdmin) {
+              loadAllCharacters();
+            }
+            if (onCharacterSaved) {
+              onCharacterSaved();
+            }
+          }}
+          refreshTrigger={refreshTrigger}
         />
       )}
     </div>
