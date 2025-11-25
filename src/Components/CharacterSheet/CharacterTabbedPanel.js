@@ -126,6 +126,13 @@ const CharacterTabbedPanel = ({
             paddingBottom: "32px",
           }}
         >
+          <SpellSlotTracker
+            character={selectedCharacter}
+            supabase={supabase}
+            discordUserId={discordUserId}
+            setCharacter={setCharacter}
+            selectedCharacterId={selectedCharacter.id}
+          />
           <SpellSummary
             character={selectedCharacter}
             supabase={supabase}
@@ -138,13 +145,6 @@ const CharacterTabbedPanel = ({
             character={selectedCharacter}
             supabase={supabase}
             discordUserId={discordUserId}
-          />
-          <SpellSlotTracker
-            character={selectedCharacter}
-            supabase={supabase}
-            discordUserId={discordUserId}
-            setCharacter={setCharacter}
-            selectedCharacterId={selectedCharacter.id}
           />
           <MetaMagicDisplay
             character={selectedCharacter}

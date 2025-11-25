@@ -938,6 +938,19 @@ const ASISelector = ({
   ];
   const currentIncreases = asi.abilityScoreIncreases || [];
 
+  const characterWithoutThisASI = {
+    ...character,
+    additionalASI: (character.additionalASI || []).filter(
+      (_, i) => i !== index
+    ),
+    additional_asi: (character.additional_asi || []).filter(
+      (_, i) => i !== index
+    ),
+  };
+  const finalAbilityScores = calculateFinalAbilityScores(
+    characterWithoutThisASI
+  );
+
   const handleAbilityIncrement = (ability) => {
     if (disabled) return;
 
@@ -1035,7 +1048,8 @@ const ASISelector = ({
           const increaseCount = abilityIncreases.length;
           const totalIncreases = currentIncreases.length;
           const canSelect = totalIncreases < 2 || increaseCount > 0;
-          const currentScore = character.abilityScores?.[ability] || 10;
+
+          const currentScore = finalAbilityScores[ability] || 10;
 
           return (
             <div

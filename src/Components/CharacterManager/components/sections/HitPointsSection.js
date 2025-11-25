@@ -4,6 +4,7 @@ import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { RefreshCw } from "lucide-react";
 import { calculateToughFeatHPBonus } from "../../utils/utils";
 import { hpData } from "../../../../SharedData/data";
+import { calculateTotalModifiers } from "../../utils/characterUtils";
 
 const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
@@ -33,14 +34,67 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
   };
 
   const castingHpData = getCastingStyleHpData(character.castingStyle);
-  const conMod = character.abilityScores?.constitution
-    ? Math.floor((character.abilityScores.constitution - 10) / 2)
-    : -1;
+
+  const calculateASIModifiers = () => {
+    const asiModifiers = {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    };
+
+    if (character.asiChoices) {
+      Object.values(character.asiChoices).forEach((choice) => {
+        if (choice.type === "asi" && choice.abilityScoreIncreases) {
+          choice.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability && increase.increase) {
+              asiModifiers[increase.ability] += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    if (character.additionalASI && Array.isArray(character.additionalASI)) {
+      character.additionalASI.forEach((asi) => {
+        if (
+          asi.abilityScoreIncreases &&
+          Array.isArray(asi.abilityScoreIncreases)
+        ) {
+          asi.abilityScoreIncreases.forEach((increase) => {
+            if (increase.ability && increase.increase) {
+              asiModifiers[increase.ability] += increase.increase;
+            }
+          });
+        }
+      });
+    }
+
+    return asiModifiers;
+  };
+
+  const modifiersFromOtherSources = calculateTotalModifiers(character);
+  const asiModifiers = calculateASIModifiers();
+  const baseConstitution = character.abilityScores?.constitution || 10;
+  const constitutionBonus =
+    (modifiersFromOtherSources.constitution || 0) +
+    (asiModifiers.constitution || 0);
+  const effectiveConstitution = baseConstitution + constitutionBonus;
+  const conMod = Math.floor((effectiveConstitution - 10) / 2);
 
   const calculateHitPoints = ({ character }) => {
     const level = character.level || 1;
-    const con = character.abilityScores?.constitution || 8;
-    const conMod = Math.floor((con - 10) / 2);
+
+    const asiMods = calculateASIModifiers();
+    const otherModifiers = calculateTotalModifiers(character);
+    const baseCon = character.abilityScores?.constitution || 8;
+    const conBonus =
+      (otherModifiers.constitution || 0) + (asiMods.constitution || 0);
+    const effectiveCon = baseCon + conBonus;
+    const conMod = Math.floor((effectiveCon - 10) / 2);
+
     const toughFeatBonus = calculateToughFeatHPBonus(character);
 
     const castingData = hpData[character.castingStyle];
@@ -55,8 +109,15 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
 
   const rollHp = () => {
     const level = character.level || 1;
-    const con = character.abilityScores?.constitution || 8;
-    const conMod = Math.floor((con - 10) / 2);
+
+    const asiMods = calculateASIModifiers();
+    const otherModifiers = calculateTotalModifiers(character);
+    const baseCon = character.abilityScores?.constitution || 8;
+    const conBonus =
+      (otherModifiers.constitution || 0) + (asiMods.constitution || 0);
+    const effectiveCon = baseCon + conBonus;
+    const conMod = Math.floor((effectiveCon - 10) / 2);
+
     const toughFeatBonus = calculateToughFeatHPBonus(character);
 
     let totalHp = castingHpData.base + conMod;
@@ -144,6 +205,10 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
       border: `3px solid ${theme.border}`,
       outline: "none",
       transition: "border-color 0.2s ease",
+      MozAppearance: "textfield",
+      WebkitAppearance: "none",
+      appearance: "textfield",
+      cursor: "text",
     },
     calculationInfo: {
       flex: 1,
@@ -263,6 +328,16 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
 
   return (
     <div style={hpStyles.container}>
+      <style>{`
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
       <div style={hpStyles.card}>
         <div style={hpStyles.header}>
           <h3 style={hpStyles.title}>Hit Points</h3>
@@ -282,14 +357,26 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
               min="1"
               value={character.hitPoints || ""}
               onChange={(e) => {
-                const newMaxHp = parseInt(e.target.value) || 1;
-                onChange("hitPoints", newMaxHp);
+                const value = e.target.value;
+                if (value === "") {
+                  onChange("hitPoints", "");
+                } else {
+                  const newMaxHp = Math.max(1, parseInt(value) || 1);
+                  onChange("hitPoints", newMaxHp);
 
-                if (
-                  character.currentHitPoints === undefined ||
-                  character.currentHitPoints === null
-                ) {
-                  onChange("currentHitPoints", newMaxHp);
+                  if (
+                    character.currentHitPoints === undefined ||
+                    character.currentHitPoints === null
+                  ) {
+                    onChange("currentHitPoints", newMaxHp);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = theme.border;
+                if (e.target.value === "" || parseInt(e.target.value) < 1) {
+                  onChange("hitPoints", 1);
+                  onChange("currentHitPoints", 1);
                 }
               }}
               placeholder="--"
@@ -299,10 +386,15 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
               }}
               disabled={disabled}
               onFocus={(e) => {
-                if (!disabled) e.target.style.borderColor = theme.primary;
+                if (!disabled) {
+                  e.target.style.borderColor = theme.primary;
+                  e.target.select();
+                }
               }}
-              onBlur={(e) => {
-                e.target.style.borderColor = theme.border;
+              onClick={(e) => {
+                if (!disabled) {
+                  e.target.select();
+                }
               }}
             />
           ) : (
@@ -320,7 +412,15 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             <div style={hpStyles.calculationRow}>
               <span>Constitution:</span>
               <span style={hpStyles.constitutionScore}>
-                {character.abilityScores.constitution}
+                {effectiveConstitution}
+                {constitutionBonus !== 0 && (
+                  <span
+                    style={{ fontSize: "11px", color: theme.textSecondary }}
+                  >
+                    {" "}
+                    ({baseConstitution} + {constitutionBonus})
+                  </span>
+                )}
               </span>
               <span>Modifier:</span>
               <span style={hpStyles.modifier}>

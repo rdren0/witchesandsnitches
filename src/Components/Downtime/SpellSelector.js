@@ -62,6 +62,22 @@ const SpellSelector = ({
   const isAttempt =
     isAttemptActivity ?? activityText?.toLowerCase().includes("attempt spells");
 
+  const getHistoryOfMagicModifier = useCallback((character) => {
+    if (!character) return 0;
+
+    const intelligenceScore = character.abilityScores?.intelligence || 10;
+    const abilityMod = Math.floor((intelligenceScore - 10) / 2);
+
+    const skillLevel = character.skills?.historyOfMagic || 0;
+    const profBonus = character.proficiencyBonus || 0;
+
+    if (skillLevel === 0) return abilityMod;
+    if (skillLevel === 1) return abilityMod + profBonus;
+    if (skillLevel === 2) return abilityMod + 2 * profBonus;
+
+    return abilityMod;
+  }, []);
+
   const calculateSpellDC = useCallback(
     (_, spellData) => {
       if (!spellData || !selectedCharacter) return 10;
@@ -138,14 +154,20 @@ const SpellSelector = ({
       const diceValue = dicePool[diceIndex];
       if (!diceValue) return null;
 
-      const modifier = getSpellModifier(
-        spellName,
-        spellData.subject,
-        selectedCharacter
-      );
+      const modifier = isResearch
+        ? getHistoryOfMagicModifier(selectedCharacter)
+        : getSpellModifier(spellName, spellData.subject, selectedCharacter);
+
       const total = diceValue + modifier;
       const dc = calculateSpellDC(spellName, spellData);
       const passes = total >= dc;
+
+      const modifierInfo = isResearch
+        ? {
+            abilityName: "History of Magic",
+            details: "Intelligence-based skill",
+          }
+        : getModifierInfo(spellName, spellData.subject, selectedCharacter);
 
       return {
         diceValue,
@@ -153,11 +175,7 @@ const SpellSelector = ({
         total,
         dc,
         passes,
-        modifierInfo: getModifierInfo(
-          spellName,
-          spellData.subject,
-          selectedCharacter
-        ),
+        modifierInfo,
       };
     },
     [
@@ -168,6 +186,8 @@ const SpellSelector = ({
       getSpellData,
       selectedCharacter,
       calculateSpellDC,
+      isResearch,
+      getHistoryOfMagicModifier,
     ]
   );
 

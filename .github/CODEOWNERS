@@ -1,4 +1,149 @@
-# CODEOWNERS file for witches-and-snitches
+# CODEOWNERS file for Witches & Snitches
+# This file defines who is responsible for code review in different parts of the repository.
+#
+# Format: path-pattern @github-username
+#
+# When someone opens a pull request that modifies code in a directory,
+# the code owners are automatically requested for review.
 
-# Require rdren0's approval for all changes
+# Default owner for everything in the repo
+# This should be the primary maintainer
 * @rdren0
+* @raechelo
+
+# ==========================================
+# CORE APPLICATION
+# ==========================================
+
+# React App entry point and core configuration
+# /src/App/ @rdren0
+# /src/index.js @rdren0
+# /src/index.css @rdren0
+
+# ==========================================
+# CONTEXTS & STATE MANAGEMENT
+# ==========================================
+
+# /src/contexts/ @rdren0
+
+# Admin functionality requires careful review
+# /src/contexts/AdminContext.js @rdren0
+
+# ==========================================
+# SERVICES & API
+# ==========================================
+
+# /src/services/ @rdren0
+
+# Character service is critical - needs thorough review
+# /src/services/characterService.js @rdren0
+
+# ==========================================
+# CHARACTER MANAGEMENT
+# ==========================================
+
+# /src/Components/CharacterManager/ @rdren0
+# /src/Components/CharacterSheet/ @rdren0
+# /src/Components/CharacterSelector/ @rdren0
+# /src/Components/CharacterGallery/ @rdren0
+# /src/Components/CharacterNotes/ @rdren0
+
+# ==========================================
+# GAME SYSTEMS
+# ==========================================
+
+# /src/Components/SpellBook/ @rdren0
+# /src/Components/Potions/ @rdren0
+# /src/Components/Recipes/ @rdren0
+# /src/Components/Inventory/ @rdren0
+# /src/Components/Downtime/ @rdren0
+# /src/Components/Creatures/ @rdren0
+
+# ==========================================
+# SHARED DATA & CONFIGURATION
+# ==========================================
+
+# /src/SharedData/ @rdren0
+
+# Feats and spells data are critical game mechanics
+# /src/SharedData/*Feat*.js @rdren0
+# /src/SharedData/spells.js @rdren0
+
+# ==========================================
+# ADMIN PANEL
+# ==========================================
+
+# /src/Admin/ @rdren0
+
+# ==========================================
+# HOOKS & UTILITIES
+# ==========================================
+
+# /src/hooks/ @rdren0
+# /src/Components/utils/ @rdren0
+
+# ==========================================
+# STYLES & THEMING
+# ==========================================
+
+# /src/styles/ @rdren0
+# /src/Components/ThemeSettings/ @rdren0
+# /src/contexts/ThemeContext.js @rdren0
+
+# ==========================================
+# DATABASE & MIGRATIONS
+# ==========================================
+
+/sql/ @rdren0
+/supabase/ @rdren0
+/migrations/ @rdren0
+
+# ==========================================
+# SCRIPTS & TOOLS
+# ==========================================
+
+/scripts/ @rdren0
+
+# Google Sheets sync scripts need careful review
+/scripts/*sync*.js @rdren0
+
+# ==========================================
+# CONFIGURATION FILES
+# ==========================================
+
+# Environment configuration
+.env @rdren0
+.env.example @rdren0
+
+# Build configuration
+package.json @rdren0
+package-lock.json @rdren0
+
+# ESLint configuration
+.eslintrc.js @rdren0
+
+# Git configuration
+.gitignore @rdren0
+.github/ @rdren0
+
+# ==========================================
+# DOCUMENTATION
+# ==========================================
+
+README.md @rdren0
+CONTRIBUTING.md @rdren0
+/docs/ @rdren0
+
+# ==========================================
+# TESTS
+# ==========================================
+
+*.test.js @rdren0
+*.spec.js @rdren0
+/coverage/ @rdren0
+
+# ==========================================
+# GITHUB WORKFLOWS
+# ==========================================
+
+/.github/workflows/ @rdren0

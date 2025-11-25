@@ -898,9 +898,14 @@ function AppContent() {
   }, [user]);
 
   const loadCharacters = useCallback(async () => {
-    if (!discordUserId || (loadingRef.current && !adminMode)) {
+    if (!discordUserId) {
       return;
     }
+
+    if (loadingRef.current) {
+      return;
+    }
+
     loadingRef.current = true;
     setCharactersLoading(true);
     setCharactersError(null);
@@ -982,15 +987,8 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-  }, [
-    discordUserId,
-    adminMode,
-    isUserAdmin,
-    customUsername,
-    user,
-    selectInitialCharacter,
-    loadCustomUsername,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discordUserId, adminMode]);
 
   useEffect(() => {
     if (discordUserId) {

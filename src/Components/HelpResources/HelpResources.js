@@ -1,6 +1,6 @@
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ExternalLink, BookOpen, Bug, Code, Lightbulb } from "lucide-react";
+import { ExternalLink, BookOpen, Bug, Code, ShoppingBag } from "lucide-react";
 
 const HelpResources = () => {
   const { theme } = useTheme();
@@ -11,7 +11,7 @@ const HelpResources = () => {
       description: "Complete game rules and mechanics",
       url: "https://docs.google.com/document/d/1BY7U9mYLQD_p9O9e42AYLHG2Xr6ZCsR8Ye07MaGXfVw/edit?tab=t.0#heading=h.frfwms2htyde",
       icon: BookOpen,
-      color: "#8b5cf6",
+      color: theme.primary,
     },
     {
       title: "Classes & Spells",
@@ -21,18 +21,18 @@ const HelpResources = () => {
       color: theme.secondary,
     },
     {
+      title: "Mirage Market Item Catalogue",
+      description: "Browse the complete catalogue of magical items",
+      url: "https://docs.google.com/document/d/1Y8t17AcnLnGuDX34xb5X0KrZ_mM4C1KlO_G8-ul6-64/edit?tab=t.0",
+      icon: ShoppingBag,
+      color: "#9333ea",
+    },
+    {
       title: "Report a Bug",
       description: "Found an issue? I'll fix it when I can!",
       url: "https://docs.google.com/forms/d/e/1FAIpQLSeneXyqmUHCqmQi9cmDh2wNOR1m62uBZCGFLc8eXmpYxmD0tQ/viewform?usp=header",
       icon: Bug,
       color: theme.error,
-    },
-    {
-      title: "Feature Requests",
-      description: "Have an idea? Share it here!",
-      url: "https://docs.google.com/forms/d/e/1FAIpQLSdGSKv_9eoJW8cszuuF4az-Opm7XtOwievBlLQTQ-qh85Dgfg/viewform?usp=publish-editor",
-      icon: Lightbulb,
-      color: "#3b82f6",
     },
     {
       title: "Contributing Guidelines",
@@ -114,7 +114,6 @@ const HelpResources = () => {
                 cursor: "pointer",
                 position: "relative",
                 overflow: "hidden",
-                gridColumn: index < 2 ? "span 3" : "span 2",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
@@ -179,6 +178,7 @@ const HelpResources = () => {
           backgroundColor: theme.surface,
           borderRadius: "12px",
           border: `2px solid ${theme.primary}`,
+          borderLeft: `8px solid ${theme.primary}`,
         }}
       >
         <h2
@@ -252,21 +252,37 @@ const HelpResources = () => {
       </div>
 
       <style>{`
+        /* Each tile spans 2 columns in the 6-column grid (appears as 3 columns) */
+        .help-resources-grid > a {
+          grid-column: span 2;
+        }
+
+        /* Center the last two tiles on the second row */
+        .help-resources-grid > a:nth-child(4) {
+          grid-column: 2 / 4;
+        }
+
+        .help-resources-grid > a:nth-child(5) {
+          grid-column: 4 / 6;
+        }
+
         @media (max-width: 1024px) {
           .help-resources-grid {
             grid-template-columns: repeat(2, 1fr) !important;
           }
-          .help-resources-grid a {
+          /* Reset to normal grid for tablet */
+          .help-resources-grid > a {
             grid-column: span 1 !important;
+          }
+          .help-resources-grid > a:nth-child(4),
+          .help-resources-grid > a:nth-child(5) {
+            grid-column: auto !important;
           }
         }
 
         @media (max-width: 640px) {
           .help-resources-grid {
             grid-template-columns: 1fr !important;
-          }
-          .help-resources-grid a {
-            grid-column: span 1 !important;
           }
         }
       `}</style>
