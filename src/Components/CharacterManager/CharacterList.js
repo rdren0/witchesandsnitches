@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Trash2,
   Users,
@@ -44,6 +44,7 @@ const CharacterList = ({
   const [filterValue, setFilterValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const loadingRefLocal = useRef(false);
   const discordUserId = user?.user_metadata?.provider_id;
 
   const getAvailableGameSessions = () => {
@@ -91,6 +92,11 @@ const CharacterList = ({
       return;
     }
 
+    if (loadingRefLocal.current) {
+      return;
+    }
+
+    loadingRefLocal.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -159,8 +165,10 @@ const CharacterList = ({
       setError("Failed to load characters. Please try again.");
     } finally {
       setIsLoading(false);
+      loadingRefLocal.current = false;
     }
-  }, [discordUserId, adminMode, isUserAdmin, allCharacters, viewMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discordUserId, adminMode, viewMode]);
 
   useEffect(() => {
     loadCharacters();
