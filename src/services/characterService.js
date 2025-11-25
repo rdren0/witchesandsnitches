@@ -737,7 +737,6 @@ const restoreCharacter = async (characterId, discordUserId) => {
     .update({
       active: true,
       archived_at: null,
-      restored_at: new Date().toISOString(),
     })
     .eq("id", characterId)
     .eq("discord_user_id", discordUserId)

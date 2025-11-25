@@ -877,8 +877,16 @@ function AppContent() {
     [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
   );
 
+  const loadingUsernameRef = useRef(false);
+
   const loadCustomUsername = useCallback(async () => {
     if (!user) return;
+
+    if (loadingUsernameRef.current) {
+      return;
+    }
+
+    loadingUsernameRef.current = true;
 
     try {
       const { data, error } = await supabase
@@ -894,6 +902,8 @@ function AppContent() {
       }
     } catch (error) {
       console.error("Error loading custom username:", error);
+    } finally {
+      loadingUsernameRef.current = false;
     }
   }, [user]);
 
@@ -997,12 +1007,16 @@ function AppContent() {
   }, [adminMode, discordUserId]);
 
   useEffect(() => {
-    if (discordUserId && !hasAttemptedLoad && !charactersLoading) {
-      requestIdleCallback(() => {
-        loadCharacters();
-      });
+    if (
+      discordUserId &&
+      !hasAttemptedLoad &&
+      !charactersLoading &&
+      !loadingRef.current
+    ) {
+      loadCharacters();
     }
-  }, [discordUserId, hasAttemptedLoad, charactersLoading, loadCharacters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discordUserId, hasAttemptedLoad, charactersLoading]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -1024,9 +1038,7 @@ function AppContent() {
 
   useEffect(() => {
     if (user) {
-      requestIdleCallback(() => {
-        loadCustomUsername();
-      });
+      loadCustomUsername();
       setHasAttemptedLoad(false);
     } else {
       setCustomUsername("");
@@ -1036,7 +1048,8 @@ function AppContent() {
       setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
-  }, [user, setThemeSelectedCharacter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (location.pathname === "/character") {
@@ -1261,6 +1274,24 @@ function AppContent() {
                     adminMode={adminMode}
                     isUserAdmin={isUserAdmin}
                     mode="create"
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/character-management/archived"
+              element={
+                <ProtectedRoute user={user}>
+                  <CharacterManager
+                    user={user}
+                    customUsername={customUsername}
+                    onCharacterSaved={() => {
+                      setHasAttemptedLoad(false);
+                    }}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                    mode="archived"
                   />
                 </ProtectedRoute>
               }
