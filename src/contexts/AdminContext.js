@@ -103,7 +103,8 @@ export const AdminProvider = ({ children, user }) => {
     };
 
     checkAdminStatus();
-  }, [discordUserId, searchParams, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discordUserId]);
 
   useEffect(() => {
     if (!searchParams) return;

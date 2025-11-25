@@ -86,7 +86,10 @@ const CharacterList = ({
   const availableGameSessions = getAvailableGameSessions();
 
   const loadCharacters = useCallback(async () => {
-    if (!discordUserId && !adminMode) return;
+    if (!discordUserId && !adminMode) {
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
