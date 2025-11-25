@@ -38,6 +38,7 @@ export const AdminProvider = ({ children, user }) => {
   });
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
+  const isCheckingAdminRef = React.useRef(false);
 
   let searchParams, setSearchParams;
   try {
@@ -57,8 +58,15 @@ export const AdminProvider = ({ children, user }) => {
       if (!discordUserId) {
         setIsUserAdmin(false);
         setAdminModeState(false);
+        isCheckingAdminRef.current = false;
         return;
       }
+
+      if (isCheckingAdminRef.current) {
+        return;
+      }
+
+      isCheckingAdminRef.current = true;
 
       try {
         const adminStatus = await characterService.isUserAdmin(discordUserId);
@@ -99,6 +107,8 @@ export const AdminProvider = ({ children, user }) => {
             storageError
           );
         }
+      } finally {
+        isCheckingAdminRef.current = false;
       }
     };
 
