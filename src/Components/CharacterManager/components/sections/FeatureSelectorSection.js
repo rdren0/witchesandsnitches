@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
-import { standardFeats } from "../../../../SharedData/standardFeatData";
+import { useFeats } from "../../../../hooks/useFeats";
 import { getAllSelectedFeats } from "../../utils/characterUtils";
 
 const FeatureSelectorSection = ({
@@ -19,6 +19,7 @@ const FeatureSelectorSection = ({
 }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
+  const { feats: standardFeats } = useFeats();
 
   const selectedFeats = (() => {
     const feats =

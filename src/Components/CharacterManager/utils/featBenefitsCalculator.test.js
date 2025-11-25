@@ -8,7 +8,118 @@ import {
   hasResistanceFromFeats,
   getHitPointsBonusFromFeats,
 } from "./featBenefitsCalculator";
-import { standardFeats } from "../../../SharedData/standardFeatData";
+
+// Test data for feat validation
+const testFeatsData = [
+  {
+    name: "Alert",
+    description: "Test feat",
+    benefits: {
+      combatBonuses: { initiativeBonus: 5 },
+      immunities: ["surprised"],
+    },
+  },
+  {
+    name: "Lucky",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+    },
+  },
+  {
+    name: "Mobile",
+    description: "Test feat",
+    benefits: { speeds: { walkingBonus: 10 } },
+  },
+  {
+    name: "Tough",
+    description: "Test feat",
+    benefits: { hitPointsPerLevel: 2 },
+  },
+  {
+    name: "Observant",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["intelligence", "wisdom"],
+        amount: 1,
+      },
+      combatBonuses: {
+        passivePerceptionBonus: 5,
+        passiveInvestigationBonus: 5,
+      },
+    },
+  },
+  {
+    name: "Athlete",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity"],
+        amount: 1,
+      },
+      speeds: { climbingBonus: "equal_to_walking" },
+    },
+  },
+  {
+    name: "Resilient",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      savingThrowProficiencies: ["choice"],
+    },
+    prerequisites: {
+      allOf: [{ type: "level", value: 4 }],
+    },
+  },
+  {
+    name: "Elemental Adept",
+    description: "Test feat",
+    benefits: {},
+    prerequisites: {
+      allOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Heavy Armor Master",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: { type: "fixed", ability: "strength", amount: 1 },
+    },
+    prerequisites: {
+      allOf: [{ type: "proficiency", category: "armor", value: "heavy" }],
+    },
+  },
+  {
+    name: "War Caster",
+    description: "Test feat",
+    benefits: {
+      combatBonuses: { concentrationAdvantage: true },
+    },
+    prerequisites: {
+      anyOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+];
+
+// Generate additional test feats for performance testing
+const generateTestFeats = (count) => {
+  const feats = [...testFeatsData];
+  for (let i = testFeatsData.length; i < count; i++) {
+    feats.push({
+      name: `TestFeat${i}`,
+      description: "Generated test feat",
+      benefits: {
+        combatBonuses: { initiativeBonus: 1 },
+      },
+    });
+  }
+  return feats;
+};
+
+const standardFeats = generateTestFeats(25);
 
 const createMockCharacter = (feats = [], level = 5, featChoices = {}) => ({
   id: "test-character",

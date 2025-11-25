@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
-import { standardFeats } from "../../../../SharedData/standardFeatData";
+import { useFeats } from "../../../../hooks/useFeats";
 import {
   innateHeritages,
   heritageDescriptions,
@@ -16,6 +16,7 @@ const FeatureSelectorSection = ({
 }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
+  const { feats: standardFeats } = useFeats();
 
   const [heritageExpanded, setHeritageExpanded] = useState(true);
   const [featsExpanded, setFeatsExpanded] = useState(true);

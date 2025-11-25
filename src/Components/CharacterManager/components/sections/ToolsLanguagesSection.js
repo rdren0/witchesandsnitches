@@ -1,15 +1,13 @@
 import React from "react";
 import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import {
-  backgroundsData,
-  subclassesData,
-  standardFeats,
-} from "../../../../SharedData";
+import { backgroundsData, subclassesData } from "../../../../SharedData";
+import { useFeats } from "../../../../hooks/useFeats";
 
 const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
+  const { feats: standardFeats } = useFeats();
 
   const toSentenceCase = (str) => {
     if (!str) return str;

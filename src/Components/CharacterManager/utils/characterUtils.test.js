@@ -7,7 +7,183 @@ import {
   checkFeatPrerequisites,
   getCharacterBenefits,
 } from "./characterUtils";
-import { standardFeats } from "../../../SharedData/standardFeatData";
+
+// Test data for feat validation
+const standardFeats = [
+  {
+    name: "Alert",
+    preview: "You can't be surprised and gain +5 to initiative",
+    description: ["Always on the lookout for danger, you gain several benefits."],
+    benefits: {
+      combatBonuses: { initiativeBonus: 5 },
+      immunities: ["surprised"],
+    },
+  },
+  {
+    name: "Lucky",
+    preview: "You can reroll dice",
+    description: ["You have inexplicable luck."],
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      specialAbilities: [
+        {
+          name: "Luck Points",
+          type: "resource",
+          description: "Reroll attacks, saves, or checks",
+          uses: "proficiency_bonus/long_rest",
+        },
+      ],
+    },
+  },
+  {
+    name: "Mobile",
+    preview: "Your speed increases",
+    description: ["You are exceptionally speedy and agile."],
+    benefits: { speeds: { walkingBonus: 10 } },
+  },
+  {
+    name: "Tough",
+    preview: "Increase your hit points",
+    description: ["Your hit point maximum increases."],
+    benefits: { hitPointsPerLevel: 2 },
+  },
+  {
+    name: "Observant",
+    preview: "Increase perception and investigation",
+    description: ["You are quick to notice details."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["intelligence", "wisdom"],
+        amount: 1,
+      },
+      combatBonuses: {
+        passivePerceptionBonus: 5,
+        passiveInvestigationBonus: 5,
+      },
+    },
+  },
+  {
+    name: "Athlete",
+    preview: "Improve athletic abilities",
+    description: ["You have undergone extensive physical training."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity"],
+        amount: 1,
+      },
+      speeds: { climbingBonus: "equal_to_walking" },
+    },
+  },
+  {
+    name: "Resilient",
+    preview: "Gain proficiency in saving throws",
+    description: ["You have trained to withstand certain effects."],
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      savingThrowProficiencies: ["choice"],
+    },
+    prerequisites: {
+      allOf: [{ type: "level", value: 4 }],
+    },
+  },
+  {
+    name: "Elemental Adept",
+    preview: "Master elemental magic",
+    description: ["You have mastered a particular type of elemental magic."],
+    benefits: {},
+    prerequisites: {
+      allOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Heavy Armor Master",
+    preview: "Master heavy armor",
+    description: ["You can use your armor to deflect strikes."],
+    benefits: {
+      abilityScoreIncrease: { type: "fixed", ability: "strength", amount: 1 },
+      resistances: ["physical"],
+    },
+    prerequisites: {
+      allOf: [{ type: "proficiency", category: "armor", value: "heavy" }],
+    },
+  },
+  {
+    name: "War Caster",
+    preview: "Improve spellcasting in combat",
+    description: ["You have practiced casting spells in combat."],
+    benefits: {
+      combatBonuses: { concentrationAdvantage: true },
+    },
+    prerequisites: {
+      anyOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Keen Mind",
+    preview: "Sharpen your intellect",
+    description: ["You have a mind that can track time, direction, and detail."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "intelligence",
+        amount: 1,
+      },
+    },
+  },
+  {
+    name: "Dungeon Delver",
+    preview: "Master of dungeon exploration",
+    description: ["Alert to hidden traps and secret doors."],
+    benefits: {
+      combatBonuses: { trapAdvantage: true },
+      resistances: ["trap_damage"],
+    },
+  },
+  {
+    name: "Defensive Duelist",
+    preview: "Use your reaction to boost AC",
+    description: ["When wielding a finesse weapon, you can use your reaction."],
+    benefits: {
+      specialAbilities: [
+        {
+          name: "Parry",
+          type: "reaction",
+          description: "Add proficiency bonus to AC",
+          uses: "unlimited",
+        },
+      ],
+    },
+    prerequisites: {
+      allOf: [{ type: "ability", ability: "dexterity", value: 13 }],
+    },
+  },
+  {
+    name: "Durable",
+    preview: "Hardy and resilient",
+    description: ["You are uncommonly hardy."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "constitution",
+        amount: 1,
+      },
+      hitPointsPerLevel: 1,
+    },
+  },
+  {
+    name: "Spell Sniper",
+    preview: "Increase spell range",
+    description: ["You have learned to cast spells at greater range."],
+    benefits: {
+      spellcasting: { spellRangeDouble: true },
+    },
+    prerequisites: {
+      anyOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+];
 
 const createTestCharacter = (overrides = {}) => ({
   id: "test-character",

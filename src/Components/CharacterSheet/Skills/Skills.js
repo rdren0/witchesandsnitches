@@ -46,7 +46,7 @@ import {
 } from "../../../SharedData";
 import { backgroundsData } from "../../../SharedData/backgroundsData";
 import { subclassesData } from "../../../SharedData/subclassesData";
-import { standardFeats } from "../../../SharedData/standardFeatData";
+import { useFeats } from "../../../hooks/useFeats";
 
 export const Skills = ({
   character,
@@ -57,6 +57,7 @@ export const Skills = ({
 }) => {
   const { rollSkill, rollMagicalTheoryCheck } = useRollFunctions();
   const { theme } = useTheme();
+  const { feats: standardFeats } = useFeats();
   const [sortColumn, setSortColumn] = useState("skill");
   const [sortDirection, setSortDirection] = useState("asc");
   const [isRolling, setIsRolling] = useState(false);
@@ -676,6 +677,77 @@ export const Skills = ({
     return <Wrench {...iconProps} />;
   };
 
+  const toolsToDbFormat = (toolsObject) => {
+    const proficientTools = [];
+    const expertiseTools = [];
+
+    Object.entries(toolsObject).forEach(([toolName, level]) => {
+      if (level === 1) {
+        proficientTools.push(toolName);
+      } else if (level === 2) {
+        expertiseTools.push(toolName);
+      }
+    });
+
+    return { proficientTools, expertiseTools };
+  };
+
+  const toggleToolProficiency = async (toolName) => {
+    if (!character || !selectedCharacterId) return;
+
+    const currentLevel = character.tools?.[toolName] || 0;
+    const newLevel = (currentLevel + 1) % 3;
+
+    const updatedTools = {
+      ...character.tools,
+      [toolName]: newLevel,
+    };
+
+    setCharacter((prev) => ({
+      ...prev,
+      tools: updatedTools,
+    }));
+
+    try {
+      const { proficientTools, expertiseTools } = toolsToDbFormat(updatedTools);
+
+      const { error } = await supabase
+        .from("characters")
+        .update({
+          tool_proficiencies: proficientTools,
+          tool_expertise: expertiseTools,
+        })
+        .eq("id", selectedCharacterId)
+        .eq("discord_user_id", discordUserId);
+
+      if (error) {
+        console.error("Error updating tool proficiency:", error);
+
+        setCharacter((prev) => ({
+          ...prev,
+          tools: {
+            ...prev.tools,
+            [toolName]: currentLevel,
+          },
+        }));
+
+        alert("Failed to update tool proficiency. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error updating tool proficiency:", err);
+
+      setCharacter((prev) => ({
+        ...prev,
+        tools: {
+          ...prev.tools,
+          [toolName]: currentLevel,
+        },
+      }));
+
+      alert("Failed to update tool proficiency. Please try again.");
+    }
+  };
+
   const getAllToolProficiencies = () => {
     const allTools = [];
 
@@ -691,6 +763,11 @@ export const Skills = ({
 
     const characterTools = character.toolProficiencies || [];
     characterTools.forEach((tool) => {
+      allTools.push({ name: tool, source: "Character" });
+    });
+
+    const characterToolExpertise = character.toolExpertise || [];
+    characterToolExpertise.forEach((tool) => {
       allTools.push({ name: tool, source: "Character" });
     });
 
@@ -735,6 +812,18 @@ export const Skills = ({
     });
 
     return uniqueTools.sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const calculateToolBonus = (toolName) => {
+    if (!character) return 0;
+    const toolLevel = character.tools?.[toolName] || 0;
+    const profBonus = character.proficiencyBonus || 0;
+
+    if (toolLevel === 0) return 0;
+    if (toolLevel === 1) return profBonus;
+    if (toolLevel === 2) return 2 * profBonus;
+
+    return 0;
   };
 
   const handleToolRoll = async () => {
@@ -801,7 +890,7 @@ export const Skills = ({
               <thead>
                 <tr style={skillStyles.headerRow}>
                   <th
-                    style={{...skillStyles.headerCell, width: "60px"}}
+                    style={{ ...skillStyles.headerCell, width: "60px" }}
                     onClick={() => handleSort("proficiency")}
                     title="Click to sort by proficiency level"
                   >
@@ -811,7 +900,7 @@ export const Skills = ({
                     </div>
                   </th>
                   <th
-                    style={{...skillStyles.headerCell, width: "70px"}}
+                    style={{ ...skillStyles.headerCell, width: "70px" }}
                     onClick={() => handleSort("modifier")}
                     title="Click to sort by ability modifier"
                   >
@@ -831,7 +920,7 @@ export const Skills = ({
                     </div>
                   </th>
                   <th
-                    style={{...skillStyles.headerCell, width: "90px"}}
+                    style={{ ...skillStyles.headerCell, width: "90px" }}
                     onClick={() => handleSort("bonus")}
                     title="Click to sort by total bonus"
                   >
@@ -1059,10 +1148,14 @@ export const Skills = ({
                   <table style={skillStyles.table}>
                     <thead>
                       <tr style={skillStyles.headerRow}>
-                        <th style={{...skillStyles.headerCell, width: "60px"}}>
+                        <th
+                          style={{ ...skillStyles.headerCell, width: "60px" }}
+                        >
                           <div style={skillStyles.sortableHeader}>PROF</div>
                         </th>
-                        <th style={{...skillStyles.headerCell, width: "70px"}}>
+                        <th
+                          style={{ ...skillStyles.headerCell, width: "70px" }}
+                        >
                           <div style={skillStyles.sortableHeader}>MOD</div>
                         </th>
                         <th style={skillStyles.headerCell}>
@@ -1070,7 +1163,9 @@ export const Skills = ({
                             TOOL PROFICIENCY
                           </div>
                         </th>
-                        <th style={{...skillStyles.headerCell, width: "90px"}}>
+                        <th
+                          style={{ ...skillStyles.headerCell, width: "90px" }}
+                        >
                           <div style={skillStyles.sortableHeader}>BONUS</div>
                         </th>
                       </tr>
@@ -1094,8 +1189,15 @@ export const Skills = ({
                       ) : (
                         allTools.map((toolObj) => {
                           const tool = toolObj.name;
-                          const source = toolObj.source;
-                          const toolColor = "#3b82f6";
+                          const toolLevel = character.tools?.[tool] || 0;
+                          const toolBonus = calculateToolBonus(tool);
+
+                          let toolColor = theme.textSecondary;
+                          if (toolLevel === 1)
+                            toolColor = theme.primary || "#3b82f6";
+                          if (toolLevel === 2)
+                            toolColor = theme.warning || "#f59e0b";
+
                           return (
                             <tr
                               key={tool}
@@ -1110,16 +1212,21 @@ export const Skills = ({
                               }}
                             >
                               <td style={skillStyles.cell}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: toolColor,
+                                <button
+                                  onClick={() => toggleToolProficiency(tool)}
+                                  title={getProficiencyTooltip(toolLevel)}
+                                  style={skillStyles.proficiencyButton}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      theme.hover || `${theme.primary}10`;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      "transparent";
                                   }}
                                 >
-                                  {getToolIcon(tool)}
-                                </div>
+                                  {getProficiencyIcon(toolLevel)}
+                                </button>
                               </td>
                               <td style={skillStyles.cell}>
                                 <span
@@ -1141,28 +1248,31 @@ export const Skills = ({
                                   style={{
                                     ...skillStyles.skillButton,
                                     color: toolColor,
-                                    fontWeight: "600",
+                                    fontWeight: toolLevel > 0 ? "600" : "400",
                                   }}
                                 >
                                   {tool}
-                                  <span
-                                    style={{
-                                      fontSize: "10px",
-                                      color: toolColor,
-                                      fontWeight: "500",
-                                      marginLeft: "4px",
-                                    }}
-                                  ></span>
+                                  {toolLevel === 2 && (
+                                    <Star
+                                      size={12}
+                                      fill={theme.warning || "#f59e0b"}
+                                      stroke={theme.warning || "#f59e0b"}
+                                      style={{ marginLeft: "4px" }}
+                                    />
+                                  )}
                                 </button>
                               </td>
                               <td style={skillStyles.cell}>
                                 <span
                                   style={{
                                     ...skillStyles.bonusValue,
-                                    color: "#3b82f6",
+                                    color: toolColor,
+                                    fontWeight: toolLevel > 0 ? "600" : "400",
                                   }}
                                 >
-                                  +{character?.proficiencyBonus || 0}
+                                  {toolLevel > 0
+                                    ? formatModifier(toolBonus)
+                                    : "—"}
                                 </span>
                               </td>
                             </tr>

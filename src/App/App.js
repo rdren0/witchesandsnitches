@@ -30,6 +30,8 @@ import Inventory from "../Components/Inventory/Inventory";
 import CharacterManager from "../Components/CharacterManager/CharacterManager";
 import logo from "./../Images/logo/Thumbnail-01.png";
 import { AdminProvider, useAdmin } from "../contexts/AdminContext";
+import { FeatsProvider } from "../contexts/FeatsContext";
+import { SpellsProvider } from "../contexts/SpellsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
@@ -1520,9 +1522,13 @@ function AdminProviderWrapper() {
   }, []);
 
   return (
-    <AdminProvider user={user}>
-      <AppContent />
-    </AdminProvider>
+    <SpellsProvider>
+      <FeatsProvider>
+        <AdminProvider user={user}>
+          <AppContent />
+        </AdminProvider>
+      </FeatsProvider>
+    </SpellsProvider>
   );
 }
 

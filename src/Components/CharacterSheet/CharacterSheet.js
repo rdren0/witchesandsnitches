@@ -39,11 +39,8 @@ import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
 } from "../CharacterManager/utils/characterUtils";
-import {
-  backgroundsData,
-  subclassesData,
-  standardFeats,
-} from "../../SharedData";
+import { backgroundsData, subclassesData } from "../../SharedData";
+import { useFeats } from "../../hooks/useFeats";
 import {
   calculateInitiativeWithFeats,
   calculateFeatBenefits,
@@ -96,6 +93,7 @@ const CharacterSheet = ({
   const { showRollResult } = useRollModal();
 
   const { theme } = useTheme();
+  const { feats: standardFeats } = useFeats();
   const styles = getCharacterSheetStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -569,6 +567,25 @@ const CharacterSheet = ({
     [getAutomaticSkillProficiencies]
   );
 
+  const transformToolData = useCallback(
+    (toolProficiencies = [], toolExpertise = []) => {
+      const tools = {};
+
+      toolProficiencies.forEach((toolName) => {
+        if (!tools[toolName]) {
+          tools[toolName] = 1;
+        }
+      });
+
+      toolExpertise.forEach((toolName) => {
+        tools[toolName] = 2;
+      });
+
+      return tools;
+    },
+    []
+  );
+
   const canModifyCharacter = (
     character,
     adminMode,
@@ -742,6 +759,12 @@ const CharacterSheet = ({
             data.skill_expertise || [],
             data
           ),
+          toolExpertise: data.tool_expertise || [],
+          toolProficiencies: data.tool_proficiencies || [],
+          tools: transformToolData(
+            data.tool_proficiencies || [],
+            data.tool_expertise || []
+          ),
           sorceryPoints: resources.sorcery_points || 0,
           speed: 30,
           spellSlots1: resources.spell_slots_1 || 0,
@@ -810,6 +833,7 @@ const CharacterSheet = ({
     getHitDie,
     getInitiativeModifier,
     transformSkillData,
+    transformToolData,
   ]);
 
   useEffect(() => {
