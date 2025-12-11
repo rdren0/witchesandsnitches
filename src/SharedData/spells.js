@@ -2533,7 +2533,7 @@ export const spellsData = {
       Cantrips: [
         {
           name: "Anapneo",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "Action",
           range: "30 Feet",
@@ -2545,7 +2545,7 @@ export const spellsData = {
         },
         {
           name: "Rennervate",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "Cantrip",
           castingTime: "Action",
           range: "10 Feet",
@@ -2559,7 +2559,7 @@ export const spellsData = {
       "1st Level": [
         {
           name: "Episkey",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "Bonus Action",
           range: "10 Feet",
@@ -2573,7 +2573,7 @@ export const spellsData = {
         },
         {
           name: "Ferula",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2585,7 +2585,7 @@ export const spellsData = {
         },
         {
           name: "Reparifors",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "1st Level",
           castingTime: "Action",
           range: "Touch",
@@ -2629,7 +2629,7 @@ export const spellsData = {
         },
         {
           name: "Animatem",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           castingTime: "Action",
           range: "Touch",
@@ -2641,7 +2641,7 @@ export const spellsData = {
         },
         {
           name: "Intus Sunt",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "3rd Level",
           castingTime: "Action",
           range: "30 Feet",
@@ -2658,7 +2658,7 @@ export const spellsData = {
       "4th Level": [
         {
           name: "Brackium Emendo",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "4th Level",
           castingTime: "Action",
           range: "Touch",
@@ -2674,7 +2674,7 @@ export const spellsData = {
       "5th Level": [
         {
           name: "Pervivo",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "5th Level",
           castingTime: "1 Hour",
           range: "Touch",
@@ -2688,7 +2688,7 @@ export const spellsData = {
       "6th Level": [
         {
           name: "Vulnera Sanentur",
-          class: [],
+          class: ["Defense Against the Dark Arts"],
           level: "6th Level",
           castingTime: "Action",
           range: "Touch",
