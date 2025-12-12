@@ -160,19 +160,33 @@ export const calculateFinalAbilityScores = (character) => {
 
   const finalScores = {};
 
-  const featChoices = { ...(character.featChoices || character.feat_choices || {}) };
+  const featChoices = {
+    ...(character.featChoices || character.feat_choices || {}),
+  };
   const asiChoices = character.asiChoices || character.asi_choices;
   if (asiChoices) {
     Object.values(asiChoices).forEach((choice) => {
-      if (choice.type === "feat" && (choice.featChoices || choice.feat_choices)) {
+      if (
+        choice.type === "feat" &&
+        (choice.featChoices || choice.feat_choices)
+      ) {
         Object.assign(featChoices, choice.featChoices || choice.feat_choices);
       }
     });
   }
 
-  const houseChoices = character.house_choices || character.houseChoices || {};
-  const heritageChoices =
-    character.heritage_choices || character.heritageChoices || {};
+  // Check if the object has keys before using it
+  const houseChoicesSnake = character.house_choices || {};
+  const houseChoicesCamel = character.houseChoices || {};
+  const houseChoices = Object.keys(houseChoicesSnake).length > 0
+    ? houseChoicesSnake
+    : houseChoicesCamel;
+
+  const heritageChoicesSnake = character.heritage_choices || {};
+  const heritageChoicesCamel = character.heritageChoices || {};
+  const heritageChoices = Object.keys(heritageChoicesSnake).length > 0
+    ? heritageChoicesSnake
+    : heritageChoicesCamel;
 
   const { totalModifiers, _asiAlreadyApplied } = calculateTotalModifiers(
     character,
@@ -605,8 +619,12 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     const choiceKey2 = `${instanceKey}_abilityChoice`;
     const choiceKey3 = `${instanceKey}_ability`;
 
-    const malformedKey1 = instanceKey.includes('_level1') ? `${featName}_levellevel1_ability_0` : null;
-    const malformedKey2 = instanceKey.includes('_level1') ? `${featName}_levellevel1_abilityChoice` : null;
+    const malformedKey1 = instanceKey.includes("_level1")
+      ? `${featName}_levellevel1_ability_0`
+      : null;
+    const malformedKey2 = instanceKey.includes("_level1")
+      ? `${featName}_levellevel1_abilityChoice`
+      : null;
 
     switch (increase.type) {
       case "fixed":
@@ -677,14 +695,20 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     const feat = standardFeats.find((f) => f.name === featName);
 
     if (feat?.repeatable) {
-      if (character.level1ChoiceType === "feat" && character.standardFeats?.includes(featName)) {
+      if (
+        character.level1ChoiceType === "feat" &&
+        character.standardFeats?.includes(featName)
+      ) {
         processFeatInstance(featName, `${featName}_level1`);
       }
 
       const asiChoices = character.asiChoices || character.asi_choices || {};
       Object.entries(asiChoices).forEach(([level, choice]) => {
         if (choice.type === "feat" && choice.selectedFeat === featName) {
-          const mergedChoices = { ...featChoices, ...(choice.featChoices || choice.feat_choices || {}) };
+          const mergedChoices = {
+            ...featChoices,
+            ...(choice.featChoices || choice.feat_choices || {}),
+          };
           const instanceKey = `${featName}_level${level}`;
           const tempFeat = standardFeats.find((f) => f.name === featName);
           if (tempFeat?.benefits?.abilityScoreIncrease) {
@@ -713,7 +737,10 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
                 break;
             }
 
-            if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
+            if (
+              abilityToIncrease &&
+              modifiers.hasOwnProperty(abilityToIncrease)
+            ) {
               modifiers[abilityToIncrease] += increase.amount;
               if (!featDetails[abilityToIncrease]) {
                 featDetails[abilityToIncrease] = [];
@@ -728,10 +755,12 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         }
       });
 
-      const additionalFeats = character.additionalFeats || character.additional_feats || [];
+      const additionalFeats =
+        character.additionalFeats || character.additional_feats || [];
       additionalFeats.forEach((fname, index) => {
         if (fname === featName) {
-          const instanceKey = index === 0 ? featName : `${featName}_additional_${index}`;
+          const instanceKey =
+            index === 0 ? featName : `${featName}_additional_${index}`;
           processFeatInstance(featName, instanceKey);
         }
       });
