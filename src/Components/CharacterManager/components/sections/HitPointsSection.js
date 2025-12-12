@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { RefreshCw } from "lucide-react";
@@ -11,6 +11,8 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const styles = createBackgroundStyles(theme);
   const [isHpManualMode, setIsHpManualMode] = useState(false);
   const [rolledHp, setRolledHp] = useState(null);
+  const prevLevelRef = useRef(character.level);
+  const prevConstitutionRef = useRef(null);
 
   useEffect(() => {
     if (
@@ -94,21 +96,50 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
   };
 
   useEffect(() => {
+    // Only auto-update HP if level or constitution actually changed (not on initial load)
+    const levelChanged = prevLevelRef.current !== character.level;
+    const constitutionChanged =
+      prevConstitutionRef.current !== null &&
+      prevConstitutionRef.current !== effectiveConstitution;
+
     if (!isHpManualMode && rolledHp === null && character.castingStyle) {
-      const calculatedHp = calculateHitPoints({ character });
-      if (
-        character.hitPoints !== calculatedHp &&
-        character.hitPoints !== undefined
-      ) {
-        onChange("hitPoints", calculatedHp);
+      const currentHp = character.hitPoints || 0;
+
+      if (levelChanged) {
+        // When level changes, add the HP gain for the new level
+        const calculatedHp = calculateHitPoints({ character });
+        const prevLevelHp = calculateHitPoints({
+          character: { ...character, level: prevLevelRef.current },
+        });
+        const hpGain = calculatedHp - prevLevelHp;
+
+        // Add the HP gain to current HP (can be positive or negative)
+        const newHp = Math.max(1, currentHp + hpGain);
+        onChange("hitPoints", newHp);
         if (
           character.currentHitPoints === undefined ||
           character.currentHitPoints === null
         ) {
-          onChange("currentHitPoints", calculatedHp);
+          onChange("currentHitPoints", newHp);
+        }
+      } else if (constitutionChanged) {
+        // When constitution changes, recalculate entire HP, but only update if higher
+        const calculatedHp = calculateHitPoints({ character });
+        if (calculatedHp > currentHp) {
+          onChange("hitPoints", calculatedHp);
+          if (
+            character.currentHitPoints === undefined ||
+            character.currentHitPoints === null
+          ) {
+            onChange("currentHitPoints", calculatedHp);
+          }
         }
       }
     }
+
+    // Update refs for next comparison
+    prevLevelRef.current = character.level;
+    prevConstitutionRef.current = effectiveConstitution;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     character.level,
@@ -377,7 +408,7 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             />
           ) : (
             <div style={hpStyles.hpValue}>
-              {rolledHp !== null ? rolledHp : calculateHitPoints({ character })}
+              {rolledHp !== null ? rolledHp : character.hitPoints || 1}
             </div>
           )}
 
@@ -412,20 +443,10 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
                 {character.level || 1}
               </span>
             </div>
-            {!isHpManualMode && rolledHp === null && (
-              <div style={hpStyles.calculationRow}>
-                <span style={{ color: theme.textSecondary, fontSize: "14px" }}>
-                  = {castingHpData.base} + {conMod} + ({character.level - 1} × (
-                  {hpData[character.castingStyle]?.avgPerLevel || 0} + {conMod}
-                  )) = {calculateHitPoints({ character })}
-                </span>
-              </div>
-            )}
             {rolledHp !== null && (
               <div style={hpStyles.calculationRow}>
                 <span style={{ color: theme.success, fontSize: "14px" }}>
-                  Rolled: ({castingHpData.hitDie} + {conMod}) ×{" "}
-                  {character.level || 1} CON = {rolledHp}
+                  Rolled: Level 1 ({castingHpData.base} + {conMod}) + Levels 2-{character.level || 1} (rolled {castingHpData.hitDie} + {conMod} each) = {rolledHp}
                 </span>
               </div>
             )}
