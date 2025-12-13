@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { RefreshCw } from "lucide-react";
 import { calculateToughFeatHPBonus } from "../../utils/utils";
 import { hpData } from "../../../../SharedData/data";
-import { calculateTotalModifiers } from "../../utils/characterUtils";
+import { calculateFinalAbilityScores } from "../../utils/characterUtils";
 
 const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
-
   const [isHpManualMode, setIsHpManualMode] = useState(false);
   const [rolledHp, setRolledHp] = useState(null);
+  const prevLevelRef = useRef(character.level);
+  const prevConstitutionRef = useRef(null);
 
   useEffect(() => {
     if (
@@ -35,64 +36,22 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
 
   const castingHpData = getCastingStyleHpData(character.castingStyle);
 
-  const calculateASIModifiers = () => {
-    const asiModifiers = {
-      strength: 0,
-      dexterity: 0,
-      constitution: 0,
-      intelligence: 0,
-      wisdom: 0,
-      charisma: 0,
-    };
-
-    if (character.asiChoices) {
-      Object.values(character.asiChoices).forEach((choice) => {
-        if (choice.type === "asi" && choice.abilityScoreIncreases) {
-          choice.abilityScoreIncreases.forEach((increase) => {
-            if (increase.ability && increase.increase) {
-              asiModifiers[increase.ability] += increase.increase;
-            }
-          });
-        }
-      });
-    }
-
-    if (character.additionalASI && Array.isArray(character.additionalASI)) {
-      character.additionalASI.forEach((asi) => {
-        if (
-          asi.abilityScoreIncreases &&
-          Array.isArray(asi.abilityScoreIncreases)
-        ) {
-          asi.abilityScoreIncreases.forEach((increase) => {
-            if (increase.ability && increase.increase) {
-              asiModifiers[increase.ability] += increase.increase;
-            }
-          });
-        }
-      });
-    }
-
-    return asiModifiers;
-  };
-
-  const modifiersFromOtherSources = calculateTotalModifiers(character);
-  const asiModifiers = calculateASIModifiers();
-  const baseConstitution = character.abilityScores?.constitution || 10;
-  const constitutionBonus =
-    (modifiersFromOtherSources.constitution || 0) +
-    (asiModifiers.constitution || 0);
-  const effectiveConstitution = baseConstitution + constitutionBonus;
+  const finalAbilityScores = calculateFinalAbilityScores(character);
+  const effectiveConstitution = finalAbilityScores.constitution || 10;
   const conMod = Math.floor((effectiveConstitution - 10) / 2);
-
+  // Calculate base constitution and bonus for display purposes
+  const baseConstitution =
+    character.baseAbilityScores?.constitution ||
+    character.base_ability_scores?.constitution ||
+    character.abilityScores?.constitution ||
+    character.ability_scores?.constitution ||
+    10;
+  const constitutionBonus = effectiveConstitution - baseConstitution;
   const calculateHitPoints = ({ character }) => {
     const level = character.level || 1;
 
-    const asiMods = calculateASIModifiers();
-    const otherModifiers = calculateTotalModifiers(character);
-    const baseCon = character.abilityScores?.constitution || 8;
-    const conBonus =
-      (otherModifiers.constitution || 0) + (asiMods.constitution || 0);
-    const effectiveCon = baseCon + conBonus;
+    const abilityScores = calculateFinalAbilityScores(character);
+    const effectiveCon = abilityScores.constitution || 10;
     const conMod = Math.floor((effectiveCon - 10) / 2);
 
     const toughFeatBonus = calculateToughFeatHPBonus(character);
@@ -110,12 +69,8 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
   const rollHp = () => {
     const level = character.level || 1;
 
-    const asiMods = calculateASIModifiers();
-    const otherModifiers = calculateTotalModifiers(character);
-    const baseCon = character.abilityScores?.constitution || 8;
-    const conBonus =
-      (otherModifiers.constitution || 0) + (asiMods.constitution || 0);
-    const effectiveCon = baseCon + conBonus;
+    const abilityScores = calculateFinalAbilityScores(character);
+    const effectiveCon = abilityScores.constitution || 10;
     const conMod = Math.floor((effectiveCon - 10) / 2);
 
     const toughFeatBonus = calculateToughFeatHPBonus(character);
@@ -139,6 +94,60 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
       onChange("currentHitPoints", totalHp);
     }
   };
+
+  useEffect(() => {
+    // Only auto-update HP if level or constitution actually changed (not on initial load)
+    const levelChanged = prevLevelRef.current !== character.level;
+    const constitutionChanged =
+      prevConstitutionRef.current !== null &&
+      prevConstitutionRef.current !== effectiveConstitution;
+
+    if (!isHpManualMode && rolledHp === null && character.castingStyle) {
+      const currentHp = character.hitPoints || 0;
+
+      if (levelChanged) {
+        // When level changes, add the HP gain for the new level
+        const calculatedHp = calculateHitPoints({ character });
+        const prevLevelHp = calculateHitPoints({
+          character: { ...character, level: prevLevelRef.current },
+        });
+        const hpGain = calculatedHp - prevLevelHp;
+
+        // Add the HP gain to current HP (can be positive or negative)
+        const newHp = Math.max(1, currentHp + hpGain);
+        onChange("hitPoints", newHp);
+        if (
+          character.currentHitPoints === undefined ||
+          character.currentHitPoints === null
+        ) {
+          onChange("currentHitPoints", newHp);
+        }
+      } else if (constitutionChanged) {
+        // When constitution changes, recalculate entire HP, but only update if higher
+        const calculatedHp = calculateHitPoints({ character });
+        if (calculatedHp > currentHp) {
+          onChange("hitPoints", calculatedHp);
+          if (
+            character.currentHitPoints === undefined ||
+            character.currentHitPoints === null
+          ) {
+            onChange("currentHitPoints", calculatedHp);
+          }
+        }
+      }
+    }
+
+    // Update refs for next comparison
+    prevLevelRef.current = character.level;
+    prevConstitutionRef.current = effectiveConstitution;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    character.level,
+    effectiveConstitution,
+    character.castingStyle,
+    isHpManualMode,
+    rolledHp,
+  ]);
 
   const hpStyles = {
     container: {
@@ -399,7 +408,7 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             />
           ) : (
             <div style={hpStyles.hpValue}>
-              {rolledHp !== null ? rolledHp : calculateHitPoints({ character })}
+              {rolledHp !== null ? rolledHp : character.hitPoints || 1}
             </div>
           )}
 
@@ -434,20 +443,10 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
                 {character.level || 1}
               </span>
             </div>
-            {!isHpManualMode && rolledHp === null && (
-              <div style={hpStyles.calculationRow}>
-                <span style={{ color: theme.textSecondary, fontSize: "14px" }}>
-                  = {castingHpData.base} + {conMod} + ({character.level - 1} × (
-                  {hpData[character.castingStyle]?.avgPerLevel || 0} + {conMod}
-                  )) = {calculateHitPoints({ character })}
-                </span>
-              </div>
-            )}
             {rolledHp !== null && (
               <div style={hpStyles.calculationRow}>
                 <span style={{ color: theme.success, fontSize: "14px" }}>
-                  Rolled: ({castingHpData.hitDie} + {conMod}) ×{" "}
-                  {character.level || 1} CON = {rolledHp}
+                  Rolled: Level 1 ({castingHpData.base} + {conMod}) + Levels 2-{character.level || 1} (rolled {castingHpData.hitDie} + {conMod} each) = {rolledHp}
                 </span>
               </div>
             )}

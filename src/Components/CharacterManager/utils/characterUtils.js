@@ -175,9 +175,18 @@ export const calculateFinalAbilityScores = (character) => {
     });
   }
 
-  const houseChoices = character.house_choices || character.houseChoices || {};
-  const heritageChoices =
-    character.heritage_choices || character.heritageChoices || {};
+  // Check if the object has keys before using it
+  const houseChoicesSnake = character.house_choices || {};
+  const houseChoicesCamel = character.houseChoices || {};
+  const houseChoices = Object.keys(houseChoicesSnake).length > 0
+    ? houseChoicesSnake
+    : houseChoicesCamel;
+
+  const heritageChoicesSnake = character.heritage_choices || {};
+  const heritageChoicesCamel = character.heritageChoices || {};
+  const heritageChoices = Object.keys(heritageChoicesSnake).length > 0
+    ? heritageChoicesSnake
+    : heritageChoicesCamel;
 
   const { totalModifiers, _asiAlreadyApplied } = calculateTotalModifiers(
     character,

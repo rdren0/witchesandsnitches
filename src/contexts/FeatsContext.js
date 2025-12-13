@@ -1,25 +1,66 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { standardFeats as fallbackFeats } from "../SharedData/deprecated/standardFeatData";
 
 const CACHE_KEY = "feats_cache";
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_TTL = 60 * 60 * 1000;
 
 const FeatsContext = createContext(null);
 
 function transformFeat(feat) {
+  let description = [];
+  if (feat.description) {
+    if (typeof feat.description === "string") {
+      description = JSON.parse(feat.description);
+    } else if (Array.isArray(feat.description)) {
+      description = feat.description.map((item) => {
+        if (typeof item === "string") return item;
+        return item.text || item;
+      });
+    } else {
+      description = [feat.description];
+    }
+  }
+
+  let benefits = {};
+  if (feat.benefits) {
+    if (typeof feat.benefits === "string") {
+      benefits = JSON.parse(feat.benefits);
+    } else {
+      benefits = feat.benefits;
+    }
+  }
+
+  const transformedBenefits = {
+    skillProficiencies: benefits.skills || [],
+    expertise: benefits.expertise || [],
+    savingThrowProficiencies: benefits.saves || [],
+    toolProficiencies: benefits.tools || [],
+    resistances: benefits.resistances || [],
+    immunities: benefits.immunities || [],
+    speeds: benefits.speeds || {},
+    combatBonuses: benefits.combat || {},
+    spellcasting: benefits.spellcasting || {},
+    specialAbilities: benefits.special || [],
+  };
+
+  if (benefits.asi) {
+    transformedBenefits.abilityScoreIncrease = {
+      type: benefits.asi.type || "specific",
+      ability:
+        benefits.asi.type === "spellcasting"
+          ? "spellcasting_ability"
+          : benefits.asi.abilities?.[0] || "choice",
+      abilities: benefits.asi.abilities || [],
+      amount: benefits.asi.amount || 1,
+    };
+  }
+
   return {
     name: feat.name,
     preview: feat.preview,
-    description: feat.description
-      ? typeof feat.description === "string"
-        ? JSON.parse(feat.description)
-        : feat.description
-      : [],
-    benefits: feat.benefits
-      ? typeof feat.benefits === "string"
-        ? JSON.parse(feat.benefits)
-        : feat.benefits
-      : {},
+    description,
+    benefits: transformedBenefits,
     prerequisites: feat.prerequisites
       ? typeof feat.prerequisites === "string"
         ? JSON.parse(feat.prerequisites)
@@ -109,9 +150,18 @@ export function FeatsProvider({ children }) {
       if (staleCache) {
         try {
           const { feats: staleFeats } = JSON.parse(staleCache);
-          setFeats(staleFeats);
-        } catch (e) {}
+          if (staleFeats && staleFeats.length > 0) {
+            setFeats(staleFeats);
+            return;
+          }
+        } catch (e) {
+          console.warn("Error reading stale cache:", e);
+        }
       }
+
+      console.warn("Using fallback local feat data");
+      setFeats(fallbackFeats);
+      setCachedFeats(fallbackFeats);
     } finally {
       setLoading(false);
       setInitialized(true);
