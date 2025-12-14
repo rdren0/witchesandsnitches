@@ -278,23 +278,21 @@ const CharacterManager = ({
         >
           View:
         </span>
-        {!adminMode && (
-          <button
-            style={{
-              padding: "6px 12px",
-              borderRadius: "6px",
-              border: `1px solid ${theme.border}`,
-              backgroundColor:
-                viewMode === "my" ? theme.primary : theme.background,
-              color: viewMode === "my" ? "white" : theme.text,
-              cursor: "pointer",
-              fontSize: "12px",
-            }}
-            onClick={() => setViewMode("my")}
-          >
-            My Characters
-          </button>
-        )}
+        <button
+          style={{
+            padding: "6px 12px",
+            borderRadius: "6px",
+            border: `1px solid ${theme.border}`,
+            backgroundColor:
+              viewMode === "my" ? theme.primary : theme.background,
+            color: viewMode === "my" ? "white" : theme.text,
+            cursor: "pointer",
+            fontSize: "12px",
+          }}
+          onClick={() => setViewMode("my")}
+        >
+          My Characters
+        </button>
         <button
           style={{
             padding: "6px 12px",

@@ -375,7 +375,6 @@ const Navigation = ({ characters }) => {
       path: "/help-resources",
       label: "Help & Resources",
       key: "help-resources",
-      isNew: true, // Set to false to remove the "NEW" badge
     });
 
     if (adminMode) {
