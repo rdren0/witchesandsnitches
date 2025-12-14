@@ -466,9 +466,11 @@ const FeatSelectionSection = ({
 
     featChoices: choice.featChoices || {},
 
-    asiChoices: {},
-
     _editingASILevel: level,
+    _originalStandardFeats: character.standardFeats,
+    _originalAsiChoices: character.asiChoices,
+
+    asiChoices: character.asiChoices || {},
   };
 
   const handleMockCharacterUpdate = (updater) => {

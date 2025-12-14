@@ -45,15 +45,46 @@ function transformFeat(feat) {
   };
 
   if (benefits.asi) {
+    const abilities = benefits.asi.abilities || [];
+    const asiType = benefits.asi.type;
+
+    const isChoice =
+      asiType === "choice" ||
+      asiType === "choice_any" ||
+      abilities.length > 1 ||
+      (asiType === "spellcasting" && abilities.length > 0);
+
     transformedBenefits.abilityScoreIncrease = {
-      type: benefits.asi.type || "specific",
-      ability:
-        benefits.asi.type === "spellcasting"
-          ? "spellcasting_ability"
-          : benefits.asi.abilities?.[0] || "choice",
-      abilities: benefits.asi.abilities || [],
+      type: isChoice ? "choice" : asiType || "specific",
+      ability: isChoice
+        ? "choice"
+        : asiType === "spellcasting"
+        ? "spellcasting_ability"
+        : abilities[0] || "choice",
+
+      abilities:
+        asiType === "spellcasting" && abilities.length > 0
+          ? ["spellcasting_ability", ...abilities]
+          : abilities,
       amount: benefits.asi.amount || 1,
     };
+  }
+
+  let prerequisites = undefined;
+  if (feat.prerequisites) {
+    if (typeof feat.prerequisites === "string") {
+      try {
+        prerequisites = JSON.parse(feat.prerequisites);
+      } catch (e) {
+        console.warn(
+          `Invalid JSON in prerequisites for ${feat.name}:`,
+          feat.prerequisites
+        );
+        prerequisites = undefined;
+      }
+    } else {
+      prerequisites = feat.prerequisites;
+    }
   }
 
   return {
@@ -61,11 +92,7 @@ function transformFeat(feat) {
     preview: feat.preview,
     description,
     benefits: transformedBenefits,
-    prerequisites: feat.prerequisites
-      ? typeof feat.prerequisites === "string"
-        ? JSON.parse(feat.prerequisites)
-        : feat.prerequisites
-      : undefined,
+    prerequisites,
     repeatable: feat.repeatable || false,
     repeatableKey: feat.repeatable_key || undefined,
   };

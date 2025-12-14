@@ -611,20 +611,30 @@ const FeatureSelectorSection = ({
   };
 
   const getFeatSelectionSource = (featName) => {
-    if (character.additionalFeats?.includes(featName)) {
-      return { source: "Additional Feats", level: null };
-    }
+    const actualStandardFeats =
+      character._originalStandardFeats || character.standardFeats || [];
+    const actualAsiChoices =
+      character._originalAsiChoices || character.asiChoices || {};
 
-    if (character.asiChoices) {
-      for (const [level, choice] of Object.entries(character.asiChoices)) {
-        if (choice.type === "feat" && choice.selectedFeat === featName) {
-          return { source: "ASI Choice", level: parseInt(level) };
-        }
+    for (const [level, choice] of Object.entries(actualAsiChoices)) {
+      if (contextLevel && parseInt(level) === contextLevel) {
+        continue;
+      }
+      if (choice.type === "feat" && choice.selectedFeat === featName) {
+        return { source: "ASI Choice", level: parseInt(level) };
       }
     }
 
-    if (character.standardFeats?.includes(featName)) {
+    if (
+      !isLevel1Choice &&
+      !character._editingASILevel &&
+      actualStandardFeats.includes(featName)
+    ) {
       return { source: "Level 1 Feat", level: 1 };
+    }
+
+    if (character.additionalFeats?.includes(featName)) {
+      return { source: "Additional Feats", level: null };
     }
 
     return null;
@@ -972,17 +982,24 @@ const FeatureSelectorSection = ({
                         {isAlreadySelectedElsewhere && (
                           <span
                             style={{
-                              fontSize: "11px",
-                              color: theme.textSecondary,
+                              fontSize: "12px",
+                              color: theme.warning || "#f59e0b",
                               marginLeft: "8px",
-                              fontStyle: "italic",
+                              fontWeight: "600",
+                              backgroundColor: `${
+                                theme.warning || "#f59e0b"
+                              }20`,
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              border: `1px solid ${
+                                theme.warning || "#f59e0b"
+                              }50`,
                             }}
                           >
-                            (Already selected
+                            Already selected
                             {selectionSource.level
                               ? ` at Level ${selectionSource.level}`
                               : ` in ${selectionSource.source}`}
-                            )
                           </span>
                         )}
                       </span>

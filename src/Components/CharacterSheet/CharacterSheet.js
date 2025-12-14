@@ -158,7 +158,7 @@ const CharacterSheet = ({
 
     const abilityKey = spellcastingAbility.toLowerCase();
     const abilityScore =
-      character.ability_scores?.[abilityKey] || character[abilityKey] || 10;
+      character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -790,6 +790,8 @@ const CharacterSheet = ({
           additional_feats: data.additional_feats || [],
           feat_choices: data.feat_choices || {},
           featChoices: data.feat_choices || {},
+          additionalASI: data.additional_asi || [],
+          additional_asi: data.additional_asi || [],
         };
 
         const effectiveAbilityScores =
