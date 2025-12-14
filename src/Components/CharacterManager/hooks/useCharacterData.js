@@ -6,7 +6,10 @@ import {
   transformCharacterFromDB,
 } from "../components/CharacterForm/utils/characterTransformUtils";
 import { getAllAbilityModifiers } from "../utils/characterUtils";
-import { SORCERY_POINT_PROGRESSION } from "../../../SharedData/data";
+import {
+  SORCERY_POINT_PROGRESSION,
+  SPELL_SLOT_PROGRESSION,
+} from "../../../SharedData/data";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -203,15 +206,39 @@ export const useCharacterData = (
 
         if (oldLevel !== newLevel && newLevel >= 1 && newLevel <= 20) {
           const maxSorceryPoints = SORCERY_POINT_PROGRESSION[newLevel];
+          const newSpellSlots = SPELL_SLOT_PROGRESSION[newLevel];
 
-          if (maxSorceryPoints !== undefined) {
+          if (maxSorceryPoints !== undefined && newSpellSlots) {
+            const { data: currentResources } = await supabase
+              .from("character_resources")
+              .select("*")
+              .eq("character_id", result.id)
+              .eq("discord_user_id", effectiveUserId)
+              .single();
+
             const resourceUpdates = {
               character_id: result.id,
               discord_user_id: effectiveUserId,
               max_sorcery_points: maxSorceryPoints,
-              sorcery_points: maxSorceryPoints,
               updated_at: new Date().toISOString(),
             };
+
+            const slotLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            slotLevels.forEach((level, index) => {
+              const maxSlots = newSpellSlots[index];
+              const isAvailableAtNewLevel = maxSlots > 0;
+
+              const hasCurrentMax =
+                currentResources &&
+                currentResources[`max_spell_slots_${level}`] !== null &&
+                currentResources[`max_spell_slots_${level}`] !== undefined &&
+                currentResources[`max_spell_slots_${level}`] > 0;
+
+              if (isAvailableAtNewLevel && !hasCurrentMax) {
+                resourceUpdates[`max_spell_slots_${level}`] = maxSlots;
+                resourceUpdates[`spell_slots_${level}`] = maxSlots;
+              }
+            });
 
             await supabase.from("character_resources").upsert(resourceUpdates, {
               onConflict: "character_id,discord_user_id",
