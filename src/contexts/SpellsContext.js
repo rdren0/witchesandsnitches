@@ -1,48 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-const CACHE_KEY = "spells_cache";
-const CACHE_TTL = 60 * 60 * 1000;
-
 const SpellsContext = createContext(null);
 
-function getCachedSpells() {
-  try {
-    const cached = sessionStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-
-    const { spells, timestamp } = JSON.parse(cached);
-    const isExpired = Date.now() - timestamp > CACHE_TTL;
-
-    if (isExpired) {
-      sessionStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-
-    return spells;
-  } catch (e) {
-    console.warn("Error reading spells cache:", e);
-    sessionStorage.removeItem(CACHE_KEY);
-    return null;
-  }
-}
-
-function setCachedSpells(spells) {
-  try {
-    sessionStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({
-        spells,
-        timestamp: Date.now(),
-      })
-    );
-  } catch (e) {
-    console.warn("Error saving spells cache:", e);
-  }
-}
+// In-memory cache - cleared on page refresh
+let inMemoryCache = null;
 
 export function clearSpellsCache() {
-  sessionStorage.removeItem(CACHE_KEY);
+  inMemoryCache = null;
 }
 
 export function SpellsProvider({ children }) {
@@ -52,14 +17,11 @@ export function SpellsProvider({ children }) {
   const [initialized, setInitialized] = useState(false);
 
   const fetchSpells = async (forceRefresh = false) => {
-    if (!forceRefresh) {
-      const cachedSpells = getCachedSpells();
-      if (cachedSpells && cachedSpells.length > 0) {
-        setSpells(cachedSpells);
-        setLoading(false);
-        setInitialized(true);
-        return;
-      }
+    if (!forceRefresh && inMemoryCache && inMemoryCache.length > 0) {
+      setSpells(inMemoryCache);
+      setLoading(false);
+      setInitialized(true);
+      return;
     }
 
     try {
@@ -77,17 +39,14 @@ export function SpellsProvider({ children }) {
       const spellsData = data || [];
 
       setSpells(spellsData);
-      setCachedSpells(spellsData);
+      inMemoryCache = spellsData;
     } catch (err) {
       console.error("Error fetching spells:", err);
       setError(err.message);
 
-      const staleCache = sessionStorage.getItem(CACHE_KEY);
-      if (staleCache) {
-        try {
-          const { spells: staleSpells } = JSON.parse(staleCache);
-          setSpells(staleSpells);
-        } catch (e) {}
+      // Try to use cached spells if available (even if fetch failed)
+      if (inMemoryCache && inMemoryCache.length > 0) {
+        setSpells(inMemoryCache);
       }
     } finally {
       setLoading(false);
@@ -187,16 +146,7 @@ export function useSpells() {
 }
 
 export function getSpellsSync() {
-  try {
-    const cached = sessionStorage.getItem(CACHE_KEY);
-    if (!cached) return [];
-
-    const { spells } = JSON.parse(cached);
-    return spells || [];
-  } catch (e) {
-    console.warn("Error reading spells cache synchronously:", e);
-    return [];
-  }
+  return inMemoryCache || [];
 }
 
 export function getSpellByNameSync(name) {

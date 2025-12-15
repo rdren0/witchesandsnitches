@@ -66,19 +66,52 @@ export const SCHOOL_METADATA = {
   },
 };
 
-const DEFAULT_METADATA = {
-  color: "#808080",
-  icon: "BookOpen",
-};
+const FALLBACK_OPTIONS = [
+  { color: "#808080", icon: "BookOpen" }, // Gray
+  { color: "#6B7280", icon: "BookOpen" }, // Slate Gray
+  { color: "#8B5CF6", icon: "BookOpen" }, // Purple
+  { color: "#EC4899", icon: "BookOpen" }, // Pink
+  { color: "#14B8A6", icon: "BookOpen" }, // Teal
+  { color: "#F59E0B", icon: "BookOpen" }, // Amber
+  { color: "#06B6D4", icon: "BookOpen" }, // Cyan
+  { color: "#10B981", icon: "BookOpen" }, // Emerald
+  { color: "#F97316", icon: "BookOpen" }, // Orange
+  { color: "#8B4513", icon: "BookOpen" }, // Brown
+];
+
+function hashString(str) {
+  if (!str) return 0;
+
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash | 0;
+  }
+
+  return hash >>> 0;
+}
 
 export function getSchoolColor(schoolName) {
-  return SCHOOL_METADATA[schoolName]?.color || DEFAULT_METADATA.color;
+  if (SCHOOL_METADATA[schoolName]) {
+    return SCHOOL_METADATA[schoolName].color;
+  }
+  const index = hashString(schoolName) % FALLBACK_OPTIONS.length;
+  return FALLBACK_OPTIONS[index].color;
 }
 
 export function getSchoolIcon(schoolName) {
-  return SCHOOL_METADATA[schoolName]?.icon || DEFAULT_METADATA.icon;
+  if (SCHOOL_METADATA[schoolName]) {
+    return SCHOOL_METADATA[schoolName].icon;
+  }
+  const index = hashString(schoolName) % FALLBACK_OPTIONS.length;
+  return FALLBACK_OPTIONS[index].icon;
 }
 
 export function getSchoolMetadata(schoolName) {
-  return SCHOOL_METADATA[schoolName] || DEFAULT_METADATA;
+  if (SCHOOL_METADATA[schoolName]) {
+    return SCHOOL_METADATA[schoolName];
+  }
+  const index = hashString(schoolName) % FALLBACK_OPTIONS.length;
+  return FALLBACK_OPTIONS[index];
 }

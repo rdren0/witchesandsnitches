@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   Plus,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRollModal } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
+import { SCHOOL_METADATA } from "../../utils/schoolColors";
 
 const CustomSpells = ({ character, supabase, discordUserId }) => {
   const { theme } = useTheme();
@@ -51,23 +52,14 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
     higher_levels: "",
   });
 
-  const spellClasses = [
-    "Ancient",
-    "Astronomic",
-    "Charms",
-    "Divinations",
-    "Elemental",
-    "Forbidden",
-    "Grim",
-    "Gravetouched",
-    "Healing",
-    "Jinxes, Hexes & Curses",
-    "Justice",
-    "Magizoo",
-    "Transfigurations",
-    "Trickery",
-    "Valiant",
-  ];
+  const spellClasses = useMemo(() => {
+    const knownClasses = Object.keys(SCHOOL_METADATA);
+    const loadedClasses = customSpells
+      .map((s) => s.spell_class)
+      .filter(Boolean);
+    const allClasses = new Set([...knownClasses, ...loadedClasses]);
+    return Array.from(allClasses).sort();
+  }, [customSpells]);
 
   const spellLevels = [
     "Cantrip",
