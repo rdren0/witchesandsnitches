@@ -1,3 +1,4 @@
+// Test data for feat validation
 import {
   calculateFeatModifiers,
   calculateHouseModifiers,
@@ -8,12 +9,13 @@ import {
   getCharacterBenefits,
 } from "./characterUtils";
 
-// Test data for feat validation
 const standardFeats = [
   {
     name: "Alert",
     preview: "You can't be surprised and gain +5 to initiative",
-    description: ["Always on the lookout for danger, you gain several benefits."],
+    description: [
+      "Always on the lookout for danger, you gain several benefits.",
+    ],
     benefits: {
       combatBonuses: { initiativeBonus: 5 },
       immunities: ["surprised"],
@@ -39,13 +41,21 @@ const standardFeats = [
     name: "Mobile",
     preview: "Your speed increases",
     description: ["You are exceptionally speedy and agile."],
-    benefits: { speeds: { walkingBonus: 10 } },
+    benefits: {
+      speeds: {
+        walking: { bonus: 10 },
+      },
+    },
   },
   {
     name: "Tough",
     preview: "Increase your hit points",
     description: ["Your hit point maximum increases."],
-    benefits: { hitPointsPerLevel: 2 },
+    benefits: {
+      combatBonuses: {
+        hitPointsPerLevel: 2,
+      },
+    },
   },
   {
     name: "Observant",
@@ -73,7 +83,9 @@ const standardFeats = [
         abilities: ["strength", "dexterity"],
         amount: 1,
       },
-      speeds: { climbingBonus: "equal_to_walking" },
+      speeds: {
+        climb: "equal_to_walking",
+      },
     },
   },
   {
@@ -123,7 +135,9 @@ const standardFeats = [
   {
     name: "Keen Mind",
     preview: "Sharpen your intellect",
-    description: ["You have a mind that can track time, direction, and detail."],
+    description: [
+      "You have a mind that can track time, direction, and detail.",
+    ],
     benefits: {
       abilityScoreIncrease: {
         type: "fixed",
@@ -169,7 +183,9 @@ const standardFeats = [
         ability: "constitution",
         amount: 1,
       },
-      hitPointsPerLevel: 1,
+      combatBonuses: {
+        deathSaveAdvantage: true,
+      },
     },
   },
   {
@@ -183,7 +199,60 @@ const standardFeats = [
       anyOf: [{ type: "spellcasting", value: true }],
     },
   },
+  {
+    name: "Vampirism",
+    preview: "Vampire abilities",
+    description: ["You have vampire abilities."],
+    benefits: {
+      skillProficiencies: ["persuasion"],
+    },
+  },
+  {
+    name: "Lycanthropy",
+    preview: "Werewolf abilities",
+    description: ["You have werewolf abilities."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "multiple",
+        increases: [
+          { ability: "strength", amount: 1 },
+          { ability: "constitution", amount: 1 },
+        ],
+      },
+    },
+  },
+  {
+    name: "Actor",
+    preview: "Master of disguise and impersonation. +1 Charisma.",
+    description: ["Skilled at mimicry and dramatics."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "charisma",
+        amount: 1,
+      },
+    },
+  },
+  {
+    name: "Cantrip Master",
+    preview: "Master of cantrips. Cast some wandlessly and as bonus actions.",
+    description: ["You have dedicated countless hours to the study and refinement of cantrips."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "spellcasting_ability",
+        amount: 1,
+      },
+      spellcasting: {
+        bonusActionCantrip: { uses: 1, recharge: "short_rest" },
+        wandlessCantrips: true,
+      },
+    },
+  },
 ];
+
+jest.mock("../../../hooks/useFeats", () => ({
+  getFeatsSync: () => standardFeats,
+}));
 
 const createTestCharacter = (overrides = {}) => ({
   id: "test-character",
@@ -311,7 +380,7 @@ describe("Character Utils - Feat Integration Tests", () => {
     it("should handle spellcasting ability increases", () => {
       const character = createTestCharacter({
         standardFeats: ["Cantrip Master"],
-        castingStyle: "wisdom",
+        spellcastingAbility: "wisdom",
       });
 
       const { modifiers } = calculateFeatModifiers(character);

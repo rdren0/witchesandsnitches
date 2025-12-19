@@ -1,4 +1,6 @@
 /* eslint-disable jest/no-conditional-expect */
+
+// Test data for feat validation
 import {
   calculateFeatBenefits,
   calculateInitiativeWithFeats,
@@ -9,13 +11,15 @@ import {
   getHitPointsBonusFromFeats,
 } from "./featBenefitsCalculator";
 
-// Test data for feat validation
 const testFeatsData = [
   {
     name: "Alert",
     description: "Test feat",
     benefits: {
-      combatBonuses: { initiativeBonus: 5 },
+      combatBonuses: {
+        initiativeBonus: 5,
+        unseeingAdvantageImmunity: true,
+      },
       immunities: ["surprised"],
     },
   },
@@ -24,17 +28,33 @@ const testFeatsData = [
     description: "Test feat",
     benefits: {
       abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      specialAbilities: [
+        {
+          name: "Luck Points",
+          type: "resource",
+          amount: "proficiency_bonus",
+          recharge: "long_rest",
+        },
+      ],
     },
   },
   {
     name: "Mobile",
     description: "Test feat",
-    benefits: { speeds: { walkingBonus: 10 } },
+    benefits: {
+      speeds: {
+        walking: { bonus: 10 },
+      },
+    },
   },
   {
     name: "Tough",
     description: "Test feat",
-    benefits: { hitPointsPerLevel: 2 },
+    benefits: {
+      combatBonuses: {
+        hitPointsPerLevel: 2,
+      },
+    },
   },
   {
     name: "Observant",
@@ -60,7 +80,9 @@ const testFeatsData = [
         abilities: ["strength", "dexterity"],
         amount: 1,
       },
-      speeds: { climbingBonus: "equal_to_walking" },
+      speeds: {
+        climb: "equal_to_walking",
+      },
     },
   },
   {
@@ -97,10 +119,83 @@ const testFeatsData = [
     description: "Test feat",
     benefits: {
       combatBonuses: { concentrationAdvantage: true },
+      spellcasting: {
+        spellOpportunityAttacks: true,
+      },
     },
     prerequisites: {
       anyOf: [{ type: "spellcasting", value: true }],
     },
+  },
+  {
+    name: "Durable",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "constitution",
+        amount: 1,
+      },
+      combatBonuses: {
+        deathSaveAdvantage: true,
+      },
+    },
+  },
+  {
+    name: "Poison Expert",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["wisdom", "constitution", "intelligence"],
+        amount: 1,
+      },
+      combatBonuses: {
+        poisonSaveAdvantage: true,
+      },
+    },
+  },
+  {
+    name: "Nimble",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity"],
+        amount: 1,
+      },
+      speeds: {
+        walking: { bonus: 5 },
+      },
+    },
+  },
+  {
+    name: "Keen Mind",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "intelligence",
+        amount: 1,
+      },
+      specialAbilities: [
+        {
+          name: "Direction Sense",
+          type: "passive",
+          effect: "always_know_north",
+        },
+        {
+          name: "Time Awareness",
+          type: "passive",
+          effect: "always_know_sunrise_sunset_timing",
+        },
+      ],
+    },
+  },
+  {
+    name: "TestFeatWithNoBenefits",
+    description: "Test feat with no benefits",
+    benefits: {},
   },
 ];
 
@@ -120,6 +215,10 @@ const generateTestFeats = (count) => {
 };
 
 const standardFeats = generateTestFeats(25);
+
+jest.mock("../../../hooks/useFeats", () => ({
+  getFeatsSync: () => generateTestFeats(25),
+}));
 
 const createMockCharacter = (feats = [], level = 5, featChoices = {}) => ({
   id: "test-character",

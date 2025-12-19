@@ -46,6 +46,135 @@ jest.mock("../utils/diceRoller", () => ({
   }),
 }));
 
+jest.mock("../../hooks/useFeats", () => {
+  const testFeats = [
+    {
+      name: "Alert",
+      preview: "Always ready for danger. +5 initiative, can't be surprised.",
+      description: ["Always on the lookout for danger, you gain several benefits."],
+      benefits: {
+        combatBonuses: {
+          initiativeBonus: 5,
+          unseeingAdvantageImmunity: true,
+        },
+        immunities: ["surprised"],
+      },
+    },
+    {
+      name: "Lucky",
+      preview: "Luck points for advantage/disadvantage manipulation.",
+      description: ["You have inexplicable luck."],
+      benefits: {
+        specialAbilities: [
+          {
+            name: "Luck Points",
+            type: "resource",
+            amount: "proficiency_bonus",
+            recharge: "long_rest",
+          },
+        ],
+      },
+    },
+    {
+      name: "Mobile",
+      preview: "Speed and mobility in combat. +10 speed.",
+      description: ["You are exceptionally speedy and agile."],
+      benefits: {
+        speeds: {
+          walking: { bonus: 10 },
+        },
+      },
+    },
+    {
+      name: "Tough",
+      preview: "Increased hit points. +2 HP per level.",
+      description: ["Your Hit Point maximum increases."],
+      benefits: {
+        combatBonuses: {
+          hitPointsPerLevel: 2,
+        },
+      },
+    },
+    {
+      name: "Observant",
+      preview: "Increase perception and investigation. +1 Int/Wis.",
+      description: ["You are quick to notice details."],
+      benefits: {
+        abilityScoreIncrease: {
+          type: "choice",
+          abilities: ["intelligence", "wisdom"],
+          amount: 1,
+        },
+        combatBonuses: {
+          passivePerceptionBonus: 5,
+          passiveInvestigationBonus: 5,
+        },
+      },
+    },
+    {
+      name: "Athlete",
+      preview: "Improve athletic abilities. +1 Str/Dex.",
+      description: ["You have undergone extensive physical training."],
+      benefits: {
+        abilityScoreIncrease: {
+          type: "choice",
+          abilities: ["strength", "dexterity"],
+          amount: 1,
+        },
+        speeds: {
+          climb: "equal_to_walking",
+        },
+      },
+    },
+    {
+      name: "Durable",
+      preview: "Hardy and resilient. +1 Con, advantage on death saves.",
+      description: ["You are uncommonly hardy."],
+      benefits: {
+        abilityScoreIncrease: {
+          type: "fixed",
+          ability: "constitution",
+          amount: 1,
+        },
+        combatBonuses: {
+          deathSaveAdvantage: true,
+        },
+      },
+    },
+    {
+      name: "War Caster",
+      preview: "Improve spellcasting in combat.",
+      description: ["You have practiced casting spells in combat."],
+      benefits: {
+        combatBonuses: { concentrationAdvantage: true },
+        spellcasting: {
+          spellOpportunityAttacks: true,
+        },
+      },
+    },
+  ];
+
+  return {
+    getFeatsSync: () => testFeats,
+    useFeats: () => ({
+      feats: testFeats,
+      loading: false,
+      error: null,
+      initialized: true,
+      getFeatByName: (name) => testFeats.find((f) => f.name === name),
+      searchFeats: (term) => testFeats,
+    }),
+    useFeatsContext: () => ({
+      feats: testFeats,
+      loading: false,
+      error: null,
+      initialized: true,
+      getFeatByName: (name) => testFeats.find((f) => f.name === name),
+      searchFeats: (term) => testFeats,
+    }),
+  };
+});
+
 describe("CharacterSheet Feat Integration Tests", () => {
   const baseCharacter = {
     id: "test-character",
