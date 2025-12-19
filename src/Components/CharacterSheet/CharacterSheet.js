@@ -10,13 +10,14 @@ import {
   Star,
   Sparkles,
   Target,
+  Crown,
 } from "lucide-react";
 import { Skills } from "./Skills/Skills";
 import AbilityScores from "../AbilityScores/AbilityScores";
 import CharacterSheetModals from "./CharacterSheetModals";
 import { modifiers, formatModifier } from "./utils";
 import { useTheme } from "../../contexts/ThemeContext";
-import { getCharacterSheetStyles } from "../../styles/masterStyles";
+import { getCharacterSheetStyles } from "../../utils/styles/masterStyles";
 import { useRollFunctions, useRollModal } from "../utils/diceRoller";
 import { useCallback } from "react";
 import { getDiscordWebhook } from "../../App/const";
@@ -38,11 +39,8 @@ import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
 } from "../CharacterManager/utils/characterUtils";
-import {
-  backgroundsData,
-  subclassesData,
-  standardFeats,
-} from "../../SharedData";
+import { backgroundsData, subclassesData } from "../../SharedData";
+import { useFeats } from "../../hooks/useFeats";
 import {
   calculateInitiativeWithFeats,
   calculateFeatBenefits,
@@ -95,6 +93,7 @@ const CharacterSheet = ({
   const { showRollResult } = useRollModal();
 
   const { theme } = useTheme();
+  const { feats: standardFeats } = useFeats();
   const styles = getCharacterSheetStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -159,7 +158,7 @@ const CharacterSheet = ({
 
     const abilityKey = spellcastingAbility.toLowerCase();
     const abilityScore =
-      character.ability_scores?.[abilityKey] || character[abilityKey] || 10;
+      character.abilityScores?.[abilityKey] || character[abilityKey] || 10;
     return Math.floor((abilityScore - 10) / 2);
   };
 
@@ -568,6 +567,25 @@ const CharacterSheet = ({
     [getAutomaticSkillProficiencies]
   );
 
+  const transformToolData = useCallback(
+    (toolProficiencies = [], toolExpertise = []) => {
+      const tools = {};
+
+      toolProficiencies.forEach((toolName) => {
+        if (!tools[toolName]) {
+          tools[toolName] = 1;
+        }
+      });
+
+      toolExpertise.forEach((toolName) => {
+        tools[toolName] = 2;
+      });
+
+      return tools;
+    },
+    []
+  );
+
   const canModifyCharacter = (
     character,
     adminMode,
@@ -741,6 +759,12 @@ const CharacterSheet = ({
             data.skill_expertise || [],
             data
           ),
+          toolExpertise: data.tool_expertise || [],
+          toolProficiencies: data.tool_proficiencies || [],
+          tools: transformToolData(
+            data.tool_proficiencies || [],
+            data.tool_expertise || []
+          ),
           sorceryPoints: resources.sorcery_points || 0,
           speed: 30,
           spellSlots1: resources.spell_slots_1 || 0,
@@ -811,6 +835,7 @@ const CharacterSheet = ({
     getHitDie,
     getInitiativeModifier,
     transformSkillData,
+    transformToolData,
   ]);
 
   useEffect(() => {
@@ -1141,18 +1166,24 @@ const CharacterSheet = ({
           selectedCharacter?.ownerId !== discordUserId && (
             <div
               style={{
-                background: "linear-gradient(135deg, #ff6b6b, #ffa500)",
-                color: "white",
-                padding: "8px 16px",
+                background: "linear-gradient(135deg, #ffd700, #ffed4e)",
+                color: "#8b4513",
+                padding: "12px 20px",
                 borderRadius: "8px",
-                marginBottom: "16px",
+                marginBottom: "20px",
                 textAlign: "center",
                 fontWeight: "bold",
-                border: "2px solid #ff4757",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                border: "2px solid #ffd700",
               }}
             >
-              ADMIN MODE: Viewing {selectedCharacter.name} (Session:{" "}
-              {selectedCharacter?.gameSession || "Unknown"})
+              <Crown size={18} />
+              ADMIN MODE: Viewing {selectedCharacter.name}
+              {selectedCharacter?.gameSession &&
+                ` (Session: ${selectedCharacter.gameSession})`}
             </div>
           )}
         {character && !characterLoading && (
@@ -1162,7 +1193,12 @@ const CharacterSheet = ({
                 backgroundColor: theme.surface,
                 borderRadius: "0px",
                 padding: "16px",
-                marginTop: "calc(-1.5rem - 20px)",
+                marginTop:
+                  adminMode &&
+                  isUserAdmin &&
+                  selectedCharacter?.ownerId !== discordUserId
+                    ? "0px"
+                    : "calc(-1.5rem - 20px)",
                 marginLeft: "-1.5rem",
                 marginRight: "-1.5rem",
                 marginBottom: "20px",

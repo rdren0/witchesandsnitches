@@ -17,7 +17,7 @@ import { houseFeatures } from "../../SharedData/houseData";
 import { subclassesData } from "../../SharedData/subclassesData";
 import { backgroundsData } from "../../SharedData/backgroundsData";
 import { heritageDescriptions } from "../../SharedData/heritageData";
-import { standardFeats } from "../../SharedData/standardFeatData";
+import { useFeats } from "../../hooks/useFeats";
 import { castingStyleData } from "../../SharedData/data";
 
 const CharacterFeatsDisplay = ({
@@ -29,6 +29,7 @@ const CharacterFeatsDisplay = ({
   isUserAdmin,
 }) => {
   const { theme } = useTheme();
+  const { feats: standardFeats } = useFeats();
   const [searchFilter, setSearchFilter] = useState("");
   const [expandedSections, setExpandedSections] = useState(new Set([]));
 

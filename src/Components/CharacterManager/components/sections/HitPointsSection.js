@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { RefreshCw } from "lucide-react";
 import { calculateToughFeatHPBonus } from "../../utils/utils";
 import { hpData } from "../../../../SharedData/data";

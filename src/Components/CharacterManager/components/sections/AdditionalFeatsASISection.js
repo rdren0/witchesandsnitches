@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
-import { standardFeats } from "../../../../SharedData/standardFeatData";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
+import { useFeats } from "../../../../hooks/useFeats";
 import { calculateFinalAbilityScores } from "../../utils/characterUtils";
 
 const AdditionalFeatsASISection = ({
@@ -12,6 +12,7 @@ const AdditionalFeatsASISection = ({
 }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
+  const { feats: standardFeats } = useFeats();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [featFilter, setFeatFilter] = useState("");

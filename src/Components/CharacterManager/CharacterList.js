@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../styles/masterStyles";
+import { createCharacterCreationStyles } from "../../utils/styles/masterStyles";
 import { characterService } from "../../services/characterService";
 import { gameSessionGroups } from "../../App/const";
 
@@ -153,7 +153,7 @@ const CharacterList = ({
       }));
 
       let filteredCharacters = transformedCharacters;
-      if (viewMode === "my" && !adminMode) {
+      if (viewMode === "my") {
         filteredCharacters = transformedCharacters.filter(
           (char) => char.discordUserId === discordUserId
         );
@@ -168,7 +168,7 @@ const CharacterList = ({
       loadingRefLocal.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discordUserId, adminMode, viewMode]);
+  }, [discordUserId, adminMode, viewMode, isUserAdmin, allCharacters]);
 
   useEffect(() => {
     loadCharacters();

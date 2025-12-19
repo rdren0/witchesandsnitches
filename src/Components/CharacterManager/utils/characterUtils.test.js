@@ -1,3 +1,4 @@
+// Test data for feat validation
 import {
   calculateFeatModifiers,
   calculateHouseModifiers,
@@ -7,7 +8,253 @@ import {
   checkFeatPrerequisites,
   getCharacterBenefits,
 } from "./characterUtils";
-import { standardFeats } from "../../../SharedData/standardFeatData";
+
+const standardFeats = [
+  {
+    name: "Alert",
+    preview: "You can't be surprised and gain +5 to initiative",
+    description: [
+      "Always on the lookout for danger, you gain several benefits.",
+    ],
+    benefits: {
+      combatBonuses: { initiativeBonus: 5 },
+      immunities: ["surprised"],
+    },
+  },
+  {
+    name: "Lucky",
+    preview: "You can reroll dice",
+    description: ["You have inexplicable luck."],
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      specialAbilities: [
+        {
+          name: "Luck Points",
+          type: "resource",
+          description: "Reroll attacks, saves, or checks",
+          uses: "proficiency_bonus/long_rest",
+        },
+      ],
+    },
+  },
+  {
+    name: "Mobile",
+    preview: "Your speed increases",
+    description: ["You are exceptionally speedy and agile."],
+    benefits: {
+      speeds: {
+        walking: { bonus: 10 },
+      },
+    },
+  },
+  {
+    name: "Tough",
+    preview: "Increase your hit points",
+    description: ["Your hit point maximum increases."],
+    benefits: {
+      combatBonuses: {
+        hitPointsPerLevel: 2,
+      },
+    },
+  },
+  {
+    name: "Observant",
+    preview: "Increase perception and investigation",
+    description: ["You are quick to notice details."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["intelligence", "wisdom"],
+        amount: 1,
+      },
+      combatBonuses: {
+        passivePerceptionBonus: 5,
+        passiveInvestigationBonus: 5,
+      },
+    },
+  },
+  {
+    name: "Athlete",
+    preview: "Improve athletic abilities",
+    description: ["You have undergone extensive physical training."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity"],
+        amount: 1,
+      },
+      speeds: {
+        climb: "equal_to_walking",
+      },
+    },
+  },
+  {
+    name: "Resilient",
+    preview: "Gain proficiency in saving throws",
+    description: ["You have trained to withstand certain effects."],
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      savingThrowProficiencies: ["choice"],
+    },
+    prerequisites: {
+      allOf: [{ type: "level", value: 4 }],
+    },
+  },
+  {
+    name: "Elemental Adept",
+    preview: "Master elemental magic",
+    description: ["You have mastered a particular type of elemental magic."],
+    benefits: {},
+    prerequisites: {
+      allOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Heavy Armor Master",
+    preview: "Master heavy armor",
+    description: ["You can use your armor to deflect strikes."],
+    benefits: {
+      abilityScoreIncrease: { type: "fixed", ability: "strength", amount: 1 },
+      resistances: ["physical"],
+    },
+    prerequisites: {
+      allOf: [{ type: "proficiency", category: "armor", value: "heavy" }],
+    },
+  },
+  {
+    name: "War Caster",
+    preview: "Improve spellcasting in combat",
+    description: ["You have practiced casting spells in combat."],
+    benefits: {
+      combatBonuses: { concentrationAdvantage: true },
+    },
+    prerequisites: {
+      anyOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Keen Mind",
+    preview: "Sharpen your intellect",
+    description: [
+      "You have a mind that can track time, direction, and detail.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "intelligence",
+        amount: 1,
+      },
+    },
+  },
+  {
+    name: "Dungeon Delver",
+    preview: "Master of dungeon exploration",
+    description: ["Alert to hidden traps and secret doors."],
+    benefits: {
+      combatBonuses: { trapAdvantage: true },
+      resistances: ["trap_damage"],
+    },
+  },
+  {
+    name: "Defensive Duelist",
+    preview: "Use your reaction to boost AC",
+    description: ["When wielding a finesse weapon, you can use your reaction."],
+    benefits: {
+      specialAbilities: [
+        {
+          name: "Parry",
+          type: "reaction",
+          description: "Add proficiency bonus to AC",
+          uses: "unlimited",
+        },
+      ],
+    },
+    prerequisites: {
+      allOf: [{ type: "ability", ability: "dexterity", value: 13 }],
+    },
+  },
+  {
+    name: "Durable",
+    preview: "Hardy and resilient",
+    description: ["You are uncommonly hardy."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "constitution",
+        amount: 1,
+      },
+      combatBonuses: {
+        deathSaveAdvantage: true,
+      },
+    },
+  },
+  {
+    name: "Spell Sniper",
+    preview: "Increase spell range",
+    description: ["You have learned to cast spells at greater range."],
+    benefits: {
+      spellcasting: { spellRangeDouble: true },
+    },
+    prerequisites: {
+      anyOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Vampirism",
+    preview: "Vampire abilities",
+    description: ["You have vampire abilities."],
+    benefits: {
+      skillProficiencies: ["persuasion"],
+    },
+  },
+  {
+    name: "Lycanthropy",
+    preview: "Werewolf abilities",
+    description: ["You have werewolf abilities."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "multiple",
+        increases: [
+          { ability: "strength", amount: 1 },
+          { ability: "constitution", amount: 1 },
+        ],
+      },
+    },
+  },
+  {
+    name: "Actor",
+    preview: "Master of disguise and impersonation. +1 Charisma.",
+    description: ["Skilled at mimicry and dramatics."],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "charisma",
+        amount: 1,
+      },
+    },
+  },
+  {
+    name: "Cantrip Master",
+    preview: "Master of cantrips. Cast some wandlessly and as bonus actions.",
+    description: [
+      "You have dedicated countless hours to the study and refinement of cantrips.",
+    ],
+    benefits: {
+      abilityScoreIncrease: {
+        type: "spellcasting_ability",
+        amount: 1,
+      },
+      spellcasting: {
+        bonusActionCantrip: { uses: 1, recharge: "short_rest" },
+        wandlessCantrips: true,
+      },
+    },
+  },
+];
+
+jest.mock("../../../hooks/useFeats", () => ({
+  getFeatsSync: () => standardFeats,
+}));
 
 const createTestCharacter = (overrides = {}) => ({
   id: "test-character",
@@ -135,7 +382,7 @@ describe("Character Utils - Feat Integration Tests", () => {
     it("should handle spellcasting ability increases", () => {
       const character = createTestCharacter({
         standardFeats: ["Cantrip Master"],
-        castingStyle: "wisdom",
+        spellcastingAbility: "wisdom",
       });
 
       const { modifiers } = calculateFeatModifiers(character);

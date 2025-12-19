@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
-import { standardFeats } from "../../../../SharedData/standardFeatData";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 
 import InnateHeritageSection from "./InnateHeritageSection";
 import FeatureSelectorSection from "./FeatureSelectorSection";

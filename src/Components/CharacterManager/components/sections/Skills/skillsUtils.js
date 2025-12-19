@@ -1,4 +1,5 @@
-import { standardFeats, skillMap } from "../../../../../SharedData";
+import { skillMap } from "../../../../../SharedData";
+import { getFeatsSync } from "../../../../../hooks/useFeats";
 import { backgroundsData } from "../../../../../SharedData/backgroundsData";
 import { calculateTotalModifiers } from "../../../utils/characterUtils";
 
@@ -150,6 +151,7 @@ export const parseFeatSkills = (character) => {
       .map((choice) => choice.selectedFeat),
   ];
 
+  const standardFeats = getFeatsSync();
   selectedFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
     if (!feat?.benefits?.skillProficiencies) return;

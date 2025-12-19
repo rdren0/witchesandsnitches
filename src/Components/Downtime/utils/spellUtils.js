@@ -1,4 +1,3 @@
-import { spellsData } from "../../../SharedData/spells";
 import { getSpellModifier } from "../../SpellBook/utils";
 
 export const calculateResearchDC = (
@@ -38,8 +37,8 @@ export const calculateResearchDC = (
   return Math.max(5, baseDC);
 };
 
-export const getSpellData = (spellName) => {
-  if (!spellName) return null;
+export const getSpellData = (spellName, spellsData) => {
+  if (!spellName || !spellsData) return null;
 
   for (const [subject, subjectData] of Object.entries(spellsData)) {
     if (subjectData.levels) {
@@ -145,7 +144,8 @@ export const updateSpellProgressOnSubmission = async (
   dicePool,
   selectedCharacter,
   user,
-  supabase
+  supabase,
+  spellsData
 ) => {
   try {
     for (let i = 0; i < formData.activities.length; i++) {
@@ -185,7 +185,7 @@ export const updateSpellProgressOnSubmission = async (
         const diceValue = dicePool[diceIndex];
         if (!diceValue) continue;
 
-        const spellData = getSpellData(spellName);
+        const spellData = getSpellData(spellName, spellsData);
         if (!spellData) continue;
 
         const modifier = getSpellModifier(

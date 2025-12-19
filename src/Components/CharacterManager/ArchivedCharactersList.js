@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { RotateCcw, Archive, AlertCircle, Search, X } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createCharacterCreationStyles } from "../../styles/masterStyles";
+import { createCharacterCreationStyles } from "../../utils/styles/masterStyles";
+
 import { characterService } from "../../services/characterService";
 
 const ArchivedCharactersList = ({

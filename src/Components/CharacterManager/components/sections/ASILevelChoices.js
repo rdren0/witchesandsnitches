@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { createBackgroundStyles } from "../../../../styles/masterStyles";
+import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import {
   getAvailableASILevels,
   handleASIChoiceChange as utilsHandleASIChoiceChange,
@@ -466,9 +466,11 @@ const FeatSelectionSection = ({
 
     featChoices: choice.featChoices || {},
 
-    asiChoices: {},
-
     _editingASILevel: level,
+    _originalStandardFeats: character.standardFeats,
+    _originalAsiChoices: character.asiChoices,
+
+    asiChoices: character.asiChoices || {},
   };
 
   const handleMockCharacterUpdate = (updater) => {

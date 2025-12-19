@@ -1,4 +1,4 @@
-import { standardFeats } from "../../../SharedData/standardFeatData";
+import { getFeatsSync } from "../../../hooks/useFeats";
 import { getAllSelectedFeats } from "./characterUtils";
 
 export const calculateFeatBenefits = (character, featChoices = {}) => {
@@ -46,7 +46,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
       specialAbilities: [],
       resources: {
         luckPoints: 0,
-      }
+      },
     };
   }
 
@@ -111,6 +111,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
     },
   };
 
+  const standardFeats = getFeatsSync();
   allSelectedFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
     if (!feat?.benefits) return;

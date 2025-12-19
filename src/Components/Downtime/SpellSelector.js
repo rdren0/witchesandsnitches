@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { X, Search, Lock } from "lucide-react";
-import { spellsData } from "../../SharedData/spells";
+import { useSpells } from "../../hooks/useSpells";
+import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -26,6 +27,17 @@ const SpellSelector = ({
   isAttemptActivity,
 }) => {
   const { theme } = useTheme();
+
+  const {
+    spells,
+    loading: spellsLoading,
+    error: spellsError,
+  } = useSpells({ realtime: false });
+
+  const spellsData = useMemo(() => {
+    return transformSpellsToNestedStructure(spells);
+  }, [spells]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSpellSlot, setActiveSpellSlot] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -913,7 +925,7 @@ const SpellSelector = ({
       standard: standardSubjects.sort(),
       specialized: specializedSubjects.sort(),
     };
-  }, []);
+  }, [spellsData]);
 
   const uniqueYears = useMemo(() => {
     const years = new Set();
@@ -927,7 +939,7 @@ const SpellSelector = ({
       }
     });
     return Array.from(years).sort((a, b) => a - b);
-  }, []);
+  }, [spellsData]);
 
   const uniqueLevels = useMemo(() => {
     const levels = new Set();
@@ -944,7 +956,23 @@ const SpellSelector = ({
 
       return a.localeCompare(b);
     });
-  }, []);
+  }, [spellsData]);
+
+  if (spellsLoading) {
+    return (
+      <div style={{ padding: "1rem", textAlign: "center", color: theme.text }}>
+        Loading spells...
+      </div>
+    );
+  }
+
+  if (spellsError) {
+    return (
+      <div style={{ padding: "1rem", textAlign: "center", color: theme.error }}>
+        Error loading spells: {spellsError}
+      </div>
+    );
+  }
 
   return (
     <div>

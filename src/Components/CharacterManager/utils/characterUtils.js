@@ -1,10 +1,10 @@
 import {
-  standardFeats,
   backgroundsData,
   houseFeatures,
   heritageDescriptions,
   subclassesData,
 } from "../../../SharedData";
+import { getFeatsSync } from "../../../hooks/useFeats";
 import { subclasses } from "../../../SharedData/subclassesData";
 import {
   calculateFeatBenefits,
@@ -86,7 +86,7 @@ export const handleASIFeatChange = (
   featChoices = {}
 ) => {
   if (featName) {
-    const { standardFeats } = require("../../../SharedData/standardFeatData");
+    const standardFeats = getFeatsSync();
     const feat = standardFeats.find((f) => f.name === featName);
 
     if (!feat?.repeatable) {
@@ -175,18 +175,19 @@ export const calculateFinalAbilityScores = (character) => {
     });
   }
 
-  // Check if the object has keys before using it
   const houseChoicesSnake = character.house_choices || {};
   const houseChoicesCamel = character.houseChoices || {};
-  const houseChoices = Object.keys(houseChoicesSnake).length > 0
-    ? houseChoicesSnake
-    : houseChoicesCamel;
+  const houseChoices =
+    Object.keys(houseChoicesSnake).length > 0
+      ? houseChoicesSnake
+      : houseChoicesCamel;
 
   const heritageChoicesSnake = character.heritage_choices || {};
   const heritageChoicesCamel = character.heritageChoices || {};
-  const heritageChoices = Object.keys(heritageChoicesSnake).length > 0
-    ? heritageChoicesSnake
-    : heritageChoicesCamel;
+  const heritageChoices =
+    Object.keys(heritageChoicesSnake).length > 0
+      ? heritageChoicesSnake
+      : heritageChoicesCamel;
 
   const { totalModifiers, _asiAlreadyApplied } = calculateTotalModifiers(
     character,
@@ -604,6 +605,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
   };
 
   const featDetails = {};
+  const standardFeats = getFeatsSync();
 
   const processFeatInstance = (featName, instanceKey) => {
     const feat = standardFeats.find((f) => f.name === featName);
@@ -639,6 +641,13 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
           (malformedKey1 && featChoices[malformedKey1]) ||
           featChoices[choiceKey3] ||
           increase.abilities?.[0];
+
+        if (
+          abilityToIncrease === "spellcasting_ability" ||
+          abilityToIncrease === "spellcasting ability"
+        ) {
+          abilityToIncrease = getSpellcastingAbility(character);
+        }
         break;
       case "spellcasting_ability":
         abilityToIncrease = getSpellcastingAbility(character);
@@ -726,6 +735,16 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
                   mergedChoices[choiceKey1] ||
                   mergedChoices[choiceKey3] ||
                   increase.abilities?.[0];
+
+                if (
+                  abilityToIncrease === "spellcasting_ability" ||
+                  abilityToIncrease === "spellcasting ability"
+                ) {
+                  abilityToIncrease = getSpellcastingAbility(character);
+                }
+                break;
+              case "spellcasting_ability":
+                abilityToIncrease = getSpellcastingAbility(character);
                 break;
               case "fixed":
                 abilityToIncrease = increase.ability;
@@ -1007,7 +1026,34 @@ export const calculateHeritageModifiers = (character, heritageChoices = {}) => {
 };
 
 export const getSpellcastingAbility = (character) => {
-  return character.castingStyle || "intelligence";
+  if (character.spellcastingAbility || character.spellcasting_ability) {
+    return character.spellcastingAbility || character.spellcasting_ability;
+  }
+
+  if (
+    character.casting_style_choices?.spellcastingAbility ||
+    character.castingStyleChoices?.spellcastingAbility
+  ) {
+    return (
+      character.casting_style_choices?.spellcastingAbility ||
+      character.castingStyleChoices?.spellcastingAbility
+    );
+  }
+
+  const castingStyleToAbility = {
+    "Technique Caster": "wisdom",
+    "Willpower Caster": "charisma",
+    "Intellect Caster": "intelligence",
+    "Vigor Caster": "constitution",
+
+    Technique: "wisdom",
+    Willpower: "charisma",
+    Intellect: "intelligence",
+    Vigor: "constitution",
+  };
+
+  const castingStyle = character.castingStyle || character.casting_style;
+  return castingStyleToAbility[castingStyle] || "intelligence";
 };
 
 export const calculateASIModifiers = (character) => {

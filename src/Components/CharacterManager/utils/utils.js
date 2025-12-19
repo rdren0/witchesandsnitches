@@ -1,4 +1,4 @@
-import { standardFeats } from "../../../SharedData/standardFeatData";
+import { getFeatsSync } from "../../../hooks/useFeats";
 import { backgroundsData } from "../../../SharedData/backgroundsData";
 import { houseFeatures } from "../../../SharedData/houseData";
 import { heritageDescriptions } from "../../../SharedData/heritageData";
@@ -307,6 +307,7 @@ const calculateFeatModifiers = (character, featChoices = {}) => {
   }
 
   const uniqueFeats = [...new Set(allSelectedFeats)];
+  const standardFeats = getFeatsSync();
 
   uniqueFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);

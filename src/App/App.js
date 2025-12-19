@@ -24,12 +24,14 @@ import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
 import HelpResources from "../Components/HelpResources/HelpResources";
 
-import { createAppStyles } from "../styles/masterStyles";
+import { createAppStyles } from "../utils/styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManager from "../Components/CharacterManager/CharacterManager";
 import logo from "./../Images/logo/Thumbnail-01.png";
 import { AdminProvider, useAdmin } from "../contexts/AdminContext";
+import { FeatsProvider } from "../contexts/FeatsContext";
+import { SpellsProvider } from "../contexts/SpellsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
@@ -373,7 +375,6 @@ const Navigation = ({ characters }) => {
       path: "/help-resources",
       label: "Help & Resources",
       key: "help-resources",
-      isNew: true, // Set to false to remove the "NEW" badge
     });
 
     if (adminMode) {
@@ -1551,9 +1552,13 @@ function AdminProviderWrapper() {
   }, []);
 
   return (
-    <AdminProvider user={user}>
-      <AppContent />
-    </AdminProvider>
+    <SpellsProvider>
+      <FeatsProvider>
+        <AdminProvider user={user}>
+          <AppContent />
+        </AdminProvider>
+      </FeatsProvider>
+    </SpellsProvider>
   );
 }
 

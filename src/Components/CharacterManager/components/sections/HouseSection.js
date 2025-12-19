@@ -4,7 +4,7 @@ import {
   houseFeatures,
   houseColors,
 } from "../../../../SharedData/houseData";
-import { createFeatStyles } from "../../../../styles/masterStyles";
+import { createFeatStyles } from "../../../../utils/styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 
 const calculateHouseAbilityModifiers = (house, houseChoices = {}) => {

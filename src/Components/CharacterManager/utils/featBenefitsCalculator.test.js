@@ -1,4 +1,6 @@
 /* eslint-disable jest/no-conditional-expect */
+
+// Test data for feat validation
 import {
   calculateFeatBenefits,
   calculateInitiativeWithFeats,
@@ -8,7 +10,215 @@ import {
   hasResistanceFromFeats,
   getHitPointsBonusFromFeats,
 } from "./featBenefitsCalculator";
-import { standardFeats } from "../../../SharedData/standardFeatData";
+
+const testFeatsData = [
+  {
+    name: "Alert",
+    description: "Test feat",
+    benefits: {
+      combatBonuses: {
+        initiativeBonus: 5,
+        unseeingAdvantageImmunity: true,
+      },
+      immunities: ["surprised"],
+    },
+  },
+  {
+    name: "Lucky",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      specialAbilities: [
+        {
+          name: "Luck Points",
+          type: "resource",
+          amount: "proficiency_bonus",
+          recharge: "long_rest",
+        },
+      ],
+    },
+  },
+  {
+    name: "Mobile",
+    description: "Test feat",
+    benefits: {
+      speeds: {
+        walking: { bonus: 10 },
+      },
+    },
+  },
+  {
+    name: "Tough",
+    description: "Test feat",
+    benefits: {
+      combatBonuses: {
+        hitPointsPerLevel: 2,
+      },
+    },
+  },
+  {
+    name: "Observant",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["intelligence", "wisdom"],
+        amount: 1,
+      },
+      combatBonuses: {
+        passivePerceptionBonus: 5,
+        passiveInvestigationBonus: 5,
+      },
+    },
+  },
+  {
+    name: "Athlete",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity"],
+        amount: 1,
+      },
+      speeds: {
+        climb: "equal_to_walking",
+      },
+    },
+  },
+  {
+    name: "Resilient",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: { type: "choice", abilities: ["any"], amount: 1 },
+      savingThrowProficiencies: ["choice"],
+    },
+    prerequisites: {
+      allOf: [{ type: "level", value: 4 }],
+    },
+  },
+  {
+    name: "Elemental Adept",
+    description: "Test feat",
+    benefits: {},
+    prerequisites: {
+      allOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Heavy Armor Master",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: { type: "fixed", ability: "strength", amount: 1 },
+    },
+    prerequisites: {
+      allOf: [{ type: "proficiency", category: "armor", value: "heavy" }],
+    },
+  },
+  {
+    name: "War Caster",
+    description: "Test feat",
+    benefits: {
+      combatBonuses: { concentrationAdvantage: true },
+      spellcasting: {
+        spellOpportunityAttacks: true,
+      },
+    },
+    prerequisites: {
+      anyOf: [{ type: "spellcasting", value: true }],
+    },
+  },
+  {
+    name: "Durable",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "constitution",
+        amount: 1,
+      },
+      combatBonuses: {
+        deathSaveAdvantage: true,
+      },
+    },
+  },
+  {
+    name: "Poison Expert",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["wisdom", "constitution", "intelligence"],
+        amount: 1,
+      },
+      combatBonuses: {
+        poisonSaveAdvantage: true,
+      },
+    },
+  },
+  {
+    name: "Nimble",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "choice",
+        abilities: ["strength", "dexterity"],
+        amount: 1,
+      },
+      speeds: {
+        walking: { bonus: 5 },
+      },
+    },
+  },
+  {
+    name: "Keen Mind",
+    description: "Test feat",
+    benefits: {
+      abilityScoreIncrease: {
+        type: "fixed",
+        ability: "intelligence",
+        amount: 1,
+      },
+      specialAbilities: [
+        {
+          name: "Direction Sense",
+          type: "passive",
+          effect: "always_know_north",
+        },
+        {
+          name: "Time Awareness",
+          type: "passive",
+          effect: "always_know_sunrise_sunset_timing",
+        },
+      ],
+    },
+  },
+  {
+    name: "TestFeatWithNoBenefits",
+    description: "Test feat with no benefits",
+    benefits: {},
+  },
+];
+
+// Generate additional test feats for performance testing
+const generateTestFeats = (count) => {
+  const feats = [...testFeatsData];
+  for (let i = testFeatsData.length; i < count; i++) {
+    feats.push({
+      name: `TestFeat${i}`,
+      description: "Generated test feat",
+      benefits: {
+        combatBonuses: { initiativeBonus: 1 },
+      },
+    });
+  }
+  return feats;
+};
+
+const standardFeats = generateTestFeats(25);
+
+jest.mock("../../../hooks/useFeats", () => ({
+  getFeatsSync: () => generateTestFeats(25),
+}));
 
 const createMockCharacter = (feats = [], level = 5, featChoices = {}) => ({
   id: "test-character",

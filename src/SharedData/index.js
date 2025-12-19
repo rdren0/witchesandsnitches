@@ -14,8 +14,4 @@ export { potions as potionsData } from "./potionsData.js";
 
 export { recipes as recipesData } from "./recipesData.js";
 
-export { spellsData } from "./spells.js";
-
-export { standardFeats } from "./standardFeatData.js";
-
 export { subclassesData } from "./subclassesData.js";
