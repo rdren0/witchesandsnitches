@@ -236,7 +236,9 @@ const standardFeats = [
   {
     name: "Cantrip Master",
     preview: "Master of cantrips. Cast some wandlessly and as bonus actions.",
-    description: ["You have dedicated countless hours to the study and refinement of cantrips."],
+    description: [
+      "You have dedicated countless hours to the study and refinement of cantrips.",
+    ],
     benefits: {
       abilityScoreIncrease: {
         type: "spellcasting_ability",

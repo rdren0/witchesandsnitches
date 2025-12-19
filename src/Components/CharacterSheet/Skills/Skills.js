@@ -67,6 +67,7 @@ export const Skills = ({
   const [hoveredSkill, setHoveredSkill] = useState(null);
   const [showToolModal, setShowToolModal] = useState(false);
   const [selectedTool, setSelectedTool] = useState(null);
+  const [selectedToolSource, setSelectedToolSource] = useState(null);
   const [selectedAbility, setSelectedAbility] = useState("strength");
 
   const passivePerception = calculatePassivePerception(character);
@@ -692,10 +693,10 @@ export const Skills = ({
     return { proficientTools, expertiseTools };
   };
 
-  const toggleToolProficiency = async (toolName) => {
+  const toggleToolProficiency = async (toolName, toolSource) => {
     if (!character || !selectedCharacterId) return;
 
-    const currentLevel = character.tools?.[toolName] || 0;
+    const currentLevel = getEffectiveToolLevel(toolName, toolSource);
     const newLevel = (currentLevel + 1) % 3;
 
     const updatedTools = {
@@ -771,9 +772,26 @@ export const Skills = ({
       allTools.push({ name: tool, source: "Character" });
     });
 
-    if (character.subclass && character.subclassChoices) {
+    if (character.subclass) {
       const subclassInfo = subclassesData[character.subclass];
-      if (subclassInfo?.choices) {
+
+      if (subclassInfo?.benefits?.toolProficiencies) {
+        subclassInfo.benefits.toolProficiencies.forEach((tool) => {
+          allTools.push({ name: tool, source: "Subclass" });
+        });
+      }
+
+      if (subclassInfo?.higherLevelFeatures) {
+        subclassInfo.higherLevelFeatures.forEach((feature) => {
+          if (feature.benefits?.toolProficiencies) {
+            feature.benefits.toolProficiencies.forEach((tool) => {
+              allTools.push({ name: tool, source: "Subclass" });
+            });
+          }
+        });
+      }
+
+      if (subclassInfo?.choices && character.subclassChoices) {
         Object.entries(character.subclassChoices).forEach(([level, choice]) => {
           const levelData = subclassInfo.choices[level];
           if (levelData?.options) {
@@ -814,9 +832,21 @@ export const Skills = ({
     return uniqueTools.sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  const calculateToolBonus = (toolName) => {
+  const getEffectiveToolLevel = (toolName, toolSource) => {
+    const manualLevel = character.tools?.[toolName];
+    if (manualLevel !== undefined) {
+      return manualLevel;
+    }
+
+    const isAutomaticProficiency = ["Background", "Subclass", "Feat"].includes(
+      toolSource
+    );
+    return isAutomaticProficiency ? 1 : 0;
+  };
+
+  const calculateToolBonus = (toolName, toolSource) => {
     if (!character) return 0;
-    const toolLevel = character.tools?.[toolName] || 0;
+    const toolLevel = getEffectiveToolLevel(toolName, toolSource);
     const profBonus = character.proficiencyBonus || 0;
 
     if (toolLevel === 0) return 0;
@@ -830,8 +860,12 @@ export const Skills = ({
     if (!selectedTool || !selectedAbility) return;
 
     const abilityMod = modifiers(character)[selectedAbility];
+    const toolLevel = getEffectiveToolLevel(selectedTool, selectedToolSource);
     const profBonus = character.proficiencyBonus || 0;
-    const totalBonus = abilityMod + profBonus;
+
+    const toolBonus =
+      toolLevel === 0 ? 0 : toolLevel === 1 ? profBonus : 2 * profBonus;
+    const totalBonus = abilityMod + toolBonus;
 
     const toolSkill = {
       name: selectedTool.toLowerCase().replace(/\s+/g, ""),
@@ -1189,8 +1223,14 @@ export const Skills = ({
                       ) : (
                         allTools.map((toolObj) => {
                           const tool = toolObj.name;
-                          const toolLevel = character.tools?.[tool] || 0;
-                          const toolBonus = calculateToolBonus(tool);
+                          const toolLevel = getEffectiveToolLevel(
+                            tool,
+                            toolObj.source
+                          );
+                          const toolBonus = calculateToolBonus(
+                            tool,
+                            toolObj.source
+                          );
 
                           let toolColor = theme.textSecondary;
                           if (toolLevel === 1)
@@ -1213,7 +1253,9 @@ export const Skills = ({
                             >
                               <td style={skillStyles.cell}>
                                 <button
-                                  onClick={() => toggleToolProficiency(tool)}
+                                  onClick={() =>
+                                    toggleToolProficiency(tool, toolObj.source)
+                                  }
                                   title={getProficiencyTooltip(toolLevel)}
                                   style={skillStyles.proficiencyButton}
                                   onMouseEnter={(e) => {
@@ -1243,6 +1285,7 @@ export const Skills = ({
                                 <button
                                   onClick={() => {
                                     setSelectedTool(tool);
+                                    setSelectedToolSource(toolObj.source);
                                     setShowToolModal(true);
                                   }}
                                   style={{
