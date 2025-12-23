@@ -311,7 +311,10 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
           ability.name === "Luck Points" &&
           ability.amount === "proficiency_bonus"
         ) {
-          benefits.resources.luckPoints = character.proficiencyBonus || 2;
+          const level = character.level || 1;
+          const proficiencyBonus =
+            character.proficiencyBonus || Math.ceil(level / 4) + 1;
+          benefits.resources.luckPoints = proficiencyBonus;
         } else {
           benefits.specialAbilities.push({
             ...ability,

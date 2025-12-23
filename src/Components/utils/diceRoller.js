@@ -1547,17 +1547,14 @@ export const rollBrewPotion = async ({
   setIsRolling,
   character,
   selectedPotion,
-  proficiencies,
   ingredientQuality,
   qualityDCs,
-  ingredientModifiers,
   characterModifier = 0,
   showRollResult,
   addPotionToInventory,
   currentCharacter,
   supabase,
   user,
-  rawIngredientQuality,
 }) => {
   if (isRolling) return null;
   setIsRolling(true);
@@ -1568,39 +1565,7 @@ export const rollBrewPotion = async ({
     const skillModifier = characterModifier || 0;
     const totalRoll = d20Roll + skillModifier;
 
-    const getMaxAchievableQuality = ({ proficiencies, ingredientQuality }) => {
-      const hasKit = proficiencies.potioneersKit || proficiencies.herbologyKit;
-      if (!hasKit) return "Cannot brew without kit";
-
-      const qualityHierarchy = ["flawed", "normal", "exceptional", "superior"];
-      const preparedIndex = qualityHierarchy.indexOf(ingredientQuality);
-
-      if (preparedIndex === -1) {
-        console.error(
-          "Invalid prepared ingredient quality:",
-          ingredientQuality
-        );
-        return "flawed";
-      }
-
-      const maxIndex = Math.min(preparedIndex + 2, qualityHierarchy.length - 1);
-      const maxQuality = qualityHierarchy[maxIndex];
-
-      return maxQuality;
-    };
-
-    const maxQuality = getMaxAchievableQuality({
-      proficiencies,
-      ingredientQuality,
-    });
     const baseDCs = qualityDCs[selectedPotion.rarity];
-    const ingredientMod = ingredientModifiers[ingredientQuality] || 0;
-    const adjustedDCs = Object.fromEntries(
-      Object.entries(baseDCs).map(([quality, dc]) => [
-        quality,
-        dc + ingredientMod,
-      ])
-    );
 
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
@@ -1609,57 +1574,38 @@ export const rollBrewPotion = async ({
     let targetDC;
 
     if (isCriticalSuccess) {
-      achievedQuality =
-        maxQuality === "Cannot brew without kit" ? "ruined" : maxQuality;
-      targetDC = adjustedDCs[achievedQuality] || 0;
+      achievedQuality = "superior";
+      targetDC = baseDCs.superior || 0;
     } else if (isCriticalFailure) {
       achievedQuality = "ruined";
       targetDC = 0;
     } else {
-      const sortedQualities = Object.entries(adjustedDCs)
+      const sortedQualities = Object.entries(baseDCs)
         .sort(([, a], [, b]) => b - a)
         .map(([quality]) => quality);
 
       achievedQuality = "ruined";
       for (const quality of sortedQualities) {
-        const dc = adjustedDCs[quality];
+        const dc = baseDCs[quality];
         if (totalRoll >= dc) {
           achievedQuality = quality;
           break;
         }
       }
 
-      const qualityHierarchy = [
-        "ruined",
-        "flawed",
-        "normal",
-        "exceptional",
-        "superior",
-      ];
-      const maxIndex = qualityHierarchy.indexOf(maxQuality);
-      const achievedIndex = qualityHierarchy.indexOf(achievedQuality);
-
-      if (maxIndex !== -1 && achievedIndex > maxIndex) {
-        achievedQuality = maxQuality;
-      }
-
-      targetDC = adjustedDCs[achievedQuality] || 0;
+      targetDC = baseDCs[achievedQuality] || 0;
     }
 
     const brewingResult = {
       achievedQuality,
-      maxQuality,
       diceRoll: d20Roll,
       characterModifier: skillModifier,
       total: totalRoll,
       roll: totalRoll,
       targetDC,
       baseDCs,
-      adjustedDCs,
-      ingredientMod,
       potion: selectedPotion,
       ingredientQuality,
-      proficiencies,
     };
 
     let inventoryAdded = false;
@@ -1713,7 +1659,7 @@ export const rollBrewPotion = async ({
           } ${selectedPotion.name}`,
           description: `${
             selectedPotion.description
-          }\n\nBrewed on ${new Date().toLocaleString()} with ${rawIngredientQuality} ingredients (prepared to ${ingredientQuality}). Roll: ${d20Roll} + ${skillModifier} = ${totalRoll}`,
+          }\n\nBrewed on ${new Date().toLocaleString()}. Roll: ${d20Roll} + ${skillModifier} = ${totalRoll}`,
           quantity: 1,
           value: null,
           category: "Potions",
