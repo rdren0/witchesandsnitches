@@ -10,7 +10,6 @@ import {
   Star,
   Search,
   FlaskRound,
-  ArrowRight,
   Plus,
   ChevronDown,
   ChevronUp,
@@ -31,7 +30,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
   const [isRolling, setIsRolling] = useState(false);
   const [selectedPotion, setSelectedPotion] = useState(null);
-  const [brewingSkills, setBrewingSkill] = useState("potionMaking");
   const [brewingInProgress, setBrewingInProgress] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,11 +52,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
   const [proficiencies, setProficiencies] = useState({
     potionMaking: 0,
-    potioneersKit: true,
-    herbologyKit: false,
   });
-
-  const [ingredientQuality, setIngredientQuality] = useState("normal");
 
   const currentCharacter = useMemo(() => {
     return character || selectedCharacter;
@@ -328,122 +322,11 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     );
   };
 
-  const ingredientModifiers = {
-    flawed: 2,
-    normal: 0,
-    exceptional: -2,
-    superior: -4,
-  };
-
-  const transformIngredientQuality = (rawQuality, proficiencies) => {
-    const hasKit = proficiencies.potioneersKit || proficiencies.herbologyKit;
-
-    if (!hasKit) {
-      return null;
-    }
-
-    const profLevel = proficiencies.potionMaking;
-
-    const transformationTable = {
-      0: {
-        poor: "flawed",
-        normal: "flawed",
-        exceptional: "normal",
-        superior: "normal",
-      },
-      1: {
-        poor: "flawed",
-        normal: "normal",
-        exceptional: "normal",
-        superior: "normal",
-      },
-      2: {
-        poor: "normal",
-        normal: "normal",
-        exceptional: "exceptional",
-        superior: "exceptional",
-      },
-      3: {
-        poor: "normal",
-        normal: "exceptional",
-        exceptional: "exceptional",
-        superior: "exceptional",
-      },
-      4: {
-        poor: "exceptional",
-        normal: "exceptional",
-        exceptional: "superior",
-        superior: "superior",
-      },
-    };
-
-    const transforms = transformationTable[profLevel] || transformationTable[0];
-    return transforms[rawQuality] || rawQuality;
-  };
-
-  const getPreparedIngredientQuality = () => {
-    return transformIngredientQuality(ingredientQuality, proficiencies);
-  };
-
-  const getMaxAchievableQuality = () => {
-    const preparedQuality = getPreparedIngredientQuality();
-    if (!preparedQuality) return "Cannot brew without kit";
-
-    const qualityHierarchy = ["flawed", "normal", "exceptional", "superior"];
-    const preparedIndex = qualityHierarchy.indexOf(preparedQuality);
-
-    if (preparedIndex === -1) {
-      console.error("Invalid prepared ingredient quality:", preparedQuality);
-      return "flawed";
-    }
-
-    const maxIndex = Math.min(preparedIndex + 2, qualityHierarchy.length - 1);
-    const maxQuality = qualityHierarchy[maxIndex];
-
-    return maxQuality;
-  };
 
   const getDiceIcon = (value) => {
     const icons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
     const IconComponent = icons[Math.min(value - 1, 5)];
     return <IconComponent size={24} />;
-  };
-
-  const getPotionValue = (quality, rarity) => {
-    const baseValues = {
-      common: {
-        flawed: "5g",
-        normal: "25g",
-        exceptional: "50g",
-        superior: "100g",
-      },
-      uncommon: {
-        flawed: "25g",
-        normal: "100g",
-        exceptional: "200g",
-        superior: "400g",
-      },
-      rare: {
-        flawed: "100g",
-        normal: "500g",
-        exceptional: "1000g",
-        superior: "2000g",
-      },
-      "very rare": {
-        flawed: "500g",
-        normal: "2500g",
-        exceptional: "5000g",
-        superior: "10000g",
-      },
-      legendary: {
-        flawed: "2500g",
-        normal: "12500g",
-        exceptional: "25000g",
-        superior: "50000g",
-      },
-    };
-
-    return baseValues[rarity]?.[quality] || "Unknown";
   };
 
   const addPotionToInventory = async (brewingResult) => {
@@ -481,7 +364,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         name: potionName,
         description: `${
           brewingResult.potion.description
-        }\n\nBrewed on ${new Date().toLocaleString()} with ${ingredientQuality} ingredients (prepared to ${getPreparedIngredientQuality()}). Roll: ${
+        }\n\nBrewed on ${new Date().toLocaleString()}. Roll: ${
           brewingResult.diceRoll || brewingResult.roll
         } + ${brewingResult.characterModifier} = ${
           (brewingResult.diceRoll || brewingResult.roll) +
@@ -513,14 +396,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   const brewPotion = async () => {
     if (!selectedPotion) return;
 
-    const preparedQuality = getPreparedIngredientQuality();
-    if (!preparedQuality) {
-      alert(
-        "You need either a Potioneer's Kit or Herbology Kit to brew potions!"
-      );
-      return;
-    }
-
     setBrewingInProgress(true);
 
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -532,16 +407,13 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         setIsRolling,
         character: currentCharacter,
         selectedPotion,
-        proficiencies,
-        ingredientQuality: preparedQuality,
+        ingredientQuality: "normal",
         qualityDCs,
-        ingredientModifiers,
         characterModifier,
         addPotionToInventory,
         currentCharacter,
         supabase,
         user,
-        rawIngredientQuality: ingredientQuality,
         hasHealingSubclass,
         healingSkillChoice,
         skillDisplayInfo: getSkillDisplayInfo,
@@ -550,8 +422,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       if (brewingResult) {
         const result = {
           ...brewingResult,
-          rawIngredientQuality: ingredientQuality,
-          preparedIngredientQuality: preparedQuality,
           characterModifier,
           timestamp: new Date().toLocaleString(),
           hasHealingSubclass,
@@ -597,7 +467,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   };
 
   const filteredPotions = getFilteredPotions();
-  const preparedQuality = getPreparedIngredientQuality();
   const characterModifier = getCharacterPotionModifier;
   const displayInfo = getSkillDisplayInfo;
 
@@ -608,113 +477,36 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       </h1>
 
       <div style={styles.card}>
-        <h3 style={styles.cardTitle}>Character Proficiencies & Ingredients</h3>
+        <h3 style={styles.cardTitle}>Additional Proficiencies (Optional)</h3>
+        <div
+          style={{
+            fontSize: "0.875rem",
+            color: theme.textSecondary,
+            marginBottom: "12px",
+          }}
+        >
+          Track additional potion-making proficiencies here. This is separate
+          from your character's Potion-Making skill.
+        </div>
 
         <div style={styles.proficiencyGrid}>
           <div style={styles.proficiencySection}>
-            <h4 style={styles.proficiencyTitle}>Proficiencies</h4>
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>Potion-Making</label>
-              <select
-                value={proficiencies.potionMaking}
-                onChange={(e) =>
-                  setProficiencies((prev) => ({
-                    ...prev,
-                    potionMaking: parseInt(e.target.value),
-                  }))
-                }
-                style={styles.select}
-              >
-                <option value={0}>No Proficiency</option>
-                <option value={1}>Proficient</option>
-                <option value={2}>2 Proficiencies or 1 Expertise</option>
-                <option value={3}>1 Proficiency + 1 Expertise</option>
-                <option value={4}>2 Expertise</option>
-              </select>
-            </div>
-
-            <div style={styles.checkboxGroup}>
-              <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={brewingSkills === "potionMaking"}
-                  onChange={(e) => ({})}
-                />
-                Potion Making
-              </label>
-            </div>
-
-            <div style={styles.checkboxGroup}>
-              <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={proficiencies.potioneersKit}
-                  onChange={(e) =>
-                    setProficiencies((prev) => ({
-                      ...prev,
-                      potioneersKit: e.target.checked,
-                    }))
-                  }
-                />
-                Potioneer's Kit
-              </label>
-
-              <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={proficiencies.herbologyKit}
-                  onChange={(e) =>
-                    setProficiencies((prev) => ({
-                      ...prev,
-                      herbologyKit: e.target.checked,
-                    }))
-                  }
-                />
-                Herbology Kit
-              </label>
-            </div>
-          </div>
-
-          <div style={styles.proficiencySection}>
-            <h4 style={styles.proficiencyTitle}>Raw Ingredient Quality</h4>
             <select
-              value={ingredientQuality}
-              onChange={(e) => setIngredientQuality(e.target.value)}
+              value={proficiencies.potionMaking}
+              onChange={(e) =>
+                setProficiencies((prev) => ({
+                  ...prev,
+                  potionMaking: parseInt(e.target.value),
+                }))
+              }
               style={styles.select}
             >
-              <option value="poor">Poor (raw ingredients)</option>
-              <option value="normal">Normal (raw ingredients)</option>
-              <option value="exceptional">Exceptional (raw ingredients)</option>
-              <option value="superior">Superior (raw ingredients)</option>
+              <option value={0}>No Proficiency</option>
+              <option value={1}>Proficient</option>
+              <option value={2}>2 Proficiencies or 1 Expertise</option>
+              <option value={3}>1 Proficiency + 1 Expertise</option>
+              <option value={4}>2 Expertise</option>
             </select>
-
-            {preparedQuality && (
-              <div style={styles.ingredientTransformation}>
-                <div style={styles.transformationRow}>
-                  <span style={styles.rawQuality}>
-                    {ingredientQuality.charAt(0).toUpperCase() +
-                      ingredientQuality.slice(1)}{" "}
-                    (raw)
-                  </span>
-                  <ArrowRight size={16} style={{ color: theme.primary }} />
-                  <span style={styles.preparedQuality}>
-                    {preparedQuality.charAt(0).toUpperCase() +
-                      preparedQuality.slice(1)}{" "}
-                    (prepared)
-                  </span>
-                </div>
-                <div style={styles.dcModifier}>
-                  DC Modifier:{" "}
-                  {ingredientModifiers[preparedQuality] > 0 ? "+" : ""}
-                  {ingredientModifiers[preparedQuality]}
-                </div>
-              </div>
-            )}
-
-            <div style={styles.maxQualityInfo}>
-              <strong>Max Achievable Quality:</strong>{" "}
-              {getMaxAchievableQuality()}
-            </div>
           </div>
         </div>
       </div>
@@ -950,49 +742,24 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                       "flawed",
                       "ruined",
                     ].map((quality) => {
-                      const baseDC =
-                        qualityDCs[selectedPotion.rarity][quality] || 0;
-                      const adjustedDC =
-                        baseDC + (ingredientModifiers[preparedQuality] || 0);
-                      const maxQuality = getMaxAchievableQuality();
-
-                      const qualityHierarchy = [
-                        "ruined",
-                        "flawed",
-                        "normal",
-                        "exceptional",
-                        "superior",
-                      ];
-                      const maxIndex = qualityHierarchy.indexOf(maxQuality);
-                      const qualityIndex = qualityHierarchy.indexOf(quality);
-
-                      const isAchievable =
-                        maxQuality !== "Cannot brew without kit" &&
-                        qualityIndex <= maxIndex;
+                      const dc = qualityDCs[selectedPotion.rarity][quality] || 0;
 
                       let displayText;
-                      if (!isAchievable) {
-                        displayText = "Not achievable";
-                      } else if (quality === "ruined") {
+                      if (quality === "ruined") {
                         const flawedDC =
                           qualityDCs[selectedPotion.rarity]["flawed"] || 0;
-                        const flawedAdjustedDC =
-                          flawedDC +
-                          (ingredientModifiers[preparedQuality] || 0);
-                        const totalNeededForFlawed = flawedAdjustedDC;
-                        const ruinedMaxTotal = totalNeededForFlawed - 1;
+                        const ruinedMaxTotal = flawedDC - 1;
                         displayText =
                           ruinedMaxTotal >= 1
                             ? `${ruinedMaxTotal} or less total`
                             : "Impossible to avoid";
                       } else {
-                        const totalNeeded = adjustedDC;
-                        if (totalNeeded > 20 + characterModifier) {
+                        if (dc > 20 + characterModifier) {
                           displayText = "Impossible";
-                        } else if (totalNeeded <= 1 + characterModifier) {
+                        } else if (dc <= 1 + characterModifier) {
                           displayText = "Automatic";
                         } else {
-                          displayText = `${totalNeeded}+ total`;
+                          displayText = `${dc}+ total`;
                         }
                       }
 
@@ -1052,12 +819,10 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
               )}
             <button
               onClick={brewPotion}
-              disabled={
-                !selectedPotion || brewingInProgress || !preparedQuality
-              }
+              disabled={!selectedPotion || brewingInProgress}
               style={{
                 ...styles.brewButton,
-                ...(!selectedPotion || brewingInProgress || !preparedQuality
+                ...(!selectedPotion || brewingInProgress
                   ? styles.brewButtonDisabled
                   : {}),
               }}
@@ -1068,12 +833,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
               />
               {brewingInProgress ? "Brewing..." : "Brew Potion!"}
             </button>
-            {!preparedQuality && (
-              <div style={styles.warningText}>
-                You need either a Potioneer's Kit or Herbology Kit to brew
-                potions!
-              </div>
-            )}
           </div>
 
           {lastResult && (
@@ -1085,14 +844,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                   <span style={styles.resultLabel}>Potion:</span>
                   <span style={styles.resultValue}>
                     {lastResult.potion.name}
-                  </span>
-                </div>
-
-                <div style={styles.resultRow}>
-                  <span style={styles.resultLabel}>Ingredients Used:</span>
-                  <span style={styles.resultValue}>
-                    {lastResult.rawIngredientQuality} →{" "}
-                    {lastResult.preparedIngredientQuality}
                   </span>
                 </div>
 
@@ -1171,57 +922,6 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                 <div>{dcs.superior}</div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Ingredient Preparation Effects</h3>
-          <div style={styles.ingredientEffectsList}>
-            <div style={styles.ingredientEffectRow}>
-              <span style={styles.ingredientEffectLabel}>
-                Flawed (prepared):
-              </span>
-              <span
-                style={{
-                  ...styles.ingredientEffectValue,
-                  ...styles.ingredientEffectHarder,
-                }}
-              >
-                +2 DC (harder)
-              </span>
-            </div>
-            <div style={styles.ingredientEffectRow}>
-              <span style={styles.ingredientEffectLabel}>
-                Normal (prepared):
-              </span>
-              <span style={styles.ingredientEffectValue}>±0 DC</span>
-            </div>
-            <div style={styles.ingredientEffectRow}>
-              <span style={styles.ingredientEffectLabel}>
-                Exceptional (prepared):
-              </span>
-              <span
-                style={{
-                  ...styles.ingredientEffectValue,
-                  ...styles.ingredientEffectEasier,
-                }}
-              >
-                -2 DC (easier)
-              </span>
-            </div>
-            <div style={styles.ingredientEffectRow}>
-              <span style={styles.ingredientEffectLabel}>
-                Superior (prepared):
-              </span>
-              <span
-                style={{
-                  ...styles.ingredientEffectValue,
-                  ...styles.ingredientEffectEasier,
-                }}
-              >
-                -4 DC (easier)
-              </span>
-            </div>
           </div>
         </div>
       </div>

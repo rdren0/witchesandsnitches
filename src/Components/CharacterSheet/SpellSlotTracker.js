@@ -773,10 +773,9 @@ const SpellSlotTracker = ({
 
       updateData.max_sorcery_points = customMaxSorceryPoints;
       const currentSorceryPts = character?.sorceryPoints || 0;
-      updateData.sorcery_points = Math.min(
-        currentSorceryPts,
-        customMaxSorceryPoints
-      );
+      if (currentSorceryPts > customMaxSorceryPoints) {
+        updateData.sorcery_points = customMaxSorceryPoints;
+      }
 
       const { error } = await supabase
         .from("character_resources")
@@ -801,10 +800,12 @@ const SpellSlotTracker = ({
         );
       });
       newCharacterState.maxSorceryPoints = customMaxSorceryPoints;
-      newCharacterState.sorceryPoints = Math.min(
-        character?.sorceryPoints || 0,
-        customMaxSorceryPoints
-      );
+      // Only cap sorcery points if they exceed the new max, otherwise preserve current value
+      if (currentSorceryPts > customMaxSorceryPoints) {
+        newCharacterState.sorceryPoints = customMaxSorceryPoints;
+      } else {
+        newCharacterState.sorceryPoints = currentSorceryPts;
+      }
       setCharacter(newCharacterState);
 
       setShowCustomModal(false);

@@ -31,17 +31,29 @@ const LuckPointButton = ({
   const featBenefits = calculateFeatBenefits(character);
   const maxLuckPoints = featBenefits.resources.luckPoints;
 
-  if (maxLuckPoints === 0) {
+  const hasLuckFromResources =
+    character?.luck !== undefined && character?.luck !== null;
+
+  if (maxLuckPoints === 0 && !hasLuckFromResources) {
     return null;
   }
-  const currentLuckPoints = character?.luck ?? maxLuckPoints;
+
+  const effectiveMaxLuckPoints =
+    maxLuckPoints > 0
+      ? maxLuckPoints
+      : getProficiencyBonus(character?.level || 1);
+
+  const currentLuckPoints = character?.luck ?? effectiveMaxLuckPoints;
 
   const updateLuckPoints = async (newCurrent) => {
     if (!character || isUpdating) return;
 
     setIsUpdating(true);
     const effectiveUserId = isAdmin ? character.discord_user_id : discordUserId;
-    const validatedCurrent = Math.max(0, Math.min(maxLuckPoints, newCurrent));
+    const validatedCurrent = Math.max(
+      0,
+      Math.min(effectiveMaxLuckPoints, newCurrent)
+    );
 
     try {
       const updateData = {
@@ -90,7 +102,7 @@ const LuckPointButton = ({
           pointsSpent: 1,
           reason: reason,
           pointsRemaining: newCurrent,
-          maxPoints: maxLuckPoints,
+          maxPoints: effectiveMaxLuckPoints,
           type: "spent",
         });
       }
@@ -99,7 +111,7 @@ const LuckPointButton = ({
   };
 
   const restoreLuckPoint = async () => {
-    if (currentLuckPoints >= maxLuckPoints) return;
+    if (currentLuckPoints >= effectiveMaxLuckPoints) return;
 
     const newCurrent = await updateLuckPoints(currentLuckPoints + 1);
 
@@ -112,10 +124,10 @@ const LuckPointButton = ({
   };
 
   const restoreAllLuckPoints = async () => {
-    if (currentLuckPoints >= maxLuckPoints) return;
+    if (currentLuckPoints >= effectiveMaxLuckPoints) return;
 
-    const pointsRestored = maxLuckPoints - currentLuckPoints;
-    const newCurrent = await updateLuckPoints(maxLuckPoints);
+    const pointsRestored = effectiveMaxLuckPoints - currentLuckPoints;
+    const newCurrent = await updateLuckPoints(effectiveMaxLuckPoints);
 
     if (newCurrent !== undefined) {
       setCharacter((prev) => ({
@@ -189,7 +201,7 @@ const LuckPointButton = ({
       <div
         style={buttonStyle}
         onClick={() => setShowModal(true)}
-        title={`Luck Points: ${currentLuckPoints}/${maxLuckPoints}\nClick to spend or manage luck points`}
+        title={`Luck Points: ${currentLuckPoints}/${effectiveMaxLuckPoints}\nClick to spend or manage luck points`}
       >
         <Clover size={16} />
         <span>Luck</span>
@@ -257,7 +269,7 @@ const LuckPointButton = ({
                     fontWeight: "600",
                   }}
                 >
-                  {currentLuckPoints}/{maxLuckPoints}
+                  {currentLuckPoints}/{effectiveMaxLuckPoints}
                 </div>
               </div>
 
@@ -326,21 +338,21 @@ const LuckPointButton = ({
                   style={{
                     ...modalButtonStyle,
                     backgroundColor:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? "#10b981"
                         : theme.surface,
                     color:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? "white"
                         : theme.textSecondary,
                     cursor:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? isUpdating
                           ? "wait"
                           : "pointer"
                         : "not-allowed",
                     opacity:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? isUpdating
                           ? 0.7
                           : 1
@@ -351,7 +363,9 @@ const LuckPointButton = ({
                     gap: "4px",
                   }}
                   onClick={restoreLuckPoint}
-                  disabled={currentLuckPoints >= maxLuckPoints || isUpdating}
+                  disabled={
+                    currentLuckPoints >= effectiveMaxLuckPoints || isUpdating
+                  }
                 >
                   <Plus size={14} />
                   Add 1
@@ -397,21 +411,21 @@ const LuckPointButton = ({
                   style={{
                     ...modalButtonStyle,
                     backgroundColor:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? "#065f46"
                         : theme.surface,
                     color:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? "white"
                         : theme.textSecondary,
                     cursor:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? isUpdating
                           ? "wait"
                           : "pointer"
                         : "not-allowed",
                     opacity:
-                      currentLuckPoints < maxLuckPoints
+                      currentLuckPoints < effectiveMaxLuckPoints
                         ? isUpdating
                           ? 0.7
                           : 1
@@ -419,7 +433,9 @@ const LuckPointButton = ({
                     fontSize: "12px",
                   }}
                   onClick={restoreAllLuckPoints}
-                  disabled={currentLuckPoints >= maxLuckPoints || isUpdating}
+                  disabled={
+                    currentLuckPoints >= effectiveMaxLuckPoints || isUpdating
+                  }
                 >
                   {isUpdating ? "..." : "Restore All"}
                 </button>
