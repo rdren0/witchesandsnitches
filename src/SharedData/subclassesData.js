@@ -2,7 +2,7 @@ export const subclassesData = {
   Charms: {
     name: "Charms",
     description:
-      "Masters of precision magic and enchantments with advanced spell techniques and dueling expertise",
+      "Masters of precision magic and enchantments with advanced spell techniques and dueling expertise.",
     higherLevelFeatures: [
       {
         level: 1,
