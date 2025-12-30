@@ -139,8 +139,7 @@ export const houseFeatures = {
       {
         name: "Exchange Student",
         description:
-          "You're familiar with the culture of other Wizarding Governments and Institutions. You may make an insight check to understand and emulate their culture, fit in seamlessly with your new peers, and make them view you more favorably. You may use this feature once per day.
-",
+          "You're familiar with the culture of other Wizarding Governments and Institutions. You may make an insight check to understand and emulate their culture, fit in seamlessly with your new peers, and make them view you more favorably. You may use this feature once per day.",
         isChoice: false,
       },
     ],
