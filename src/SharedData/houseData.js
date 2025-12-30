@@ -115,7 +115,7 @@ export const houseFeatures = {
       {
         name: "Compromising Information",
         description:
-          "Whenever you make a Charisma check related to using a person's secrets, you are considered proficient in the appropriate skill and add double your proficiency bonus to the check.",
+          "Whenever you make a Charisma check related to using a person's secrets, you are considered proficient in the appropriate skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus.",
         isChoice: false,
       },
       {
@@ -139,7 +139,8 @@ export const houseFeatures = {
       {
         name: "Exchange Student",
         description:
-          "You may make an insight check to understand and emulate another culture, fitting in seamlessly and gaining favor. Usable once per day.",
+          "You're familiar with the culture of other Wizarding Governments and Institutions. You may make an insight check to understand and emulate their culture, fit in seamlessly with your new peers, and make them view you more favorably. You may use this feature once per day.
+",
         isChoice: false,
       },
     ],
@@ -157,7 +158,8 @@ export const houseFeatures = {
       {
         name: "Aggressive Endurance",
         description:
-          "When you take damage that would reduce you to 0 hit points, you can use your reaction to stay conscious and continue acting until the end of your next turn. If you do not receive healing by then, you fall unconscious. Once per long rest.",
+          "When you take damage that would reduce you to 0 hit points, you stay conscious and continue acting until the end of your next turn. If you do not receive healing by then, you fall unconscious. Once you use this feature, you cannot do so again until you finish a long rest.
+",
         isChoice: false,
       },
     ],
@@ -169,13 +171,13 @@ export const houseFeatures = {
       {
         name: "Lesser Animagus",
         description:
-          "At 6th level, you gain one Animagus form using the stat block of a common small beast (e.g., bat, owl, spider).",
+          "You gain one Animagus form of your choice using the stat block of a bat, cat, crab, frog (toad), hawk, lizard, octopus, owl, poisonous snake, fish (quipper), rat, raven, sea horse, spider (Tarantula), or weasel. You gain this feature at 6th level.",
         isChoice: false,
       },
       {
         name: "I'd Rather Use My Hands",
         description:
-          "You may add half your Dexterity bonus to your wandless spell attempts if you have the Wandless Magic or Superior Wandless Magic feat.",
+          "Your Wandless Magic training at school makes using a wand feel foreign and uncomfortable in your fingers. You may add half your Dexterity bonus to your spell attempts when attempting to cast a spell wandlessly, rounded down. You must have the Wandless Magic or Superior Wandless Magic feat to do so.",
         isChoice: false,
       },
     ],
@@ -187,13 +189,13 @@ export const houseFeatures = {
       {
         name: "Quidditch Fanatic",
         description:
-          "You gain tool proficiency with Brooms. If you have the Quidditch Fan background or Aerial Combatant feat, you gain Expertise with Brooms.",
+          "You gain tool proficiency with Brooms. Additionally, if you take the Quidditch Fan background or the Aerial Combatant Feat, you gain Expertise with Brooms instead.",
         isChoice: false,
       },
       {
         name: "Locked in Spells",
         description:
-          "You may choose 3 Charms, 3 DADA, and 2 Transfiguration spells from the First Year spell list to have one successful attempt.",
+          "Students of Mahoutokoro School start their Magical Education a year earlier than other schools, and as a result, you gain an advantage. You may choose 3 Charms spells, 3 DADA spells, and 2 Transfigurations spells from the First Year spell list to have one successful attempt.",
         isChoice: false,
       },
     ],
@@ -205,13 +207,13 @@ export const houseFeatures = {
       {
         name: "Beast Finder",
         description:
-          "You can spend one spell slot to sense magical creatures within 100 feet for 1 minute per slot level. You may attempt a Magical Creatures check to identify them.",
+          "Castelobruxo School in Brazil has an intense focus on magics of the natural world and how to recognize and utilize them. You can use your action to spend one spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense Magical Creatures within 100 Feet of you. You may additionally make a Magical Creatures check to identify what kind of creatures you sensed. This feature doesn’t reveal the creatures’ location or number.",
         isChoice: false,
       },
       {
         name: "Toxicology Specialist",
         description:
-          "You have advantage on Constitution saving throws to resist poison damage or being poisoned.",
+          "Your training with handling dangerous and poisonous plants has caused you to be able to resist the effects of poisons. You have advantage on any constitution saving throws to resist poison damage or being poisoned.",
         isChoice: false,
       },
     ],
@@ -229,7 +231,7 @@ export const houseFeatures = {
       {
         name: "Improvised Brooms",
         description:
-          "You can spend 10 minutes and succeed on a DC 15 spellcasting check to enchant an uprooted tree into a broom that can carry up to three medium creatures.",
+          "Koldovstoretz has a reputation for its use of uprooted trees as brooms rather than what is traditional throughout the rest of the world, and you have been taught how to make these vehicles in a pinch. If you spend 10 minutes, you can make a DC 15 Spellcasting ability check to enchant any uprooted tree into a broom. Brooms created in this way can carry up to three medium sized creatures without being encumbered.",
         isChoice: false,
       },
     ],
@@ -241,13 +243,13 @@ export const houseFeatures = {
       {
         name: "Scholar's Mind",
         description:
-          "Add half your proficiency bonus to any Intelligence or Charisma check you make that doesn't already include proficiency.",
+          "You add half your proficiency bonus to any Intelligence or Charisma ability check you make that doesn't already include your proficiency bonus.",
         isChoice: false,
       },
       {
         name: "Procedural Thinking",
         description:
-          "If stuck on a riddle or puzzle, you may make an Investigation check at advantage to subconsciously connect the dots.",
+          "You enjoy testing yourself with riddles and logic puzzles. If you get stuck on one, make an investigation check at advantage and you might subconsciously connect a few dots.",
         isChoice: false,
       },
     ],
@@ -259,13 +261,13 @@ export const houseFeatures = {
       {
         name: "Warrior's Endurance",
         description:
-          "When you roll a 16 or higher on a death saving throw, you instantly regain 1 HP. Once per long rest.",
+          "When you roll a 16 or higher on a death saving throw, you instantly regain 1 hit point. You can't use this feature again until you finish a long rest.",
         isChoice: false,
       },
       {
         name: "Contagious Valor",
         description:
-          "As an action, unleash a battle cry that gives up to ten allies within 60 feet advantage on attack rolls and saving throws until your next turn. Once per long rest.",
+          " As an action, you unleash a battle cry infused with arcane energy. Up to ten other creatures of your choice within 60 feet of you that can hear you gain advantage on attack rolls and saving throws until the start of your next turn. Once you use this feature, you can’t use it again until you finish a long rest.",
         isChoice: false,
       },
     ],
@@ -277,13 +279,13 @@ export const houseFeatures = {
       {
         name: "Adventurer's Footing",
         description:
-          "You ignore difficult terrain, gain +5 to movement speed, and gain a climbing and swimming speed equal to your walking speed.",
+          "Moving through difficult terrain costs you no extra movement, your walking speed increases by 5, and you gain a climbing speed and a swimming speed equal to your walking speed.",
         isChoice: false,
       },
       {
         name: "Dependable Bearings",
         description:
-          "You have a strong sense of direction and gain advantage on Survival checks made to navigate or track.",
+          "You have a good sense of direction and can easily use notable landmarks and geography to remember the general layout of areas. Additionally, you gain advantage in survival checks for navigation.",
         isChoice: false,
       },
     ],
@@ -295,13 +297,13 @@ export const houseFeatures = {
       {
         name: "Healer's Knack",
         description:
-          "When you cast a healing spell, affected creatures gain temporary HP equal to 1 + your Wisdom or Charisma modifier (whichever is higher).",
+          "Whenever you cast a healing spell, any affected creatures gain Temporary hit points equal to 1 + your Wisdom or Charisma Modifier (Whichever is higher).",
         isChoice: false,
       },
       {
         name: "A Diplomatic Touch",
         description:
-          "If you assist a hostile creature in a meaningful way, it may reconsider its hostility. This may defuse tension in roleplay scenarios.",
+          "If you assist a hostile creature in a meaningful way, they're more likely to reconsider their hostility towards you, potentially defusing the situation.",
         isChoice: false,
       },
     ],
