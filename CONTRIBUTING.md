@@ -232,266 +232,425 @@ CREATE TABLE character_activity_progress (
   updated_at timestamp with time zone
 );
 
-CREATE TABLE character_downtime (
-  id bigint NOT NULL PRIMARY KEY,
+CREATE TABLE public.character_downtime (
+  id bigserial NOT NULL,
   character_id bigint NOT NULL,
   user_id uuid NOT NULL,
-  semester integer NOT NULL,
   character_name text NOT NULL,
-  year text,
-  school_year text,
-  subjects jsonb,
-  activities jsonb,
-  extra_activity jsonb,
-  activity_progress jsonb,
-  selected_spells jsonb,
-  selected_magic_school text,
-  magic_school_choices jsonb,
-  spell_research_data jsonb,
-  relationships jsonb,
-  roll_assignments jsonb,
-  dice_pool text[],
-  is_draft boolean NOT NULL,
-  archived boolean NOT NULL,
-  extra_fields_unlocked boolean,
-  review_status text,
-  admin_feedback text,
-  admin_notes text,
-  reviewed_by uuid,
-  reviewed_at timestamp with time zone,
-  submitted_at timestamp with time zone,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone,
-  last_edited_at timestamp with time zone,
-  last_edited_by uuid
-);
+  year text NULL,
+  semester integer NOT NULL,
+  subjects jsonb NULL DEFAULT '{}'::jsonb,
+  activities jsonb NULL DEFAULT '[]'::jsonb,
+  extra_activity jsonb NULL DEFAULT '{}'::jsonb,
+  magic_school_choices jsonb NULL DEFAULT '{}'::jsonb,
+  submitted_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  last_edited_at timestamp with time zone NULL,
+  last_edited_by uuid NULL,
+  spell_research_data jsonb NULL DEFAULT '{}'::jsonb,
+  dice_pool integer[] NULL,
+  extra_fields_unlocked boolean NULL DEFAULT false,
+  is_draft boolean NOT NULL DEFAULT false,
+  roll_assignments jsonb NULL DEFAULT '{}'::jsonb,
+  selected_magic_school text NULL DEFAULT ''::text,
+  relationships jsonb NULL DEFAULT '[]'::jsonb,
+  review_status text NULL DEFAULT 'pending'::text,
+  admin_feedback text NULL DEFAULT ''::text,
+  admin_notes text NULL DEFAULT ''::text,
+  reviewed_at timestamp with time zone NULL,
+  reviewed_by uuid NULL,
+  selected_spells jsonb NULL DEFAULT '{}'::jsonb,
+  activity_progress jsonb NULL DEFAULT '{}'::jsonb,
+  school_year text NULL,
+  archived boolean NOT NULL DEFAULT false,
+  CONSTRAINT character_downtime_pkey PRIMARY KEY (id),
+  CONSTRAINT character_downtime_character_id_year_semester_key UNIQUE (character_id, year, semester),
+  CONSTRAINT character_downtime_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE,
+  CONSTRAINT check_review_status CHECK (
+    (
+      review_status = ANY (
+        ARRAY[
+          'pending'::text,
+          'success'::text,
+          'failure'::text,
+          'partial'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
 
-CREATE TABLE character_money (
-  id integer NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_downtime_selected_spells ON public.character_downtime USING gin (selected_spells) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_downtime_activity_progress ON public.character_downtime USING gin (activity_progress) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_downtime_year_semester ON public.character_downtime USING btree (year, semester) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_downtime_character_id ON public.character_downtime USING btree (character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_downtime_user_id ON public.character_downtime USING btree (user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_downtime_review_status ON public.character_downtime USING btree (review_status) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_downtime_reviewed_at ON public.character_downtime USING btree (reviewed_at) TABLESPACE pg_default;
+
+CREATE TRIGGER trigger_character_downtime_updated_at BEFORE UPDATE ON character_downtime FOR EACH ROW
+EXECUTE FUNCTION update_character_downtime_updated_at();
+
+CREATE TABLE public.character_money (
+  id serial NOT NULL,
   character_id integer NOT NULL,
   discord_user_id text NOT NULL,
-  total_knuts integer NOT NULL,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  total_knuts integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT character_money_pkey PRIMARY KEY (id),
+  CONSTRAINT character_money_character_id_discord_user_id_key UNIQUE (character_id, discord_user_id)
+) TABLESPACE pg_default;
 
-CREATE TABLE character_notes (
-  id integer NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_character_money_character_id ON public.character_money USING btree (character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_money_discord_user_id ON public.character_money USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE TRIGGER update_character_money_updated_at BEFORE UPDATE ON character_money FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE public.character_notes (
+  id serial NOT NULL,
   character_id integer NOT NULL,
   user_id text NOT NULL,
-  notes text,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  notes text NULL DEFAULT ''::text,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT character_notes_pkey PRIMARY KEY (id),
+  CONSTRAINT character_notes_character_id_user_id_key UNIQUE (character_id, user_id)
+) TABLESPACE pg_default;
 
-CREATE TABLE character_npc_notes (
-  id bigint NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_character_notes_character_id ON public.character_notes USING btree (character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_notes_user_id ON public.character_notes USING btree (user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_notes_updated_at ON public.character_notes USING btree (updated_at) TABLESPACE pg_default;
+
+CREATE TABLE public.character_npc_notes (
+  id bigserial NOT NULL,
   character_id bigint NOT NULL,
   discord_user_id text NOT NULL,
   npc_name text NOT NULL,
-  npc_school text,
-  npc_type text,
-  relationship text,
-  notes text,
-  last_interaction text,
-  custom_tags jsonb,
-  connections jsonb,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  npc_school text NULL,
+  npc_type text NULL,
+  notes text NULL,
+  relationship text NULL DEFAULT 'unknown'::text,
+  last_interaction text NULL,
+  custom_tags jsonb NULL DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  connections jsonb NULL DEFAULT '[]'::jsonb,
+  CONSTRAINT character_npc_notes_pkey PRIMARY KEY (id),
+  CONSTRAINT character_npc_notes_character_id_discord_user_id_npc_name_key UNIQUE (character_id, discord_user_id, npc_name),
+  CONSTRAINT character_npc_notes_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE,
+  CONSTRAINT character_npc_notes_relationship_check CHECK (
+    (
+      relationship = ANY (
+        ARRAY[
+          'unknown'::text,
+          'friend'::text,
+          'neutral'::text,
+          'suspicious'::text,
+          'enemy'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
 
-CREATE TABLE character_pc_notes (
-  id bigint NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_character_npc_notes_character_user ON public.character_npc_notes USING btree (character_id, discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_npc_notes_custom_tags ON public.character_npc_notes USING gin (custom_tags) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_npc_notes_relationship ON public.character_npc_notes USING btree (relationship) TABLESPACE pg_default;
+
+CREATE TABLE public.character_pc_notes (
+  id bigserial NOT NULL,
   character_id bigint NOT NULL,
   discord_user_id text NOT NULL,
   pc_name text NOT NULL,
-  pc_school text,
-  pc_clan text,
-  relationship text,
-  notes text,
-  last_interaction text,
-  custom_tags jsonb,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  pc_school text NULL,
+  pc_clan text NULL,
+  notes text NULL,
+  relationship text NULL DEFAULT 'unknown'::text,
+  last_interaction text NULL,
+  custom_tags jsonb NULL DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT character_pc_notes_pkey PRIMARY KEY (id),
+  CONSTRAINT character_pc_notes_character_id_discord_user_id_pc_name_key UNIQUE (character_id, discord_user_id, pc_name),
+  CONSTRAINT character_pc_notes_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE,
+  CONSTRAINT character_pc_notes_relationship_check CHECK (
+    (
+      relationship = ANY (
+        ARRAY[
+          'unknown'::text,
+          'ally'::text,
+          'neutral'::text,
+          'rival'::text,
+          'enemy'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
 
-CREATE TABLE character_resources (
-  id bigint NOT NULL PRIMARY KEY,
-  character_id bigint,
-  discord_user_id text NOT NULL,
-  sorcery_points integer,
-  max_sorcery_points integer,
-  corruption_points integer,
-  inspiration boolean,
-  luck integer,
-  spell_slots_1 integer,
-  spell_slots_2 integer,
-  spell_slots_3 integer,
-  spell_slots_4 integer,
-  spell_slots_5 integer,
-  spell_slots_6 integer,
-  spell_slots_7 integer,
-  spell_slots_8 integer,
-  spell_slots_9 integer,
-  max_spell_slots_1 integer,
-  max_spell_slots_2 integer,
-  max_spell_slots_3 integer,
-  max_spell_slots_4 integer,
-  max_spell_slots_5 integer,
-  max_spell_slots_6 integer,
-  max_spell_slots_7 integer,
-  max_spell_slots_8 integer,
-  max_spell_slots_9 integer,
-  spell_bonus_dice jsonb,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+CREATE INDEX IF NOT EXISTS idx_character_pc_notes_character_user ON public.character_pc_notes USING btree (character_id, discord_user_id) TABLESPACE pg_default;
 
-CREATE TABLE characters (
-  id bigint NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_character_pc_notes_custom_tags ON public.character_pc_notes USING gin (custom_tags) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_pc_notes_relationship ON public.character_pc_notes USING btree (relationship) TABLESPACE pg_default;
+
+CREATE TABLE public.character_resources (
+  id bigserial NOT NULL,
+  character_id bigint NULL,
   discord_user_id text NOT NULL,
+  corruption_points integer NULL DEFAULT 0,
+  sorcery_points integer NULL DEFAULT 0,
+  max_sorcery_points integer NULL DEFAULT 0,
+  spell_slots_1 integer NULL DEFAULT 0,
+  spell_slots_2 integer NULL DEFAULT 0,
+  spell_slots_3 integer NULL DEFAULT 0,
+  spell_slots_4 integer NULL DEFAULT 0,
+  spell_slots_5 integer NULL DEFAULT 0,
+  spell_slots_6 integer NULL DEFAULT 0,
+  spell_slots_7 integer NULL DEFAULT 0,
+  spell_slots_8 integer NULL DEFAULT 0,
+  spell_slots_9 integer NULL DEFAULT 0,
+  max_spell_slots_1 integer NULL DEFAULT 0,
+  max_spell_slots_2 integer NULL DEFAULT 0,
+  max_spell_slots_3 integer NULL DEFAULT 0,
+  max_spell_slots_4 integer NULL DEFAULT 0,
+  max_spell_slots_5 integer NULL DEFAULT 0,
+  max_spell_slots_6 integer NULL DEFAULT 0,
+  max_spell_slots_7 integer NULL DEFAULT 0,
+  max_spell_slots_8 integer NULL DEFAULT 0,
+  max_spell_slots_9 integer NULL DEFAULT 0,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  inspiration boolean NULL DEFAULT false,
+  spell_bonus_dice jsonb NULL,
+  luck integer NULL,
+  CONSTRAINT character_resources_pkey PRIMARY KEY (id),
+  CONSTRAINT character_resources_character_id_discord_user_id_key UNIQUE (character_id, discord_user_id),
+  CONSTRAINT character_resources_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_resources_character_id ON public.character_resources USING btree (character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_character_resources_discord_user_id ON public.character_resources USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE TABLE public.characters (
+  id bigserial NOT NULL,
   name text NOT NULL,
-  level integer,
-  house text,
-  school_year integer,
-  casting_style text,
-  subclass text,
-  innate_heritage text,
-  background text,
-  game_session character varying,
-  level1_choice_type character varying,
-  initiative_ability character varying,
-  wand_type text,
-  wand_info text,
-  image_url text,
-  notes text,
+  house text NULL,
+  casting_style text NULL,
+  subclass text NULL,
+  innate_heritage text NULL,
+  background text NULL,
+  standard_feats jsonb NULL DEFAULT '[]'::jsonb,
   ability_scores jsonb NOT NULL,
-  base_ability_scores jsonb,
-  calculated_ability_scores jsonb,
-  hit_points integer,
-  current_hit_points integer,
-  temp_hp integer,
-  current_hit_dice integer,
-  corruption_points integer NOT NULL,
-  active boolean,
-  archived_at timestamp with time zone,
-  skill_proficiencies text[],
-  base_skill_proficiencies text[],
-  calculated_skill_proficiencies text[],
-  innate_heritage_skills text[],
-  skill_expertise text[],
-  language_proficiencies text[],
-  tool_proficiencies jsonb,
-  asi_choices jsonb,
-  additional_asi jsonb,
-  subclass_choices jsonb,
-  house_choices jsonb,
-  feat_choices jsonb,
-  additional_feats jsonb,
-  standard_feats jsonb,
-  heritage_choices jsonb,
-  casting_style_choices jsonb,
-  metamagic_choices jsonb,
-  subclass_features jsonb,
-  subclass_level integer,
-  feature_uses jsonb,
-  magic_modifiers jsonb,
-  ac jsonb,
-  spell_attack jsonb,
-  initiative jsonb,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
-
-CREATE TABLE creatures (
-  id uuid NOT NULL PRIMARY KEY,
+  hit_points integer NULL DEFAULT 0,
+  level integer NULL DEFAULT 1,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  wand_type text NULL DEFAULT ''::text,
+  magic_modifiers jsonb NULL DEFAULT '{"charms": 0, "healing": 0, "divinations": 0, "transfiguration": 0, "jinxesHexesCurses": 0}'::jsonb,
   discord_user_id text NOT NULL,
-  character_id integer,
-  name text NOT NULL,
-  type text NOT NULL,
-  size text NOT NULL,
-  alignment text,
-  description text,
-  source text,
-  notes text,
-  armor_class integer NOT NULL,
-  armor_type text,
-  hit_points integer NOT NULL,
-  current_hit_points integer NOT NULL,
-  hit_dice text,
-  speed jsonb,
-  strength integer NOT NULL,
-  dexterity integer NOT NULL,
-  constitution integer NOT NULL,
-  intelligence integer NOT NULL,
-  wisdom integer NOT NULL,
-  charisma integer NOT NULL,
-  saving_throws jsonb,
-  saving_throw_proficiencies jsonb,
-  skills jsonb,
-  selected_skills jsonb,
-  skill_proficiencies jsonb,
-  proficiencies jsonb,
-  senses jsonb,
-  languages text[],
-  damage_vulnerabilities text[],
-  damage_resistances text[],
-  damage_immunities text[],
-  condition_immunities text[],
-  resistances jsonb,
-  special_traits jsonb,
-  traits jsonb,
-  actions jsonb,
-  attacks jsonb,
-  reactions jsonb,
-  legendary_actions jsonb,
-  legendary_actions_per_round integer,
-  lair_actions jsonb,
-  initiative_modifier integer,
-  image_url text,
-  created_at timestamp with time zone NOT NULL,
-  updated_at timestamp with time zone NOT NULL
-);
+  game_session character varying(50) NULL,
+  active boolean NULL DEFAULT true,
+  archived_at timestamp with time zone NULL,
+  current_hit_dice integer NULL,
+  level1_choice_type character varying(20) NULL,
+  current_hit_points integer NULL,
+  asi_choices jsonb NULL DEFAULT '{}'::jsonb,
+  initiative_ability character varying(20) NULL DEFAULT 'dexterity'::character varying,
+  skill_proficiencies text[] NULL,
+  skill_expertise text[] NULL,
+  image_url text NULL,
+  subclass_choices jsonb NULL DEFAULT '{}'::jsonb,
+  house_choices jsonb NULL DEFAULT '{}'::jsonb,
+  feat_choices jsonb NULL DEFAULT '{}'::jsonb,
+  base_ability_scores jsonb NULL,
+  calculated_ability_scores jsonb NULL,
+  base_skill_proficiencies text[] NULL,
+  calculated_skill_proficiencies text[] NULL,
+  tool_proficiencies jsonb NULL DEFAULT '[]'::jsonb,
+  heritage_choices jsonb NULL DEFAULT '{}'::jsonb,
+  innate_heritage_skills text[] NULL DEFAULT '{}'::text[],
+  corruption_points integer NOT NULL DEFAULT 0,
+  subclass_features jsonb NULL DEFAULT '[]'::jsonb,
+  subclass_level integer NULL DEFAULT 1,
+  school_year integer NULL DEFAULT 1,
+  notes text NULL,
+  casting_style_choices jsonb NULL DEFAULT '{}'::jsonb,
+  feature_uses jsonb NULL DEFAULT '{}'::jsonb,
+  language_proficiencies text[] NULL DEFAULT '{}'::text[],
+  metamagic_choices jsonb NULL DEFAULT '{}'::jsonb,
+  additional_feats jsonb NULL DEFAULT '[]'::jsonb,
+  ac jsonb NULL DEFAULT '{"modifier": 0, "override": null}'::jsonb,
+  spell_attack jsonb NULL DEFAULT '{"modifier": 0, "override": null}'::jsonb,
+  wand_info text NULL,
+  initiative jsonb NULL DEFAULT '{"modifier": 0, "override": null}'::jsonb,
+  additional_asi jsonb NULL DEFAULT '[]'::jsonb,
+  temp_hp integer NULL DEFAULT 0,
+  tool_expertise jsonb NULL DEFAULT '[]'::jsonb,
+  CONSTRAINT characters_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_characters_discord_user FOREIGN KEY (discord_user_id) REFERENCES discord_users (discord_user_id),
+  CONSTRAINT characters_school_year_check CHECK (
+    (
+      (school_year >= 1)
+      AND (school_year <= 7)
+    )
+  ),
+  CONSTRAINT valid_subclass_choices CHECK ((jsonb_typeof(subclass_choices) = 'object'::text))
+) TABLESPACE pg_default;
 
-CREATE TABLE custom_melee_attacks (
-  id uuid NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_characters_active ON public.characters USING btree (active) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_archived_at ON public.characters USING btree (archived_at) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_id_discord_user ON public.characters USING btree (id, discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_subclass_choices ON public.characters USING gin (subclass_choices) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_discord_user_id ON public.characters USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_asi_choices ON public.characters USING gin (asi_choices) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_house_choices ON public.characters USING gin (house_choices) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_innate_heritage ON public.characters USING btree (innate_heritage) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_heritage_choices ON public.characters USING gin (heritage_choices) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_subclass_features ON public.characters USING gin (subclass_features) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_game_session ON public.characters USING btree (game_session) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_metamagic_choices ON public.characters USING gin (metamagic_choices) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_characters_additional_feats ON public.characters USING gin (additional_feats) TABLESPACE pg_default;
+
+CREATE TRIGGER ensure_discord_user_before_character_insert BEFORE INSERT ON characters FOR EACH ROW
+EXECUTE FUNCTION auto_create_discord_user ();
+
+CREATE TABLE public.creatures (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  discord_user_id text NOT NULL,
+  name text NOT NULL,
+  size text NOT NULL DEFAULT 'Medium'::text,
+  type text NOT NULL DEFAULT 'Beast'::text,
+  alignment text NULL,
+  armor_class integer NOT NULL DEFAULT 10,
+  armor_type text NULL,
+  hit_points integer NOT NULL DEFAULT 1,
+  hit_dice text NULL,
+  speed jsonb NULL DEFAULT '{"walk": 30}'::jsonb,
+  strength integer NOT NULL DEFAULT 10,
+  dexterity integer NOT NULL DEFAULT 10,
+  constitution integer NOT NULL DEFAULT 10,
+  intelligence integer NOT NULL DEFAULT 10,
+  wisdom integer NOT NULL DEFAULT 10,
+  charisma integer NOT NULL DEFAULT 10,
+  saving_throws jsonb NULL,
+  skills jsonb NULL,
+  damage_vulnerabilities text[] NULL,
+  damage_resistances text[] NULL,
+  damage_immunities text[] NULL,
+  condition_immunities text[] NULL,
+  senses jsonb NULL DEFAULT '{"passive_perception": 10}'::jsonb,
+  languages text[] NULL,
+  special_traits jsonb NULL,
+  actions jsonb NULL,
+  reactions jsonb NULL,
+  legendary_actions jsonb NULL,
+  legendary_actions_per_round integer NULL DEFAULT 0,
+  lair_actions jsonb NULL,
+  description text NULL,
+  notes text NULL,
+  source text NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  attacks jsonb NULL,
+  character_id integer NULL,
+  current_hit_points integer NOT NULL,
+  image_url text NULL,
+  initiative_modifier integer NULL DEFAULT 0,
+  traits jsonb NULL DEFAULT '[]'::jsonb,
+  proficiencies jsonb NULL DEFAULT '{}'::jsonb,
+  resistances jsonb NULL DEFAULT '{}'::jsonb,
+  skill_proficiencies jsonb NULL DEFAULT '{}'::jsonb,
+  saving_throw_proficiencies jsonb NULL DEFAULT '[]'::jsonb,
+  selected_skills jsonb NULL DEFAULT '[]'::jsonb,
+  CONSTRAINT creatures_pkey PRIMARY KEY (id),
+  CONSTRAINT creatures_current_hp_non_negative CHECK ((current_hit_points >= 0))
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_creatures_discord_user_id ON public.creatures USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_creatures_name ON public.creatures USING btree (name) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_creatures_traits ON public.creatures USING gin (traits) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_creatures_character_id ON public.creatures USING btree (character_id) TABLESPACE pg_default;
+
+CREATE TRIGGER update_creatures_updated_at BEFORE UPDATE ON creatures FOR EACH ROW
+EXECUTE FUNCTION update_creatures_updated_at();
+
+CREATE TABLE public.custom_melee_attacks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   character_id integer NOT NULL,
   discord_user_id text NOT NULL,
   name text NOT NULL,
-  description text,
-  attack_ability_modifier text NOT NULL,
-  damage_dice_count integer,
-  damage_dice_type text,
-  damage_modifier integer,
-  damage_type text,
-  damage_name text,
-  bonus_damage integer,
-  additional_damage jsonb,
-  range text,
-  has_proficiency boolean,
-  magical_bonus integer,
-  crit_range integer,
-  save_type text,
-  save_effect text,
-  higher_levels text,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  attack_ability_modifier text NOT NULL DEFAULT 'strength'::text,
+  has_proficiency boolean NULL DEFAULT true,
+  magical_bonus integer NULL DEFAULT 0,
+  range text NULL DEFAULT 'Melee'::text,
+  damage_dice_count integer NULL,
+  damage_dice_type text NULL DEFAULT 'd8'::text,
+  damage_modifier integer NULL DEFAULT 0,
+  bonus_damage integer NULL DEFAULT 0,
+  damage_type text NULL,
+  additional_damage jsonb NULL DEFAULT '[]'::jsonb,
+  save_type text NULL,
+  save_effect text NULL,
+  description text NULL,
+  higher_levels text NULL,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  crit_range integer NULL DEFAULT 20,
+  damage_name text NULL,
+  CONSTRAINT custom_melee_attacks_pkey PRIMARY KEY (id)
+) TABLESPACE pg_default;
 
-CREATE TABLE custom_recipes (
-  id integer NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_custom_melee_attacks_character ON public.custom_melee_attacks USING btree (character_id, discord_user_id) TABLESPACE pg_default;
+
+CREATE TRIGGER update_custom_melee_attacks_updated_at BEFORE UPDATE ON custom_melee_attacks FOR EACH ROW
+EXECUTE FUNCTION update_custom_melee_attacks_updated_at();
+
+CREATE TABLE public.custom_recipes (
+  id serial NOT NULL,
+  name character varying(255) NOT NULL,
+  category character varying(50) NULL,
+  eating_time character varying(50) NULL,
+  duration character varying(50) NULL,
+  description text NULL,
   created_by_character_id integer NOT NULL,
-  name character varying NOT NULL,
-  category character varying,
-  description text,
-  duration character varying,
-  eating_time character varying,
   qualities jsonb NOT NULL,
-  created_at timestamp without time zone
-);
+  created_at timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT custom_recipes_pkey PRIMARY KEY (id),
+  CONSTRAINT custom_recipes_name_created_by_character_id_key UNIQUE (name, created_by_character_id)
+) TABLESPACE pg_default;
 
-CREATE TABLE custom_spells (
-  id uuid NOT NULL PRIMARY KEY,
+CREATE TABLE public.custom_spells (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   character_id bigint NOT NULL,
   discord_user_id text NOT NULL,
   name text NOT NULL,
@@ -499,34 +658,60 @@ CREATE TABLE custom_spells (
   level text NOT NULL,
   casting_time text NOT NULL,
   range text NOT NULL,
-  duration text,
-  components text,
+  duration text NULL,
+  components text NULL,
+  check_type text NULL,
+  save_type text NULL,
+  damage_type text NULL,
+  tags text NULL,
   description text NOT NULL,
-  higher_levels text,
-  concentration boolean,
-  damage_dice_count integer,
-  damage_dice_type text,
-  damage_modifier integer,
-  damage_type text,
-  scaling_dice_count integer,
-  scaling_dice_type character varying,
-  scaling_per_level boolean,
-  check_type text,
-  save_type text,
-  tags text,
-  status text,
-  created_at timestamp with time zone NOT NULL,
-  updated_at timestamp with time zone NOT NULL
-);
+  higher_levels text NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  damage_dice_count integer NULL,
+  damage_dice_type text NULL,
+  damage_modifier integer NULL,
+  status text NULL DEFAULT 'known'::text,
+  concentration boolean NULL DEFAULT false,
+  scaling_dice_count integer NULL,
+  scaling_dice_type character varying NULL,
+  scaling_per_level boolean NULL DEFAULT true,
+  CONSTRAINT custom_spells_pkey PRIMARY KEY (id),
+  CONSTRAINT custom_spells_character_fkey FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE,
+  CONSTRAINT custom_spells_character_id_fkey FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE,
+  CONSTRAINT valid_status CHECK (
+    (
+      status = ANY (
+        ARRAY[
+          'known'::text,
+          'researched'::text,
+          'attempted'::text,
+          'failed'::text,
+          'mastered'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
 
-CREATE TABLE discord_users (
-  discord_user_id text NOT NULL PRIMARY KEY,
-  username text,
-  display_name text,
-  avatar_url text,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+CREATE INDEX IF NOT EXISTS idx_custom_spells_character_id ON public.custom_spells USING btree (character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_custom_spells_discord_user_id ON public.custom_spells USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_custom_spells_character_discord ON public.custom_spells USING btree (character_id, discord_user_id) TABLESPACE pg_default;
+
+CREATE TRIGGER update_custom_spells_updated_at BEFORE UPDATE ON custom_spells FOR EACH ROW
+EXECUTE FUNCTION update_custom_spells_updated_at();
+
+CREATE TABLE public.discord_users (
+  discord_user_id text NOT NULL,
+  username text NULL,
+  display_name text NULL,
+  avatar_url text NULL,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT discord_users_pkey PRIMARY KEY (discord_user_id)
+) TABLESPACE pg_default;
 
 CREATE TABLE enhanced_spells (
   id integer PRIMARY KEY,
@@ -547,91 +732,164 @@ CREATE TABLE enhanced_spells (
   updated_at timestamp with time zone
 );
 
-CREATE TABLE inventory_items (
-  id bigint NOT NULL PRIMARY KEY,
-  character_id bigint NOT NULL,
-  discord_user_id text NOT NULL,
-  name text NOT NULL,
-  description text,
-  category text NOT NULL,
-  quantity integer NOT NULL,
-  value text,
-  attunement_required boolean,
-  is_attuned boolean,
-  created_at timestamp with time zone NOT NULL,
-  updated_at timestamp with time zone NOT NULL
-);
-
-CREATE TABLE owl_mail (
-  id bigint NOT NULL PRIMARY KEY,
-  sender_character_id bigint,
-  recipient_character_id bigint,
-  subject text NOT NULL,
-  message text,
-  read boolean,
-  created_at timestamp with time zone
-);
-
-CREATE TABLE spells (
+CREATE TABLE public.feats (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  preview text NULL,
+  description jsonb NULL DEFAULT '[]'::jsonb,
+  benefits jsonb NULL DEFAULT '{}'::jsonb,
+  prerequisites jsonb NULL,
+  repeatable boolean NULL DEFAULT false,
+  repeatable_key text NULL,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT feats_pkey PRIMARY KEY (id),
+  CONSTRAINT feats_name_key UNIQUE (name)
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_feats_name ON public.feats USING btree (name) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_feats_repeatable ON public.feats USING btree (repeatable) TABLESPACE pg_default;
+
+CREATE TRIGGER update_feats_updated_at BEFORE UPDATE ON feats FOR EACH ROW
+EXECUTE FUNCTION update_feats_updated_at();
+
+CREATE TABLE public.inventory_items (
+  id bigserial NOT NULL,
+  discord_user_id text NOT NULL,
+  character_id bigint NOT NULL,
+  name text NOT NULL,
+  description text NULL DEFAULT ''::text,
+  quantity integer NOT NULL DEFAULT 1,
+  value text NULL DEFAULT ''::text,
+  category text NOT NULL DEFAULT 'General'::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  attunement_required boolean NULL,
+  is_attuned boolean NULL DEFAULT false,
+  CONSTRAINT inventory_items_pkey PRIMARY KEY (id)
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS inventory_items_discord_user_id_idx ON public.inventory_items USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS inventory_items_character_id_idx ON public.inventory_items USING btree (character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS inventory_items_category_idx ON public.inventory_items USING btree (category) TABLESPACE pg_default;
+
+CREATE TRIGGER handle_inventory_items_updated_at BEFORE UPDATE ON inventory_items FOR EACH ROW
+EXECUTE FUNCTION handle_updated_at();
+
+CREATE TABLE public.owl_mail (
+  id bigserial NOT NULL,
+  sender_character_id bigint NULL,
+  recipient_character_id bigint NULL,
+  subject text NOT NULL,
+  message text NULL,
+  read boolean NULL DEFAULT false,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT owl_mail_pkey PRIMARY KEY (id),
+  CONSTRAINT owl_mail_recipient_character_id_fkey FOREIGN KEY (recipient_character_id) REFERENCES characters (id) ON DELETE CASCADE,
+  CONSTRAINT owl_mail_sender_character_id_fkey FOREIGN KEY (sender_character_id) REFERENCES characters (id) ON DELETE CASCADE
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_owl_mail_sender ON public.owl_mail USING btree (sender_character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_owl_mail_recipient ON public.owl_mail USING btree (recipient_character_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_owl_mail_created_at ON public.owl_mail USING btree (created_at) TABLESPACE pg_default;
+
+CREATE TABLE public.spells (
+  id uuid NOT NULL DEFAULT extensions.uuid_generate_v4(),
   name text NOT NULL,
   school text NOT NULL,
   level text NOT NULL,
-  casting_time text,
-  range text,
-  duration text,
-  year integer,
+  casting_time text NULL,
+  range text NULL,
+  duration text NULL,
+  year integer NULL,
   description text NOT NULL,
-  higher_levels text,
-  check_type text,
-  attack_type text,
-  saving_throw jsonb,
-  damage jsonb,
-  class jsonb,
-  tags jsonb DEFAULT '[]'::jsonb,
-  ritual boolean DEFAULT false,
-  restriction boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
+  higher_levels text NULL,
+  check_type text NULL,
+  attack_type text NULL,
+  saving_throw jsonb NULL,
+  damage jsonb NULL,
+  class jsonb NULL,
+  tags jsonb NULL DEFAULT '[]'::jsonb,
+  ritual boolean NULL DEFAULT false,
+  restriction boolean NULL DEFAULT false,
+  created_at timestamp without time zone NULL DEFAULT now(),
+  updated_at timestamp without time zone NULL DEFAULT now(),
   CONSTRAINT spells_pkey PRIMARY KEY (id),
   CONSTRAINT spells_name_key UNIQUE (name)
-);
+) TABLESPACE pg_default;
 
-CREATE INDEX IF NOT EXISTS idx_spells_school ON spells (school);
-CREATE INDEX IF NOT EXISTS idx_spells_level ON spells (level);
-CREATE INDEX IF NOT EXISTS idx_spells_year ON spells (year);
-CREATE INDEX IF NOT EXISTS idx_spells_name ON spells (name);
+CREATE INDEX IF NOT EXISTS idx_spells_school ON public.spells USING btree (school) TABLESPACE pg_default;
 
--- Trigger to auto-update updated_at on spells table
-CREATE TRIGGER update_spells_updated_at
-  BEFORE UPDATE ON spells
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX IF NOT EXISTS idx_spells_level ON public.spells USING btree (level) TABLESPACE pg_default;
 
-CREATE TABLE spell_progress_summary (
-  id integer NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_spells_year ON public.spells USING btree (year) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_spells_name ON public.spells USING btree (name) TABLESPACE pg_default;
+
+CREATE TRIGGER update_spells_updated_at BEFORE UPDATE ON spells FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE public.spell_progress_summary (
+  id serial NOT NULL,
   character_id integer NOT NULL,
   discord_user_id text NOT NULL,
   spell_name text NOT NULL,
-  researched boolean NOT NULL,
-  successful_attempts integer,
-  has_failed_attempt boolean NOT NULL,
-  has_natural_twenty boolean,
-  has_arithmantic_tag boolean,
-  has_runic_tag boolean,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  successful_attempts integer NULL DEFAULT 0,
+  has_natural_twenty boolean NULL DEFAULT false,
+  created_at timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP,
+  has_failed_attempt boolean NOT NULL DEFAULT false,
+  researched boolean NOT NULL DEFAULT false,
+  has_arithmantic_tag boolean NULL DEFAULT false,
+  has_runic_tag boolean NULL DEFAULT false,
+  CONSTRAINT spell_progress_summary_pkey PRIMARY KEY (id),
+  CONSTRAINT spell_progress_summary_character_id_discord_user_id_spell_n_key UNIQUE (character_id, discord_user_id, spell_name)
+) TABLESPACE pg_default;
 
-CREATE TABLE user_profiles (
-  id uuid NOT NULL PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_spell_progress_spell_name ON public.spell_progress_summary USING btree (spell_name) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_spell_progress_character_discord ON public.spell_progress_summary USING btree (character_id, discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_spell_progress_arithmantic_tag ON public.spell_progress_summary USING btree (has_arithmantic_tag) TABLESPACE pg_default
+WHERE (has_arithmantic_tag = true);
+
+CREATE INDEX IF NOT EXISTS idx_spell_progress_runic_tag ON public.spell_progress_summary USING btree (has_runic_tag) TABLESPACE pg_default
+WHERE (has_runic_tag = true);
+
+CREATE TRIGGER researcher_enhancement_trigger BEFORE UPDATE OF researched ON spell_progress_summary FOR EACH ROW
+EXECUTE FUNCTION apply_researcher_enhancement ();
+
+CREATE TABLE public.user_profiles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   discord_user_id text NOT NULL,
-  username text,
-  discord_name text,
-  avatar_url text,
-  created_at timestamp with time zone,
-  updated_at timestamp with time zone
-);
+  username text NULL,
+  discord_name text NULL,
+  avatar_url text NULL,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  updated_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_profiles_discord_user_id_key UNIQUE (discord_user_id),
+  CONSTRAINT username_basic_validation CHECK (
+    (
+      (username IS NOT NULL)
+      AND (
+        length(
+          TRIM(
+            BOTH
+            FROM
+              username
+          )
+        ) > 0
+      )
+      AND (length(username) <= 50)
+    )
+  )
+) TABLESPACE pg_default;
 
 CREATE TABLE user_role_status (
   discord_user_id text,
@@ -639,14 +897,32 @@ CREATE TABLE user_role_status (
   effective_role text
 );
 
-CREATE TABLE user_roles (
-  id integer NOT NULL PRIMARY KEY,
+CREATE TABLE public.user_roles (
+  id serial NOT NULL,
   discord_user_id text NOT NULL,
   role text NOT NULL,
-  granted_by text,
-  granted_at timestamp with time zone,
-  created_at timestamp with time zone
-);
+  granted_by text NULL,
+  granted_at timestamp with time zone NULL DEFAULT now(),
+  created_at timestamp with time zone NULL DEFAULT now(),
+  CONSTRAINT user_roles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_roles_discord_user_id_role_key UNIQUE (discord_user_id, role),
+  CONSTRAINT user_roles_role_check CHECK (
+    (
+      role = ANY (
+        ARRAY[
+          'admin'::text,
+          'moderator'::text,
+          'user'::text,
+          'forbidden'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_user_roles_discord_user_id ON public.user_roles USING btree (discord_user_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles USING btree (role) TABLESPACE pg_default;
 ```
 
 </details>
