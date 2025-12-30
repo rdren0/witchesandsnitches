@@ -157,8 +157,7 @@ export const houseFeatures = {
       {
         name: "Aggressive Endurance",
         description:
-          "When you take damage that would reduce you to 0 hit points, you stay conscious and continue acting until the end of your next turn. If you do not receive healing by then, you fall unconscious. Once you use this feature, you cannot do so again until you finish a long rest.
-",
+          "When you take damage that would reduce you to 0 hit points, you stay conscious and continue acting until the end of your next turn. If you do not receive healing by then, you fall unconscious. Once you use this feature, you cannot do so again until you finish a long rest.",
         isChoice: false,
       },
     ],
