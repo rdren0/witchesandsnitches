@@ -312,18 +312,31 @@ const FeatureSelectorSection = ({
       return [];
     }
 
-    return (
-      asiIncrease.abilities ||
-      asiIncrease.options ||
-      asiIncrease.choices || [
-        "strength",
-        "dexterity",
-        "constitution",
-        "intelligence",
-        "wisdom",
-        "charisma",
-      ]
-    );
+    const abilities =
+      asiIncrease.abilities || asiIncrease.options || asiIncrease.choices;
+
+    if (abilities && abilities.length > 0) {
+      if (abilities.length === 1 && abilities[0]?.toLowerCase() === "any") {
+        return [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma",
+        ];
+      }
+      return abilities;
+    }
+
+    return [
+      "strength",
+      "dexterity",
+      "constitution",
+      "intelligence",
+      "wisdom",
+      "charisma",
+    ];
   };
 
   const getFeatSkillChoices = (feat) => {
@@ -1696,7 +1709,7 @@ const FeatureSelectorSection = ({
                                   padding: "4px 0",
                                 }}
                               >
-                                <strong>• Damage Resistances:</strong>{" "}
+                                <strong>• Resistances:</strong>{" "}
                                 {feat.benefits.resistances
                                   .map(formatChoiceName)
                                   .join(", ")}
@@ -1711,7 +1724,7 @@ const FeatureSelectorSection = ({
                                   padding: "4px 0",
                                 }}
                               >
-                                <strong>• Damage Immunities:</strong>{" "}
+                                <strong>• Immunities:</strong>{" "}
                                 {feat.benefits.immunities
                                   .map(formatChoiceName)
                                   .join(", ")}
