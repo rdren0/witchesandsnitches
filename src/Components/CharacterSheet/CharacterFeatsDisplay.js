@@ -241,20 +241,61 @@ const CharacterFeatsDisplay = ({
       if (subclassData) {
         const featuresByLevel = parseAllFeaturesByLevel(subclassData);
 
+        if (
+          subclassData.level1Features &&
+          subclassData.level1Features.length > 0
+        ) {
+          subclassData.level1Features.forEach((feature) => {
+            sections.subclass.features.push({
+              name: feature.name,
+              type: "Level 1 Subclass Feature",
+              source: character.subclass,
+              level: 1,
+              description: feature.description,
+              details: [],
+            });
+          });
+        }
+
+        if (
+          subclassData.level1Choices &&
+          subclassData.level1Choices.length > 0
+        ) {
+          const hasLevel1Selection = character.subclassChoices?.[1];
+
+          if (!hasLevel1Selection) {
+            sections.subclass.features.push({
+              name: "Level 1 Specialization",
+              type: "Subclass Choice Options",
+              source: character.subclass,
+              level: 1,
+              description: "Choose one of the following specializations:",
+              details: subclassData.level1Choices.map(
+                (choice) => `${choice.name}: ${choice.description}`
+              ),
+            });
+          }
+        }
+
         if (subclassData.higherLevelFeatures) {
           subclassData.higherLevelFeatures.forEach((feature) => {
             if (feature.level <= character.level) {
               if (feature.choices && feature.choices.length > 0) {
-                sections.subclass.features.push({
-                  name: feature.name,
-                  type: "Subclass Choice Options",
-                  source: character.subclass,
-                  level: feature.level,
-                  description: feature.description,
-                  details: feature.choices.map(
-                    (choice) => `${choice.name}: ${choice.description}`
-                  ),
-                });
+                const hasUserSelection =
+                  character.subclassChoices?.[feature.level];
+
+                if (!hasUserSelection) {
+                  sections.subclass.features.push({
+                    name: feature.name,
+                    type: "Subclass Choice Options",
+                    source: character.subclass,
+                    level: feature.level,
+                    description: feature.description,
+                    details: feature.choices.map(
+                      (choice) => `${choice.name}: ${choice.description}`
+                    ),
+                  });
+                }
               } else {
                 sections.subclass.features.push({
                   name: feature.name,
@@ -323,27 +364,26 @@ const CharacterFeatsDisplay = ({
                   }
                 }
 
+                const featureName = subChoiceName
+                  ? `${choiceName}: ${subChoiceName}`
+                  : choiceName;
+
+                const featureToAdd = {
+                  name: `${featureName} (Selected)`,
+                  type: "Selected Subclass Choice",
+                  source: character.subclass,
+                  level: parseInt(level) || null,
+                  description:
+                    fullDescription ||
+                    `Your selected specialization from level ${level}`,
+                  details: fullDescription
+                    ? [fullDescription]
+                    : [`Selected at level ${level}: ${featureName}`],
+                };
+                sections.subclass.features.push(featureToAdd);
+
                 const hasSpecialAbilities =
                   selectedOption?.benefits?.specialAbilities?.length > 0;
-
-                if (!hasSpecialAbilities) {
-                  const featureName = subChoiceName
-                    ? `${choiceName}: ${subChoiceName}`
-                    : choiceName;
-
-                  sections.subclass.features.push({
-                    name: `${featureName} (Selected)`,
-                    type: "Selected Subclass Choice",
-                    source: character.subclass,
-                    level: parseInt(level) || null,
-                    description:
-                      fullDescription ||
-                      `Your selected specialization from level ${level}`,
-                    details: fullDescription
-                      ? [fullDescription]
-                      : [`Selected at level ${level}: ${featureName}`],
-                  });
-                }
 
                 if (selectedOption && selectedOption.benefits) {
                   const benefits = selectedOption.benefits;
@@ -368,10 +408,15 @@ const CharacterFeatsDisplay = ({
                     benefits.specialAbilities.length > 0
                   ) {
                     benefits.specialAbilities.forEach((ability) => {
+                      if (
+                        ability.name === choiceName ||
+                        ability.name === featureName
+                      ) {
+                        return;
+                      }
+
                       const abilityDetails = [];
 
-                      if (ability.type)
-                        abilityDetails.push(`Type: ${ability.type}`);
                       if (ability.duration)
                         abilityDetails.push(`Duration: ${ability.duration}`);
                       if (ability.tempHP)
@@ -670,6 +715,49 @@ const CharacterFeatsDisplay = ({
 
       processedFeats.add(featName);
 
+      const benefitDetails = [];
+
+      if (featData?.benefits) {
+        const benefits = featData.benefits;
+
+        if (
+          benefits.toolProficiencies &&
+          benefits.toolProficiencies.length > 0
+        ) {
+          benefitDetails.push(
+            `Tool Proficiencies: ${benefits.toolProficiencies.join(", ")}`
+          );
+        }
+
+        if (benefits.resistances && benefits.resistances.length > 0) {
+          benefitDetails.push(
+            `Resistances: ${benefits.resistances.join(", ")}`
+          );
+        }
+
+        if (benefits.immunities && benefits.immunities.length > 0) {
+          benefitDetails.push(`Immunities: ${benefits.immunities.join(", ")}`);
+        }
+
+        if (benefits.specialAbilities && benefits.specialAbilities.length > 0) {
+          const abilityNames = benefits.specialAbilities.map(
+            (ability) =>
+              ability.name || ability.description || "Special Ability"
+          );
+          benefitDetails.push(`Special Abilities: ${abilityNames.join(", ")}`);
+        }
+      }
+
+      const descriptionDetails = Array.isArray(featData?.description)
+        ? featData.description
+        : featData?.description
+        ? [featData.description]
+        : [
+            `Acquired through character progression`,
+            "Provides specific mechanical benefits",
+            "Represents focused training or talent",
+          ];
+
       sections.feats.features.push({
         name: featName,
         type: featType,
@@ -679,15 +767,7 @@ const CharacterFeatsDisplay = ({
           featData?.preview ||
           featData?.description?.[0] ||
           `A feat representing specialized training or natural talent that enhances your character's capabilities.`,
-        details: Array.isArray(featData?.description)
-          ? featData.description
-          : featData?.description
-          ? [featData.description]
-          : [
-              `Acquired through character progression`,
-              "Provides specific mechanical benefits",
-              "Represents focused training or talent",
-            ],
+        details: [...descriptionDetails, ...benefitDetails],
       });
     };
 
@@ -1067,11 +1147,11 @@ const CharacterFeatsDisplay = ({
       fontSize: "12px",
       lineHeight: "1.4",
       padding: "8px 12px",
-      backgroundColor: theme.background,
+      backgroundColor: "rgba(0, 0, 0, 0.3)",
       border: `1px solid ${theme.border}`,
       borderRadius: "6px",
       color: theme.text,
-      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
     },
     levelBadge: {
       backgroundColor: theme.primary,
