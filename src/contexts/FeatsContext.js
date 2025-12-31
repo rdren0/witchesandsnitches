@@ -8,6 +8,19 @@ const CACHE_TTL = 60 * 60 * 1000;
 const FeatsContext = createContext(null);
 
 function transformFeat(feat) {
+  const parseField = (field, defaultValue) => {
+    if (!field) return defaultValue;
+    if (typeof field === "string") {
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        console.warn(`Failed to parse field:`, field);
+        return defaultValue;
+      }
+    }
+    return field;
+  };
+
   let description = [];
   if (feat.description) {
     if (typeof feat.description === "string") {
@@ -32,16 +45,16 @@ function transformFeat(feat) {
   }
 
   const transformedBenefits = {
-    skillProficiencies: benefits.skills || [],
-    expertise: benefits.expertise || [],
-    savingThrowProficiencies: benefits.saves || [],
-    toolProficiencies: benefits.tools || [],
-    resistances: benefits.resistances || [],
-    immunities: benefits.immunities || [],
-    speeds: benefits.speeds || {},
-    combatBonuses: benefits.combat || {},
-    spellcasting: benefits.spellcasting || {},
-    specialAbilities: benefits.special || [],
+    skillProficiencies: parseField(benefits.skills, []),
+    expertise: parseField(benefits.expertise, []),
+    savingThrowProficiencies: parseField(benefits.saves, []),
+    toolProficiencies: parseField(benefits.tools, []),
+    resistances: parseField(benefits.resistances, []),
+    immunities: parseField(benefits.immunities, []),
+    speeds: parseField(benefits.speeds, {}),
+    combatBonuses: parseField(benefits.combat, {}),
+    spellcasting: parseField(benefits.spellcasting, {}),
+    specialAbilities: parseField(benefits.special, []),
   };
 
   if (benefits.asi) {

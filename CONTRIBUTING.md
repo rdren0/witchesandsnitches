@@ -1012,6 +1012,102 @@ The project uses Google Apps Script to sync spell data from Google Sheets to Sup
 4. Update Supabase credentials in the script
 5. Run "Setup Auto-Sync" and "Setup Auto-Delete" from the menu
 
+## Feats Data Management
+
+The project uses a similar Google Apps Script approach to sync feat data from Google Sheets to Supabase.
+
+### Feats Cache
+
+Feats are cached in the browser's `sessionStorage` for 1 hour to improve performance and reduce database queries.
+
+#### Cache Behavior
+
+- **Cache Duration:** 60 minutes (1 hour)
+- **Storage Location:** Browser sessionStorage
+- **Cache Key:** `feats_cache`
+
+#### Refreshing the Cache
+
+If you've updated feats in the database and need to see changes immediately (without waiting for the 1-hour cache to expire), you can manually refresh the cache using the browser console:
+
+```javascript
+// Clear the feats cache
+sessionStorage.removeItem("feats_cache");
+
+// Then reload the page
+location.reload();
+```
+
+#### Feat Benefits Structure
+
+Feats in the database have a `benefits` JSONB column that should follow this structure:
+
+**IMPORTANT:** When entering data in Google Sheets, make sure arrays are proper JSON arrays, NOT JSON strings. For example:
+- ✅ Correct: `"resistances": ["fire", "cold"]`
+- ❌ Wrong: `"resistances": "[\"fire\", \"cold\"]"`
+
+The wrong format will display as raw text like `["fire"]` instead of being parsed as an array.
+
+```json
+{
+  "combat": {
+    "initiativeBonus": 5,
+    "spellAttackBonus": 1,
+    "criticalRange": 19,
+    "concentrationAdvantage": true,
+    "darkvision": 60,
+    "hitPointsPerLevel": 1
+  },
+  "skills": ["Perception", "Investigation"],
+  "tools": ["Broomstick", "Potioneer's kit"],
+  "saves": ["Wisdom"],
+  "resistances": ["fire", "cold"],
+  "immunities": ["poison"],
+  "special": [
+    {
+      "name": "Luck Points",
+      "amount": "proficiency_bonus",
+      "description": "Gain luck points equal to your proficiency bonus"
+    }
+  ],
+  "speeds": {
+    "walking": { "bonus": 10 },
+    "flying": 50,
+    "climb": "equal_to_walking"
+  },
+  "spellcasting": {
+    "cantripsLearned": 2,
+    "spellsKnown": { "1": 2 },
+    "extraSpellSlots": { "1": 1 },
+    "wandlessCantrips": true,
+    "wandlessSpells": ["Shield", "Feather Fall"],
+    "superiorWandlessCasting": true,
+    "spellOpportunityAttacks": true,
+    "spellRangeDouble": true,
+    "ignoreHalfCover": true,
+    "ignoreAllCover": true,
+    "bonusActionCantrip": "Prestidigitation",
+    "enhancedHealing": { "type": "maximized", "amount": 5 },
+    "elementalMastery": [{ "type": "fire", "bonusDamage": 3 }],
+    "metamagicOptions": ["Quickened Spell", "Twinned Spell"],
+    "sorceryPoints": 2
+  },
+  "asi": {
+    "type": "choice",
+    "abilities": ["Intelligence", "Wisdom"],
+    "amount": 1
+  }
+}
+```
+
+**Note:** The code transforms these property names:
+
+- `tools` → `toolProficiencies`
+- `skills` → `skillProficiencies`
+- `saves` → `savingThrowProficiencies`
+- `special` → `specialAbilities`
+- `combat` → `combatBonuses`
+
 ## Submitting Contributions
 
 ### Pull Request Process

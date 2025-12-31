@@ -175,7 +175,10 @@ const CharacterSheet = ({
       return override;
     }
 
-    return baseAttackBonus + modifier;
+    const featBenefits = calculateFeatBenefits(character);
+    const featBonus = featBenefits.combatBonuses.spellAttackBonus || 0;
+
+    return baseAttackBonus + modifier + featBonus;
   };
 
   const rollSpellcastingAbilityCheck = async () => {
