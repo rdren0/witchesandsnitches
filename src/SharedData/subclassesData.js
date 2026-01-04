@@ -1748,7 +1748,7 @@ export const subclassesData = {
         level: 1,
         name: "Biological Studies",
         description:
-          "At 1st level, your study of magical creatures allows you to cast any known Healing spells on beasts. You gain a small trunk that carries magical beasts inside. Choose one specialization that defines your approach to creature study.",
+          "At 1st level, your study of magical creatures has taught you about their injuries and physiologies. You can cast any known Healing spells on beasts. You also gain a small trunk that carries all of your magical beasts inside. Additionally, you gain one of the following features.",
         benefits: {
           equipment: ["Small trunk (carries magical beasts)"],
           specialAbilities: [
@@ -1769,7 +1769,7 @@ export const subclassesData = {
           {
             name: "Studious",
             description:
-              "You maintain a personal notebook of beast findings. Whenever you add your Magical Creatures proficiency to an ability check, also add your Intelligence modifier. Focuses on academic knowledge and creature analysis.",
+              "You have your own personal notebook of beasts where you document your findings. Whenever you add your Magical Creatures proficiency to an Ability check, add your Intelligence modifier as well.",
             benefits: {
               equipment: ["Personal notebook of beast findings"],
               specialAbilities: [
@@ -1785,7 +1785,7 @@ export const subclassesData = {
           {
             name: "Creature Empathy",
             description:
-              "You have innate ability to communicate with bestial creatures. As an action, communicate simple ideas to creatures with Intelligence 3+ and read their basic mood, intent, emotional state, magical effects, needs, and how to avoid their attacks. Focuses on emotional connection and communication.",
+              "You have an innate ability to communicate with bestial creatures, and how to read their needs and emotions. As an action, you can communicate simple ideas to a creature with an Intelligence of 3 or higher and can read its basic mood and intent. You learn its emotional state, whether it is affected by magic of any sort, its short-term needs (such as food or safety), and actions you can take (if any) to urge it to not attack.",
             benefits: {
               specialAbilities: [
                 {
@@ -1809,7 +1809,7 @@ export const subclassesData = {
             {
               name: "Wizard's Best Friend",
               type: "companion",
-              description: "Beast companion with Command Dice system",
+              description: "Your care and compassion towards creatures earns you their trust and respect. You can have a beast companion.",
             },
           ],
         },
@@ -1817,7 +1817,7 @@ export const subclassesData = {
           {
             name: "Basically a Disney Princess",
             description:
-              "Gain access to Magizoo Spell List (creature communication, summoning, control, transformation spells). May attempt to cast these spells in Care for Magical Creatures class.",
+              "You gain access to the Magizoo Spell List. You may attempt to cast these spells in Care for Magical Creatures Class.",
             benefits: {
               spellList: "Magizoo",
               specialAbilities: [
@@ -1833,7 +1833,7 @@ export const subclassesData = {
           {
             name: "Prepared Ambush",
             description:
-              "When casting 1st level+ spell targeting single creature/area, weave spell into surroundings as magical trap. Set trigger conditions and exclusions. Trap detected by Investigation vs spell save DC or Specialis Revelio.",
+              "In learning to combat dangerous targets, you know how to place a magical trap, waiting to be sprung. When you cast a spell that targets a single creature or area using a spell slot of 1st level or higher, you can weave that spell into your surroundings, having no immediate effect. The spell is cast when it is triggered by something, which you decide at the time of setting the trap, such as entering an area, getting within a certain distance, or manipulating an object. You can also set conditions for creatures that don't trigger the spell, such as specific people or those who say a certain password./n*If the spell requires a target, the spell can only target one triggering creature, or if it affects an area, the spell's area of effect is centered on the triggering creature. If the spell conjures hostile creatures, they appear as close as possible to the triggering creature and attack. If the spell requires concentration, it lasts its full duration. A trap can be detected by a successful Intelligence (Investigation) check against your spell save DC, or by casting specialis revelio.",
             benefits: {
               specialAbilities: [
                 {
@@ -1851,7 +1851,7 @@ export const subclassesData = {
         level: 9,
         name: "Call Beasts",
         description:
-          "High-pitched wail summons swarms to attack moving creatures. As reaction when creature within 60 feet moves, swarm attacks 5-foot square where creature stops (2d12 slashing damage when entering/starting turn in area). Once per short rest.",
+          "At 9th Level you can let out a high pitched wail alerting nearby creatures and calling them to your aid. As a reaction when a creature within 60 feet moves in any direction, a swarm of small creatures attack a 5 foot square where the creature stops. A creature takes 2d12 slashing damage  when it enters the swarmed area for the first time on a turn or when it starts its turn there. /n*You may use this feature once per short rest.",
         benefits: {
           specialAbilities: [
             {
@@ -1877,7 +1877,7 @@ export const subclassesData = {
             {
               name: "Gentle Caretaker",
               type: "companion enhancement",
-              description: "Enhanced beast companion stats",
+              description: "Starting at 10th level, beasts that you care for are more resilient than their wild counterparts. Any beast benefiting from your care gains the following benefits: /n* -The creature appears with more hit points than normal: 2 extra hit points per your level. /n* -The damage from its natural weapons is considered magical for the purpose of overcoming immunity and resistance to non-magical attacks and damage. /n* -The creature attacks with almost human-like awareness.  Add 1d4 to the damage from its natural weapons.",
             },
           ],
         },
@@ -1885,7 +1885,7 @@ export const subclassesData = {
           {
             name: "Survivalist",
             description:
-              "Gain proficiency (or expertise if already proficient) in Herbology and Survival. Group benefits: no difficult terrain slowdown, pass through non-magical plants without penalty, can't be surprised while resting (if you/party/companion keeps watch), advantage vs magical plant impediments.",
+              "You are particularly adept at traveling through and surviving in natural environments. You gain proficiency in Herbology and Survival. If you are already proficient, gain expertise in both Herbology and Survival. Also, you and your group gain the following benefits:/n* -Difficult terrain doesn’t slow your group’s travel./n* -Moving through non-magical difficult terrain costs you no extra movement. You can also pass through non-magical plants without being slowed by them and without taking damage from them if they have thorns, spines, or a similar hazard./n* -Your group can't be surprised while resting, as long as you, a member of your party, or your Beast Companion are keeping watch./n* -In addition, you have advantage on saving throws against plants that are magically created or manipulated to impede movement, such as those made by the Herbivicus spell.",
             benefits: {
               skillProficiencies: [
                 {
@@ -1923,7 +1923,7 @@ export const subclassesData = {
           {
             name: "Monster Hunting",
             description:
-              "Bonus action to analyze creature within 60 feet (Wisdom save, spend 2 sorcery points for disadvantage). Learn damage immunities, resistances, vulnerabilities. Hidden divination creatures appear to have none. Use Wisdom modifier times per long rest.",
+              "You have vast experience studying, tracking, and hunting creatures, allowing you to quickly adapt to threats. You gain the ability to peer at a creature and discern how best to hurt it. Choose one creature you can see within 60 feet of you as a bonus action, they must make a Wisdom save.  You may spend two sorcery points to have the save be at disadvantage. Upon failure, you immediately learn whether the creature has any damage immunities, resistances, or vulnerabilities and what they are. If the creature is hidden from divination magic, you sense that it has no damage immunities, resistances, or vulnerabilities./n*You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses of it when you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -1949,7 +1949,7 @@ export const subclassesData = {
           {
             name: "Beast Whisperer",
             description:
-              "Action to use Wisdom (Magical Creatures) check to soothe hostile beast. Success makes beast neutral to party until you/party inflicts damage/conditions on it or identical beasts. Once per short rest.",
+              "You've learned the body language and social rituals of many beasts. As an action, you can use a Wisdom (Magical Creatures) check to attempt to soothe and calm a hostile beast. On success, the beast believes you mean it no harm and is neutral to the party. The effect is canceled if you or a party member inflicts any damage or condition on that beast or any identical beasts. You cannot use this feature again until you complete a short or long rest",
             benefits: {
               specialAbilities: [
                 {
@@ -1965,7 +1965,7 @@ export const subclassesData = {
           {
             name: "Exploited Vulnerabilities",
             description:
-              "Bonus action to call out enemy weaknesses. Target takes additional 2d8 damage from allies' damaging spells until start of your next turn. Intelligence modifier uses per long rest.",
+              "You know exactly how to hit where it hurts. As a bonus action, you can call out an enemy's weaknesses to your allies. The target takes an additional 2d8 damage from your allies' damaging spells until the start of your next turn. You have a number of uses equal to your Intelligence modifier, and uses are restored after a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -1981,7 +1981,7 @@ export const subclassesData = {
           {
             name: "Based Magizoologist",
             description:
-              "Requires Gentle Caretaker. When Beast Companion ends turn within 20 feet of you, it regains HP equal to half your level.",
+              "Your magic has adapted to your personality and safeguards the beasts you are bonded to. When your Beast Companion ends its turn within 20 ft of you, that creature regains a number of hit points equal to half your level.",
             requirements: ["Gentle Caretaker"],
             benefits: {
               specialAbilities: [
@@ -1999,7 +1999,7 @@ export const subclassesData = {
           {
             name: "Friend of All",
             description:
-              "When beast/plant creature attacks you, it must make Wisdom save vs your spell save DC. Failed save forces different target or automatic miss. Success grants 24-hour immunity. Creature aware of effect before attacking.",
+              " Creatures of the natural world recognize your reverence for nature and become hesitant to attack you. When a beast or plant creature attacks you, that creature must make a Wisdom saving throw against your spell save DC. On a failed save, the creature must choose a different target, or the attack automatically misses. On a successful save, the creature is immune to this effect for 24 hours./n*The creature is aware of this effect before it makes its attack against you.",
             benefits: {
               specialAbilities: [
                 {
@@ -2023,7 +2023,7 @@ export const subclassesData = {
           {
             name: "Draconic Empathy",
             description:
-              "Requires Wizard's Best Friend. If you've raised a dragon from egg, it views you as ally and can serve as beast companion. Tamed dragons have own HP, hit dice, ability scores, and use natural attack actions.",
+              "Your dedication as a dragon-keeper allows you to deeply understand dragons. If you've ever raised a dragon from an egg, it will view you as an ally and can serve as your beast companion. Tamed dragons have their own hit points, hit dice, and ability scores, and use natural attack actions.",
             requirements: ["Wizard's Best Friend"],
             benefits: {
               specialAbilities: [
@@ -2039,7 +2039,7 @@ export const subclassesData = {
           {
             name: "Hunter's Reflexes",
             description:
-              "Reaction when seeing creature cast spell/attack: cast spell (action/bonus action/reaction casting time) targeting only that creature. Conditions/damage applied before target completes action. Damage imposes disadvantage on attack roll. Proficiency bonus uses per short rest.",
+              "You've precisely honed your instincts in combat. As a reaction to a creature you can see casting a spell or attacking, you can cast a spell with a casting time of one action, bonus action, or reaction, targeting only that creature. Conditions and damage are applied before the target completes their action. Damage dealt to the target imposes disadvantage on its attack roll. You can use this feature a number of times equal to your proficiency bonus before you complete a short or long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2073,7 +2073,7 @@ export const subclassesData = {
         level: 1,
         name: "Liquid Darkness",
         description:
-          "You learn the recipe to create a potion known as Liquid Darkness. When you make a Wisdom (Potion Making) check you may instead use Charisma (Persuasion) or Wisdom (Perception), representing time spent asking for help or cheating off others.",
+          "You learn the recipe to create a potion known as Liquid Darkness. Additionally, your cunning may assist you when brewing a potion in class or with allies. When you make a Wisdom (Potion Making) check you may instead use Charisma (Persuasion) or Wisdom (Perception), representing time spent asking for help (Persuasion) or cheating off others (Perception).",
         benefits: {
           potionRecipes: ["Liquid Darkness"],
           specialAbilities: [
@@ -2110,7 +2110,7 @@ export const subclassesData = {
           {
             name: "Malice",
             description:
-              "The anger in your heart has given you the ability to place a malicious curse on an enemy. As a bonus action, choose one creature you can see within 30 feet of you. The target is cursed for 1 minute. You gain bonus damage equal to your proficiency bonus (once per spell), critical hits on 19-20 against the target, and regain hit points when the cursed target dies. Once per short or long rest.",
+              "The anger in your heart has given you the ability to place a malicious curse on an enemy. As a bonus action, choose one creature you can see within 30 feet of you. The target is cursed for 1 minute. The curse ends early if the target dies, you die, or you are incapacitated. Until the curse ends, you gain the following benefits:/n* -You gain a bonus to damage rolls against the cursed target. The bonus equals your proficiency bonus. This bonus can be applied once per spell./n* -Any attack roll you make against the cursed target is a critical hit on a roll of 19 or 20 on the d20./n* -If the cursed target dies, you regain hit points equal to your level + your spellcasting ability modifier (minimum of 1 hit point)./n*You can't use this feature again until you finish a short or long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2140,7 +2140,7 @@ export const subclassesData = {
             {
               name: "Forbidden Knowledge",
               type: "passive",
-              description: "Access to forbidden magical knowledge",
+              description: "Your studies of the Dark Arts have led you to the Restricted Section, where you’ve figured out how to weasel your way in. As a downtime action, you can sneak into the Restricted Section of the library and automatically succeed on finding a dark spell of the HM’s choosing that does not exceed your maximum spell slot level.",
             },
           ],
         },
@@ -2148,7 +2148,7 @@ export const subclassesData = {
           {
             name: "Wrathful Magic",
             description:
-              "You have learned how to channel your wrath into your spellwork. When you hit a creature with a spell attack, you can use a reaction to deal extra necrotic damage equal to 5 + twice your level. Use half proficiency bonus times per long rest.",
+              "You have learned how to channel your wrath into your spellwork, making your spells more dangerous. When you hit a creature with a spell attack, you can use a reaction to deal extra necrotic damage to the target. The damage equals 5 + twice your level. You can do this a number of times equal to half of your proficiency bonus per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2164,7 +2164,7 @@ export const subclassesData = {
           {
             name: "Dark Intentions",
             description:
-              "The evil in your heart has become potent enough to affect those around you. Twice per long rest, choose Frightening (Wisdom save or frightened for 1 minute with halved speed) or Judging (gain advantage on attacks against target for 1d4 rounds).",
+              "The evil in your heart has become potent enough to affect those around you. Twice per long rest you may choose a target of your Dark Intentions and affect them in one of the following ways./n* -Frightening. As an action, you speak your intentions to your victim, causing them to suffer a moment of terror. Choose one creature within 60 feet of you that you can see. That creature must make a Wisdom saving throw, on a failed save, the creature is frightened for 1 minute or until it takes any damage. While frightened, the creature's speed is halved, and it can't benefit from any bonus to its speed. The creature can repeat the saving throw at the end of each of its turns, ending the effect on a success. /n* -Judging. As a bonus action, you speak your intentions to your victim, bolstering your confidence and your spite towards them. You gain advantage on attack rolls against the creature for 1d4 rounds or until it drops to 0 hit points or falls unconscious.",
             benefits: {
               specialAbilities: [
                 {
@@ -2185,7 +2185,7 @@ export const subclassesData = {
         level: 9,
         name: "Death Wish",
         description:
-          "As an action, choose one creature you can see within 30 feet, cursing it until the end of your next turn. The next attack against the cursed creature grants vulnerability to all damage from that attack. Use half spellcasting ability modifier times per long rest.",
+          "At 9th Level you can mark another creature’s life force for termination. As an action, you choose one creature you can see within 30 feet of you, cursing it until the end of your next turn. The next time you or an ally of yours hits the cursed creature with an attack, the creature has vulnerability to all of that attack's damage, and then the curse ends. You may use this feature a number of times equal to half of your spellcasting ability modifier rounded down.",
         benefits: {
           specialAbilities: [
             {
@@ -2209,7 +2209,7 @@ export const subclassesData = {
           {
             name: "Visions of Death",
             description:
-              "When you hit with an attack, target must make Wisdom save or be unable to hear until your next turn and take 3d10 psychic damage (6d10 and unable to speak if failed by 5+). Once per long rest.",
+              "When you hit a creature with an attack, you can use this feature to cause your target to have horrible visions of its death at your hands. The target must succeed on a Wisdom saving throw against your spell save DC, or be unable to hear until the start of your next turn. When it awakes, it takes 3d10 psychic damage as it reels from its horrific experience. If the target fails by 5 or more, the damage increases to 6d10 and is unable to speak. /n*Once you use this feature, you can't use it again until you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2226,7 +2226,7 @@ export const subclassesData = {
           {
             name: "Dark Duelist",
             description:
-              "Dark spells are automatically cast one level higher than the consumed spell slot. If you have reached Devious tier corruption, apply a random metamagic effect (roll 1d8 on metamagic table).",
+              "Your knowledge of the Dark Arts has made your spells ever more deadly and the counterspells come readily to your mind. Any Dark spells you cast are automatically cast one level higher than the consumed spell slot, not exceeding the highest available level of spell slots you have. If you have reached at least the Devious tier of corruption, a random metamagic effect is applied. /n*Roll 1d8 on the table below and apply the metamagic associated: /n*1 -Roll again/n*2 -Careful Spell/n*3 -Distant Spell/n*4 -Extended Spell/n*5 -Heightened Spell/n*6 -Quickened Spell/n*7 -Subtle Spell/n*8 -Twinned Spell",
             benefits: {
               specialAbilities: [
                 {
@@ -2253,7 +2253,7 @@ export const subclassesData = {
           {
             name: "Advanced Defenses",
             description:
-              "When you cast any protego-related spell, you can transition the spell's casting to your off-hand (bonus action dedication) while maintaining another concentration/dedication spell with your wand. Make separate saves for each spell.",
+              "Sometimes you just have to stay and fight. And while everyone knows that offense is the best defense, having both is even better. When you cast any protego-related spell, you can transition the spell’s casting to your off-hand, freeing up your wand to cast other spells. The spell’s dedication now expends a bonus action instead of an action, and you are able to cast and maintain another concentration or dedication spell with your wand.",
             benefits: {
               specialAbilities: [
                 {
@@ -2268,7 +2268,7 @@ export const subclassesData = {
           {
             name: "Dark Curse",
             description:
-              "When casting a spell with an attack roll, expend a bonus action to transform it into a Curse. If it hits, target makes Constitution save or gains 1d2 exhaustion (max 5). Curse removed by Wideye Potion or Vulnera Sanentur. Use spellcasting modifier times per day.",
+              "When casting a spell that requires you to make an attack roll, you may expend a bonus action to transform the spell into a Curse. If the spell hits, the target must make a Constitution Saving throw against your Spell Save DC. On failure, the target gains 1d2 points of exhaustion. Repeatedly using this ability cannot increase a target's exhaustion level beyond 5. This curse can only be removed by a Wideye Potion or the Vulnera Sanentur spell. You may use this ability a number of times per day equal to your spellcasting ability modifier.",
             benefits: {
               specialAbilities: [
                 {
@@ -2285,7 +2285,7 @@ export const subclassesData = {
           {
             name: "Greater Judgment",
             description:
-              "Requires Dark Intentions. When a creature under your Judgment makes an attack, use your reaction to make a spell attack against that creature using a spell of level equal to half proficiency bonus (rounded down) or lower.",
+              "Dark Intentions Required. The conviction with which you speak your Judging Intentions gives you greater power over your foe. When a creature under the effect of your Judgment makes an attack, you can use your reaction to make a spell attack against that creature if it is within range using a spell with a level equal to half of your proficiency bonus rounded down or lower.",
             requirements: ["Dark Intentions"],
             benefits: {
               specialAbilities: [
@@ -2310,7 +2310,7 @@ export const subclassesData = {
           {
             name: "Punishment",
             description:
-              "Whenever a creature hits you with an attack, that creature takes psychic damage equal to your Charisma modifier (minimum 1) if you're not incapacitated.",
+              "Those who dare to strike you are psychically punished for their audacity. Whenever a creature hits you with an attack, that creature takes psychic damage equal to your Charisma modifier (minimum of 1) if you’re not incapacitated.",
             benefits: {
               specialAbilities: [
                 {
@@ -2325,7 +2325,7 @@ export const subclassesData = {
           {
             name: "Suffering",
             description:
-              "You become a master of instant death. When you hit with a spell attack without disadvantage, target must make Constitution save (DC 8 + half your corruption points). On failure, double the damage of your attack.",
+              "You become a master of instant death. When you hit a creature with a spell attack and do not have disadvantage on the roll, it must make a Constitution saving throw (DC 8 + half your current number of corruption points). On a failed save, double the damage of your attack against the creature.",
             benefits: {
               specialAbilities: [
                 {
@@ -2371,7 +2371,7 @@ export const subclassesData = {
         level: 1,
         name: "Recipes",
         description:
-          "You learn three recipes from your cookbook. After a long rest, prepare recipes equal to your proficiency bonus. Creatures consume meals as a bonus action. You gain 'Prepare Meal' as an additional Free Period/Downtime action for learning new recipes or cooking additional meals.",
+          "Beginning at 1st level, you learn three recipes that can be used to aid yourself and your allies. The recipes are kept inside your cookbook, and are all detailed at the end of the class description./n* -Meals Per Day. After a long rest, you may prepare a number of recipes equal to your proficiency bonus.  You can prepare the same recipe multiple times in a single day. Preparing more recipes than this requires the use of the Prepare Meal action during a Free Period./n* -Consuming a Meal. Any creature that possesses one of your meals can use a bonus action on their turn to consume it and gain its benefits, provided they have a free hand to do so. Alternatively, they can feed the meal to a willing creature within 5 feet using a free hand. A creature must be conscious to consume your meal. The effects of different recipes add together while their durations overlap, but the effects of the same recipe consumed multiple times don't combine./n* -Prepare Meal. You gain an additional Free Period and/or Downtime Action called Prepare Meal. Prepare Meal allows you to attempt cooking a recipe you know from your recipe list, or learn a brand new recipe. /n* -Learn a new recipe. Learning a recipe follows the same rules as practicing spells, using a Survival (Wisdom) check and treating any recipe as a Level 0 (cantrip) spell + half the number of Recipes you have listed in your cookbook for the purpose of DC to successfully research and cook the recipe.",
         benefits: {
           specialAbilities: [
             {
@@ -2384,7 +2384,7 @@ export const subclassesData = {
             {
               name: "Prepare Meal",
               type: "downtime action",
-              description: "Additional action for learning recipes or cooking",
+              description: "Cooking a recipe follows the same rules as creating potions, making a Survival (Wisdom) check to successfully attempt to cook the recipe in question.",
             },
           ],
         },
@@ -2398,7 +2398,7 @@ export const subclassesData = {
           {
             name: "Cooking by the Book",
             description:
-              "Your culinary techniques overlap with potion-making. Use Survival (Wisdom) in place of Potion-Making (Wisdom) when brewing potions. Your self-experimentation gives you advantage on Constitution saving throws.",
+              "Your familiarity with recipes and culinary techniques overlaps with your potion-making abilities, allowing you to use your Survival(Wisdom) in place of Potion-Making (Wisdom) when brewing potions. Your fearless self-experimentation gives you an iron stomach, giving you advantage on Constitution saving throws.",
             benefits: {
               savingThrows: {
                 advantage: ["Constitution"],
@@ -2415,7 +2415,7 @@ export const subclassesData = {
           {
             name: "No Reservations",
             description:
-              "You are a devoted lover of Muggle cuisine. Gain proficiency in Muggle Studies. When Culinarian features require Survival (Wisdom) checks, you may use Muggle Studies (Intelligence) instead.",
+              "You are a devout lover of Muggle cuisine, whether your family’s local cultural recipes, exposure to the foods of other regions, or a deep love of studying cookbooks. You gain proficiency in Muggle Studies. When your other Culinarian class features require a Survival (Wisdom) check, you may make a Muggle Studies (Intelligence) check instead.",
             benefits: {
               skillProficiencies: [
                 {
@@ -2446,7 +2446,7 @@ export const subclassesData = {
               name: "Favorite Foods",
               type: "passive",
               description:
-                "Learn favorites with Insight, use Survival for Persuasion with favorite foods",
+                "When interacting with another being you can attempt to learn what their favorite food is. Roll an Insight(Wisdom) check against their passive Deception, on a success you learn what their favorite food is. Cooking this food and giving it to them allows you to make your next Persuasion(Charisma) check against them using Survival(Wisdom) instead.",
             },
           ],
         },
@@ -2461,7 +2461,7 @@ export const subclassesData = {
           {
             name: "Fast Food",
             description:
-              "You've got a stockpile of ready-made meals. As an action, summon one locked-in recipe as a completed meal from the kitchens. Use spellcasting modifier times per long rest.",
+              "You’ve got a stockpile of meals, ready made and good to conjure from the kitchens at all times. As an action, you may use a spell taught to you by the house elves: you may summon one of your locked-in recipes as a completed meal from the kitchens ready for immediate consumption. You may only use this ability a number of times equal to your spellcasting modifier per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2476,7 +2476,7 @@ export const subclassesData = {
           {
             name: "Yes, Chef!",
             description:
-              "Your commanding presence carries into battle. Use Help action as bonus action on targets who can hear you. If they yell 'Yes, Chef!' and attempt your suggested action, they gain advantage on that roll.",
+              "Your commanding presence in the kitchens carries over into other areas of life, including the battlefield.You may use the Help action as a Bonus Action on a target able to hear you speak. You then may suggest to them an action requiring an attack roll, saving throw, or ability check. On their next turn, if they yell “Yes, Chef!” and attempt the action suggested, they get advantage on that attack roll, saving throw or ability check.",
             benefits: {
               specialAbilities: [
                 {
@@ -2494,7 +2494,7 @@ export const subclassesData = {
         level: 9,
         name: "Nourishment",
         description:
-          "Whenever an ally consumes one of your recipes, they gain temporary hit points equal to 2d6 + your Intelligence or Wisdom modifier (whichever is higher, minimum 1).",
+          "At 9th Level whenever an ally consumes one of your recipes it gains temporary hit points equal to 2d6 + your Intelligence or Wisdom Modifier (whichever is higher with a minimum of 1 temporary hit point).",
         benefits: {
           specialAbilities: [
             {
@@ -2516,7 +2516,7 @@ export const subclassesData = {
           {
             name: "Sugar Rush",
             description:
-              "Creatures consuming your meals gain an additional action (cast spell 3rd level or lower, or Dash/Disengage/Hide/Use Object). Cannot be affected again until short/long rest. Spell level increases to 4th at 13th level, 5th at 17th level.",
+              "Any creature that consumes one of your meals is blessed with a rush of energy. In addition to the meal’s benefits, the creature also gains an additional action on their turn. This action may only be used to cast a Spell of 3rd Level or lower, or take the Dash, Disengage, Hide, or Use Object action. A creature affected by Sugar Rush can not be affected by it again until they complete a short or long rest./n*Once you reach 13th level this spell can be of 4th level or lower. Once you reach 17th level this spell can be of 5th level or lower.",
             benefits: {
               specialAbilities: [
                 {
@@ -2536,7 +2536,7 @@ export const subclassesData = {
           {
             name: "Dinnertime Bonding",
             description:
-              "Once per semester, host a banquet with at least 5 people. Ask each the same question. Satisfactory answers grant one Foresight roll lasting until expended or end of semester.",
+              "Once per semester, you may elect to host a banquet. In attendance, you must have at least five people, and ask each individual present the same question in-character (ex: What is your favorite memory of us? What are you most looking forward to after graduation? etc.) over food and drink you have prepared. Each individual who answers to the Headmaster’s satisfaction receives one Foresight roll. This die lasts until it is expended or until the end of the semester.",
             benefits: {
               specialAbilities: [
                 {
@@ -2559,7 +2559,7 @@ export const subclassesData = {
           {
             name: "YES! CHEF!",
             description:
-              "Requires Yes, Chef! When suggesting actions that force saving throws, targets make those saves at disadvantage if the ally yells 'Yes, Chef!' and follows through.",
+              "Yes, Chef Required. When using your Yes, Chef feature to suggest a course of action, you can instead suggest to an ally a course of action that would force a different creature (or creatures) to make a saving throw. On their next turn, if the ally yells “Yes, Chef!” the imposed saving throw(s) is made at Disadvantage.",
             requirements: ["Yes, Chef!"],
             benefits: {
               specialAbilities: [
@@ -2575,7 +2575,7 @@ export const subclassesData = {
           {
             name: "Royal Banquet",
             description:
-              "Requires Dinnertime Bonding. Satisfactory answers grant two Foresight rolls. Participants can divulge secrets for immunity to poison/fear, +2d10 max HP, and same HP gain until semester end.",
+              "Dinnertime Bonding Required. If a participant’s answer to a question during a Banquet is to the Headmaster’s satisfaction, they receive two Foresight rolls instead of one. Additionally, a participant can divulge a secret. If the secret is to the Headmaster’s satisfaction, the participant becomes immune to poison and being frightened, its hit point maximum increases by 2d10, and it gains the same number of hit points. These effects last until the end of the semester.",
             requirements: ["Dinnertime Bonding"],
             benefits: {
               specialAbilities: [
@@ -2592,7 +2592,7 @@ export const subclassesData = {
           {
             name: "Eating Contest Champion",
             description:
-              "Once per turn when eating a meal as bonus action, eat two meals instead. Use spellcasting ability modifier times per long rest.",
+              "Once per turn, when eating a meal as a bonus action you can eat two meals instead of one. This feature can be used a number of times equal to your Spell Casting Ability Modifier per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2615,7 +2615,7 @@ export const subclassesData = {
           {
             name: "It's Fucking Raw!",
             description:
-              "As bonus action, throw food at creatures up to 30 feet (attack roll if unwilling). Choose whether they gain positive or negative effects from your recipes when consumed.",
+              "Your magical influence over your food has given you the ability to control the quality of your recipes at will. As a Bonus Action you can throw your food at a creature up to 30 feet away. If the target is unwilling to eat the food, you must make an attack roll using Dexterity or Strength (whichever is higher) + Proficiency to force them to eat the meal. When a creature eats your food, you may choose whether they gain a positive or negative effect from the food.",
             benefits: {
               specialAbilities: [
                 {
@@ -2631,7 +2631,7 @@ export const subclassesData = {
           {
             name: "Where's The Lamb Sauce!",
             description:
-              "As action, screech for 1 minute. Enemies within 60 feet make Intelligence saves at start of turn (3d8 psychic damage, half on success). Bonus action to throw arcane kitchen utensil (spell attack, 2d12 + spellcasting modifier force damage). Once per long rest.",
+              "You can, as an action, screech belittling comments at your enemies for 1 minute. Whenever an enemy starts its turn within 60 feet of you, it makes an Intelligence saving throw against your spell save DC. On a failure, it takes 3d8 psychic damage, and half as much on a success. /n*While the aura lasts, you can use a bonus action on your turn to throw an arcane plate or similar kitchen utensil in the aura to attack one creature. Make a spell attack against the target. If the attack hits, the target takes force damage equal to 2d12 + your spellcasting ability modifier./n*After activating the aura, you can't do so again until you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2677,7 +2677,7 @@ export const subclassesData = {
           {
             name: "The Subtle Science",
             description:
-              "You gain a well-loved heirloom potions textbook filled with ancestral notes. Gain Potions Kit, proficiency in Potions Kit and Potion-Making, and access to 3 additional common potion recipes. Add Intelligence modifier to Potion Making (Wisdom) checks. Learn 2 Uncommon recipes at 6th level, 1 Rare at 10th, 1 Very Rare at 14th.",
+              "Unlike all the others who come to Hogwarts with a brand new potions textbook, yours is a well-loved heirloom filled with notes and suggestions from whoever came before you and entrusted you with their legacy./n*You gain a Potions Kit and proficiency in the Potions Kit and Potion-Making, and have access to three additional common potion recipes. When attempting to brew a potion from the list of potions appropriate for your year or below, you may add your Intelligence modifier to your Potion Making (Wisdom) check, representing the written guidance of those who came before./n*You learn new potions incrementally as you level up. Learn 2 Uncommon Potion recipes at level 6, 1 Rare potion at 10th Level, and 1 very rare potion at 14th Level.",
             benefits: {
               equipment: ["Heirloom potions textbook", "Potions Kit"],
               toolProficiencies: ["Potioneer's kit"],
@@ -2709,7 +2709,9 @@ export const subclassesData = {
           {
             name: "Green Thumb",
             description:
-              "Gain Herbology Kit, proficiency in Herbology Kit and Herbology skill, and cast Orchideous wordlessly/wandlessly at will. Add Wisdom to Herbology (Intelligence) checks. Gain portable greenhouse and two plant companions (one utility, one combat). Combat plant adds 1d8 piercing damage once per turn. Symbiotic Connection grants Herbology modifier to initiative and +10 feet speed with difficult terrain immunity during combat.",
+              "You gain an Herbology Kit and proficiency in the Herbology Kit and the Herbology skill, and the ability to cast Orchideous wordlessly, wandlessly and at will. You may add your Wisdom to your Herbology (Intelligence) check, representing long hours spent carefully tending to your plants.
+
+You gain the ability to grow plants in places that they normally wouldn’t. You Gain a portable greenhouse that can carry the plants from the first half of this list. This serves as a Travel-Pack capable of protecting from harm and comfortably carrying 1 Plant companion on your back. Additionally, your plant companion gains the following effect./n* -Attack. When you hit a creature with an attack, your plant lashes out and enhances the damage. The creature takes an extra 1d8 piercing damage. You can deal this extra damage once per turn.",
             benefits: {
               equipment: ["Herbology Kit", "Portable greenhouse"],
               toolProficiencies: ["Herbologist's tools"],
@@ -2752,7 +2754,7 @@ export const subclassesData = {
           {
             name: "Metapotions",
             description:
-              "Replace Metamagic abilities with Mastery Points for modifying potions. Learn 2 Metapotion effects at 3rd level, gain 1 more each level until all are learned. Use Mastery Points to enhance potion brewing with various effects.",
+              "Potioneers do not receive access to metamagic abilities or Sorcery Points from leveling up as a Technique, Willpower, Intellect or Vigor Caster normally would. Instead, a Potioneer receives access to an equivalent number of Mastery Points, used exclusively to modify the effectiveness and utility of their Draughts and Potions./n*Expended Mastery Points can only be regained by un-imbuing the Metapotion effect used on a potion, or consuming/destroying it.",
             benefits: {
               specialAbilities: [
                 {
@@ -2768,7 +2770,7 @@ export const subclassesData = {
           {
             name: "Natural Evocations",
             description:
-              "Replace Metamagic abilities with Nature Points for botanical magic. Gain abilities like Nature's Wrath (reroll missed attacks), Carnivorous Force (temporary HP and damage boost), Tree Stride (teleport between trees), and Summon Spirit (elemental companions).",
+              "Herbologists do not receive access to Metamagic abilities or Sorcery Points from leveling up as a Technique, Willpower, Intellect or Vigor Caster normally would. Instead, a Herbologist receives access to Natural Evocations and an equivalent number of Nature Points./n*See Natural Evocations below for more details.",
             benefits: {
               specialAbilities: [
                 {
@@ -2792,7 +2794,7 @@ export const subclassesData = {
         level: 4,
         name: "Toxic Presence (Optional)",
         description:
-          "Can take instead of ASI/Feat. Constant exposure to poisons makes you venomous. When creatures move within 10 feet or start turn there, use reaction to deal 1d4 necrotic damage (Constitution save negates). Damage increases to 1d6 at 6th, 1d8 at 10th, 1d10 at 14th level.",
+          "Can take instead of ASI/Feat. Because of your constant interactions, with your poisonous plants or from the toxic fumes of brewing potions, you have become somewhat venomous yourself. You are surrounded by invisible, necrotic fumes that are harmless until you unleash them on a creature nearby. When a creature you can see moves into a space within 10 feet of you or starts its turn there, you can use your reaction to deal 1d4 necrotic damage to that creature unless it succeeds on a Constitution saving throw against your spell save DC. The necrotic damage increases to 1d6 at 6th level, 1d8 at 10th level, and 1d10 at 14th level.",
         benefits: {
           specialAbilities: [
             {
@@ -2831,7 +2833,7 @@ export const subclassesData = {
           {
             name: "Plant Veil",
             description:
-              "Requires Green Thumb. Create camouflage in 1 minute for +10 Stealth bonus when pressed against solid surfaces. Plant companion gains Defend (opportunity attacks against you at disadvantage) and Deflect (+4 AC against subsequent attacks from same creature).",
+              "Green Thumb Required. You can spend 1 minute using your plants to create camouflage for yourself. /n*Once you are camouflaged in this way, you can try to hide by pressing yourself up against a solid surface, such as a tree or wall, that is at least as tall and wide as you are. You gain a +10 bonus to Dexterity (Stealth) checks as long as you remain there without moving or taking actions. Once you move or take an action or a reaction, you must camouflage yourself again to gain this benefit./n*Additionally, your plant companion gains the following effects./n* -Defend. Your plant lashes out and defends you against assault. Opportunity attacks against you are made with disadvantage./n* -Deflect. When a creature hits you with an attack, you gain a +4 bonus to AC against all subsequent attacks made by that creature for the rest of the turn.",
             requirements: ["Green Thumb"],
             benefits: {
               specialAbilities: [
@@ -2855,7 +2857,7 @@ export const subclassesData = {
           {
             name: "Don't Waste a Drop",
             description:
-              "Once per day, extend brewing time by 1 minute to dilute successful potions into multiple lower-quality versions. Potions achieve superior quality on 19-20. Dilution yields: Common (1d3+1), Uncommon (1d2+1), Rare (1d2), Very Rare+ (impossible).",
+              "Once per day, you may add 1 minute to the final brewing time of a potion. If you succeed in brewing the potion, you may dilute the result to convert the potion into one or more potions that are one level of quality lower than the brewed potion. The number of potions brewed depends on the potion’s rarity./n* -Common: 1d3+1 Potions/n* -Uncommon: 1d2+1 Potions/n* -Rare: 1d2 Potions/n* -Very Rare or Legendary: Impossible/n*Additionally, potions you brew can now be produced of superior quality on a natural 19 or 20.",
             benefits: {
               specialAbilities: [
                 {
@@ -2880,7 +2882,7 @@ export const subclassesData = {
           {
             name: "Herbivify",
             description:
-              "Channel plant energy for healing. Gain d6s equal to your level. As bonus action, choose ally within 120 feet and spend up to half your level in dice. Target regains HP equal to total rolled plus 1 temporary HP per die. Regain dice on long rest.",
+              "You channel the energy from the plants around you to assist your allies. You have the aid and strength of plants, represented by a number of d6s equal to your level./n*As a bonus action, plants grow on your allies' wounds to heal and stabilize them. You can choose an ally you can see within 120 feet of you and spend a number of those dice equal to half your level or less. Roll the spent dice and add them together. The target regains a number of hit points equal to the total. The target also gains 1 temporary hit point per die spent./n*You regain the expended dice when you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -2901,7 +2903,7 @@ export const subclassesData = {
         level: 9,
         name: "Delayed Sorcery",
         description:
-          "Finally tap into innate magical abilities like your peers. Gain Sorcery Points and Metamagic options starting with 5 points and 1 metamagic, scaling up to 10 points and 2 metamagics at 20th level.",
+          "At 9th Level you finally gain the ability to tap into your innate ability to channel and manipulate magic like that of your peers. You gain a number of Sorcery Points and Metamagic Options as shown on the table below.",
         benefits: {
           specialAbilities: [
             {
@@ -2937,7 +2939,7 @@ export const subclassesData = {
           {
             name: "Entangle",
             description:
-              "Requires Green Thumb. As bonus action, create entangled dome. You and allies within 5 feet have full cover, allies within 10 feet have half cover. Lasts 1 minute or until dedication lost.",
+              "Green Thumb required. Your plant has grown so large that it can protect your allies. As a Bonus Action you create a thick entangled dome around yourself and your allies. You and friendly creatures within 5 feet of you have full coverage and friendly creatures within 10 feet of you have half coverage. This ability lasts for 1 minute or until you lose dedication./n* -Whirlwind. Your plant can use your action to make melee attacks against any number of creatures within 5 feet of you, with a separate attack roll for each target. The plant makes a Strength or Dexterity attack (whichever is higher) using your Strength or Dexterity Modifier (whichever is higher). On a hit the plant does 1d8 + your Dexterity or Strength Modifier (whichever is higher).",
             requirements: ["Green Thumb"],
             benefits: {
               specialAbilities: [
@@ -2954,26 +2956,9 @@ export const subclassesData = {
             },
           },
           {
-            name: "Whirlwind",
-            description:
-              "Requires Green Thumb. Plant uses your action to attack all creatures within 5 feet. Separate attack rolls using your Str/Dex modifier (whichever higher), dealing 1d8 + modifier damage on hit.",
-            requirements: ["Green Thumb"],
-            benefits: {
-              specialAbilities: [
-                {
-                  name: "Plant Whirlwind",
-                  type: "action",
-                  area: "5 feet",
-                  attack: "Str/Dex modifier (higher)",
-                  damage: "1d8 + modifier",
-                },
-              ],
-            },
-          },
-          {
             name: "Designated Taste Tester",
             description:
-              "Automatically succeed on checks to identify harmful ingestibles. Resistance to natural toxins grants immunity to blinded, deafened, frightened, and poisoned conditions.",
+              "Your proximity to dangerous plants, toxins and poisons has made you intimately familiar with the subtle signs of danger many others would miss. You automatically succeed on ability checks made to identify whether or not a plant or other ingestible object (potion, food, drink, etc.) is harmful, dangerous, or otherwise not what it seems. Additionally, because of your resistance to natural toxins, you can't be blinded, deafened, frightened, or poisoned.",
             benefits: {
               immunities: ["blinded", "deafened", "frightened", "poisoned"],
               specialAbilities: [
@@ -2988,7 +2973,7 @@ export const subclassesData = {
           {
             name: "Quick-Brew Mastery",
             description:
-              "Requires Metapotions. Reduce Mastery Point costs for quick-brewing: Common (1 round: 2 MP, bonus action: 4 MP), Uncommon (1 round: 4 MP, bonus action: 8 MP), Rare (1 round: 8 MP, bonus action: 12 MP). Once per short rest.",
+              "Metapotions required. You may quick-brew a potion and the number of Mastery Points required to brew one is reduced. /n* -Common: 1 round (2 MP) / Bonus Action (4 MP)/n* -Uncommon: 1 round (4 MP) / Bonus Action (8 MP)/n* -Rare: 1 round (8 MP) / Bonus Action (12 MP)/n* -Very Rare/Legendary: Impossible/n*Once you have Quick-Brewed a potion this way, you may not do so again until after a short rest. If the potion is consumed or destroyed the day it is made, the Mastery Points are lost until after a short rest (otherwise, if the potion is not used the day it’s made, the Mastery Points continue to be imbued in the potion until used or unimbued but are recovered when used or unimbued).",
             requirements: ["Metapotions"],
             benefits: {
               specialAbilities: [
@@ -3016,7 +3001,7 @@ export const subclassesData = {
           {
             name: "Metapotion Prodigy",
             description:
-              "Requires Metapotions. Remove limit on metapotion effects per potion (contradictory effects still forbidden).",
+              "Metapotions required. You no longer have a limit on the number of metapotion effects that can be applied to a single potion. However, contradictory metapotion effects still may not be applied to the same potion.",
             requirements: ["Metapotions"],
             benefits: {
               specialAbilities: [
@@ -3031,7 +3016,7 @@ export const subclassesData = {
           {
             name: "My Friend Felix",
             description:
-              "Learn to brew Felicity's Gold (lesser Felix Felicis) once per semester. Grants 3 luck points for one month. Spend for advantage on attack/ability/save rolls, or force reroll of attacks against you/allies within 15 feet.",
+              "By doing extra potions research, You learn to create a lesser version of Felix Felicis, called Felicity’s Gold. You may only Brew this potion Once per Semester. When ingested, you receive three luck points for the next Month. Whenever you make an attack roll, an ability check, or a saving throw, you can spend one luck point to instead roll at advantage. You can choose to spend one of your luck points after you roll the die, but before the outcome is determined./n*You can also spend one luck point when an attack roll is made against you or an ally within 15 feet. Roll a d20 and then choose whether the attack uses the attacker's roll or yours./n*If more than one creature spends a luck point to influence the outcome of a roll, the points cancel each other out; no additional dice are rolled. This potion cannot compete against the effects of another creature who has recently ingested Felix Felicis.",
             benefits: {
               potionRecipes: ["Felicity's Gold"],
               specialAbilities: [
@@ -3052,7 +3037,7 @@ export const subclassesData = {
           {
             name: "Nature's Sanctuary",
             description:
-              "Requires Green Thumb. Beast and plant creatures must make Wisdom save or choose different target when attacking you. Plant companion gains Dodge reaction to halve incoming attack damage.",
+              "Green Thumb Required. Creatures of the natural world sense your connection to nature and become hesitant to attack you. When a beast or plant creature attacks you, that creature must make a Wisdom saving throw against your spell save DC. On a failed save, the creature must choose a different target, or the attack automatically misses. On a successful save, the creature is immune to this effect for 24 hours./n*The creature is aware of this effect before it makes its attack against you./n*Additionally, your plant companion gains the following effect./n* -Dodge. Your plant can use it’s own natural awareness to help you defend from attacks. When an attacker that you can see hits you with an attack, your companion can use your reaction to halve the attack’s damage against you.",
             requirements: ["Green Thumb"],
             benefits: {
               specialAbilities: [
@@ -3081,7 +3066,7 @@ export const subclassesData = {
           {
             name: "Snape's Greasy Hair",
             description:
-              "Exposure to toxins grants immunity to disease and resistance to acid, necrotic, and poison damage.",
+              "Your exposure to toxins with your craft has made you immune to disease. Additionally, you become resistant to acid, necrotic and poison damage.",
             benefits: {
               immunities: ["disease"],
               resistances: ["acid", "necrotic", "poison"],
@@ -3097,7 +3082,7 @@ export const subclassesData = {
           {
             name: "Plant Aspect",
             description:
-              "Requires Green Thumb. Become one with plants, gaining immunity to acid, necrotic, poison damage and disease, but vulnerability to fire damage.",
+              "You have become so in tune with your plants that they begin to become a part of you. You gain immunity to acid, necrotic, and poison damage and you become immune to disease. However, you gain vulnerability to fire damage.",
             requirements: ["Green Thumb"],
             benefits: {
               immunities: [
@@ -3129,7 +3114,7 @@ export const subclassesData = {
         level: 1,
         name: "Alternate Spellcaster",
         description:
-          "At 1st level, you learn Flagrate as a free action subtle spell and gain access to the Ancient Spellbook. Choose your specialization approach to magical study.",
+          "At 1st level you learn the spell Flagrate. Any casting of this spell is done as a free action and is considered subtle. Additionally, you gain access to the ancient spellbook and one of the following features.",
         benefits: {
           spells: ["Flagrate (free action, subtle)"],
           specialAbilities: [
@@ -3146,7 +3131,7 @@ export const subclassesData = {
         level: 1,
         name: "Ancient Spellbook",
         description:
-          "Access to unique Arithmantic and Runic spells that can be cast subtly without sorcery points. Spells can be shared with other subclasses through downtime or free time. All spells have either Runic or Arithmantic tags for enhanced casting.",
+          "All Arithmantic and Runic spells may be cast in the class of their associated schools of magic only. /n*Ancient Spellbook Spell Sharing Rules: Spells within the Ancient spellbook may be taught to players of other subclasses under the following conditions:/n* -The spell must be locked in/n* -Using a Downtime slot. Both the Teacher and the Learner must use a slot to teach the spell/n* -Free Time during Session. Both the Teacher and the Learner must use their free time to teach the spell./n*All spells within the Ancient Spellbook have either the Runic or Arithmantic Tag. Meaning, they can be cast Subtly without the use of sorcery points. The Spellbook is outlined at the bottom of this subclass.",
         benefits: {
           specialAbilities: [
             {
@@ -3173,7 +3158,7 @@ export const subclassesData = {
           {
             name: "School of Magic Expert",
             description:
-              "Choose one school of magic specialization (+1 to that school required). Each school grants unique abilities: Divinations (reroll attacks/checks twice per long rest), Charms (charm creatures within 5 feet), Transfigurations (alter weight of Large or smaller objects), Healing (magical ward with 2x level + modifier HP), or JHC (Dark Empowerment with AC/speed/concentration bonuses).",
+              "Choose one of the following School of Magic options. +1 to School of Magic Required.",
             benefits: {
               specialAbilities: [
                 {
@@ -3181,11 +3166,11 @@ export const subclassesData = {
                   type: "choice",
                   requirement: "+1 to chosen school",
                   options: [
-                    "Divinations: Reroll attacks/checks 2/long rest",
-                    "Charms: Charm creatures within 5 feet",
-                    "Transfigurations: Alter weight of Large or smaller objects",
-                    "Healing: Ward with 2×level+modifier HP",
-                    "JHC: Dark Empowerment (AC/speed/concentration bonuses)",
+                    "Divinations: You can magically exert limited control over the flow of time around a creature. As a reaction, after you or a creature you can see within 30 feet of you makes an attack roll, an ability check, or a saving throw, you can force the creature to reroll. You make this decision after you see whether the roll succeeds or fails. The target must use the result of the second roll./n*You can use this ability twice, and you regain any expended uses when you finish a long rest.",
+                    "Charms: Your soft words and enchanting gaze can magically enthrall another creature. As an action, choose one creature that you can see within 5 feet of you. If the target can see or hear you, it must succeed on a Wisdom saving throw against your spell save DC or be charmed by you until the end of your next turn. The charmed creature's speed drops to 0, and the creature is incapacitated and visibly dazed./n*On subsequent turns, you can use your action to dedicate on this effect, extending its duration until the end of your next turn. However, the effect ends if you move more than 5 feet away from the creature, the creature is pulled more than 5 feet away from you, if the creature can neither see nor hear you, or if the creature takes damage./n*Once the effect ends, or if the creature succeeds on its initial saving throw against this effect, you can't use this feature on that creature again until you finish a long rest.",
+                    "Transfigurations: As an action, you can transfigure the weight of one object or creature you can see within 30 feet of you. The object or creature must be Large or smaller. The target's weight is halved or doubled for up to 1 minute. /n* -While the weight of a creature is halved by this effect, the creature's speed increases by 10 feet, it can jump twice as far as normal, and it has disadvantage on Strength checks and Strength saving throws./n* -While the weight of a creature is doubled by this effect, the creature's speed is reduced by 10 feet, and it has advantage on Strength checks and Strength saving throws./n*Upon reaching 8th level, you can target an object or a creature that is Huge or smaller.",
+                    "Healing: You can weave magic around yourself for protection. When you cast a healing spell of 1st level or higher, you can simultaneously use a strand of the spell's magic to create a magical ward on yourself that lasts until you finish a long rest. The ward has hit points equal to twice your level + your Healing modifier. Whenever you take damage, the ward takes the damage instead. If this damage reduces the ward to 0 hit points, you take any remaining damage./n*While the ward has 0 hit points, it can't absorb damage, but its magic remains. Whenever you cast a healing spell of 1st level or higher, the ward regains a number of hit points equal to twice the level of the spell./n*Once you create the ward, you can't create it again until you finish a long rest.",
+                    "JHC: You can invoke a Dark Empowerment that graces you with supernatural speed, agility, and focus.You can use a bonus action to invoke your Dark Empowerment, which lasts for 1 minute. It ends early if you are incapacitated. While your Dark Empowerment is active, you gain the following benefits:/n* -You gain a bonus to your AC equal to half of your JHC modifier rounded up (minimum of +1)/n* -Your walking speed increases by 10 feet./n* -You have advantage on Dexterity (Acrobatics) checks./n* -You gain a bonus to any Constitution saving throw you make to maintain your concentration on a spell. The bonus equals half of your JHC modifier rounded up (minimum of +1)./n*You can use this feature once per long rest.",
                   ],
                 },
               ],
