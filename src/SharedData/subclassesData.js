@@ -91,7 +91,7 @@ export const subclassesData = {
         level: 4,
         name: "Mastered Charms (Optional)",
         description:
-          "Can take instead of ASI/Feat. +1 Dexterity (max 20). Choose five known cantrips as Mastered Charms - each can be cast once per short rest as a bonus action without expending sorcery points.",
+          "At 4th level, you can optionally take this feature in place of an Ability score Improvement or Feat. Increase your Dexterity score by 1, to a maximum of 20. Additionally, you have honed your skills with charms spells to be able to cast quickly and accurately. Choose five of your known cantrips as your Mastered Charms. You can cast each of them once with the use of a bonus action without expending sorcery points. When you do so, you can’t do so again until you finish a short or long rest.",
         benefits: {
           abilityScoreIncrease: {
             type: "fixed",
@@ -105,7 +105,7 @@ export const subclassesData = {
               type: "resource",
               uses: "5 cantrips, once each per short rest",
               description:
-                "Cast chosen cantrips as bonus action without sorcery points",
+                "Increase your Dexterity score by 1, to a maximum of 20. Additionally, you have honed your skills with charms spells to be able to cast quickly and accurately. Choose five of your known cantrips as your Mastered Charms. You can cast each of them once with the use of a bonus action without expending sorcery points. When you do so, you can’t do so again until you finish a short or long rest.",
             },
           ],
         },
@@ -120,7 +120,10 @@ export const subclassesData = {
           {
             name: "Rapid Casting",
             description:
-              "When you cast a Charms spell as an action, cast another locked-in Charms spell of 3rd level or lower as part of that action. Increases to 3 spells at 10th level, 4 spells at 18th level.",
+              "Whenever you cast a Charms spell as an action, you may cast another locked in Charms spell of 3rd level or lower as a part of that action.
+
+The number of Charms spells you can cast per action increases to three when you reach 10th level and to four when you reach 18th level.
+",
             benefits: {
               specialAbilities: [
                 {
@@ -139,7 +142,7 @@ export const subclassesData = {
           {
             name: "Professional Charmer",
             description:
-              "Gain access to Professional Charms spell enhancements (enhanced versions of Diffindo, Immobulus, Deprimo, Confundo, Piertotum Locomotor that must be locked in).",
+              "You have learned how to improve and even perfect your charms spells. You gain access to the Professional Charms spell enhancements listed at the end of this subclass.",
             benefits: {
               spells: [
                 "Professional Diffindo",
@@ -164,7 +167,7 @@ export const subclassesData = {
         level: 9,
         name: "Double Cast",
         description:
-          "When you cast a spell of 1st level or higher that doesn't deal damage, choose one additional target for the same spell within range without expending an additional spell slot. Once per long rest.",
+          "At 9th level you’ve developed a heightened awareness of magical balance. When you cast a spell of 1st level or higher that does not deal damage, you can choose one additional target for the same spell within range, without expending an additional spell slot. You can use this feature once per long rest.",
         benefits: {
           specialAbilities: [
             {
@@ -187,7 +190,7 @@ export const subclassesData = {
           {
             name: "Durable Spellwork",
             description:
-              "While you maintain concentration on a spell, you have +2 bonus to AC and all saving throws.",
+              "The magic you channel helps ward off harm. While you maintain concentration on a spell, you have a +2 bonus to AC and all saving throws.",
             benefits: {
               combatBonuses: {
                 acBonus: "+2 while concentrating",
@@ -205,7 +208,7 @@ export const subclassesData = {
           {
             name: "Issued Command",
             description:
-              "Once per round, command an ally to cast one of your locked-in charms spells without them needing the spell or gaining a casting attempt. Use half proficiency bonus times per long rest.",
+              "You have shown your allies that trusting in your knowledge of charmswork will help in a pinch. Once per round, you may interact with an ally and command them to cast one of your locked in charms spells. Your ally does not have to have the spell attempted and does not gain a successful casting attempt when following this command. You may issue a command a number of times equal to half your proficiency bonus per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -229,7 +232,7 @@ export const subclassesData = {
           {
             name: "Wand and Shield",
             description:
-              "When casting Protego/Protego Maxima, transition to off-hand (bonus action dedication) while maintaining another concentration/dedication spell with your wand. Make separate Constitution saves for each spell when taking damage.",
+              "You've uncovered an ancient dueling style, allowing both offense and defense at the same time. When you cast protego or protego maxima, you can transition the spell's casting to your off-hand, freeing up your wand to cast other spells. The spell's dedication now expends a bonus action instead of an action, and you are able to cast and maintain another concentration or dedication spell with your wand. Any factor that affects maintaining concentration is applied individually to each effect (e.g. upon taking damage make a Constitution saving throw for each spell).",
             benefits: {
               specialAbilities: [
                 {
@@ -267,7 +270,7 @@ export const subclassesData = {
           {
             name: "Called Shot",
             description:
-              "If you miss with a spell attack roll, reroll with advantage. Twice per rest.",
+              "Your work to be able to strike enemies under pressure has hit its peak. If you miss with a spell attack roll, you can roll it again with advantage. You can use this feature twice per rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -282,7 +285,7 @@ export const subclassesData = {
           {
             name: "Force of Will",
             description:
-              "Creatures make saving throws against your Charms spells at disadvantage. Charms spells with area effects (cube, line, sphere, cone) have doubled area size.",
+              "Whenever a creature makes a saving throw against one of your Charms spells, it must do so at disadvantage. Additionally, any charm spell you cast that affects an area (cube, line, sphere, or cone) has its area's size doubled.",
             benefits: {
               specialAbilities: [
                 {
@@ -324,7 +327,7 @@ export const subclassesData = {
           {
             name: "Auror Training",
             description:
-              "You've already started practicing the required skills to become an Auror. You learn two common potion recipes or one uncommon potion recipe and gain an Auror's kit containing tracking tools, disguise and false identity items and a vial that restores 1d4 HP per dose and contains a number of doses equal to your proficiency bonus per long rest. Additionally, you gain proficiency in two of the following: Investigation, Potion-Making, Stealth, Survival.",
+              "You've already started practicing the required skills to become an Auror. You learn two common potion recipes or one uncommon potion recipe and gain an Auror’s kit containing tracking tools, disguise and false identity items and a vial that restores 1d4 HP per dose and contains a number of doses equal to your proficiency bonus per long rest. Additionally, you gain proficiency in two of the following: Investigation, Potion-Making, Stealth, Survival.",
             benefits: {
               equipment: ["Auror's Kit"],
               potionRecipes: {
@@ -356,7 +359,7 @@ export const subclassesData = {
           {
             name: "Curse-Breaking",
             description:
-              "Your curiosity in taking apart spells and enchantments has found an outlet. When you or an ally within 5 feet of you are the target of any Jinx, Hex, Curse or Dark spell, you can use your reaction to make a spellcasting ability check with a DC of 10+ the spell's level. If you succeed, you change the spell into a locked in Jinx, Hex, Curse or Dark spell of your choosing.",
+              "Your curiosity in taking apart spells and enchantments has found an outlet. When you or an ally within 5 feet of you are the target of any Jinx, Hex, Curse or Dark spell, you can use your reaction to make a spellcasting ability check with a DC of 10+ the spell’s level. If you succeed, you change the spell into a locked in Jinx, Hex, Curse or Dark spell of your choosing.",
             benefits: {
               specialAbilities: [
                 {
@@ -380,7 +383,7 @@ export const subclassesData = {
           {
             name: "Forceful Magic",
             description:
-              "You cast every spell as if it were life-or-death. When you cast a spell that requires you to make a spell attack you can make an additional melee spell attack using your spell attack modifier as a Bonus Action. The damage for this attack is 1d6 + your spellcasting ability modifier.\n\nThis damage increases to 1d8 at 8th level, 1d10 at 10th level, and 1d12 at 12th level.",
+              "You cast every spell as if it were life-or-death. When you cast a spell that requires you to make a spell attack you can make an additional melee spell attack using your spell attack modifier as a Bonus Action. The damage for this attack is 1d6 + your spellcasting ability modifier. This damage increases to 1d8 at 8th level, 1d10 at 10th level, and 1d12 at 12th level.",
             benefits: {
               specialAbilities: [
                 {
@@ -625,7 +628,7 @@ export const subclassesData = {
           {
             name: "Transfigured Armament",
             description:
-              "When you cast Vera Verto, you may transfigure your wand into the form of any singular melee weapon of your choosing. Your Transfigured Armament uses your Strength ability for attack and damage rolls. The damage dealt is considered magical for the purposes of overcoming resistance to damage from non-magical attacks.",
+              "When you cast Vera Verto, you may transfigure your wand into the form of any singular melee weapon of your choosing. Your Transfigured Armament uses your Strength ability for attack and damage rolls. The damage dealt is considered magical for the purposes of overcoming resistance to damage from non-magical attacks. Starting at 6th Level, you can attack twice with your Transfigured Armament, whenever you take the Attack Action. Additionally, the number of attacks you can make with your Transfigured Armament increases to three when you reach 11th level and four when you reach 17th level.",
             benefits: {
               weaponProficiencies: ["All melee weapons (when transfigured)"],
               specialAbilities: [
@@ -644,7 +647,7 @@ export const subclassesData = {
         level: 4,
         name: "Elemental Spirit (Optional ASI)",
         description:
-          "Requires Elementalist. Summon elemental spirits (Poison, Ice, Flame, Lightning, Wind) that deal 2d6 damage in 10-foot radius and fight alongside you. Once per long rest.",
+          "Requires Elementalist. You can summon an elemental spirit and bind it to your will. As an action, you can summon a Poison (Acid damage), Ice (Cold Damage), Flame (Fire Damage), Lightning (Lightning Damage) or Wind (Thunder Damage) Spirit. The spirit appears in an unoccupied space of your choice that you can see within 30 feet of you. Each creature within 10 feet of the spirit (other than you) when it appears must succeed on a Dexterity saving throw against your spell save DC or take 2d6 damage of the Spirit’s associated type. The spirit is friendly to you and your companions and obeys your commands. See this creature's game statistics in the Elemental Spirit stat block, which uses your proficiency bonus (PB) in several places. You determine the spirit's appearance. In combat, the spirit shares your initiative count, but it takes its turn immediately after yours. The only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the spirit can take any action of its choice, not just Dodge. The spirit manifests for 1 hour, until it is reduced to 0 hit points, until you use this feature to summon the spirit again, or until you die. You can use this feature once per long rest.",
         requirements: ["Elementalist"],
         benefits: {
           specialAbilities: [
@@ -1490,7 +1493,7 @@ export const subclassesData = {
           {
             name: "Foresight",
             description:
-              "You see omens everywhere. After long rest, roll two d20s and record as foresight rolls. Expend one to replace any attack roll, saving throw, or ability check you can see (once per turn). Reroll after long rest. Gain third roll at 10th level.",
+              "You start to see omens everywhere you look. After a long rest, roll two d20s and record those rolls as your two foresight rolls. When you or a creature you can see is about to make an attack roll, saving throw, or ability check, you can expend one of your foresight rolls to use that number, once per turn. After a long rest, you lose and reroll your foresight rolls. At level 10, you gain another foresight roll, for a total of 3.",
             benefits: {
               specialAbilities: [
                 {
@@ -1509,7 +1512,7 @@ export const subclassesData = {
           {
             name: "Legilimency",
             description:
-              "Add Legilimens to locked spells. Cast Legilimens at-will (verbal or non-verbal). Resistance attempts against your Legilimens are made at disadvantage.",
+              "You add the legilimens spell to your list of locked in spells. Additionally, your skill in navigating thoughts is unparalleled. You can now cast legilimens at-will, verbally or non-verbally. Any attempt to resist your legilimens spell is made at disadvantage.",
             benefits: {
               spells: ["Legilimens"],
               specialAbilities: [
@@ -1538,7 +1541,7 @@ export const subclassesData = {
           {
             name: "Font of Divination",
             description:
-              "When casting divination spell of 2nd level+ using spell slot, regain one expended spell slot. Regained slot must be lower level than cast spell, max 5th level.",
+              "Casting divination spells comes so easily to you that it expends only a fraction of your spellcasting efforts. When you cast a divination spell of 2nd level or higher using a spell slot, you regain one expended spell slot. The slot you regain must be of a level lower than the spell you cast and can't be higher than 5th level.",
             benefits: {
               specialAbilities: [
                 {
@@ -1553,7 +1556,7 @@ export const subclassesData = {
           {
             name: "Skilled Occlumens",
             description:
-              "Legilimens and Veritaserum don't work on you unless you allow it. Can choose to let Legilimens continue while revealing false information, emotions, or memories of your choosing.",
+              "Legilimens and veritaserum will not work on you, unless you allow it. You can choose to let legilimens continue and reveal false information, false emotions, or false memories of your choosing.",
             benefits: {
               immunities: [
                 "Legilimens (unless allowed)",
@@ -1579,7 +1582,7 @@ export const subclassesData = {
         level: 9,
         name: "Sensing Danger",
         description:
-          "Add full proficiency bonus to Initiative and add half Divinations modifier (rounded up, minimum +1) to AC.",
+          "You add your full proficiency bonus to your initiative and can add half of your Divinations modifier (Rounded up with a minimum of +1) to your AC.",
         benefits: {
           combatBonuses: {
             initiative: "full proficiency bonus",
@@ -1605,7 +1608,7 @@ export const subclassesData = {
           {
             name: "Third Eye",
             description:
-              "Action to gain one benefit until incapacitated or short/long rest: Darkvision 60ft, read any language, or see invisible creatures/objects within 10ft. Once per short/long rest.",
+              "You can use your action to increase your powers of perception. When you do so, choose one of the following benefits, which lasts until you are incapacitated or you take a short or long rest. You can't use the feature again until you finish a short or long rest.\n*Darkvision: You gain darkvision out to a range of 60 feet. \n*Greater Comprehension: You can read any language. \n*See Invisibility: You can see invisible creatures and objects within 10 feet of you that are within line of sight.",
             benefits: {
               specialAbilities: [
                 {
@@ -1625,7 +1628,7 @@ export const subclassesData = {
           {
             name: "Mystic Sleep",
             description:
-              "After rest, choose: Dream messaging (appear in target's dreams, shape environment, optional nightmare for 3d6 damage), Scrying (see/hear target with invisible sensor), or Portal (10ft circle to last long rest location). Once per long rest.",
+              "When you finish a rest, you can use one of the following abilities./n* -Choose a creature known to you as the target of this ability. You, or a willing creature you touch, enters a trance state, acting as a messenger. While in the trance, the messenger is aware of their surroundings, but can’t take actions or move. If the target is asleep, the messenger appears in the target’s dreams and can converse with the target as long as it remains asleep, through the duration of the spell. The messenger can also shape the environment of the dream, creating landscapes, objects, and other images. The messenger can emerge from the trance at any time, ending the effect of the spell early. The target recalls the dream perfectly upon waking. If the target is awake when you cast the spell, the messenger knows it, and can either end the trance (and the spell) or wait for the target to fall asleep, at which point the messenger appears in the target’s dreams. You can make the messenger appear monstrous and terrifying to the target. If you do, the messenger can deliver a message of no more than ten words and then the target must make a Wisdom saving throw. On a failed save, echoes of the phantasmal monstrosity spawn a nightmare that lasts the duration of the target’s sleep and prevents the target from gaining any benefit from that rest. In addition, when the target wakes up, it takes 3d6 psychic damage. If you have a body part, lock of hair, clipping from a nail, or similar portion of the target’s body, the target makes its saving throw with disadvantage./n* -You can see and hear a particular creature you choose that is on the same plane of existence as you. The target must make a Wisdom saving throw, which is modified by how well you know the target and the sort of physical connection you have to it. If a target knows you’re casting this spell, it can fail the saving throw voluntarily if it wants to be observed. SCRYING TABLE On a successful save, the target isn’t affected, and you can’t use this spell against it again for 24 hours. On a failed save, the spell creates an invisible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration. A creature that can see invisible objects sees the sensor as a luminous orb about the size of your fist. Instead of targeting a creature, you can choose a location you have seen before as the target of this spell. When you do, the sensor appears at that location and doesn’t move./n* -You draw a 10-foot-diameter circle on the ground inscribed with sigils that opens a portal to the last location where you finished a long rest. Any creature that enters the portal instantly appears within 5 feet of the destination or in the nearest unoccupied space if that space is occupied./n*Once you use this feature, you can't use it again until you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -1662,7 +1665,7 @@ export const subclassesData = {
           {
             name: "Greater Foresight",
             description:
-              "Requires Foresight. Reroll one Foresight roll per day, must use new roll.",
+              "Foresight Required. You may reroll one Foresight roll per day. You must use the new roll.",
             requirements: ["Foresight"],
             benefits: {
               specialAbilities: [
@@ -1678,7 +1681,7 @@ export const subclassesData = {
           {
             name: "Darting Eyes",
             description:
-              "Requires Legilimency. Bonus action to cast Legilimens in combat, charming target with telepathic control. Action for total control until end of next turn (gain corruption point, max 4). Damage breaks charm, no effect on Occlumens.",
+              "Legilimency required. As a bonus action, you can cast legilimens in combat to beguile a humanoid that you can see within range. It must succeed on a Wisdom saving throw or be charmed by you for the duration. The creature always rolls this saving throw without disadvantage. /n*While the target is charmed, you have a telepathic link with it as long as the two of you are on the same plane of existence. You can use this telepathic link to issue commands to the creature while you are conscious (no action required), which it does its best to obey. You can specify a simple and general course of action, such as “Attack that creature,” “Run over there,” or “Fetch that object.” If the creature completes the order and doesn’t receive further direction from you, it defends and preserves itself to the best of its ability./n*You can use your action to take total and precise control of the target. Until the end of your next turn, the creature takes only the actions you choose, and doesn’t do anything that you don’t allow it to do. During this time you can also cause the creature to use a reaction, but this requires you to use your own reaction as well. If you do so, you immediately gain one corruption point not exceeding a total of four corruption points./n*Each time the target takes damage, it makes a new Wisdom saving throw against the spell. If the saving throw succeeds, the spell ends. This spell has no effect on an Occlumens.",
             requirements: ["Legilimency"],
             benefits: {
               specialAbilities: [
@@ -1707,7 +1710,7 @@ export const subclassesData = {
           {
             name: "Vivid Visions",
             description:
-              "Bonus action to see vision of your next action and consequences, rolling all required rolls. If you choose that action, vision becomes reality using same rolls. Once per long rest.",
+              "Your connection to your Inner Eye gives you lucid visions of the immediate future. As a bonus action, you can see a vision of your next action and its immediate consequences, rolling any required rolls and hearing a description of the results. If you choose that action, your vision becomes reality, using all the same rolls. The vision is instantaneous, and takes up no time. After you use this ability, you can’t use it again until you finish a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -1722,7 +1725,7 @@ export const subclassesData = {
           {
             name: "Master of Minds",
             description:
-              "Requires Legilimency. When casting Legilimens as action, force Wisdom save. Target takes 4d8 psychic damage (failed save) or half (success). Damage increases by 1d8 per slot level above 3rd.",
+              "Legilimency required. Your skill in navigating thoughts is unparalleled. Any time you cast Legillimens, as an action, you can force the target to succeed on a Wisdom saving throw, taking 4d8 psychic damage on a failed save, or half as much damage on a successful one./n*At Higher Levels. When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d8 for each slot level above 3rd.",
             requirements: ["Legilimency"],
             benefits: {
               specialAbilities: [
