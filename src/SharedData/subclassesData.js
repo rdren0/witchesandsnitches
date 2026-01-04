@@ -2709,9 +2709,7 @@ export const subclassesData = {
           {
             name: "Green Thumb",
             description:
-              "You gain an Herbology Kit and proficiency in the Herbology Kit and the Herbology skill, and the ability to cast Orchideous wordlessly, wandlessly and at will. You may add your Wisdom to your Herbology (Intelligence) check, representing long hours spent carefully tending to your plants.
-
-You gain the ability to grow plants in places that they normally wouldn’t. You Gain a portable greenhouse that can carry the plants from the first half of this list. This serves as a Travel-Pack capable of protecting from harm and comfortably carrying 1 Plant companion on your back. Additionally, your plant companion gains the following effect./n* -Attack. When you hit a creature with an attack, your plant lashes out and enhances the damage. The creature takes an extra 1d8 piercing damage. You can deal this extra damage once per turn.",
+              "You gain an Herbology Kit and proficiency in the Herbology Kit and the Herbology skill, and the ability to cast Orchideous wordlessly, wandlessly and at will. You may add your Wisdom to your Herbology (Intelligence) check, representing long hours spent carefully tending to your plants. You gain the ability to grow plants in places that they normally wouldn’t. You Gain a portable greenhouse that can carry the plants from the first half of this list. This serves as a Travel-Pack capable of protecting from harm and comfortably carrying 1 Plant companion on your back. Additionally, your plant companion gains the following effect./n* -Attack. When you hit a creature with an attack, your plant lashes out and enhances the damage. The creature takes an extra 1d8 piercing damage. You can deal this extra damage once per turn.",
             benefits: {
               equipment: ["Herbology Kit", "Portable greenhouse"],
               toolProficiencies: ["Herbologist's tools"],
