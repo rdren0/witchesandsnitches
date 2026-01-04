@@ -120,10 +120,7 @@ export const subclassesData = {
           {
             name: "Rapid Casting",
             description:
-              "Whenever you cast a Charms spell as an action, you may cast another locked in Charms spell of 3rd level or lower as a part of that action.
-
-The number of Charms spells you can cast per action increases to three when you reach 10th level and to four when you reach 18th level.
-",
+              "Whenever you cast a Charms spell as an action, you may cast another locked in Charms spell of 3rd level or lower as a part of that action. The number of Charms spells you can cast per action increases to three when you reach 10th level and to four when you reach 18th level.",
             benefits: {
               specialAbilities: [
                 {
