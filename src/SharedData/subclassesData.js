@@ -6397,8 +6397,7 @@ export const subclassesData = {
           {
             name: "Sticky Fingers",
             description:
-              "When you cast Manus, you can make the spectral hand invisible, and you can perform the following additional tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check: /n* -You can stow one object the hand is holding in a container worn or carried by another creature. /n* -You can retrieve an object in a container worn or carried by another creature. /n* -You can use thieves' tools to pick locks and disarm traps at range. /n*In addition, you can use a bonus action to control the hand.
-",
+              "When you cast Manus, you can make the spectral hand invisible, and you can perform the following additional tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check: /n* -You can stow one object the hand is holding in a container worn or carried by another creature. /n* -You can retrieve an object in a container worn or carried by another creature. /n* -You can use thieves' tools to pick locks and disarm traps at range. /n*In addition, you can use a bonus action to control the hand.",
             benefits: {
               specialAbilities: [
                 {
