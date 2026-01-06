@@ -5409,7 +5409,7 @@ export const subclassesData = {
           {
             name: "Study Buddy",
             description:
-              "After 1 hour studying, automatically improve one subject grade by one category. Can help others with homework instead. Choose: Herbology or History of Magic or Investigation or Magical Theory or Muggle Studies to gain proficiency in (expertise if already proficient).",
+              "You have extensively studied the history and lore within the library. You learn one language of your choice, and you gain proficiency with one of the following skills of your choice: Herbology, History of Magic, Investigation, Magical Theory, or Muggle Studies. If you already have proficiency in one of the listed skills, you can instead gain expertise. /n*Additionally, if you spend at least one hour studying, your grade in one chosen subject automatically goes up by one category. You may also choose to help others with their homework, giving them the benefits of this feature instead of yourself.",
             benefits: {
               skillProficiencies: [
                 {
@@ -5438,7 +5438,7 @@ export const subclassesData = {
           {
             name: "Quick Skim",
             description:
-              "Once per short/long rest, choose one skill or tool to gain proficiency with for 1 hour (expertise if already proficient). Master the art of rapid knowledge absorption.",
+              "You’ve mastered the art of skimming texts to boost your knowledge for a short burst of time. Once per short or long rest, you choose one skill or tool. For 1 hour, you have proficiency with the chosen skill or tool. If you already have proficiency with that skill or tool, you have expertise instead.",
             benefits: {
               specialAbilities: [
                 {
@@ -5462,7 +5462,7 @@ export const subclassesData = {
           {
             name: "Um, Actually?",
             description:
-              "When creature within 60 feet makes attack roll, ability check, or damage roll, use reaction for Intelligence contest. On success, reduce their roll by proficiency bonus. Use after roll but before results. Half Intelligence modifier (rounded up) times per long rest.",
+              "You learn how to use your superior intelligence to distract, confuse, and otherwise sap the confidence and competence of others. When a creature that you can see within 60 feet of you makes an attack roll, an ability check, or a damage roll, you can use your reaction to insult their intelligence. Make an Intelligence check contested by an Intelligence check of the target. On a fail, the target's roll is reduced by a number equal to your Proficiency Bonus. You can choose to use this feature after the creature makes its roll, but before the DM determines whether the attack roll or ability check succeeds or fails, or before the creature deals its damage. The creature is immune if it can't hear you or if it's immune to being charmed./n*You can use this feature a number of times equal to half of your intelligence modifier rounded up per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -5480,7 +5480,7 @@ export const subclassesData = {
           {
             name: "Battle Studies",
             description:
-              "When you hit with cantrip, analyze creature to learn all damage vulnerabilities, resistances, immunities, and condition immunities. When analyzed creature misses you, use reaction to cast cantrip at them. Lasts until short/long rest. Half proficiency bonus uses per long rest.",
+              "Your spells create a momentary link with your enemies, allowing you to intuit crucial information about a foe. When you hit a creature with a cantrip, you can intellectually analyze it. Whenever an analyzed creature misses you with an attack, you can immediately use your reaction to cast a cantrip at the target. This benefit lasts until you finish a short or long rest./n*Additionally, when you analyze a creature, you learn all of its damage vulnerabilities, damage resistances, damage immunities, and condition immunities./n*You can intellectually analyze a creature a number of times equal to half of your proficiency bonus per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -5506,7 +5506,7 @@ export const subclassesData = {
         level: 9,
         name: "I Was in the Library...",
         description:
-          "Your extensive research grants access to specialized knowledge. Automatically lock in two spells of your choice from the Elemental, Magizoo, Diviner's Curse, Forbidden, or Astronomic spell lists.",
+          "Your extensive research grants access to specialized knowledge. You automatically lock in two spells of your choice from the Elemental, Magizoo, Diviner’s Curse, Forbidden, or Astronomic spell lists.",
         benefits: {
           spells: {
             type: "choice",
@@ -5530,7 +5530,7 @@ export const subclassesData = {
           {
             name: "Intelligent Maneuver",
             description:
-              "Once per round, if you've already used your reaction, you can take an additional reaction. Use twice per long rest. Honed awareness through mental aptitude and pattern recognition.",
+              "You've honed your awareness and reflexes through mental aptitude and pattern recognition. Once per round, if you've already taken your reaction, you may take an additional reaction. /n*You can use this feature twice per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -5546,7 +5546,7 @@ export const subclassesData = {
           {
             name: "Wait... Hold on.",
             description:
-              "When making skill check, use reaction to reroll and add half Intelligence modifier (rounded up). Must use new roll. Choose after rolling but before learning success/failure.",
+              "When you make a skill check, you can use your reaction to think about your mistakes and try again. You may roll the check again, adding half your Intelligence modifier (rounded up) to the ability check, you must use the new roll. You can choose to do so after you roll the die for the ability check, but before the DM tells you whether you succeed or fail.",
             benefits: {
               specialAbilities: [
                 {
@@ -5570,7 +5570,7 @@ export const subclassesData = {
           {
             name: "Intelligent Casting",
             description:
-              "Add Intelligence modifier to damage of spells 3rd level or lower. Gain resistance to being charmed. In-depth knowledge of magical mechanics boosts spell potency.",
+              "Your in depth knowledge of the mechanical workings of magic boosts the potency of your spells. Add your Intelligence modifier to the damage you deal with any spell of 3rd Level or lower. Additionally, you gain resistance to being charmed.",
             benefits: {
               resistances: ["charmed"],
               specialAbilities: [
@@ -5585,7 +5585,7 @@ export const subclassesData = {
           {
             name: "Super Sleuth",
             description:
-              "Spend 1+ minutes in contemplation (up to Intelligence score minutes, concentration required). Object Reading: learn acquisition, loss, and recent significant events of held objects and previous owners. Area Reading: see recent significant events in 50-foot cube going back Intelligence score days. Once per short/long rest.",
+              "Your keen mind can call up recollections of the past that relate to an object you hold or your immediate surroundings. You spend at least 1 minute in contemplation, then receive dreamlike, shadowy interpretations of recent events. You can study in this way for a number of minutes equal to your Intelligence score and must maintain concentration during that time, as if you were casting a spell./n* -Once you use this feature, you can't use it again until you finish a short or long rest./n* -Object Reading. Holding an object as you study it, you can see visions of the object's previous owner. After contemplating for 1 minute, you learn how the owner acquired and lost the object, as well as the most recent significant event involving the object and that owner. If the object was owned by another creature in the recent past (within a number of days equal to your Intelligence score), you can spend 1 additional minute for each owner to learn the same information about that creature./n* -Area Reading. As you contemplate, you see visions of recent events in your immediate vicinity (a room, street, tunnel, clearing, or the like, up to a 50-foot cube), going back a number of days equal to your Intelligence score. For each minute you contemplate, you learn about one significant event, beginning with the most recent. Significant events typically involve powerful emotions, such as battles and betrayals, marriages and murders, births and funerals. However, they might also include more mundane events that are nevertheless important in your current situation.",
             benefits: {
               specialAbilities: [
                 {
@@ -5612,7 +5612,7 @@ export const subclassesData = {
           {
             name: "Battle Expert",
             description:
-              "Requires Battle Studies. When hitting with cantrip, cause vulnerability to chosen damage type for 1 minute (suppresses resistance instead if present, no effect on immunity). Once per long rest.",
+              "Battle Studies Required. When you hit a creature with a cantrip, you can cause the creature to gain vulnerability to one damage type of your choice for 1 minute./n*If a creature has resistance to the damage type you choose, this resistance is suppressed for 1 minute, rather than gaining vulnerability. A creature that is immune to the damage type you choose is unaffected. /n*You can use this feature once per long rest.",
             requirements: ["Battle Studies"],
             benefits: {
               specialAbilities: [
@@ -5630,7 +5630,7 @@ export const subclassesData = {
           {
             name: "Perfected Communication",
             description:
-              "Understand all spoken languages. Any creature that can understand a language can understand what you say. Universal linguistic mastery through cultural study.",
+              "You spend so much time on the study of other cultures and languages that you understand all spoken languages. Moreover, any creature that can understand a language can understand what you say.",
             benefits: {
               languages: ["all spoken languages (understand)"],
               specialAbilities: [
@@ -5933,7 +5933,7 @@ export const subclassesData = {
         level: 1,
         name: "Quidditch Initiate",
         description:
-          "At 1st level, you gain Vehicles (Broomstick) proficiency (expertise if already proficient). Summon magical broom as bonus action. Choose your primary Quidditch position specialty.",
+          "At 1st level you gain tool proficiency in Vehicles (Broomstick). If you already have Broomstick proficiency, you gain Expertise instead. You can summon your magical broom as a bonus action, which remains with you unless dismissed or if you’re separated from it for over 1 hour. Additionally, you gain one of the following features.",
         benefits: {
           vehicleProficiencies: ["Broomstick"],
           specialAbilities: [
@@ -5954,7 +5954,7 @@ export const subclassesData = {
           {
             name: "Batter Up!",
             description:
-              "Beater specialization. Gain Athletics proficiency (expertise if already proficient). Weapon proficiency with Beater's Bats (1d4/1d6 versatile) and Bludgers (1d6 ranged, scaling to 4d6 at 17th level). Use Strength for attack and damage rolls.",
+              "Your practice with your Beater’s Bat and aim with a Bludger has earned you a reputation as a strong Beater. You gain proficiency in Athletics, if you already have proficiency gain Expertise instead. You also gain weapon proficiency with Beater’s Bats and Bludgers, and use Strength for the attack and damage rolls with them. /n*The Bludger's damage increases by 1d6 when you reach 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
             benefits: {
               skillProficiencies: [
                 {
@@ -5983,7 +5983,7 @@ export const subclassesData = {
           {
             name: "Think Fast!",
             description:
-              "Chaser specialization. Gain Acrobatics proficiency (expertise if already proficient). As bonus action, target within 30 feet holding item must make Wisdom save or drop item to catch your Quaffle.",
+              "Your maneuverability on a broom and Quidditch tactics with your Quaffle is second to none. You gain proficiency in Acrobatics, if you already have proficiency gain Expertise instead. As a bonus action, you may choose a being within 30 feet holding an item and pass your Quaffle to them. The being must succeed on a wisdom saving throw or drop whatever it is holding to catch your Quaffle.",
             benefits: {
               skillProficiencies: [
                 {
@@ -6014,7 +6014,7 @@ export const subclassesData = {
           {
             name: "Cheer",
             description:
-              "As bonus action, inspire proficiency bonus allies within 30 feet with 1d4 to add to one ability check, attack roll, or saving throw before end of next turn. Twice per long rest.",
+              "You have a knack for bolstering your team’s confidence in a tricky situation. As a bonus action, you may inspire a number of allies equal to your proficiency bonus within 30 feet of you who can hear you. These creatures gain 1d4 that they can add to one ability check, attack roll, or saving throw before the end of their next turn. You can use this feature twice per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6032,7 +6032,7 @@ export const subclassesData = {
           {
             name: "Chirp",
             description:
-              "As bonus action, discourage proficiency bonus enemies within 30 feet to subtract 1d4 from next ability check, attack roll, or saving throw before end of your next turn. Twice per long rest.",
+              "Alternatively, you’ve learned how to mock your enemies to distract and confuse them. As a bonus action you may discourage a number of enemies equal to your proficiency bonus within 30 feet of you who can hear you. These creatures must subtract 1d4 from their next ability check, attack roll, or saving throw before the end of your next turn. You can use this feature twice per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6057,7 +6057,7 @@ export const subclassesData = {
           {
             name: "Goalkeeper",
             description:
-              "Keeper specialization. Gain Athletics or Acrobatics proficiency, +2 AC bonus. As reaction, force enemy within 15 feet to reroll attack (take lower). Use proficiency bonus times per short rest.",
+              "Your practice as Keeper has given you the ability to dodge and deflect attacks. You gain proficiency in Athletics or Acrobatics, and you gain a +2 bonus to your Armor Class. Additionally, as a reaction, you may force an enemy within 15 feet to reroll one attack roll, taking the lower result. You can use this ability a number of times equal to your proficiency bonus per short rest.",
             benefits: {
               combatBonuses: {
                 acBonus: "+2",
@@ -6083,7 +6083,7 @@ export const subclassesData = {
           {
             name: "Eagle Eyes",
             description:
-              "Seeker specialization. Gain Perception or Sleight of Hand proficiency. Add half Wisdom modifier to Dexterity saves, advantage on sight-based Perception checks.",
+              "Seeker’s skills come naturally to you. Spotting and catching tiny objects from far away are a quick reflex. You gain proficiency in Perception or Sleight of Hand. Additionally, you may add half of your Wisdom modifier rounded down (minimum of 0) to your Dexterity saving throws, and you gain advantage on Perception checks that rely on sight.",
             benefits: {
               savingThrows: {
                 bonus: "half Wisdom modifier to Dexterity saves",
@@ -6110,7 +6110,7 @@ export const subclassesData = {
         level: 8,
         name: "I'm Ok! (Optional)",
         description:
-          "Can take instead of ASI/Feat. Dexterity +1 (max 20). Advantage on Acrobatics while flying/mid-air. Reaction to reduce fall damage by 3×(Dex mod + Str mod).",
+          "Quidditch is a game played in the highest of highs but you’re no stranger to the lowest of lows. You gain the following benefits./n* -Increase your Dexterity score by 1, to a maximum of 20 /n* -While flying or in mid-air, you have advantage on Acrobatics checks. If you fall from any height, you can use your reaction to reduce fall damage by an amount equal to 3 times your Dexterity modifier + 3 times your Strength Modifier.",
         benefits: {
           abilityScoreIncrease: {
             type: "fixed",
@@ -6137,7 +6137,7 @@ export const subclassesData = {
         level: 9,
         name: "Quidditch Robe",
         description:
-          "While not wearing cloak or wielding defensive item, AC equals 10 + Dex modifier + Str modifier.",
+          "At 9th level, while you are not wearing a cloak or wielding a defensive item, your armor class equals 10 + your Dexterity modifier + your Strength modifier.",
         benefits: {
           armorClass: {
             calculation: "10 + Dex modifier + Str modifier",
@@ -6154,7 +6154,7 @@ export const subclassesData = {
           {
             name: "Zoomies!",
             description:
-              "While on broom or flying, teleport up to 60 feet as part of movement, passing through walls/barriers without opportunity attacks. Half proficiency bonus uses per long rest.",
+              "Your movement becomes so swift and streamlined that it becomes nearly instantaneous. When on a broom, or using a flying speed, you can teleport up to 60 feet as part of that movement, allowing you to pass through walls or barriers. This teleportation doesn’t provoke opportunity attacks. /n*You can use this feature a number of times equal to half of your proficiency bonus per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6174,7 +6174,7 @@ export const subclassesData = {
           {
             name: "I Am Speed",
             description:
-              "As action while on broom, fly 60 feet in straight line creating 60×20 foot wind tunnel for 1 minute. Creatures entering or starting turn inside make Strength save or take 5d6 force damage and be pulled 15 feet toward center. Various environmental effects. Once per long rest.",
+              "Your understanding of aerodynamics and wind currents has given you an edge. As an action while on a broom, you can use your movement to fly up to 60 feet in a straight line, without provoking opportunity attacks and creating a wind tunnel 60 feet long and 20 feet wide that lasts for 1 minute before dispersing. Each creature that enters the wind tunnel for the first time or starts its turn in the wind tunnel must succeed on a Strength saving throw against your spell save DC or take 5d6 force damage and be pulled up to 15 feet towards the center of the wind tunnel. On a successful save the creature takes half as much damage and is not pulled. /n*Any creature in the Wind tunnel must spend 2 feet of movement for every 1 foot it moves when moving closer to you. /n*The wind disperses gas or vapor, and it extinguishes candles, torches, and similar unprotected flames in the area. It causes protected flames, such as those of lanterns, to dance wildly and has a 50 percent chance to extinguish them. /n*You can use this feature once per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6203,7 +6203,7 @@ export const subclassesData = {
           {
             name: "Slugger",
             description:
-              "Requires Batter Up!. Bludger and Beater's Bat attacks count as magical. Bludger hits can deal 4d8 additional force damage (Strength modifier uses per long rest) and force Strength save for knockback/prone.",
+              "Batter up! Required. Your attacks with your Bludger and Beater’s Bat count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage. Additionally, attacks with your Bludger gain the following benefits./n* -When you hit a creature with your Bludger, you can deal 4d8 additional force damage. You can apply this damage a number of times equal to your strength modifier per long rest./n* -When you hit a creature with your Bludger, you may force them to make a Strength saving throw against your spell save DC. On a failed save the target is either pushed back by 10 feet or knocked prone.",
             requirements: ["Batter Up!"],
             benefits: {
               specialAbilities: [
@@ -6225,7 +6225,7 @@ export const subclassesData = {
           {
             name: "Chaser's Strategy",
             description:
-              "Requires Think Fast!. As action, command ally within 30 feet to use reaction for attack or spell with advantage.",
+              "Think Fast! Required. As an Action, you can shout a command to an ally within 30 feet who can hear you. They may use their Reaction to make an attack or cast a spell. Any attack rolls made this way are done at Advantage.",
             requirements: ["Think Fast!"],
             benefits: {
               specialAbilities: [
@@ -6242,7 +6242,7 @@ export const subclassesData = {
           {
             name: "Keeper's Wall",
             description:
-              "Requires Goalkeeper. As reaction, create ethereal barrier for ally within 30 feet (+5 AC or +3 saves until next turn, Dedication extends to 1 minute). Can affect two allies if within 5 feet of each other. Dexterity modifier uses per long rest.",
+              "Goalkeeper Required. As a reaction, you can create an ethereal barrier to protect an ally within 30 feet, granting them a +5 bonus to their AC or a +3 bonus to saving throws. This barrier lasts until the start of your next turn, or you may use Dedication to extend the duration to 1 minute.Additionally, if there is another ally within 5 feet of the target of this ability it can be applied to both allies. The barrier will remain active for the duration as long as both allies remain within 15 feet of each other. /n*You can use this feature a number of times equal to your Dexterity modifier per long rest.",
             requirements: ["Goalkeeper"],
             benefits: {
               specialAbilities: [
@@ -6261,7 +6261,7 @@ export const subclassesData = {
           {
             name: "Seeker's Sight",
             description:
-              "Requires Eagle Eyes. Treat d20 rolls of 9 or lower as 10 for Acrobatics, Sleight of Hand, or Perception. Automatically detect invisible creatures/objects within 30 feet unless behind total cover.",
+              "Eagle Eyes Required. You are the best Seeker on the team, and are always reliable in a pinch. Whenever you make an Acrobatics, Sleight of hand or Perception check, you can treat a d20 roll of 9 or lower as a 10. /n*Additionally, you automatically detect the faint outlines of invisible creatures or objects within 30 feet, unless they are behind total cover.",
             requirements: ["Eagle Eyes"],
             benefits: {
               specialAbilities: [
@@ -6292,7 +6292,7 @@ export const subclassesData = {
           {
             name: "All For One!",
             description:
-              "Requires Get Your Head in the Game. Gain additional use of Cheer/Chirp. Cheer: add die to damage/AC, temp HP equal to 10 + 2×spellcasting modifier. Chirp: Wisdom save or 2d4 psychic damage + d4 penalty for two rounds.",
+              "Get Your Head in the Game Required. You gain one additional use of your Cheer or Chirp feature and gain one of the following bonuses. /n* -Cheer: When you use your cheer ability, any inspired allies may add their die to attack damage or use the number rolled as an AC bonus until the end of their next turn. Additionally, any inspired allies gain Temporary Hit Points equal to 10 + twice your spellcasting ability modifier. /n* -Chirp: When you use your chirp ability, any discouraged enemies must succeed on a wisdom saving throw against your spell save DC. On a failed save, they take 2d4 psychic damage and subtract a d4 from ability checks, saving throws and attack rolls for two rounds. On a successful save they subtract a d4 from the next ability check, attack roll, or saving throw they make before the end of your next turn.",
             requirements: ["Get Your Head in the Game"],
             benefits: {
               specialAbilities: [
@@ -6309,7 +6309,7 @@ export const subclassesData = {
           {
             name: "Bombs Away!",
             description:
-              "Gain permanent 30-foot magical flying speed. While flying, advantage on attack rolls against creatures in 30-foot cone directly below you.",
+              "Your years as team captain has made you a formidable opponent in the sky. You gain a permanent magical flying speed of 30 feet. Additionally, while flying, you gain advantage on attack rolls against creatures in a 30 foot cone directly below you.",
             benefits: {
               speeds: {
                 fly: "30 feet (magical)",
@@ -6327,7 +6327,7 @@ export const subclassesData = {
           {
             name: "All Rounder",
             description:
-              "Gain expertise in Athletics, Acrobatics, Perception, and Sleight of Hand (if already proficient). Choose one additional feature from Best Of The Best section.",
+              "You gain Expertise in any of the following that you are already proficient in: Athletics, Acrobatics, Perception and Sleight of Hand. Additionally, you may choose one extra feature from the Best of the Best section.",
             benefits: {
               skillExpertise: [
                 {
@@ -6379,7 +6379,7 @@ export const subclassesData = {
           {
             name: "Insidious Rumor",
             description:
-              "After speaking alone with a creature for 1 minute, target makes Wisdom save or becomes frightened of you or chosen creature for 1 hour (ends if attacked/damaged or sees allies attacked). No hint on successful save. Once per short/long rest.",
+              "You learn to infuse innocent-seeming words with an insidious magic that can inspire terror. /n*If you speak to a being alone for at least 1 minute, you can attempt to seed paranoia and fear into its mind. At the end of the conversation, the target must succeed on a Wisdom saving throw against your spell save DC or be frightened of you or another creature of your choice. The target is frightened in this way for 1 hour, until it is attacked or damaged, or until it witnesses its allies being attacked or damaged. Creatures with less than 4 Intelligence are immune to this effect. /n*If the target succeeds on its saving throw, the target has no hint that you tried to frighten it. /n*Once you use this feature, you can't use it again until you finish a short rest or long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6397,7 +6397,8 @@ export const subclassesData = {
           {
             name: "Sticky Fingers",
             description:
-              "When casting Manus, make spectral hand invisible. With contested Sleight of Hand vs Perception: stow objects in others' containers, retrieve objects from others, use thieves' tools at range. Control hand with bonus action.",
+              "When you cast Manus, you can make the spectral hand invisible, and you can perform the following additional tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check: /n* -You can stow one object the hand is holding in a container worn or carried by another creature. /n* -You can retrieve an object in a container worn or carried by another creature. /n* -You can use thieves' tools to pick locks and disarm traps at range. /n*In addition, you can use a bonus action to control the hand.
+",
             benefits: {
               specialAbilities: [
                 {
@@ -6420,7 +6421,7 @@ export const subclassesData = {
         level: 4,
         name: "Silver Tongue (Optional)",
         description:
-          "Can take instead of ASI/Feat. Master of saying the right thing. Treat d20 rolls of 7 or lower as 8 for Charisma (Persuasion) and Charisma (Deception) checks.",
+          "Can take instead of ASI/Feat. You are a master at saying the right thing at the right time. When you make a Charisma (Persuasion) or Charisma (Deception) check, you can treat a d20 roll of 7 or lower as a 8.",
         benefits: {
           specialAbilities: [
             {
@@ -6436,7 +6437,7 @@ export const subclassesData = {
         level: 6,
         name: "Perjurer",
         description:
-          "Gain stealth expertise and choose an advanced deception technique.",
+          "You’ve spent a significant amount of time honing your skills at moving silently and unseen, and pick-pocketing your victims. You gain proficiency in two of the following: Deception, Intimidation, Sleight of Hand, or Stealth.",
         benefits: {
           skillExpertise: [
             {
@@ -6449,7 +6450,7 @@ export const subclassesData = {
           {
             name: "Duplicate",
             description:
-              "As action, create perfect illusion of yourself for 1 minute within 30 feet (120-foot max range). Move 30 feet as bonus action. Cast spells through illusion space. Advantage on attacks when both you and illusion within 5 feet of target. Once per long rest.",
+              "As an action, you create a perfect illusion of yourself that lasts for 1 minute, or until you lose your concentration (as if you were concentrating on a spell). The illusion appears in an unoccupied space that you can see within 30 feet of you. As a bonus action on your turn, you can move the illusion up to 30 feet to a space you can see, but it must remain within 120 feet of you. /n*For the duration, you can cast spells as though you were in the illusion's space, but you must use your own senses. Additionally, when both you and your illusion are within 5 feet of a creature that can see the illusion, you have advantage on attack rolls against that creature, given how distracting the illusion is to the target. /n*You can use this feature once per long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6470,7 +6471,7 @@ export const subclassesData = {
           {
             name: "Make Nice",
             description:
-              "After 1+ minutes observing/interacting outside combat, learn if creature is equal/superior/inferior in Intelligence/Wisdom/Charisma scores or their subclass (choose 2). May learn history/personality traits.",
+              "If you spend at least 1 minute observing or interacting with another creature outside combat, you can learn certain information about its capabilities compared to your own. The DM tells you if the creature is your equal, superior, inferior or what their subclass is, in regard to two of the following characteristics of your choice: /n* -Intelligence score /n* -Wisdom score /n* -Charisma score /n* -Subclass /n*At the DM's option, you might also realize you know a piece of the creature's history or one of its personality traits, if it has any.",
             benefits: {
               specialAbilities: [
                 {
@@ -6486,7 +6487,7 @@ export const subclassesData = {
           {
             name: "Deep Pockets",
             description:
-              "One garment gains 1-foot diameter compartment visible only to you, permanently affected by Capacious Extremis charm. Temporarily inaccessible in magically extended spaces.",
+              "A good thief knows to keep their ill-gotten gains close to the chest, and you have learned how to take it to the next level. The inside of one garment holds a one-foot diameter compartment which is visible and accessible only to you. The compartment is permanently affected by the Capacious Extremis charm. If taken into a space already magically extended, the pocket becomes temporarily inaccessible but does not interact unfavorably as other similar enchantments would.",
             benefits: {
               equipment: [
                 "Hidden compartment (1-foot diameter, Capacious Extremis)",
@@ -6506,7 +6507,7 @@ export const subclassesData = {
         level: 8,
         name: "Obliviator (Optional)",
         description:
-          "Can take instead of ASI/Feat. When casting obliviate, can implant detailed false memories instead of erasing. Undetectable to target but might be detected by external memory examination.",
+          "Can take instead of ASI/Feat. Instead of simply erasing memories, when you cast obliviate, you can choose to implant very detailed false memories. These memories are undetectable by the target of the spell, but if others examine the target's memories (through Legilimency or a Pensieve), they might be able to detect that they're false.",
         benefits: {
           specialAbilities: [
             {
@@ -6523,7 +6524,7 @@ export const subclassesData = {
         level: 9,
         name: "Sneaky Bitch",
         description:
-          "On your turn, take one additional bonus action. Can use bonus actions for Dash, Disengage, or Hide actions.",
+          "On your turn you can take one additional bonus action, and can use your bonus actions to take the Dash, Disengage or Hide action.",
         benefits: {
           specialAbilities: [
             {
@@ -6544,7 +6545,7 @@ export const subclassesData = {
           {
             name: "Look at me",
             description:
-              "As action, Persuasion vs Insight contest. Success on hostile: disadvantage on attacks vs others, no opportunity attacks vs others (1 minute, various end conditions). Success on non-hostile: charmed for 1 minute (ends if harmed).",
+              "Your words become extraordinarily beguiling. As an action, you can make a Charisma (Persuasion) check contested by a creature's Wisdom (Insight) check. The creature must be able to hear you, and the two of you must share a language. /n*If you succeed on the check and the creature is hostile to you, it has disadvantage on attack rolls against targets other than you and can't make opportunity attacks against targets other than you. This effect lasts for 1 minute, until one of your companions attacks the target or affects it with a spell, you use this feature on another creature, or until you and the target are more than 60 feet apart. /n*If you succeed on the check and the creature isn't hostile to you, it is charmed by you for 1 minute. While charmed, it regards you as a friendly acquaintance. This effect ends immediately if you or your companions do anything harmful to it.",
             benefits: {
               specialAbilities: [
                 {
@@ -6561,7 +6562,7 @@ export const subclassesData = {
           {
             name: "Mirrored Memories",
             description:
-              "Once per long rest, as action tell vivid story to creatures within 60 feet. Intelligence save or charmed and believe they experienced the story until completing long rest.",
+              "You can weave illusions into your stories, causing those who hear them to believe they experienced the events firsthand. Once per long rest, as an action, you can choose a creature or group of creatures within 60 feet and tell a vivid story. The targets must make an Intelligence saving throw against your spell save DC. On a failed save they are charmed and believe the events of your story actually happened to them until they complete a long rest.",
             benefits: {
               specialAbilities: [
                 {
@@ -6586,7 +6587,7 @@ export const subclassesData = {
           {
             name: "Misdirection",
             description:
-              "When targeted by attack while creature within 5 feet, use reaction to redirect attack to that creature instead.",
+              "You can occasionally cause another creature to suffer an attack meant for you. When you are targeted by an attack while a creature is within 5 feet of you, you can use your reaction to have the attack target that creature instead of you.",
             benefits: {
               specialAbilities: [
                 {
@@ -6602,7 +6603,7 @@ export const subclassesData = {
           {
             name: "Veiled Influence",
             description:
-              "After 10-minute conversation, gain 24-hour advantage on Charisma checks vs target. Can implant suggestion: Wisdom save or take 4d10 psychic damage when acting counter to instructions (max 3 times per 24 hours). No suicidal commands.",
+              "If you spend 10 minutes in conversation with a creature, you can leave them with a lingering magical impression. For the next 24 hours, you have advantage on Charisma checks against that creature. Additionally, you can subtly implant a suggestion or idea during this conversation, requiring the target to make a Wisdom saving throw against your spell save DC. On a failed save, they are influenced by the implanted idea and each time it acts in a manner directly counter to your instructions, it takes 4d10 psychic damage. This damage cannot be taken more than three times in a 24 hour period. /n*You can issue any command you choose, short of an activity that would result in certain death. Should you issue a suicidal command, the effect ends. You can end the effect early by using an action to dismiss it.",
             benefits: {
               specialAbilities: [
                 {
@@ -6627,7 +6628,7 @@ export const subclassesData = {
           {
             name: "Quintuplicate",
             description:
-              "Requires Duplicate. Create up to 4 duplicates instead of 1. Bonus action to move any number up to 30 feet (120-foot max). When targeted by spell/attack, reaction to swap places with duplicate within 60 feet.",
+              "Duplicate Required. You can create up to four duplicates of yourself, instead of one, when you use Duplicate. As a bonus action on your turn, you can move any number of them up to 30 feet, to a maximum range of 120 feet. /n*Additionally, when you are the target of a spell or attack you can use your reaction to swap places with one of your duplicates within 60 feet of you.",
             requirements: ["Duplicate"],
             benefits: {
               specialAbilities: [
@@ -6644,7 +6645,7 @@ export const subclassesData = {
           {
             name: "Yoink!",
             description:
-              "When creature casts spell targeting you or including you in area, reaction to force spellcasting ability save (DC = your spell save DC). Success negates effect on you and steals spell knowledge for 8 hours if 1st+ level and you can cast it. Caster can't use spell for 8 hours. Proficiency bonus uses per long rest.",
+              "You gain the ability to magically steal the knowledge of how to cast a spell from another spellcaster. /n*Immediately after a creature casts a spell that targets you or includes you in its area of effect, you can use your reaction to force the creature to make a saving throw with its spellcasting ability modifier. The DC equals your spell save DC. On a failed save, you negate the spell's effect against you, and you steal the knowledge of the spell if it is at least 1st level and of a level you can cast. For the next 8 hours, you know the spell and can cast it using your spell slots. The creature can't cast that spell until the 8 hours have passed./n*You can use this feature a number of times equal to your proficiency bonus per long rest.",
             benefits: {
               specialAbilities: [
                 {
