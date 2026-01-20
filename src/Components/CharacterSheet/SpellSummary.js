@@ -354,6 +354,7 @@ const SpellSummary = ({
       supabase,
       showBonusDiceModal: () => {},
       hideBonusDiceModal: () => {},
+      spellsData,
     });
   };
 
