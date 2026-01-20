@@ -624,7 +624,7 @@ export const SubjectCard = ({
     if (!selectedCharacter) return;
 
     const spellcastingAbility = getSpellcastingAbility(
-      selectedCharacter.castingStyle
+      selectedCharacter.castingStyle,
     );
     if (!spellcastingAbility) return;
 
@@ -899,7 +899,7 @@ export const SubjectCard = ({
   const proceedWithAlternateCasting = async (
     spellName,
     subject,
-    castingType
+    castingType,
   ) => {
     const castingFunction =
       castingType === "arithmancy" ? attemptArithmancySpell : attemptRunesSpell;
@@ -922,7 +922,7 @@ export const SubjectCard = ({
     const levels = allSpellsData[subject].levels;
     const totalSpells = Object.values(levels).reduce(
       (total, spells) => total + spells.length,
-      0
+      0,
     );
 
     const allSpells = Object.values(levels).flat();
@@ -937,7 +937,7 @@ export const SubjectCard = ({
       totalSpells,
       masteredCount: masteredSpells.length,
       progressPercentage: Math.round(
-        (masteredSpells.length / totalSpells) * 100
+        (masteredSpells.length / totalSpells) * 100,
       ),
     };
   };
@@ -956,7 +956,7 @@ export const SubjectCard = ({
 
   const allSpells = useMemo(() => {
     return Object.entries(subjectData.levels).flatMap(([level, spells]) =>
-      spells.map((spell) => ({ ...spell, level, subject: subjectName }))
+      spells.map((spell) => ({ ...spell, level, subject: subjectName })),
     );
   }, [subjectData.levels, subjectName]);
 
@@ -971,7 +971,7 @@ export const SubjectCard = ({
         ?.toLowerCase()
         .includes(searchTermLower);
       const tagMatch = spell.tags?.some((tag) =>
-        tag.toLowerCase().includes(searchTermLower)
+        tag.toLowerCase().includes(searchTermLower),
       );
 
       return nameMatch || descriptionMatch || tagMatch;
@@ -985,7 +985,7 @@ export const SubjectCard = ({
   const updateSpellProgressSummary = async (
     spellName,
     isSuccess,
-    isNaturalTwenty = false
+    isNaturalTwenty = false,
   ) => {
     if (!selectedCharacter) return;
 
@@ -1104,7 +1104,7 @@ export const SubjectCard = ({
           <tbody>
             {searchResults
               .map((spellObj, index) =>
-                renderSpellRow(spellObj, index, subjectName, true)
+                renderSpellRow(spellObj, index, subjectName, true),
               )
               .flat()}
           </tbody>
@@ -1186,7 +1186,7 @@ export const SubjectCard = ({
                 <div style={styles.alternateButtonModifier}>
                   +
                   {Math.floor(
-                    (selectedCharacter?.abilityScores?.intelligence - 10) / 2
+                    (selectedCharacter?.abilityScores?.intelligence - 10) / 2,
                   ) || 0}
                 </div>
               </button>
@@ -1229,7 +1229,7 @@ export const SubjectCard = ({
                 <div style={styles.alternateButtonModifier}>
                   +
                   {Math.floor(
-                    (selectedCharacter?.abilityScores?.wisdom - 10) / 2
+                    (selectedCharacter?.abilityScores?.wisdom - 10) / 2,
                   ) || 0}
                 </div>
               </button>
@@ -1304,11 +1304,11 @@ export const SubjectCard = ({
                     let modifier = getSpellModifier(
                       spellName,
                       subjectName,
-                      selectedCharacter
+                      selectedCharacter,
                     );
                     if (hasSubclassFeature(selectedCharacter, "Researcher")) {
                       const wisdomModifier = Math.floor(
-                        (selectedCharacter?.abilityScores?.wisdom - 10) / 2
+                        (selectedCharacter?.abilityScores?.wisdom - 10) / 2,
                       );
                       const researcherBonus = Math.floor(wisdomModifier / 2);
                       modifier += researcherBonus;
@@ -1349,7 +1349,7 @@ export const SubjectCard = ({
     const spellModifier = getSpellModifier(
       spellName,
       subject,
-      selectedCharacter
+      selectedCharacter,
     );
     const modifierDisplay =
       spellModifier !== 0 ? (
@@ -1454,12 +1454,12 @@ export const SubjectCard = ({
                       isMastered && hasCriticalSuccess
                         ? "#ffd700"
                         : isMastered
-                        ? theme.success || "#10b981"
-                        : hasAttempts
-                        ? "#fbbf24"
-                        : hasFailedAttempt
-                        ? "#f97316"
-                        : "#6b7280",
+                          ? theme.success || "#10b981"
+                          : hasAttempts
+                            ? "#fbbf24"
+                            : hasFailedAttempt
+                              ? "#f97316"
+                              : "#6b7280",
                     color:
                       (isMastered && hasCriticalSuccess) || hasAttempts
                         ? "#000000"
@@ -1473,12 +1473,12 @@ export const SubjectCard = ({
                   {isMastered && hasCriticalSuccess
                     ? "★ Critical"
                     : isMastered
-                    ? "Mastered"
-                    : hasAttempts
-                    ? "Attempted"
-                    : hasFailedAttempt
-                    ? "Failed"
-                    : "Unknown"}
+                      ? "Mastered"
+                      : hasAttempts
+                        ? "Attempted"
+                        : hasFailedAttempt
+                          ? "Failed"
+                          : "Unknown"}
                 </span>
               )}
               {isResearched && (
@@ -1822,7 +1822,7 @@ export const SubjectCard = ({
     playerYear,
     spellYear,
     spellName,
-    selectedCharacter
+    selectedCharacter,
   ) => {
     let baseDC = 8 + 2 * spellYear;
 
@@ -1870,7 +1870,7 @@ export const SubjectCard = ({
       playerYear,
       spellYear,
       spellName,
-      selectedCharacter
+      selectedCharacter,
     );
 
     setAttemptingSpells((prev) => ({ ...prev, [spellName]: true }));
@@ -1879,12 +1879,12 @@ export const SubjectCard = ({
       let modifier = getSpellModifier(
         spellName,
         subjectName,
-        selectedCharacter
+        selectedCharacter,
       );
 
       if (hasSubclassFeature(selectedCharacter, "Researcher")) {
         const wisdomModifier = Math.floor(
-          (selectedCharacter.abilityScores.wisdom - 10) / 2
+          (selectedCharacter.abilityScores.wisdom - 10) / 2,
         );
         const researcherBonus = Math.floor(wisdomModifier / 2);
         modifier += researcherBonus;
@@ -1902,7 +1902,7 @@ export const SubjectCard = ({
         getModifierInfo,
         researcherBonus: hasSubclassFeature(selectedCharacter, "Researcher")
           ? Math.floor(
-              Math.floor((selectedCharacter.abilityScores.wisdom - 10) / 2) / 2
+              Math.floor((selectedCharacter.abilityScores.wisdom - 10) / 2) / 2,
             )
           : 0,
       });
@@ -1928,7 +1928,7 @@ export const SubjectCard = ({
         if (fetchError && fetchError.code !== "PGRST116") {
           console.error(
             "Error fetching spell progress for research:",
-            fetchError
+            fetchError,
           );
           return;
         }
@@ -1943,7 +1943,7 @@ export const SubjectCard = ({
               existingProgress.has_natural_twenty || rollResult.isNaturalTwenty,
             has_arithmantic_tag: hasSubclassFeature(
               selectedCharacter,
-              "Researcher"
+              "Researcher",
             ),
             has_runic_tag: hasSubclassFeature(selectedCharacter, "Researcher"),
           };
@@ -1969,7 +1969,7 @@ export const SubjectCard = ({
 
             has_arithmantic_tag: hasSubclassFeature(
               selectedCharacter,
-              "Researcher"
+              "Researcher",
             ),
             has_runic_tag: hasSubclassFeature(selectedCharacter, "Researcher"),
           };
@@ -2205,7 +2205,7 @@ export const SubjectCard = ({
         </span>
       ) : (
         part
-      )
+      ),
     );
   };
 
@@ -2498,7 +2498,7 @@ export const SubjectCard = ({
             <tbody>
               {filteredSpells
                 .map((spellObj, index) =>
-                  renderSpellRow(spellObj, index, subject)
+                  renderSpellRow(spellObj, index, subject),
                 )
                 .flat()}
             </tbody>
@@ -2568,7 +2568,7 @@ export const SubjectCard = ({
           </div>
 
           {filteredLevels.map(([level, spells]) =>
-            renderLevelSection(level, spells, subjectName)
+            renderLevelSection(level, spells, subjectName),
           )}
         </div>
       )}

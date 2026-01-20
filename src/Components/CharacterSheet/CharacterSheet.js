@@ -38,6 +38,7 @@ import Tooltip from "../Common/Tooltip";
 import {
   getAllAbilityModifiers,
   calculateFinalAbilityScores,
+  getAllSelectedFeats,
 } from "../CharacterManager/utils/characterUtils";
 import { backgroundsData, subclassesData } from "../../SharedData";
 import { useFeats } from "../../hooks/useFeats";
@@ -223,7 +224,7 @@ const CharacterSheet = ({
         {
           name: "Ability",
           value: `${spellcastingAbility}: ${formatModifier(
-            spellcastingModifier
+            spellcastingModifier,
           )}`,
           inline: true,
         },
@@ -236,7 +237,7 @@ const CharacterSheet = ({
 
         embedColor: getRollResultColor(
           rollResult,
-          ROLL_COLORS.spellcastingCheck
+          ROLL_COLORS.spellcastingCheck,
         ),
         rollResult,
         fields: additionalFields,
@@ -306,8 +307,8 @@ const CharacterSheet = ({
         rollType === "advantage"
           ? " (Advantage)"
           : rollType === "disadvantage"
-          ? " (Disadvantage)"
-          : "";
+            ? " (Disadvantage)"
+            : "";
 
       showRollResult({
         title: `Spell Attack Roll${rollTypeText}`,
@@ -388,13 +389,13 @@ const CharacterSheet = ({
       if (characterData) {
         baseModifier = calculateInitiativeWithFeats(
           characterData,
-          baseModifier
+          baseModifier,
         );
       }
 
       return baseModifier + (initiativeData.modifier || 0);
     },
-    []
+    [],
   );
 
   const getHPColor = (character) => {
@@ -442,7 +443,7 @@ const CharacterSheet = ({
 
     if (characterData.background) {
       const background = Object.values(backgroundsData).find(
-        (bg) => bg.name === characterData.background
+        (bg) => bg.name === characterData.background,
       );
       if (background?.skillProficiencies) {
         automaticProficiencies.push(...background.skillProficiencies);
@@ -466,7 +467,7 @@ const CharacterSheet = ({
             const levelData = subclassInfo.choices[level];
             if (levelData?.options) {
               const selectedOption = levelData.options.find(
-                (opt) => opt.name === choice
+                (opt) => opt.name === choice,
               );
               if (selectedOption?.benefits?.skillProficiencies) {
                 selectedOption.benefits.skillProficiencies.forEach((prof) => {
@@ -487,7 +488,7 @@ const CharacterSheet = ({
                 });
               }
             }
-          }
+          },
         );
       }
     }
@@ -567,7 +568,7 @@ const CharacterSheet = ({
 
       return skills;
     },
-    [getAutomaticSkillProficiencies]
+    [getAutomaticSkillProficiencies],
   );
 
   const transformToolData = useCallback(
@@ -586,14 +587,14 @@ const CharacterSheet = ({
 
       return tools;
     },
-    []
+    [],
   );
 
   const canModifyCharacter = (
     character,
     adminMode,
     isUserAdmin,
-    currentUserId
+    currentUserId,
   ) => {
     if (character.discord_user_id === currentUserId) return true;
 
@@ -646,7 +647,7 @@ const CharacterSheet = ({
             inspiration,
             luck
           )
-        `
+        `,
           )
           .eq("id", selectedCharacter.id)
           .single();
@@ -685,7 +686,7 @@ const CharacterSheet = ({
             inspiration,
             luck
           )
-        `
+        `,
           )
           .eq("id", selectedCharacter.id)
           .eq("discord_user_id", discordUserId)
@@ -704,7 +705,7 @@ const CharacterSheet = ({
 
         const allFeats = getAllCharacterFeats(
           data.standard_feats || [],
-          data.asi_choices || {}
+          data.asi_choices || {},
         );
 
         const resources = data.character_resources?.[0] || {};
@@ -760,13 +761,13 @@ const CharacterSheet = ({
           skills: transformSkillData(
             data.skill_proficiencies || [],
             data.skill_expertise || [],
-            data
+            data,
           ),
           toolExpertise: data.tool_expertise || [],
           toolProficiencies: data.tool_proficiencies || [],
           tools: transformToolData(
             data.tool_proficiencies || [],
-            data.tool_expertise || []
+            data.tool_expertise || [],
           ),
           sorceryPoints: resources.sorcery_points || 0,
           speed: 30,
@@ -815,7 +816,7 @@ const CharacterSheet = ({
         transformedCharacter.initiativeModifier = getInitiativeModifier(
           data.initiative_ability,
           effectiveAbilityScores,
-          data
+          data,
         );
 
         setCharacter(transformedCharacter);
@@ -868,14 +869,15 @@ const CharacterSheet = ({
     const maxHitDice = character.maxHitDice;
 
     const hasSpellSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].some(
-      (level) => (character?.[`maxSpellSlots${level}`] || 0) > 0
+      (level) => (character?.[`maxSpellSlots${level}`] || 0) > 0,
     );
 
     const maxSorceryPoints = character?.maxSorceryPoints || 0;
     const hasSorceryPoints = maxSorceryPoints > 0;
 
-    const featBenefits = calculateFeatBenefits(character);
-    const hasLuckyFeat = featBenefits.resources.luckPoints > 0;
+    // Check for Lucky feat directly from character data (more reliable than feat cache)
+    const allSelectedFeats = getAllSelectedFeats(character);
+    const hasLuckyFeat = allSelectedFeats.includes("Lucky");
 
     const confirmed = window.confirm(
       `Take a long rest for ${
@@ -933,8 +935,10 @@ const CharacterSheet = ({
         }
 
         if (hasLuckyFeat) {
-          const maxLuckPoints = featBenefits.resources.luckPoints;
-          resourceUpdates.luck = maxLuckPoints;
+          // Lucky feat grants luck points equal to proficiency bonus
+          const proficiencyBonus =
+            character.proficiencyBonus || Math.ceil((character.level || 1) / 4) + 1;
+          resourceUpdates.luck = proficiencyBonus;
         }
 
         const { error: resourcesError } = await supabase
@@ -1027,7 +1031,7 @@ const CharacterSheet = ({
     }
 
     const confirmed = window.confirm(
-      `Fully heal ${character.name}?\n\nHP: ${currentHP} → ${maxHP}`
+      `Fully heal ${character.name}?\n\nHP: ${currentHP} → ${maxHP}`,
     );
     if (!confirmed) return;
 
@@ -1458,7 +1462,7 @@ const CharacterSheet = ({
                   content={{
                     title: "Initiative",
                     leftClick: `Roll initiative (d20 ${formatModifier(
-                      character.initiativeModifier
+                      character.initiativeModifier,
                     )})`,
                     rightClick: "Modify or override initiative modifier",
                   }}
@@ -1543,12 +1547,12 @@ const CharacterSheet = ({
                   <Tooltip
                     content={{
                       title: `Spellcasting Ability (${getSpellcastingAbility(
-                        character.castingStyle
+                        character.castingStyle,
                       )})`,
                       leftClick: `Roll ${getSpellcastingAbility(
-                        character.castingStyle
+                        character.castingStyle,
                       )} check (d20 ${formatModifier(
-                        getSpellcastingAbilityModifier(character)
+                        getSpellcastingAbilityModifier(character),
                       )})`,
                       description: "No proficiency bonus applied",
                     }}
@@ -1579,7 +1583,7 @@ const CharacterSheet = ({
                         }}
                       >
                         {formatModifier(
-                          getSpellcastingAbilityModifier(character)
+                          getSpellcastingAbilityModifier(character),
                         )}
                       </div>
                       <div style={{ ...styles.statLabel, color: "#8b5cf6" }}>
@@ -1708,9 +1712,9 @@ const CharacterSheet = ({
                     title={`Spell Save DC: 8 + Prof (${
                       character.proficiencyBonus
                     }) + ${getSpellcastingAbility(
-                      character.castingStyle
+                      character.castingStyle,
                     )} (${formatModifier(
-                      getSpellcastingAbilityModifier(character)
+                      getSpellcastingAbilityModifier(character),
                     )})`}
                   >
                     <Shield
@@ -1851,7 +1855,7 @@ const CharacterSheet = ({
               const newInitiativeModifier = getInitiativeModifier(
                 character.initiativeAbility,
                 effectiveAbilityScores,
-                updatedCharacter
+                updatedCharacter,
               );
 
               setCharacter({
