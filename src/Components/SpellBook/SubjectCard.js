@@ -914,6 +914,7 @@ export const SubjectCard = ({
       setCriticalSuccesses,
       setFailedAttempts,
       updateSpellProgressSummary,
+      spellsData: allSpellsData,
     });
   };
 
