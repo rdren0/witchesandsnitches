@@ -16,6 +16,7 @@ import { useCallback, useMemo } from "react";
 import CastingTiles from "../CharacterSheet/CastingTiles";
 import { useSpells } from "../../hooks/useSpells";
 import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
+import { calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
 
 const SpellBook = ({
   supabase,
@@ -38,6 +39,15 @@ const SpellBook = ({
   const spellsData = useMemo(() => {
     return transformSpellsToNestedStructure(spells);
   }, [spells]);
+
+  const characterWithCalculatedScores = useMemo(() => {
+    if (!selectedCharacter) return selectedCharacter;
+    const finalScores = calculateFinalAbilityScores(selectedCharacter);
+    return {
+      ...selectedCharacter,
+      abilityScores: finalScores,
+    };
+  }, [selectedCharacter]);
 
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedSubjects, setExpandedSubjects] = useState({});
@@ -824,7 +834,7 @@ const SpellBook = ({
         paddingBottom: "20px",
       }}
     >
-      <CastingTiles character={selectedCharacter} />
+      <CastingTiles character={characterWithCalculatedScores} />
 
       {error && (
         <div
@@ -1581,7 +1591,7 @@ const SpellBook = ({
               discordUserId={discordUserId}
               expandedSections={expandedSections}
               expandedSubjects={expandedSubjects}
-              selectedCharacter={selectedCharacter}
+              selectedCharacter={characterWithCalculatedScores}
               setCriticalSuccesses={setCriticalSuccesses}
               setError={setError}
               setExpandedSections={setExpandedSections}
@@ -1719,7 +1729,7 @@ const SpellBook = ({
                       discordUserId={discordUserId}
                       expandedSections={expandedSections}
                       expandedSubjects={expandedSubjects}
-                      selectedCharacter={selectedCharacter}
+                      selectedCharacter={characterWithCalculatedScores}
                       setCriticalSuccesses={setCriticalSuccesses}
                       setError={setError}
                       setExpandedSections={setExpandedSections}
