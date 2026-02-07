@@ -1134,7 +1134,7 @@ export const rollMagicalTheoryCheck = async ({
           .from("character_resources")
           .select("spell_bonus_dice")
           .eq("character_id", character.id)
-          .eq("discord_user_id", discordUserId || character.discord_user_id)
+          .eq("discord_user_id", character.discord_user_id || discordUserId)
           .single();
 
         if (fetchError && fetchError.code !== "PGRST116") {
@@ -1175,7 +1175,7 @@ export const rollMagicalTheoryCheck = async ({
               .from("character_resources")
               .insert({
                 character_id: character.id,
-                discord_user_id: discordUserId || character.discord_user_id,
+                discord_user_id: character.discord_user_id || discordUserId,
                 spell_bonus_dice: [bonusDie],
               });
 
@@ -2140,7 +2140,7 @@ export const attemptSpell = async ({
       const availableDice = await getCharacterSpellBonusDice(
         supabase,
         selectedCharacter.id,
-        discordUserId
+        selectedCharacter.discord_user_id || discordUserId
       );
 
       if (availableDice) {
@@ -2177,7 +2177,7 @@ export const attemptSpell = async ({
           await removeSpellBonusDie(
             supabase,
             selectedCharacter.id,
-            discordUserId,
+            selectedCharacter.discord_user_id || discordUserId,
             userWantsToUseDice
           );
         }

@@ -481,7 +481,7 @@ const SpellSlotTracker = ({
 
         const updateData = {
           character_id: selectedCharacterId,
-          discord_user_id: discordUserId,
+          discord_user_id: character?.discord_user_id || discordUserId,
           updated_at: new Date().toISOString(),
         };
 
@@ -526,7 +526,7 @@ const SpellSlotTracker = ({
       }
     },
 
-    [selectedCharacterId, discordUserId, supabase, setCharacter]
+    [selectedCharacterId, discordUserId, supabase, setCharacter],
   );
 
   const [customSlots, setCustomSlots] = useState({
@@ -565,7 +565,7 @@ const SpellSlotTracker = ({
 
         const updateData = {
           character_id: selectedCharacterId,
-          discord_user_id: discordUserId,
+          discord_user_id: character?.discord_user_id || discordUserId,
           updated_at: new Date().toISOString(),
         };
 
@@ -608,7 +608,7 @@ const SpellSlotTracker = ({
       }
     },
 
-    [selectedCharacterId, discordUserId, supabase, setCharacter]
+    [selectedCharacterId, discordUserId, supabase, setCharacter],
   );
 
   const updateSorceryPointsOnLevelUp = useCallback(
@@ -626,7 +626,7 @@ const SpellSlotTracker = ({
       if (maxSorceryPoints === undefined) {
         console.error(
           "Invalid character level for sorcery points:",
-          characterLevel
+          characterLevel,
         );
         return;
       }
@@ -636,7 +636,7 @@ const SpellSlotTracker = ({
       try {
         const updateData = {
           character_id: selectedCharacterId,
-          discord_user_id: discordUserId,
+          discord_user_id: character?.discord_user_id || discordUserId,
           max_sorcery_points: maxSorceryPoints,
           sorcery_points: maxSorceryPoints,
           updated_at: new Date().toISOString(),
@@ -665,7 +665,7 @@ const SpellSlotTracker = ({
       }
     },
 
-    [selectedCharacterId, discordUserId, supabase, setCharacter]
+    [selectedCharacterId, discordUserId, supabase, setCharacter],
   );
 
   useEffect(() => {
@@ -685,7 +685,7 @@ const SpellSlotTracker = ({
       if (!character || !character.level || isUpdating) return;
 
       const hasSpellSlots = Object.keys(character).some(
-        (key) => key.startsWith("maxSpellSlots") && character[key] > 0
+        (key) => key.startsWith("maxSpellSlots") && character[key] > 0,
       );
 
       if (!hasSpellSlots) {
@@ -759,7 +759,7 @@ const SpellSlotTracker = ({
     try {
       const updateData = {
         character_id: selectedCharacterId,
-        discord_user_id: discordUserId,
+        discord_user_id: character?.discord_user_id || discordUserId,
         updated_at: new Date().toISOString(),
       };
 
@@ -796,7 +796,7 @@ const SpellSlotTracker = ({
         const currentSlots = character?.[`spellSlots${level}`] || 0;
         newCharacterState[`spellSlots${level}`] = Math.min(
           currentSlots,
-          maxSlots
+          maxSlots,
         );
       });
       newCharacterState.maxSorceryPoints = customMaxSorceryPoints;
@@ -812,7 +812,7 @@ const SpellSlotTracker = ({
 
       const totalSlots = Object.values(customSlots).reduce(
         (sum, slots) => sum + slots,
-        0
+        0,
       );
 
       const success = await sendDiscordRollWebhook({
@@ -843,7 +843,7 @@ const SpellSlotTracker = ({
     action,
     isEdit = false,
     newMaxSlots = null,
-    newCurrentSlots = null
+    newCurrentSlots = null,
   ) => {
     if (!character || isUpdating) return;
 
@@ -855,7 +855,7 @@ const SpellSlotTracker = ({
 
       let updateData = {
         character_id: selectedCharacterId,
-        discord_user_id: discordUserId,
+        discord_user_id: character?.discord_user_id || discordUserId,
         updated_at: new Date().toISOString(),
       };
 
@@ -864,7 +864,7 @@ const SpellSlotTracker = ({
 
       if (isEdit) {
         finalMaxSlots = Math.max(0, newMaxSlots);
-        newSlots = Math.max(0, Math.min(newCurrentSlots, finalMaxSlots));
+        newSlots = Math.max(0, newCurrentSlots);
         updateData[`max_spell_slots_${level}`] = finalMaxSlots;
         updateData[`spell_slots_${level}`] = newSlots;
       } else {
@@ -979,7 +979,7 @@ const SpellSlotTracker = ({
     change,
     action,
     isDirectSet = false,
-    newMaxSorceryPoints = null
+    newMaxSorceryPoints = null,
   ) => {
     if (!character || isUpdating) return;
 
@@ -998,14 +998,14 @@ const SpellSlotTracker = ({
       const { error } = await supabase.from("character_resources").upsert(
         {
           character_id: selectedCharacterId,
-          discord_user_id: discordUserId,
+          discord_user_id: character?.discord_user_id || discordUserId,
           sorcery_points: newSorceryPoints,
           max_sorcery_points: finalMaxSorceryPoints,
           updated_at: new Date().toISOString(),
         },
         {
           onConflict: "character_id,discord_user_id",
-        }
+        },
       );
 
       if (error) {
@@ -1601,8 +1601,8 @@ const SpellSlotTracker = ({
                                   count === 0
                                     ? theme.textSecondary
                                     : isCurrentLevel
-                                    ? theme.primary
-                                    : theme.text,
+                                      ? theme.primary
+                                      : theme.text,
                                 fontWeight:
                                   isCurrentLevel && count > 0
                                     ? "700"
@@ -1614,7 +1614,7 @@ const SpellSlotTracker = ({
                           ))}
                         </tr>
                       );
-                    }
+                    },
                   )}
                 </tbody>
               </table>
@@ -2065,14 +2065,14 @@ const SpellSlotTracker = ({
                                     </td>
                                   </tr>
                                 );
-                              }
+                              },
                             )}
                           </tbody>
                         </table>
                       </div>
                     )}
                   </div>
-                )
+                ),
               )}
             </>
           )}
@@ -2136,7 +2136,7 @@ const SpellSlotTracker = ({
                           ...prev,
                           [level]: Math.max(
                             0,
-                            Math.min(20, parseInt(e.target.value) || 0)
+                            Math.min(20, parseInt(e.target.value) || 0),
                           ),
                         }))
                       }
@@ -2197,8 +2197,8 @@ const SpellSlotTracker = ({
                         setCustomMaxSorceryPoints(
                           Math.max(
                             0,
-                            Math.min(50, parseInt(e.target.value) || 0)
-                          )
+                            Math.min(50, parseInt(e.target.value) || 0),
+                          ),
                         )
                       }
                       style={{
@@ -2249,8 +2249,8 @@ const SpellSlotTracker = ({
                 {modalData.action === "add"
                   ? "Add"
                   : modalData.action === "edit"
-                  ? "Edit"
-                  : "Use"}{" "}
+                    ? "Edit"
+                    : "Use"}{" "}
                 Level {modalData.level} Spell Slot
                 {modalData.action === "edit" ? "s" : ""}
               </div>
@@ -2268,7 +2268,7 @@ const SpellSlotTracker = ({
                           ...prev,
                           currentSlots: Math.max(
                             0,
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value) || 0,
                           ),
                         }))
                       }
@@ -2288,7 +2288,7 @@ const SpellSlotTracker = ({
                           ...prev,
                           currentMax: Math.max(
                             0,
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value) || 0,
                           ),
                         }))
                       }
@@ -2340,7 +2340,7 @@ const SpellSlotTracker = ({
                         "Spell Slots Updated",
                         true,
                         modalData.currentMax,
-                        modalData.currentSlots
+                        modalData.currentSlots,
                       );
                     } else {
                       handleSpellSlotChange(
@@ -2350,7 +2350,7 @@ const SpellSlotTracker = ({
                           : -modalData.amount,
                         modalData.action === "add"
                           ? "Spell Slot Added"
-                          : "Spell Slot Used"
+                          : "Spell Slot Used",
                       );
                     }
                   }}
@@ -2360,13 +2360,13 @@ const SpellSlotTracker = ({
                     ? modalData.action === "add"
                       ? "Adding..."
                       : modalData.action === "edit"
-                      ? "Updating..."
-                      : "Using..."
+                        ? "Updating..."
+                        : "Using..."
                     : modalData.action === "edit"
-                    ? `Set to ${modalData.currentSlots}/${modalData.currentMax}`
-                    : `${modalData.action === "add" ? "Add" : "Use"} ${
-                        modalData.amount
-                      }`}
+                      ? `Set to ${modalData.currentSlots}/${modalData.currentMax}`
+                      : `${modalData.action === "add" ? "Add" : "Use"} ${
+                          modalData.amount
+                        }`}
                 </button>
               </div>
             </div>
@@ -2387,8 +2387,8 @@ const SpellSlotTracker = ({
                 {sorceryModalData.action === "add"
                   ? "Add"
                   : sorceryModalData.action === "edit"
-                  ? "Edit"
-                  : "Use"}{" "}
+                    ? "Edit"
+                    : "Use"}{" "}
                 Sorcery Points
               </div>
 
@@ -2405,7 +2405,7 @@ const SpellSlotTracker = ({
                           ...prev,
                           currentValue: Math.max(
                             0,
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value) || 0,
                           ),
                         }))
                       }
@@ -2466,7 +2466,7 @@ const SpellSlotTracker = ({
                         sorceryModalData.currentValue,
                         "Sorcery Points Updated",
                         true,
-                        sorceryModalData.maxValue
+                        sorceryModalData.maxValue,
                       );
                     } else {
                       handleSorceryPointChange(
@@ -2475,7 +2475,7 @@ const SpellSlotTracker = ({
                           : -sorceryModalData.amount,
                         sorceryModalData.action === "add"
                           ? "Sorcery Points Added"
-                          : "Sorcery Points Used"
+                          : "Sorcery Points Used",
                       );
                     }
                   }}
@@ -2485,13 +2485,13 @@ const SpellSlotTracker = ({
                     ? sorceryModalData.action === "add"
                       ? "Adding..."
                       : sorceryModalData.action === "edit"
-                      ? "Updating..."
-                      : "Using..."
+                        ? "Updating..."
+                        : "Using..."
                     : sorceryModalData.action === "edit"
-                    ? `Update (${sorceryModalData.currentValue}/${sorceryModalData.maxValue})`
-                    : `${sorceryModalData.action === "add" ? "Add" : "Use"} ${
-                        sorceryModalData.amount
-                      }`}
+                      ? `Update (${sorceryModalData.currentValue}/${sorceryModalData.maxValue})`
+                      : `${sorceryModalData.action === "add" ? "Add" : "Use"} ${
+                          sorceryModalData.amount
+                        }`}
                 </button>
               </div>
             </div>

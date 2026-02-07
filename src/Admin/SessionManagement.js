@@ -109,7 +109,12 @@ const SessionManagement = ({ supabase }) => {
         acc[sessionName] = [];
       }
 
-      const characterResources = character.character_resources?.[0] || {};
+      const characterResources =
+        character.character_resources?.find(
+          (r) => r.discord_user_id === character.discord_user_id
+        ) ||
+        character.character_resources?.[0] ||
+        {};
 
       acc[sessionName].push({
         id: character.id,

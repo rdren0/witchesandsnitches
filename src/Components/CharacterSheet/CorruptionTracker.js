@@ -105,7 +105,7 @@ export const CorruptionTracker = ({
           updated_at: new Date().toISOString(),
         })
         .eq("character_id", selectedCharacterId)
-        .eq("discord_user_id", discordUserId)
+        .eq("discord_user_id", character?.discord_user_id || discordUserId)
         .select()
         .single();
 
@@ -117,7 +117,7 @@ export const CorruptionTracker = ({
             .from("character_resources")
             .insert({
               character_id: selectedCharacterId,
-              discord_user_id: discordUserId,
+              discord_user_id: character?.discord_user_id || discordUserId,
               corruption_points: validatedTotal,
               sorcery_points: 0,
               max_sorcery_points: 0,
