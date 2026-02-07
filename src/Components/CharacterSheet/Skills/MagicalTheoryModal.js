@@ -41,7 +41,7 @@ export const MagicalTheoryModal = ({
       const dice = await getCharacterSpellBonusDice(
         supabase,
         character.id,
-        discordUserId
+        character?.discord_user_id || discordUserId
       );
       setCurrentDice(dice || []);
     } catch (error) {
@@ -65,7 +65,7 @@ export const MagicalTheoryModal = ({
         .from("character_resources")
         .select("spell_bonus_dice")
         .eq("character_id", character.id)
-        .eq("discord_user_id", discordUserId)
+        .eq("discord_user_id", character?.discord_user_id || discordUserId)
         .single();
 
       let currentDiceArray = [];
@@ -82,7 +82,7 @@ export const MagicalTheoryModal = ({
         .upsert(
           {
             character_id: character.id,
-            discord_user_id: discordUserId,
+            discord_user_id: character?.discord_user_id || discordUserId,
             spell_bonus_dice: newDiceArray,
           },
           {

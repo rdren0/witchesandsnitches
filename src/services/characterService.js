@@ -83,6 +83,7 @@ const getAllCharacters = async () => {
         *,
         discord_users (username, display_name),
         character_resources (
+          discord_user_id,
           inspiration,
           sorcery_points,
           corruption_points,
@@ -112,7 +113,12 @@ const getAllCharacters = async () => {
 
     if (!error) {
       const transformedData = (data || []).map((character) => {
-        const resources = character.character_resources?.[0] || {};
+        const resources =
+          character.character_resources?.find(
+            (r) => r.discord_user_id === character.discord_user_id
+          ) ||
+          character.character_resources?.[0] ||
+          {};
 
         return {
           ...character,

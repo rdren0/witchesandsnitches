@@ -623,6 +623,7 @@ const CharacterSheet = ({
           *, 
           initiative_ability,
           character_resources (
+            discord_user_id,
             corruption_points,
             sorcery_points,
             max_sorcery_points,
@@ -662,6 +663,7 @@ const CharacterSheet = ({
           *, 
           initiative_ability,
           character_resources (
+            discord_user_id,
             corruption_points,
             sorcery_points,
             max_sorcery_points,
@@ -708,7 +710,12 @@ const CharacterSheet = ({
           data.asi_choices || {},
         );
 
-        const resources = data.character_resources?.[0] || {};
+        const resources =
+          data.character_resources?.find(
+            (r) => r.discord_user_id === data.discord_user_id
+          ) ||
+          data.character_resources?.[0] ||
+          {};
 
         const transformedCharacter = {
           ac: data.ac || { override: null, modifier: 0 },
