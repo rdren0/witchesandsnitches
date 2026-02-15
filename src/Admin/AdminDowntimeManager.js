@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-import { Trash2, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  Trash2,
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+} from "lucide-react";
 import AdminDowntimeReviewForm from "./AdminDowntimeReviewForm";
 import { gameSessionGroups } from "../App/const";
 
@@ -26,7 +33,42 @@ const AdminDowntimeManager = ({ supabase }) => {
     approved: 0,
     denied: 0,
     drafts: 0,
+    missingNpcData: 0,
   });
+
+  const hasMissingNpcData = useCallback((sheet) => {
+    if (
+      sheet.is_draft ||
+      !sheet.review_status ||
+      sheet.review_status === "pending" ||
+      sheet.review_status === "npc_override"
+    ) {
+      return false;
+    }
+
+    if (sheet.review_status === "partial") return true;
+
+    const rollAssignments = sheet.roll_assignments;
+    const relationships = sheet.relationships;
+    if (!relationships || !rollAssignments) return false;
+
+    for (let i = 0; i < relationships.length; i++) {
+      const rel = relationships[i];
+      if (!rel || !rel.npcName || rel.npcName.trim() === "") continue;
+
+      const key = `relationship${i + 1}`;
+      const assignment = rollAssignments[key];
+      if (
+        !assignment ||
+        !assignment.adminNotes ||
+        assignment.adminNotes.trim() === ""
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }, []);
 
   const styles = {
     container: {
@@ -312,6 +354,8 @@ const AdminDowntimeManager = ({ supabase }) => {
           school_year,
           semester,
           archived,
+          roll_assignments,
+          relationships,
           characters (
             id,
             name,
@@ -319,7 +363,7 @@ const AdminDowntimeManager = ({ supabase }) => {
             house,
             level
           )
-        `
+        `,
         )
         .eq("archived", false)
         .order("submitted_at", { ascending: false })
@@ -338,16 +382,27 @@ const AdminDowntimeManager = ({ supabase }) => {
       setFilteredSheets(sheets || []);
 
       const submitted = sheets?.filter((sheet) => !sheet.is_draft) || [];
+      const allSheets = sheets || [];
+      const missingNpcCount = allSheets.filter((sheet) =>
+        hasMissingNpcData(sheet),
+      ).length;
       const newStats = {
         total: submitted.length,
         pending: submitted.filter(
-          (sheet) => !sheet.review_status || sheet.review_status === "pending"
+          (sheet) => !sheet.review_status || sheet.review_status === "pending",
         ).length,
-        approved: submitted.filter((sheet) => sheet.review_status === "success")
-          .length,
-        denied: submitted.filter((sheet) => sheet.review_status === "failure")
-          .length,
-        drafts: sheets?.filter((sheet) => sheet.is_draft).length || 0,
+        approved: submitted.filter(
+          (sheet) =>
+            (sheet.review_status === "success" ||
+              sheet.review_status === "npc_override") &&
+            !hasMissingNpcData(sheet),
+        ).length,
+        denied: submitted.filter(
+          (sheet) =>
+            sheet.review_status === "failure" && !hasMissingNpcData(sheet),
+        ).length,
+        drafts: allSheets.filter((sheet) => sheet.is_draft).length,
+        missingNpcData: missingNpcCount,
       };
       setStats(newStats);
     } catch (err) {
@@ -365,10 +420,15 @@ const AdminDowntimeManager = ({ supabase }) => {
         (sheet) =>
           !sheet.review_status ||
           sheet.review_status === "pending" ||
-          sheet.review_status === "failure"
+          sheet.review_status === "failure",
       ).length,
-      approved: submitted.filter((sheet) => sheet.review_status === "success")
-        .length,
+      missingNpc: submitted.filter((sheet) => hasMissingNpcData(sheet)).length,
+      approved: submitted.filter(
+        (sheet) =>
+          (sheet.review_status === "success" ||
+            sheet.review_status === "npc_override") &&
+          !hasMissingNpcData(sheet),
+      ).length,
     };
   };
 
@@ -381,29 +441,35 @@ const AdminDowntimeManager = ({ supabase }) => {
           !sheet.is_draft &&
           (!sheet.review_status ||
             sheet.review_status === "pending" ||
-            sheet.review_status === "failure")
+            sheet.review_status === "failure"),
       );
+    } else if (activeTab === "missingNpc") {
+      filtered = filtered.filter((sheet) => hasMissingNpcData(sheet));
     } else if (activeTab === "approved") {
       filtered = filtered.filter(
-        (sheet) => !sheet.is_draft && sheet.review_status === "success"
+        (sheet) =>
+          !sheet.is_draft &&
+          (sheet.review_status === "success" ||
+            sheet.review_status === "npc_override") &&
+          !hasMissingNpcData(sheet),
       );
     }
 
     if (selectedGameSession) {
       filtered = filtered.filter(
-        (sheet) => sheet.characters?.game_session === selectedGameSession
+        (sheet) => sheet.characters?.game_session === selectedGameSession,
       );
     }
 
     if (selectedYear) {
       filtered = filtered.filter(
-        (sheet) => sheet.year === parseInt(selectedYear)
+        (sheet) => sheet.year === parseInt(selectedYear),
       );
     }
 
     if (selectedSemester) {
       filtered = filtered.filter(
-        (sheet) => sheet.semester === parseInt(selectedSemester)
+        (sheet) => sheet.semester === parseInt(selectedSemester),
       );
     }
 
@@ -415,7 +481,7 @@ const AdminDowntimeManager = ({ supabase }) => {
             .includes(searchCharacterName.toLowerCase()) ||
           sheet.character_name
             ?.toLowerCase()
-            .includes(searchCharacterName.toLowerCase())
+            .includes(searchCharacterName.toLowerCase()),
       );
     }
 
@@ -427,6 +493,7 @@ const AdminDowntimeManager = ({ supabase }) => {
     selectedYear,
     selectedSemester,
     searchCharacterName,
+    hasMissingNpcData,
   ]);
 
   const clearFilters = () => {
@@ -444,7 +511,7 @@ const AdminDowntimeManager = ({ supabase }) => {
   const deleteSheet = async (sheetId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this downtime sheet? This action cannot be undone."
+        "Are you sure you want to delete this downtime sheet? This action cannot be undone.",
       )
     ) {
       return;
@@ -482,7 +549,9 @@ const AdminDowntimeManager = ({ supabase }) => {
       );
     }
 
-    const status = sheet.review_status || "pending";
+    const status = hasMissingNpcData(sheet)
+      ? "partial"
+      : sheet.review_status || "pending";
     const statusConfig = {
       pending: { style: styles.pendingReview, icon: Clock, text: "Pending" },
       success: {
@@ -490,7 +559,17 @@ const AdminDowntimeManager = ({ supabase }) => {
         icon: CheckCircle,
         text: "Approved",
       },
+      npc_override: {
+        style: styles.approvedReview,
+        icon: CheckCircle,
+        text: "Approved (NPC Override)",
+      },
       failure: { style: styles.deniedReview, icon: XCircle, text: "Rejected" },
+      partial: {
+        style: { backgroundColor: "#f97316", color: "white" },
+        icon: AlertTriangle,
+        text: "Partial",
+      },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -535,40 +614,68 @@ const AdminDowntimeManager = ({ supabase }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Downtime Management</h1>
+        <h1 style={styles.title}>
+          Downtime Management
+          <span
+            style={{
+              fontSize: "14px",
+              fontWeight: "400",
+              color: theme.textSecondary,
+              marginLeft: "12px",
+            }}
+          >
+            {stats.total} submissions
+          </span>
+        </h1>
         <p style={styles.subtitle}>
           Review and manage player downtime submissions
         </p>
       </div>
 
       <div style={styles.statsContainer}>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.total}</div>
-          <div style={styles.statLabel}>Total Submissions</div>
-        </div>
-        <div style={styles.statCard}>
+        <div
+          style={{ ...styles.statCard, cursor: "pointer" }}
+          onClick={() => setActiveTab("pending")}
+        >
           <div style={{ ...styles.statNumber, color: "#f59e0b" }}>
             {stats.pending}
           </div>
           <div style={styles.statLabel}>Pending Review</div>
         </div>
-        <div style={styles.statCard}>
+        {stats.missingNpcData > 0 && (
+          <div
+            style={{ ...styles.statCard, cursor: "pointer" }}
+            onClick={() => setActiveTab("missingNpc")}
+          >
+            <div style={{ ...styles.statNumber, color: "#f97316" }}>
+              {stats.missingNpcData}
+            </div>
+            <div style={styles.statLabel}>
+              <AlertTriangle
+                size={14}
+                style={{ verticalAlign: "middle", marginRight: "4px" }}
+              />
+              Missing NPC Data
+            </div>
+          </div>
+        )}
+        <div
+          style={{ ...styles.statCard, cursor: "pointer" }}
+          onClick={() => setActiveTab("approved")}
+        >
           <div style={{ ...styles.statNumber, color: "#10b981" }}>
             {stats.approved}
           </div>
           <div style={styles.statLabel}>Approved</div>
         </div>
-        <div style={styles.statCard}>
+        <div
+          style={{ ...styles.statCard, cursor: "pointer" }}
+          onClick={() => setActiveTab("pending")}
+        >
           <div style={{ ...styles.statNumber, color: "#ef4444" }}>
             {stats.denied}
           </div>
           <div style={styles.statLabel}>Rejected</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={{ ...styles.statNumber, color: "#6b7280" }}>
-            {stats.drafts}
-          </div>
-          <div style={styles.statLabel}>Drafts</div>
         </div>
       </div>
 
@@ -583,6 +690,26 @@ const AdminDowntimeManager = ({ supabase }) => {
           Pending & Rejected
           <span style={{ ...tabStyles.tabBadge, ...tabStyles.pendingBadge }}>
             {getTabCounts().pending}
+          </span>
+        </button>
+        <button
+          style={{
+            ...tabStyles.tab,
+            ...(activeTab === "missingNpc"
+              ? { color: "#f97316", borderBottomColor: "#f97316" }
+              : {}),
+          }}
+          onClick={() => setActiveTab("missingNpc")}
+        >
+          Missing NPC Data
+          <span
+            style={{
+              ...tabStyles.tabBadge,
+              backgroundColor: "#f9731620",
+              color: "#f97316",
+            }}
+          >
+            {getTabCounts().missingNpc}
           </span>
         </button>
         <button
@@ -697,8 +824,12 @@ const AdminDowntimeManager = ({ supabase }) => {
       <div style={styles.sheetsContainer}>
         <div style={styles.sheetsHeader}>
           <h2>
-            {activeTab === "pending" ? "Pending & Rejected" : "Approved"} Sheets
-            ({filteredSheets.length})
+            {activeTab === "pending"
+              ? "Pending & Rejected"
+              : activeTab === "missingNpc"
+                ? "Missing NPC Data"
+                : "Approved"}{" "}
+            Sheets ({filteredSheets.length})
           </h2>
         </div>
 
@@ -716,8 +847,35 @@ const AdminDowntimeManager = ({ supabase }) => {
               {filteredSheets.map((sheet) => (
                 <div key={sheet.id} style={styles.sheetItem}>
                   <div style={styles.characterInfo}>
-                    <div style={styles.characterName}>
-                      {sheet.characters?.name || sheet.character_name}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <span style={styles.characterName}>
+                        {sheet.characters?.name || sheet.character_name}
+                      </span>
+                      {hasMissingNpcData(sheet) && (
+                        <span
+                          title="Missing NPC notes data"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            backgroundColor: "#f9731620",
+                            color: "#f97316",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          <AlertTriangle size={12} />
+                          NPC
+                        </span>
+                      )}
                     </div>
                     <div style={styles.gameSession}>
                       {sheet.characters?.game_session || "Unknown Session"}
@@ -763,7 +921,12 @@ const AdminDowntimeManager = ({ supabase }) => {
         ) : (
           <div style={styles.emptyState}>
             <div>
-              No {activeTab === "pending" ? "pending or rejected" : "approved"}{" "}
+              No{" "}
+              {activeTab === "pending"
+                ? "pending or rejected"
+                : activeTab === "missingNpc"
+                  ? "missing NPC data"
+                  : "approved"}{" "}
               sheets found matching your filters.
             </div>
           </div>

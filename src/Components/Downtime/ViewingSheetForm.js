@@ -304,6 +304,22 @@ const ViewingSheetForm = ({
         description:
           "Your downtime sheet has been reviewed but needs revisions. Check the admin feedback below.",
       },
+      partial: {
+        bg: "#f9731620",
+        color: "#f97316",
+        icon: "🔄",
+        text: "Approved - NPC Review Pending",
+        description:
+          "Your activities have been reviewed. NPC interaction notes are still being processed by an admin.",
+      },
+      npc_override: {
+        bg: theme.success + "20",
+        color: theme.success,
+        icon: "✅",
+        text: "Approved",
+        description:
+          "Your downtime sheet has been reviewed and approved by an admin.",
+      },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -1066,6 +1082,10 @@ const ViewingSheetForm = ({
                 ? "✅ Approved"
                 : viewingSheet.review_status === "failure"
                 ? "❌ Rejected"
+                : viewingSheet.review_status === "partial"
+                ? "🔄 NPC Review Pending"
+                : viewingSheet.review_status === "npc_override"
+                ? "✅ Approved"
                 : viewingSheet.review_status === "pending"
                 ? "⏳ Pending Review"
                 : "✅ Submitted"}

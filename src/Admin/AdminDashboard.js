@@ -24,6 +24,7 @@ const AdminDashboard = ({ supabase }) => {
     totalCharacters: 0,
     downtimeSheets: 0,
     activeSessions: 0,
+    missingNpcData: 0,
   });
 
   const adminStyles = {
@@ -185,7 +186,7 @@ const AdminDashboard = ({ supabase }) => {
 
       const { data: downtimeSheets } = await supabase
         .from("character_downtime")
-        .select("review_status, is_draft")
+        .select("review_status, is_draft, roll_assignments, relationships")
         .eq("archived", false)
         .limit(500);
 
@@ -196,11 +197,29 @@ const AdminDashboard = ({ supabase }) => {
             (!sheet.review_status || sheet.review_status === "pending")
         ).length || 0;
 
+      const missingNpcCount =
+        downtimeSheets?.filter((sheet) => {
+          if (sheet.is_draft || !sheet.review_status || sheet.review_status === "pending" || sheet.review_status === "npc_override") return false;
+          if (sheet.review_status === "partial") return true;
+          const relationships = sheet.relationships;
+          const rollAssignments = sheet.roll_assignments;
+          if (!relationships || !rollAssignments) return false;
+          for (let i = 0; i < relationships.length; i++) {
+            const rel = relationships[i];
+            if (!rel || !rel.npcName || rel.npcName.trim() === "") continue;
+            const key = `relationship${i + 1}`;
+            const assignment = rollAssignments[key];
+            if (!assignment || !assignment.adminNotes || assignment.adminNotes.trim() === "") return true;
+          }
+          return false;
+        }).length || 0;
+
       setDashboardStats({
         totalCharacters: validCharacters.length,
         activeUsers: uniqueUsers.size,
         downtimeSheets: pendingReviewCount,
         activeSessions: uniqueSessions.size,
+        missingNpcData: missingNpcCount,
       });
     } catch (error) {
       console.error("Error loading dashboard stats:", error);
@@ -244,6 +263,10 @@ const AdminDashboard = ({ supabase }) => {
       badge:
         dashboardStats.downtimeSheets > 0
           ? dashboardStats.downtimeSheets
+          : undefined,
+      secondaryBadge:
+        dashboardStats.missingNpcData > 0
+          ? dashboardStats.missingNpcData
           : undefined,
     },
   ];
@@ -295,6 +318,23 @@ const AdminDashboard = ({ supabase }) => {
                   }}
                 >
                   {tab.badge}
+                </span>
+              )}
+              {tab.secondaryBadge && Number(tab.secondaryBadge) > 0 && (
+                <span
+                  style={{
+                    marginLeft: "4px",
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    backgroundColor: "#f97316",
+                    color: "white",
+                    minWidth: "18px",
+                    textAlign: "center",
+                  }}
+                >
+                  {tab.secondaryBadge}
                 </span>
               )}
             </button>

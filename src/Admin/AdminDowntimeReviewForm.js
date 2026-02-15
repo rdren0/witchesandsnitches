@@ -45,6 +45,7 @@ const AdminDowntimeReviewForm = React.memo(
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [reviewStatus, setReviewStatus] = useState("pending");
+    const [overridePartial, setOverridePartial] = useState(false);
     const [adminFeedback, setAdminFeedback] = useState("");
     const [adminNotes, setAdminNotes] = useState("");
     const [activityReviews, setActivityReviews] = useState({});
@@ -287,6 +288,10 @@ const AdminDowntimeReviewForm = React.memo(
           backgroundColor: "#ef4444",
           color: "white",
         },
+        partialBadge: {
+          backgroundColor: "#f97316",
+          color: "white",
+        },
         reviewButtons: {
           display: "flex",
           gap: "12px",
@@ -438,6 +443,18 @@ const AdminDowntimeReviewForm = React.memo(
           padding: "8px 12px",
           fontSize: "13px",
           fontWeight: reviewStatus === "pending" ? "600" : "400",
+        },
+        partialOption: {
+          ...styles.reviewButton,
+          backgroundColor:
+            reviewStatus === "partial" ? "#f9731620" : "transparent",
+          color: reviewStatus === "partial" ? "#f97316" : theme.textSecondary,
+          border: `1px solid ${
+            reviewStatus === "partial" ? "#f97316" : theme.border
+          }`,
+          padding: "8px 12px",
+          fontSize: "13px",
+          fontWeight: reviewStatus === "partial" ? "600" : "400",
         },
       }),
       [styles.reviewButton, reviewStatus, theme]
@@ -1006,7 +1023,8 @@ const AdminDowntimeReviewForm = React.memo(
 
         if (error) throw error;
         setDowntimeSheet(sheet);
-        setReviewStatus(sheet.review_status || "pending");
+        setReviewStatus(sheet.review_status === "npc_override" ? "success" : (sheet.review_status || "pending"));
+        setOverridePartial(sheet.review_status === "npc_override");
         setAdminFeedback(sheet.admin_feedback || "");
         setAdminNotes(sheet.admin_notes || "");
         const activityReviewsInit = {};
@@ -1093,8 +1111,32 @@ const AdminDowntimeReviewForm = React.memo(
           }
         });
 
+        // Auto-detect missing NPC notes and set partial (unless admin overrides)
+        let finalReviewStatus = reviewStatus;
+
+        // If admin explicitly overrides a partial sheet, save as npc_override
+        if (reviewStatus === "partial" && overridePartial) {
+          finalReviewStatus = "npc_override";
+        } else if (reviewStatus === "success" || reviewStatus === "failure") {
+          const relationships = downtimeSheet.relationships || [];
+          let hasIncompleteNpc = false;
+          for (let i = 0; i < relationships.length; i++) {
+            const rel = relationships[i];
+            if (!rel || !rel.npcName || rel.npcName.trim() === "") continue;
+            const key = `relationship${i + 1}`;
+            const relReview = relationshipReviews[key];
+            if (!relReview || !relReview.adminNotes || relReview.adminNotes.trim() === "") {
+              hasIncompleteNpc = true;
+              break;
+            }
+          }
+          if (hasIncompleteNpc) {
+            finalReviewStatus = overridePartial ? "npc_override" : "partial";
+          }
+        }
+
         const updateData = {
-          review_status: reviewStatus,
+          review_status: finalReviewStatus,
           admin_feedback: adminFeedback,
           admin_notes: adminNotes,
           activities: updatedActivities,
@@ -1123,6 +1165,7 @@ const AdminDowntimeReviewForm = React.memo(
       supabase,
       sheetId,
       reviewStatus,
+      overridePartial,
       adminFeedback,
       adminNotes,
       activityReviews,
@@ -1773,15 +1816,19 @@ const AdminDowntimeReviewForm = React.memo(
                   <span
                     style={{
                       ...styles.statusBadge,
-                      ...(reviewStatus === "success"
+                      ...(reviewStatus === "success" || reviewStatus === "npc_override"
                         ? styles.successBadge
                         : reviewStatus === "failure"
                         ? styles.failureBadge
+                        : reviewStatus === "partial"
+                        ? styles.partialBadge
                         : styles.pendingBadge),
                     }}
                   >
                     {reviewStatus === "success"
                       ? "Approved"
+                      : reviewStatus === "npc_override"
+                      ? "Approved (NPC Override)"
                       : reviewStatus === "failure"
                       ? "Rejected"
                       : "Pending"}
@@ -1888,6 +1935,13 @@ const AdminDowntimeReviewForm = React.memo(
                     Reject
                   </div>
                   <div
+                    onClick={() => setReviewStatus("partial")}
+                    style={reviewButtonStyles.partialOption}
+                  >
+                    <AlertCircle size={14} />
+                    Partial
+                  </div>
+                  <div
                     onClick={() => setReviewStatus("pending")}
                     style={reviewButtonStyles.pendingOption}
                   >
@@ -1902,18 +1956,24 @@ const AdminDowntimeReviewForm = React.memo(
                 <span
                   style={{
                     ...styles.statusBadge,
-                    ...(reviewStatus === "success"
+                    ...(reviewStatus === "success" || reviewStatus === "npc_override"
                       ? styles.successBadge
                       : reviewStatus === "failure"
                       ? styles.failureBadge
+                      : reviewStatus === "partial"
+                      ? styles.partialBadge
                       : styles.pendingBadge),
                     marginLeft: "8px",
                   }}
                 >
                   {reviewStatus === "success"
                     ? "Approved"
+                    : reviewStatus === "npc_override"
+                    ? "Approved (NPC Override)"
                     : reviewStatus === "failure"
                     ? "Rejected"
+                    : reviewStatus === "partial"
+                    ? "Partially Complete"
                     : "Pending"}
                 </span>
               </div>
@@ -1929,6 +1989,53 @@ const AdminDowntimeReviewForm = React.memo(
                   style={{ ...styles.textarea, minHeight: "100px" }}
                 />
               </div>
+
+              {(reviewStatus === "success" || reviewStatus === "failure" || reviewStatus === "partial") && (() => {
+                const isAlreadyPartial = reviewStatus === "partial";
+                const relationships = downtimeSheet?.relationships || [];
+                const hasIncomplete = isAlreadyPartial || relationships.some((rel, i) => {
+                  if (!rel || !rel.npcName || rel.npcName.trim() === "") return false;
+                  const key = `relationship${i + 1}`;
+                  const relReview = relationshipReviews[key];
+                  return !relReview || !relReview.adminNotes || relReview.adminNotes.trim() === "";
+                });
+                if (!hasIncomplete) return null;
+                return (
+                  <div style={{
+                    padding: "12px",
+                    backgroundColor: "#f9731615",
+                    border: "1px solid #f97316",
+                    borderRadius: "8px",
+                    marginBottom: "12px",
+                    fontSize: "13px",
+                    color: "#f97316",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                      <AlertCircle size={16} />
+                      {overridePartial
+                        ? "NPC notes are incomplete but override is active. Sheet will save as Approved (NPC Override)."
+                        : isAlreadyPartial
+                        ? "This sheet has incomplete NPC interaction notes."
+                        : "NPC interaction notes are incomplete. This sheet will be saved as \"Partially Complete\"."}
+                    </div>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      color: theme.text,
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={overridePartial}
+                        onChange={(e) => setOverridePartial(e.target.checked)}
+                      />
+                      Override: approve without NPC data
+                    </label>
+                  </div>
+                );
+              })()}
 
               <button
                 onClick={saveReview}
