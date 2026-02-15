@@ -1187,6 +1187,18 @@ const DowntimeWrapper = ({
           description:
             "Your downtime sheet needs revisions. Check the admin feedback below and use the 'Edit & Resubmit' button to make changes.",
         },
+        partial: {
+          bg: "#f9731620",
+          color: "#f97316",
+          icon: "🔄",
+          text: "NPC Review Pending",
+        },
+        npc_override: {
+          bg: theme.success + "20",
+          color: theme.success,
+          icon: "✅",
+          text: "Approved",
+        },
       };
 
       const config = statusConfig[status] || statusConfig.pending;
