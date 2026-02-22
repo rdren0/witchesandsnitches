@@ -3,11 +3,10 @@ import { ArrowLeftRight, X, Search, User } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAdmin } from "../contexts/AdminContext";
 
-// Returns a human-readable label for a user, preferring Discord display name
-// but falling back to character names when the stored name is a raw Discord ID.
 const isRawDiscordId = (str) => /^\d{15,20}$/.test(str ?? "");
 const PLACEHOLDER_NAMES = ["Unknown User", "Unknown", "Discord User"];
-const isPlaceholder = (str) => !str || PLACEHOLDER_NAMES.includes(str) || isRawDiscordId(str);
+const isPlaceholder = (str) =>
+  !str || PLACEHOLDER_NAMES.includes(str) || isRawDiscordId(str);
 
 const getUserLabel = (user) => {
   if (!user) return null;
@@ -49,18 +48,19 @@ const TransferCharacterModal = ({
 
   if (!isOpen || !character) return null;
 
-  // Characters in CharacterList are transformed to camelCase
   const currentOwnerId = character.discordUserId || character.discord_user_id;
 
   const currentOwner = allUsers.find((u) => u.discordUserId === currentOwnerId);
-  const currentOwnerLabel = getUserLabel(currentOwner) || currentOwnerId || "Unknown";
+  const currentOwnerLabel =
+    getUserLabel(currentOwner) || currentOwnerId || "Unknown";
 
   const filteredUsers = allUsers.filter((u) => {
     if (u.discordUserId === currentOwnerId) return false;
     const q = search.toLowerCase();
     const label = getUserLabel(u)?.toLowerCase() ?? "";
     const username = u.username?.toLowerCase() ?? "";
-    const charNames = u.characters?.map((c) => c.name.toLowerCase()).join(" ") ?? "";
+    const charNames =
+      u.characters?.map((c) => c.name.toLowerCase()).join(" ") ?? "";
     return label.includes(q) || username.includes(q) || charNames.includes(q);
   });
 
@@ -365,11 +365,14 @@ const TransferCharacterModal = ({
             <div style={styles.userList}>
               {filteredUsers.length === 0 ? (
                 <div style={styles.emptyState}>
-                  {search ? "No users match your search." : "No other users found."}
+                  {search
+                    ? "No users match your search."
+                    : "No other users found."}
                 </div>
               ) : (
                 filteredUsers.map((u, i) => {
-                  const isSelected = selectedUser?.discordUserId === u.discordUserId;
+                  const isSelected =
+                    selectedUser?.discordUserId === u.discordUserId;
                   const isLast = i === filteredUsers.length - 1;
                   const label = getUserLabel(u);
                   const hasGoodName = !isPlaceholder(u.displayName);
