@@ -737,6 +737,19 @@ const deleteCharacterAsAdmin = async (characterId) => {
   return data[0];
 };
 
+const transferCharacterOwnership = async (characterId, newDiscordUserId) => {
+  const { data, error } = await supabase
+    .from("characters")
+    .update({ discord_user_id: newDiscordUserId })
+    .eq("id", characterId)
+    .eq("active", true)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Transfer failed: ${error.message}`);
+  return data;
+};
+
 const restoreCharacter = async (characterId, discordUserId) => {
   const { data, error } = await supabase
     .from("characters")
@@ -871,6 +884,7 @@ export const characterService = {
   updateCharacterSubclass,
   deleteCharacter,
   deleteCharacterAsAdmin,
+  transferCharacterOwnership,
   restoreCharacter,
   getArchivedCharacters,
   advanceSchoolYear,
