@@ -35,12 +35,13 @@ import { SpellsProvider } from "../contexts/SpellsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
+import DisplayNamePrompt from "./DisplayNamePrompt";
 import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 import "./App.css";
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
+  process.env.REACT_APP_SUPABASE_ANON_KEY,
 );
 
 const isLocalhost = window.location.hostname === "localhost";
@@ -479,12 +480,12 @@ const Navigation = ({ characters }) => {
                       fontWeight: "bold",
                     }
                   : isAdminTab && adminMode
-                  ? {
-                      backgroundColor: "#ffd70030",
-                      color: theme.text,
-                      opacity: 0.9,
-                    }
-                  : {}),
+                    ? {
+                        backgroundColor: "#ffd70030",
+                        color: theme.text,
+                        opacity: 0.9,
+                      }
+                    : {}),
               }}
               onClick={() => navigate(tab.path)}
             >
@@ -732,6 +733,8 @@ function AppContent() {
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [isSubmittingName, setIsSubmittingName] = useState(false);
 
   const [isInitializing, setIsInitializing] = useState(true);
   const initTimeoutRef = useRef(null);
@@ -749,7 +752,7 @@ function AppContent() {
     return null;
   };
   const [selectedCharacter, setSelectedCharacter] = useState(
-    getInitialSelectedCharacter
+    getInitialSelectedCharacter,
   );
 
   const loadingRef = useRef(false);
@@ -763,13 +766,13 @@ function AppContent() {
         if (character) {
           sessionStorage.setItem(
             "selectedCharacterId",
-            character.id.toString()
+            character.id.toString(),
           );
         } else {
           sessionStorage.removeItem("selectedCharacterId");
         }
       }, 100),
-    []
+    [],
   );
 
   const prevSelectedCharacterRef = useRef();
@@ -843,15 +846,15 @@ function AppContent() {
       if (
         selectedCharacter &&
         characters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString()
+          (c) => c.id.toString() === selectedCharacter.id.toString(),
         )
       ) {
         characterToSelect = characters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString()
+          (c) => c.id.toString() === selectedCharacter.id.toString(),
         );
       } else if (savedCharacterId) {
         characterToSelect = characters.find(
-          (char) => char.id.toString() === savedCharacterId.toString()
+          (char) => char.id.toString() === savedCharacterId.toString(),
         );
       }
 
@@ -875,7 +878,7 @@ function AppContent() {
         setIsInitializing(false);
       }, 1000);
     },
-    [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
+    [selectedCharacter, initialCharacterId, debouncedSelectCharacter],
   );
 
   const loadingUsernameRef = useRef(false);
@@ -896,8 +899,10 @@ function AppContent() {
         .eq("discord_user_id", user.id)
         .maybeSingle();
 
-      if (!error && data) {
-        setCustomUsername(data.username || "");
+      if (!error && data?.username) {
+        setCustomUsername(data.username);
+      } else if (!error && !sessionStorage.getItem("skipNamePrompt")) {
+        setShowNamePrompt(true);
       } else if (error && error.code !== "PGRST116") {
         console.error("Error loading custom username:", error);
       }
@@ -998,7 +1003,6 @@ function AppContent() {
       setCharactersLoading(false);
       loadingRef.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discordUserId, adminMode]);
 
   useEffect(() => {
@@ -1016,7 +1020,6 @@ function AppContent() {
     ) {
       loadCharacters();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discordUserId, hasAttemptedLoad, charactersLoading]);
 
   useEffect(() => {
@@ -1049,7 +1052,6 @@ function AppContent() {
       setHasAttemptedLoad(false);
       sessionStorage.removeItem("selectedCharacterId");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   useEffect(() => {
@@ -1087,7 +1089,7 @@ function AppContent() {
 
       debouncedSelectCharacter(character);
     },
-    [debouncedSelectCharacter, isInitializing]
+    [debouncedSelectCharacter, isInitializing],
   );
 
   useEffect(() => {
@@ -1132,10 +1134,33 @@ function AppContent() {
       }
 
       setCustomUsername(newUsername);
+
+      const providerDiscordId = user.user_metadata?.provider_id;
+      if (providerDiscordId) {
+        await supabase
+          .from("discord_users")
+          .update({ display_name: newUsername })
+          .eq("discord_user_id", providerDiscordId);
+      }
     } catch (error) {
       console.error("Error updating custom username:", error);
       throw error;
     }
+  };
+
+  const handleNamePromptSubmit = async (name) => {
+    setIsSubmittingName(true);
+    try {
+      await updateCustomUsername(name);
+      setShowNamePrompt(false);
+    } finally {
+      setIsSubmittingName(false);
+    }
+  };
+
+  const handleNamePromptSkip = () => {
+    sessionStorage.setItem("skipNamePrompt", "true");
+    setShowNamePrompt(false);
   };
 
   const signInWithDiscord = async () => {
@@ -1484,6 +1509,12 @@ function AppContent() {
           onClose={handleModalClose}
           onPasswordSubmit={handlePasswordSubmit}
           isLoading={isVerifying}
+        />
+        <DisplayNamePrompt
+          isOpen={showNamePrompt}
+          onSubmit={handleNamePromptSubmit}
+          onSkip={handleNamePromptSkip}
+          isLoading={isSubmittingName}
         />
       </div>
       <footer

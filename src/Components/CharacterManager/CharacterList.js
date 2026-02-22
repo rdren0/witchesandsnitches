@@ -10,6 +10,7 @@ import {
   Calendar,
   Edit3,
   User,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import { useTheme } from "../../contexts/ThemeContext";
@@ -24,6 +25,7 @@ const CharacterList = ({
   onSelectedCharacterReset,
   onEditCharacter,
   onDeleteCharacter,
+  onTransferCharacter = null,
   onCreateNew,
   supabase,
   adminMode = false,
@@ -390,6 +392,34 @@ const CharacterList = ({
               Edit
             </span>
           </button>
+
+          {onTransferCharacter && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTransferCharacter(character);
+              }}
+              style={{
+                ...styles.button,
+                backgroundColor: theme.primary,
+                color: "white",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                borderRadius: "6px",
+                fontSize: "13px",
+              }}
+              title="Transfer ownership"
+            >
+              <ArrowLeftRight size={14} />
+              <span
+                style={{ display: window.innerWidth > 768 ? "inline" : "none" }}
+              >
+                Transfer
+              </span>
+            </button>
+          )}
 
           <button
             onClick={(e) => {

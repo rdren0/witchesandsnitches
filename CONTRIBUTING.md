@@ -1043,6 +1043,7 @@ location.reload();
 Feats in the database have a `benefits` JSONB column that should follow this structure:
 
 **IMPORTANT:** When entering data in Google Sheets, make sure arrays are proper JSON arrays, NOT JSON strings. For example:
+
 - ✅ Correct: `"resistances": ["fire", "cold"]`
 - ❌ Wrong: `"resistances": "[\"fire\", \"cold\"]"`
 
@@ -1113,21 +1114,18 @@ The wrong format will display as raw text like `["fire"]` instead of being parse
 ### Pull Request Process
 
 1. **Ensure your code:**
-
    - Follows our code guidelines
    - Passes ESLint checks
    - Has been tested locally
    - Doesn't break existing features
 
 2. **Create a Pull Request with:**
-
    - Clear description of changes
    - Screenshots/GIFs for UI changes
    - Link to any related issues
    - Test instructions
 
 3. **PR Title Format:**
-
    - `feat: Add spell filtering to SpellBook`
    - `fix: Resolve character sheet loading issue`
    - `docs: Update contributing guidelines`

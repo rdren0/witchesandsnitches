@@ -13,6 +13,7 @@ import { characterService } from "../../services/characterService";
 import CharacterForm from "./components/CharacterForm/CharacterForm";
 import CharacterList from "./CharacterList";
 import ArchivedCharactersList from "./ArchivedCharactersList";
+import TransferCharacterModal from "../../Admin/TransferCharacterModal";
 
 const CharacterManager = ({
   user,
@@ -38,6 +39,8 @@ const CharacterManager = ({
   const [viewMode, setViewMode] = useState("my");
   const [isUserDataReady, setIsUserDataReady] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [transferCharacter, setTransferCharacter] = useState(null);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -99,10 +102,9 @@ const CharacterManager = ({
     });
   };
 
-
   const handleDeleteCharacter = async (character) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${character.name}? This action cannot be undone.`
+      `Are you sure you want to delete ${character.name}? This action cannot be undone.`,
     );
 
     if (confirmed) {
@@ -110,7 +112,7 @@ const CharacterManager = ({
         if (adminMode && isUserAdmin) {
           await characterService.deleteCharacter(
             character.id,
-            character.discord_user_id
+            character.discord_user_id,
           );
         } else {
           await characterService.deleteCharacter(character.id, discordUserId);
@@ -128,6 +130,28 @@ const CharacterManager = ({
         console.error("Error deleting character:", error);
         alert("Failed to delete character. Please try again.");
       }
+    }
+  };
+
+  const handleTransferCharacter = (character) => {
+    setTransferCharacter(character);
+  };
+
+  const handleTransferSubmit = async (newDiscordUserId) => {
+    setIsTransferring(true);
+    try {
+      await characterService.transferCharacterOwnership(
+        transferCharacter.id,
+        newDiscordUserId,
+      );
+      setTransferCharacter(null);
+      setRefreshTrigger((prev) => prev + 1);
+      await loadAllCharacters();
+    } catch (error) {
+      console.error("Error transferring character:", error);
+      throw error;
+    } finally {
+      setIsTransferring(false);
     }
   };
 
@@ -256,7 +280,7 @@ const CharacterManager = ({
         }}
       >
         <Crown size={18} />
-        ADMIN MODE ACTIVE - You can create and edit characters for all users
+        ADMIN MODE ACTIVE
       </div>
     );
   };
@@ -312,7 +336,11 @@ const CharacterManager = ({
     );
   };
 
-  const displayName = customUsername || user?.user_metadata?.custom_claims?.global_name || user?.user_metadata?.full_name || "Adventurer";
+  const displayName =
+    customUsername ||
+    user?.user_metadata?.custom_claims?.global_name ||
+    user?.user_metadata?.full_name ||
+    "Adventurer";
 
   const renderWelcomeSection = () => {
     return (
@@ -372,6 +400,9 @@ const CharacterManager = ({
             allCharacters={allCharacters}
             onEditCharacter={handleEditCharacter}
             onDeleteCharacter={handleDeleteCharacter}
+            onTransferCharacter={
+              adminMode && isUserAdmin ? handleTransferCharacter : null
+            }
             supabase={supabase}
             refreshTrigger={refreshTrigger}
           />
@@ -426,6 +457,14 @@ const CharacterManager = ({
           refreshTrigger={refreshTrigger}
         />
       )}
+
+      <TransferCharacterModal
+        isOpen={!!transferCharacter}
+        onClose={() => setTransferCharacter(null)}
+        character={transferCharacter}
+        onTransfer={handleTransferSubmit}
+        isLoading={isTransferring}
+      />
     </div>
   );
 };
