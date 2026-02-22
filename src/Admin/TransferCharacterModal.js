@@ -11,8 +11,8 @@ const isPlaceholder = (str) =>
 const getUserLabel = (user) => {
   if (!user) return null;
   if (!isPlaceholder(user.displayName)) return user.displayName;
-  const charNames = user.characters?.map((c) => c.name).join(", ");
-  return charNames || user.discordUserId;
+  if (!isPlaceholder(user.username)) return user.username;
+  return user.discordUserId;
 };
 
 const formatCharList = (characters = []) => {
@@ -56,6 +56,7 @@ const TransferCharacterModal = ({
 
   const filteredUsers = allUsers.filter((u) => {
     if (u.discordUserId === currentOwnerId) return false;
+    if (!u.characters?.length) return false;
     const q = search.toLowerCase();
     const label = getUserLabel(u)?.toLowerCase() ?? "";
     const username = u.username?.toLowerCase() ?? "";
@@ -375,7 +376,6 @@ const TransferCharacterModal = ({
                     selectedUser?.discordUserId === u.discordUserId;
                   const isLast = i === filteredUsers.length - 1;
                   const label = getUserLabel(u);
-                  const hasGoodName = !isPlaceholder(u.displayName);
                   const charNames = u.characters?.map((c) => c.name).join(", ");
                   const usernameSubtitle =
                     !isPlaceholder(u.username) && u.username !== label
@@ -394,7 +394,7 @@ const TransferCharacterModal = ({
                         {usernameSubtitle && (
                           <div style={styles.userSub}>{usernameSubtitle}</div>
                         )}
-                        {charNames && hasGoodName && (
+                        {charNames && (
                           <div style={styles.userSub}>{charNames}</div>
                         )}
                       </div>
