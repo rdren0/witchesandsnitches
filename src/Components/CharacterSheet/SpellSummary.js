@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
   BookOpen,
@@ -14,6 +20,22 @@ import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { useRollModal, useRollFunctions } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 import { getSpellModifier } from "../SpellBook/utils";
+
+const ACTION_TYPE_BADGE_MAP = [
+  { key: "action", label: "Action", color: "#6366f1" },
+  { key: "bonus_action", label: "Bonus", color: "#f59e0b" },
+  { key: "reaction", label: "React.", color: "#10b981" },
+  { key: "long", label: "1 Min+", color: "#8b5cf6" },
+];
+
+const CATEGORY_PRIORITY = { action: 0, bonus_action: 1, reaction: 2, long: 3 };
+
+const CASTING_TIME_FILTER_OPTIONS = [
+  { value: "action", label: "1 Action" },
+  { value: "bonus_action", label: "1 Bonus Action" },
+  { value: "reaction", label: "1 Reaction" },
+  { value: "long", label: "1 Minute+" },
+];
 
 const SpellSummary = ({
   character,
@@ -51,7 +73,7 @@ const SpellSummary = ({
     } catch (error) {
       console.error(
         "Error reading spellSummaryExpanded from localStorage:",
-        error
+        error,
       );
       return false;
     }
@@ -66,12 +88,19 @@ const SpellSummary = ({
     } catch (error) {
       console.error(
         "Error reading spellSummaryShowCanAttempt from localStorage:",
-        error
+        error,
       );
       return false;
     }
   });
   const [attemptingSpells, setAttemptingSpells] = useState({});
+  const [selectedCastingTimeFilters, setSelectedCastingTimeFilters] = useState(
+    [],
+  );
+  const [sortByActionType, setSortByActionType] = useState(false);
+  const [isCastingTimeDropdownOpen, setIsCastingTimeDropdownOpen] =
+    useState(false);
+  const castingTimeDropdownRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -79,7 +108,7 @@ const SpellSummary = ({
     } catch (error) {
       console.error(
         "Error saving spellSummaryExpanded to localStorage:",
-        error
+        error,
       );
     }
   }, [isExpanded]);
@@ -88,15 +117,30 @@ const SpellSummary = ({
     try {
       localStorage.setItem(
         "spellSummaryShowCanAttempt",
-        JSON.stringify(showCanAttempt)
+        JSON.stringify(showCanAttempt),
       );
     } catch (error) {
       console.error(
         "Error saving spellSummaryShowCanAttempt to localStorage:",
-        error
+        error,
       );
     }
   }, [showCanAttempt]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        castingTimeDropdownRef.current &&
+        !castingTimeDropdownRef.current.contains(e.target)
+      ) {
+        setIsCastingTimeDropdownOpen(false);
+      }
+    };
+    if (isCastingTimeDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isCastingTimeDropdownOpen]);
 
   useEffect(() => {
     if (!character || !supabase) return;
@@ -164,7 +208,7 @@ const SpellSummary = ({
 
         // DEBUG: Log processed data
         const masteredCount = Object.values(newSpellAttempts).filter(
-          (attempt) => attempt[2]
+          (attempt) => attempt[2],
         ).length;
 
         setSpellAttempts(newSpellAttempts);
@@ -214,7 +258,7 @@ const SpellSummary = ({
   const updateSpellProgressSummary = async (
     spellName,
     isSuccess,
-    isNaturalTwenty = false
+    isNaturalTwenty = false,
   ) => {
     if (!character) return;
 
@@ -379,10 +423,39 @@ const SpellSummary = ({
           onClick={() => toggleSpellExpansion(spell.name)}
         >
           {icon}
-          {spell.name}
-          <span style={{ marginLeft: "auto", fontSize: "10px" }}>
-            {expandedSpells[spell.name] ? "▼" : "▶"}
-          </span>
+          <span style={{ flex: 1 }}>{spell.name}</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              marginLeft: "4px",
+            }}
+          >
+            {parseCastingTimeParts(spell.castingTime, spell.name).map(
+              (part, i) => (
+                <span
+                  key={i}
+                  style={{
+                    fontSize: "9px",
+                    fontWeight: "600",
+                    padding: "1px 4px",
+                    borderRadius: "8px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.3px",
+                    backgroundColor: part.badge?.color,
+                    color: "white",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {part.badge?.label}
+                </span>
+              ),
+            )}
+            <span style={{ fontSize: "10px", marginLeft: "2px" }}>
+              {expandedSpells[spell.name] ? "▼" : "▶"}
+            </span>
+          </div>
         </div>
         {expandedSpells[spell.name] &&
           renderSpellDetails(spell, isMastered, isAttempting)}
@@ -516,7 +589,7 @@ const SpellSummary = ({
                           e.stopPropagation();
                           handleDamageRoll(
                             spell,
-                            selectedSpellLevels[spell.name]
+                            selectedSpellLevels[spell.name],
                           );
                         }}
                         style={styles.damageButton}
@@ -543,25 +616,25 @@ const SpellSummary = ({
                             if (spell.level === "Cantrip") {
                               diceFormula = getCantripScaledDamage(
                                 diceFormula,
-                                character?.level || 1
+                                character?.level || 1,
                               );
                             } else if (
                               selectedSpellLevels[spell.name] &&
                               spell.higherLevels
                             ) {
                               const baseLevel = parseInt(
-                                spell.level.match(/(\d+)/)?.[1] || "1"
+                                spell.level.match(/(\d+)/)?.[1] || "1",
                               );
                               const castLevel = parseInt(
                                 selectedSpellLevels[spell.name].match(
-                                  /(\d+)/
-                                )?.[1] || baseLevel
+                                  /(\d+)/,
+                                )?.[1] || baseLevel,
                               );
                               const levelDiff = castLevel - baseLevel;
 
                               if (levelDiff > 0) {
                                 const scalingMatch = spell.higherLevels.match(
-                                  /(?:the\s+)?damage\s+(?:increases|is\s+increased)\s+by\s+(\d+d\d+)/i
+                                  /(?:the\s+)?damage\s+(?:increases|is\s+increased)\s+by\s+(\d+d\d+)/i,
                                 );
                                 if (scalingMatch) {
                                   const bonusDice = scalingMatch[1];
@@ -569,14 +642,14 @@ const SpellSummary = ({
                                     bonusDice.match(/(\d+)(d\d+)/);
                                   if (bonusMatch) {
                                     const baseDiceMatch = diceFormula.match(
-                                      /(\d+)(d\d+)(?:\+(\d+))?/
+                                      /(\d+)(d\d+)(?:\+(\d+))?/,
                                     );
                                     if (
                                       baseDiceMatch &&
                                       baseDiceMatch[2] === bonusMatch[2]
                                     ) {
                                       const baseDiceCount = parseInt(
-                                        baseDiceMatch[1]
+                                        baseDiceMatch[1],
                                       );
                                       const bonusDiceCount =
                                         parseInt(bonusMatch[1]) * levelDiff;
@@ -661,7 +734,7 @@ const SpellSummary = ({
     if (!description) return null;
 
     const damageMatch = description.match(
-      /(\d+d\d+(?:\s*\+\s*\d+)?)\s+(\w+)\s+damage/i
+      /(\d+d\d+(?:\s*\+\s*\d+)?)\s+(\w+)\s+damage/i,
     );
     if (damageMatch) {
       return {
@@ -676,7 +749,7 @@ const SpellSummary = ({
     if (!description) return null;
 
     const saveMatch = description.match(
-      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+sav(?:ing throw|e)/i
+      /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+sav(?:ing throw|e)/i,
     );
     if (saveMatch) {
       return {
@@ -712,7 +785,7 @@ const SpellSummary = ({
 
     for (let i = levelNum; i <= 9; i++) {
       levels.push(
-        `${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} Level`
+        `${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} Level`,
       );
     }
 
@@ -736,6 +809,125 @@ const SpellSummary = ({
     return levelOrder.filter((level) => masteredByLevel[level]);
   };
 
+  const toggleCastingTimeFilter = (value) => {
+    setSelectedCastingTimeFilters((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
+  const getSpellActionCategories = useCallback(
+    (castingTime, spellName) => {
+      if (!castingTime) return [];
+      const ct = castingTime.toLowerCase();
+      const cats = [];
+      if (ct.includes("bonus action")) cats.push("bonus_action");
+      if (
+        ct
+          .replace(/bonus action/gi, "")
+          .replace(/reaction/gi, "")
+          .includes("action")
+      )
+        cats.push("action");
+      if (ct.includes("reaction")) cats.push("reaction");
+      if (ct.includes("minute") || ct.includes("hour") || ct.includes("day"))
+        cats.push("long");
+      if (
+        spellName === "Bombarda" &&
+        character?.house === "Durmstrang" &&
+        !cats.includes("bonus_action")
+      ) {
+        cats.push("bonus_action");
+      }
+      return cats;
+    },
+    [character?.house],
+  );
+
+  const getActionTypePriority = useCallback(
+    (castingTime, spellName) => {
+      const cats = getSpellActionCategories(castingTime, spellName);
+      if (cats.length === 0) return 99;
+      return Math.min(...cats.map((c) => CATEGORY_PRIORITY[c] ?? 99));
+    },
+    [getSpellActionCategories],
+  );
+
+  const parseCastingTimeParts = useCallback(
+    (castingTime, spellName) => {
+      if (!castingTime) return [];
+      const commaIdx = castingTime.indexOf(",");
+      const actionSection =
+        commaIdx === -1 ? castingTime : castingTime.slice(0, commaIdx).trim();
+      const triggerText =
+        commaIdx === -1 ? null : castingTime.slice(commaIdx + 1).trim() || null;
+      const actionClauses = actionSection.split(/ or /i);
+      const result = [];
+      for (let i = 0; i < actionClauses.length; i++) {
+        const base = actionClauses[i].trim().toLowerCase();
+        let badgeKey = null;
+        if (base.includes("bonus action")) badgeKey = "bonus_action";
+        else if (
+          base
+            .replace(/bonus action/gi, "")
+            .replace(/reaction/gi, "")
+            .includes("action")
+        )
+          badgeKey = "action";
+        else if (base.includes("reaction")) badgeKey = "reaction";
+        else if (
+          base.includes("minute") ||
+          base.includes("hour") ||
+          base.includes("day")
+        )
+          badgeKey = "long";
+        if (badgeKey) {
+          result.push({
+            badge: ACTION_TYPE_BADGE_MAP.find((b) => b.key === badgeKey),
+            trigger: i === actionClauses.length - 1 ? triggerText : null,
+          });
+        }
+      }
+      if (
+        spellName === "Bombarda" &&
+        character?.house === "Durmstrang" &&
+        !result.some((p) => p.badge?.key === "bonus_action")
+      ) {
+        result.push({
+          badge: ACTION_TYPE_BADGE_MAP.find((b) => b.key === "bonus_action"),
+          trigger: "Durmstrang: Cold Efficiency",
+        });
+      }
+      return result;
+    },
+    [character?.house],
+  );
+
+  const applyFilterAndSort = useCallback(
+    (spells) => {
+      let result = spells;
+      if (selectedCastingTimeFilters.length > 0) {
+        result = result.filter((spell) => {
+          const cats = getSpellActionCategories(spell.castingTime, spell.name);
+          return selectedCastingTimeFilters.some((f) => cats.includes(f));
+        });
+      }
+      if (sortByActionType) {
+        result = [...result].sort(
+          (a, b) =>
+            getActionTypePriority(a.castingTime, a.name) -
+            getActionTypePriority(b.castingTime, b.name),
+        );
+      }
+      return result;
+    },
+    [
+      selectedCastingTimeFilters,
+      sortByActionType,
+      getSpellActionCategories,
+      getActionTypePriority,
+    ],
+  );
+
   const handleDamageRoll = async (spell, castAtLevel = null) => {
     if (!character) return;
 
@@ -751,13 +943,13 @@ const SpellSummary = ({
       } else if (castAtLevel && spell.higherLevels) {
         const baseLevel = parseInt(spell.level.match(/(\d+)/)?.[1] || "1");
         const castLevel = parseInt(
-          castAtLevel.match(/(\d+)/)?.[1] || baseLevel
+          castAtLevel.match(/(\d+)/)?.[1] || baseLevel,
         );
         const levelDiff = castLevel - baseLevel;
 
         if (levelDiff > 0) {
           const scalingMatch = spell.higherLevels.match(
-            /(?:the\s+)?damage\s+(?:increases|is\s+increased)\s+by\s+(\d+d\d+)/i
+            /(?:the\s+)?damage\s+(?:increases|is\s+increased)\s+by\s+(\d+d\d+)/i,
           );
 
           if (scalingMatch) {
@@ -765,7 +957,7 @@ const SpellSummary = ({
             const bonusMatch = bonusDice.match(/(\d+)(d\d+)/);
             if (bonusMatch) {
               const baseDiceMatch = diceFormula.match(
-                /(\d+)(d\d+)(?:\+(\d+))?/
+                /(\d+)(d\d+)(?:\+(\d+))?/,
               );
               if (baseDiceMatch && baseDiceMatch[2] === bonusMatch[2]) {
                 const baseDiceCount = parseInt(baseDiceMatch[1]);
@@ -804,8 +996,8 @@ const SpellSummary = ({
           castAtLevel
             ? ` (${castAtLevel})`
             : spell.level === "Cantrip"
-            ? ` (Level ${character.level || 1})`
-            : ""
+              ? ` (Level ${character.level || 1})`
+              : ""
         }`,
         rollValue: rolls.reduce((sum, roll) => sum + roll, 0),
         modifier: bonus,
@@ -891,7 +1083,7 @@ const SpellSummary = ({
       const spellName = spell.name;
       const attempts = spellAttempts[spellName] || {};
       const successfulAttempts = Object.keys(attempts).filter(
-        (key) => attempts[key]
+        (key) => attempts[key],
       ).length;
       const hasFailed = failedAttempts[spellName];
       const isResearched = researchedSpells[spellName];
@@ -933,7 +1125,7 @@ const SpellSummary = ({
     // DEBUG: Log computed spell stats
     const allSpellNames = allSpells.map((s) => s.name);
     const unmatchedProgressSpells = spellProgressNames.filter(
-      (name) => !allSpellNames.includes(name)
+      (name) => !allSpellNames.includes(name),
     );
 
     return stats;
@@ -1255,6 +1447,145 @@ const SpellSummary = ({
               <div style={styles.toggleKnob}></div>
             </div>
             <span style={styles.toggleLabel}>All Attemptable</span>
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              {/* Action Type Filter */}
+              <div
+                style={{ position: "relative" }}
+                ref={castingTimeDropdownRef}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsCastingTimeDropdownOpen(!isCastingTimeDropdownOpen);
+                  }}
+                  style={{
+                    padding: "4px 10px",
+                    backgroundColor:
+                      selectedCastingTimeFilters.length > 0
+                        ? theme.primary || "#6366f1"
+                        : theme.surface,
+                    color:
+                      selectedCastingTimeFilters.length > 0
+                        ? "white"
+                        : theme.text,
+                    border: `1px solid ${selectedCastingTimeFilters.length > 0 ? theme.primary || "#6366f1" : theme.border}`,
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Action
+                  {selectedCastingTimeFilters.length > 0
+                    ? ` (${selectedCastingTimeFilters.length})`
+                    : ""}{" "}
+                  ▾
+                </button>
+                {isCastingTimeDropdownOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      right: 0,
+                      backgroundColor: theme.surface,
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      zIndex: 100,
+                      minWidth: "160px",
+                      padding: "6px",
+                    }}
+                  >
+                    {CASTING_TIME_FILTER_OPTIONS.map((opt) => (
+                      <label
+                        key={opt.value}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "6px 8px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          color: theme.text,
+                          backgroundColor: selectedCastingTimeFilters.includes(
+                            opt.value,
+                          )
+                            ? `${theme.primary}20`
+                            : "transparent",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCastingTimeFilters.includes(
+                            opt.value,
+                          )}
+                          onChange={() => toggleCastingTimeFilter(opt.value)}
+                          style={{ cursor: "pointer" }}
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
+                    {selectedCastingTimeFilters.length > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCastingTimeFilters([]);
+                        }}
+                        style={{
+                          width: "100%",
+                          marginTop: "4px",
+                          padding: "4px 8px",
+                          backgroundColor: "transparent",
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          color: theme.textSecondary,
+                        }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort by action type */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSortByActionType(!sortByActionType);
+                }}
+                style={{
+                  padding: "4px 10px",
+                  backgroundColor: sortByActionType
+                    ? theme.primary || "#6366f1"
+                    : theme.surface,
+                  color: sortByActionType ? "white" : theme.text,
+                  border: `1px solid ${sortByActionType ? theme.primary || "#6366f1" : theme.border}`,
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                }}
+                title="Sort by action type"
+              >
+                ↕ Sort
+              </button>
+            </div>
           </div>
 
           {showCanAttempt && (
@@ -1345,24 +1676,29 @@ const SpellSummary = ({
             {!showCanAttempt && spellStats.mastered.length > 0 && (
               <>
                 {getSortedSpellLevels(spellStats.masteredByLevel).map(
-                  (levelName) => (
-                    <div key={levelName} style={{ marginBottom: "24px" }}>
-                      <div style={styles.sectionTitle}>
-                        <Zap size={14} style={{ color: theme.success }} />
-                        {levelName} (
-                        {spellStats.masteredByLevel[levelName].length})
+                  (levelName) => {
+                    const filteredSpells = applyFilterAndSort(
+                      spellStats.masteredByLevel[levelName],
+                    );
+                    if (filteredSpells.length === 0) return null;
+                    return (
+                      <div key={levelName} style={{ marginBottom: "24px" }}>
+                        <div style={styles.sectionTitle}>
+                          <Zap size={14} style={{ color: theme.success }} />
+                          {levelName} ({filteredSpells.length})
+                        </div>
+                        <div style={styles.spellGrid}>
+                          {filteredSpells.map((spell) =>
+                            renderSpellTile(
+                              spell,
+                              styles.masteredSpell,
+                              <Zap size={12} />,
+                            ),
+                          )}
+                        </div>
                       </div>
-                      <div style={styles.spellGrid}>
-                        {spellStats.masteredByLevel[levelName].map((spell) =>
-                          renderSpellTile(
-                            spell,
-                            styles.masteredSpell,
-                            <Zap size={12} />
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )
+                    );
+                  },
                 )}
               </>
             )}
@@ -1375,57 +1711,61 @@ const SpellSummary = ({
                   ...spellStats.failedByLevel,
                   ...spellStats.researchedByLevel,
                 }).map((levelName) => {
-                  const masteredSpells =
-                    spellStats.masteredByLevel[levelName] || [];
-                  const attemptedSpells =
-                    spellStats.attemptedByLevel[levelName] || [];
-                  const failedSpells =
-                    spellStats.failedByLevel[levelName] || [];
-                  const researchedSpells =
-                    spellStats.researchedByLevel[levelName] || [];
+                  const filteredMastered = applyFilterAndSort(
+                    spellStats.masteredByLevel[levelName] || [],
+                  );
+                  const filteredAttempted = applyFilterAndSort(
+                    spellStats.attemptedByLevel[levelName] || [],
+                  );
+                  const filteredFailed = applyFilterAndSort(
+                    spellStats.failedByLevel[levelName] || [],
+                  );
+                  const filteredResearched = applyFilterAndSort(
+                    spellStats.researchedByLevel[levelName] || [],
+                  );
 
-                  const totalSpells =
-                    masteredSpells.length +
-                    attemptedSpells.length +
-                    failedSpells.length +
-                    researchedSpells.length;
+                  const totalFiltered =
+                    filteredMastered.length +
+                    filteredAttempted.length +
+                    filteredFailed.length +
+                    filteredResearched.length;
 
-                  if (totalSpells === 0) return null;
+                  if (totalFiltered === 0) return null;
 
                   return (
                     <div key={levelName} style={{ marginBottom: "24px" }}>
                       <div style={styles.sectionTitle}>
                         <Zap size={14} style={{ color: theme.text }} />
-                        {levelName} ({totalSpells})
+                        {levelName} ({totalFiltered})
                       </div>
                       <div style={styles.spellGrid}>
-                        {masteredSpells.map((spell) =>
+                        {filteredMastered.map((spell) =>
                           renderSpellTile(
                             spell,
                             styles.masteredSpell,
-                            <Zap size={12} />
-                          )
+                            <Zap size={12} />,
+                          ),
                         )}
-                        {attemptedSpells.map((spell) =>
+                        {filteredAttempted.map((spell) =>
                           renderSpellTile(
                             spell,
                             styles.attemptedSpell,
-                            <Target size={12} />
-                          )
+                            <Target size={12} />,
+                          ),
                         )}
-                        {failedSpells.map((spell) =>
+                        {filteredFailed.map((spell) =>
                           renderSpellTile(
                             spell,
                             styles.failedSpell,
-                            <X size={12} />
-                          )
+                            <X size={12} />,
+                          ),
                         )}
-                        {researchedSpells.map((spell) =>
+                        {filteredResearched.map((spell) =>
                           renderSpellTile(
                             spell,
                             styles.researchedSpell,
-                            <BookOpen size={12} />
-                          )
+                            <BookOpen size={12} />,
+                          ),
                         )}
                       </div>
                     </div>

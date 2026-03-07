@@ -16,10 +16,10 @@ import {
   Plus,
   Edit3,
 } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "./styles";
-import { ALL_CHARACTERS } from "../../SharedData/charactersData";
-import { filterNPCGalleryCharacters } from "../../utils/characterFiltering";
+import { ALL_CHARACTERS } from "../../../SharedData/charactersData";
+import { filterNPCGalleryCharacters } from "../../../utils/characterFiltering";
 
 const DEFAULT_TAGS = [
   "Study Buddy",

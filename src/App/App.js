@@ -16,7 +16,7 @@ import SpellBook from "../Components/SpellBook/SpellBook";
 import CharacterSheetWrapper from "../Components/CharacterSheet/CharacterSheetWrapper";
 import CharacterNotes from "../Components/CharacterNotes/CharacterNotes";
 import CharacterSelector from "../Components/CharacterSelector/CharacterSelector";
-import CharacterGallery from "../Components/CharacterGallery/CharacterGallery";
+import CharacterGallery from "../Components/CharacterManager/CharacterGallery/CharacterGallery";
 import OtherPlayers from "../Components/OtherPlayers/OtherPlayers";
 import Creatures from "../Components/Creatures/Creatures";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
