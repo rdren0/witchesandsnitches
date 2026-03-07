@@ -773,6 +773,105 @@ export const SubjectCard = ({
   const additionalStyles = getAdditionalStyles(theme);
   const styles = { ...baseStyles, ...additionalStyles };
 
+  const CATEGORY_PRIORITY = {
+    action: 1,
+    bonus_action: 2,
+    reaction: 3,
+    long: 4,
+  };
+
+  const getActionTypePriority = (castingTime, spellName) => {
+    const categories = getSpellActionCategories(castingTime, spellName);
+    if (categories.length === 0) return 99;
+    return Math.min(...categories.map((c) => CATEGORY_PRIORITY[c] ?? 99));
+  };
+
+  const ACTION_TYPE_BADGE_MAP = [
+    { key: "bonus_action", label: "Bonus Action", color: "#f59e0b" },
+    { key: "action", label: "Action", color: "#3b82f6" },
+    { key: "reaction", label: "Reaction", color: "#8b5cf6" },
+    { key: "long", label: "Ritual", color: "#6b7280" },
+  ];
+
+  const getSpellActionCategories = (castingTime, spellName) => {
+    if (!castingTime) return [];
+    const ct = castingTime.toLowerCase();
+    const categories = [];
+    if (ct.includes("bonus action")) categories.push("bonus_action");
+    if (
+      ct
+        .replace(/bonus action/gi, "")
+        .replace(/reaction/gi, "")
+        .includes("action")
+    )
+      categories.push("action");
+    if (ct.includes("reaction")) categories.push("reaction");
+    if (ct.includes("minute") || ct.includes("hour") || ct.includes("day"))
+      categories.push("long");
+
+    if (
+      spellName === "Bombarda" &&
+      selectedCharacter?.house === "Durmstrang" &&
+      !categories.includes("bonus_action")
+    ) {
+      categories.push("bonus_action");
+    }
+    return categories;
+  };
+
+  const parseCastingTimeParts = (castingTime, spellName) => {
+    if (!castingTime) return [];
+
+    const commaIdx = castingTime.indexOf(",");
+    const actionSection =
+      commaIdx === -1 ? castingTime : castingTime.slice(0, commaIdx).trim();
+    const triggerText =
+      commaIdx === -1 ? null : castingTime.slice(commaIdx + 1).trim() || null;
+
+    const actionClauses = actionSection.split(/ or /i);
+    const result = [];
+
+    for (let i = 0; i < actionClauses.length; i++) {
+      const base = actionClauses[i].trim().toLowerCase();
+      let badgeKey = null;
+      if (base.includes("bonus action")) badgeKey = "bonus_action";
+      else if (
+        base
+          .replace(/bonus action/gi, "")
+          .replace(/reaction/gi, "")
+          .includes("action")
+      )
+        badgeKey = "action";
+      else if (base.includes("reaction")) badgeKey = "reaction";
+      else if (
+        base.includes("minute") ||
+        base.includes("hour") ||
+        base.includes("day")
+      )
+        badgeKey = "long";
+
+      if (badgeKey) {
+        result.push({
+          badge: ACTION_TYPE_BADGE_MAP.find((b) => b.key === badgeKey),
+          trigger: i === actionClauses.length - 1 ? triggerText : null,
+        });
+      }
+    }
+
+    if (
+      spellName === "Bombarda" &&
+      selectedCharacter?.house === "Durmstrang" &&
+      !result.some((p) => p.badge?.key === "bonus_action")
+    ) {
+      result.push({
+        badge: ACTION_TYPE_BADGE_MAP.find((b) => b.key === "bonus_action"),
+        trigger: "Durmstrang: Cold Efficiency",
+      });
+    }
+
+    return result;
+  };
+
   const [attemptingSpells, setAttemptingSpells] = useState({});
   const [alternateAttemptsModal, setAlternateAttemptsModal] = useState(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
@@ -789,6 +888,7 @@ export const SubjectCard = ({
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
+  const [sortByActionType, setSortByActionType] = useState(false);
 
   const [bonusDiceModalState, setBonusDiceModalState] = useState({
     isOpen: false,
@@ -1090,6 +1190,21 @@ export const SubjectCard = ({
                 style={{ ...styles.tableHeaderCellCenter, width: "2.5rem" }}
               ></th>
               <th style={styles.tableHeaderCell}>Spell Name</th>
+              <th
+                onClick={() => setSortByActionType((prev) => !prev)}
+                style={{
+                  ...styles.tableHeaderCell,
+                  cursor: "pointer",
+                  userSelect: "none",
+                  whiteSpace: "nowrap",
+                  color: sortByActionType ? theme.primary : theme.text,
+                  width: "9rem",
+                  maxWidth: "9rem",
+                }}
+                title="Click to sort by action type"
+              >
+                Action {sortByActionType ? "▲" : "↕"}
+              </th>
               <th style={styles.tableHeaderCell}>Successful Attempts</th>
               <th style={styles.tableHeaderCellCenter}>Critical</th>
               <th style={styles.tableHeaderCellCenter}>Attempt</th>
@@ -1102,7 +1217,14 @@ export const SubjectCard = ({
             </tr>
           </thead>
           <tbody>
-            {searchResults
+            {(sortByActionType
+              ? [...searchResults].sort(
+                  (a, b) =>
+                    getActionTypePriority(a.castingTime, a.name) -
+                    getActionTypePriority(b.castingTime, b.name),
+                )
+              : searchResults
+            )
               .map((spellObj, index) =>
                 renderSpellRow(spellObj, index, subjectName, true),
               )
@@ -1532,6 +1654,55 @@ export const SubjectCard = ({
                 </span>
               )}
             </div>
+          </div>
+        </td>
+        <td style={{ ...styles.tableCell, verticalAlign: "top" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {parseCastingTimeParts(spellObj.castingTime, spellObj.name).map(
+              (part, i, arr) => (
+                <div
+                  key={part.badge?.key ?? i}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2px",
+                    paddingBottom: i < arr.length - 1 ? "6px" : 0,
+                    borderBottom:
+                      i < arr.length - 1 ? `1px solid ${theme.border}` : "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "600",
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      backgroundColor: part.badge?.color,
+                      color: "white",
+                      whiteSpace: "nowrap",
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    {part.badge?.label}
+                  </span>
+                  {part.trigger && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: theme.textSecondary,
+                        fontStyle: "italic",
+                        lineHeight: "1.3",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {part.trigger}
+                    </span>
+                  )}
+                </div>
+              ),
+            )}
           </div>
         </td>
         <td style={styles.tableCell}>
@@ -2487,6 +2658,19 @@ export const SubjectCard = ({
                   style={{ ...styles.tableHeaderCellCenter, width: "2.5rem" }}
                 ></th>
                 <th style={styles.tableHeaderCell}>Spell Name</th>
+                <th
+                  onClick={() => setSortByActionType((prev) => !prev)}
+                  style={{
+                    ...styles.tableHeaderCell,
+                    cursor: "pointer",
+                    userSelect: "none",
+                    whiteSpace: "nowrap",
+                    color: sortByActionType ? theme.primary : theme.text,
+                  }}
+                  title="Click to sort by action type"
+                >
+                  Action {sortByActionType ? "▲" : "↕"}
+                </th>
                 <th style={styles.tableHeaderCell}>Successful Attempts</th>
                 <th style={styles.tableHeaderCellCenter}>Critical</th>
                 <th style={styles.tableHeaderCellCenter}>Attempt</th>
@@ -2496,7 +2680,14 @@ export const SubjectCard = ({
               </tr>
             </thead>
             <tbody>
-              {filteredSpells
+              {(sortByActionType
+                ? [...filteredSpells].sort(
+                    (a, b) =>
+                      getActionTypePriority(a.castingTime, a.name) -
+                      getActionTypePriority(b.castingTime, b.name),
+                  )
+                : filteredSpells
+              )
                 .map((spellObj, index) =>
                   renderSpellRow(spellObj, index, subject),
                 )

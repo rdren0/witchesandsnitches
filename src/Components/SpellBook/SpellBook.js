@@ -66,8 +66,14 @@ const SpellBook = ({
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
   const [isAttemptDropdownOpen, setIsAttemptDropdownOpen] = useState(false);
+  const [selectedCastingTimeFilters, setSelectedCastingTimeFilters] = useState(
+    [],
+  );
+  const [isCastingTimeDropdownOpen, setIsCastingTimeDropdownOpen] =
+    useState(false);
   const levelDropdownRef = useRef(null);
   const attemptDropdownRef = useRef(null);
+  const castingTimeDropdownRef = useRef(null);
 
   const loadSpellProgress = useCallback(async () => {
     if (!selectedCharacter) return;
@@ -164,9 +170,42 @@ const SpellBook = ({
     { value: "researched", label: "Researched" },
   ];
 
+  const castingTimeFilterOptions = [
+    { value: "action", label: "1 Action" },
+    { value: "bonus_action", label: "1 Bonus Action" },
+    { value: "reaction", label: "1 Reaction" },
+    { value: "long", label: "1 Minute+" },
+  ];
+
+  const getCastingTimeCategories = (castingTime, spellName) => {
+    if (!castingTime) return [];
+    const ct = castingTime.toLowerCase();
+    const categories = [];
+    if (ct.includes("bonus action")) categories.push("bonus_action");
+    if (
+      ct
+        .replace(/bonus action/gi, "")
+        .replace(/reaction/gi, "")
+        .includes("action")
+    )
+      categories.push("action");
+    if (ct.includes("reaction")) categories.push("reaction");
+    if (ct.includes("minute") || ct.includes("hour") || ct.includes("day"))
+      categories.push("long");
+    // Durmstrang "Cold Efficiency": Bombarda can also be cast as a bonus action
+    if (
+      spellName === "Bombarda" &&
+      selectedCharacter?.house === "Durmstrang" &&
+      !categories.includes("bonus_action")
+    ) {
+      categories.push("bonus_action");
+    }
+    return categories;
+  };
+
   const getAvailableSpellsData = useCallback(
     () => ({ ...spellsData }),
-    [spellsData]
+    [spellsData],
   );
 
   const coreSubjects = [
@@ -295,7 +334,7 @@ const SpellBook = ({
         successfulAttempts,
       };
     },
-    [spellAttempts, failedAttempts, researchedSpells]
+    [spellAttempts, failedAttempts, researchedSpells],
   );
 
   const getFilteredSpellsData = useCallback(() => {
@@ -312,7 +351,7 @@ const SpellBook = ({
         Object.entries(subjectData.levels).forEach(([level, spells]) => {
           const filteredSpells = spells.filter((spell) => {
             const hasInherentTag = spell.tags?.some((tag) =>
-              tag.toLowerCase().includes(lowerSearchTerm)
+              tag.toLowerCase().includes(lowerSearchTerm),
             );
 
             const hasManualArithmancticTag =
@@ -335,7 +374,7 @@ const SpellBook = ({
               spell.description?.toLowerCase().includes(lowerSearchTerm) ||
               spell.level?.toLowerCase().includes(lowerSearchTerm) ||
               spell.class?.some((cls) =>
-                cls.toLowerCase().includes(lowerSearchTerm)
+                cls.toLowerCase().includes(lowerSearchTerm),
               ) ||
               subjectName.toLowerCase().includes(lowerSearchTerm) ||
               spell.castingTime?.toLowerCase().includes(lowerSearchTerm) ||
@@ -502,6 +541,41 @@ const SpellBook = ({
       return finalFilteredData;
     }
 
+    if (selectedCastingTimeFilters.length > 0) {
+      const castingTimeFilteredData = {};
+
+      Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
+        const filteredLevels = {};
+        let hasMatchingSpells = false;
+
+        Object.entries(subjectData.levels).forEach(([level, spells]) => {
+          const filteredSpells = spells.filter((spell) => {
+            const categories = getCastingTimeCategories(
+              spell.castingTime,
+              spell.name,
+            );
+            return selectedCastingTimeFilters.some((f) =>
+              categories.includes(f),
+            );
+          });
+
+          if (filteredSpells.length > 0) {
+            filteredLevels[level] = filteredSpells;
+            hasMatchingSpells = true;
+          }
+        });
+
+        if (hasMatchingSpells) {
+          castingTimeFilteredData[subjectName] = {
+            ...subjectData,
+            levels: filteredLevels,
+          };
+        }
+      });
+
+      return castingTimeFilteredData;
+    }
+
     return filteredData;
   }, [
     searchTerm,
@@ -515,6 +589,7 @@ const SpellBook = ({
     researchedSpells,
     selectedCharacter,
     getSpellAttemptStatus,
+    selectedCastingTimeFilters,
   ]);
 
   const getTotalSpells = (dataSource = null) => {
@@ -524,7 +599,7 @@ const SpellBook = ({
         total +
         Object.values(subject.levels).reduce(
           (levelTotal, spells) => levelTotal + spells.length,
-          0
+          0,
         )
       );
     }, 0);
@@ -646,8 +721,10 @@ const SpellBook = ({
     setYearFilter("all");
     setClassFilter("all");
     setSelectedLevels([]);
+    setSelectedCastingTimeFilters([]);
     setIsLevelDropdownOpen(false);
     setIsAttemptDropdownOpen(false);
+    setIsCastingTimeDropdownOpen(false);
   };
 
   const handleLevelToggle = (level) => {
@@ -680,7 +757,7 @@ const SpellBook = ({
 
   const selectAllAttemptFilters = () => {
     setSelectedAttemptFilters(
-      attemptFilterOptions.map((option) => option.value)
+      attemptFilterOptions.map((option) => option.value),
     );
   };
 
@@ -694,6 +771,41 @@ const SpellBook = ({
 
   const toggleAttemptDropdown = () => {
     setIsAttemptDropdownOpen(!isAttemptDropdownOpen);
+  };
+
+  const handleCastingTimeFilterToggle = (filter) => {
+    setSelectedCastingTimeFilters((prev) => {
+      if (prev.includes(filter)) {
+        return prev.filter((f) => f !== filter);
+      } else {
+        return [...prev, filter];
+      }
+    });
+  };
+
+  const deselectAllCastingTimeFilters = () => {
+    setSelectedCastingTimeFilters([]);
+  };
+
+  const toggleCastingTimeDropdown = () => {
+    setIsCastingTimeDropdownOpen(!isCastingTimeDropdownOpen);
+  };
+
+  const getCastingTimeDropdownLabel = () => {
+    if (selectedCastingTimeFilters.length === 0) {
+      return "All Actions";
+    } else if (selectedCastingTimeFilters.length === 1) {
+      const option = castingTimeFilterOptions.find(
+        (opt) => opt.value === selectedCastingTimeFilters[0],
+      );
+      return option ? option.label : selectedCastingTimeFilters[0];
+    } else if (
+      selectedCastingTimeFilters.length === castingTimeFilterOptions.length
+    ) {
+      return "All Actions";
+    } else {
+      return `${selectedCastingTimeFilters.length} Actions`;
+    }
   };
 
   const getLevelDropdownLabel = () => {
@@ -713,7 +825,7 @@ const SpellBook = ({
       return "All Spells";
     } else if (selectedAttemptFilters.length === 1) {
       const option = attemptFilterOptions.find(
-        (opt) => opt.value === selectedAttemptFilters[0]
+        (opt) => opt.value === selectedAttemptFilters[0],
       );
       return option ? option.label : selectedAttemptFilters[0];
     } else if (selectedAttemptFilters.length === attemptFilterOptions.length) {
@@ -747,6 +859,12 @@ const SpellBook = ({
         !attemptDropdownRef.current.contains(event.target)
       ) {
         setIsAttemptDropdownOpen(false);
+      }
+      if (
+        castingTimeDropdownRef.current &&
+        !castingTimeDropdownRef.current.contains(event.target)
+      ) {
+        setIsCastingTimeDropdownOpen(false);
       }
     };
 
@@ -935,7 +1053,7 @@ const SpellBook = ({
                   ) : (
                     selectedAttemptFilters.map((filter) => {
                       const option = attemptFilterOptions.find(
-                        (opt) => opt.value === filter
+                        (opt) => opt.value === filter,
                       );
                       return (
                         <div
@@ -1059,7 +1177,7 @@ const SpellBook = ({
                         <input
                           type="checkbox"
                           checked={selectedAttemptFilters.includes(
-                            option.value
+                            option.value,
                           )}
                           onChange={() => {}}
                           style={{
@@ -1285,6 +1403,203 @@ const SpellBook = ({
                 fontWeight: "500",
               }}
             >
+              Action:
+            </span>
+            <div
+              ref={castingTimeDropdownRef}
+              style={{
+                position: "relative",
+                minWidth: "180px",
+              }}
+            >
+              <div
+                onClick={toggleCastingTimeDropdown}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  minHeight: "20px",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    flex: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {selectedCastingTimeFilters.length === 0 ? (
+                    <span style={{ color: theme.textSecondary }}>
+                      All Actions
+                    </span>
+                  ) : (
+                    selectedCastingTimeFilters.map((filter) => {
+                      const option = castingTimeFilterOptions.find(
+                        (opt) => opt.value === filter,
+                      );
+                      return (
+                        <div
+                          key={filter}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            backgroundColor: theme.primary || "#6366f1",
+                            color: "white",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          <span>{option ? option.label : filter}</span>
+                          <X
+                            size={12}
+                            style={{ cursor: "pointer" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCastingTimeFilterToggle(filter);
+                            }}
+                          />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <ChevronDown
+                  size={16}
+                  style={{
+                    color: theme.textSecondary,
+                    transform: isCastingTimeDropdownOpen
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s ease",
+                  }}
+                />
+              </div>
+
+              {isCastingTimeDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    backgroundColor: theme.surface || theme.background,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    marginTop: "2px",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderBottom: `1px solid ${theme.border}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      Select Action Type
+                    </span>
+                    <button
+                      onClick={deselectAllCastingTimeFilters}
+                      style={{
+                        padding: "2px 6px",
+                        fontSize: "10px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "4px",
+                        backgroundColor: "transparent",
+                        color: theme.primary,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  <div style={{ padding: "4px" }}>
+                    {castingTimeFilterOptions.map((option) => (
+                      <div
+                        key={option.value}
+                        onClick={() =>
+                          handleCastingTimeFilterToggle(option.value)
+                        }
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 12px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          color: theme.text,
+                          backgroundColor: "transparent",
+                          transition: "background-color 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            theme.background || "#f8fafc";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCastingTimeFilters.includes(
+                            option.value,
+                          )}
+                          onChange={() => {}}
+                          style={{
+                            accentColor: theme.primary,
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "14px",
+                color: theme.textSecondary,
+                fontWeight: "500",
+              }}
+            >
               Class:
             </span>
             <select
@@ -1349,7 +1664,8 @@ const SpellBook = ({
             selectedAttemptFilters.length > 0 ||
             yearFilter !== "all" ||
             classFilter !== "all" ||
-            selectedLevels.length > 0) && (
+            selectedLevels.length > 0 ||
+            selectedCastingTimeFilters.length > 0) && (
             <button
               onClick={clearFilters}
               style={{
@@ -1400,7 +1716,8 @@ const SpellBook = ({
           selectedAttemptFilters.length > 0 ||
           yearFilter !== "all" ||
           classFilter !== "all" ||
-          selectedLevels.length > 0) && (
+          selectedLevels.length > 0 ||
+          selectedCastingTimeFilters.length > 0) && (
           <div style={styles.searchResults}>
             Showing {totalFilteredSpells} of {totalSpells} spells
             {searchTerm && <span> • Search: "{searchTerm}"</span>}
@@ -1411,7 +1728,7 @@ const SpellBook = ({
                 {selectedAttemptFilters
                   .map((filter) => {
                     const option = attemptFilterOptions.find(
-                      (opt) => opt.value === filter
+                      (opt) => opt.value === filter,
                     );
                     return option ? option.label : filter;
                   })
@@ -1440,6 +1757,20 @@ const SpellBook = ({
             )}
             {selectedLevels.length > 0 && (
               <span> • Levels: {selectedLevels.join(", ")}</span>
+            )}
+            {selectedCastingTimeFilters.length > 0 && (
+              <span>
+                {" "}
+                • Action:{" "}
+                {selectedCastingTimeFilters
+                  .map((f) => {
+                    const opt = castingTimeFilterOptions.find(
+                      (o) => o.value === f,
+                    );
+                    return opt ? opt.label : f;
+                  })
+                  .join(", ")}
+              </span>
             )}
             {totalFilteredSpells < totalSpells && (
               <span style={styles.searchResultsHint}>
@@ -1505,7 +1836,8 @@ const SpellBook = ({
         selectedAttemptFilters.length > 0 ||
         yearFilter !== "all" ||
         classFilter !== "all" ||
-        selectedLevels.length > 0) &&
+        selectedLevels.length > 0 ||
+        selectedCastingTimeFilters.length > 0) &&
         Object.keys(filteredSpellsData).length === 0 && (
           <div style={styles.noResultsContainer}>
             <div style={styles.noResultsIcon}>🔍</div>
@@ -1526,7 +1858,7 @@ const SpellBook = ({
                     {selectedAttemptFilters
                       .map((filter) => {
                         const option = attemptFilterOptions.find(
-                          (opt) => opt.value === filter
+                          (opt) => opt.value === filter,
                         );
                         return option ? option.label : filter;
                       })
@@ -1541,7 +1873,7 @@ const SpellBook = ({
                   <strong>
                     {
                       classFilterOptions.find(
-                        (opt) => opt.value === classFilter
+                        (opt) => opt.value === classFilter,
                       )?.label
                     }
                   </strong>
@@ -1619,7 +1951,7 @@ const SpellBook = ({
           ))}
 
         {Object.entries(filteredSpellsData).filter(([subjectName]) =>
-          isSpecializedSubject(subjectName)
+          isSpecializedSubject(subjectName),
         ).length > 0 && (
           <div
             style={{
@@ -1680,7 +2012,7 @@ const SpellBook = ({
               >
                 {
                   Object.entries(filteredSpellsData).filter(([subjectName]) =>
-                    isSpecializedSubject(subjectName)
+                    isSpecializedSubject(subjectName),
                   ).length
                 }{" "}
                 subjects
