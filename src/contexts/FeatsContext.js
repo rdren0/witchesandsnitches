@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { standardFeats as fallbackFeats } from "../SharedData/deprecated/standardFeatData";
 
-const CACHE_KEY = "feats_cache";
+const CACHE_KEY = "feats_cache_v2";
 const CACHE_TTL = 60 * 60 * 1000;
 
 const FeatsContext = createContext(null);
@@ -17,6 +17,17 @@ function transformFeat(feat) {
         console.warn(`Failed to parse field:`, field);
         return defaultValue;
       }
+    }
+    if (
+      Array.isArray(field) &&
+      field.length > 0 &&
+      field.every((item) => typeof item === "string")
+    ) {
+      try {
+        const joined = field.join(", ");
+        const parsed = JSON.parse(joined);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
     }
     return field;
   };
@@ -72,8 +83,8 @@ function transformFeat(feat) {
       ability: isChoice
         ? "choice"
         : asiType === "spellcasting"
-        ? "spellcasting_ability"
-        : abilities[0] || "choice",
+          ? "spellcasting_ability"
+          : abilities[0] || "choice",
 
       abilities:
         asiType === "spellcasting" && abilities.length > 0
@@ -91,7 +102,7 @@ function transformFeat(feat) {
       } catch (e) {
         console.warn(
           `Invalid JSON in prerequisites for ${feat.name}:`,
-          feat.prerequisites
+          feat.prerequisites,
         );
         prerequisites = undefined;
       }
@@ -139,7 +150,7 @@ function setCachedFeats(feats) {
       JSON.stringify({
         feats,
         timestamp: Date.now(),
-      })
+      }),
     );
   } catch (e) {
     console.warn("Error saving feats cache:", e);
@@ -223,7 +234,7 @@ export function FeatsProvider({ children }) {
       (feat) =>
         feat.name?.toLowerCase().includes(term) ||
         feat.preview?.toLowerCase().includes(term) ||
-        feat.description?.some((desc) => desc.toLowerCase().includes(term))
+        feat.description?.some((desc) => desc.toLowerCase().includes(term)),
     );
   };
 
@@ -266,7 +277,7 @@ export function useFeats() {
   if (!context) {
     throw new Error(
       "useFeats must be used within a FeatsProvider. " +
-        "Make sure the app is wrapped with <FeatsProvider>."
+        "Make sure the app is wrapped with <FeatsProvider>.",
     );
   }
 
