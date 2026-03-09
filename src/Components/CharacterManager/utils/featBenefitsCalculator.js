@@ -155,7 +155,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
       if (cb.darkvision) {
         benefits.combatBonuses.darkvision = Math.max(
           benefits.combatBonuses.darkvision,
-          cb.darkvision
+          cb.darkvision,
         );
       }
 
@@ -193,7 +193,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
         } else if (typeof speeds.climb === "number") {
           benefits.speeds.climb = Math.max(
             benefits.speeds.climb || 0,
-            speeds.climb
+            speeds.climb,
           );
         }
       }
@@ -201,7 +201,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
       if (speeds.flying) {
         benefits.speeds.flying = Math.max(
           benefits.speeds.flying || 0,
-          speeds.flying
+          speeds.flying,
         );
       }
     }
@@ -264,7 +264,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
       if (sc.elementalMastery) {
         if (
           !benefits.spellcasting.elementalMastery.some(
-            (em) => em.type === sc.elementalMastery.type
+            (em) => em.type === sc.elementalMastery.type,
           )
         ) {
           benefits.spellcasting.elementalMastery.push(sc.elementalMastery);
@@ -331,7 +331,7 @@ export const calculateFeatBenefits = (character, featChoices = {}) => {
 export const calculateInitiativeWithFeats = (
   character,
   baseInitiativeModifier,
-  featChoices = {}
+  featChoices = {},
 ) => {
   const featBenefits = calculateFeatBenefits(character, featChoices);
   return baseInitiativeModifier + featBenefits.combatBonuses.initiativeBonus;
@@ -340,7 +340,7 @@ export const calculateInitiativeWithFeats = (
 export const calculateWalkingSpeedWithFeats = (
   character,
   baseSpeed = 30,
-  featChoices = {}
+  featChoices = {},
 ) => {
   const featBenefits = calculateFeatBenefits(character, featChoices);
   return baseSpeed + featBenefits.speeds.walkingBonus;
@@ -349,7 +349,7 @@ export const calculateWalkingSpeedWithFeats = (
 export const calculateSpeedsWithFeats = (
   character,
   baseSpeed = 30,
-  featChoices = {}
+  featChoices = {},
 ) => {
   const featBenefits = calculateFeatBenefits(character, featChoices);
   const walkingSpeed = baseSpeed + featBenefits.speeds.walkingBonus;
@@ -367,7 +367,7 @@ export const calculateSpeedsWithFeats = (
 export const getPassiveSkillFeatBonus = (
   character,
   skillName,
-  featChoices = {}
+  featChoices = {},
 ) => {
   const featBenefits = calculateFeatBenefits(character, featChoices);
 
@@ -384,7 +384,7 @@ export const getPassiveSkillFeatBonus = (
 export const hasImmunityFromFeats = (
   character,
   immunityType,
-  featChoices = {}
+  featChoices = {},
 ) => {
   const featBenefits = calculateFeatBenefits(character, featChoices);
   return featBenefits.immunities.includes(immunityType);
@@ -393,7 +393,7 @@ export const hasImmunityFromFeats = (
 export const hasResistanceFromFeats = (
   character,
   resistanceType,
-  featChoices = {}
+  featChoices = {},
 ) => {
   const featBenefits = calculateFeatBenefits(character, featChoices);
   return featBenefits.resistances.includes(resistanceType);
@@ -405,6 +405,120 @@ export const getHitPointsBonusFromFeats = (character, featChoices = {}) => {
   return featBenefits.combatBonuses.hitPointsPerLevel * level;
 };
 
+export const getFeatSavingThrowProficiencies = (
+  character,
+  featChoices = {},
+) => {
+  if (!character) return [];
+
+  const allSelectedFeats = getAllSelectedFeats(character);
+
+  const combinedFeatChoices = {
+    ...(character.feat_choices || character.featChoices || {}),
+    ...featChoices,
+  };
+
+  const asiChoices = character.asi_choices || character.asiChoices || {};
+  Object.values(asiChoices).forEach((choice) => {
+    if (choice.type === "feat" && (choice.featChoices || choice.feat_choices)) {
+      Object.assign(
+        combinedFeatChoices,
+        choice.featChoices || choice.feat_choices,
+      );
+    }
+  });
+
+  const proficiencies = [];
+  const standardFeats = getFeatsSync();
+
+  const resolveChoiceForInstance = (featName, instanceKey) => {
+    const key1 = `${instanceKey}_abilityChoice`;
+    const key2 = `${instanceKey}_ability_0`;
+    const malKey1 = instanceKey.includes("_level1")
+      ? `${featName}_levellevel1_abilityChoice`
+      : null;
+    const malKey2 = instanceKey.includes("_level1")
+      ? `${featName}_levellevel1_ability_0`
+      : null;
+
+    return (
+      combinedFeatChoices[key1] ||
+      combinedFeatChoices[key2] ||
+      (malKey1 && combinedFeatChoices[malKey1]) ||
+      (malKey2 && combinedFeatChoices[malKey2]) ||
+      null
+    );
+  };
+
+  allSelectedFeats.forEach((featName) => {
+    const feat = standardFeats.find((f) => f.name === featName);
+    if (!feat?.benefits?.savingThrowProficiencies?.length) return;
+
+    const isChoiceProficiency = (prof) =>
+      prof === "choice" ||
+      (typeof prof === "object" && prof !== null && prof.type === "choice");
+
+    feat.benefits.savingThrowProficiencies.forEach((prof) => {
+      if (!isChoiceProficiency(prof)) {
+        const profKey = typeof prof === "string" ? prof : prof?.ability || null;
+        if (profKey && !proficiencies.includes(profKey))
+          proficiencies.push(profKey);
+        return;
+      }
+
+      if (feat.repeatable) {
+        const level1ChoiceType =
+          character.level1_choice_type || character.level1ChoiceType;
+        const characterStandardFeats =
+          character.standardFeats || character.standard_feats || [];
+        if (
+          level1ChoiceType === "feat" &&
+          characterStandardFeats.includes(featName)
+        ) {
+          const chosen = resolveChoiceForInstance(
+            featName,
+            `${featName}_level1`,
+          );
+          if (chosen && !proficiencies.includes(chosen))
+            proficiencies.push(chosen);
+        }
+
+        Object.entries(asiChoices).forEach(([level, choice]) => {
+          if (choice.type === "feat" && choice.selectedFeat === featName) {
+            const instanceChoices = {
+              ...combinedFeatChoices,
+              ...(choice.featChoices || choice.feat_choices || {}),
+            };
+            const key1 = `${featName}_level${level}_abilityChoice`;
+            const key2 = `${featName}_level${level}_ability_0`;
+            const chosen = instanceChoices[key1] || instanceChoices[key2];
+            if (chosen && !proficiencies.includes(chosen))
+              proficiencies.push(chosen);
+          }
+        });
+
+        const additionalFeats =
+          character.additional_feats || character.additionalFeats || [];
+        additionalFeats.forEach((fname, index) => {
+          if (fname === featName) {
+            const instanceKey =
+              index === 0 ? featName : `${featName}_additional_${index}`;
+            const chosen = resolveChoiceForInstance(featName, instanceKey);
+            if (chosen && !proficiencies.includes(chosen))
+              proficiencies.push(chosen);
+          }
+        });
+      } else {
+        const chosen = resolveChoiceForInstance(featName, featName);
+        if (chosen && !proficiencies.includes(chosen))
+          proficiencies.push(chosen);
+      }
+    });
+  });
+
+  return proficiencies;
+};
+
 const featBenefitsCalculator = {
   calculateFeatBenefits,
   calculateInitiativeWithFeats,
@@ -414,6 +528,7 @@ const featBenefitsCalculator = {
   hasImmunityFromFeats,
   hasResistanceFromFeats,
   getHitPointsBonusFromFeats,
+  getFeatSavingThrowProficiencies,
 };
 
 export default featBenefitsCalculator;
