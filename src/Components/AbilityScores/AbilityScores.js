@@ -4,6 +4,7 @@ import { useRollFunctions } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getAbilityScoresStyles } from "./styles";
 import { calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
+import { getFeatSavingThrowProficiencies } from "../CharacterManager/utils/featBenefitsCalculator";
 
 const AbilityScores = ({ character }) => {
   const { rollAbility, rollSavingThrow } = useRollFunctions();
@@ -57,10 +58,13 @@ const AbilityScores = ({ character }) => {
     const baseModifier = characterModifiers[abilityKey];
     const proficiencyBonus = character.proficiencyBonus || 0;
 
-    const savingThrowProficiencies = getSavingThrowProficiencies(
+    const castingStyleProficiencies = getSavingThrowProficiencies(
       character.castingStyle
     );
-    const isProficient = savingThrowProficiencies.includes(abilityKey);
+    const featProficiencies = getFeatSavingThrowProficiencies(character);
+    const isProficient =
+      castingStyleProficiencies.includes(abilityKey) ||
+      featProficiencies.includes(abilityKey);
 
     return isProficient ? baseModifier + proficiencyBonus : baseModifier;
   };
