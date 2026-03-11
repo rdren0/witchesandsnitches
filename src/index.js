@@ -15,7 +15,7 @@ Sentry.init({
   tracesSampleRate: 0.2,
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  enabled: process.env.NODE_ENV === "production",
+  enabled: !!process.env.REACT_APP_SENTRY_DSN,
 });
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
