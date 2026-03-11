@@ -5,6 +5,7 @@
   "dependencies": {
     "@dice-roller/rpg-dice-roller": "^5.5.1",
     "@monaco-editor/react": "^4.7.0",
+    "@sentry/react": "^10.43.0",
     "@statsig/js-client": "^3.24.4",
     "@statsig/session-replay": "^3.24.4",
     "@statsig/web-analytics": "^3.24.4",
