@@ -91,6 +91,7 @@ Witches & Snitches is a full-featured character management system for a Harry Po
 
 - **Discord Webhooks** - Roll result notifications
 - **Discord API** - User authentication and data
+- **Sentry** - Error tracking and performance monitoring
 
 ### Development Tools
 
@@ -134,6 +135,7 @@ REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 REACT_APP_DISCORD_CLIENT_ID=your_discord_client_id
 REACT_APP_DISCORD_REDIRECT_URI=http://localhost:3000/auth/callback
 REACT_APP_DISCORD_WEBHOOK_URL=your_discord_webhook_url
+REACT_APP_SENTRY_DSN=your_sentry_dsn
 ```
 
 4. **Database Setup**
@@ -411,6 +413,30 @@ const character = await characterService.fetchCharacter(characterId);
 
 // Save character
 await characterService.saveCharacter(character);
+```
+
+### Sentry Error Tracking
+
+Sentry is initialized in `src/index.js` and enabled only in production. It captures unhandled errors, performance traces, and session replays.
+
+```javascript
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: process.env.REACT_APP_SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: 0.2,         // 20% of transactions
+  replaysSessionSampleRate: 0.1, // 10% of sessions
+  replaysOnErrorSampleRate: 1.0, // 100% on errors
+});
+```
+
+To manually capture an error:
+
+```javascript
+import * as Sentry from "@sentry/react";
+
+Sentry.captureException(error);
 ```
 
 ### Discord Webhook Service
