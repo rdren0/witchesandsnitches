@@ -79,7 +79,7 @@ function transformFeat(feat) {
       (asiType === "spellcasting" && abilities.length > 0);
 
     transformedBenefits.abilityScoreIncrease = {
-      type: isChoice ? "choice" : asiType || "specific",
+      type: isChoice ? "choice" : asiType || "fixed",
       ability: isChoice
         ? "choice"
         : asiType === "spellcasting"
