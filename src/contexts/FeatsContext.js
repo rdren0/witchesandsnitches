@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { standardFeats as fallbackFeats } from "../SharedData/deprecated/standardFeatData";
 
-const CACHE_KEY = "feats_cache_v4";
+const CACHE_KEY = "feats_cache_v5";
 const CACHE_TTL = 60 * 60 * 1000;
 
 const FeatsContext = createContext(null);
@@ -75,27 +75,40 @@ function transformFeat(feat) {
       : asiSource.abilities || (asiSource.ability ? [asiSource.ability] : []);
     const asiType = asiSource.type === "specific" ? "fixed" : asiSource.type;
 
-    const isChoice =
-      asiType === "choice" ||
-      asiType === "choice_any" ||
-      abilities.length > 1 ||
-      (asiType === "spellcasting" && abilities.length > 0);
+    if (asiType === "multiple") {
+      const increases = abilities.map((abilityStr) => {
+        const match = String(abilityStr).match(/^(\w+)\((\d+)\)$/);
+        return match
+          ? { ability: match[1], amount: parseInt(match[2], 10) }
+          : { ability: abilityStr, amount: asiSource.amount || 1 };
+      });
+      transformedBenefits.abilityScoreIncrease = {
+        type: "multiple",
+        increases,
+      };
+    } else {
+      const isChoice =
+        asiType === "choice" ||
+        asiType === "choice_any" ||
+        abilities.length > 1 ||
+        (asiType === "spellcasting" && abilities.length > 0);
 
-    const fixedAbility = isChoice
-      ? "choice"
-      : asiType === "spellcasting"
-        ? "spellcasting_ability"
-        : abilities[0] || null;
+      const fixedAbility = isChoice
+        ? "choice"
+        : asiType === "spellcasting"
+          ? "spellcasting_ability"
+          : abilities[0] || null;
 
-    transformedBenefits.abilityScoreIncrease = {
-      type: isChoice ? "choice" : asiType || "fixed",
-      ability: fixedAbility,
-      abilities:
-        asiType === "spellcasting" && abilities.length > 0
-          ? ["spellcasting_ability", ...abilities]
-          : abilities,
-      amount: asiSource.amount || 1,
-    };
+      transformedBenefits.abilityScoreIncrease = {
+        type: isChoice ? "choice" : asiType || "fixed",
+        ability: fixedAbility,
+        abilities:
+          asiType === "spellcasting" && abilities.length > 0
+            ? ["spellcasting_ability", ...abilities]
+            : abilities,
+        amount: asiSource.amount || 1,
+      };
+    }
   }
 
   let prerequisites = undefined;
