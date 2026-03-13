@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { standardFeats as fallbackFeats } from "../SharedData/deprecated/standardFeatData";
 
-const CACHE_KEY = "feats_cache_v2";
+const CACHE_KEY = "feats_cache_v4";
 const CACHE_TTL = 60 * 60 * 1000;
 
 const FeatsContext = createContext(null);
@@ -68,9 +68,12 @@ function transformFeat(feat) {
     specialAbilities: parseField(benefits.special, []),
   };
 
-  if (benefits.asi) {
-    const abilities = benefits.asi.abilities || [];
-    const asiType = benefits.asi.type;
+  const asiSource = benefits.asi || benefits.abilityScoreIncrease;
+  if (asiSource) {
+    const abilities = benefits.asi
+      ? asiSource.abilities || []
+      : asiSource.abilities || (asiSource.ability ? [asiSource.ability] : []);
+    const asiType = asiSource.type === "specific" ? "fixed" : asiSource.type;
 
     const isChoice =
       asiType === "choice" ||
@@ -78,19 +81,20 @@ function transformFeat(feat) {
       abilities.length > 1 ||
       (asiType === "spellcasting" && abilities.length > 0);
 
+    const fixedAbility = isChoice
+      ? "choice"
+      : asiType === "spellcasting"
+        ? "spellcasting_ability"
+        : abilities[0] || null;
+
     transformedBenefits.abilityScoreIncrease = {
       type: isChoice ? "choice" : asiType || "fixed",
-      ability: isChoice
-        ? "choice"
-        : asiType === "spellcasting"
-          ? "spellcasting_ability"
-          : abilities[0] || "choice",
-
+      ability: fixedAbility,
       abilities:
         asiType === "spellcasting" && abilities.length > 0
           ? ["spellcasting_ability", ...abilities]
           : abilities,
-      amount: benefits.asi.amount || 1,
+      amount: asiSource.amount || 1,
     };
   }
 
