@@ -9,7 +9,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Edit3, Check, X, User, Palette, Shield, Key } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
 
@@ -39,10 +39,6 @@ import DisplayNamePrompt from "./DisplayNamePrompt";
 import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 import "./App.css";
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY,
-);
 
 const isLocalhost = window.location.hostname === "localhost";
 

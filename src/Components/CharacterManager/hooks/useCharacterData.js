@@ -10,12 +10,7 @@ import {
   SORCERY_POINT_PROGRESSION,
   SPELL_SLOT_PROGRESSION,
 } from "../../../SharedData/data";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
+import { supabase } from "../../../lib/supabase";
 
 export const useCharacterData = (
   characterId = null,
