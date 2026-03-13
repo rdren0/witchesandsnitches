@@ -94,7 +94,7 @@ const CharacterSheet = ({
   const { showRollResult } = useRollModal();
 
   const { theme } = useTheme();
-  const { feats: standardFeats } = useFeats();
+  const { feats: standardFeats, initialized: featsInitialized } = useFeats();
   const styles = getCharacterSheetStyles(theme);
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -847,6 +847,7 @@ const CharacterSheet = ({
     getInitiativeModifier,
     transformSkillData,
     transformToolData,
+    featsInitialized,
   ]);
 
   useEffect(() => {
