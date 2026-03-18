@@ -6810,10 +6810,10 @@ export const subclassesData = {
         ],
       },
       {
-        level: 6,
+        level: 9,
         name: "Curse Cleanser",
         description:
-          "When you use a healing spell of 1st level or higher on a creature, you can end one condition or magical effect on them. The condition must be one of the following: charmed, frightened, poisoned, blinded, deafened, or cursed. The level of the curse must be equal to or lower than the level of the healing spell. You can do this a number of times equal to your spellcasting modifier per long rest.",
+          "Starting at 9th level, when you use a healing spell of 1st level or higher on a creature, you can end one condition or magical effect on them. The condition must be one of the following: charmed, frightened, poisoned, blinded, deafened, or cursed. The level of the curse must be equal to or lower than the level of the healing spell. You can do this a number of times equal to your spellcasting modifier per long rest.",
         benefits: {
           specialAbilities: [
             {
