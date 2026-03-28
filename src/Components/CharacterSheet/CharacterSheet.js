@@ -29,6 +29,7 @@ import {
 import InspirationTracker from "./InspirationTracker";
 import LuckPointButton from "./LuckPointButton";
 import CorruptionButton from "./CorruptionButton";
+import CustomCounters from "./CustomCounters";
 import CharacterTabbedPanel from "./CharacterTabbedPanel";
 import ACOverrideModal from "./ACOverrideModal";
 import SpellAttackModal from "./SpellAttackModal";
@@ -109,6 +110,7 @@ const CharacterSheet = ({
   const [tempHPAmount, setTempHPAmount] = useState(0);
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
+  const [customCounterRefreshKey, setCustomCounterRefreshKey] = useState(0);
   const [showACModal, setShowACModal] = useState(false);
   const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
   const [showSpellAttackRollModal, setShowSpellAttackRollModal] =
@@ -960,6 +962,43 @@ const CharacterSheet = ({
         }
       }
 
+      // Reset custom counters that renew on long rest
+      try {
+        const { data: renewCounters } = await supabase
+          .from("custom_counters")
+          .select("id, counter_type, max_value")
+          .eq("character_id", character.id)
+          .eq("discord_user_id", characterOwnerId)
+          .eq("renews_on_long_rest", true);
+
+        if (renewCounters && renewCounters.length > 0) {
+          const updates = renewCounters.map((c) => ({
+            id: c.id,
+            current_value:
+              c.counter_type === "boolean"
+                ? 1
+                : c.max_value != null
+                ? c.max_value
+                : 0,
+            updated_at: new Date().toISOString(),
+          }));
+
+          for (const update of updates) {
+            await supabase
+              .from("custom_counters")
+              .update({
+                current_value: update.current_value,
+                updated_at: update.updated_at,
+              })
+              .eq("id", update.id);
+          }
+
+          setCustomCounterRefreshKey((k) => k + 1);
+        }
+      } catch (err) {
+        console.error("Error resetting custom counters on long rest:", err);
+      }
+
       showRollResult({
         title: `Long Rest Complete`,
         rollValue: hpRestored + hitDiceRestored,
@@ -1224,10 +1263,9 @@ const CharacterSheet = ({
               <div
                 style={{
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   justifyContent: "space-between",
                   gap: "16px",
-                  flexWrap: "wrap",
                 }}
               >
                 <div
@@ -1236,6 +1274,8 @@ const CharacterSheet = ({
                     gap: "8px",
                     alignItems: "center",
                     flexWrap: "wrap",
+                    flex: 1,
+                    minWidth: 0,
                   }}
                 >
                   <InspirationTracker
@@ -1261,6 +1301,14 @@ const CharacterSheet = ({
                     selectedCharacterId={selectedCharacter.id}
                     isAdmin={adminMode}
                   />
+                  <CustomCounters
+                    character={character}
+                    supabase={supabase}
+                    discordUserId={discordUserId}
+                    selectedCharacterId={selectedCharacter.id}
+                    isAdmin={adminMode}
+                    refreshTrigger={customCounterRefreshKey}
+                  />
                 </div>
 
                 <div
@@ -1268,7 +1316,8 @@ const CharacterSheet = ({
                     display: "flex",
                     gap: "8px",
                     alignItems: "center",
-                    flexWrap: "wrap",
+                    flexShrink: 0,
+                    alignSelf: "flex-start",
                   }}
                 >
                   <button
@@ -1287,8 +1336,10 @@ const CharacterSheet = ({
                       transition: "all 0.2s ease",
                       justifyContent: "center",
                       padding: "8px 12px",
-                      height: "32px",
+                      height: "40px",
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
                     onClick={handleShortRestClick}
                     disabled={false}
                     title="Take a short rest - choose how many hit dice to use (0 to rest without healing)"
@@ -1312,8 +1363,10 @@ const CharacterSheet = ({
                       transition: "all 0.2s ease",
                       justifyContent: "center",
                       padding: "8px 12px",
-                      height: "32px",
+                      height: "40px",
                     }}
+                    onMouseEnter={(e) => { if (!isLongResting) e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
                     onClick={handleLongRest}
                     disabled={isLongResting}
                     title="Take a long rest - automatically restores all HP, hit dice, and spell slots"
@@ -1336,8 +1389,10 @@ const CharacterSheet = ({
                       transition: "all 0.2s ease",
                       justifyContent: "center",
                       padding: "8px 12px",
-                      height: "32px",
+                      height: "40px",
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
                     onClick={() =>
                       onNavigateToCharacterManagement &&
                       onNavigateToCharacterManagement(character.id)

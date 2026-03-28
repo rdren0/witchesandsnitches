@@ -205,6 +205,8 @@ const CorruptionButton = ({
       <div
         style={getTileStyle()}
         onClick={() => setShowModal(true)}
+        onMouseEnter={(e) => { e.currentTarget.style.outline = corruptionPoints > 0 ? "2px solid rgba(255,255,255,0.7)" : `2px solid ${currentTier.color}`; }}
+        onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
         title={`Corruption: ${corruptionPoints} (${currentTier.name}). Click to manage corruption points.`}
       >
         <Flame
@@ -435,6 +437,8 @@ const CorruptionButton = ({
                 <button
                   onClick={addPoints}
                   disabled={gainAmount < 1 || isProcessing}
+                  onMouseEnter={(e) => { if (gainAmount >= 1 && !isProcessing) e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
                   style={{
                     width: "100%",
                     padding: "12px 16px",
@@ -586,6 +590,8 @@ const CorruptionButton = ({
                     isProcessing ||
                     corruptionPoints === 0
                   }
+                  onMouseEnter={(e) => { if (spendAmount <= corruptionPoints && !isProcessing && corruptionPoints > 0) e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
                   style={{
                     width: "100%",
                     padding: "12px 16px",
