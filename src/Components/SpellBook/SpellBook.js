@@ -61,7 +61,8 @@ const SpellBook = ({
   const [runicTags, setRunicTags] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAttemptFilters, setSelectedAttemptFilters] = useState([]);
-  const [yearFilter, setYearFilter] = useState("all");
+  const [selectedYearFilters, setSelectedYearFilters] = useState([]);
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
   const [classFilter, setClassFilter] = useState("all");
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
@@ -74,6 +75,7 @@ const SpellBook = ({
   const levelDropdownRef = useRef(null);
   const attemptDropdownRef = useRef(null);
   const castingTimeDropdownRef = useRef(null);
+  const yearDropdownRef = useRef(null);
 
   const loadSpellProgress = useCallback(async () => {
     if (!selectedCharacter) return;
@@ -284,15 +286,12 @@ const SpellBook = ({
     })),
   ];
 
-  const yearFilterOptions = [
-    { value: "all", label: "All Years" },
-    ...getAvailableYears().map((year) => ({
-      value: year.toString(),
-      label: `${year}${
-        year === 1 ? "st" : year === 2 ? "nd" : year === 3 ? "rd" : "th"
-      } Year`,
-    })),
-  ];
+  const yearFilterOptions = getAvailableYears().map((year) => ({
+    value: year.toString(),
+    label: `${year}${
+      year === 1 ? "st" : year === 2 ? "nd" : year === 3 ? "rd" : "th"
+    } Year`,
+  }));
 
   const levelFilterOptions = [
     { value: "all", label: "All Levels" },
@@ -310,7 +309,7 @@ const SpellBook = ({
     setArithmancticTags({});
     setRunicTags({});
     setSelectedAttemptFilters([]);
-    setYearFilter("all");
+    setSelectedYearFilters([]);
     setClassFilter("all");
     setSelectedLevels([]);
   }, [selectedCharacter?.id]);
@@ -433,9 +432,9 @@ const SpellBook = ({
       filteredData = classFilteredData;
     }
 
-    if (yearFilter !== "all") {
+    if (selectedYearFilters.length > 0) {
       const yearFilteredData = {};
-      const targetYear = parseInt(yearFilter);
+      const targetYears = selectedYearFilters.map((y) => parseInt(y));
 
       Object.entries(filteredData).forEach(([subjectName, subjectData]) => {
         const filteredLevels = {};
@@ -448,9 +447,7 @@ const SpellBook = ({
 
             const normalizedSpellYear =
               typeof spellYear === "string" ? parseInt(spellYear) : spellYear;
-            const matches = normalizedSpellYear === targetYear;
-
-            return matches;
+            return targetYears.includes(normalizedSpellYear);
           });
 
           if (filteredSpells.length > 0) {
@@ -580,7 +577,7 @@ const SpellBook = ({
   }, [
     searchTerm,
     selectedAttemptFilters,
-    yearFilter,
+    selectedYearFilters,
     classFilter,
     selectedLevels,
     getAvailableSpellsData,
@@ -718,13 +715,32 @@ const SpellBook = ({
   const clearFilters = () => {
     setSearchTerm("");
     setSelectedAttemptFilters([]);
-    setYearFilter("all");
+    setSelectedYearFilters([]);
     setClassFilter("all");
     setSelectedLevels([]);
     setSelectedCastingTimeFilters([]);
     setIsLevelDropdownOpen(false);
     setIsAttemptDropdownOpen(false);
     setIsCastingTimeDropdownOpen(false);
+    setIsYearDropdownOpen(false);
+  };
+
+  const handleYearFilterToggle = (year) => {
+    setSelectedYearFilters((prev) => {
+      if (prev.includes(year)) {
+        return prev.filter((y) => y !== year);
+      } else {
+        return [...prev, year];
+      }
+    });
+  };
+
+  const deselectAllYearFilters = () => {
+    setSelectedYearFilters([]);
+  };
+
+  const toggleYearDropdown = () => {
+    setIsYearDropdownOpen(!isYearDropdownOpen);
   };
 
   const handleLevelToggle = (level) => {
@@ -865,6 +881,12 @@ const SpellBook = ({
         !castingTimeDropdownRef.current.contains(event.target)
       ) {
         setIsCastingTimeDropdownOpen(false);
+      }
+      if (
+        yearDropdownRef.current &&
+        !yearDropdownRef.current.contains(event.target)
+      ) {
+        setIsYearDropdownOpen(false);
       }
     };
 
@@ -1639,30 +1661,188 @@ const SpellBook = ({
             >
               Year:
             </span>
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
+            <div
+              ref={yearDropdownRef}
               style={{
-                padding: "6px 12px",
-                borderRadius: "6px",
-                border: `1px solid ${theme.border}`,
-                backgroundColor: theme.background,
-                color: theme.text,
-                fontSize: "14px",
-                minWidth: "120px",
+                position: "relative",
+                minWidth: "160px",
               }}
             >
-              {yearFilterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              <div
+                onClick={toggleYearDropdown}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  minHeight: "20px",
+                  flexWrap: "wrap",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    flex: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {selectedYearFilters.length === 0 ? (
+                    <span style={{ color: theme.textSecondary }}>
+                      All Years
+                    </span>
+                  ) : (
+                    selectedYearFilters.map((year) => {
+                      const option = yearFilterOptions.find(
+                        (opt) => opt.value === year,
+                      );
+                      return (
+                        <div
+                          key={year}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            backgroundColor: theme.primary || "#6366f1",
+                            color: "white",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          <span>{option ? option.label : `${year} Year`}</span>
+                          <X
+                            size={12}
+                            style={{ cursor: "pointer" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleYearFilterToggle(year);
+                            }}
+                          />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <ChevronDown
+                  size={16}
+                  style={{
+                    color: theme.textSecondary,
+                    transform: isYearDropdownOpen
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s ease",
+                  }}
+                />
+              </div>
+
+              {isYearDropdownOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    backgroundColor: theme.surface || theme.background,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    marginTop: "2px",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderBottom: `1px solid ${theme.border}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      Filter by Year
+                    </span>
+                    <button
+                      onClick={deselectAllYearFilters}
+                      style={{
+                        padding: "2px 6px",
+                        fontSize: "10px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "4px",
+                        backgroundColor: "transparent",
+                        color: theme.primary,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  <div style={{ padding: "4px" }}>
+                    {yearFilterOptions.map((option) => (
+                      <div
+                        key={option.value}
+                        onClick={() => handleYearFilterToggle(option.value)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 12px",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          color: theme.text,
+                          backgroundColor: "transparent",
+                          transition: "background-color 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            theme.background || "#f8fafc";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedYearFilters.includes(option.value)}
+                          onChange={() => {}}
+                          style={{
+                            accentColor: theme.primary,
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {(searchTerm ||
             selectedAttemptFilters.length > 0 ||
-            yearFilter !== "all" ||
+            selectedYearFilters.length > 0 ||
             classFilter !== "all" ||
             selectedLevels.length > 0 ||
             selectedCastingTimeFilters.length > 0) && (
@@ -1714,7 +1894,7 @@ const SpellBook = ({
 
         {(searchTerm ||
           selectedAttemptFilters.length > 0 ||
-          yearFilter !== "all" ||
+          selectedYearFilters.length > 0 ||
           classFilter !== "all" ||
           selectedLevels.length > 0 ||
           selectedCastingTimeFilters.length > 0) && (
@@ -1745,14 +1925,16 @@ const SpellBook = ({
                 }
               </span>
             )}
-            {yearFilter !== "all" && (
+            {selectedYearFilters.length > 0 && (
               <span>
                 {" "}
                 • Year:{" "}
-                {
-                  yearFilterOptions.find((opt) => opt.value === yearFilter)
-                    ?.label
-                }
+                {selectedYearFilters
+                  .map((y) => {
+                    const opt = yearFilterOptions.find((o) => o.value === y);
+                    return opt ? opt.label : `${y} Year`;
+                  })
+                  .join(", ")}
               </span>
             )}
             {selectedLevels.length > 0 && (
@@ -1834,7 +2016,7 @@ const SpellBook = ({
 
       {(searchTerm ||
         selectedAttemptFilters.length > 0 ||
-        yearFilter !== "all" ||
+        selectedYearFilters.length > 0 ||
         classFilter !== "all" ||
         selectedLevels.length > 0 ||
         selectedCastingTimeFilters.length > 0) &&
@@ -1879,15 +2061,17 @@ const SpellBook = ({
                   </strong>
                 </>
               )}
-              {yearFilter !== "all" && (
+              {selectedYearFilters.length > 0 && (
                 <>
                   <br />
-                  Year filter:{" "}
+                  Year filters:{" "}
                   <strong>
-                    {
-                      yearFilterOptions.find((opt) => opt.value === yearFilter)
-                        ?.label
-                    }
+                    {selectedYearFilters
+                      .map((y) => {
+                        const opt = yearFilterOptions.find((o) => o.value === y);
+                        return opt ? opt.label : `${y} Year`;
+                      })
+                      .join(", ")}
                   </strong>
                 </>
               )}

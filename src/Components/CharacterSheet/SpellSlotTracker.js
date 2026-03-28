@@ -252,7 +252,7 @@ const CASTING_STYLE_PROGRESSION = {
     6: {
       proficiencyBonus: 3,
       sorceryPoints: 5,
-      metamagic: 2,
+      metamagic: 1,
       features: ["School of Magic Feature"],
     },
     7: {

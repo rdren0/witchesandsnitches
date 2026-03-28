@@ -937,7 +937,9 @@ function AppContent() {
 
       const transformedCharacters = charactersData.map((char) => ({
         id: char.id,
-        abilityScores: char.ability_scores,
+        abilityScores: char.base_ability_scores || char.ability_scores,
+        base_ability_scores: char.base_ability_scores,
+        baseAbilityScores: char.base_ability_scores || char.ability_scores,
         asiChoices: char.asi_choices || {},
         background: char.background,
         backgroundSkills: char.background_skills || [],
@@ -959,6 +961,9 @@ function AppContent() {
         skillProficiencies: char.skill_proficiencies || [],
         skillExpertise: char.skill_expertise || [],
         standardFeats: char.standard_feats || [],
+        standard_feats: char.standard_feats || [],
+        featChoices: char.feat_choices || {},
+        feat_choices: char.feat_choices || {},
         subclass: char.subclass,
         subclassChoices: char.subclass_choices || {},
         wandType: char.wand_type || "",
