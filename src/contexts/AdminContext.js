@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { characterService } from "../services/characterService";
 import { useCallback } from "react";
 
@@ -29,27 +28,16 @@ export const useAdmin = () => {
 export const AdminProvider = ({ children, user }) => {
   const [adminMode, setAdminModeState] = useState(() => {
     try {
-      const savedAdminMode = sessionStorage.getItem("adminMode");
+      const savedAdminMode = localStorage.getItem("adminMode");
       return savedAdminMode === "true";
     } catch (error) {
-      console.warn("Failed to read admin mode from session storage:", error);
+      console.warn("Failed to read admin mode from local storage:", error);
       return false;
     }
   });
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const isCheckingAdminRef = React.useRef(false);
-
-  let searchParams, setSearchParams;
-  try {
-    [searchParams, setSearchParams] = useSearchParams();
-  } catch (error) {
-    console.warn(
-      "useSearchParams not available, admin mode URL persistence disabled"
-    );
-    searchParams = new URLSearchParams();
-    setSearchParams = () => {};
-  }
 
   const discordUserId = user?.user_metadata?.provider_id;
 
@@ -76,22 +64,12 @@ export const AdminProvider = ({ children, user }) => {
           setAdminModeState(false);
 
           try {
-            sessionStorage.removeItem("adminMode");
+            localStorage.removeItem("adminMode");
           } catch (error) {
             console.warn(
               "Failed to clear admin mode from session storage:",
               error
             );
-          }
-
-          if (setSearchParams && typeof setSearchParams === "function") {
-            try {
-              const newParams = new URLSearchParams(searchParams);
-              newParams.delete("admin");
-              setSearchParams(newParams, { replace: true });
-            } catch (error) {
-              console.warn("Failed to update URL parameters:", error);
-            }
           }
         }
       } catch (error) {
@@ -100,7 +78,7 @@ export const AdminProvider = ({ children, user }) => {
         setAdminModeState(false);
 
         try {
-          sessionStorage.removeItem("adminMode");
+          localStorage.removeItem("adminMode");
         } catch (storageError) {
           console.warn(
             "Failed to clear admin mode from session storage:",
@@ -116,29 +94,6 @@ export const AdminProvider = ({ children, user }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discordUserId]);
 
-  useEffect(() => {
-    if (!searchParams) return;
-
-    const adminParam = searchParams.get("admin");
-
-    if (adminParam === "true" && isUserAdmin) {
-      setAdminModeState(true);
-    } else if (
-      adminParam === "true" &&
-      !isUserAdmin &&
-      setSearchParams &&
-      typeof setSearchParams === "function"
-    ) {
-      try {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete("admin");
-        setSearchParams(newParams, { replace: true });
-      } catch (error) {
-        console.warn("Failed to update URL parameters:", error);
-      }
-    }
-  }, [isUserAdmin, searchParams, setSearchParams]);
-
   const setAdminMode = useCallback(
     (isActive) => {
       if (!isUserAdmin) {
@@ -150,29 +105,15 @@ export const AdminProvider = ({ children, user }) => {
 
       try {
         if (isActive) {
-          sessionStorage.setItem("adminMode", "true");
+          localStorage.setItem("adminMode", "true");
         } else {
-          sessionStorage.removeItem("adminMode");
+          localStorage.removeItem("adminMode");
         }
       } catch (error) {
         console.warn("Failed to save admin mode to session storage:", error);
       }
-
-      if (setSearchParams && typeof setSearchParams === "function") {
-        try {
-          const newParams = new URLSearchParams(searchParams);
-          if (isActive) {
-            newParams.set("admin", "true");
-          } else {
-            newParams.delete("admin");
-          }
-          setSearchParams(newParams, { replace: true });
-        } catch (error) {
-          console.warn("Failed to update URL parameters:", error);
-        }
-      }
     },
-    [isUserAdmin, setAdminModeState, setSearchParams, searchParams]
+    [isUserAdmin, setAdminModeState]
   );
 
   useEffect(() => {
@@ -184,7 +125,7 @@ export const AdminProvider = ({ children, user }) => {
   useEffect(() => {
     if (isUserAdmin && !adminMode) {
       try {
-        const savedAdminMode = sessionStorage.getItem("adminMode");
+        const savedAdminMode = localStorage.getItem("adminMode");
         if (savedAdminMode === "true") {
           setAdminModeState(true);
         }

@@ -714,7 +714,7 @@ const CharacterSheet = ({
 
         const resources =
           data.character_resources?.find(
-            (r) => r.discord_user_id === data.discord_user_id
+            (r) => r.discord_user_id === data.discord_user_id,
           ) ||
           data.character_resources?.[0] ||
           {};
@@ -896,7 +896,7 @@ const CharacterSheet = ({
         hasSpellSlots ? "\n• All Spell Slots" : ""
       }${hasSorceryPoints ? "\n• All Sorcery Points" : ""}${
         hasLuckyFeat ? "\n• All Luck Points" : ""
-      }`
+      }`,
     );
     if (!confirmed) return;
 
@@ -947,7 +947,8 @@ const CharacterSheet = ({
         if (hasLuckyFeat) {
           // Lucky feat grants luck points equal to proficiency bonus
           const proficiencyBonus =
-            character.proficiencyBonus || Math.ceil((character.level || 1) / 4) + 1;
+            character.proficiencyBonus ||
+            Math.ceil((character.level || 1) / 4) + 1;
           resourceUpdates.luck = proficiencyBonus;
         }
 
@@ -962,7 +963,6 @@ const CharacterSheet = ({
         }
       }
 
-      // Reset custom counters that renew on long rest
       try {
         const { data: renewCounters } = await supabase
           .from("custom_counters")
@@ -978,8 +978,8 @@ const CharacterSheet = ({
               c.counter_type === "boolean"
                 ? 1
                 : c.max_value != null
-                ? c.max_value
-                : 0,
+                  ? c.max_value
+                  : 0,
             updated_at: new Date().toISOString(),
           }));
 
@@ -1338,8 +1338,13 @@ const CharacterSheet = ({
                       padding: "8px 12px",
                       height: "40px",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.outline =
+                        "2px solid rgba(255,255,255,0.7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.outline = "none";
+                    }}
                     onClick={handleShortRestClick}
                     disabled={false}
                     title="Take a short rest - choose how many hit dice to use (0 to rest without healing)"
@@ -1365,8 +1370,14 @@ const CharacterSheet = ({
                       padding: "8px 12px",
                       height: "40px",
                     }}
-                    onMouseEnter={(e) => { if (!isLongResting) e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
+                    onMouseEnter={(e) => {
+                      if (!isLongResting)
+                        e.currentTarget.style.outline =
+                          "2px solid rgba(255,255,255,0.7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.outline = "none";
+                    }}
                     onClick={handleLongRest}
                     disabled={isLongResting}
                     title="Take a long rest - automatically restores all HP, hit dice, and spell slots"
@@ -1391,8 +1402,13 @@ const CharacterSheet = ({
                       padding: "8px 12px",
                       height: "40px",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.outline = "none"; }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.outline =
+                        "2px solid rgba(255,255,255,0.7)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.outline = "none";
+                    }}
                     onClick={() =>
                       onNavigateToCharacterManagement &&
                       onNavigateToCharacterManagement(character.id)

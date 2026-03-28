@@ -57,6 +57,14 @@ const debounce = (func, wait) => {
 const requestIdleCallback =
   window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
 
+const slugifyName = (name) =>
+  name
+    ? name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "")
+    : "unknown";
+
 const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
@@ -525,18 +533,8 @@ const Navigation = ({ characters }) => {
 
 const CharacterSubNavigation = () => {
   const { theme } = useTheme();
-  const { adminMode } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const navigateWithAdminMode = (path) => {
-    if (adminMode) {
-      const separator = path.includes("?") ? "&" : "?";
-      navigate(`${path}${separator}admin=true`);
-    } else {
-      navigate(path);
-    }
-  };
 
   const characterSubtabs = [
     { path: "/character/sheet", label: "Character Sheet", key: "sheet" },
@@ -559,7 +557,8 @@ const CharacterSubNavigation = () => {
     { path: "/character/downtime", label: "Downtime", key: "downtime" },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
     <div
@@ -617,7 +616,7 @@ const CharacterSubNavigation = () => {
                       transform: "translateY(0px)",
                     }),
               }}
-              onClick={() => navigateWithAdminMode(subtab.path)}
+              onClick={() => navigate(subtab.path)}
             >
               <span
                 style={{
@@ -832,14 +831,23 @@ function AppContent() {
   };
 
   const selectInitialCharacter = useCallback(
-    (characters) => {
+    (characters, urlCharacterId) => {
       if (!characters.length) return;
 
       const savedCharacterId =
-        sessionStorage.getItem("selectedCharacterId") || initialCharacterId;
+        urlCharacterId ||
+        sessionStorage.getItem("selectedCharacterId") ||
+        initialCharacterId;
       let characterToSelect = null;
 
+      if (urlCharacterId) {
+        characterToSelect = characters.find(
+          (c) => c.id.toString() === urlCharacterId.toString(),
+        );
+      }
+
       if (
+        !characterToSelect &&
         selectedCharacter &&
         characters.find(
           (c) => c.id.toString() === selectedCharacter.id.toString(),
@@ -848,7 +856,7 @@ function AppContent() {
         characterToSelect = characters.find(
           (c) => c.id.toString() === selectedCharacter.id.toString(),
         );
-      } else if (savedCharacterId) {
+      } else if (!characterToSelect && savedCharacterId) {
         characterToSelect = characters.find(
           (char) => char.id.toString() === savedCharacterId.toString(),
         );
@@ -992,7 +1000,11 @@ function AppContent() {
       setCharacters(sortedCharacters);
 
       requestIdleCallback(() => {
-        selectInitialCharacter(sortedCharacters);
+        const urlMatch = window.location.pathname.match(
+          /\/character\/[^/]+\/(\d+)/,
+        );
+        const urlCharId = urlMatch ? urlMatch[1] : null;
+        selectInitialCharacter(sortedCharacters, urlCharId);
       });
 
       setHasAttemptedLoad(true);
@@ -1064,6 +1076,28 @@ function AppContent() {
       navigate("/character/sheet", { replace: true });
     }
   }, [location.pathname, navigate]);
+
+  useEffect(() => {
+    if (isInitializing || !selectedCharacter?.id || !selectedCharacter?.name)
+      return;
+
+    if (!location.pathname.startsWith("/character/")) return;
+
+    const sectionMatch = location.pathname.match(/^\/character\/([^/]+)/);
+    if (!sectionMatch) return;
+    const section = sectionMatch[1];
+
+    const targetPath = `/character/${section}/${selectedCharacter.id}/${slugifyName(selectedCharacter.name)}`;
+    if (location.pathname !== targetPath) {
+      navigate(targetPath, { replace: true });
+    }
+  }, [
+    selectedCharacter?.id,
+    selectedCharacter?.name,
+    location.pathname,
+    isInitializing,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (
@@ -1346,6 +1380,24 @@ function AppContent() {
               }
             />
             <Route
+              path="/character-management/edit/:characterId/:characterName"
+              element={
+                <ProtectedRoute user={user}>
+                  <CharacterManager
+                    user={user}
+                    customUsername={customUsername}
+                    onCharacterSaved={() => {
+                      setHasAttemptedLoad(false);
+                    }}
+                    supabase={supabase}
+                    adminMode={adminMode}
+                    isUserAdmin={isUserAdmin}
+                    mode="edit"
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/character"
               element={<Navigate to="/character/sheet" replace />}
             />
@@ -1375,135 +1427,178 @@ function AppContent() {
               }
             />
             <Route
-              path="/character/spellbook"
+              path="/character/sheet/:characterId/:characterName"
               element={
                 <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <SpellBook
+                  <CharacterSheetWrapper
                     user={user}
                     customUsername={customUsername}
                     supabase={supabase}
                     selectedCharacter={selectedCharacter}
                     characters={characters}
-                    discordUserId={user?.user_metadata?.provider_id}
                     adminMode={adminMode}
                     isUserAdmin={isUserAdmin}
+                    characterSelector={characterSelector}
                   />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/character/potions"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <PotionBrewingSystem
-                    user={user}
-                    character={selectedCharacter}
-                    supabase={supabase}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/recipes"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <RecipeCookingSystem
-                    user={user}
-                    selectedCharacter={selectedCharacter}
-                    supabase={supabase}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/inventory"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <Inventory
-                    user={user}
-                    selectedCharacter={selectedCharacter}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/notes"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <CharacterNotes
-                    user={user}
-                    selectedCharacter={selectedCharacter}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                  />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/character/downtime"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <DowntimeWrapper
-                    user={user}
-                    selectedCharacter={selectedCharacter}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/gallery"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <CharacterGallery
-                    selectedCharacter={selectedCharacter}
-                    supabase={supabase}
-                    user={user}
-                    adminMode={adminMode}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/players"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <OtherPlayers
-                    selectedCharacter={selectedCharacter}
-                    supabase={supabase}
-                    user={user}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/creatures"
-              element={
-                <ProtectedRoute user={user}>
-                  {characterSelector}
-                  <Creatures
-                    supabase={supabase}
-                    user={user}
-                    characters={characters}
-                    selectedCharacter={selectedCharacter}
-                  />
-                </ProtectedRoute>
-              }
-            />
+            {["/character/spellbook", "/character/spellbook/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <SpellBook
+                      user={user}
+                      customUsername={customUsername}
+                      supabase={supabase}
+                      selectedCharacter={selectedCharacter}
+                      characters={characters}
+                      discordUserId={user?.user_metadata?.provider_id}
+                      adminMode={adminMode}
+                      isUserAdmin={isUserAdmin}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/potions", "/character/potions/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <PotionBrewingSystem
+                      user={user}
+                      character={selectedCharacter}
+                      supabase={supabase}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/recipes", "/character/recipes/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <RecipeCookingSystem
+                      user={user}
+                      selectedCharacter={selectedCharacter}
+                      supabase={supabase}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/inventory", "/character/inventory/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <Inventory
+                      user={user}
+                      selectedCharacter={selectedCharacter}
+                      supabase={supabase}
+                      adminMode={adminMode}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/notes", "/character/notes/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <CharacterNotes
+                      user={user}
+                      selectedCharacter={selectedCharacter}
+                      supabase={supabase}
+                      adminMode={adminMode}
+                      isUserAdmin={isUserAdmin}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/downtime", "/character/downtime/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <DowntimeWrapper
+                      user={user}
+                      selectedCharacter={selectedCharacter}
+                      supabase={supabase}
+                      adminMode={adminMode}
+                      isUserAdmin={isUserAdmin}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/gallery", "/character/gallery/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <CharacterGallery
+                      selectedCharacter={selectedCharacter}
+                      supabase={supabase}
+                      user={user}
+                      adminMode={adminMode}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/players", "/character/players/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <OtherPlayers
+                      selectedCharacter={selectedCharacter}
+                      supabase={supabase}
+                      user={user}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {["/character/creatures", "/character/creatures/:characterId/:characterName"].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    {characterSelector}
+                    <Creatures
+                      supabase={supabase}
+                      user={user}
+                      characters={characters}
+                      selectedCharacter={selectedCharacter}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
             <Route path="/theme-settings" element={<ThemeSettings />} />
             <Route path="/help-resources" element={<HelpResources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
