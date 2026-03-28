@@ -161,7 +161,7 @@ export const CharacterNotes = ({
         },
         {
           onConflict: "character_id,user_id",
-        }
+        },
       );
 
       if (error) throw error;
@@ -260,7 +260,7 @@ export const CharacterNotes = ({
       const newEntries = entries.map((entry) =>
         entry.id === entryId
           ? { ...entry, ...updates, updated_at: new Date().toISOString() }
-          : entry
+          : entry,
       );
 
       await saveEntriesToDatabase(newEntries);
@@ -368,17 +368,6 @@ export const CharacterNotes = ({
           <p style={styles.subtitle}>
             {entries.length} note{entries.length !== 1 ? "s" : ""} for{" "}
             {selectedCharacter.name}
-            {adminMode && isUserAdmin && notesOwner && (
-              <span
-                style={{
-                  color: theme.warning,
-                  fontSize: "14px",
-                  marginLeft: "8px",
-                }}
-              >
-                (Owner: {notesOwner})
-              </span>
-            )}
           </p>
         </div>
 
@@ -439,7 +428,7 @@ export const CharacterNotes = ({
               <div style={styles.templateGrid}>
                 <div
                   {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle)
+                    createNewEntry(newEntryTitle),
                   )}
                 >
                   <div
@@ -458,7 +447,7 @@ export const CharacterNotes = ({
 
                 <div
                   {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "hogwartsMarkdown")
+                    createNewEntry(newEntryTitle, "", "hogwartsMarkdown"),
                   )}
                 >
                   <div
@@ -477,7 +466,7 @@ export const CharacterNotes = ({
 
                 <div
                   {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "session")
+                    createNewEntry(newEntryTitle, "", "session"),
                   )}
                 >
                   <div
@@ -496,7 +485,7 @@ export const CharacterNotes = ({
 
                 <div
                   {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "spell")
+                    createNewEntry(newEntryTitle, "", "spell"),
                   )}
                 >
                   <div
@@ -514,7 +503,7 @@ export const CharacterNotes = ({
                 </div>
                 <div
                   {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "relationship")
+                    createNewEntry(newEntryTitle, "", "relationship"),
                   )}
                 >
                   <div
@@ -533,7 +522,7 @@ export const CharacterNotes = ({
 
                 <div
                   {...createTemplateCardProps(() =>
-                    createNewEntry(newEntryTitle, "", "creature")
+                    createNewEntry(newEntryTitle, "", "creature"),
                   )}
                 >
                   <div

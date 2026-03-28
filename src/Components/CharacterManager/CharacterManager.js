@@ -94,7 +94,13 @@ const CharacterManager = ({
   };
 
   const handleEditCharacter = (character) => {
-    navigate(`/character-management/edit/${character.id}`, {
+    const slug = character.name
+      ? character.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+      : "unknown";
+    navigate(`/character-management/edit/${character.id}/${slug}`, {
       state: {
         characterOwnerId: character.discord_user_id,
         characterName: character.name,
