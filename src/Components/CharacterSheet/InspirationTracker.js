@@ -135,6 +135,13 @@ const InspirationTracker = ({
       <div
         style={getTileStyle()}
         onClick={handleTileClick}
+        onMouseEnter={(e) => {
+          if (hasInspiration && !isUpdating)
+            e.currentTarget.style.outline = "2px solid rgba(255,255,255,0.7)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.outline = "none";
+        }}
         title={
           hasInspiration
             ? "Click to use inspiration (advantage on one roll)"
