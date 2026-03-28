@@ -209,6 +209,19 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
   }, [items]);
 
   useEffect(() => {
+    if (expandedStack) {
+      const stackExists = items.some(
+        (item) =>
+          `${item.category}-${item.name.toLowerCase().trim()}` === expandedStack
+      );
+      if (!stackExists) {
+        setExpandedStack(null);
+        setEditingId(null);
+      }
+    }
+  }, [items, expandedStack]);
+
+  useEffect(() => {
     if (searchTerm.trim()) {
       const allCategories = [...new Set(items.map((item) => item.category))];
       const expandedState = {};
