@@ -1,15 +1,17 @@
 import ThemeCharacterSync from "../Components/ThemeCharacterSync/ThemeCharacterSync";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useNavigate,
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { Edit3, Check, X, User, Palette, Shield, Key } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "./useAuth";
+import { useCharacterData } from "./useCharacterData";
+import { useSyncCharacterToUrl } from "./useSyncCharacterToUrl";
+
 import { characterService } from "../services/characterService";
 import SpellBook from "../Components/SpellBook/SpellBook";
 
@@ -28,651 +30,20 @@ import { createAppStyles } from "../utils/styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
 import CharacterManager from "../Components/CharacterManager/CharacterManager";
-import logo from "./../Images/logo/Thumbnail-01.png";
+import AuthComponent from "./AuthComponent";
+import Navigation from "./Navigation";
+import CharacterSubNavigation from "./CharacterSubNavigation";
 import { AdminProvider, useAdmin } from "../contexts/AdminContext";
+import { SupabaseProvider } from "../contexts/SupabaseContext";
 import { FeatsProvider } from "../contexts/FeatsContext";
 import { SpellsProvider } from "../contexts/SpellsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import DisplayNamePrompt from "./DisplayNamePrompt";
-import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
+import { RULE_BOOK_URL } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 import "./App.css";
-
-const isLocalhost = window.location.hostname === "localhost";
-
-const debounce = (func, wait) => {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
-
-const requestIdleCallback =
-  window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
-
-const slugifyName = (name) =>
-  name
-    ? name
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "")
-    : "unknown";
-
-const UsernameEditor = ({ user, customUsername, onUsernameUpdate }) => {
-  const { theme } = useTheme();
-  const styles = createAppStyles(theme);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(customUsername || "");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleEdit = () => {
-    setIsEditing(true);
-    setEditValue(customUsername || user.user_metadata.full_name || "");
-    setError("");
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setEditValue(customUsername || "");
-    setError("");
-  };
-
-  const validateUsername = (username) => {
-    if (!username.trim()) {
-      return "Username cannot be empty";
-    }
-    if (username.length < 2) {
-      return "Username must be at least 2 characters";
-    }
-    if (username.length > 30) {
-      return "Username must be less than 30 characters";
-    }
-
-    if (!/^[a-zA-Z0-9_\-.\s@+!#$%&*()[\]{}'",:;?=]+$/.test(username)) {
-      return "Invalid characters in username";
-    }
-    return null;
-  };
-
-  const handleSave = async () => {
-    const trimmedValue = editValue.trim();
-    const validationError = validateUsername(trimmedValue);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const { data: existingUser } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("username", trimmedValue)
-        .neq("discord_user_id", user.id)
-        .maybeSingle();
-
-      if (existingUser) {
-        setError("Username is already taken");
-        setIsLoading(false);
-        return;
-      }
-
-      await onUsernameUpdate(trimmedValue);
-      setIsEditing(false);
-    } catch (err) {
-      setError("Failed to update username. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const displayName =
-    customUsername || user?.user_metadata?.full_name || "User";
-
-  if (isEditing) {
-    return (
-      <div style={styles.usernameEditor}>
-        <div>
-          <input
-            type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            style={styles.usernameInput}
-            placeholder="Enter username"
-            maxLength={30}
-            disabled={isLoading}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSave();
-              if (e.key === "Escape") handleCancel();
-            }}
-            autoFocus
-          />
-          {error && (
-            <div
-              style={{ color: theme.error, fontSize: "12px", marginTop: "4px" }}
-            >
-              {error}
-            </div>
-          )}
-        </div>
-        <button
-          onClick={handleSave}
-          style={styles.saveButton}
-          disabled={isLoading}
-          title="Save username"
-        >
-          <Check size={14} />
-        </button>
-        <button
-          onClick={handleCancel}
-          style={styles.cancelButton}
-          disabled={isLoading}
-          title="Cancel"
-        >
-          <X size={14} />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={styles.username}>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          {displayName}
-          <button
-            onClick={handleEdit}
-            style={styles.editButton}
-            title="Edit username"
-          >
-            <Edit3 size={14} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AuthComponent = ({
-  user,
-  customUsername,
-  onUsernameUpdate,
-  onSignIn,
-  onSignOut,
-  isLoading,
-  onAdminToggleClick,
-}) => {
-  const { theme } = useTheme();
-  const { isUserAdmin, adminMode } = useAdmin();
-  const styles = createAppStyles(theme);
-  const navigate = useNavigate();
-
-  if (user) {
-    return (
-      <div style={styles.authSection}>
-        {(isUserAdmin || true) && (
-          <button
-            onClick={onAdminToggleClick}
-            style={{
-              ...styles.themeButton,
-              backgroundColor: adminMode ? "#ffd700" : theme.surface,
-              color: adminMode ? theme.secondary : theme.primary,
-              border: adminMode
-                ? "2px solid #ffaa00"
-                : `1px solid ${theme.border}`,
-              fontWeight: adminMode ? "bold" : "normal",
-
-              transform: adminMode ? "scale(1.05)" : "scale(1)",
-              transition: "all 0.2s ease",
-              position: "relative",
-              textShadow: adminMode ? "0 1px 2px rgba(0, 0, 0, 0.3)" : "none",
-            }}
-            title={
-              isUserAdmin
-                ? adminMode
-                  ? "🔓 Admin Mode ACTIVE - Click to exit"
-                  : "🔒 Enter Admin Mode"
-                : "🔑 Unlock Admin Mode"
-            }
-          >
-            {adminMode ? (
-              <>
-                <Shield size={16} />
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-4px",
-                    right: "-4px",
-                    width: "6px",
-                    height: "6px",
-                    backgroundColor: "#ff0000",
-                    borderRadius: "50%",
-                    border: "1px solid white",
-                  }}
-                />
-              </>
-            ) : (
-              <Key size={16} />
-            )}
-          </button>
-        )}
-
-        <button
-          onClick={() => navigate("/theme-settings")}
-          style={styles.themeButton}
-          title="Theme Settings"
-        >
-          <Palette size={16} color={theme.primary} />
-        </button>
-
-        <div style={styles.userInfo}>
-          {user.user_metadata?.avatar_url ? (
-            <img
-              src={user.user_metadata.avatar_url}
-              alt="Avatar"
-              style={styles.userAvatar}
-            />
-          ) : (
-            <div
-              style={{
-                ...styles.userAvatar,
-                backgroundColor: theme.primary,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <User size={20} color={theme.secondary} />
-            </div>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <UsernameEditor
-              user={user}
-              customUsername={customUsername}
-              onUsernameUpdate={onUsernameUpdate}
-            />
-            <button
-              onClick={onSignOut}
-              style={{
-                ...styles.cancelButton,
-                fontSize: "12px",
-                padding: "4px 8px",
-                alignSelf: "flex-start",
-              }}
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing Out..." : "Sign Out"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={styles.authSection}>
-      <button
-        onClick={() => navigate("/theme-settings")}
-        style={styles.themeButton}
-        title="Theme Settings"
-      >
-        <Palette size={16} color={theme.primary} />
-      </button>
-
-      <button
-        onClick={onSignIn}
-        style={{
-          padding: "0.5rem 1rem",
-          border: "none",
-          borderRadius: "0.25rem",
-          fontWeight: "500",
-          cursor: "pointer",
-          transition: "background-color 0.2s",
-          minWidth: "80px",
-          backgroundColor: theme.primary,
-          color: theme.text,
-          opacity: isLoading ? 0.6 : 1,
-        }}
-        disabled={isLoading}
-      >
-        {isLoading ? "Signing In..." : "Sign in with Discord"}
-      </button>
-    </div>
-  );
-};
-
-const Navigation = ({ characters }) => {
-  const { theme } = useTheme();
-  const { adminMode } = useAdmin();
-  const styles = createAppStyles(theme);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const getVisibleTabs = () => {
-    const baseTabs = [
-      {
-        path: "/",
-        label: "Character Management",
-        key: "character-management",
-      },
-    ];
-
-    if (characters.length > 0) {
-      baseTabs.push({
-        path: "/character/sheet",
-        label: "Character Sheet",
-        key: "character",
-      });
-    }
-
-    baseTabs.push({
-      path: "/help-resources",
-      label: "Help & Resources",
-      key: "help-resources",
-    });
-
-    if (adminMode) {
-      return [
-        ...baseTabs,
-        {
-          path: "/admin",
-          label: "Admin Dashboard",
-          key: "admin",
-        },
-      ];
-    }
-
-    return baseTabs;
-  };
-
-  const visibleTabs = getVisibleTabs();
-
-  const isActiveTab = (path) => {
-    if (path === "/") {
-      return (
-        location.pathname === "/" ||
-        location.pathname === "/character-management" ||
-        location.pathname.startsWith("/character-management/")
-      );
-    }
-    if (path === "/character/sheet") {
-      return location.pathname.startsWith("/character/");
-    }
-    return location.pathname === path;
-  };
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "90%",
-        marginRight: "16px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          cursor: "pointer",
-          flexShrink: 0,
-        }}
-        onClick={() => navigate("/")}
-        title="Home"
-      >
-        <img
-          src={logo}
-          alt="Witches & Snitches Logo"
-          style={{
-            height: "60px",
-            width: "auto",
-            transition: "opacity 0.2s ease",
-            marginRight: "16px",
-          }}
-        />
-      </div>
-
-      <nav style={styles.tabNavigation}>
-        {visibleTabs.map((tab) => {
-          const isActive = isActiveTab(tab.path);
-          const isAdminTab = tab.key === "admin";
-
-          return (
-            <button
-              key={tab.key}
-              style={{
-                padding: "12px 20px",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "16px",
-                fontWeight: "500",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                minWidth: "120px",
-
-                ...(isActive
-                  ? {
-                      backgroundColor: theme.surface,
-                      color: theme.text,
-                      fontWeight: "600",
-                      boxShadow: `0 2px 4px rgba(0, 0, 0, 0.1)`,
-                      border: `1px solid ${theme.border}`,
-                    }
-                  : {
-                      backgroundColor: "transparent",
-                      color: theme.text,
-                      fontWeight: "400",
-                      opacity: 0.85,
-                    }),
-
-                ...(isAdminTab && adminMode && isActive
-                  ? {
-                      backgroundColor: "#ffd700",
-                      color: theme.primary,
-                      fontWeight: "bold",
-                    }
-                  : isAdminTab && adminMode
-                    ? {
-                        backgroundColor: "#ffd70030",
-                        color: theme.text,
-                        opacity: 0.9,
-                      }
-                    : {}),
-              }}
-              onClick={() => navigate(tab.path)}
-            >
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  justifyContent: "center",
-                }}
-              >
-                {isAdminTab && (
-                  <Shield size={16} style={{ marginRight: "6px" }} />
-                )}
-                {tab.label}
-                {tab.isNew && (
-                  <span
-                    style={{
-                      backgroundColor: theme.primary || "#10b981",
-                      color: "white",
-                      padding: "6px",
-                      borderRadius: "10px",
-                      fontSize: "9px",
-                      fontWeight: "700",
-                      letterSpacing: "0.5px",
-                      lineHeight: "1",
-                      marginLeft: "4px",
-                    }}
-                  >
-                    NEW
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-    </div>
-  );
-};
-
-const CharacterSubNavigation = () => {
-  const { theme } = useTheme();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const characterSubtabs = [
-    { path: "/character/sheet", label: "Character Sheet", key: "sheet" },
-    { path: "/character/spellbook", label: "Spellbook", key: "spellbook" },
-    { path: "/character/potions", label: "Potions", key: "potions" },
-    { path: "/character/inventory", label: "Inventory", key: "inventory" },
-    {
-      path: "/character/gallery",
-      label: "NPC Gallery",
-      key: "gallery",
-    },
-    {
-      path: "/character/players",
-      label: "Other Players",
-      key: "players",
-    },
-    { path: "/character/notes", label: "Notes", key: "notes" },
-    { path: "/character/recipes", label: "Recipes", key: "recipes" },
-
-    { path: "/character/downtime", label: "Downtime", key: "downtime" },
-  ];
-
-  const isActive = (path) =>
-    location.pathname === path || location.pathname.startsWith(`${path}/`);
-
-  return (
-    <div
-      style={{
-        borderBottom: `1px solid ${theme.border}`,
-        backgroundColor: theme.background,
-        padding: "0 20px",
-      }}
-    >
-      <nav
-        style={{
-          display: "flex",
-          gap: "2px",
-          margin: "0 auto",
-          paddingTop: "8px",
-        }}
-      >
-        {characterSubtabs.map((subtab) => {
-          const active = isActive(subtab.path);
-
-          return (
-            <button
-              key={subtab.key}
-              style={{
-                border: "none",
-                borderRadius: "12px 12px 0 0",
-                padding: "12px 18px 14px 18px",
-                fontSize: "14px",
-                cursor: "pointer",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                position: "relative",
-                marginBottom: "-1px",
-                minWidth: "130px",
-                color: theme.primary,
-
-                ...(active
-                  ? {
-                      background: `linear-gradient(135deg, ${theme.surface}, ${theme.surface}CC)`,
-                      color: theme.text,
-                      fontWeight: "700",
-                      borderBottom: `4px solid ${theme.primary}`,
-                      boxShadow: `
-                    0 -4px 8px rgba(0, 0, 0, 0.1),
-                    0 0 0 1px ${theme.border},
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1)
-                  `,
-                      transform: "translateY(-2px)",
-                      zIndex: 10,
-                    }
-                  : {
-                      background: `linear-gradient(135deg, ${theme.background}40, ${theme.background}20)`,
-                      color: theme.text,
-                      fontWeight: "400",
-                      borderBottom: "4px solid transparent",
-                      transform: "translateY(0px)",
-                    }),
-              }}
-              onClick={() => navigate(subtab.path)}
-            >
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  justifyContent: "center",
-                }}
-              >
-                {subtab.label}
-                {subtab.isNew && (
-                  <span
-                    style={{
-                      backgroundColor: theme.primary || "#10b981",
-                      color: "white",
-                      padding: "4px 6px",
-                      borderRadius: "10px",
-                      fontSize: "10px",
-                      fontWeight: "700",
-                      letterSpacing: "0.5px",
-                      lineHeight: "1",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    NEW
-                  </span>
-                )}
-                {subtab.isUpdated && (
-                  <span
-                    style={{
-                      backgroundColor: "#f59e0b",
-                      color: "white",
-                      padding: "4px 6px",
-                      borderRadius: "10px",
-                      fontSize: "10px",
-                      fontWeight: "700",
-                      letterSpacing: "0.5px",
-                      lineHeight: "1",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    UPDATED
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-    </div>
-  );
-};
 
 const ProtectedRoute = ({ user, children, fallback }) => {
   const { theme } = useTheme();
@@ -708,92 +79,151 @@ const ProtectedRoute = ({ user, children, fallback }) => {
   return children;
 };
 
+const CHARACTER_ROUTE_CONFIG = [
+  {
+    section: "spellbook",
+    component: SpellBook,
+    getProps: (ctx) => ({
+      user: ctx.user,
+      customUsername: ctx.customUsername,
+      supabase,
+      selectedCharacter: ctx.selectedCharacter,
+      characters: ctx.characters,
+      discordUserId: ctx.user?.user_metadata?.provider_id,
+      adminMode: ctx.adminMode,
+      isUserAdmin: ctx.isUserAdmin,
+    }),
+  },
+  {
+    section: "potions",
+    component: PotionBrewingSystem,
+    getProps: (ctx) => ({
+      user: ctx.user,
+      character: ctx.selectedCharacter,
+      supabase,
+    }),
+  },
+  {
+    section: "recipes",
+    component: RecipeCookingSystem,
+    getProps: (ctx) => ({
+      user: ctx.user,
+      selectedCharacter: ctx.selectedCharacter,
+      supabase,
+    }),
+  },
+  {
+    section: "inventory",
+    component: Inventory,
+    getProps: (ctx) => ({
+      user: ctx.user,
+      selectedCharacter: ctx.selectedCharacter,
+      supabase,
+      adminMode: ctx.adminMode,
+    }),
+  },
+  {
+    section: "notes",
+    component: CharacterNotes,
+    getProps: (ctx) => ({
+      user: ctx.user,
+      selectedCharacter: ctx.selectedCharacter,
+      supabase,
+      adminMode: ctx.adminMode,
+      isUserAdmin: ctx.isUserAdmin,
+    }),
+  },
+  {
+    section: "downtime",
+    component: DowntimeWrapper,
+    getProps: (ctx) => ({
+      user: ctx.user,
+      selectedCharacter: ctx.selectedCharacter,
+      supabase,
+      adminMode: ctx.adminMode,
+      isUserAdmin: ctx.isUserAdmin,
+    }),
+  },
+  {
+    section: "gallery",
+    component: CharacterGallery,
+    getProps: (ctx) => ({
+      selectedCharacter: ctx.selectedCharacter,
+      supabase,
+      user: ctx.user,
+      adminMode: ctx.adminMode,
+    }),
+  },
+  {
+    section: "players",
+    component: OtherPlayers,
+    getProps: (ctx) => ({
+      selectedCharacter: ctx.selectedCharacter,
+      supabase,
+      user: ctx.user,
+    }),
+  },
+  {
+    section: "creatures",
+    component: Creatures,
+    getProps: (ctx) => ({
+      supabase,
+      user: ctx.user,
+      characters: ctx.characters,
+      selectedCharacter: ctx.selectedCharacter,
+    }),
+  },
+];
+
 function AppContent() {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
   const location = useLocation();
-  const navigate = useNavigate();
   const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
 
-  const [user, setUser] = useState(null);
-  const [customUsername, setCustomUsername] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [authLoading, setAuthLoading] = useState(false);
+  const {
+    user,
+    customUsername,
+    loading,
+    authLoading,
+    showNamePrompt,
+    isSubmittingName,
+    signInWithDiscord,
+    signOut,
+    updateCustomUsername,
+    loadCustomUsername,
+    handleNamePromptSubmit,
+    handleNamePromptSkip,
+  } = useAuth();
 
-  const [characters, setCharacters] = useState([]);
-  const [charactersLoading, setCharactersLoading] = useState(false);
-  const [charactersError, setCharactersError] = useState(null);
-  const [initialCharacterId, setInitialCharacterId] = useState(null);
-  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  const discordUserId = user?.user_metadata?.provider_id;
+
+  const {
+    characters,
+    selectedCharacter,
+    charactersLoading,
+    charactersError,
+    hasAttemptedLoad,
+    setHasAttemptedLoad,
+    isInitializing,
+    handleCharacterChange,
+  } = useCharacterData({
+    user,
+    discordUserId,
+    adminMode,
+    isUserAdmin,
+    customUsername,
+    loadCustomUsername,
+  });
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [showNamePrompt, setShowNamePrompt] = useState(false);
-  const [isSubmittingName, setIsSubmittingName] = useState(false);
-
-  const [isInitializing, setIsInitializing] = useState(true);
-  const initTimeoutRef = useRef(null);
-
-  const getInitialSelectedCharacter = () => {
-    try {
-      const savedCharacterId = sessionStorage.getItem("selectedCharacterId");
-      if (savedCharacterId) {
-        setInitialCharacterId(savedCharacterId);
-        return { id: savedCharacterId };
-      }
-    } catch (error) {
-      console.error("Error reading from sessionStorage:", error);
-    }
-    return null;
-  };
-  const [selectedCharacter, setSelectedCharacter] = useState(
-    getInitialSelectedCharacter,
-  );
-
-  const loadingRef = useRef(false);
-  const { setSelectedCharacter: setThemeSelectedCharacter } = useTheme();
-  const discordUserId = user?.user_metadata?.provider_id;
-
-  const debouncedSelectCharacter = useMemo(
-    () =>
-      debounce((character) => {
-        setSelectedCharacter(character);
-        if (character) {
-          sessionStorage.setItem(
-            "selectedCharacterId",
-            character.id.toString(),
-          );
-        } else {
-          sessionStorage.removeItem("selectedCharacterId");
-        }
-      }, 100),
-    [],
-  );
-
-  const prevSelectedCharacterRef = useRef();
-  useEffect(() => {
-    if (prevSelectedCharacterRef.current !== selectedCharacter) {
-      setThemeSelectedCharacter(selectedCharacter);
-      prevSelectedCharacterRef.current = selectedCharacter;
-    }
-  }, [selectedCharacter, setThemeSelectedCharacter]);
-
-  const resetSelectedCharacter = (newCharacter = null) => {
-    if (newCharacter) {
-      debouncedSelectCharacter(newCharacter);
-    } else {
-      setSelectedCharacter(null);
-      setThemeSelectedCharacter(null);
-      sessionStorage.removeItem("selectedCharacterId");
-    }
-  };
 
   const handleAdminToggleClick = () => {
     if (adminMode) {
       setAdminMode(false);
       return;
     }
-
     if (isUserAdmin) {
       setAdminMode(true);
     } else {
@@ -803,21 +233,14 @@ function AppContent() {
 
   const handlePasswordSubmit = async (password) => {
     setIsVerifying(true);
-
     try {
-      const discordUserId = user?.user_metadata?.provider_id;
-
       await characterService.verifyAdminPassword(discordUserId, password);
-
       setIsUserAdmin(true);
-
       setAdminMode(true);
-
       setShowPasswordModal(false);
     } catch (error) {
       console.error("❌ Password verification failed!");
       console.error("Error:", error);
-
       throw error;
     } finally {
       setIsVerifying(false);
@@ -830,425 +253,15 @@ function AppContent() {
     }
   };
 
-  const selectInitialCharacter = useCallback(
-    (characters, urlCharacterId) => {
-      if (!characters.length) return;
-
-      const savedCharacterId =
-        urlCharacterId ||
-        sessionStorage.getItem("selectedCharacterId") ||
-        initialCharacterId;
-      let characterToSelect = null;
-
-      if (urlCharacterId) {
-        characterToSelect = characters.find(
-          (c) => c.id.toString() === urlCharacterId.toString(),
-        );
-      }
-
-      if (
-        !characterToSelect &&
-        selectedCharacter &&
-        characters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString(),
-        )
-      ) {
-        characterToSelect = characters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString(),
-        );
-      } else if (!characterToSelect && savedCharacterId) {
-        characterToSelect = characters.find(
-          (char) => char.id.toString() === savedCharacterId.toString(),
-        );
-      }
-
-      if (!characterToSelect && characters.length > 0) {
-        characterToSelect = characters[0];
-      }
-
-      if (
-        characterToSelect &&
-        (!selectedCharacter || selectedCharacter.id !== characterToSelect.id)
-      ) {
-        debouncedSelectCharacter(characterToSelect);
-        setInitialCharacterId(null);
-      }
-
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
-
-      initTimeoutRef.current = setTimeout(() => {
-        setIsInitializing(false);
-      }, 1000);
-    },
-    [selectedCharacter, initialCharacterId, debouncedSelectCharacter],
-  );
-
-  const loadingUsernameRef = useRef(false);
-
-  const loadCustomUsername = useCallback(async () => {
-    if (!user) return;
-
-    if (loadingUsernameRef.current) {
-      return;
-    }
-
-    loadingUsernameRef.current = true;
-
-    try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("username")
-        .eq("discord_user_id", user.id)
-        .maybeSingle();
-
-      if (!error && data?.username) {
-        setCustomUsername(data.username);
-      } else if (!error && !sessionStorage.getItem("skipNamePrompt")) {
-        setShowNamePrompt(true);
-      } else if (error && error.code !== "PGRST116") {
-        console.error("Error loading custom username:", error);
-      }
-    } catch (error) {
-      console.error("Error loading custom username:", error);
-    } finally {
-      loadingUsernameRef.current = false;
-    }
-  }, [user]);
-
-  const loadCharacters = useCallback(async () => {
-    if (!discordUserId) {
-      return;
-    }
-
-    if (loadingRef.current) {
-      return;
-    }
-
-    loadingRef.current = true;
-    setCharactersLoading(true);
-    setCharactersError(null);
-
-    try {
-      const loadOperations = [
-        adminMode && isUserAdmin
-          ? characterService.getAllCharacters()
-          : characterService.getCharacters(discordUserId),
-      ];
-
-      if (!customUsername && user) {
-        loadOperations.push(loadCustomUsername());
-      }
-
-      const [charactersData] = await Promise.all(loadOperations);
-
-      const transformedCharacters = charactersData.map((char) => ({
-        id: char.id,
-        abilityScores: char.base_ability_scores || char.ability_scores,
-        base_ability_scores: char.base_ability_scores,
-        baseAbilityScores: char.base_ability_scores || char.ability_scores,
-        asiChoices: char.asi_choices || {},
-        background: char.background,
-        backgroundSkills: char.background_skills || [],
-        heritageChoices: char.heritage_choices || {},
-        innateHeritageSkills: char.innate_heritage_skills || [],
-        castingStyle: char.castingStyle || char.casting_style,
-        createdAt: char.created_at,
-        gameSession: char.gameSession || char.game_session,
-        hitPoints: char.hit_points,
-        house: char.house,
-        houseChoices: char.house_choices || {},
-        imageUrl: char.imageUrl || char.image_url || "",
-        initiativeAbility: char.initiative_ability || "dexterity",
-        innateHeritage: char.innate_heritage,
-        level: char.level,
-        level1ChoiceType: char.level1_choice_type || "",
-        name: char.name,
-        schoolYear: char.schoolYear || char.school_year || null,
-        skillProficiencies: char.skill_proficiencies || [],
-        skillExpertise: char.skill_expertise || [],
-        standardFeats: char.standard_feats || [],
-        standard_feats: char.standard_feats || [],
-        featChoices: char.feat_choices || {},
-        feat_choices: char.feat_choices || {},
-        subclass: char.subclass,
-        subclassChoices: char.subclass_choices || {},
-        wandType: char.wand_type || "",
-        magicModifiers: char.magic_modifiers || {
-          divinations: 0,
-          charms: 0,
-          transfiguration: 0,
-          healing: 0,
-          jinxesHexesCurses: 0,
-        },
-        metamagicChoices: char.metamagic_choices || {},
-
-        discord_user_id: char.discord_user_id,
-        ownerInfo: char.discord_users
-          ? {
-              username: char.discord_users.username,
-              displayName: char.discord_users.display_name,
-            }
-          : null,
-      }));
-
-      const sortedCharacters = transformedCharacters.sort((a, b) => {
-        return new Date(a.createdAt) - new Date(b.createdAt);
-      });
-
-      setCharacters(sortedCharacters);
-
-      requestIdleCallback(() => {
-        const urlMatch = window.location.pathname.match(
-          /\/character\/[^/]+\/(\d+)/,
-        );
-        const urlCharId = urlMatch ? urlMatch[1] : null;
-        selectInitialCharacter(sortedCharacters, urlCharId);
-      });
-
-      setHasAttemptedLoad(true);
-    } catch (err) {
-      setCharactersError("Failed to load characters: " + err.message);
-      console.error("Error loading characters:", err);
-      setHasAttemptedLoad(true);
-    } finally {
-      setCharactersLoading(false);
-      loadingRef.current = false;
-    }
-  }, [discordUserId, adminMode]);
-
-  useEffect(() => {
-    if (discordUserId) {
-      setHasAttemptedLoad(false);
-    }
-  }, [adminMode, discordUserId]);
-
-  useEffect(() => {
-    if (
-      discordUserId &&
-      !hasAttemptedLoad &&
-      !charactersLoading &&
-      !loadingRef.current
-    ) {
-      loadCharacters();
-    }
-  }, [discordUserId, hasAttemptedLoad, charactersLoading]);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser((prev) => {
-        const newUser = session?.user ?? null;
-        if (prev?.id === newUser?.id) return prev;
-        return newUser;
-      });
-      setAuthLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      loadCustomUsername();
-      setHasAttemptedLoad(false);
-    } else {
-      setCustomUsername("");
-      setCharacters([]);
-      setSelectedCharacter(null);
-      setThemeSelectedCharacter(null);
-      setHasAttemptedLoad(false);
-      sessionStorage.removeItem("selectedCharacterId");
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (location.pathname === "/character") {
-      navigate("/character/sheet", { replace: true });
-    }
-  }, [location.pathname, navigate]);
-
-  useEffect(() => {
-    if (isInitializing || !selectedCharacter?.id || !selectedCharacter?.name)
-      return;
-
-    if (!location.pathname.startsWith("/character/")) return;
-
-    const sectionMatch = location.pathname.match(/^\/character\/([^/]+)/);
-    if (!sectionMatch) return;
-    const section = sectionMatch[1];
-
-    const targetPath = `/character/${section}/${selectedCharacter.id}/${slugifyName(selectedCharacter.name)}`;
-    if (location.pathname !== targetPath) {
-      navigate(targetPath, { replace: true });
-    }
-  }, [
-    selectedCharacter?.id,
-    selectedCharacter?.name,
-    location.pathname,
+  useSyncCharacterToUrl({
+    selectedCharacter,
     isInitializing,
-    navigate,
-  ]);
-
-  useEffect(() => {
-    if (
-      location.pathname.startsWith("/character/") &&
-      characters.length === 0 &&
-      !charactersLoading &&
-      !loading &&
-      user &&
-      hasAttemptedLoad
-    ) {
-      navigate("/", { replace: true });
-    }
-  }, [
-    location.pathname,
-    characters.length,
+    characters,
     charactersLoading,
     loading,
-    navigate,
     user,
     hasAttemptedLoad,
-  ]);
-
-  const handleCharacterChange = useCallback(
-    (character) => {
-      if (isInitializing) {
-        return;
-      }
-
-      debouncedSelectCharacter(character);
-    },
-    [debouncedSelectCharacter, isInitializing],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const updateCustomUsername = async (newUsername) => {
-    if (!user) return;
-
-    try {
-      const { data: existingProfile } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("discord_user_id", user.id)
-        .maybeSingle();
-
-      if (existingProfile) {
-        const { error } = await supabase
-          .from("user_profiles")
-          .update({
-            username: newUsername,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("discord_user_id", user.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("user_profiles").insert([
-          {
-            discord_user_id: user.id,
-            username: newUsername,
-            discord_name: user.user_metadata.full_name,
-            avatar_url: user.user_metadata.avatar_url,
-          },
-        ]);
-
-        if (error) throw error;
-      }
-
-      setCustomUsername(newUsername);
-
-      const providerDiscordId = user.user_metadata?.provider_id;
-      if (providerDiscordId) {
-        await supabase
-          .from("discord_users")
-          .update({ display_name: newUsername })
-          .eq("discord_user_id", providerDiscordId);
-      }
-    } catch (error) {
-      console.error("Error updating custom username:", error);
-      throw error;
-    }
-  };
-
-  const handleNamePromptSubmit = async (name) => {
-    setIsSubmittingName(true);
-    try {
-      await updateCustomUsername(name);
-      setShowNamePrompt(false);
-    } finally {
-      setIsSubmittingName(false);
-    }
-  };
-
-  const handleNamePromptSkip = () => {
-    sessionStorage.setItem("skipNamePrompt", "true");
-    setShowNamePrompt(false);
-  };
-
-  const signInWithDiscord = async () => {
-    try {
-      setAuthLoading(true);
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "discord",
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-
-      if (error) {
-        console.error("Error signing in:", error);
-        alert("Failed to sign in: " + error.message);
-      }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("An unexpected error occurred while signing in");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setAuthLoading(true);
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("Error signing out:", error);
-        alert("Failed to sign out: " + error.message);
-      } else {
-        setUser(null);
-        setCustomUsername("");
-        setCharacters([]);
-        setSelectedCharacter(null);
-        setThemeSelectedCharacter(null);
-        sessionStorage.removeItem("selectedCharacterId");
-        navigate("/");
-      }
-    } catch (err) {
-      console.error("Unexpected error during sign out:", err);
-      alert("An unexpected error occurred while signing out");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  });
 
   if (loading) {
     return (
@@ -1269,6 +282,15 @@ function AppContent() {
       adminMode={adminMode}
     />
   );
+
+  const routeCtx = {
+    user,
+    customUsername,
+    selectedCharacter,
+    characters,
+    adminMode,
+    isUserAdmin,
+  };
 
   return (
     <div
@@ -1310,9 +332,7 @@ function AppContent() {
                   <CharacterManager
                     user={user}
                     customUsername={customUsername}
-                    onCharacterSaved={() => {
-                      setHasAttemptedLoad(false);
-                    }}
+                    onCharacterSaved={() => setHasAttemptedLoad(false)}
                     supabase={supabase}
                     adminMode={adminMode}
                     isUserAdmin={isUserAdmin}
@@ -1325,78 +345,47 @@ function AppContent() {
               path="/character-management"
               element={<Navigate to="/" replace />}
             />
-            <Route
-              path="/character-management/create"
-              element={
-                <ProtectedRoute user={user}>
-                  <CharacterManager
-                    user={user}
-                    customUsername={customUsername}
-                    onCharacterSaved={() => {
-                      setHasAttemptedLoad(false);
-                    }}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                    mode="create"
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character-management/archived"
-              element={
-                <ProtectedRoute user={user}>
-                  <CharacterManager
-                    user={user}
-                    customUsername={customUsername}
-                    onCharacterSaved={() => {
-                      setHasAttemptedLoad(false);
-                    }}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                    mode="archived"
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character-management/edit/:characterId"
-              element={
-                <ProtectedRoute user={user}>
-                  <CharacterManager
-                    user={user}
-                    customUsername={customUsername}
-                    onCharacterSaved={() => {
-                      setHasAttemptedLoad(false);
-                    }}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                    mode="edit"
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character-management/edit/:characterId/:characterName"
-              element={
-                <ProtectedRoute user={user}>
-                  <CharacterManager
-                    user={user}
-                    customUsername={customUsername}
-                    onCharacterSaved={() => {
-                      setHasAttemptedLoad(false);
-                    }}
-                    supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                    mode="edit"
-                  />
-                </ProtectedRoute>
-              }
-            />
+            {["create", "archived"].map((mode) => (
+              <Route
+                key={mode}
+                path={`/character-management/${mode}`}
+                element={
+                  <ProtectedRoute user={user}>
+                    <CharacterManager
+                      user={user}
+                      customUsername={customUsername}
+                      onCharacterSaved={() => setHasAttemptedLoad(false)}
+                      supabase={supabase}
+                      adminMode={adminMode}
+                      isUserAdmin={isUserAdmin}
+                      mode={mode}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {[
+              "/character-management/edit/:characterId",
+              "/character-management/edit/:characterId/:characterName",
+            ].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute user={user}>
+                    <CharacterManager
+                      user={user}
+                      customUsername={customUsername}
+                      onCharacterSaved={() => setHasAttemptedLoad(false)}
+                      supabase={supabase}
+                      adminMode={adminMode}
+                      isUserAdmin={isUserAdmin}
+                      mode="edit"
+                    />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
             <Route
               path="/character"
               element={<Navigate to="/character/sheet" replace />}
@@ -1409,196 +398,47 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/character/sheet"
-              element={
-                <ProtectedRoute user={user}>
-                  <CharacterSheetWrapper
-                    user={user}
-                    customUsername={customUsername}
-                    supabase={supabase}
-                    selectedCharacter={selectedCharacter}
-                    characters={characters}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                    characterSelector={characterSelector}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/character/sheet/:characterId/:characterName"
-              element={
-                <ProtectedRoute user={user}>
-                  <CharacterSheetWrapper
-                    user={user}
-                    customUsername={customUsername}
-                    supabase={supabase}
-                    selectedCharacter={selectedCharacter}
-                    characters={characters}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
-                    characterSelector={characterSelector}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            {["/character/spellbook", "/character/spellbook/:characterId/:characterName"].map((path) => (
+            {[
+              "/character/sheet",
+              "/character/sheet/:characterId/:characterName",
+            ].map((path) => (
               <Route
                 key={path}
                 path={path}
                 element={
                   <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <SpellBook
+                    <CharacterSheetWrapper
                       user={user}
                       customUsername={customUsername}
                       supabase={supabase}
                       selectedCharacter={selectedCharacter}
                       characters={characters}
-                      discordUserId={user?.user_metadata?.provider_id}
                       adminMode={adminMode}
                       isUserAdmin={isUserAdmin}
+                      characterSelector={characterSelector}
                     />
                   </ProtectedRoute>
                 }
               />
             ))}
-            {["/character/potions", "/character/potions/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <PotionBrewingSystem
-                      user={user}
-                      character={selectedCharacter}
-                      supabase={supabase}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/recipes", "/character/recipes/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <RecipeCookingSystem
-                      user={user}
-                      selectedCharacter={selectedCharacter}
-                      supabase={supabase}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/inventory", "/character/inventory/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <Inventory
-                      user={user}
-                      selectedCharacter={selectedCharacter}
-                      supabase={supabase}
-                      adminMode={adminMode}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/notes", "/character/notes/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <CharacterNotes
-                      user={user}
-                      selectedCharacter={selectedCharacter}
-                      supabase={supabase}
-                      adminMode={adminMode}
-                      isUserAdmin={isUserAdmin}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/downtime", "/character/downtime/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <DowntimeWrapper
-                      user={user}
-                      selectedCharacter={selectedCharacter}
-                      supabase={supabase}
-                      adminMode={adminMode}
-                      isUserAdmin={isUserAdmin}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/gallery", "/character/gallery/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <CharacterGallery
-                      selectedCharacter={selectedCharacter}
-                      supabase={supabase}
-                      user={user}
-                      adminMode={adminMode}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/players", "/character/players/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <OtherPlayers
-                      selectedCharacter={selectedCharacter}
-                      supabase={supabase}
-                      user={user}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
-            {["/character/creatures", "/character/creatures/:characterId/:characterName"].map((path) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute user={user}>
-                    {characterSelector}
-                    <Creatures
-                      supabase={supabase}
-                      user={user}
-                      characters={characters}
-                      selectedCharacter={selectedCharacter}
-                    />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
+            {CHARACTER_ROUTE_CONFIG.flatMap(
+              ({ section, component: Component, getProps }) =>
+                [
+                  `/character/${section}`,
+                  `/character/${section}/:characterId/:characterName`,
+                ].map((path) => (
+                  <Route
+                    key={path}
+                    path={path}
+                    element={
+                      <ProtectedRoute user={user}>
+                        {characterSelector}
+                        <Component {...getProps(routeCtx)} />
+                      </ProtectedRoute>
+                    }
+                  />
+                )),
+            )}
             <Route path="/theme-settings" element={<ThemeSettings />} />
             <Route path="/help-resources" element={<HelpResources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -1656,11 +496,13 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <RollModalProvider>
-        <ThemeProvider>
-          <AdminProviderWrapper />
-        </ThemeProvider>
-      </RollModalProvider>
+      <SupabaseProvider>
+        <RollModalProvider>
+          <ThemeProvider>
+            <AdminProviderWrapper />
+          </ThemeProvider>
+        </RollModalProvider>
+      </SupabaseProvider>
     </Router>
   );
 }
