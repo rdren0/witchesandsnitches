@@ -15,7 +15,16 @@ import {
 } from "lucide-react";
 import { useRollModal } from "../utils/diceRoller";
 import { sendDiscordRollWebhook } from "../utils/discordWebhook";
-import { SCHOOL_METADATA } from "../../utils/schoolColors";
+import { SCHOOL_METADATA, getSchoolColor } from "../../utils/schoolColors";
+
+const CASTING_TIME_PILL = {
+  "Action": { label: "Action", color: "#6366f1" },
+  "Bonus Action": { label: "Bonus", color: "#f59e0b" },
+  "Reaction": { label: "React.", color: "#10b981" },
+  "1 Minute": { label: "1 Min+", color: "#8b5cf6" },
+  "10 Minutes": { label: "1 Min+", color: "#8b5cf6" },
+  "1 Hour": { label: "1 Min+", color: "#8b5cf6" },
+};
 
 const CustomSpells = ({ character, supabase, discordUserId }) => {
   const { theme } = useTheme();
@@ -451,6 +460,32 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       color: theme.textSecondary,
       transition: "transform 0.2s ease",
     },
+    statsRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: "16px",
+      fontSize: "14px",
+      color: theme.textSecondary,
+    },
+    stat: {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+    },
+    spellGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+      gap: "8px",
+    },
+    spellItem: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "6px 8px",
+      borderRadius: "4px",
+      fontSize: "13px",
+      border: `1px solid ${theme.border}`,
+    },
     content: {
       padding: "16px",
     },
@@ -664,7 +699,16 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
         <div style={styles.headerLeft}>
           <div style={styles.title}>
             <Sparkles size={16} color={theme.primary} />
-            Custom Spells ({customSpells.length})
+            Custom Spells
+          </div>
+          <div style={styles.statsRow}>
+            <div style={styles.stat}>
+              <Sparkles size={12} style={{ color: theme.primary }} />
+              <span>
+                {customSpells.length}{" "}
+                {customSpells.length === 1 ? "spell" : "spells"}
+              </span>
+            </div>
           </div>
         </div>
         {isExpanded ? (
@@ -673,6 +717,61 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
           <ChevronDown size={16} style={styles.expandIcon} />
         )}
       </div>
+
+      {!isExpanded && customSpells.length > 0 && (
+        <div style={{ padding: "0 16px 16px" }}>
+          <div style={styles.spellGrid}>
+            {customSpells.map((spell) => {
+              const schoolColor = getSchoolColor(spell.spell_class);
+              return (
+                <div
+                  key={spell.id}
+                  style={{ ...styles.spellItem, borderColor: schoolColor }}
+                >
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: schoolColor,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ flex: 1, color: theme.text, fontWeight: "500" }}>
+                    {spell.name}
+                  </span>
+                  {spell.casting_time
+                    .split(", ")
+                    .filter(Boolean)
+                    .map((time) => CASTING_TIME_PILL[time])
+                    .filter(Boolean)
+                    .map((pill, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: "600",
+                          padding: "1px 4px",
+                          borderRadius: "8px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.3px",
+                          backgroundColor: pill.color,
+                          color: "white",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {pill.label}
+                      </span>
+                    ))}
+                  <span style={{ fontSize: "11px", color: theme.textSecondary }}>
+                    {spell.level}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {isExpanded && (
         <div style={styles.content}>
@@ -743,19 +842,47 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                 </div>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Casting Time</label>
-                  <select
-                    value={formData.casting_time}
-                    onChange={(e) =>
-                      setFormData({ ...formData, casting_time: e.target.value })
-                    }
-                    style={styles.input}
-                  >
-                    {castingTimes.map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
+                    {castingTimes.map((time) => {
+                      const selected = formData.casting_time
+                        .split(", ")
+                        .filter(Boolean)
+                        .includes(time);
+                      return (
+                        <button
+                          key={time}
+                          type="button"
+                          onClick={() => {
+                            const current = formData.casting_time
+                              .split(", ")
+                              .filter(Boolean);
+                            const next = selected
+                              ? current.filter((t) => t !== time)
+                              : [...current, time];
+                            setFormData({
+                              ...formData,
+                              casting_time: next.join(", "),
+                            });
+                          }}
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "12px",
+                            border: `2px solid ${selected ? CASTING_TIME_PILL[time]?.color || theme.primary : theme.border}`,
+                            backgroundColor: selected
+                              ? CASTING_TIME_PILL[time]?.color || theme.primary
+                              : "transparent",
+                            color: selected ? "white" : theme.textSecondary,
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          {time}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -1134,7 +1261,33 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                     >
                       <span>{spell.level}</span>
                       <span style={{ color: theme.text }}>•</span>
-                      <span>{spell.casting_time}</span>
+                      {spell.casting_time
+                        .split(", ")
+                        .filter(Boolean)
+                        .map((time) => ({ time, pill: CASTING_TIME_PILL[time] }))
+                        .map(({ time, pill }, i) =>
+                          pill ? (
+                            <span
+                              key={i}
+                              style={{
+                                fontSize: "9px",
+                                fontWeight: "600",
+                                padding: "1px 4px",
+                                borderRadius: "8px",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.3px",
+                                backgroundColor: pill.color,
+                                color: "white",
+                                whiteSpace: "nowrap",
+                                fontStyle: "normal",
+                              }}
+                            >
+                              {pill.label}
+                            </span>
+                          ) : (
+                            <span key={i}>{time}</span>
+                          )
+                        )}
                       <span style={{ color: theme.text }}>•</span>
                       <span>Range: {spell.range}</span>
                       {spell.duration && (

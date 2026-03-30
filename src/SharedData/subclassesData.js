@@ -7068,6 +7068,7 @@ export const subclassesData = {
                 "Alchemist's supplies",
                 "Potion making kits",
               ],
+              toolProficiencies: ["Alchemist's supplies", "Potion making kits"],
               specialAbilities: [
                 {
                   name: "Daily Elixir Creation",
@@ -7098,6 +7099,7 @@ export const subclassesData = {
               "Your alchemical knowledge veers towards the rarer form of Spagyrics, focusing on plants. You gain proficiency in Medicine, Herbology and Herbology kits. Additionally, your study of herbs and their properties has caused you to learn how to mix their innate magic with yours. As a bonus action, you can touch a creature that has less than its full hit points and heal or harm them. The die rolled increases as you level up: 1d6 at 5th level, 1d8 at 11th level, and 1d10 at 17th level.",
             benefits: {
               proficiencies: ["Medicine", "Herbology", "Herbology kits"],
+              toolProficiencies: ["Herbology kits"],
               specialAbilities: [
                 {
                   name: "Herbal Alchemy",
@@ -7121,6 +7123,7 @@ export const subclassesData = {
               "Your metallurgical pursuits have led to you making armor a conduit for your magic. You gain proficiency with heavy armor and smith's tools, and gain a set of alchemical armor with an AC of 17. Additionally, you learn how to use your artisan's tools as a spellcasting focus in place of a wand. Whenever you use your tool to cast a spell that either deals damage or heals a creature you gain a bonus to the damage or healing equal to your intelligence modifier (minimum of +1).",
             benefits: {
               proficiencies: ["Heavy armor", "Smith's tools"],
+              toolProficiencies: ["Smith's tools"],
               equipment: ["Alchemical armor (AC 17)"],
               specialAbilities: [
                 {
