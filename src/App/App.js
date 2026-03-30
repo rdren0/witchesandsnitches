@@ -45,8 +45,6 @@ import { RULE_BOOK_URL } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 import "./App.css";
 
-
-
 const ProtectedRoute = ({ user, children, fallback }) => {
   const { theme } = useTheme();
 
@@ -285,7 +283,14 @@ function AppContent() {
     />
   );
 
-  const routeCtx = { user, customUsername, selectedCharacter, characters, adminMode, isUserAdmin };
+  const routeCtx = {
+    user,
+    customUsername,
+    selectedCharacter,
+    characters,
+    adminMode,
+    isUserAdmin,
+  };
 
   return (
     <div
@@ -336,7 +341,10 @@ function AppContent() {
               }
             />
             <Route path="/home" element={<Navigate to="/" replace />} />
-            <Route path="/character-management" element={<Navigate to="/" replace />} />
+            <Route
+              path="/character-management"
+              element={<Navigate to="/" replace />}
+            />
             {["create", "archived"].map((mode) => (
               <Route
                 key={mode}
@@ -378,7 +386,10 @@ function AppContent() {
                 }
               />
             ))}
-            <Route path="/character" element={<Navigate to="/character/sheet" replace />} />
+            <Route
+              path="/character"
+              element={<Navigate to="/character/sheet" replace />}
+            />
             <Route
               path="/admin"
               element={
@@ -387,7 +398,10 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
-            {["/character/sheet", "/character/sheet/:characterId/:characterName"].map((path) => (
+            {[
+              "/character/sheet",
+              "/character/sheet/:characterId/:characterName",
+            ].map((path) => (
               <Route
                 key={path}
                 path={path}
@@ -407,19 +421,23 @@ function AppContent() {
                 }
               />
             ))}
-            {CHARACTER_ROUTE_CONFIG.flatMap(({ section, component: Component, getProps }) =>
-              [`/character/${section}`, `/character/${section}/:characterId/:characterName`].map((path) => (
-                <Route
-                  key={path}
-                  path={path}
-                  element={
-                    <ProtectedRoute user={user}>
-                      {characterSelector}
-                      <Component {...getProps(routeCtx)} />
-                    </ProtectedRoute>
-                  }
-                />
-              ))
+            {CHARACTER_ROUTE_CONFIG.flatMap(
+              ({ section, component: Component, getProps }) =>
+                [
+                  `/character/${section}`,
+                  `/character/${section}/:characterId/:characterName`,
+                ].map((path) => (
+                  <Route
+                    key={path}
+                    path={path}
+                    element={
+                      <ProtectedRoute user={user}>
+                        {characterSelector}
+                        <Component {...getProps(routeCtx)} />
+                      </ProtectedRoute>
+                    }
+                  />
+                )),
             )}
             <Route path="/theme-settings" element={<ThemeSettings />} />
             <Route path="/help-resources" element={<HelpResources />} />
