@@ -49,6 +49,8 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
   const [healingSkillChoice, setHealingSkillChoice] =
     useState("wisdomPotionMaking");
+  const [darkArtsSkillChoice, setDarkArtsSkillChoice] =
+    useState("wisdomPotionMaking");
 
   const [proficiencies, setProficiencies] = useState({
     potionMaking: 0,
@@ -60,6 +62,10 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
   const hasHealingSubclass = useMemo(() => {
     return currentCharacter?.subclass === "Healing";
+  }, [currentCharacter?.subclass]);
+
+  const hasDarkArtsSubclass = useMemo(() => {
+    return currentCharacter?.subclass === "Dark Arts";
   }, [currentCharacter?.subclass]);
 
   const getMedicineSkillProficiencyInfo = useMemo(() => {
@@ -115,6 +121,36 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     currentCharacter?.level,
   ]);
 
+  const getDarkArtsSkillInfo = useMemo(() => {
+    const proficiencyBonus = Math.ceil((currentCharacter?.level || 1) / 4) + 1;
+    const skillProficiencies = currentCharacter?.skillProficiencies || [];
+    const skillExpertise = currentCharacter?.skillExpertise || [];
+
+    const getInfo = (skillName) => {
+      const hasProficiency = skillProficiencies.some(
+        (s) => s.toLowerCase() === skillName.toLowerCase()
+      );
+      const hasExpertise = skillExpertise.some(
+        (s) => s.toLowerCase() === skillName.toLowerCase()
+      );
+      if (hasExpertise) {
+        return { bonus: proficiencyBonus * 2, description: `+${proficiencyBonus * 2} (expertise)` };
+      } else if (hasProficiency) {
+        return { bonus: proficiencyBonus, description: `+${proficiencyBonus} (proficient)` };
+      }
+      return { bonus: 0, description: "+0 (not proficient)" };
+    };
+
+    return {
+      persuasion: getInfo("Persuasion"),
+      perception: getInfo("Perception"),
+    };
+  }, [
+    currentCharacter?.skillProficiencies,
+    currentCharacter?.skillExpertise,
+    currentCharacter?.level,
+  ]);
+
   const getCharacterPotionModifier = useMemo(() => {
     if (!currentCharacter) return 0;
 
@@ -139,6 +175,22 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       potionMakingSkillBonus = proficiencyBonus * 2;
     } else if (isProficientInPotionMaking) {
       potionMakingSkillBonus = proficiencyBonus;
+    }
+
+    if (hasDarkArtsSubclass) {
+      if (darkArtsSkillChoice === "charismaPersuasion") {
+        const charismaScore = currentCharacter.abilityScores?.charisma || 10;
+        const charismaModifier = Math.floor((charismaScore - 10) / 2);
+        return charismaModifier + getDarkArtsSkillInfo.persuasion.bonus;
+      } else if (darkArtsSkillChoice === "wisdomPerception") {
+        const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+        const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
+        return wisdomModifier + getDarkArtsSkillInfo.perception.bonus;
+      } else {
+        const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+        const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
+        return wisdomModifier + potionMakingSkillBonus;
+      }
     }
 
     if (!hasHealingSubclass) {
@@ -176,6 +228,9 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     hasHealingSubclass,
     healingSkillChoice,
     getMedicineSkillProficiencyInfo,
+    hasDarkArtsSubclass,
+    darkArtsSkillChoice,
+    getDarkArtsSkillInfo,
   ]);
 
   const getSkillProficiencyInfo = useMemo(() => {
@@ -220,6 +275,37 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   ]);
 
   const getSkillDisplayInfo = useMemo(() => {
+    if (hasDarkArtsSubclass) {
+      if (darkArtsSkillChoice === "charismaPersuasion") {
+        return {
+          abilityName: "Charisma",
+          abilityModifier: Math.floor(
+            ((currentCharacter?.abilityScores?.charisma || 10) - 10) / 2
+          ),
+          skillName: "Persuasion",
+          skillInfo: getDarkArtsSkillInfo.persuasion,
+        };
+      } else if (darkArtsSkillChoice === "wisdomPerception") {
+        return {
+          abilityName: "Wisdom",
+          abilityModifier: Math.floor(
+            ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+          ),
+          skillName: "Perception",
+          skillInfo: getDarkArtsSkillInfo.perception,
+        };
+      } else {
+        return {
+          abilityName: "Wisdom",
+          abilityModifier: Math.floor(
+            ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+          ),
+          skillName: "Potion Making",
+          skillInfo: getSkillProficiencyInfo,
+        };
+      }
+    }
+
     if (!hasHealingSubclass) {
       return {
         abilityName: "Wisdom",
@@ -262,9 +348,12 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   }, [
     hasHealingSubclass,
     healingSkillChoice,
+    hasDarkArtsSubclass,
+    darkArtsSkillChoice,
     currentCharacter?.abilityScores,
     getSkillProficiencyInfo,
     getMedicineSkillProficiencyInfo,
+    getDarkArtsSkillInfo,
   ]);
 
   const renderHealingSkillChoice = () => {
@@ -322,6 +411,48 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     );
   };
 
+
+  const renderDarkArtsSkillChoice = () => {
+    if (!hasDarkArtsSubclass) return null;
+
+    const wisdomMod = Math.floor(
+      ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+    );
+    const charismaMod = Math.floor(
+      ((currentCharacter?.abilityScores?.charisma || 10) - 10) / 2
+    );
+
+    return (
+      <div style={styles.card}>
+        <h3 style={styles.cardTitle}>Dark Arts - Alternative Brewing</h3>
+        <div style={styles.proficiencyGrid}>
+          <div style={styles.proficiencySection}>
+            <div style={{ fontSize: "0.875rem", color: theme.text, marginBottom: "12px" }}>
+              Liquid Darkness lets you use Charisma (Persuasion) or Wisdom
+              (Perception) instead of Wisdom (Potion Making):
+            </div>
+            <div style={styles.inputGroup}>
+              <select
+                value={darkArtsSkillChoice}
+                onChange={(e) => setDarkArtsSkillChoice(e.target.value)}
+                style={styles.select}
+              >
+                <option value="wisdomPotionMaking">
+                  Wisdom (Potion Making) +{wisdomMod + getSkillProficiencyInfo.bonus}
+                </option>
+                <option value="charismaPersuasion">
+                  Charisma (Persuasion) +{charismaMod + getDarkArtsSkillInfo.persuasion.bonus}
+                </option>
+                <option value="wisdomPerception">
+                  Wisdom (Perception) +{wisdomMod + getDarkArtsSkillInfo.perception.bonus}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const getDiceIcon = (value) => {
     const icons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
@@ -416,6 +547,8 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         user,
         hasHealingSubclass,
         healingSkillChoice,
+        hasDarkArtsSubclass,
+        darkArtsSkillChoice,
         skillDisplayInfo: getSkillDisplayInfo,
       });
 
@@ -426,6 +559,8 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
           timestamp: new Date().toLocaleString(),
           hasHealingSubclass,
           healingSkillChoice,
+          hasDarkArtsSubclass,
+          darkArtsSkillChoice,
         };
         setLastResult(result);
       }
@@ -511,6 +646,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         </div>
       </div>
       {renderHealingSkillChoice()}
+      {renderDarkArtsSkillChoice()}
 
       <div style={styles.card}>
         <div style={styles.searchContainer}>
@@ -541,6 +677,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
               return (
                 <div
                   key={potionKey}
+                  onClick={() => setSelectedPotion(potion)}
                   style={{
                     ...styles.potionItem,
                     ...(selectedPotion?.name === potion.name
@@ -551,10 +688,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                       : {}),
                   }}
                 >
-                  <div
-                    onClick={() => setSelectedPotion(potion)}
-                    style={{ cursor: "pointer" }}
-                  >
+                  <div>
                     <div style={styles.potionHeader}>
                       <h3 style={styles.potionName}>
                         {potion.name}
@@ -690,13 +824,25 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                         <span
                           style={{
                             marginLeft: "8px",
-
                             fontSize: "0.75rem",
                             color: theme.primary,
                             fontWeight: "600",
                           }}
                         >
                           (Star Grass Salve)
+                        </span>
+                      )}
+                    {hasDarkArtsSubclass &&
+                      darkArtsSkillChoice !== "wisdomPotionMaking" && (
+                        <span
+                          style={{
+                            marginLeft: "8px",
+                            fontSize: "0.75rem",
+                            color: theme.primary,
+                            fontWeight: "600",
+                          }}
+                        >
+                          (Alternative Brewing)
                         </span>
                       )}
                   </div>

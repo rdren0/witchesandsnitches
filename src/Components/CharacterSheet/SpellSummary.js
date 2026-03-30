@@ -14,6 +14,7 @@ import {
   ChevronUp,
   X,
   Dice6,
+  Search,
 } from "lucide-react";
 import { useSpells } from "../../hooks/useSpells";
 import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
@@ -100,6 +101,8 @@ const SpellSummary = ({
   const [sortByActionType, setSortByActionType] = useState(false);
   const [isCastingTimeDropdownOpen, setIsCastingTimeDropdownOpen] =
     useState(false);
+  const [unlockedSearchTerm, setUnlockedSearchTerm] = useState("");
+  const [selectedStatusFilters, setSelectedStatusFilters] = useState([]);
   const castingTimeDropdownRef = useRef(null);
 
   useEffect(() => {
@@ -905,6 +908,15 @@ const SpellSummary = ({
   const applyFilterAndSort = useCallback(
     (spells) => {
       let result = spells;
+      if (unlockedSearchTerm.trim()) {
+        const lower = unlockedSearchTerm.toLowerCase();
+        result = result.filter(
+          (spell) =>
+            spell.name.toLowerCase().includes(lower) ||
+            spell.description?.toLowerCase().includes(lower) ||
+            spell.tags?.some((tag) => tag.toLowerCase().includes(lower)),
+        );
+      }
       if (selectedCastingTimeFilters.length > 0) {
         result = result.filter((spell) => {
           const cats = getSpellActionCategories(spell.castingTime, spell.name);
@@ -921,6 +933,7 @@ const SpellSummary = ({
       return result;
     },
     [
+      unlockedSearchTerm,
       selectedCastingTimeFilters,
       sortByActionType,
       getSpellActionCategories,
@@ -1137,7 +1150,6 @@ const SpellSummary = ({
       border: `1px solid ${theme.border}`,
       borderRadius: "8px",
       marginBottom: "16px",
-      overflow: "hidden",
     },
     header: {
       display: "flex",
@@ -1178,14 +1190,14 @@ const SpellSummary = ({
       transition: "transform 0.2s ease",
     },
     content: {
-      padding: "16px",
+      padding: isExpanded ? "16px" : "0 16px",
       maxHeight: isExpanded ? "400px" : "0",
-      overflow: "auto",
+      overflow: isExpanded ? "auto" : "hidden",
       transition: "max-height 0.3s ease",
     },
     spellGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
       gap: "8px",
       marginBottom: "16px",
     },
@@ -1588,87 +1600,135 @@ const SpellSummary = ({
             </div>
           </div>
 
+          <div
+            style={{
+              padding: "8px 16px",
+              borderBottom: `1px solid ${theme.border}`,
+              backgroundColor: theme.background,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: theme.surface,
+                border: `1px solid ${theme.border}`,
+                borderRadius: "6px",
+                padding: "6px 10px",
+              }}
+            >
+              <Search size={14} color={theme.textSecondary} />
+              <input
+                type="text"
+                placeholder="Search by name or keyword..."
+                value={unlockedSearchTerm}
+                onChange={(e) => setUnlockedSearchTerm(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  flex: 1,
+                  border: "none",
+                  outline: "none",
+                  backgroundColor: "transparent",
+                  color: theme.text,
+                  fontSize: "13px",
+                }}
+              />
+              {unlockedSearchTerm && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUnlockedSearchTerm("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  title="Clear search"
+                >
+                  <X size={14} color={theme.textSecondary} />
+                </button>
+              )}
+            </div>
+          </div>
+
           {showCanAttempt && (
             <div
               style={{
                 padding: "12px 16px",
                 borderBottom: `1px solid ${theme.border}`,
                 backgroundColor: theme.background,
+                display: "flex",
+                gap: "16px",
+                alignItems: "center",
+                flexWrap: "wrap",
+                fontSize: "13px",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  gap: "16px",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  fontSize: "13px",
-                }}
-              >
-                <span style={{ fontWeight: "600", color: theme.text }}>
-                  Legend:
-                </span>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                >
+              {[
+                {
+                  key: "mastered",
+                  label: "Mastered",
+                  bg: `${theme.success}15`,
+                  border: theme.success,
+                },
+                {
+                  key: "attempted",
+                  label: "Successfully Attempted",
+                  bg: "rgba(251,191,36,0.15)",
+                  border: "#fbbf24",
+                },
+                {
+                  key: "failed",
+                  label: "Failed Only",
+                  bg: "rgba(249,115,22,0.15)",
+                  border: "#f97316",
+                },
+                {
+                  key: "researched",
+                  label: "Researched",
+                  bg: "rgba(239,68,68,0.15)",
+                  border: "#ef4444",
+                },
+              ].map(({ key, label, bg, border }) => {
+                const active = selectedStatusFilters.includes(key);
+                return (
                   <div
-                    style={{
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: `${theme.success}15`,
-                      border: `2px solid ${theme.success}`,
-                      borderRadius: "4px",
+                    key={key}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedStatusFilters((prev) =>
+                        prev.includes(key)
+                          ? prev.filter((f) => f !== key)
+                          : [...prev, key],
+                      );
                     }}
-                  ></div>
-                  <span style={{ color: theme.textSecondary }}>Mastered</span>
-                </div>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  <div
                     style={{
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "rgba(251, 191, 36, 0.15)",
-                      border: "2px solid #fbbf24",
-                      borderRadius: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
                     }}
-                  ></div>
-                  <span style={{ color: theme.textSecondary }}>
-                    Successfully Attempted
-                  </span>
-                </div>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  <div
-                    style={{
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "rgba(249, 115, 22, 0.15)",
-                      border: "2px solid #f97316",
-                      borderRadius: "4px",
-                    }}
-                  ></div>
-                  <span style={{ color: theme.textSecondary }}>
-                    Failed Only
-                  </span>
-                </div>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  <div
-                    style={{
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "rgba(239, 68, 68, 0.15)",
-                      border: "2px solid #ef4444",
-                      borderRadius: "4px",
-                    }}
-                  ></div>
-                  <span style={{ color: theme.textSecondary }}>Researched</span>
-                </div>
-              </div>
+                  >
+                    <div
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        backgroundColor: active ? border : bg,
+                        border: `2px solid ${border}`,
+                        borderRadius: "4px",
+                        flexShrink: 0,
+                        transition: "background-color 0.15s ease",
+                      }}
+                    />
+                    <span style={{ color: theme.textSecondary }}>{label}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -1711,18 +1771,33 @@ const SpellSummary = ({
                   ...spellStats.failedByLevel,
                   ...spellStats.researchedByLevel,
                 }).map((levelName) => {
-                  const filteredMastered = applyFilterAndSort(
-                    spellStats.masteredByLevel[levelName] || [],
-                  );
-                  const filteredAttempted = applyFilterAndSort(
-                    spellStats.attemptedByLevel[levelName] || [],
-                  );
-                  const filteredFailed = applyFilterAndSort(
-                    spellStats.failedByLevel[levelName] || [],
-                  );
-                  const filteredResearched = applyFilterAndSort(
-                    spellStats.researchedByLevel[levelName] || [],
-                  );
+                  const noStatusFilter = selectedStatusFilters.length === 0;
+                  const filteredMastered =
+                    noStatusFilter || selectedStatusFilters.includes("mastered")
+                      ? applyFilterAndSort(
+                          spellStats.masteredByLevel[levelName] || [],
+                        )
+                      : [];
+                  const filteredAttempted =
+                    noStatusFilter ||
+                    selectedStatusFilters.includes("attempted")
+                      ? applyFilterAndSort(
+                          spellStats.attemptedByLevel[levelName] || [],
+                        )
+                      : [];
+                  const filteredFailed =
+                    noStatusFilter || selectedStatusFilters.includes("failed")
+                      ? applyFilterAndSort(
+                          spellStats.failedByLevel[levelName] || [],
+                        )
+                      : [];
+                  const filteredResearched =
+                    noStatusFilter ||
+                    selectedStatusFilters.includes("researched")
+                      ? applyFilterAndSort(
+                          spellStats.researchedByLevel[levelName] || [],
+                        )
+                      : [];
 
                   const totalFiltered =
                     filteredMastered.length +
