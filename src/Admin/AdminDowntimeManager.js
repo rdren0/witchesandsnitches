@@ -420,7 +420,10 @@ const AdminDowntimeManager = ({ supabase }) => {
         (sheet) =>
           !sheet.review_status ||
           sheet.review_status === "pending" ||
-          sheet.review_status === "failure",
+          sheet.review_status === "partial",
+      ).length,
+      rejected: downtimeSheets.filter(
+        (sheet) => sheet.review_status === "failure",
       ).length,
       missingNpc: submitted.filter((sheet) => hasMissingNpcData(sheet)).length,
       approved: submitted.filter(
@@ -441,7 +444,11 @@ const AdminDowntimeManager = ({ supabase }) => {
           !sheet.is_draft &&
           (!sheet.review_status ||
             sheet.review_status === "pending" ||
-            sheet.review_status === "failure"),
+            sheet.review_status === "partial"),
+      );
+    } else if (activeTab === "rejected") {
+      filtered = filtered.filter(
+        (sheet) => sheet.review_status === "failure",
       );
     } else if (activeTab === "missingNpc") {
       filtered = filtered.filter((sheet) => hasMissingNpcData(sheet));
@@ -462,8 +469,11 @@ const AdminDowntimeManager = ({ supabase }) => {
     }
 
     if (selectedYear) {
+      const yearInt = parseInt(selectedYear);
       filtered = filtered.filter(
-        (sheet) => sheet.year === parseInt(selectedYear),
+        (sheet) =>
+          sheet.year === yearInt ||
+          parseInt(sheet.school_year) === yearInt,
       );
     }
 
@@ -670,7 +680,7 @@ const AdminDowntimeManager = ({ supabase }) => {
         </div>
         <div
           style={{ ...styles.statCard, cursor: "pointer" }}
-          onClick={() => setActiveTab("pending")}
+          onClick={() => setActiveTab("rejected")}
         >
           <div style={{ ...styles.statNumber, color: "#ef4444" }}>
             {stats.denied}
@@ -690,6 +700,26 @@ const AdminDowntimeManager = ({ supabase }) => {
           Pending & Rejected
           <span style={{ ...tabStyles.tabBadge, ...tabStyles.pendingBadge }}>
             {getTabCounts().pending}
+          </span>
+        </button>
+        <button
+          style={{
+            ...tabStyles.tab,
+            ...(activeTab === "rejected"
+              ? { color: "#ef4444", borderBottomColor: "#ef4444" }
+              : {}),
+          }}
+          onClick={() => setActiveTab("rejected")}
+        >
+          Rejected
+          <span
+            style={{
+              ...tabStyles.tabBadge,
+              backgroundColor: "#ef444420",
+              color: "#ef4444",
+            }}
+          >
+            {getTabCounts().rejected}
           </span>
         </button>
         <button
@@ -825,10 +855,12 @@ const AdminDowntimeManager = ({ supabase }) => {
         <div style={styles.sheetsHeader}>
           <h2>
             {activeTab === "pending"
-              ? "Pending & Rejected"
-              : activeTab === "missingNpc"
-                ? "Missing NPC Data"
-                : "Approved"}{" "}
+              ? "Pending"
+              : activeTab === "rejected"
+                ? "Rejected"
+                : activeTab === "missingNpc"
+                  ? "Missing NPC Data"
+                  : "Approved"}{" "}
             Sheets ({filteredSheets.length})
           </h2>
         </div>
@@ -923,10 +955,12 @@ const AdminDowntimeManager = ({ supabase }) => {
             <div>
               No{" "}
               {activeTab === "pending"
-                ? "pending or rejected"
-                : activeTab === "missingNpc"
-                  ? "missing NPC data"
-                  : "approved"}{" "}
+                ? "pending"
+                : activeTab === "rejected"
+                  ? "rejected"
+                  : activeTab === "missingNpc"
+                    ? "missing NPC data"
+                    : "approved"}{" "}
               sheets found matching your filters.
             </div>
           </div>
