@@ -1196,8 +1196,8 @@ const SpellSummary = ({
       transition: "max-height 0.3s ease",
     },
     spellGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+      display: "flex",
+      flexWrap: "wrap",
       gap: "8px",
       marginBottom: "16px",
     },
