@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { backgroundsData, subclassesData } from "../../../../SharedData";
@@ -8,6 +8,7 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
   const { feats: standardFeats } = useFeats();
+  const [customToolInput, setCustomToolInput] = useState("");
 
   const toSentenceCase = (str) => {
     if (!str) return str;
@@ -40,6 +41,25 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
           }
           if (feature.benefits?.vehicleProficiencies) {
             subclassTools.push(...feature.benefits.vehicleProficiencies);
+          }
+          if (feature.choices && Array.isArray(feature.choices)) {
+            const level = String(feature.level);
+            const selectedChoices = character.subclassChoices?.[level];
+            if (selectedChoices) {
+              const selectedNames = Array.isArray(selectedChoices)
+                ? selectedChoices
+                : [selectedChoices];
+              feature.choices.forEach((choice) => {
+                if (selectedNames.includes(choice.name)) {
+                  if (choice.benefits?.toolProficiencies) {
+                    subclassTools.push(...choice.benefits.toolProficiencies);
+                  }
+                  if (choice.benefits?.vehicleProficiencies) {
+                    subclassTools.push(...choice.benefits.vehicleProficiencies);
+                  }
+                }
+              });
+            }
           }
         });
       }
@@ -74,15 +94,23 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
       });
     }
 
-    const characterTools = character.toolProficiencies || [];
+    const rawToolProficiencies = character.toolProficiencies || [];
+    const excludedTools = new Set(
+      rawToolProficiencies.filter((t) => t.startsWith("!")).map((t) => t.slice(1))
+    );
+    const characterTools = rawToolProficiencies.filter((t) => !t.startsWith("!"));
+    const filteredSubclassTools = subclassTools.filter((t) => !excludedTools.has(t));
+    const filteredBackgroundTools = backgroundTools.filter((t) => !excludedTools.has(t));
+    const filteredFeatTools = featTools.filter((t) => !excludedTools.has(t));
 
-    const automaticTools = [...backgroundTools, ...subclassTools, ...featTools];
+    const automaticTools = [...filteredBackgroundTools, ...filteredSubclassTools, ...filteredFeatTools];
 
     return {
-      background: backgroundTools,
-      subclass: subclassTools,
-      feat: featTools,
+      background: filteredBackgroundTools,
+      subclass: filteredSubclassTools,
+      feat: filteredFeatTools,
       character: characterTools,
+      excluded: excludedTools,
       automatic: [...new Set(automaticTools)],
       all: [...new Set([...automaticTools, ...characterTools])],
     };
@@ -104,21 +132,52 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
     "Diviner's kit",
   ];
 
+  const customTools = (character.toolProficiencies || []).filter(
+    (t) => !t.startsWith("!") && !availableTools.includes(t) && !toolData.automatic.includes(t)
+  );
+
+  const handleAddCustomTool = () => {
+    const name = customToolInput.trim();
+    if (!name || disabled) return;
+    const currentTools = character.toolProficiencies || [];
+    const activeTools = currentTools.filter((t) => !t.startsWith("!"));
+    if (activeTools.includes(name)) return;
+    // Remove any exclusion marker and add as proficient
+    const newTools = [
+      ...currentTools.filter((t) => t !== `!${name}` && t !== name),
+      name,
+    ];
+    onChange("toolProficiencies", newTools);
+    setCustomToolInput("");
+  };
+
+  const handleRemoveCustomTool = (tool, isAutomatic) => {
+    if (disabled) return;
+    const currentTools = character.toolProficiencies || [];
+    if (isAutomatic) {
+      // Store exclusion marker instead of removing (it's auto-granted)
+      if (!currentTools.includes(`!${tool}`)) {
+        onChange("toolProficiencies", [...currentTools, `!${tool}`]);
+      }
+    } else {
+      onChange("toolProficiencies", currentTools.filter((t) => t !== tool));
+    }
+  };
+
   const handleToolToggle = (tool) => {
     if (disabled) return;
 
     const currentTools = character.toolProficiencies || [];
-    const isCurrentlySelected = currentTools.includes(tool);
+    const activeTools = currentTools.filter((t) => !t.startsWith("!"));
+    const isCurrentlySelected = activeTools.includes(tool);
     const isAutomatic = toolData.automatic.includes(tool);
 
     if (isAutomatic) return;
 
     if (isCurrentlySelected) {
-      const newTools = currentTools.filter((t) => t !== tool);
-      onChange("toolProficiencies", newTools);
+      onChange("toolProficiencies", currentTools.filter((t) => t !== tool));
     } else {
-      const newTools = [...currentTools, tool];
-      onChange("toolProficiencies", newTools);
+      onChange("toolProficiencies", [...currentTools, tool]);
     }
   };
 
@@ -328,14 +387,36 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
                   else if (toolData.feat.includes(tool)) sourceType = "feat";
 
                   return (
-                    <ProficiencyBox
-                      key={`auto-tool-${tool}`}
-                      item={tool}
-                      isSelected={true}
-                      isAutomatic={true}
-                      sourceType={sourceType}
-                      canToggle={false}
-                    />
+                    <div key={`auto-tool-${tool}`} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <div style={{ flex: 1 }}>
+                        <ProficiencyBox
+                          item={tool}
+                          isSelected={true}
+                          isAutomatic={true}
+                          sourceType={sourceType}
+                          canToggle={false}
+                        />
+                      </div>
+                      {!disabled && (
+                        <button
+                          onClick={() => handleRemoveCustomTool(tool, true)}
+                          title="Remove"
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: theme.textSecondary,
+                            fontSize: "16px",
+                            lineHeight: 1,
+                            padding: "0 4px",
+                            opacity: 0.5,
+                            flexShrink: 0,
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -388,6 +469,105 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
                 );
               })}
             </div>
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <h4
+              style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: theme.text,
+                marginBottom: "8px",
+              }}
+            >
+              Custom Tools
+            </h4>
+
+            {customTools.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  marginBottom: "12px",
+                }}
+              >
+                {customTools.map((tool) => (
+                  <div
+                    key={tool}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "6px 10px",
+                      borderRadius: "6px",
+                      backgroundColor: `${theme.success}20`,
+                      border: `2px solid ${theme.success}`,
+                      fontSize: "14px",
+                      color: theme.success,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {tool}
+                    {!disabled && (
+                      <button
+                        onClick={() => handleRemoveCustomTool(tool, false)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: theme.success,
+                          fontSize: "16px",
+                          lineHeight: 1,
+                          padding: "0 2px",
+                          opacity: 0.7,
+                        }}
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!disabled && (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  value={customToolInput}
+                  onChange={(e) => setCustomToolInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddCustomTool()}
+                  placeholder="e.g. Alchemist's supplies"
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    border: `1px solid ${theme.border}`,
+                    backgroundColor: theme.background,
+                    color: theme.text,
+                    fontSize: "14px",
+                  }}
+                />
+                <button
+                  onClick={handleAddCustomTool}
+                  disabled={!customToolInput.trim()}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    border: "none",
+                    backgroundColor: customToolInput.trim() ? theme.primary : theme.border,
+                    color: "white",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    cursor: customToolInput.trim() ? "pointer" : "not-allowed",
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
