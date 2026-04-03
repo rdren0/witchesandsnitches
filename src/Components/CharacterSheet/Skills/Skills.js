@@ -752,17 +752,23 @@ export const Skills = ({
   const getAllToolProficiencies = () => {
     const allTools = [];
 
+    const rawToolProficiencies = character.toolProficiencies || [];
+    const excludedTools = new Set(
+      rawToolProficiencies
+        .filter((t) => t.startsWith("!"))
+        .map((t) => t.slice(1))
+    );
+    const characterTools = rawToolProficiencies.filter((t) => !t.startsWith("!"));
+
     const backgroundTools = character.background
       ? Object.values(backgroundsData).find(
-          (bg) => bg.name === character.background
+          (bg) => bg.name === character.background,
         )?.toolProficiencies || []
       : [];
 
     backgroundTools.forEach((tool) => {
-      allTools.push({ name: tool, source: "Background" });
+      if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Background" });
     });
-
-    const characterTools = character.toolProficiencies || [];
     characterTools.forEach((tool) => {
       allTools.push({ name: tool, source: "Character" });
     });
@@ -796,7 +802,7 @@ export const Skills = ({
           const levelData = subclassInfo.choices[level];
           if (levelData?.options) {
             const selectedOption = levelData.options.find(
-              (opt) => opt.name === choice
+              (opt) => opt.name === choice,
             );
             if (selectedOption?.benefits?.toolProficiencies) {
               selectedOption.benefits.toolProficiencies.forEach((tool) => {
@@ -839,7 +845,7 @@ export const Skills = ({
     }
 
     const isAutomaticProficiency = ["Background", "Subclass", "Feat"].includes(
-      toolSource
+      toolSource,
     );
     return isAutomaticProficiency ? 1 : 0;
   };
@@ -970,7 +976,7 @@ export const Skills = ({
                   const abilityMod = modifiers(character)[skill.ability];
                   const skillBonus = calculateSkillBonus(
                     skill.name,
-                    abilityMod
+                    abilityMod,
                   );
                   const skillLevel = character.skills?.[skill.name] || 0;
                   const isPerception = skill.name === "perception";
@@ -1225,11 +1231,11 @@ export const Skills = ({
                           const tool = toolObj.name;
                           const toolLevel = getEffectiveToolLevel(
                             tool,
-                            toolObj.source
+                            toolObj.source,
                           );
                           const toolBonus = calculateToolBonus(
                             tool,
-                            toolObj.source
+                            toolObj.source,
                           );
 
                           let toolColor = theme.textSecondary;
@@ -1482,7 +1488,7 @@ export const Skills = ({
                   >
                     {formatModifier(
                       (modifiers(character)[selectedAbility] || 0) +
-                        (character?.proficiencyBonus || 0)
+                        (character?.proficiencyBonus || 0),
                     )}
                   </span>
                 </div>
