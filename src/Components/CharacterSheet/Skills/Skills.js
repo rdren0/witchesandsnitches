@@ -69,7 +69,6 @@ export const Skills = ({
   const [selectedTool, setSelectedTool] = useState(null);
   const [selectedToolSource, setSelectedToolSource] = useState(null);
   const [selectedAbility, setSelectedAbility] = useState("strength");
-  const [customToolInput, setCustomToolInput] = useState("");
 
   const passivePerception = calculatePassivePerception(character);
   const passiveInvestigation = calculatePassiveInvestigation(character);
@@ -750,124 +749,8 @@ export const Skills = ({
     }
   };
 
-  const handleAddCustomTool = async () => {
-    const name = customToolInput.trim();
-    if (!name || !selectedCharacterId) return;
-
-    const currentProficiencies = character.toolProficiencies || [];
-    const currentExpertise = character.toolExpertise || [];
-    const activeTools = currentProficiencies.filter((t) => !t.startsWith("!"));
-    if (activeTools.includes(name) || currentExpertise.includes(name)) return;
-
-    // Remove any exclusion marker for this tool and add it as proficient
-    const newProficiencies = [
-      ...currentProficiencies.filter((t) => t !== `!${name}` && t !== name),
-      name,
-    ];
-    const newTools = { ...character.tools, [name]: 1 };
-
-    setCharacter((prev) => ({
-      ...prev,
-      toolProficiencies: newProficiencies,
-      tools: newTools,
-    }));
-    setCustomToolInput("");
-
-    try {
-      const { error } = await supabase
-        .from("characters")
-        .update({ tool_proficiencies: newProficiencies })
-        .eq("id", selectedCharacterId)
-        .eq("discord_user_id", discordUserId);
-
-      if (error) {
-        console.error("Error adding custom tool:", error);
-        setCharacter((prev) => ({
-          ...prev,
-          toolProficiencies: currentProficiencies,
-          tools: character.tools,
-        }));
-      }
-    } catch (err) {
-      console.error("Error adding custom tool:", err);
-      setCharacter((prev) => ({
-        ...prev,
-        toolProficiencies: currentProficiencies,
-        tools: character.tools,
-      }));
-    }
-  };
-
-  const handleRemoveCustomTool = async (toolName, toolSource) => {
-    if (!selectedCharacterId) return;
-
-    const currentProficiencies = character.toolProficiencies || [];
-    const currentExpertise = character.toolExpertise || [];
-
-    let newProficiencies;
-    let newExpertise = currentExpertise.filter((t) => t !== toolName);
-    const newTools = { ...character.tools };
-
-    if (toolSource === "Character") {
-      // Remove from manual lists
-      newProficiencies = currentProficiencies.filter((t) => t !== toolName);
-      delete newTools[toolName];
-    } else {
-      // Store an exclusion marker so the automatic grant is suppressed
-      newProficiencies = currentProficiencies.includes(`!${toolName}`)
-        ? currentProficiencies
-        : [...currentProficiencies, `!${toolName}`];
-    }
-
-    setCharacter((prev) => ({
-      ...prev,
-      toolProficiencies: newProficiencies,
-      toolExpertise: newExpertise,
-      tools: newTools,
-    }));
-
-    try {
-      const { error } = await supabase
-        .from("characters")
-        .update({
-          tool_proficiencies: newProficiencies,
-          tool_expertise: newExpertise,
-        })
-        .eq("id", selectedCharacterId)
-        .eq("discord_user_id", discordUserId);
-
-      if (error) {
-        console.error("Error removing tool:", error);
-        setCharacter((prev) => ({
-          ...prev,
-          toolProficiencies: currentProficiencies,
-          toolExpertise: currentExpertise,
-          tools: character.tools,
-        }));
-      }
-    } catch (err) {
-      console.error("Error removing tool:", err);
-      setCharacter((prev) => ({
-        ...prev,
-        toolProficiencies: currentProficiencies,
-        toolExpertise: currentExpertise,
-        tools: character.tools,
-      }));
-    }
-  };
-
   const getAllToolProficiencies = () => {
     const allTools = [];
-
-    const backgroundTools = character.background
-      ? Object.values(backgroundsData).find(
-          (bg) => bg.name === character.background
-        )?.toolProficiencies || []
-      : [];
-
-    backgroundTools.forEach((tool) => {
-      if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Background" });
-    });
 
     const rawToolProficiencies = character.toolProficiencies || [];
     const excludedTools = new Set(
@@ -876,6 +759,16 @@ export const Skills = ({
         .map((t) => t.slice(1))
     );
     const characterTools = rawToolProficiencies.filter((t) => !t.startsWith("!"));
+
+    const backgroundTools = character.background
+      ? Object.values(backgroundsData).find(
+          (bg) => bg.name === character.background,
+        )?.toolProficiencies || []
+      : [];
+
+    backgroundTools.forEach((tool) => {
+      if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Background" });
+    });
     characterTools.forEach((tool) => {
       allTools.push({ name: tool, source: "Character" });
     });
@@ -890,7 +783,7 @@ export const Skills = ({
 
       if (subclassInfo?.benefits?.toolProficiencies) {
         subclassInfo.benefits.toolProficiencies.forEach((tool) => {
-          if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Subclass" });
+          allTools.push({ name: tool, source: "Subclass" });
         });
       }
 
@@ -898,26 +791,8 @@ export const Skills = ({
         subclassInfo.higherLevelFeatures.forEach((feature) => {
           if (feature.benefits?.toolProficiencies) {
             feature.benefits.toolProficiencies.forEach((tool) => {
-              if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Subclass" });
+              allTools.push({ name: tool, source: "Subclass" });
             });
-          }
-          if (feature.choices && Array.isArray(feature.choices) && character.subclassChoices) {
-            const level = String(feature.level);
-            const selectedChoices = character.subclassChoices[level];
-            if (selectedChoices) {
-              const selectedNames = Array.isArray(selectedChoices)
-                ? selectedChoices
-                : [selectedChoices];
-              feature.choices.forEach((choice) => {
-                if (selectedNames.includes(choice.name)) {
-                  if (choice.benefits?.toolProficiencies) {
-                    choice.benefits.toolProficiencies.forEach((tool) => {
-                      if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Subclass" });
-                    });
-                  }
-                }
-              });
-            }
           }
         });
       }
@@ -927,11 +802,11 @@ export const Skills = ({
           const levelData = subclassInfo.choices[level];
           if (levelData?.options) {
             const selectedOption = levelData.options.find(
-              (opt) => opt.name === choice
+              (opt) => opt.name === choice,
             );
             if (selectedOption?.benefits?.toolProficiencies) {
               selectedOption.benefits.toolProficiencies.forEach((tool) => {
-                if (!excludedTools.has(tool)) allTools.push({ name: tool, source: "Subclass" });
+                allTools.push({ name: tool, source: "Subclass" });
               });
             }
           }
@@ -970,7 +845,7 @@ export const Skills = ({
     }
 
     const isAutomaticProficiency = ["Background", "Subclass", "Feat"].includes(
-      toolSource
+      toolSource,
     );
     return isAutomaticProficiency ? 1 : 0;
   };
@@ -1101,7 +976,7 @@ export const Skills = ({
                   const abilityMod = modifiers(character)[skill.ability];
                   const skillBonus = calculateSkillBonus(
                     skill.name,
-                    abilityMod
+                    abilityMod,
                   );
                   const skillLevel = character.skills?.[skill.name] || 0;
                   const isPerception = skill.name === "perception";
@@ -1356,11 +1231,11 @@ export const Skills = ({
                           const tool = toolObj.name;
                           const toolLevel = getEffectiveToolLevel(
                             tool,
-                            toolObj.source
+                            toolObj.source,
                           );
                           const toolBonus = calculateToolBonus(
                             tool,
-                            toolObj.source
+                            toolObj.source,
                           );
 
                           let toolColor = theme.textSecondary;
@@ -1456,40 +1331,6 @@ export const Skills = ({
                     </tbody>
                   </table>
                 </div>
-              <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                <input
-                  type="text"
-                  value={customToolInput}
-                  onChange={(e) => setCustomToolInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddCustomTool()}
-                  placeholder="Add custom tool..."
-                  style={{
-                    flex: 1,
-                    padding: "6px 10px",
-                    borderRadius: "6px",
-                    border: `1px solid ${theme.border}`,
-                    backgroundColor: theme.background,
-                    color: theme.text,
-                    fontSize: "13px",
-                  }}
-                />
-                <button
-                  onClick={handleAddCustomTool}
-                  disabled={!customToolInput.trim()}
-                  style={{
-                    padding: "6px 14px",
-                    borderRadius: "6px",
-                    border: "none",
-                    backgroundColor: customToolInput.trim() ? theme.primary : theme.border,
-                    color: "white",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: customToolInput.trim() ? "pointer" : "not-allowed",
-                  }}
-                >
-                  Add
-                </button>
-              </div>
               </div>
             );
           })()}
@@ -1647,7 +1488,7 @@ export const Skills = ({
                   >
                     {formatModifier(
                       (modifiers(character)[selectedAbility] || 0) +
-                        (character?.proficiencyBonus || 0)
+                        (character?.proficiencyBonus || 0),
                     )}
                   </span>
                 </div>
@@ -1658,31 +1499,9 @@ export const Skills = ({
               style={{
                 display: "flex",
                 gap: "12px",
-                justifyContent: "space-between",
-                alignItems: "center",
+                justifyContent: "flex-end",
               }}
             >
-              {(selectedToolSource === "Character" || selectedToolSource === "Subclass") && (
-                <button
-                  onClick={() => {
-                    handleRemoveCustomTool(selectedTool, selectedToolSource);
-                    setShowToolModal(false);
-                  }}
-                  style={{
-                    backgroundColor: "transparent",
-                    color: theme.error || "#ef4444",
-                    border: `1px solid ${theme.error || "#ef4444"}`,
-                    borderRadius: "6px",
-                    padding: "8px 16px",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                  }}
-                >
-                  Delete Tool
-                </button>
-              )}
-              <div style={{ display: "flex", gap: "12px", marginLeft: "auto" }}>
               <button
                 onClick={() => setShowToolModal(false)}
                 style={{
@@ -1732,7 +1551,6 @@ export const Skills = ({
               >
                 {isRolling ? "Rolling..." : "Roll Check"}
               </button>
-              </div>
             </div>
           </div>
         </div>
