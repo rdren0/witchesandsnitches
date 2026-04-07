@@ -1117,7 +1117,7 @@ const AdminDowntimeReviewForm = React.memo(
         // If admin explicitly overrides a partial sheet, save as npc_override
         if (reviewStatus === "partial" && overridePartial) {
           finalReviewStatus = "npc_override";
-        } else if (reviewStatus === "success" || reviewStatus === "failure") {
+        } else if (reviewStatus === "success") {
           const relationships = downtimeSheet.relationships || [];
           let hasIncompleteNpc = false;
           for (let i = 0; i < relationships.length; i++) {
