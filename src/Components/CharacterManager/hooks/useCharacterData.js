@@ -16,7 +16,7 @@ export const useCharacterData = (
   characterId = null,
   userId = null,
   adminMode = false,
-  isUserAdmin = false
+  isUserAdmin = false,
 ) => {
   const [character, setCharacter] = useState(DEFAULT_CHARACTER);
   const [originalCharacter, setOriginalCharacter] = useState(DEFAULT_CHARACTER);
@@ -29,9 +29,11 @@ export const useCharacterData = (
   const loadCharacter = useCallback(async () => {
     if (!characterId) return;
 
-    if (!userId && !(adminMode && isUserAdmin)) {
+    if (adminMode && !isUserAdmin) return;
+
+    if (!userId && !isUserAdmin) {
       console.warn(
-        "Cannot load character: userId is undefined and not in admin mode"
+        "Cannot load character: userId is undefined and not in admin mode",
       );
       return;
     }
@@ -43,13 +45,12 @@ export const useCharacterData = (
       let loadedCharacter;
 
       if (adminMode && isUserAdmin) {
-        loadedCharacter = await characterService.getCharacterByIdAdmin(
-          characterId
-        );
+        loadedCharacter =
+          await characterService.getCharacterByIdAdmin(characterId);
       } else if (userId) {
         loadedCharacter = await characterService.getCharacterById(
           characterId,
-          userId
+          userId,
         );
       } else {
         throw new Error("Cannot load character: missing userId");
@@ -166,7 +167,7 @@ export const useCharacterData = (
       };
 
       const characterToSave = transformCharacterForSave(
-        characterWithFinalScores
+        characterWithFinalScores,
       );
 
       characterToSave.discord_user_id = effectiveUserId;
@@ -179,19 +180,19 @@ export const useCharacterData = (
         if (adminMode && isUserAdmin) {
           result = await characterService.updateCharacterAsAdmin(
             character.id,
-            characterToSave
+            characterToSave,
           );
         } else {
           result = await characterService.updateCharacter(
             character.id,
             characterToSave,
-            effectiveUserId
+            effectiveUserId,
           );
         }
       } else {
         result = await characterService.saveCharacter(
           characterToSave,
-          effectiveUserId
+          effectiveUserId,
         );
       }
 

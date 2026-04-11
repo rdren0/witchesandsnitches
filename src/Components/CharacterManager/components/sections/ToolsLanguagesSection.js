@@ -99,9 +99,10 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
       rawToolProficiencies.filter((t) => t.startsWith("!")).map((t) => t.slice(1))
     );
     const characterTools = rawToolProficiencies.filter((t) => !t.startsWith("!"));
-    const filteredSubclassTools = subclassTools.filter((t) => !excludedTools.has(t));
-    const filteredBackgroundTools = backgroundTools.filter((t) => !excludedTools.has(t));
-    const filteredFeatTools = featTools.filter((t) => !excludedTools.has(t));
+    const subclassChoiceGrants = subclassTools.filter((t) => t && typeof t === "object" && t.type === "choice");
+    const filteredSubclassTools = subclassTools.filter((t) => typeof t === "string" && !excludedTools.has(t));
+    const filteredBackgroundTools = backgroundTools.filter((t) => typeof t === "string" && !excludedTools.has(t));
+    const filteredFeatTools = featTools.filter((t) => typeof t === "string" && !excludedTools.has(t));
 
     const automaticTools = [...filteredBackgroundTools, ...filteredSubclassTools, ...filteredFeatTools];
 
@@ -113,6 +114,7 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
       excluded: excludedTools,
       automatic: [...new Set(automaticTools)],
       all: [...new Set([...automaticTools, ...characterTools])],
+      choiceGrants: subclassChoiceGrants,
     };
   };
 
