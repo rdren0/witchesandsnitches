@@ -1,61 +1,46 @@
 export const gameSessionOptions = [
   "One-Shot",
-  "Sunday - Knights",
-  "Sunday - Haunting",
   "Monday - Haunting",
-  "Tuesday - Knights",
   "Tuesday - Haunting",
-  "Wednesday - Haunting",
-  "Thursday - Knights",
-  "Thursday - Jaguaras",
-  "Friday - Knights",
+  "Thursday - Haunting",
   "Friday - Haunting",
-  "Saturday - Haunting",
-  "Saturday - Knights AM",
-  "Saturday - Knights PM",
+  "Wednesday - Knights",
+  "Friday - Knights",
+  "Saturday - Knights Morning",
+  "Saturday - Knights Night",
   "DEVELOPMENT",
 ];
 
 export const gameSessionGroups = {
   haunting: [
-    "Sunday - Haunting",
     "Monday - Haunting",
     "Tuesday - Haunting",
-    "Wednesday - Haunting",
+    "Thursday - Haunting",
     "Friday - Haunting",
-    "Saturday - Haunting",
   ],
   knights: [
-    "Sunday - Knights",
-    "Tuesday - Knights",
-    "Thursday - Knights",
+    "Wednesday - Knights",
     "Friday - Knights",
-    "Saturday - Knights AM",
-    "Saturday - Knights PM",
+    "Saturday - Knights Morning",
+    "Saturday - Knights Night",
   ],
-  other: ["One-Shot", "Thursday - Jaguaras"],
+  other: ["One-Shot"],
   development: ["DEVELOPMENT"],
 };
 
 export const DISCORD_WEBHOOKS = {
   "One-Shot": process.env.REACT_APP_DISCORD_WEBHOOK_ONE_SHOT,
-  "Sunday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_SUNDAY_KNIGHTS,
-  "Sunday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_SUNDAY_HAUNTING,
   "Monday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_MONDAY_HAUNTING,
-  "Tuesday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_TUESDAY_KNIGHTS,
   "Tuesday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_TUESDAY_HAUNTING,
-  "Wednesday - Haunting":
+  "Thursday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
-  "Thursday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_KNIGHTS,
-  "Thursday - Jaguaras":
-    process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_JAGUARAS,
-  "Friday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_KNIGHTS,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
-  "Saturday - Haunting":
-    process.env.REACT_APP_DISCORD_WEBHOOK_SATURDAY_HAUNTING,
-  "Saturday - Knights AM":
+  "Wednesday - Knights":
+    process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_KNIGHTS,
+  "Friday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_KNIGHTS,
+  "Saturday - Knights Morning":
     process.env.REACT_APP_DISCORD_WEBHOOK_SATURDAY_KNIGHTS_AM,
-  "Saturday - Knights PM":
+  "Saturday - Knights Night":
     process.env.REACT_APP_DISCORD_WEBHOOK_SATURDAY_KNIGHTS_PM,
   DEVELOPMENT: process.env.REACT_APP_DISCORD_WEBHOOK_DEVELOPMENT,
   FALLBACK: process.env.REACT_APP_DISCORD_WEBHOOK_FALLBACK,
