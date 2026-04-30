@@ -6,6 +6,7 @@ export const gameSessionOptions = [
   "Friday - Haunting",
   "Wednesday - Knights",
   "Friday - Knights",
+  "Saturday - Haunting",
   "Saturday - Knights Morning",
   "Saturday - Knights Night",
   "DEVELOPMENT",
@@ -17,6 +18,7 @@ export const gameSessionGroups = {
     "Tuesday - Haunting",
     "Thursday - Haunting",
     "Friday - Haunting",
+    "Saturday - Haunting",
   ],
   knights: [
     "Wednesday - Knights",
@@ -35,6 +37,8 @@ export const DISCORD_WEBHOOKS = {
   "Thursday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
+  "Saturday - Haunting":
+    process.env.REACT_APP_DISCORD_WEBHOOK_SATURDAY_HAUNTING,
   "Wednesday - Knights":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_KNIGHTS,
   "Friday - Knights": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_KNIGHTS,
@@ -48,7 +52,7 @@ export const DISCORD_WEBHOOKS = {
 
 export const getDiscordWebhook = (gameSession) =>
   gameSession
-    ? DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK
+    ? (DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK)
     : DISCORD_WEBHOOKS.FALLBACK;
 
 export const LOCAL_HOST = "http://localhost:3000";
