@@ -12,7 +12,7 @@ export const sendDiscordRollWebhook = async ({
   additionalData = {},
 }) => {
   try {
-    const discordWebhookUrl = getDiscordWebhook(character?.gameSession);
+    const discordWebhookUrl = getDiscordWebhook(character?.game_session || character?.gameSession);
 
     if (!discordWebhookUrl) {
       console.error("Discord webhook URL not configured");
