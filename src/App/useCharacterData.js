@@ -43,7 +43,10 @@ export function useCharacterData({
       debounce((character) => {
         setSelectedCharacter(character);
         if (character) {
-          sessionStorage.setItem("selectedCharacterId", character.id.toString());
+          sessionStorage.setItem(
+            "selectedCharacterId",
+            character.id.toString(),
+          );
         } else {
           sessionStorage.removeItem("selectedCharacterId");
         }
@@ -158,7 +161,11 @@ export function useCharacterData({
       const transformedCharacters = charactersData.map((char) => ({
         id: char.id,
         abilityScores: char.ability_scores,
+        baseAbilityScores: char.base_ability_scores || null,
         asiChoices: char.asi_choices || {},
+        additionalASI: char.additional_asi || [],
+        additionalFeats: char.additional_feats || [],
+        featChoices: char.feat_choices || {},
         background: char.background,
         backgroundSkills: char.background_skills || [],
         heritageChoices: char.heritage_choices || {},
