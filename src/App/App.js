@@ -43,6 +43,7 @@ import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import DisplayNamePrompt from "./DisplayNamePrompt";
 import { RULE_BOOK_URL } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
+import RollHistoryDrawer from "../Components/FlexibleDiceRoller/RollHistoryDrawer";
 import "./App.css";
 
 const ProtectedRoute = ({ user, children, fallback }) => {
@@ -456,6 +457,7 @@ function AppContent() {
           onSkip={handleNamePromptSkip}
           isLoading={isSubmittingName}
         />
+        <RollHistoryDrawer character={selectedCharacter} />
       </div>
       <footer
         style={{

@@ -6,7 +6,7 @@ import { calculateToughFeatHPBonus } from "../../utils/utils";
 import { hpData } from "../../../../SharedData/data";
 import { calculateFinalAbilityScores } from "../../utils/characterUtils";
 
-const HitPointsSection = ({ character, onChange, disabled = false }) => {
+const HitPointsSection = ({ character, onChange, disabled = false, onNavigate }) => {
   const { theme } = useTheme();
   const styles = createBackgroundStyles(theme);
   const [isHpManualMode, setIsHpManualMode] = useState(false);
@@ -318,17 +318,52 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     character.abilityScores?.constitution !== null &&
     character.abilityScores?.constitution !== undefined;
 
+  const linkStyle = {
+    background: "none",
+    border: "none",
+    padding: 0,
+    color: theme.warning,
+    textDecoration: "underline",
+    cursor: "pointer",
+    fontSize: "inherit",
+    fontWeight: "700",
+  };
+
   if (!hasCastingStyle || !hasConstitution) {
     return (
       <div style={hpStyles.container}>
         <div style={hpStyles.prerequisiteWarning}>
           <h3 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>Hit Points</h3>
           <p style={{ margin: 0 }}>
-            {!hasCastingStyle && !hasConstitution
-              ? "Please select a Casting Style and set your Constitution score first"
-              : !hasCastingStyle
-              ? "Please select a Casting Style first"
-              : "Please set your Constitution score first"}
+            {!hasCastingStyle && !hasConstitution ? (
+              <>
+                Please select a{" "}
+                <button style={linkStyle} onClick={() => onNavigate?.("casting-style-choices")}>
+                  Casting Style
+                </button>{" "}
+                and set your{" "}
+                <button style={linkStyle} onClick={() => onNavigate?.("ability-scores")}>
+                  Constitution score
+                </button>{" "}
+                first
+              </>
+            ) : !hasCastingStyle ? (
+              <>
+                Please select a{" "}
+                <button style={linkStyle} onClick={() => onNavigate?.("casting-style-choices")}>
+                  Casting Style
+                </button>{" "}
+                first
+              </>
+            ) : (
+              <>
+                Please set your{" "}
+                <button style={linkStyle} onClick={() => onNavigate?.("ability-scores")}>
+                  Constitution score
+                </button>{" "}
+                first
+              </>
+            )}
           </p>
         </div>
       </div>

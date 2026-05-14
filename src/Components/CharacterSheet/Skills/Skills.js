@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 import {
   ChevronDown,
@@ -65,10 +65,13 @@ export const Skills = ({
   const [pendingMagicalTheoryData, setPendingMagicalTheoryData] =
     useState(null);
   const [hoveredSkill, setHoveredSkill] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
+  const contextMenuRef = useRef(null);
   const [showToolModal, setShowToolModal] = useState(false);
   const [selectedTool, setSelectedTool] = useState(null);
   const [selectedToolSource, setSelectedToolSource] = useState(null);
   const [selectedAbility, setSelectedAbility] = useState("strength");
+  const [toolRollType, setToolRollType] = useState("normal");
 
   const passivePerception = calculatePassivePerception(character);
   const passiveInvestigation = calculatePassiveInvestigation(character);
@@ -372,7 +375,19 @@ export const Skills = ({
     }
   };
 
-  const handleSkillRoll = async (skill, abilityMod) => {
+  useEffect(() => {
+    if (!contextMenu) return;
+    const dismiss = () => setContextMenu(null);
+    const onKey = (e) => e.key === "Escape" && dismiss();
+    document.addEventListener("mousedown", dismiss);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", dismiss);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [contextMenu]);
+
+  const handleSkillRoll = async (skill, abilityMod, rollType = "normal") => {
     if (
       skill.name === "magicalTheory" ||
       skill.displayName === "Magical Theory"
@@ -386,6 +401,7 @@ export const Skills = ({
         isRolling,
         setIsRolling,
         character,
+        rollType,
       });
     }
   };
@@ -885,8 +901,10 @@ export const Skills = ({
       isRolling,
       setIsRolling,
       character,
+      rollType: toolRollType,
     });
 
+    setToolRollType("normal");
     setShowToolModal(false);
   };
 
@@ -895,6 +913,9 @@ export const Skills = ({
       <div style={skillStyles.container}>
         <div style={skillStyles.header}>
           <h2 style={skillStyles.title}>Skills & Tool Proficiencies</h2>
+          <p style={{ margin: 0, fontSize: "11px", color: theme.textSecondary, opacity: 0.75 }}>
+            Right-click any skill to roll with advantage or disadvantage
+          </p>
         </div>
         <div style={skillStyles.legendItems}>
           <div style={skillStyles.legendItem}>
@@ -1059,6 +1080,10 @@ export const Skills = ({
                       <td style={skillStyles.cell}>
                         <button
                           onClick={() => handleSkillRoll(skill, abilityMod)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setContextMenu({ x: e.clientX, y: e.clientY, skill, abilityMod });
+                          }}
                           disabled={isRolling}
                           onMouseEnter={() => setHoveredSkill(skill.name)}
                           onMouseLeave={() => setHoveredSkill(null)}
@@ -1495,6 +1520,38 @@ export const Skills = ({
               </div>
             </div>
 
+            {/* Roll type toggle */}
+            <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+              {[
+                { type: "normal", label: "Normal", color: theme.textSecondary },
+                { type: "advantage", label: "Advantage", color: "#10b981" },
+                { type: "disadvantage", label: "Disadvantage", color: "#ef4444" },
+              ].map(({ type, label, color }) => {
+                const isActive = toolRollType === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setToolRollType(type)}
+                    style={{
+                      flex: 1,
+                      padding: "6px 0",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      letterSpacing: "0.04em",
+                      borderRadius: "6px",
+                      border: `1px solid ${isActive ? color : theme.border}`,
+                      backgroundColor: isActive ? color + "20" : "transparent",
+                      color: isActive ? color : theme.textSecondary,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
             <div
               style={{
                 display: "flex",
@@ -1503,7 +1560,7 @@ export const Skills = ({
               }}
             >
               <button
-                onClick={() => setShowToolModal(false)}
+                onClick={() => { setToolRollType("normal"); setShowToolModal(false); }}
                 style={{
                   backgroundColor: "transparent",
                   color: theme.textSecondary,
@@ -1553,6 +1610,56 @@ export const Skills = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 9999,
+            backgroundColor: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
+            overflow: "hidden",
+            minWidth: "160px",
+          }}
+        >
+          {[
+            { type: "normal",       label: "Normal Roll",  color: theme.text },
+            { type: "advantage",    label: "Advantage",    color: "#10b981" },
+            { type: "disadvantage", label: "Disadvantage", color: "#ef4444" },
+          ].map(({ type, label, color }) => (
+            <button
+              key={type}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                handleSkillRoll(contextMenu.skill, contextMenu.abilityMod, type);
+                setContextMenu(null);
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px 16px",
+                background: "none",
+                border: "none",
+                borderBottom: type !== "disadvantage" ? `1px solid ${theme.border}` : "none",
+                cursor: "pointer",
+                textAlign: "left",
+                fontSize: "13px",
+                fontWeight: "600",
+                color,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       )}
     </>
