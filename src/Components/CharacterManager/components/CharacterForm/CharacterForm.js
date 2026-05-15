@@ -36,10 +36,10 @@ const WIZARD_STEPS = [
   { label: "House", sections: ["house"] },
   { label: "Subclass", sections: ["subclass"] },
   { label: "Background", sections: ["background"] },
-  { label: "Abilities", sections: ["ability-scores", "level1-choice", "asi-feats", "additional-feats-asi"] },
+  { label: "Abilities", sections: ["ability-scores", "hit-points", "level1-choice", "asi-feats", "additional-feats-asi"] },
   { label: "Metamagic", sections: ["metamagic"] },
   { label: "Proficiencies", sections: ["skills", "tools"] },
-  { label: "Stats", sections: ["hit-points", "magic-modifiers", "notes"] },
+  { label: "Misc", sections: ["magic-modifiers", "notes"] },
 ];
 
 const SECTION_TO_STEP = Object.fromEntries(
@@ -288,38 +288,33 @@ const CharacterForm = ({
         </div>
 
         {/* Row 2: step indicator */}
-        <div style={{ display: "flex", gap: "4px", overflowX: "auto" }}>
+        <div style={{ display: "flex", borderBottom: `2px solid ${theme.border}`, overflowX: "auto" }}>
           {WIZARD_STEPS.map((step, index) => {
             const isActive = currentStep === index;
-            const isPast = mode === "create" && index < currentStep;
             return (
               <button
                 key={index}
                 onClick={() => navigateToStep(index)}
                 style={{
                   flex: "1 0 auto",
-                  minWidth: "60px",
-                  padding: "6px 8px",
-                  backgroundColor: isActive ? theme.text : "transparent",
-                  border: `2px solid ${
-                    isActive
-                      ? theme.text
-                      : isPast
-                      ? theme.success || "#22c55e"
-                      : theme.border
-                  }`,
-                  borderRadius: "6px",
-                  color: isActive ? theme.surface : theme.text,
+                  padding: "8px 12px",
+                  backgroundColor: isActive ? theme.background : "transparent",
+                  border: "none",
+                  borderRadius: "8px 8px 0 0",
+                  borderBottom: isActive
+                    ? `2px solid ${theme.primary}`
+                    : `2px solid transparent`,
+                  color: isActive ? theme.text : theme.textSecondary,
                   cursor: "pointer",
                   fontSize: "11px",
-                  fontWeight: isActive ? "700" : "400",
+                  fontWeight: isActive ? "600" : "500",
                   textAlign: "center",
                   lineHeight: "1.3",
                   transition: "all 0.2s ease",
                 }}
               >
                 <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "2px" }}>
-                  {isPast ? "✓" : index + 1}
+                  {index + 1}
                 </div>
                 {step.label}
               </button>
@@ -444,6 +439,14 @@ const CharacterForm = ({
           </FormSection>
 
           <FormSection
+            title="Hit Points"
+            subtitle="Calculate your character's hit points based on casting style and constitution"
+            id="section-hit-points"
+          >
+            <HitPointsSection character={character} onChange={updateCharacter} onNavigate={navigateToSection} />
+          </FormSection>
+
+          <FormSection
             title="Level 1 Choice"
             subtitle="Choose either an Innate Heritage or a Standard Feat"
             id="section-level1-choice"
@@ -533,14 +536,6 @@ const CharacterForm = ({
       {/* Step 8: Stats */}
       {currentStep === 7 && (
         <>
-          <FormSection
-            title="Hit Points"
-            subtitle="Calculate your character's hit points based on casting style and constitution"
-            id="section-hit-points"
-          >
-            <HitPointsSection character={character} onChange={updateCharacter} onNavigate={navigateToSection} />
-          </FormSection>
-
           <FormSection
             title="Magic Modifiers & Wand"
             subtitle="Wand bonuses and character wand information"
