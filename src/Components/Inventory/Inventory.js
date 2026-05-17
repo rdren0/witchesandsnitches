@@ -13,6 +13,9 @@ import {
   ChevronDown,
   ChevronUp,
   Gift,
+  Zap,
+  Moon,
+  Coffee,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getInventoryStyles } from "./styles";
@@ -21,7 +24,13 @@ import Bank from "../Bank/Bank";
 import OwlMail from "./OwlMail";
 import { ReactComponent as OwlIcon } from "../../Images/owl.svg";
 
-const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
+const Inventory = ({
+  user,
+  selectedCharacter,
+  supabase,
+  adminMode,
+  restKey,
+}) => {
   const { theme } = useTheme();
   const styles = getInventoryStyles(theme);
 
@@ -54,6 +63,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     category: "General",
     attunement_required: false,
     is_attuned: false,
+    recharge_type: null,
+    max_uses: "",
   });
 
   const categories = [
@@ -103,7 +114,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [fetchItems]);
+  }, [fetchItems, restKey]);
 
   const fetchSessionCharacters = useCallback(async () => {
     const gameSession =
@@ -212,7 +223,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     if (expandedStack) {
       const stackExists = items.some(
         (item) =>
-          `${item.category}-${item.name.toLowerCase().trim()}` === expandedStack
+          `${item.category}-${item.name.toLowerCase().trim()}` ===
+          expandedStack,
       );
       if (!stackExists) {
         setExpandedStack(null);
@@ -239,6 +251,10 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     setError(null);
 
     try {
+      const maxUses =
+        formData.recharge_type && formData.max_uses
+          ? parseInt(formData.max_uses)
+          : null;
       const newItem = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
@@ -246,6 +262,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         value: formData.value.trim() || null,
         category: formData.category,
         attunement_required: formData.attunement_required,
+        recharge_type: formData.recharge_type || null,
+        max_uses: maxUses,
+        current_uses: maxUses,
         character_id: selectedCharacter.id,
 
         discord_user_id: adminMode
@@ -269,6 +288,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         attunement_required: false,
         value: "",
         category: "General",
+        recharge_type: null,
+        max_uses: "",
       });
       setShowAddForm(false);
     } catch (err) {
@@ -305,7 +326,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         setError("Failed to delete item. Please try again.");
       }
     },
-    [supabase]
+    [supabase],
   );
 
   const startEdit = useCallback((item) => {
@@ -318,6 +339,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       category: item.category,
       attunement_required: item.attunement_required,
       is_attuned: item.is_attuned || false,
+      recharge_type: item.recharge_type || null,
+      max_uses: item.max_uses != null ? String(item.max_uses) : "",
     });
   }, []);
 
@@ -328,6 +351,10 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     setError(null);
 
     try {
+      const editMaxUses =
+        formData.recharge_type && formData.max_uses
+          ? parseInt(formData.max_uses)
+          : null;
       const updatedItem = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
@@ -336,6 +363,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         category: formData.category,
         attunement_required: formData.attunement_required,
         is_attuned: formData.is_attuned || false,
+        recharge_type: formData.recharge_type || null,
+        max_uses: editMaxUses,
+        current_uses: editMaxUses,
       };
 
       const { data, error: updateError } = await supabase
@@ -348,7 +378,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       if (updateError) throw updateError;
 
       setItems((prev) =>
-        prev.map((item) => (item.id === editingId ? data : item))
+        prev.map((item) => (item.id === editingId ? data : item)),
       );
 
       setEditingId(null);
@@ -360,6 +390,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         value: "",
         category: "General",
         attunement_required: false,
+        recharge_type: null,
+        max_uses: "",
       });
     } catch (err) {
       console.error("Error updating item:", err);
@@ -378,10 +410,50 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       value: "",
       category: "General",
       attunement_required: false,
+      recharge_type: null,
+      max_uses: "",
     });
     setShowAddForm(false);
     setError(null);
   }, []);
+
+  const spendCharge = useCallback(
+    async (item) => {
+      if (!supabase || !item.current_uses || item.current_uses <= 0) return;
+      try {
+        const { data, error: updateError } = await supabase
+          .from("inventory_items")
+          .update({ current_uses: item.current_uses - 1 })
+          .eq("id", item.id)
+          .select()
+          .single();
+        if (updateError) throw updateError;
+        setItems((prev) => prev.map((i) => (i.id === item.id ? data : i)));
+      } catch (err) {
+        console.error("Error using item charge:", err);
+      }
+    },
+    [supabase],
+  );
+
+  const resetUses = useCallback(
+    async (item) => {
+      if (!supabase || !item.max_uses) return;
+      try {
+        const { data, error: updateError } = await supabase
+          .from("inventory_items")
+          .update({ current_uses: item.max_uses })
+          .eq("id", item.id)
+          .select()
+          .single();
+        if (updateError) throw updateError;
+        setItems((prev) => prev.map((i) => (i.id === item.id ? data : i)));
+      } catch (err) {
+        console.error("Error resetting item uses:", err);
+      }
+    },
+    [supabase],
+  );
 
   const toggleAttunement = useCallback(
     async (item) => {
@@ -405,7 +477,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         setError("Failed to toggle attunement. Please try again.");
       }
     },
-    [supabase]
+    [supabase],
   );
 
   const sendItem = useCallback(async () => {
@@ -470,8 +542,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
           prev.map((i) =>
             i.id === selectedItem.id
               ? { ...i, quantity: i.quantity - quantityToSend }
-              : i
-          )
+              : i,
+          ),
         );
       }
 
@@ -503,7 +575,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
 
         return matchesSearch && matchesAttunement;
       }),
-    [items, searchTerm, filterAttunement]
+    [items, searchTerm, filterAttunement],
   );
 
   const groupedItems = useMemo(
@@ -515,7 +587,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
         acc[item.category].push(item);
         return acc;
       }, {}),
-    [filteredItems]
+    [filteredItems],
   );
 
   const stackedItems = useMemo(() => {
@@ -550,7 +622,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
       Object.values(itemStacks).forEach((stack) => {
         if (stack.attunement_required && stack.items.length > 0) {
           stack.all_items_attuned = stack.items.every(
-            (item) => item.is_attuned
+            (item) => item.is_attuned,
           );
         }
       });
@@ -565,7 +637,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
     const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
     const attunementItems = items.filter((item) => item.is_attuned).length;
     const requiresAttunementItems = items.filter(
-      (item) => item.attunement_required
+      (item) => item.attunement_required,
     ).length;
     const categories = new Set(items.map((item) => item.category)).size;
 
@@ -950,6 +1022,130 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                     Check this if the item requires magical attunement to use
                   </small>
                 </div>
+
+                {!formData.recharge_type ? (
+                  <div style={styles.formField}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          recharge_type: "long_rest",
+                          max_uses: "",
+                        }))
+                      }
+                      disabled={isSaving}
+                      style={{
+                        background: "none",
+                        border: `1px dashed ${theme.border}`,
+                        borderRadius: "8px",
+                        padding: "6px 12px",
+                        color: theme.textSecondary,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <Zap size={13} />
+                      Add use limit
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      ...styles.formField,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      padding: "10px 12px",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: "8px",
+                      backgroundColor: theme.surface,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <label
+                        style={{
+                          ...styles.label,
+                          margin: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <Zap size={13} />
+                        Limited Uses
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            recharge_type: null,
+                            max_uses: "",
+                          }))
+                        }
+                        disabled={isSaving}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: theme.textSecondary,
+                          padding: "2px",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                        title="Remove use limit"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <select
+                        value={formData.recharge_type}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            recharge_type: e.target.value,
+                          }))
+                        }
+                        style={{ ...styles.select, flex: 1 }}
+                        disabled={isSaving}
+                      >
+                        <option value="short_rest">Short Rest</option>
+                        <option value="long_rest">Long Rest</option>
+                      </select>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.max_uses}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            max_uses: e.target.value,
+                          }))
+                        }
+                        placeholder="Uses"
+                        style={{ ...styles.input, width: "80px" }}
+                        disabled={isSaving}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = theme.primary;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = theme.border;
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={styles.formActions}>
@@ -988,6 +1184,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                       value: "",
                       category: "General",
                       attunement_required: false,
+                      recharge_type: null,
+                      max_uses: "",
                     });
                   }}
                   style={styles.cancelButton}
@@ -1204,7 +1402,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                         ...formData,
                                                         quantity:
                                                           parseInt(
-                                                            e.target.value
+                                                            e.target.value,
                                                           ) || 0,
                                                       })
                                                     }
@@ -1342,6 +1540,156 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                 </div>
                                               )}
 
+                                              {!formData.recharge_type ? (
+                                                <div style={styles.formGroup}>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setFormData({
+                                                        ...formData,
+                                                        recharge_type:
+                                                          "long_rest",
+                                                        max_uses: "",
+                                                      })
+                                                    }
+                                                    disabled={isSaving}
+                                                    style={{
+                                                      background: "none",
+                                                      border: `1px dashed ${theme.border}`,
+                                                      borderRadius: "8px",
+                                                      padding: "6px 12px",
+                                                      color:
+                                                        theme.textSecondary,
+                                                      fontSize: "12px",
+                                                      cursor: "pointer",
+                                                      display: "inline-flex",
+                                                      alignItems: "center",
+                                                      gap: "6px",
+                                                    }}
+                                                  >
+                                                    <Zap size={13} />
+                                                    Add use limit
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <div
+                                                  style={{
+                                                    ...styles.formGroup,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "8px",
+                                                    padding: "10px 12px",
+                                                    border: `1px solid ${theme.border}`,
+                                                    borderRadius: "8px",
+                                                    backgroundColor:
+                                                      theme.surface,
+                                                  }}
+                                                >
+                                                  <div
+                                                    style={{
+                                                      display: "flex",
+                                                      alignItems: "center",
+                                                      justifyContent:
+                                                        "space-between",
+                                                    }}
+                                                  >
+                                                    <label
+                                                      style={{
+                                                        ...styles.label,
+                                                        margin: 0,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "6px",
+                                                      }}
+                                                    >
+                                                      <Zap size={13} />
+                                                      Limited Uses
+                                                    </label>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        setFormData({
+                                                          ...formData,
+                                                          recharge_type: null,
+                                                          max_uses: "",
+                                                        })
+                                                      }
+                                                      disabled={isSaving}
+                                                      style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        cursor: "pointer",
+                                                        color:
+                                                          theme.textSecondary,
+                                                        padding: "2px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                      }}
+                                                      title="Remove use limit"
+                                                    >
+                                                      <X size={14} />
+                                                    </button>
+                                                  </div>
+                                                  <div
+                                                    style={{
+                                                      display: "flex",
+                                                      gap: "8px",
+                                                    }}
+                                                  >
+                                                    <select
+                                                      value={
+                                                        formData.recharge_type
+                                                      }
+                                                      onChange={(e) =>
+                                                        setFormData({
+                                                          ...formData,
+                                                          recharge_type:
+                                                            e.target.value,
+                                                        })
+                                                      }
+                                                      style={{
+                                                        ...styles.select,
+                                                        flex: 1,
+                                                      }}
+                                                      disabled={isSaving}
+                                                    >
+                                                      <option value="short_rest">
+                                                        Short Rest
+                                                      </option>
+                                                      <option value="long_rest">
+                                                        Long Rest
+                                                      </option>
+                                                    </select>
+                                                    <input
+                                                      type="number"
+                                                      min="1"
+                                                      value={formData.max_uses}
+                                                      onChange={(e) =>
+                                                        setFormData({
+                                                          ...formData,
+                                                          max_uses:
+                                                            e.target.value,
+                                                        })
+                                                      }
+                                                      placeholder="Uses"
+                                                      style={{
+                                                        ...styles.input,
+                                                        width: "80px",
+                                                      }}
+                                                      disabled={isSaving}
+                                                      onFocus={(e) => {
+                                                        e.target.style.borderColor =
+                                                          theme.primary;
+                                                      }}
+                                                      onBlur={(e) => {
+                                                        e.target.style.borderColor =
+                                                          theme.border;
+                                                      }}
+                                                    />
+                                                  </div>
+                                                </div>
+                                              )}
+
                                               <div style={styles.formActions}>
                                                 <button
                                                   onClick={saveEdit}
@@ -1464,6 +1812,101 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                       : "Not Attuned"}
                                                   </button>
                                                 )}
+                                                {item.recharge_type &&
+                                                  item.max_uses && (
+                                                    <div
+                                                      style={{
+                                                        marginTop: "8px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "6px",
+                                                        flexWrap: "wrap",
+                                                      }}
+                                                    >
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          spendCharge(item);
+                                                        }}
+                                                        disabled={
+                                                          !item.current_uses ||
+                                                          item.current_uses <= 0
+                                                        }
+                                                        style={{
+                                                          padding: "4px 10px",
+                                                          backgroundColor:
+                                                            item.current_uses >
+                                                            0
+                                                              ? theme.primary
+                                                              : theme.background,
+                                                          color:
+                                                            item.current_uses >
+                                                            0
+                                                              ? "white"
+                                                              : theme.textSecondary,
+                                                          border: `2px solid ${
+                                                            item.current_uses >
+                                                            0
+                                                              ? theme.primary
+                                                              : theme.border
+                                                          }`,
+                                                          borderRadius: "12px",
+                                                          fontSize: "11px",
+                                                          fontWeight: "600",
+                                                          display:
+                                                            "inline-flex",
+                                                          alignItems: "center",
+                                                          gap: "4px",
+                                                          cursor:
+                                                            item.current_uses >
+                                                            0
+                                                              ? "pointer"
+                                                              : "not-allowed",
+                                                          transition:
+                                                            "all 0.2s ease",
+                                                          opacity:
+                                                            item.current_uses >
+                                                            0
+                                                              ? 1
+                                                              : 0.6,
+                                                        }}
+                                                        title={
+                                                          item.current_uses > 0
+                                                            ? "Use this ability"
+                                                            : "No uses remaining"
+                                                        }
+                                                      >
+                                                        <Zap size={11} />
+                                                        Use (
+                                                        {item.current_uses ??
+                                                          item.max_uses}
+                                                        /{item.max_uses})
+                                                      </button>
+                                                      <span
+                                                        style={{
+                                                          fontSize: "10px",
+                                                          color:
+                                                            theme.textSecondary,
+                                                          display: "flex",
+                                                          alignItems: "center",
+                                                          gap: "3px",
+                                                        }}
+                                                      >
+                                                        {item.recharge_type ===
+                                                        "short_rest" ? (
+                                                          <>
+                                                            <Coffee size={10} />
+                                                            Short Rest
+                                                          </>
+                                                        ) : (
+                                                          <>
+                                                            <Moon size={10} />
+                                                            Long Rest
+                                                          </>
+                                                        )}
+                                                      </span>
+                                                    </div>
+                                                  )}
                                                 {item.description && (
                                                   <div
                                                     style={{
@@ -1535,153 +1978,278 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                       ))}
                                     </div>
                                   ) : (
-                                    <>
-                                      <div style={styles.itemHeader}>
-                                        <div>
-                                          <div style={styles.itemName}>
-                                            {stack.name}
-                                            {stack.attunement_required && (
-                                              <span
-                                                style={{
-                                                  ...styles.attunementBadge,
-                                                  backgroundColor:
-                                                    stack.all_items_attuned
-                                                      ? (theme.success ||
-                                                          "#10B981") + "20"
-                                                      : (theme.warning ||
-                                                          "#F59E0B") + "20",
-                                                  color: stack.all_items_attuned
-                                                    ? theme.success || "#10B981"
-                                                    : theme.warning ||
-                                                      "#F59E0B",
-                                                }}
-                                              >
-                                                {stack.all_items_attuned ? (
-                                                  <>
-                                                    <Check
-                                                      size={12}
-                                                      color={
-                                                        theme.success ||
-                                                        "#10B981"
-                                                      }
-                                                    />
-                                                    Attuned
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <Star
-                                                      size={12}
-                                                      color={theme.warning}
-                                                    />
-                                                    Requires Attunement
-                                                  </>
+                                    (() => {
+                                      const chargeItems = stack.items.filter(
+                                        (i) => i.recharge_type && i.max_uses,
+                                      );
+                                      const totalCurrentUses =
+                                        chargeItems.reduce(
+                                          (sum, i) =>
+                                            sum +
+                                            (i.current_uses ?? i.max_uses),
+                                          0,
+                                        );
+                                      const totalMaxUses = chargeItems.reduce(
+                                        (sum, i) => sum + i.max_uses,
+                                        0,
+                                      );
+                                      const stackRechargeType =
+                                        chargeItems[0]?.recharge_type;
+                                      const hasCharges = chargeItems.length > 0;
+                                      const firstUsableItem = chargeItems.find(
+                                        (i) =>
+                                          i.current_uses != null &&
+                                          i.current_uses > 0,
+                                      );
+
+                                      return (
+                                        <>
+                                          <div style={styles.itemHeader}>
+                                            <div
+                                              style={{ flex: 1, minWidth: 0 }}
+                                            >
+                                              <div style={styles.itemName}>
+                                                {stack.name}
+                                                {stack.attunement_required && (
+                                                  <span
+                                                    style={{
+                                                      ...styles.attunementBadge,
+                                                      backgroundColor:
+                                                        stack.all_items_attuned
+                                                          ? (theme.success ||
+                                                              "#10B981") + "20"
+                                                          : (theme.warning ||
+                                                              "#F59E0B") + "20",
+                                                      color:
+                                                        stack.all_items_attuned
+                                                          ? theme.success ||
+                                                            "#10B981"
+                                                          : theme.warning ||
+                                                            "#F59E0B",
+                                                    }}
+                                                  >
+                                                    {stack.all_items_attuned ? (
+                                                      <>
+                                                        <Check
+                                                          size={12}
+                                                          color={
+                                                            theme.success ||
+                                                            "#10B981"
+                                                          }
+                                                        />
+                                                        Attuned
+                                                      </>
+                                                    ) : (
+                                                      <>
+                                                        <Star
+                                                          size={12}
+                                                          color={theme.warning}
+                                                        />
+                                                        Requires Attunement
+                                                      </>
+                                                    )}
+                                                  </span>
                                                 )}
-                                              </span>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div style={styles.itemActions}>
-                                          {sessionCharacters.length > 0 && (
-                                            <button
-                                              onClick={() =>
-                                                setSendItemModal({
-                                                  stack,
-                                                  items: stack.items,
-                                                  selectedItem:
-                                                    stack.items.length === 1
-                                                      ? stack.items[0]
-                                                      : null,
-                                                  quantityToSend: 1,
-                                                })
-                                              }
-                                              disabled={
-                                                expandedStack ||
-                                                showAddForm ||
-                                                isSaving
-                                              }
-                                              style={{
-                                                ...styles.actionButton,
-                                                backgroundColor: theme.primary,
-                                                color: "white",
-                                                opacity:
+                                                {hasCharges && (
+                                                  <span
+                                                    style={{
+                                                      ...styles.attunementBadge,
+                                                      backgroundColor:
+                                                        totalCurrentUses > 0
+                                                          ? (theme.primary ||
+                                                              "#6366F1") + "20"
+                                                          : (theme.error ||
+                                                              "#EF4444") + "15",
+                                                      color:
+                                                        totalCurrentUses > 0
+                                                          ? theme.primary ||
+                                                            "#6366F1"
+                                                          : theme.error ||
+                                                            "#EF4444",
+                                                    }}
+                                                  >
+                                                    <Zap size={11} />
+                                                    {totalCurrentUses}/
+                                                    {totalMaxUses}{" "}
+                                                    {stackRechargeType ===
+                                                    "short_rest"
+                                                      ? "SR"
+                                                      : "LR"}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              {hasCharges && (
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (firstUsableItem)
+                                                      spendCharge(
+                                                        firstUsableItem,
+                                                      );
+                                                  }}
+                                                  disabled={
+                                                    !firstUsableItem ||
+                                                    expandedStack ||
+                                                    showAddForm ||
+                                                    isSaving
+                                                  }
+                                                  style={{
+                                                    marginTop: "6px",
+                                                    padding: "3px 10px",
+                                                    backgroundColor:
+                                                      firstUsableItem
+                                                        ? theme.primary
+                                                        : theme.background,
+                                                    color: firstUsableItem
+                                                      ? "white"
+                                                      : theme.textSecondary,
+                                                    border: `2px solid ${
+                                                      firstUsableItem
+                                                        ? theme.primary
+                                                        : theme.border
+                                                    }`,
+                                                    borderRadius: "12px",
+                                                    fontSize: "11px",
+                                                    fontWeight: "600",
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                    cursor: firstUsableItem
+                                                      ? "pointer"
+                                                      : "not-allowed",
+                                                    opacity:
+                                                      firstUsableItem &&
+                                                      !expandedStack &&
+                                                      !showAddForm &&
+                                                      !isSaving
+                                                        ? 1
+                                                        : 0.5,
+                                                    transition: "all 0.2s ease",
+                                                  }}
+                                                  title={
+                                                    firstUsableItem
+                                                      ? `Uses: (${totalCurrentUses} remaining)`
+                                                      : "No uses remaining — recharges on " +
+                                                        (stackRechargeType ===
+                                                        "short_rest"
+                                                          ? "short rest"
+                                                          : "long rest")
+                                                  }
+                                                >
+                                                  <Zap size={11} />
+                                                  Use
+                                                </button>
+                                              )}
+                                            </div>
+                                            <div style={styles.itemActions}>
+                                              {sessionCharacters.length > 0 && (
+                                                <button
+                                                  onClick={() =>
+                                                    setSendItemModal({
+                                                      stack,
+                                                      items: stack.items,
+                                                      selectedItem:
+                                                        stack.items.length === 1
+                                                          ? stack.items[0]
+                                                          : null,
+                                                      quantityToSend: 1,
+                                                    })
+                                                  }
+                                                  disabled={
+                                                    expandedStack ||
+                                                    showAddForm ||
+                                                    isSaving
+                                                  }
+                                                  style={{
+                                                    ...styles.actionButton,
+                                                    backgroundColor:
+                                                      theme.primary,
+                                                    color: "white",
+                                                    opacity:
+                                                      expandedStack ||
+                                                      showAddForm ||
+                                                      isSaving
+                                                        ? 0.5
+                                                        : 1,
+                                                  }}
+                                                  title="Send to another character"
+                                                >
+                                                  <Gift size={16} />
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => {
+                                                  setExpandedStack(
+                                                    stack.stackKey,
+                                                  );
+                                                  startEdit(stack.items[0]);
+                                                }}
+                                                disabled={
                                                   expandedStack ||
                                                   showAddForm ||
                                                   isSaving
-                                                    ? 0.5
-                                                    : 1,
-                                              }}
-                                              title="Send to another character"
-                                            >
-                                              <Gift size={16} />
-                                            </button>
-                                          )}
-                                          <button
-                                            onClick={() => {
-                                              setExpandedStack(stack.stackKey);
-                                              startEdit(stack.items[0]);
-                                            }}
-                                            disabled={
-                                              expandedStack ||
-                                              showAddForm ||
-                                              isSaving
-                                            }
-                                            style={{
-                                              ...styles.actionButton,
-                                              ...styles.editButton,
-                                              opacity:
-                                                expandedStack ||
-                                                showAddForm ||
-                                                isSaving
-                                                  ? 0.5
-                                                  : 1,
-                                            }}
-                                          >
-                                            <Edit2 size={16} />
-                                          </button>
-                                          <button
-                                            onClick={() => {
-                                              stack.items.forEach((item) =>
-                                                deleteItem(item.id)
-                                              );
-                                            }}
-                                            disabled={
-                                              expandedStack ||
-                                              showAddForm ||
-                                              isSaving
-                                            }
-                                            style={{
-                                              ...styles.actionButton,
-                                              ...styles.deleteButton,
-                                              opacity:
-                                                expandedStack ||
-                                                showAddForm ||
-                                                isSaving
-                                                  ? 0.5
-                                                  : 1,
-                                            }}
-                                          >
-                                            <Trash2 size={16} />
-                                          </button>
-                                        </div>
-                                      </div>
+                                                }
+                                                style={{
+                                                  ...styles.actionButton,
+                                                  ...styles.editButton,
+                                                  opacity:
+                                                    expandedStack ||
+                                                    showAddForm ||
+                                                    isSaving
+                                                      ? 0.5
+                                                      : 1,
+                                                }}
+                                              >
+                                                <Edit2 size={16} />
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  stack.items.forEach((item) =>
+                                                    deleteItem(item.id),
+                                                  );
+                                                }}
+                                                disabled={
+                                                  expandedStack ||
+                                                  showAddForm ||
+                                                  isSaving
+                                                }
+                                                style={{
+                                                  ...styles.actionButton,
+                                                  ...styles.deleteButton,
+                                                  opacity:
+                                                    expandedStack ||
+                                                    showAddForm ||
+                                                    isSaving
+                                                      ? 0.5
+                                                      : 1,
+                                                }}
+                                              >
+                                                <Trash2 size={16} />
+                                              </button>
+                                            </div>
+                                          </div>
 
-                                      {stack.description && (
-                                        <div style={styles.itemDescription}>
-                                          {stack.description}
-                                        </div>
-                                      )}
-
-                                      <div style={styles.itemMeta}>
-                                        <span style={styles.quantityBadge}>
-                                          Qty: {stack.totalQuantity}
-                                        </span>
-                                        {stack.value &&
-                                          stack.value !== 0 &&
-                                          stack.value !== "0" && (
-                                            <span>Value: {stack.value}</span>
+                                          {stack.description && (
+                                            <div style={styles.itemDescription}>
+                                              {stack.description}
+                                            </div>
                                           )}
-                                      </div>
-                                    </>
+
+                                          <div style={styles.itemMeta}>
+                                            <span style={styles.quantityBadge}>
+                                              Qty: {stack.totalQuantity}
+                                            </span>
+                                            {stack.value &&
+                                              stack.value !== 0 &&
+                                              stack.value !== "0" && (
+                                                <span>
+                                                  Value: {stack.value}
+                                                </span>
+                                              )}
+                                          </div>
+                                        </>
+                                      );
+                                    })()
                                   )}
                                 </div>
                               );
@@ -1929,7 +2497,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                           ...prev,
                           quantityToSend: Math.min(
                             Math.max(1, value),
-                            sendItemModal.selectedItem.quantity
+                            sendItemModal.selectedItem.quantity,
                           ),
                         }));
                       }}
@@ -1968,7 +2536,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                             return;
                           }
                           const character = sessionCharacters.find(
-                            (c) => String(c.id) === String(characterId)
+                            (c) => String(c.id) === String(characterId),
                           );
                           setSelectedRecipient(character || null);
                         }}

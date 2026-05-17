@@ -113,14 +113,14 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
       typeof character.metamagicChoices === "object"
     ) {
       metaMagicNames = Object.keys(character.metamagicChoices).filter(
-        (key) => character.metamagicChoices[key] === true
+        (key) => character.metamagicChoices[key] === true,
       );
     } else if (
       character?.metamagic_choices &&
       typeof character.metamagic_choices === "object"
     ) {
       metaMagicNames = Object.keys(character.metamagic_choices).filter(
-        (key) => character.metamagic_choices[key] === true
+        (key) => character.metamagic_choices[key] === true,
       );
     } else {
       metaMagicNames =
@@ -178,7 +178,8 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
+
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
       padding: "16px",
@@ -213,7 +214,7 @@ const MetaMagicDisplay = ({ character, onNavigateToCharacterManagement }) => {
       flexDirection: "column",
       gap: "8px",
       padding: "12px",
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       borderRadius: "8px",
       border: `1px solid ${theme.border}`,
     },

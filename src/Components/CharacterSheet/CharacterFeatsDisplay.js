@@ -1063,7 +1063,7 @@ const CharacterFeatsDisplay = ({
     },
     section: {
       marginBottom: "24px",
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
       overflow: "hidden",
@@ -1074,7 +1074,7 @@ const CharacterFeatsDisplay = ({
       justifyContent: "space-between",
       padding: "16px",
       cursor: "pointer",
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       borderBottom: `1px solid ${theme.border}`,
       transition: "all 0.2s ease",
     },

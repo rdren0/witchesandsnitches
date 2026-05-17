@@ -111,6 +111,7 @@ const CharacterSheet = ({
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
   const [customCounterRefreshKey, setCustomCounterRefreshKey] = useState(0);
+  const [inventoryRestKey, setInventoryRestKey] = useState(0);
   const [showACModal, setShowACModal] = useState(false);
   const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
   const [showSpellAttackRollModal, setShowSpellAttackRollModal] =
@@ -999,6 +1000,27 @@ const CharacterSheet = ({
         console.error("Error resetting custom counters on long rest:", err);
       }
 
+      try {
+        const { data: longRestItems } = await supabase
+          .from("inventory_items")
+          .select("id, max_uses")
+          .eq("character_id", character.id)
+          .eq("recharge_type", "long_rest")
+          .not("max_uses", "is", null);
+
+        if (longRestItems && longRestItems.length > 0) {
+          for (const item of longRestItems) {
+            await supabase
+              .from("inventory_items")
+              .update({ current_uses: item.max_uses })
+              .eq("id", item.id);
+          }
+        }
+        setInventoryRestKey((k) => k + 1);
+      } catch (err) {
+        console.error("Error resetting item uses on long rest:", err);
+      }
+
       showRollResult({
         title: `Long Rest Complete`,
         rollValue: hpRestored + hitDiceRestored,
@@ -1848,6 +1870,7 @@ const CharacterSheet = ({
                   onNavigateToCharacterManagement={
                     onNavigateToCharacterManagement
                   }
+                  inventoryRestKey={inventoryRestKey}
                 />
               </div>
             </div>
@@ -1881,6 +1904,7 @@ const CharacterSheet = ({
           setIsApplyingDamage={setIsApplyingDamage}
           adminMode={adminMode}
           isUserAdmin={isUserAdmin}
+          onShortRestComplete={() => setInventoryRestKey((k) => k + 1)}
         />
 
         {showACModal && character && (

@@ -249,6 +249,8 @@ export const createInventoryStyles = (theme) => ({
     border: `2px solid ${theme.border}`,
     transition: "all 0.2s ease",
     position: "relative",
+    overflow: "hidden",
+    minWidth: 0,
   },
   itemHeader: {
     display: "flex",
