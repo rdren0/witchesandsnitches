@@ -111,6 +111,7 @@ const CharacterSheet = ({
   const [isApplyingDamage, setIsApplyingDamage] = useState(false);
   const [isLongResting, setIsLongResting] = useState(false);
   const [customCounterRefreshKey, setCustomCounterRefreshKey] = useState(0);
+  const [inventoryRestKey, setInventoryRestKey] = useState(0);
   const [showACModal, setShowACModal] = useState(false);
   const [showSpellAttackModal, setShowSpellAttackModal] = useState(false);
   const [showSpellAttackRollModal, setShowSpellAttackRollModal] =
@@ -1004,7 +1005,6 @@ const CharacterSheet = ({
           .from("inventory_items")
           .select("id, max_uses")
           .eq("character_id", character.id)
-          .eq("discord_user_id", characterOwnerId)
           .eq("recharge_type", "long_rest")
           .not("max_uses", "is", null);
 
@@ -1016,6 +1016,7 @@ const CharacterSheet = ({
               .eq("id", item.id);
           }
         }
+        setInventoryRestKey((k) => k + 1);
       } catch (err) {
         console.error("Error resetting item uses on long rest:", err);
       }
@@ -1869,6 +1870,7 @@ const CharacterSheet = ({
                   onNavigateToCharacterManagement={
                     onNavigateToCharacterManagement
                   }
+                  inventoryRestKey={inventoryRestKey}
                 />
               </div>
             </div>
@@ -1902,6 +1904,7 @@ const CharacterSheet = ({
           setIsApplyingDamage={setIsApplyingDamage}
           adminMode={adminMode}
           isUserAdmin={isUserAdmin}
+          onShortRestComplete={() => setInventoryRestKey((k) => k + 1)}
         />
 
         {showACModal && character && (

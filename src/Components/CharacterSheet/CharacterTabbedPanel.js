@@ -20,6 +20,7 @@ const CharacterTabbedPanel = ({
   adminMode,
   isUserAdmin,
   onNavigateToCharacterManagement,
+  inventoryRestKey,
 }) => {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("slots");
@@ -156,6 +157,7 @@ const CharacterTabbedPanel = ({
           user={user}
           selectedCharacter={selectedCharacter}
           supabase={supabase}
+          restKey={inventoryRestKey}
         />
       ),
     },

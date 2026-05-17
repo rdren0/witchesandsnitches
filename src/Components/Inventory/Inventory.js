@@ -24,7 +24,13 @@ import Bank from "../Bank/Bank";
 import OwlMail from "./OwlMail";
 import { ReactComponent as OwlIcon } from "../../Images/owl.svg";
 
-const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
+const Inventory = ({
+  user,
+  selectedCharacter,
+  supabase,
+  adminMode,
+  restKey,
+}) => {
   const { theme } = useTheme();
   const styles = getInventoryStyles(theme);
 
@@ -108,7 +114,7 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [fetchItems]);
+  }, [fetchItems, restKey]);
 
   const fetchSessionCharacters = useCallback(async () => {
     const gameSession =
@@ -1552,7 +1558,8 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                                       border: `1px dashed ${theme.border}`,
                                                       borderRadius: "8px",
                                                       padding: "6px 12px",
-                                                      color: theme.textSecondary,
+                                                      color:
+                                                        theme.textSecondary,
                                                       fontSize: "12px",
                                                       cursor: "pointer",
                                                       display: "inline-flex",
@@ -1998,7 +2005,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                                       return (
                                         <>
                                           <div style={styles.itemHeader}>
-                                            <div>
+                                            <div
+                                              style={{ flex: 1, minWidth: 0 }}
+                                            >
                                               <div style={styles.itemName}>
                                                 {stack.name}
                                                 {stack.attunement_required && (

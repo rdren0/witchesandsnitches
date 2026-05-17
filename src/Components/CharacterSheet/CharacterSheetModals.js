@@ -30,6 +30,7 @@ const CharacterSheetModals = ({
   setIsApplyingDamage,
   adminMode = false,
   isUserAdmin = false,
+  onShortRestComplete,
 }) => {
   const rollHitDice = async () => {
     if (
@@ -40,13 +41,12 @@ const CharacterSheetModals = ({
       return;
     }
 
-    const resetShortRestItems = async (characterId, characterOwnerId) => {
+    const resetShortRestItems = async (characterId) => {
       try {
         const { data: shortRestItems } = await supabase
           .from("inventory_items")
           .select("id, max_uses")
           .eq("character_id", characterId)
-          .eq("discord_user_id", characterOwnerId)
           .eq("recharge_type", "short_rest")
           .not("max_uses", "is", null);
 
@@ -147,7 +147,8 @@ const CharacterSheetModals = ({
           console.error("Failed to send short rest to Discord");
         }
 
-        await resetShortRestItems(character.id, characterOwnerId);
+        await resetShortRestItems(character.id);
+        onShortRestComplete?.();
 
         return;
       } catch (error) {
@@ -266,10 +267,8 @@ const CharacterSheetModals = ({
         console.error("Failed to send hit dice recovery to Discord");
       }
 
-      await resetShortRestItems(
-        character.id,
-        character.discord_user_id || character.ownerId
-      );
+      await resetShortRestItems(character.id);
+      onShortRestComplete?.();
       await fetchCharacterDetails();
       setShowHitDiceModal(false);
     } catch (error) {
