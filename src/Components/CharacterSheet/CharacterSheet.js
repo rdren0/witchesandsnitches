@@ -999,6 +999,27 @@ const CharacterSheet = ({
         console.error("Error resetting custom counters on long rest:", err);
       }
 
+      try {
+        const { data: longRestItems } = await supabase
+          .from("inventory_items")
+          .select("id, max_uses")
+          .eq("character_id", character.id)
+          .eq("discord_user_id", characterOwnerId)
+          .eq("recharge_type", "long_rest")
+          .not("max_uses", "is", null);
+
+        if (longRestItems && longRestItems.length > 0) {
+          for (const item of longRestItems) {
+            await supabase
+              .from("inventory_items")
+              .update({ current_uses: item.max_uses })
+              .eq("id", item.id);
+          }
+        }
+      } catch (err) {
+        console.error("Error resetting item uses on long rest:", err);
+      }
+
       showRollResult({
         title: `Long Rest Complete`,
         rollValue: hpRestored + hitDiceRestored,

@@ -26,18 +26,16 @@ const CharacterTabbedPanel = ({
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
-      height: "1200px",
       display: "flex",
       flexDirection: "column",
-      overflow: "hidden",
+      backgroundColor: theme.surface,
     },
     tabsContainer: {
       display: "flex",
       borderBottom: `2px solid ${theme.border}`,
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       borderRadius: "12px 12px 0 0",
     },
     tab: {
@@ -65,10 +63,7 @@ const CharacterTabbedPanel = ({
       borderRadius: "8px 8px 0 0",
     },
     tabContent: {
-      flex: 1,
-      overflow: "auto",
-      padding: "0",
-      height: "calc(600px - 48px)",
+      backgroundColor: theme.surface,
     },
     placeholderContent: {
       display: "flex",

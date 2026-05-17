@@ -200,7 +200,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
   const handleDelete = async (id) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this custom melee attack?"
+        "Are you sure you want to delete this custom melee attack?",
       )
     ) {
       return;
@@ -230,7 +230,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
     if (!character) return 0;
     const abilityMod = getAbilityModifier(
       character,
-      attack.attack_ability_modifier
+      attack.attack_ability_modifier,
     );
     const profBonus = attack.has_proficiency
       ? character.proficiencyBonus || 0
@@ -246,7 +246,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
       const d20Roll = Math.floor(Math.random() * 20) + 1;
       const abilityMod = getAbilityModifier(
         character,
-        attack.attack_ability_modifier
+        attack.attack_ability_modifier,
       );
       const profBonus = attack.has_proficiency
         ? character.proficiencyBonus || 0
@@ -345,7 +345,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
   const handleDamageRoll = async (
     attack,
     isCritical = false,
-    damageIndex = null
+    damageIndex = null,
   ) => {
     if (!character) return;
 
@@ -464,8 +464,8 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
             (totalBonus > 0
               ? ` + ${totalBonus}`
               : totalBonus < 0
-              ? ` - ${Math.abs(totalBonus)}`
-              : ""),
+                ? ` - ${Math.abs(totalBonus)}`
+                : ""),
           inline: true,
         },
       ];
@@ -516,14 +516,14 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
 
   const removeAdditionalDamage = (index) => {
     const newAdditionalDamage = formData.additional_damage.filter(
-      (_, i) => i !== index
+      (_, i) => i !== index,
     );
     setFormData({ ...formData, additional_damage: newAdditionalDamage });
   };
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       border: `2px solid ${theme.border}`,
       borderRadius: "12px",
       marginBottom: "32px",
@@ -653,7 +653,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
       gap: "12px",
     },
     attackCard: {
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       border: `2px solid ${theme.border}`,
       borderRadius: "8px",
       padding: "12px",
@@ -904,13 +904,13 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                     Modifier:{" "}
                     {getAbilityModifier(
                       character,
-                      formData.attack_ability_modifier
+                      formData.attack_ability_modifier,
                     ) >= 0
                       ? "+"
                       : ""}
                     {getAbilityModifier(
                       character,
-                      formData.attack_ability_modifier
+                      formData.attack_ability_modifier,
                     )}
                   </div>
                 </div>
@@ -947,7 +947,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                   Attack Bonus: +
                   {getAbilityModifier(
                     character,
-                    formData.attack_ability_modifier
+                    formData.attack_ability_modifier,
                   ) +
                     (formData.has_proficiency
                       ? character.proficiencyBonus || 0
@@ -966,13 +966,13 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                       ?.label.slice(0, 3)}{" "}
                     {getAbilityModifier(
                       character,
-                      formData.attack_ability_modifier
+                      formData.attack_ability_modifier,
                     ) >= 0
                       ? "+"
                       : ""}
                     {getAbilityModifier(
                       character,
-                      formData.attack_ability_modifier
+                      formData.attack_ability_modifier,
                     )}
                     {formData.has_proficiency &&
                       ` + Prof +${character.proficiencyBonus || 0}`}
@@ -1239,7 +1239,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                             updateAdditionalDamage(
                               index,
                               "dice_count",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           style={styles.input}
@@ -1257,7 +1257,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                             updateAdditionalDamage(
                               index,
                               "dice_type",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           style={styles.input}
@@ -1280,7 +1280,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                             updateAdditionalDamage(
                               index,
                               "modifier",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           style={styles.input}
@@ -1304,7 +1304,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                             updateAdditionalDamage(
                               index,
                               "damage_type",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           style={styles.input}
@@ -1545,7 +1545,8 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                             {attack.damage_name && `${attack.damage_name}: `}
                             {attack.damage_dice_count}
                             {attack.damage_dice_type}
-                            {attack.damage_modifier !== 0 && attack.damage_modifier != null &&
+                            {attack.damage_modifier !== 0 &&
+                              attack.damage_modifier != null &&
                               ` + ${attack.damage_modifier}`}
                             {attack.damage_type && ` ${attack.damage_type}`}
                           </div>
@@ -1692,7 +1693,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                                         : ""}{" "}
                                       {damage.damage_type}
                                     </li>
-                                  )
+                                  ),
                                 )}
                               </ul>
                             </div>
@@ -1772,7 +1773,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                     handleDamageRoll(
                       selectedAttackForDamage,
                       damageModalIsCritical,
-                      0
+                      0,
                     );
                     setShowDamageModal(false);
                   }}
@@ -1833,7 +1834,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                       handleDamageRoll(
                         selectedAttackForDamage,
                         damageModalIsCritical,
-                        damageIndex
+                        damageIndex,
                       );
                       setShowDamageModal(false);
                     }}
@@ -1879,7 +1880,7 @@ const CustomMeleeAttacks = ({ character, supabase, discordUserId }) => {
                       {damage.damage_type || ""}
                     </div>
                   </button>
-                )
+                ),
               )}
             </div>
             <button

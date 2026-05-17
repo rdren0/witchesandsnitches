@@ -18,9 +18,9 @@ import { sendDiscordRollWebhook } from "../utils/discordWebhook";
 import { SCHOOL_METADATA, getSchoolColor } from "../../utils/schoolColors";
 
 const CASTING_TIME_PILL = {
-  "Action": { label: "Action", color: "#6366f1" },
+  Action: { label: "Action", color: "#6366f1" },
   "Bonus Action": { label: "Bonus", color: "#f59e0b" },
-  "Reaction": { label: "React.", color: "#10b981" },
+  Reaction: { label: "React.", color: "#10b981" },
   "1 Minute": { label: "1 Min+", color: "#8b5cf6" },
   "10 Minutes": { label: "1 Min+", color: "#8b5cf6" },
   "1 Hour": { label: "1 Min+", color: "#8b5cf6" },
@@ -317,7 +317,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
     for (let i = levelNum; i <= 9; i++) {
       levels.push(
-        `${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} Level`
+        `${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} Level`,
       );
     }
 
@@ -339,13 +339,13 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       ) {
         const baseLevel = parseInt(spell.level.match(/(\d+)/)?.[1] || "1");
         const castLevel = parseInt(
-          castAtLevel.match(/(\d+)/)?.[1] || baseLevel
+          castAtLevel.match(/(\d+)/)?.[1] || baseLevel,
         );
         const levelDiff = castLevel - baseLevel;
 
         if (levelDiff > 0) {
           const scalingDiceSize = parseInt(
-            spell.scaling_dice_type.substring(1)
+            spell.scaling_dice_type.substring(1),
           );
 
           if (scalingDiceSize === diceSize) {
@@ -428,7 +428,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       border: `2px solid ${theme.border}`,
       borderRadius: "12px",
       marginBottom: "16px",
@@ -584,7 +584,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
       gap: "12px",
     },
     spellCard: {
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       border: `2px solid ${theme.border}`,
       borderRadius: "8px",
       padding: "12px",
@@ -737,7 +737,9 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                       flexShrink: 0,
                     }}
                   />
-                  <span style={{ flex: 1, color: theme.text, fontWeight: "500" }}>
+                  <span
+                    style={{ flex: 1, color: theme.text, fontWeight: "500" }}
+                  >
                     {spell.name}
                   </span>
                   {spell.casting_time
@@ -763,7 +765,9 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                         {pill.label}
                       </span>
                     ))}
-                  <span style={{ fontSize: "11px", color: theme.textSecondary }}>
+                  <span
+                    style={{ fontSize: "11px", color: theme.textSecondary }}
+                  >
                     {spell.level}
                   </span>
                 </div>
@@ -842,7 +846,14 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                 </div>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Casting Time</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "6px",
+                      marginTop: "4px",
+                    }}
+                  >
                     {castingTimes.map((time) => {
                       const selected = formData.casting_time
                         .split(", ")
@@ -1264,7 +1275,10 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                       {spell.casting_time
                         .split(", ")
                         .filter(Boolean)
-                        .map((time) => ({ time, pill: CASTING_TIME_PILL[time] }))
+                        .map((time) => ({
+                          time,
+                          pill: CASTING_TIME_PILL[time],
+                        }))
                         .map(({ time, pill }, i) =>
                           pill ? (
                             <span
@@ -1286,7 +1300,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                             </span>
                           ) : (
                             <span key={i}>{time}</span>
-                          )
+                          ),
                         )}
                       <span style={{ color: theme.text }}>•</span>
                       <span>Range: {spell.range}</span>
@@ -1392,7 +1406,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                                   <option key={level} value={level}>
                                     {level}
                                   </option>
-                                )
+                                ),
                               )}
                             </select>
                           )}
@@ -1400,7 +1414,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                           onClick={() =>
                             handleDamageRoll(
                               spell,
-                              selectedSpellLevels[spell.id]
+                              selectedSpellLevels[spell.id],
                             )
                           }
                           style={styles.damageButton}
@@ -1427,19 +1441,19 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                                 spell.level !== "Cantrip"
                               ) {
                                 const baseLevel = parseInt(
-                                  spell.level.match(/(\d+)/)?.[1] || "1"
+                                  spell.level.match(/(\d+)/)?.[1] || "1",
                                 );
                                 const castLevel = parseInt(
-                                  castAtLevel.match(/(\d+)/)?.[1] || baseLevel
+                                  castAtLevel.match(/(\d+)/)?.[1] || baseLevel,
                                 );
                                 const levelDiff = castLevel - baseLevel;
 
                                 if (levelDiff > 0) {
                                   const scalingDiceSize = parseInt(
-                                    spell.scaling_dice_type.substring(1)
+                                    spell.scaling_dice_type.substring(1),
                                   );
                                   const diceSize = parseInt(
-                                    spell.damage_dice_type.substring(1)
+                                    spell.damage_dice_type.substring(1),
                                   );
 
                                   if (scalingDiceSize === diceSize) {
@@ -1545,7 +1559,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                                         <option key={level} value={level}>
                                           {level}
                                         </option>
-                                      )
+                                      ),
                                     )}
                                   </select>
                                 </div>
@@ -1555,7 +1569,7 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                                 onClick={() =>
                                   handleDamageRoll(
                                     spell,
-                                    selectedSpellLevels[spell.id]
+                                    selectedSpellLevels[spell.id],
                                   )
                                 }
                                 style={{
@@ -1586,20 +1600,20 @@ const CustomSpells = ({ character, supabase, discordUserId }) => {
                                       spell.level !== "Cantrip"
                                     ) {
                                       const baseLevel = parseInt(
-                                        spell.level.match(/(\d+)/)?.[1] || "1"
+                                        spell.level.match(/(\d+)/)?.[1] || "1",
                                       );
                                       const castLevel = parseInt(
                                         castAtLevel.match(/(\d+)/)?.[1] ||
-                                          baseLevel
+                                          baseLevel,
                                       );
                                       const levelDiff = castLevel - baseLevel;
 
                                       if (levelDiff > 0) {
                                         const scalingDiceSize = parseInt(
-                                          spell.scaling_dice_type.substring(1)
+                                          spell.scaling_dice_type.substring(1),
                                         );
                                         const diceSize = parseInt(
-                                          spell.damage_dice_type.substring(1)
+                                          spell.damage_dice_type.substring(1),
                                         );
 
                                         if (scalingDiceSize === diceSize) {

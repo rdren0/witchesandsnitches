@@ -1064,7 +1064,7 @@ const SpellSlotTracker = ({
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       border: `2px solid ${theme.border}`,
       borderRadius: "12px",
       padding: "20px",

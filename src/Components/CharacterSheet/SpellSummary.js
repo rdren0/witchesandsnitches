@@ -1146,7 +1146,8 @@ const SpellSummary = ({
 
   const styles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
+
       border: `1px solid ${theme.border}`,
       borderRadius: "8px",
       marginBottom: "16px",

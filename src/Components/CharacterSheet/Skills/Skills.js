@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import React from "react";
 import {
-  ChevronDown,
-  ChevronUp,
   Circle,
   Star,
   Wrench,
@@ -58,13 +56,12 @@ export const Skills = ({
   const { rollSkill, rollMagicalTheoryCheck } = useRollFunctions();
   const { theme } = useTheme();
   const { feats: standardFeats } = useFeats();
-  const [sortColumn, setSortColumn] = useState("skill");
-  const [sortDirection, setSortDirection] = useState("asc");
   const [isRolling, setIsRolling] = useState(false);
   const [showMagicalTheoryModal, setShowMagicalTheoryModal] = useState(false);
   const [pendingMagicalTheoryData, setPendingMagicalTheoryData] =
     useState(null);
   const [hoveredSkill, setHoveredSkill] = useState(null);
+  const [hoveredTool, setHoveredTool] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const contextMenuRef = useRef(null);
   const [showToolModal, setShowToolModal] = useState(false);
@@ -87,13 +84,17 @@ export const Skills = ({
       overflow: "hidden",
     },
     header: {
-      padding: "20px 24px",
+      padding: "12px 24px",
       borderBottom: `2px solid ${theme.border}`,
       backgroundColor: theme.background,
       borderRadius: "12px 12px 0 0",
+      minHeight: "48px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
     },
     title: {
-      fontSize: "18px",
+      fontSize: "14px",
       fontWeight: "700",
       color: theme.text,
       margin: 0,
@@ -110,7 +111,7 @@ export const Skills = ({
       padding: "20px",
     },
     tableContainer: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       borderRadius: "8px",
       border: `1px solid ${theme.border}`,
       overflow: "hidden",
@@ -123,7 +124,7 @@ export const Skills = ({
       tableLayout: "fixed",
     },
     headerRow: {
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
     },
     headerCell: {
       padding: "12px 16px",
@@ -142,11 +143,11 @@ export const Skills = ({
       gap: "4px",
     },
     row: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       transition: "background-color 0.15s ease",
     },
     rowHover: {
-      backgroundColor: theme.hover || `${theme.primary}05`,
+      backgroundColor: theme.surface,
     },
     cell: {
       padding: "8px 16px",
@@ -252,9 +253,9 @@ export const Skills = ({
       display: "flex",
       gap: "24px",
       flexWrap: "nowrap",
-      margin: "8px 0",
-      padding: "6px 0",
-      justifyContent: "center",
+      margin: "4px 0 0 0",
+      padding: "6px 20px 6px 40px",
+      justifyContent: "flex-start",
       alignItems: "center",
     },
     legendItem: {
@@ -436,69 +437,6 @@ export const Skills = ({
   const handleMagicalTheoryModalClose = () => {
     setShowMagicalTheoryModal(false);
     setPendingMagicalTheoryData(null);
-  };
-
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
-  };
-
-  const sortSkills = (skills) => {
-    return [...skills].sort((a, b) => {
-      let aValue, bValue;
-
-      switch (sortColumn) {
-        case "proficiency":
-          aValue = character.skills?.[a.name] || 0;
-          bValue = character.skills?.[b.name] || 0;
-          break;
-        case "modifier":
-          aValue = a.ability;
-          bValue = b.ability;
-          break;
-        case "skill":
-          aValue = a.displayName;
-          bValue = b.displayName;
-          break;
-        case "bonus": {
-          const aAbilityMod = modifiers(character)[a.ability];
-          const bAbilityMod = modifiers(character)[b.ability];
-          aValue = calculateSkillBonus(a.name, aAbilityMod);
-          bValue = calculateSkillBonus(b.name, bAbilityMod);
-          break;
-        }
-        default:
-          aValue = a.displayName;
-          bValue = b.displayName;
-      }
-
-      if (sortDirection === "asc") {
-        if (typeof aValue === "string") {
-          return aValue.localeCompare(bValue);
-        }
-        return aValue - bValue;
-      } else {
-        if (typeof aValue === "string") {
-          return bValue.localeCompare(aValue);
-        }
-        return bValue - aValue;
-      }
-    });
-  };
-
-  const getSortIcon = (column) => {
-    if (sortColumn !== column) {
-      return null;
-    }
-    return sortDirection === "asc" ? (
-      <ChevronUp className="w-3 h-3" />
-    ) : (
-      <ChevronDown className="w-3 h-3" />
-    );
   };
 
   const getProficiencyIcon = (skillLevel) => {
@@ -912,10 +850,7 @@ export const Skills = ({
     <>
       <div style={skillStyles.container}>
         <div style={skillStyles.header}>
-          <h2 style={skillStyles.title}>Skills & Tool Proficiencies</h2>
-          <p style={{ margin: 0, fontSize: "11px", color: theme.textSecondary, opacity: 0.75 }}>
-            Right-click any skill to roll with advantage or disadvantage
-          </p>
+          <h2 style={skillStyles.title}>Proficiencies</h2>
         </div>
         <div style={skillStyles.legendItems}>
           <div style={skillStyles.legendItem}>
@@ -948,52 +883,32 @@ export const Skills = ({
         <div style={skillStyles.contentContainer}>
           <div style={skillStyles.tableContainer}>
             <table style={skillStyles.table}>
+              <colgroup>
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "70px" }} />
+                <col />
+                <col style={{ width: "90px" }} />
+              </colgroup>
               <thead>
                 <tr style={skillStyles.headerRow}>
                   <th
-                    style={{ ...skillStyles.headerCell, width: "60px" }}
-                    onClick={() => handleSort("proficiency")}
-                    title="Click to sort by proficiency level"
+                    colSpan={4}
+                    style={{
+                      ...skillStyles.headerCell,
+                      cursor: "default",
+                    }}
                   >
-                    <div style={skillStyles.sortableHeader}>
-                      PROF
-                      {getSortIcon("proficiency")}
+                    <div style={{ fontSize: "14px", fontWeight: "700", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                      Skills
                     </div>
-                  </th>
-                  <th
-                    style={{ ...skillStyles.headerCell, width: "70px" }}
-                    onClick={() => handleSort("modifier")}
-                    title="Click to sort by ability modifier"
-                  >
-                    <div style={skillStyles.sortableHeader}>
-                      MOD
-                      {getSortIcon("modifier")}
-                    </div>
-                  </th>
-                  <th
-                    style={skillStyles.headerCell}
-                    onClick={() => handleSort("skill")}
-                    title="Click to sort by skill name"
-                  >
-                    <div style={skillStyles.sortableHeader}>
-                      SKILL (Click to Roll)
-                      {getSortIcon("skill")}
-                    </div>
-                  </th>
-                  <th
-                    style={{ ...skillStyles.headerCell, width: "90px" }}
-                    onClick={() => handleSort("bonus")}
-                    title="Click to sort by total bonus"
-                  >
-                    <div style={skillStyles.sortableHeader}>
-                      BONUS
-                      {getSortIcon("bonus")}
+                    <div style={{ fontSize: "10px", fontWeight: "400", letterSpacing: "0", textTransform: "none", opacity: 0.65, marginTop: "2px" }}>
+                      Right-click any skill to roll with advantage or disadvantage
                     </div>
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {sortSkills(allSkills).map((skill) => {
+                {allSkills.map((skill) => {
                   const abilityMod = modifiers(character)[skill.ability];
                   const skillBonus = calculateSkillBonus(
                     skill.name,
@@ -1031,23 +946,6 @@ export const Skills = ({
                     <tr
                       key={skill.name}
                       style={rowStyle}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          theme.hover || `${theme.primary}05`;
-                      }}
-                      onMouseLeave={(e) => {
-                        if (isPassiveSkill) {
-                          e.currentTarget.style.backgroundColor = `${
-                            theme.primary || "#3b82f6"
-                          }08`;
-                        } else if (isMagicalTheory) {
-                          e.currentTarget.style.backgroundColor = `${
-                            theme.warning || "#f59e0b"
-                          }08`;
-                        } else {
-                          e.currentTarget.style.backgroundColor = theme.surface;
-                        }
-                      }}
                     >
                       <td style={skillStyles.cell}>
                         <button
@@ -1104,6 +1002,7 @@ export const Skills = ({
                             ...(isRolling
                               ? { opacity: 0.5, cursor: "not-allowed" }
                               : {}),
+                            ...(isHovered ? { fontWeight: "800" } : {}),
                           }}
                         >
                           {skill.displayName}
@@ -1211,27 +1110,26 @@ export const Skills = ({
               <div style={{ marginTop: "20px" }}>
                 <div style={skillStyles.tableContainer}>
                   <table style={skillStyles.table}>
+                    <colgroup>
+                      <col style={{ width: "60px" }} />
+                      <col style={{ width: "70px" }} />
+                      <col />
+                      <col style={{ width: "90px" }} />
+                    </colgroup>
                     <thead>
                       <tr style={skillStyles.headerRow}>
                         <th
-                          style={{ ...skillStyles.headerCell, width: "60px" }}
+                          colSpan={4}
+                          style={{
+                            ...skillStyles.headerCell,
+                            fontSize: "14px",
+                            fontWeight: "700",
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            cursor: "default",
+                          }}
                         >
-                          <div style={skillStyles.sortableHeader}>PROF</div>
-                        </th>
-                        <th
-                          style={{ ...skillStyles.headerCell, width: "70px" }}
-                        >
-                          <div style={skillStyles.sortableHeader}>MOD</div>
-                        </th>
-                        <th style={skillStyles.headerCell}>
-                          <div style={skillStyles.sortableHeader}>
-                            TOOL PROFICIENCY
-                          </div>
-                        </th>
-                        <th
-                          style={{ ...skillStyles.headerCell, width: "90px" }}
-                        >
-                          <div style={skillStyles.sortableHeader}>BONUS</div>
+                          Tools
                         </th>
                       </tr>
                     </thead>
@@ -1273,14 +1171,6 @@ export const Skills = ({
                             <tr
                               key={tool}
                               style={skillStyles.row}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  theme.hover || `${theme.primary}05`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  theme.surface;
-                              }}
                             >
                               <td style={skillStyles.cell}>
                                 <button
@@ -1319,10 +1209,12 @@ export const Skills = ({
                                     setSelectedToolSource(toolObj.source);
                                     setShowToolModal(true);
                                   }}
+                                  onMouseEnter={() => setHoveredTool(tool)}
+                                  onMouseLeave={() => setHoveredTool(null)}
                                   style={{
                                     ...skillStyles.skillButton,
                                     color: toolColor,
-                                    fontWeight: toolLevel > 0 ? "600" : "400",
+                                    fontWeight: hoveredTool === tool ? "800" : (toolLevel > 0 ? "600" : "400"),
                                   }}
                                 >
                                   {tool}
