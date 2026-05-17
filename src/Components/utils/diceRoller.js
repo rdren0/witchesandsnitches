@@ -13,6 +13,54 @@ import {
 
 const RollModalContext = createContext();
 
+export const getRollTypeColor = (type) => {
+  switch (type) {
+    case "ability":
+      return "#20b7b0";
+    case "initiative":
+      return "#107319";
+    case "skill":
+      return "#6600cc";
+    case "spell":
+      return "#3b82f6";
+    case "hitdice":
+      return "#9d4edd";
+    case "damage":
+      return "#ef4444";
+    case "heal":
+      return "#10b981";
+    case "saving_throw":
+      return "#8b5cf6";
+    case "research":
+      return "#10b981";
+    case "flexible":
+      return "#f59e0b";
+    case "potion":
+      return "#6b46c1";
+    case "recipe":
+      return "#8b5cf6";
+    default:
+      return "#6b7280";
+  }
+};
+
+const HISTORY_KEY = "wns:roll-history";
+const MAX_HISTORY = 100;
+
+const loadHistory = () => {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const saveHistory = (history) => {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch {}
+};
+
 export const hasSubclassFeature = (character, featureName) => {
   return character?.subclassFeatures?.includes(featureName) || false;
 };
@@ -38,36 +86,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     individualDiceResults,
   } = rollResult;
 
-  const getTypeColor = () => {
-    switch (type) {
-      case "ability":
-        return "#20b7b0";
-      case "initiative":
-        return "#107319";
-      case "skill":
-        return "#6600cc";
-      case "spell":
-        return "#3b82f6";
-      case "hitdice":
-        return "#9d4edd";
-      case "damage":
-        return "#ef4444";
-      case "heal":
-        return "#10b981";
-      case "saving_throw":
-        return "#8b5cf6";
-      case "research":
-        return "#10b981";
-      case "flexible":
-        return "#f59e0b";
-      case "potion":
-        return "#6b46c1";
-      case "recipe":
-        return "#8b5cf6";
-      default:
-        return "#6b7280";
-    }
-  };
+  const getTypeColor = () => getRollTypeColor(type);
 
   const getDiceColor = () => {
     if (isCriticalSuccess) return "#f59e0b";
@@ -84,20 +103,20 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
   const backgroundColor = isCriticalSuccess
     ? "#fef3c7"
     : isCriticalFailure
-    ? "#fee2e2"
-    : "#f8fafc";
+      ? "#fee2e2"
+      : "#f8fafc";
 
   const borderColor = isCriticalSuccess
     ? "#f59e0b"
     : isCriticalFailure
-    ? "#ef4444"
-    : getDiceColor();
+      ? "#ef4444"
+      : getDiceColor();
 
   const textColor = isCriticalSuccess
     ? "#92400e"
     : isCriticalFailure
-    ? "#991b1b"
-    : "#1f2937";
+      ? "#991b1b"
+      : "#1f2937";
 
   const getQualityColor = (quality) => {
     const colors = {
@@ -268,7 +287,7 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: 1100,
         padding: "20px",
       }}
       onClick={onClose}
@@ -524,8 +543,8 @@ export const rollCorruption = async ({
       (type === "gained"
         ? "Dark deed"
         : type === "spent"
-        ? "Dark power unleashed"
-        : "Act of redemption");
+          ? "Dark power unleashed"
+          : "Act of redemption");
 
     const getCorruptionTier = (points) => {
       if (points === 0)
@@ -744,10 +763,61 @@ export const rollCorruption = async ({
 export const RollModalProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [rollResult, setRollResult] = useState(null);
+  const [rollHistory, setRollHistory] = useState(loadHistory);
 
   const showRollResult = (result) => {
     setRollResult(result);
     setIsOpen(true);
+
+    const entry = {
+      id: `${Date.now()}-${Math.random()}`,
+      title: result.title,
+      total: result.total,
+      rollValue: result.rollValue,
+      modifier: result.modifier,
+      type: result.type || "ability",
+      rollType: result.rollType || "normal",
+      isCriticalSuccess: !!result.isCriticalSuccess,
+      isCriticalFailure: !!result.isCriticalFailure,
+      timestamp: Date.now(),
+      characterId: result.character?.id || null,
+      characterName: result.character?.name || null,
+      diceValues: result.individualDiceResults?.keptDice || [],
+      diceGroups: result.individualDiceResults?.groups || null,
+      discardedValues: result.individualDiceResults?.discardedDice || [],
+      modifierBreakdown: result.modifierBreakdown || null,
+      isSuccess: result.isSuccess !== undefined ? result.isSuccess : null,
+    };
+
+    setRollHistory((prev) => {
+      const next = [entry, ...prev].slice(0, MAX_HISTORY);
+      saveHistory(next);
+      return next;
+    });
+  };
+
+  const clearRollHistory = (characterId = null) => {
+    if (characterId !== null) {
+      setRollHistory((prev) => {
+        const next = prev.filter((e) => e.characterId !== characterId);
+        saveHistory(next);
+        return next;
+      });
+    } else {
+      setRollHistory([]);
+      saveHistory([]);
+    }
+  };
+
+  const THREE_WEEKS_MS = 21 * 24 * 60 * 60 * 1000;
+
+  const pruneOldHistory = () => {
+    const cutoff = Date.now() - THREE_WEEKS_MS;
+    setRollHistory((prev) => {
+      const next = prev.filter((e) => e.timestamp >= cutoff);
+      if (next.length !== prev.length) saveHistory(next);
+      return next;
+    });
   };
 
   const closeModal = () => {
@@ -756,7 +826,9 @@ export const RollModalProvider = ({ children }) => {
   };
 
   return (
-    <RollModalContext.Provider value={{ showRollResult }}>
+    <RollModalContext.Provider
+      value={{ showRollResult, rollHistory, clearRollHistory, pruneOldHistory }}
+    >
       {children}
       <RollResultModal
         rollResult={rollResult}
@@ -775,15 +847,32 @@ export const useRollModal = () => {
         const criticalText = result.isCriticalSuccess
           ? " - CRITICAL SUCCESS!"
           : result.isCriticalFailure
-          ? " - CRITICAL FAILURE!"
-          : "";
+            ? " - CRITICAL FAILURE!"
+            : "";
         alert(
-          `${result.title}: d20(${result.rollValue}) + ${result.modifier} = ${result.total}${criticalText}`
+          `${result.title}: d20(${result.rollValue}) + ${result.modifier} = ${result.total}${criticalText}`,
         );
       },
+      rollHistory: [],
+      clearRollHistory: () => {},
+      pruneOldHistory: () => {},
     };
   }
   return context;
+};
+
+const ABILITY_ABBRS = { intelligence: "INT", wisdom: "WIS", strength: "STR", dexterity: "DEX", constitution: "CON", charisma: "CHA" };
+
+const buildSpellModifierBreakdown = (modifierInfo) => {
+  if (!modifierInfo) return null;
+  const total = (modifierInfo.abilityModifier || 0) + (modifierInfo.wandModifier || 0);
+  if (total === 0) return null;
+  const hasSchool = modifierInfo.wandType && modifierInfo.wandType !== "None";
+  const label = hasSchool
+    ? modifierInfo.wandType
+    : (ABILITY_ABBRS[modifierInfo.abilityName?.toLowerCase()] || modifierInfo.abilityName?.slice(0, 3).toUpperCase());
+  if (!label) return null;
+  return [{ label, value: total }];
 };
 
 export const calculateSkillBonus = ({ skillName, abilityMod, character }) => {
@@ -802,7 +891,7 @@ export const applyRavenclawBonus = (
   diceRoll,
   character,
   abilityType,
-  hasProficiency
+  hasProficiency,
 ) => {
   if (character?.house !== "Ravenclaw") {
     return diceRoll;
@@ -822,7 +911,7 @@ export const applyHornedSerpentBonus = (
   modifier,
   character,
   abilityType,
-  hasProficiency
+  hasProficiency,
 ) => {
   if (character?.house !== "Horned Serpent") {
     return { modifier, bonusApplied: false };
@@ -847,7 +936,7 @@ export const applyHornedSerpentBonus = (
 export const rollDice = (
   character = null,
   abilityType = null,
-  hasProficiency = false
+  hasProficiency = false,
 ) => {
   const roller = new DiceRoller();
   const roll = roller.roll("1d20");
@@ -856,7 +945,7 @@ export const rollDice = (
     roll.total,
     character,
     abilityType,
-    hasProficiency
+    hasProficiency,
   );
 
   return {
@@ -891,7 +980,7 @@ export const rollAbilityCheckWithProficiency = async ({
       modifier,
       character,
       abilityType,
-      hasProficiency
+      hasProficiency,
     );
     const finalModifier = hornedSerpentResult.modifier;
     const total = adjustedRoll + finalModifier;
@@ -920,8 +1009,8 @@ export const rollAbilityCheckWithProficiency = async ({
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
 
       const ravenclawText = diceResult.ravenclawBonusApplied
         ? ` (Ravenclaw: ${d20Roll}→${adjustedRoll})`
@@ -932,7 +1021,7 @@ export const rollAbilityCheckWithProficiency = async ({
         : "";
 
       alert(
-        `${title}: d20(${adjustedRoll})${ravenclawText}${hornedSerpentText} + ${finalModifier} = ${total}${criticalText}`
+        `${title}: d20(${adjustedRoll})${ravenclawText}${hornedSerpentText} + ${finalModifier} = ${total}${criticalText}`,
       );
     }
   } catch (error) {
@@ -979,10 +1068,10 @@ export const rollMagicCasting = async ({
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       alert(
-        `${school} ${type} Roll: d20(${d20Roll}) + ${modifier} = ${total}${criticalText}`
+        `${school} ${type} Roll: d20(${d20Roll}) + ${modifier} = ${total}${criticalText}`,
       );
     }
 
@@ -1022,11 +1111,11 @@ export const rollMagicCasting = async ({
       description: isCriticalSuccess
         ? "Natural 20! Exceptional magical prowess!"
         : isCriticalFailure
-        ? "Natural 1! Magic went awry!"
-        : "",
+          ? "Natural 1! Magic went awry!"
+          : "",
       embedColor: getRollResultColor(
         rollResult,
-        schoolColors[school] || ROLL_COLORS.magic_casting
+        schoolColors[school] || ROLL_COLORS.magic_casting,
       ),
       rollResult,
       fields: additionalFields,
@@ -1069,7 +1158,7 @@ export const rollMagicalTheoryCheck = async ({
 
   if (isForSpellDice === null) {
     console.warn(
-      "rollMagicalTheoryCheck called without isForSpellDice parameter. Modal should be shown by caller."
+      "rollMagicalTheoryCheck called without isForSpellDice parameter. Modal should be shown by caller.",
     );
     return;
   }
@@ -1162,7 +1251,7 @@ export const rollMagicalTheoryCheck = async ({
               .eq("character_id", character.id)
               .eq(
                 "discord_user_id",
-                discordUserId || character.discord_user_id
+                discordUserId || character.discord_user_id,
               );
 
             if (!updateError) {
@@ -1184,7 +1273,7 @@ export const rollMagicalTheoryCheck = async ({
             } else {
               console.error(
                 "Error inserting character resources:",
-                insertError
+                insertError,
               );
             }
           }
@@ -1248,10 +1337,10 @@ export const rollMagicalTheoryCheck = async ({
       description: isNaturalTwenty
         ? "Natural 20!"
         : isCriticalFailure
-        ? "Natural 1!"
-        : bonusDie
-        ? `Success! Earned ${bonusDie}`
-        : "Failed to earn bonus die",
+          ? "Natural 1!"
+          : bonusDie
+            ? `Success! Earned ${bonusDie}`
+            : "Failed to earn bonus die",
       embedColor: bonusDie ? 0x00ff00 : 0xff0000,
       rollResult,
       fields: additionalFields,
@@ -1308,6 +1397,7 @@ export const rollAbility = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "ability",
+        character: character,
         description: `Rolling ${ability.name} check for ${character.name}`,
         ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
         abilityType: ability.key,
@@ -1316,15 +1406,15 @@ export const rollAbility = async ({
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
 
       const ravenclawText = diceResult.ravenclawBonusApplied
         ? ` (Ravenclaw: ${d20Roll}→${adjustedRoll})`
         : "";
 
       alert(
-        `${ability.name} Check: d20(${adjustedRoll})${ravenclawText} + ${abilityMod} = ${total}${criticalText}`
+        `${ability.name} Check: d20(${adjustedRoll})${ravenclawText} + ${abilityMod} = ${total}${criticalText}`,
       );
     }
 
@@ -1353,8 +1443,8 @@ export const rollAbility = async ({
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
-        ? "Natural 1!"
-        : "",
+          ? "Natural 1!"
+          : "",
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.ability),
       rollResult,
       fields: additionalFields,
@@ -1469,7 +1559,7 @@ export const getProficiencyAnalysis = (proficiencies, ingredientQuality) => {
   }
 
   return `**Category:** ${category}\n**With ${ingredientQuality} ingredients:** Can achieve up to ${getMaxAchievableQuality(
-    { proficiencies, ingredientQuality }
+    { proficiencies, ingredientQuality },
   )} quality`;
 };
 
@@ -1504,6 +1594,7 @@ export const rollGenericD20 = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "generic",
+        character: character,
         description: description,
       });
     } else {
@@ -1691,6 +1782,7 @@ export const rollBrewPotion = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "potion",
+        character: currentCharacter,
         description: `Quality Achieved: ${
           achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
         }`,
@@ -1702,11 +1794,11 @@ export const rollBrewPotion = async ({
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       const inventoryText = inventoryAdded ? " - Added to Inventory!" : "";
       alert(
-        `Potion Brewing: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}${inventoryText}`
+        `Potion Brewing: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}${inventoryText}`,
       );
     }
 
@@ -1797,6 +1889,7 @@ export const rollInitiative = async ({
         isCriticalSuccess: false,
         isCriticalFailure: false,
         type: "initiative",
+        character,
         description: `Rolling initiative for ${character.name}`,
       });
     } else {
@@ -1840,6 +1933,7 @@ export const rollSkill = async ({
   setIsRolling,
   character,
   showRollResult,
+  rollType = "normal",
 }) => {
   if (isRolling) return;
 
@@ -1877,9 +1971,29 @@ export const rollSkill = async ({
       character?.skill_proficiencies?.includes(skill.displayName) ||
       character?.skill_proficiencies?.includes(skill.name);
 
-    const diceResult = rollDice(character, abilityType, hasProficiency);
-    const d20Roll = diceResult.originalRoll;
-    const adjustedRoll = diceResult.total;
+    let d20Roll,
+      adjustedRoll,
+      ravenclawBonusApplied = false,
+      individualDiceResults = null;
+
+    if (rollType !== "normal") {
+      const flexResult = rollFlexibleDie(1, 20, rollType);
+      d20Roll =
+        flexResult.individualDiceResults.keptDice[0] ?? flexResult.total;
+      adjustedRoll = applyRavenclawBonus(
+        d20Roll,
+        character,
+        abilityType,
+        hasProficiency,
+      );
+      ravenclawBonusApplied = adjustedRoll !== d20Roll;
+      individualDiceResults = flexResult.individualDiceResults;
+    } else {
+      const diceResult = rollDice(character, abilityType, hasProficiency);
+      d20Roll = diceResult.originalRoll;
+      adjustedRoll = diceResult.total;
+      ravenclawBonusApplied = diceResult.ravenclawBonusApplied;
+    }
 
     const skillBonus = calculateSkillBonus({
       skillName: skill.name,
@@ -1891,6 +2005,14 @@ export const rollSkill = async ({
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
 
+    const abilityAbbrs = { strength: "STR", dexterity: "DEX", constitution: "CON", intelligence: "INT", wisdom: "WIS", charisma: "CHA" };
+    const abilityAbbr = abilityAbbrs[abilityType] || "MOD";
+    const profComponent = skillBonus - abilityMod;
+    const profBonus = character?.proficiencyBonus || 0;
+    const modifierBreakdown = [];
+    if (abilityMod !== 0) modifierBreakdown.push({ label: abilityAbbr, value: abilityMod });
+    if (profComponent !== 0) modifierBreakdown.push({ label: profBonus > 0 && Math.abs(profComponent) >= 2 * profBonus ? "EXP" : "PROF", value: profComponent });
+
     if (showRollResult) {
       showRollResult({
         title: `${skill.displayName} Check`,
@@ -1901,23 +2023,27 @@ export const rollSkill = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "skill",
+        rollType,
+        character,
         description: `Rolling ${skill.displayName} check for ${character.name}`,
-        ravenclawBonusApplied: diceResult.ravenclawBonusApplied,
-        abilityType: abilityType,
+        ravenclawBonusApplied,
+        abilityType,
+        individualDiceResults,
+        modifierBreakdown: modifierBreakdown.length > 0 ? modifierBreakdown : null,
       });
     } else {
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
 
-      const ravenclawText = diceResult.ravenclawBonusApplied
+      const ravenclawText = ravenclawBonusApplied
         ? ` (Ravenclaw: ${d20Roll}→${adjustedRoll})`
         : "";
 
       alert(
-        `${skill.displayName} Check: d20(${adjustedRoll})${ravenclawText} + ${skillBonus} = ${total}${criticalText}`
+        `${skill.displayName} Check: d20(${adjustedRoll})${ravenclawText} + ${skillBonus} = ${total}${criticalText}`,
       );
     }
 
@@ -1927,11 +2053,12 @@ export const rollSkill = async ({
       total,
       isCriticalSuccess,
       isCriticalFailure,
+      individualDiceResults: individualDiceResults || null,
     };
 
     let additionalFields = [];
 
-    if (diceResult.ravenclawBonusApplied) {
+    if (ravenclawBonusApplied) {
       additionalFields.push({
         name: "Special Abilities",
         value: `🦅 **Ravenclaw In-Depth Knowledge!**\nRoll: ${d20Roll} → ${adjustedRoll}\n🎓 *In-Depth Knowledge bonus applied!*`,
@@ -1939,15 +2066,16 @@ export const rollSkill = async ({
       });
     }
 
+    const rollTypeLabel =
+      rollType === "advantage" ? "⬆️ Advantage" : rollType === "disadvantage" ? "⬇️ Disadvantage" : "";
+    const critText = isCriticalSuccess ? "Natural 20!" : isCriticalFailure ? "Natural 1!" : "";
+    const descParts = [critText, rollTypeLabel].filter(Boolean);
+
     const success = await sendDiscordRollWebhook({
       character,
       rollType: "Skill Check",
       title: `${character.name}: ${skill.displayName}`,
-      description: isCriticalSuccess
-        ? "Natural 20!"
-        : isCriticalFailure
-        ? "Natural 1!"
-        : "",
+      description: descParts.join(" · "),
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.skill),
       rollResult,
       fields: additionalFields,
@@ -2006,7 +2134,7 @@ const getSpellData = (spellName, spellsData) => {
 export const getCharacterSpellBonusDice = async (
   supabase,
   characterId,
-  discordUserId
+  discordUserId,
 ) => {
   const { data, error } = await supabase
     .from("character_resources")
@@ -2032,7 +2160,7 @@ export const removeSpellBonusDie = async (
   supabase,
   characterId,
   discordUserId,
-  dieToRemove
+  dieToRemove,
 ) => {
   try {
     const { data: existingResources, error: fetchError } = await supabase
@@ -2121,9 +2249,12 @@ export const attemptSpell = async ({
     const totalModifier = getSpellModifier(
       spellName,
       subject,
-      selectedCharacter
+      selectedCharacter,
     );
     let total = d20Roll + totalModifier;
+
+    const spellModifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
+    const spellModifierBreakdown = buildSpellModifierBreakdown(spellModifierInfo);
 
     const spellLevel = getSpellLevel(spellName, subject, spellsData);
     const goal = getSpellCastingDC(spellLevel);
@@ -2140,7 +2271,7 @@ export const attemptSpell = async ({
       const availableDice = await getCharacterSpellBonusDice(
         supabase,
         selectedCharacter.id,
-        selectedCharacter.discord_user_id || discordUserId
+        selectedCharacter.discord_user_id || discordUserId,
       );
 
       if (availableDice) {
@@ -2178,7 +2309,7 @@ export const attemptSpell = async ({
             supabase,
             selectedCharacter.id,
             selectedCharacter.discord_user_id || discordUserId,
-            userWantsToUseDice
+            userWantsToUseDice,
           );
         }
       }
@@ -2200,8 +2331,11 @@ export const attemptSpell = async ({
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
+        isSuccess,
         type: "spell",
+        character: selectedCharacter,
         description: description,
+        modifierBreakdown: spellModifierBreakdown,
       });
     }
 
@@ -2294,7 +2428,7 @@ export const attemptSpell = async ({
       const modifierInfo = getModifierInfo(
         spellName,
         subject,
-        selectedCharacter
+        selectedCharacter,
       );
       additionalFields.push(buildModifierBreakdownField(modifierInfo));
     }
@@ -2359,7 +2493,7 @@ export const attemptArithmancySpell = async ({
     const d20Roll = diceResult.total;
 
     const intModifier = Math.floor(
-      (selectedCharacter.abilityScores.intelligence - 10) / 2
+      (selectedCharacter.abilityScores.intelligence - 10) / 2,
     );
     const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
     const wandModifier = modifierInfo.wandModifier || 0;
@@ -2383,18 +2517,21 @@ export const attemptArithmancySpell = async ({
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
+        isSuccess,
         type: "spell",
+        character: selectedCharacter,
         description: `Arithmancy casting ${spellName} (Level ${spellLevel}, DC ${goal}) for ${selectedCharacter.name} using Intelligence`,
+        modifierBreakdown: buildSpellModifierBreakdown(modifierInfo),
       });
     } else {
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       const resultText = isSuccess ? "SUCCESS" : "FAILED";
       alert(
-        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`
+        `${spellName} (Arithmancy): d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`,
       );
     }
 
@@ -2511,7 +2648,7 @@ export const attemptRunesSpell = async ({
     const d20Roll = diceResult.total;
 
     const wisModifier = Math.floor(
-      (selectedCharacter.abilityScores.wisdom - 10) / 2
+      (selectedCharacter.abilityScores.wisdom - 10) / 2,
     );
     const modifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
     const wandModifier = modifierInfo.wandModifier || 0;
@@ -2535,18 +2672,21 @@ export const attemptRunesSpell = async ({
         total: total,
         isCriticalSuccess,
         isCriticalFailure,
+        isSuccess,
         type: "spell",
+        character: selectedCharacter,
         description: `Runic casting ${spellName} (Level ${spellLevel}, DC ${goal}) for ${selectedCharacter.name} using Wisdom`,
+        modifierBreakdown: buildSpellModifierBreakdown(modifierInfo),
       });
     } else {
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       const resultText = isSuccess ? "SUCCESS" : "FAILED";
       alert(
-        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`
+        `${spellName} (Runes): d20(${d20Roll}) + ${totalModifier} = ${total} vs DC ${goal} - ${resultText}${criticalText}`,
       );
     }
 
@@ -2678,7 +2818,7 @@ export const rollCookRecipe = async ({
       if (preparedIndex === -1) {
         console.error(
           "Invalid prepared ingredient quality:",
-          ingredientQuality
+          ingredientQuality,
         );
         return "flawed";
       }
@@ -2690,7 +2830,7 @@ export const rollCookRecipe = async ({
 
       const maxIndex = Math.min(
         preparedIndex + 2 + maxQualityBonus,
-        qualityHierarchy.length - 1
+        qualityHierarchy.length - 1,
       );
       const maxQuality = qualityHierarchy[maxIndex];
 
@@ -2708,7 +2848,7 @@ export const rollCookRecipe = async ({
       Object.entries(baseDCs).map(([quality, dc]) => [
         quality,
         dc + ingredientMod,
-      ])
+      ]),
     );
 
     const isCriticalSuccess = d20Roll === 20;
@@ -2827,6 +2967,7 @@ export const rollCookRecipe = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "recipe",
+        character: currentCharacter,
         description: `Quality Achieved: ${
           achievedQuality.charAt(0).toUpperCase() + achievedQuality.slice(1)
         }`,
@@ -2838,11 +2979,11 @@ export const rollCookRecipe = async ({
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       const inventoryText = inventoryAdded ? " - Added to Inventory!" : "";
       alert(
-        `Recipe Cooking: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}${inventoryText}`
+        `Recipe Cooking: d20(${d20Roll}) + ${skillModifier} = ${totalRoll} - Quality: ${achievedQuality}${criticalText}${inventoryText}`,
       );
     }
 
@@ -2961,16 +3102,17 @@ export const rollSavingThrow = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "saving_throw",
+        character,
         description: `Rolling ${ability.name} saving throw for ${character.name}`,
       });
     } else {
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       alert(
-        `${ability.name} Saving Throw: d20(${d20Roll}) + ${modifier} = ${total}${criticalText}`
+        `${ability.name} Saving Throw: d20(${d20Roll}) + ${modifier} = ${total}${criticalText}`,
       );
     }
 
@@ -2989,8 +3131,8 @@ export const rollSavingThrow = async ({
       description: isCriticalSuccess
         ? "Natural 20!"
         : isCriticalFailure
-        ? "Natural 1!"
-        : "",
+          ? "Natural 1!"
+          : "",
       embedColor: getRollResultColor(rollResult, ROLL_COLORS.saving_throw),
       rollResult,
       fields: [],
@@ -3050,6 +3192,7 @@ export const rollResearch = async ({
         isCriticalSuccess,
         isCriticalFailure,
         type: "research",
+        character: selectedCharacter,
         description: `History of Magic check (DC ${dc}) for ${
           selectedCharacter.name
         }${customRoll !== null ? " using assigned die" : ""}`,
@@ -3126,7 +3269,7 @@ export const rollResearch = async ({
       const modifierInfo = getModifierInfo(
         spellName,
         subject,
-        selectedCharacter
+        selectedCharacter,
       );
       additionalFields.push(buildModifierBreakdownField(modifierInfo));
     }
@@ -3167,7 +3310,7 @@ export const rollResearch = async ({
 export const rollFlexibleDie = (
   diceQuantity = 1,
   diceType = 20,
-  rollType = "normal"
+  rollType = "normal",
 ) => {
   const roller = new DiceRoller();
   let notation;
@@ -3185,7 +3328,7 @@ export const rollFlexibleDie = (
   const individualDiceResults = extractIndividualDiceResults(
     roll,
     rollType,
-    diceQuantity
+    diceQuantity,
   );
 
   return {
@@ -3296,8 +3439,8 @@ export const rollFlexibleDice = async ({
       const criticalText = isCriticalSuccess
         ? " - CRITICAL SUCCESS!"
         : isCriticalFailure
-        ? " - CRITICAL FAILURE!"
-        : "";
+          ? " - CRITICAL FAILURE!"
+          : "";
       const rollTypeText =
         rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
 
@@ -3307,7 +3450,7 @@ export const rollFlexibleDice = async ({
           : "";
 
       alert(
-        `${title}: ${diceQuantity}d${diceType}${rollTypeText}${individualDiceText}(${diceRoll}) + ${mod} = ${total}${criticalText}`
+        `${title}: ${diceQuantity}d${diceType}${rollTypeText}${individualDiceText}(${diceRoll}) + ${mod} = ${total}${criticalText}`,
       );
     }
 
@@ -3371,6 +3514,138 @@ export const rollFlexibleDice = async ({
   }
 };
 
+// dicePool: [{ qty: number, sides: number }, ...]
+export const rollFlexibleDicePool = async ({
+  dicePool = [],
+  modifier = 0,
+  rollType = "normal",
+  title = "Damage Roll",
+  description = "",
+  character = null,
+  isRolling,
+  setIsRolling,
+  showRollResult,
+}) => {
+  if (isRolling || dicePool.length === 0) return;
+
+  setIsRolling(true);
+
+  try {
+    const mod = parseInt(modifier) || 0;
+    const isSingleGroup = dicePool.length === 1;
+    const { qty, sides } = dicePool[0];
+
+    let diceRoll, notation, individualDiceResults;
+
+    if (rollType !== "normal") {
+      // Apply adv/dis per group: each group rolls double and keeps highest/lowest
+      const results = dicePool.map((g) =>
+        rollFlexibleDie(g.qty, g.sides, rollType),
+      );
+      diceRoll = results.reduce((sum, r) => sum + r.total, 0);
+      notation = results.map((r) => r.notation).join(" + ");
+      const groups = dicePool.map((g, i) => ({
+        sides: g.sides,
+        values: results[i].individualDiceResults?.keptDice || [],
+      }));
+      individualDiceResults = isSingleGroup
+        ? { ...results[0].individualDiceResults, groups }
+        : {
+            keptDice: results.flatMap(
+              (r) => r.individualDiceResults?.keptDice || [],
+            ),
+            discardedDice: [],
+            groups,
+          };
+    } else {
+      const results = dicePool.map((g) =>
+        rollFlexibleDie(g.qty, g.sides, "normal"),
+      );
+      diceRoll = results.reduce((sum, r) => sum + r.total, 0);
+      notation = results.map((r) => r.notation).join(" + ");
+      const allKeptDice = results.flatMap(
+        (r) => r.individualDiceResults?.keptDice || [],
+      );
+      const groups = dicePool.map((g, i) => ({
+        sides: g.sides,
+        values: results[i].individualDiceResults?.keptDice || [],
+      }));
+      individualDiceResults = {
+        keptDice: allKeptDice,
+        discardedDice: [],
+        groups,
+      };
+    }
+
+    const total = diceRoll + mod;
+    const isCriticalSuccess =
+      isSingleGroup && sides === 20 && qty === 1 && diceRoll === 20;
+    const isCriticalFailure =
+      isSingleGroup && sides === 20 && qty === 1 && diceRoll === 1;
+    const effectiveRollType = rollType;
+
+    if (showRollResult) {
+      showRollResult({
+        title,
+        rollValue: diceRoll,
+        modifier: mod,
+        total,
+        isCriticalSuccess,
+        isCriticalFailure,
+        type: "flexible",
+        description,
+        rollType: effectiveRollType,
+        character,
+        individualDiceResults,
+      });
+    }
+
+    const rollResult = {
+      d20Roll: diceRoll,
+      modifier: mod,
+      total,
+      isCriticalSuccess,
+      isCriticalFailure,
+      individualDiceResults,
+    };
+    const advantageInfo =
+      effectiveRollType !== "normal"
+        ? `${effectiveRollType === "advantage" ? "🎯 Advantage" : "⚠️ Disadvantage"} Roll`
+        : "";
+
+    const additionalFields = [
+      { name: "Dice Formula", value: notation, inline: true },
+    ];
+    if (mod !== 0) {
+      additionalFields.push({
+        name: "Modifier",
+        value: `${mod >= 0 ? "+" : ""}${mod}`,
+        inline: true,
+      });
+    }
+
+    const success = await sendDiscordRollWebhook({
+      character,
+      rollType: "Damage Roll",
+      title,
+      description: advantageInfo,
+      embedColor: getRollResultColor(rollResult, ROLL_COLORS.flexible),
+      rollResult,
+      fields: additionalFields,
+      useCharacterAvatar: !!character,
+    });
+
+    if (!success) {
+      alert("Failed to send roll to Discord");
+    }
+  } catch (error) {
+    console.error("Error rolling dice pool:", error);
+    alert("Failed to roll dice pool");
+  } finally {
+    setIsRolling(false);
+  }
+};
+
 export const rollLuckPoint = async ({
   character,
   pointsSpent,
@@ -3393,8 +3668,8 @@ export const rollLuckPoint = async ({
       (type === "spent"
         ? "Luck manipulation"
         : type === "long_rest"
-        ? "Long rest recovery"
-        : "Luck point action");
+          ? "Long rest recovery"
+          : "Luck point action");
 
     let title, description;
     const fields = [];
@@ -3502,6 +3777,8 @@ export const useRollFunctions = () => {
       rollMagicCasting({ ...params, showRollResult }),
     rollFlexibleDice: (params) =>
       rollFlexibleDice({ ...params, showRollResult }),
+    rollFlexibleDicePool: (params) =>
+      rollFlexibleDicePool({ ...params, showRollResult }),
     rollLuckPoint: (params) => rollLuckPoint({ ...params, showRollResult }),
     rollMagicalTheoryCheck: (params) =>
       rollMagicalTheoryCheck({ ...params, showRollResult }),

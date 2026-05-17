@@ -126,14 +126,6 @@ const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
 
   return (
     <div style={customStyles.container}>
-      <div
-        style={{
-          maxHeight: "600px",
-          overflowY: "auto",
-          overflowX: "hidden",
-          paddingRight: "4px",
-        }}
-      >
         <h3 style={customStyles.header}>Magic Subject Modifiers</h3>
         <div style={customStyles.helpText}>
           Enter your wand's bonuses/penalties for each subject of magic (The DM
@@ -228,7 +220,6 @@ const MagicModifiersSection = ({ character, onChange, disabled = false }) => {
             rows={5}
           />
         </div>
-      </div>
     </div>
   );
 };

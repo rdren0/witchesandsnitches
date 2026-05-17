@@ -425,8 +425,21 @@ const CharacterFeatsDisplay = ({
                         abilityDetails.push(`Save: ${ability.save}`);
                       if (ability.uses)
                         abilityDetails.push(`Uses: ${ability.uses}`);
-                      if (ability.damage)
-                        abilityDetails.push(`Damage: ${ability.damage}`);
+                      if (ability.damage) {
+                        const dmg = ability.damage;
+                        if (typeof dmg === "object") {
+                          let dmgStr = dmg.base || "";
+                          if (dmg.scaling) {
+                            const scalingParts = Object.entries(dmg.scaling)
+                              .map(([lvl, val]) => `${val} at level ${lvl}`)
+                              .join(", ");
+                            dmgStr += ` (${scalingParts})`;
+                          }
+                          abilityDetails.push(`Damage: ${dmgStr}`);
+                        } else {
+                          abilityDetails.push(`Damage: ${dmg}`);
+                        }
+                      }
                       if (ability.range)
                         abilityDetails.push(`Range: ${ability.range}`);
                       if (ability.effect)

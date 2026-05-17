@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Package, Wand, Dices, Award, Rat } from "lucide-react";
+import { Package, Wand, Award, Rat } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import Inventory from "../Inventory/Inventory";
-import FlexibleDiceRoller from "../FlexibleDiceRoller/FlexibleDiceRoller";
 import SpellSlotTracker from "./SpellSlotTracker";
 import CharacterFeatsDisplay from "./CharacterFeatsDisplay";
 import MetaMagicDisplay from "./MetaMagicDisplay";
@@ -94,26 +93,6 @@ const CharacterTabbedPanel = ({
   };
 
   const tabs = [
-    {
-      id: "diceRoller",
-      label: "Dice Roller",
-      icon: Dices,
-      component: (
-        <div
-          style={{
-            backgroundColor: theme.background,
-            padding: "16px",
-            height: "100%",
-          }}
-        >
-          <FlexibleDiceRoller
-            title="Custom Roll"
-            description={`Rolling for ${selectedCharacter.name}`}
-            character={selectedCharacter}
-          />
-        </div>
-      ),
-    },
     {
       id: "slots",
       label: "Spellcasting & Attacks",

@@ -2,6 +2,10 @@ import React from "react";
 import { Sparkles } from "lucide-react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../utils/styles/masterStyles";
+import {
+  METAMAGIC_COUNT_PROGRESSION,
+  getMaxMetamagicCount,
+} from "../../../../utils/metamagicUtils";
 
 const AVAILABLE_METAMAGICS = [
   {
@@ -62,6 +66,7 @@ const AVAILABLE_METAMAGICS = [
   },
 ];
 
+
 const CASTING_STYLE_METAMAGICS = {
   "Willpower Caster": [
     {
@@ -81,6 +86,17 @@ const CASTING_STYLE_METAMAGICS = {
       preview: "Make spells more resistant to dispelling",
       requiredLevel: 3,
       castingStyle: "Willpower Caster",
+    },
+  ],
+  "Vigor Caster": [
+    {
+      name: "Rage",
+      cost: "5 sorcery points",
+      description:
+        "At 3rd level, when in battle, you fight with primal ferocity. On your turn, you can spend 5 sorcery points to enter a rage as a bonus action. While raging, you gain advantage on Strength checks and Strength saving throws, resistance to bludgeoning, piercing, slashing and fire damage, and a +2 bonus to unarmed strike damage rolls (+3 at 10th level, +4 at 16th level). You can't cast spells with an area of effect or concentrate on spells while raging. Your rage lasts 1 minute.",
+      preview: "Enter a primal rage for combat bonuses",
+      requiredLevel: 3,
+      castingStyle: "Vigor Caster",
     },
   ],
   "Technique Caster": [
@@ -168,8 +184,11 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
     const level = character?.level || 1;
 
     if (castingStyle === "Willpower Caster" && level >= 3) {
-      const willpowerMetaMagics = CASTING_STYLE_METAMAGICS["Willpower Caster"];
-      automaticMetaMagics.push(...willpowerMetaMagics);
+      automaticMetaMagics.push(...CASTING_STYLE_METAMAGICS["Willpower Caster"]);
+    }
+
+    if (castingStyle === "Vigor Caster" && level >= 3) {
+      automaticMetaMagics.push(...CASTING_STYLE_METAMAGICS["Vigor Caster"]);
     }
 
     return automaticMetaMagics;
@@ -178,6 +197,11 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
   const allAvailableMetaMagics = getAvailableMetaMagics(character);
   const automaticMetaMagics = getAutomaticMetaMagics(character);
   const selectedCount = currentMetaMagics.length;
+  const maxCount = getMaxMetamagicCount(
+    character?.castingStyle,
+    character?.level || 1
+  );
+  const isOverLimit = maxCount !== null && selectedCount > maxCount;
 
   const handleMetaMagicToggle = (metaMagicName) => {
     const isSelected = currentMetaMagics.includes(metaMagicName);
@@ -251,18 +275,35 @@ const MetaMagicSection = ({ character, onChange, disabled = false }) => {
               color: theme.primary,
             }}
           >
-            {selectedCount} selected
+            {selectedCount}
+            {maxCount !== null ? ` / ${maxCount}` : ""} selected
             {automaticMetaMagics.length > 0 &&
               ` + ${automaticMetaMagics.length} automatic`}
           </span>
         </div>
-        <div
-          style={{
-            fontSize: "12px",
-            color: theme.textSecondary,
-          }}
-        >
-          Select as many Metamagic options as allowed by the rulebook{" "}
+        <div style={{ fontSize: "12px" }}>
+          <span style={{ color: "#3B82F6" }}>
+            {maxCount !== null && character?.castingStyle
+              ? maxCount === 0
+                ? `${character.castingStyle}s don't gain metamagic options until a higher level.`
+                : <>
+                    As a{" "}
+                    <span style={{ color: theme.warning, fontWeight: "700" }}>
+                      level {character.level || 1}
+                    </span>
+                    {" "}{character.castingStyle}, you are typically allowed{" "}
+                    <span style={{ color: theme.warning, fontWeight: "700" }}>
+                      {maxCount} metamagic option{maxCount !== 1 ? "s" : ""}
+                    </span>
+                    .
+                  </>
+              : "Select metamagic options for your character."}
+          </span>
+          {isOverLimit && (
+            <span style={{ color: theme.textSecondary }}>
+              {" "}You have selected more than the guideline allows — confirm with your DM.
+            </span>
+          )}
         </div>
       </div>
 

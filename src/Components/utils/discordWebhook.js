@@ -1,5 +1,37 @@
 import { getDiscordWebhook } from "../../App/const";
 
+const buildRollDetailsValue = ({ modifier, total, individualDiceResults }) => {
+  const { keptDice = [], discardedDice = [], groups } = individualDiceResults;
+  const modStr = modifier > 0 ? ` + ${modifier}` : modifier < 0 ? ` − ${Math.abs(modifier)}` : "";
+
+  // Multiple die types (e.g. 2d6 + d8)
+  const validGroups = groups ? groups.filter((g) => g.values && g.values.length > 0) : [];
+  if (validGroups.length > 1) {
+    const groupStr = validGroups
+      .map((g) => `d${g.sides} [${g.values.join(", ")}]`)
+      .join(" + ");
+    return `${groupStr}${modStr} = **${total}**`;
+  }
+
+  // Advantage / disadvantage — has discarded dice
+  if (discardedDice.length > 0) {
+    const discardedStr = discardedDice.map((d) => `~~${d}~~`).join(", ");
+    return `${discardedStr} → **${keptDice[0]}**${modStr} = **${total}**`;
+  }
+
+  // Multiple kept dice, single type (e.g. 3d6)
+  if (keptDice.length > 1) {
+    return `[${keptDice.join(", ")}]${modStr} = **${total}**`;
+  }
+
+  // Single kept die
+  if (keptDice.length === 1) {
+    return `${keptDice[0]}${modStr} = **${total}**`;
+  }
+
+  return `**${total}**`;
+};
+
 export const sendDiscordRollWebhook = async ({
   character,
   rollType,
@@ -51,11 +83,14 @@ export const sendDiscordRollWebhook = async ({
         isCriticalFailure,
         customRoll,
         rollDetailsDisplay,
+        individualDiceResults,
       } = rollResult;
 
       let rollDescription;
       if (rollDetailsDisplay) {
         rollDescription = `\`${rollDetailsDisplay}\``;
+      } else if (individualDiceResults) {
+        rollDescription = buildRollDetailsValue({ modifier, total, individualDiceResults });
       } else {
         const modifierText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
         rollDescription = `\`${d20Roll}${modifierText}=${total}\``;

@@ -2423,8 +2423,6 @@ export const createBackgroundStyles = (theme) => ({
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    maxHeight: "800px",
-    overflowY: "auto",
     padding: "4px",
   },
   completionMessage: {
