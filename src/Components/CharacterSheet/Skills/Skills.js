@@ -76,7 +76,7 @@ export const Skills = ({
 
   const skillStyles = {
     container: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
       display: "flex",
@@ -86,7 +86,7 @@ export const Skills = ({
     header: {
       padding: "12px 24px",
       borderBottom: `2px solid ${theme.border}`,
-      backgroundColor: theme.background,
+      backgroundColor: theme.surface,
       borderRadius: "12px 12px 0 0",
       minHeight: "48px",
       display: "flex",
