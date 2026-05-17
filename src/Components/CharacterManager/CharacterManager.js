@@ -20,12 +20,10 @@ const CharacterManager = ({
   customUsername,
   onCharacterSaved,
   supabase,
-  adminMode = false,
-  isUserAdmin = false,
   mode,
 }) => {
   const { theme } = useTheme();
-  const { allUsers, loadAllUsers } = useAdmin();
+  const { adminMode, isUserAdmin, loadAllUsers, adminCheckComplete } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const { characterId } = useParams();
@@ -37,20 +35,11 @@ const CharacterManager = ({
   const [selectedTargetUserId, setSelectedTargetUserId] = useState(null);
   const [allCharacters, setAllCharacters] = useState([]);
   const [viewMode, setViewMode] = useState("my");
-  const [isUserDataReady, setIsUserDataReady] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [transferCharacter, setTransferCharacter] = useState(null);
   const [isTransferring, setIsTransferring] = useState(false);
 
   const discordUserId = user?.user_metadata?.provider_id;
-
-  useEffect(() => {
-    if (discordUserId) {
-      setIsUserDataReady(true);
-    } else {
-      setIsUserDataReady(false);
-    }
-  }, [discordUserId]);
 
   useEffect(() => {
     if (adminMode && isUserAdmin) {
@@ -161,7 +150,7 @@ const CharacterManager = ({
     }
   };
 
-  if (!user || !discordUserId || !isUserDataReady) {
+  if (!user || !discordUserId) {
     return (
       <div
         style={{
@@ -415,23 +404,46 @@ const CharacterManager = ({
         </>
       )}
 
-      {currentMode === "edit" && characterId && (
-        <CharacterForm
-          characterId={characterId}
-          userId={
-            adminMode && isUserAdmin
-              ? location.state?.characterOwnerId
-              : discordUserId
-          }
-          mode="edit"
-          onSave={handleCharacterSaved}
-          onCancel={() => navigate("/character-management")}
-          supabase={supabase}
-          adminMode={adminMode}
-          isUserAdmin={isUserAdmin}
-          initialSection={sectionToOpen}
-        />
+      {currentMode === "edit" && characterId && !adminCheckComplete && (
+        <div
+          style={{
+            maxWidth: "900px",
+            margin: "0 auto",
+            padding: "24px",
+          }}
+        >
+          {[180, 120, 120, 80, 160].map((width, i) => (
+            <div
+              key={i}
+              style={{
+                height: "20px",
+                width: `${width * 4}px`,
+                maxWidth: "100%",
+                borderRadius: "6px",
+                backgroundColor: theme.surface,
+                marginBottom: "16px",
+                opacity: 0.6,
+              }}
+            />
+          ))}
+        </div>
       )}
+
+      {currentMode === "edit" &&
+        characterId &&
+        adminCheckComplete && (
+          <CharacterForm
+            characterId={characterId}
+            userId={discordUserId}
+            mode="edit"
+            onSave={handleCharacterSaved}
+            onCancel={() => navigate("/character-management")}
+            supabase={supabase}
+            adminMode={adminMode}
+            isUserAdmin={isUserAdmin}
+            initialSection={sectionToOpen}
+          />
+        )}
 
       {currentMode === "create" && (
         <CharacterForm

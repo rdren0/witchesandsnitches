@@ -31,7 +31,7 @@ export const useCharacterData = (
 
     if (adminMode && !isUserAdmin) return;
 
-    if (!userId && !isUserAdmin) {
+    if (!userId) {
       console.warn(
         "Cannot load character: userId is undefined and not in admin mode",
       );
@@ -73,6 +73,7 @@ export const useCharacterData = (
 
         setCharacter(finalCharacter);
         setOriginalCharacter(finalCharacter);
+        setError(null);
       }
     } catch (err) {
       console.error("Error loading character:", err);

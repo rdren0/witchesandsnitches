@@ -425,8 +425,20 @@ const CharacterFeatsDisplay = ({
                         abilityDetails.push(`Save: ${ability.save}`);
                       if (ability.uses)
                         abilityDetails.push(`Uses: ${ability.uses}`);
-                      if (ability.damage)
-                        abilityDetails.push(`Damage: ${ability.damage}`);
+                      if (ability.damage) {
+                        if (typeof ability.damage === "object") {
+                          let damageText = ability.damage.base || "";
+                          if (ability.damage.scaling) {
+                            const scalingEntries = Object.entries(ability.damage.scaling)
+                              .map(([lvl, dmg]) => `${dmg} at level ${lvl}`)
+                              .join(", ");
+                            damageText += ` (${scalingEntries})`;
+                          }
+                          abilityDetails.push(`Damage: ${damageText}`);
+                        } else {
+                          abilityDetails.push(`Damage: ${ability.damage}`);
+                        }
+                      }
                       if (ability.range)
                         abilityDetails.push(`Range: ${ability.range}`);
                       if (ability.effect)
