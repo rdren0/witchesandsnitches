@@ -202,15 +202,15 @@ export const calculateFinalAbilityScores = (character) => {
       character.base_ability_scores &&
       character.base_ability_scores[ability] !== undefined
     ) {
-      baseScore = character.base_ability_scores[ability];
+      baseScore = character.base_ability_scores[ability] || 8;
     } else if (
       character.baseAbilityScores &&
       character.baseAbilityScores[ability] !== undefined
     ) {
-      baseScore = character.baseAbilityScores[ability];
+      baseScore = character.baseAbilityScores[ability] || 8;
     } else {
       baseScore =
-        character.abilityScores?.[ability] || character[ability] || 10;
+        character.abilityScores?.[ability] || character[ability] || 8;
     }
 
     let finalScore = baseScore;

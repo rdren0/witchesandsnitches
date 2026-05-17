@@ -105,6 +105,7 @@ const RollHistoryDrawer = ({ character }) => {
           transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.25s ease",
           boxShadow: drawerOpen ? "-6px 0 24px rgba(0,0,0,0.25)" : "none",
+          borderLeft: `1px solid ${theme.border}`,
         }}
       >
         <button
@@ -129,7 +130,7 @@ const RollHistoryDrawer = ({ character }) => {
         >
           <X size={14} />
         </button>
-        <RollHistory />
+        <RollHistory characterId={character?.id} />
       </div>
 
       {/* Dice Roller modal */}

@@ -4,19 +4,33 @@ import { useRollModal, getRollTypeColor } from "../utils/diceRoller";
 import { useTheme } from "../../contexts/ThemeContext";
 
 
-const relativeTime = (timestamp) => {
-  const diff = Date.now() - timestamp;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "JUST NOW";
-  if (mins < 60) return `${mins} MIN${mins !== 1 ? "S" : ""} AGO`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} HR${hrs !== 1 ? "S" : ""} AGO`;
-  const date = new Date(timestamp);
-  return (
-    date.toLocaleDateString() +
-    " " +
-    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
+const todayKey = new Date().toDateString();
+
+const formatEntryTime = (timestamp) => {
+  const dayKey = new Date(timestamp).toDateString();
+  if (dayKey === todayKey) {
+    return new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+  return new Date(timestamp).toLocaleDateString([], { month: "short", day: "numeric" });
+};
+
+const groupByDay = (entries) => {
+  const groups = [];
+  entries.forEach((entry) => {
+    const dayKey = new Date(entry.timestamp).toDateString();
+    const last = groups[groups.length - 1];
+    if (last && last.dayKey === dayKey) {
+      last.entries.push(entry);
+    } else {
+      groups.push({ dayKey, entries: [entry] });
+    }
+  });
+  return groups;
+};
+
+const formatGroupLabel = (dayKey) => {
+  if (dayKey === todayKey) return "Today";
+  return new Date(dayKey).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
 };
 
 const formatFormula = (entry) => {
@@ -157,7 +171,7 @@ const RollHistory = ({ characterId }) => {
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          backgroundColor: theme.surface,
+          backgroundColor: theme.background,
           minWidth: 0,
         }}
       >
@@ -168,7 +182,7 @@ const RollHistory = ({ characterId }) => {
             justifyContent: "space-between",
             padding: "12px 14px",
             borderBottom: `1px solid ${theme.border}`,
-            backgroundColor: theme.background,
+            backgroundColor: theme.surface,
             flexShrink: 0,
           }}
         >
@@ -184,7 +198,7 @@ const RollHistory = ({ characterId }) => {
               ROLL HISTORY
             </span>
             <div style={{ fontSize: "9px", color: theme.textSecondary, opacity: 0.6, marginTop: "1px" }}>
-              Kept for ~2 weeks
+              Kept for ~3 weeks
             </div>
           </div>
           {filtered.length > 0 && (
@@ -206,7 +220,7 @@ const RollHistory = ({ characterId }) => {
           )}
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "14px" }}>
           {filtered.length === 0 ? (
             <div
               style={{
@@ -223,111 +237,113 @@ const RollHistory = ({ characterId }) => {
               Roll something to see your history here
             </div>
           ) : (
-            filtered.map((entry) => {
-              const typeColor = getEntryColor(entry);
-              const formula = formatFormula(entry);
-              const hasDiscarded = entry.discardedValues && entry.discardedValues.length > 0;
-              const isAdv = entry.rollType === "advantage";
-              const isDis = entry.rollType === "disadvantage";
-              const outcomeBadge = getOutcomeBadge(entry);
+            groupByDay(filtered).map((group, gi) => (
+              <React.Fragment key={group.dayKey}>
+                {gi > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0 16px" }}>
+                    <div style={{ flex: 1, height: "1px", backgroundColor: theme.textSecondary, opacity: 0.35 }} />
+                    <span style={{ fontSize: "11px", color: theme.textSecondary, opacity: 0.6, whiteSpace: "nowrap" }}>
+                      {formatGroupLabel(group.dayKey)}
+                    </span>
+                    <div style={{ flex: 1, height: "1px", backgroundColor: theme.textSecondary, opacity: 0.35 }} />
+                  </div>
+                )}
+                {group.entries.map((entry) => {
+                  const typeColor = getEntryColor(entry);
+                  const formula = formatFormula(entry);
+                  const hasDiscarded = entry.discardedValues && entry.discardedValues.length > 0;
+                  const isAdv = entry.rollType === "advantage";
+                  const isDis = entry.rollType === "disadvantage";
+                  const outcomeBadge = getOutcomeBadge(entry);
 
-              const hasFormula = formula || hasDiscarded;
-              const hasModifiers = entry.modifierBreakdown && entry.modifierBreakdown.length > 0;
+                  const hasFormula = formula || hasDiscarded;
+                  const hasModifiers = entry.modifierBreakdown && entry.modifierBreakdown.length > 0;
 
-              return (
-                <div key={entry.id} style={{ marginBottom: "14px" }}>
-                  {/* Character name */}
-                  {entry.characterName && (
-                    <div style={{ fontSize: "10px", color: theme.textSecondary, marginBottom: "2px", paddingLeft: "3px" }}>
-                      {entry.characterName}
-                    </div>
-                  )}
+                  return (
+                    <div key={entry.id} style={{ marginBottom: "12px" }}>
+                      <div
+                        style={{
+                          backgroundColor: typeColor + "18",
+                          border: `1px solid ${typeColor}`,
+                          borderLeft: `4px solid ${typeColor}`,
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {/* Name + total row */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 8px 12px", gap: "8px" }}>
+                          {/* Left: name + badges */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "5px", minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: "700",
+                                color: theme.text,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {entry.title}
+                            </div>
+                            {(outcomeBadge || isAdv || isDis) && (
+                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                                {outcomeBadge && (
+                                  <span style={{ fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: "4px", backgroundColor: outcomeBadge.color + "30", color: outcomeBadge.color, letterSpacing: "0.05em" }}>
+                                    {outcomeBadge.label}
+                                  </span>
+                                )}
+                                {(isAdv || isDis) && (
+                                  <span style={{ fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: "4px", backgroundColor: isAdv ? "#10b98130" : "#ef444430", color: isAdv ? "#10b981" : "#ef4444", letterSpacing: "0.05em" }}>
+                                    {isAdv ? "ADV" : "DIS"}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
 
-                  {/* Card */}
-                  <div
-                    style={{
-                      display: "flex",
-                      backgroundColor: typeColor + "10",
-                      border: `1px solid ${typeColor}35`,
-                      borderLeft: `3px solid ${typeColor}`,
-                      borderRadius: "6px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {/* Left: title + sub-sections */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {/* Title row */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", padding: "7px 10px 6px" }}>
-                        <div
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            color: theme.text,
-                            letterSpacing: "0.04em",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {entry.title.toUpperCase()}
+                          {/* Right: total */}
+                          <div style={{ fontSize: "30px", fontWeight: "800", color: typeColor, lineHeight: 1, flexShrink: 0 }}>
+                            {entry.total}
+                          </div>
                         </div>
-                        {outcomeBadge && (
-                          <span style={{ fontSize: "9px", fontWeight: "700", padding: "1px 4px", borderRadius: "3px", backgroundColor: outcomeBadge.color + "25", color: outcomeBadge.color, flexShrink: 0, letterSpacing: "0.04em" }}>
-                            {outcomeBadge.label}
-                          </span>
-                        )}
-                        {(isAdv || isDis) && (
-                          <span style={{ fontSize: "9px", fontWeight: "700", padding: "1px 4px", borderRadius: "3px", backgroundColor: isAdv ? "#10b98125" : "#ef444425", color: isAdv ? "#10b981" : "#ef4444", flexShrink: 0, letterSpacing: "0.04em" }}>
-                            {isAdv ? "ADV" : "DIS"}
-                          </span>
+
+                        {/* Formula + modifiers */}
+                        {(hasFormula || hasModifiers) && (
+                          <div style={{ padding: "6px 14px 9px 12px", borderTop: `1px solid ${typeColor}`, display: "flex", flexDirection: "column", gap: "3px" }}>
+                            {hasFormula && (
+                              <div style={{ fontFamily: "'Courier New', monospace", fontSize: "12px", color: theme.textSecondary, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px" }}>
+                                {hasDiscarded && (
+                                  <>
+                                    <span style={{ textDecoration: "line-through", opacity: 0.5 }}>{entry.discardedValues.join(", ")}</span>
+                                    <span style={{ opacity: 0.5 }}>→</span>
+                                  </>
+                                )}
+                                {formula && <span>{formula}</span>}
+                              </div>
+                            )}
+                            {hasModifiers && (
+                              <div style={{ fontSize: "11px", color: theme.textSecondary, opacity: 0.8 }}>
+                                {entry.modifierBreakdown.map((part, i) => (
+                                  <span key={i}>
+                                    {i > 0 && " · "}
+                                    {part.label} {part.value >= 0 ? "+" : ""}{part.value}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
 
-                      {/* Math + modifiers together in one sub-row */}
-                      {(hasFormula || hasModifiers) && (
-                        <div style={{ padding: "4px 10px 7px", borderTop: `1px solid ${typeColor}20`, display: "flex", flexDirection: "column", gap: "2px" }}>
-                          {hasFormula && (
-                            <div style={{ fontFamily: "'Courier New', monospace", fontSize: "12px", color: theme.textSecondary, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "3px" }}>
-                              {hasDiscarded && (
-                                <>
-                                  <span style={{ textDecoration: "line-through", opacity: 0.45 }}>{entry.discardedValues.join(", ")}</span>
-                                  <span style={{ opacity: 0.45 }}>→</span>
-                                </>
-                              )}
-                              {formula && <span>{formula}</span>}
-                            </div>
-                          )}
-                          {hasModifiers && (
-                            <div style={{ fontSize: "9px", color: theme.textSecondary, letterSpacing: "0.03em" }}>
-                              ({entry.modifierBreakdown.map((part, i) => (
-                                <span key={i}>
-                                  {i > 0 && " · "}
-                                  {part.label} {part.value >= 0 ? "+" : ""}{part.value}
-                                </span>
-                              ))})
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div style={{ fontSize: "10px", color: theme.textSecondary, textAlign: "right", padding: "3px 4px 0", opacity: 0.7 }}>
+                        {formatEntryTime(entry.timestamp)}
+                      </div>
                     </div>
-
-                    {/* Vertical divider */}
-                    <div style={{ width: "1px", backgroundColor: typeColor + "40", flexShrink: 0 }} />
-
-                    {/* Total */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 14px", flexShrink: 0 }}>
-                      <span style={{ fontSize: "22px", fontWeight: "700", color: theme.text }}>
-                        {entry.total}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ fontSize: "10px", color: theme.textSecondary, textAlign: "right", padding: "2px 4px 0" }}>
-                    {relativeTime(entry.timestamp)}
-                  </div>
-                </div>
-              );
-            })
+                  );
+                })}
+              </React.Fragment>
+            ))
           )}
         </div>
       </div>

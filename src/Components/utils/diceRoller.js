@@ -809,10 +809,10 @@ export const RollModalProvider = ({ children }) => {
     }
   };
 
-  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+  const THREE_WEEKS_MS = 21 * 24 * 60 * 60 * 1000;
 
   const pruneOldHistory = () => {
-    const cutoff = Date.now() - TWO_WEEKS_MS;
+    const cutoff = Date.now() - THREE_WEEKS_MS;
     setRollHistory((prev) => {
       const next = prev.filter((e) => e.timestamp >= cutoff);
       if (next.length !== prev.length) saveHistory(next);
