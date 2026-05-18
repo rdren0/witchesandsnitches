@@ -549,6 +549,8 @@ const DowntimeForm = ({
               secondSkill: "",
               wandModifier: "",
               secondWandModifier: "",
+              firstSpellDice: null,
+              secondSpellDice: null,
             },
           }));
         }

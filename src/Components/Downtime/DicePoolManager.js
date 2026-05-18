@@ -154,12 +154,26 @@ const DicePoolManager = ({
   );
 
   const isDiceAssigned = (diceIndex) => {
-    const isAssignedToActivities = Object.values(rollAssignments).some(
-      (assignment) =>
-        assignment.diceIndex === diceIndex ||
-        assignment.secondDiceIndex === diceIndex ||
-        assignment.firstSpellDice === diceIndex ||
-        assignment.secondSpellDice === diceIndex
+    const isAssignedToActivities = Object.entries(rollAssignments).some(
+      ([key, assignment]) => {
+        if (
+          assignment.diceIndex === diceIndex ||
+          assignment.secondDiceIndex === diceIndex
+        ) {
+          return true;
+        }
+        if (key.startsWith("activity")) {
+          const activityIndex = parseInt(key.replace("activity", "")) - 1;
+          const activityText = formData.activities[activityIndex]?.activity;
+          if (activityRequiresSpellDice(activityText)) {
+            return (
+              assignment.firstSpellDice === diceIndex ||
+              assignment.secondSpellDice === diceIndex
+            );
+          }
+        }
+        return false;
+      }
     );
 
     const isAssignedToRelationships = [

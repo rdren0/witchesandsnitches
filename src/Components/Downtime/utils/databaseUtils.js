@@ -142,7 +142,9 @@ export const submitDowntimeSheet = async ({
   }
 
   const isResubmission =
-    currentSheet && currentSheet.review_status === "failure";
+    currentSheet &&
+    (currentSheet.review_status === "failure" ||
+      currentSheet.review_status === "partial");
 
   try {
     const processedRollAssignments = { ...rollAssignments };
