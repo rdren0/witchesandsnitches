@@ -3352,10 +3352,10 @@ const extractIndividualDiceResults = (roll, rollType) => {
 
         if (rollType === "advantage" || rollType === "disadvantage") {
           const keptDice = diceRoll.rolls
-            .filter((die) => !die.discarded)
+            .filter((die) => die.useInTotal !== false)
             .map((die) => die.value);
           const discardedDice = diceRoll.rolls
-            .filter((die) => die.discarded)
+            .filter((die) => die.useInTotal === false)
             .map((die) => die.value);
 
           return {
