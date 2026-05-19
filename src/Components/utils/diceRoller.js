@@ -10,6 +10,7 @@ import {
   buildModifierBreakdownField,
   ROLL_COLORS,
 } from "./discordWebhook";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const RollModalContext = createContext();
 
@@ -66,6 +67,7 @@ export const hasSubclassFeature = (character, featureName) => {
 };
 
 export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
+  const { theme } = useTheme();
   if (!isOpen || !rollResult) return null;
 
   const {
@@ -78,45 +80,34 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     description,
     type = "ability",
     rollType = "normal",
+    isPrivate = false,
     inventoryAdded,
     potionQuality,
     recipeQuality,
-    diceQuantity = 1,
-    diceType = 20,
     individualDiceResults,
+    modifierBreakdown,
   } = rollResult;
 
-  const getTypeColor = () => getRollTypeColor(type);
-
-  const getDiceColor = () => {
-    if (isCriticalSuccess) return "#f59e0b";
-    if (isCriticalFailure) return "#ef4444";
-    return getTypeColor();
-  };
-
-  const getRollTypeIndicator = () => {
-    if (rollType === "advantage") return "🎯 ADV";
-    if (rollType === "disadvantage") return "⚠️ DIS";
-    return "";
-  };
-
-  const backgroundColor = isCriticalSuccess
-    ? "#fef3c7"
-    : isCriticalFailure
-      ? "#fee2e2"
-      : "#f8fafc";
-
-  const borderColor = isCriticalSuccess
+  const accentColor = isCriticalSuccess
     ? "#f59e0b"
     : isCriticalFailure
       ? "#ef4444"
-      : getDiceColor();
+      : getRollTypeColor(type);
 
-  const textColor = isCriticalSuccess
-    ? "#92400e"
-    : isCriticalFailure
-      ? "#991b1b"
-      : "#1f2937";
+  const isAdv = rollType === "advantage";
+  const isDis = rollType === "disadvantage";
+  const mod = parseInt(modifier) || 0;
+  const modAbs = Math.abs(mod);
+
+  const groups = individualDiceResults?.groups;
+  const keptDice = individualDiceResults?.keptDice || [];
+  const discardedDice = individualDiceResults?.discardedDice || [];
+  const hasMultipleDice = groups
+    ? groups.some((g) => (g.values?.length || 0) > 0)
+    : keptDice.length > 1;
+  const hasDiscardedAny =
+    discardedDice.length > 0 ||
+    (groups && groups.some((g) => g.discardedValues?.length > 0));
 
   const getQualityColor = (quality) => {
     const colors = {
@@ -129,161 +120,134 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     return colors[quality] || "#6b7280";
   };
 
-  const getDiceFormula = () => {
-    if (type === "flexible") {
-      const advantageText =
-        rollType !== "normal" ? ` (${rollType.toUpperCase()})` : "";
-      return `${diceQuantity}d${diceType}${advantageText}`;
+  const DieChip = ({ value, kept }) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: "28px",
+        height: "28px",
+        padding: "0 5px",
+        backgroundColor: kept ? accentColor + "22" : "transparent",
+        border: `1.5px solid ${kept ? accentColor : theme.border}`,
+        borderRadius: "5px",
+        fontSize: "13px",
+        fontWeight: "700",
+        color: kept ? accentColor : theme.textSecondary,
+        opacity: kept ? 1 : 0.45,
+        fontFamily: "monospace",
+        textDecoration: kept ? "none" : "line-through",
+        flexShrink: 0,
+      }}
+    >
+      {value}
+    </div>
+  );
+
+  const renderDiceSection = () => {
+    if (!individualDiceResults) return null;
+
+    if (groups && groups.length > 0) {
+      const validGroups = groups.filter(
+        (g) => (g.values?.length || 0) + (g.discardedValues?.length || 0) > 0,
+      );
+      if (validGroups.length === 0) return null;
+
+      return validGroups.map((g, gi) => {
+        const groupSum = (g.values || []).reduce((a, b) => a + b, 0);
+        return (
+          <div
+            key={gi}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "800",
+                color: accentColor,
+                minWidth: "24px",
+                fontFamily: "monospace",
+                letterSpacing: "0.02em",
+                flexShrink: 0,
+              }}
+            >
+              d{g.sides}
+            </span>
+            <div
+              style={{
+                display: "flex",
+                gap: "4px",
+                flexWrap: "wrap",
+                alignItems: "center",
+                flex: 1,
+              }}
+            >
+              {(g.values || []).map((v, i) => (
+                <DieChip key={`k-${i}`} value={v} kept={true} />
+              ))}
+              {g.discardedValues?.length > 0 &&
+                g.discardedValues.map((v, i) => (
+                  <DieChip key={`d-${i}`} value={v} kept={false} />
+                ))}
+            </div>
+            {validGroups.length > 1 && (
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: theme.textSecondary,
+                  fontFamily: "monospace",
+                  flexShrink: 0,
+                }}
+              >
+                = {groupSum}
+              </span>
+            )}
+          </div>
+        );
+      });
     }
-    return null;
-  };
 
-  const renderIndividualDiceResults = () => {
-    if (
-      !individualDiceResults ||
-      !individualDiceResults.keptDice ||
-      individualDiceResults.keptDice.length <= 1
-    ) {
-      return null;
-    }
-
-    const {
-      keptDice,
-      discardedDice,
-      rollType: diceRollType,
-    } = individualDiceResults;
-
+    if (keptDice.length === 0) return null;
     return (
       <div
         style={{
-          marginTop: "16px",
-          padding: "12px",
-          backgroundColor: "rgba(255, 255, 255, 0.5)",
-          borderRadius: "8px",
-          border: `1px solid ${borderColor}30`,
+          display: "flex",
+          gap: "4px",
+          flexWrap: "wrap",
+          alignItems: "center",
         }}
       >
-        <div
-          style={{
-            fontSize: "12px",
-            fontWeight: "600",
-            color: "#6b7280",
-            marginBottom: "8px",
-            textAlign: "center",
-          }}
-        >
-          Individual Dice Results
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px",
-            justifyContent: "center",
-          }}
-        >
-          {keptDice.map((die, index) => (
-            <div
-              key={`kept-${index}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "32px",
-                height: "32px",
-                backgroundColor: getDiceColor(),
-                color: "white",
-                borderRadius: "6px",
-                fontSize: "14px",
-                fontWeight: "700",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-              }}
-            >
-              {die}
-            </div>
+        {keptDice.map((v, i) => (
+          <DieChip key={`k-${i}`} value={v} kept={true} />
+        ))}
+        {discardedDice.length > 0 &&
+          discardedDice.map((v, i) => (
+            <DieChip key={`d-${i}`} value={v} kept={false} />
           ))}
-
-          {discardedDice.length > 0 && (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  margin: "0 4px",
-                }}
-              >
-                |
-              </div>
-              {discardedDice.map((die, index) => (
-                <div
-                  key={`discarded-${index}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "32px",
-                    height: "32px",
-                    backgroundColor: "#9ca3af",
-                    color: "white",
-                    borderRadius: "6px",
-                    fontSize: "14px",
-                    fontWeight: "700",
-                    opacity: 0.6,
-                    textDecoration: "line-through",
-                  }}
-                >
-                  {die}
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-
-        {(diceRollType === "advantage" || diceRollType === "disadvantage") &&
-          discardedDice.length > 0 && (
-            <div
-              style={{
-                fontSize: "10px",
-                color: "#6b7280",
-                textAlign: "center",
-                marginTop: "6px",
-              }}
-            >
-              {diceRollType === "advantage"
-                ? "Highest dice kept"
-                : "Lowest dice kept"}{" "}
-              | Crossed out dice discarded
-            </div>
-          )}
-
-        {diceRollType === "normal" && keptDice.length > 1 && (
-          <div
-            style={{
-              fontSize: "12px",
-              color: "#6b7280",
-              textAlign: "center",
-              marginTop: "6px",
-            }}
-          >
-            Sum: {keptDice.join(" + ")} = {rollValue}
-          </div>
-        )}
       </div>
     );
   };
 
-  return (
+  const isCustomRoll = type === "flexible";
+  const diceSection = isCustomRoll ? renderDiceSection() : null;
+  const showCustomPanel = isCustomRoll && (diceSection || mod !== 0);
+
+  // For standard rolls: build a simple equation row
+  const standardKept = keptDice.length > 0 ? keptDice : [rollValue];
+  const standardDiscarded = !isCustomRoll ? discardedDice : [];
+
+  const Backdrop = ({ children }) => (
     <div
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.65)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -294,182 +258,171 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
     >
       <div
         style={{
-          backgroundColor,
-          border: `3px solid ${borderColor}`,
+          backgroundColor: theme.surface,
+          border: `2px solid ${accentColor}`,
           borderRadius: "16px",
-          padding: "24px",
-          minWidth: "320px",
-          maxWidth: "500px",
-          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
-          transform: "scale(1)",
-          animation: "rollModalAppear 0.3s ease-out",
+          minWidth: "300px",
+          maxWidth: isCustomRoll ? "460px" : "360px",
+          width: "100%",
+          boxShadow: `0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px ${accentColor}18`,
+          overflow: "hidden",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <Dice6
-              size={32}
-              style={{
-                color: getDiceColor(),
-                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-              }}
-            />
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: "20px",
-                  fontWeight: "700",
-                  color: textColor,
-                  lineHeight: "1.2",
-                }}
-              >
-                {title}
-              </h2>
-              {getRollTypeIndicator() && (
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#6b7280",
-                    fontWeight: "500",
-                    marginTop: "2px",
-                  }}
-                >
-                  {getRollTypeIndicator()}
-                </div>
-              )}
-              {getDiceFormula() && (
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#6b7280",
-                    fontWeight: "500",
-                    marginTop: "2px",
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {getDiceFormula()}
-                </div>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#6b7280",
-              cursor: "pointer",
-              padding: "4px",
-              borderRadius: "6px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
+        {children}
+      </div>
+    </div>
+  );
 
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            padding: "20px",
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            borderRadius: "12px",
-            border: `2px solid ${borderColor}20`,
-          }}
-        >
+  const Header = () => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "14px 18px",
+        borderBottom: `1px solid ${theme.border}`,
+        backgroundColor: theme.background,
+        gap: "10px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          minWidth: 0,
+        }}
+      >
+        <Dice6 size={20} style={{ color: accentColor, flexShrink: 0 }} />
+        <div style={{ minWidth: 0 }}>
           <div
             style={{
-              fontSize: "48px",
-              fontWeight: "900",
-              color: getDiceColor(),
-              lineHeight: "1",
-              marginBottom: "8px",
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              fontSize: "15px",
+              fontWeight: "700",
+              color: theme.text,
+              lineHeight: 1.2,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            {total}
+            {isPrivate && (
+              <span style={{ color: "#f59e0b", marginRight: "6px" }}>🔒</span>
+            )}
+            {title}
           </div>
-          <div
-            style={{
-              fontSize: "18px",
-              color: textColor,
-              fontWeight: "600",
-              marginBottom: "4px",
-            }}
-          >
-            {rollValue} +{modifier} = {total}
-          </div>
-          {(isCriticalSuccess || isCriticalFailure) && (
+          {description && (
             <div
               style={{
-                fontSize: "14px",
-                fontWeight: "700",
-                color: isCriticalSuccess ? "#f59e0b" : "#ef4444",
-                marginTop: "8px",
+                fontSize: "12px",
+                color: theme.textSecondary,
+                marginTop: "2px",
               }}
             >
-              {isCriticalSuccess
-                ? "✨ CRITICAL SUCCESS!"
-                : "💥 CRITICAL FAILURE!"}
+              {description}
             </div>
           )}
-
-          {renderIndividualDiceResults()}
         </div>
-
-        {description && (
-          <div
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          flexShrink: 0,
+        }}
+      >
+        {(isAdv || isDis) && (
+          <span
             style={{
-              textAlign: "center",
-              fontSize: "14px",
-              color: "#6b7280",
-              marginBottom: "16px",
-              padding: "12px",
-              backgroundColor: "rgba(255, 255, 255, 0.5)",
-              borderRadius: "8px",
+              fontSize: "10px",
+              fontWeight: "800",
+              padding: "3px 7px",
+              borderRadius: "5px",
+              backgroundColor: isAdv ? "#10b98128" : "#ef444428",
+              color: isAdv ? "#10b981" : "#ef4444",
+              letterSpacing: "0.06em",
             }}
           >
-            {description}
-          </div>
+            {isAdv ? "ADV" : "DIS"}
+          </span>
         )}
+        <button
+          onClick={onClose}
+          style={{
+            background: "none",
+            border: "none",
+            color: theme.textSecondary,
+            cursor: "pointer",
+            padding: "4px",
+            borderRadius: "6px",
+            display: "flex",
+          }}
+        >
+          <X size={17} />
+        </button>
+      </div>
+    </div>
+  );
 
+  const TotalDisplay = () => (
+    <div style={{ textAlign: "center", padding: "20px 24px 12px" }}>
+      <div
+        style={{
+          fontSize: "68px",
+          fontWeight: "900",
+          color: accentColor,
+          lineHeight: 1,
+          letterSpacing: "-2px",
+        }}
+      >
+        {total}
+      </div>
+      {(isCriticalSuccess || isCriticalFailure) && (
+        <div
+          style={{
+            fontSize: "12px",
+            fontWeight: "800",
+            color: isCriticalSuccess ? "#f59e0b" : "#ef4444",
+            marginTop: "6px",
+            letterSpacing: "0.1em",
+          }}
+        >
+          {isCriticalSuccess ? "CRITICAL SUCCESS" : "CRITICAL FAILURE"}
+        </div>
+      )}
+    </div>
+  );
+
+  const SpecialFields = () =>
+    potionQuality || recipeQuality ? (
+      <div
+        style={{
+          margin: "0 18px 14px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+        }}
+      >
         {potionQuality && (
           <div
             style={{
-              textAlign: "center",
-              fontSize: "16px",
+              padding: "10px 14px",
+              backgroundColor: getQualityColor(potionQuality) + "15",
+              border: `1px solid ${getQualityColor(potionQuality)}40`,
+              borderRadius: "8px",
+              fontSize: "14px",
               fontWeight: "600",
               color: getQualityColor(potionQuality),
-              marginBottom: "16px",
-              padding: "12px",
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
-              borderRadius: "8px",
-              border: `2px solid ${getQualityColor(potionQuality)}40`,
+              textAlign: "center",
             }}
           >
             Potion Quality:{" "}
             {potionQuality.charAt(0).toUpperCase() + potionQuality.slice(1)}
             {inventoryAdded && (
               <div
-                style={{ fontSize: "12px", color: "#059669", marginTop: "4px" }}
+                style={{ fontSize: "11px", color: "#10b981", marginTop: "3px" }}
               >
                 ✅ Added to inventory
               </div>
@@ -479,45 +432,259 @@ export const RollResultModal = ({ rollResult, isOpen, onClose }) => {
         {recipeQuality && (
           <div
             style={{
-              textAlign: "center",
-              fontSize: "16px",
+              padding: "10px 14px",
+              backgroundColor: getQualityColor(recipeQuality) + "15",
+              border: `1px solid ${getQualityColor(recipeQuality)}40`,
+              borderRadius: "8px",
+              fontSize: "14px",
               fontWeight: "600",
               color: getQualityColor(recipeQuality),
-              marginBottom: "16px",
-              padding: "12px",
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
-              borderRadius: "8px",
-              border: `2px solid ${getQualityColor(recipeQuality)}40`,
+              textAlign: "center",
             }}
           >
             Recipe Quality:{" "}
             {recipeQuality.charAt(0).toUpperCase() + recipeQuality.slice(1)}
           </div>
         )}
+      </div>
+    ) : null;
 
-        <button
-          onClick={onClose}
+  const CloseBtn = () => (
+    <div style={{ padding: "0 18px 18px" }}>
+      <button
+        onClick={onClose}
+        style={{
+          width: "100%",
+          padding: "11px",
+          backgroundColor: accentColor,
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "700",
+          cursor: "pointer",
+          letterSpacing: "0.03em",
+        }}
+      >
+        Close
+      </button>
+    </div>
+  );
+
+  // ── Custom roll layout (flexible dice pool) ──────────────────────────────
+  if (isCustomRoll) {
+    return (
+      <Backdrop>
+        <Header />
+        <TotalDisplay />
+        {showCustomPanel && (
+          <div
+            style={{
+              margin: "0 18px 14px",
+              padding: "12px 14px",
+              backgroundColor: theme.background,
+              borderRadius: "10px",
+              border: `1px solid ${theme.border}`,
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+            }}
+          >
+            {diceSection}
+            {mod !== 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  paddingTop: diceSection ? "6px" : "0",
+                  borderTop: diceSection ? `1px solid ${theme.border}` : "none",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "800",
+                    color: theme.textSecondary,
+                    minWidth: "24px",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  MOD
+                </span>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    color: mod >= 0 ? "#10b981" : "#ef4444",
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {mod >= 0 ? "+" : "−"}
+                  {modAbs}
+                </span>
+                {modifierBreakdown && modifierBreakdown.length > 0 && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: theme.textSecondary,
+                      opacity: 0.7,
+                    }}
+                  >
+                    (
+                    {modifierBreakdown
+                      .map(
+                        (p, i) =>
+                          `${i > 0 ? " + " : ""}${p.label} ${p.value >= 0 ? "+" : ""}${p.value}`,
+                      )
+                      .join("")}
+                    )
+                  </span>
+                )}
+              </div>
+            )}
+            {hasMultipleDice && (
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: theme.textSecondary,
+                  fontFamily: "monospace",
+                  textAlign: "right",
+                  opacity: 0.7,
+                }}
+              >
+                {rollValue}
+                {mod !== 0 ? ` ${mod >= 0 ? "+" : "−"} ${modAbs}` : ""} ={" "}
+                {total}
+              </div>
+            )}
+          </div>
+        )}
+        {(isAdv || isDis) && hasDiscardedAny && (
+          <div
+            style={{
+              marginTop: "-6px",
+              marginBottom: "10px",
+              fontSize: "10px",
+              color: theme.textSecondary,
+              textAlign: "center",
+              opacity: 0.6,
+            }}
+          >
+            {isAdv ? "Kept highest" : "Kept lowest"} · dimmed dice were
+            discarded
+          </div>
+        )}
+        <SpecialFields />
+        <CloseBtn />
+      </Backdrop>
+    );
+  }
+
+  // ── Standard roll layout (ability checks, skills, spells, etc.) ──────────
+  const showEquationPanel =
+    mod !== 0 || isAdv || isDis || standardKept.length > 1;
+  return (
+    <Backdrop>
+      <Header />
+      <TotalDisplay />
+      {showEquationPanel && (
+        <div
           style={{
-            width: "100%",
-            padding: "12px 20px",
-            backgroundColor: getDiceColor(),
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "16px",
-            fontWeight: "600",
-            cursor: "pointer",
+            margin: "0 18px 14px",
+            padding: "12px 16px",
+            backgroundColor: theme.background,
+            borderRadius: "10px",
+            border: `1px solid ${theme.border}`,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
             gap: "8px",
-            transition: "all 0.2s ease",
+            flexWrap: "wrap",
+            justifyContent: "center",
           }}
         >
-          Close
-        </button>
-      </div>
-    </div>
+          {/* Kept die chip(s) */}
+          {standardKept.map((v, i) => (
+            <DieChip key={`k-${i}`} value={v} kept={true} />
+          ))}
+          {/* Discarded die chip(s) for ADV/DIS */}
+          {standardDiscarded.length > 0 &&
+            standardDiscarded.map((v, i) => (
+              <DieChip key={`d-${i}`} value={v} kept={false} />
+            ))}
+          {/* Modifier */}
+          {mod !== 0 && (
+            <span
+              style={{
+                fontSize: "15px",
+                fontWeight: "700",
+                color: mod >= 0 ? "#10b981" : "#ef4444",
+                fontFamily: "monospace",
+              }}
+            >
+              {mod >= 0 ? "+" : "−"}
+              {modAbs}
+            </span>
+          )}
+          {/* Equals total */}
+          {(mod !== 0 || standardKept.length > 1) && (
+            <>
+              <span style={{ fontSize: "13px", color: theme.textSecondary }}>
+                =
+              </span>
+              <span
+                style={{
+                  fontSize: "15px",
+                  fontWeight: "800",
+                  color: accentColor,
+                  fontFamily: "monospace",
+                }}
+              >
+                {total}
+              </span>
+            </>
+          )}
+          {/* Modifier breakdown */}
+          {modifierBreakdown && modifierBreakdown.length > 0 && (
+            <div
+              style={{
+                width: "100%",
+                fontSize: "11px",
+                color: theme.textSecondary,
+                textAlign: "center",
+                opacity: 0.7,
+                marginTop: "2px",
+              }}
+            >
+              {modifierBreakdown.map((p, i) => (
+                <span key={i}>
+                  {i > 0 && " · "}
+                  {p.label} {p.value >= 0 ? "+" : ""}
+                  {p.value}
+                </span>
+              ))}
+            </div>
+          )}
+          {/* ADV/DIS hint */}
+          {(isAdv || isDis) && standardDiscarded.length > 0 && (
+            <div
+              style={{
+                width: "100%",
+                fontSize: "10px",
+                color: theme.textSecondary,
+                textAlign: "center",
+                opacity: 0.6,
+                marginTop: "2px",
+              }}
+            >
+              {isAdv ? "Kept highest" : "Kept lowest"} · dimmed die discarded
+            </div>
+          )}
+        </div>
+      )}
+      <SpecialFields />
+      <CloseBtn />
+    </Backdrop>
   );
 };
 
@@ -861,16 +1028,25 @@ export const useRollModal = () => {
   return context;
 };
 
-const ABILITY_ABBRS = { intelligence: "INT", wisdom: "WIS", strength: "STR", dexterity: "DEX", constitution: "CON", charisma: "CHA" };
+const ABILITY_ABBRS = {
+  intelligence: "INT",
+  wisdom: "WIS",
+  strength: "STR",
+  dexterity: "DEX",
+  constitution: "CON",
+  charisma: "CHA",
+};
 
 const buildSpellModifierBreakdown = (modifierInfo) => {
   if (!modifierInfo) return null;
-  const total = (modifierInfo.abilityModifier || 0) + (modifierInfo.wandModifier || 0);
+  const total =
+    (modifierInfo.abilityModifier || 0) + (modifierInfo.wandModifier || 0);
   if (total === 0) return null;
   const hasSchool = modifierInfo.wandType && modifierInfo.wandType !== "None";
   const label = hasSchool
     ? modifierInfo.wandType
-    : (ABILITY_ABBRS[modifierInfo.abilityName?.toLowerCase()] || modifierInfo.abilityName?.slice(0, 3).toUpperCase());
+    : ABILITY_ABBRS[modifierInfo.abilityName?.toLowerCase()] ||
+      modifierInfo.abilityName?.slice(0, 3).toUpperCase();
   if (!label) return null;
   return [{ label, value: total }];
 };
@@ -2005,13 +2181,28 @@ export const rollSkill = async ({
     const isCriticalSuccess = d20Roll === 20;
     const isCriticalFailure = d20Roll === 1;
 
-    const abilityAbbrs = { strength: "STR", dexterity: "DEX", constitution: "CON", intelligence: "INT", wisdom: "WIS", charisma: "CHA" };
+    const abilityAbbrs = {
+      strength: "STR",
+      dexterity: "DEX",
+      constitution: "CON",
+      intelligence: "INT",
+      wisdom: "WIS",
+      charisma: "CHA",
+    };
     const abilityAbbr = abilityAbbrs[abilityType] || "MOD";
     const profComponent = skillBonus - abilityMod;
     const profBonus = character?.proficiencyBonus || 0;
     const modifierBreakdown = [];
-    if (abilityMod !== 0) modifierBreakdown.push({ label: abilityAbbr, value: abilityMod });
-    if (profComponent !== 0) modifierBreakdown.push({ label: profBonus > 0 && Math.abs(profComponent) >= 2 * profBonus ? "EXP" : "PROF", value: profComponent });
+    if (abilityMod !== 0)
+      modifierBreakdown.push({ label: abilityAbbr, value: abilityMod });
+    if (profComponent !== 0)
+      modifierBreakdown.push({
+        label:
+          profBonus > 0 && Math.abs(profComponent) >= 2 * profBonus
+            ? "EXP"
+            : "PROF",
+        value: profComponent,
+      });
 
     if (showRollResult) {
       showRollResult({
@@ -2029,7 +2220,8 @@ export const rollSkill = async ({
         ravenclawBonusApplied,
         abilityType,
         individualDiceResults,
-        modifierBreakdown: modifierBreakdown.length > 0 ? modifierBreakdown : null,
+        modifierBreakdown:
+          modifierBreakdown.length > 0 ? modifierBreakdown : null,
       });
     } else {
       const criticalText = isCriticalSuccess
@@ -2067,8 +2259,16 @@ export const rollSkill = async ({
     }
 
     const rollTypeLabel =
-      rollType === "advantage" ? "⬆️ Advantage" : rollType === "disadvantage" ? "⬇️ Disadvantage" : "";
-    const critText = isCriticalSuccess ? "Natural 20!" : isCriticalFailure ? "Natural 1!" : "";
+      rollType === "advantage"
+        ? "⬆️ Advantage"
+        : rollType === "disadvantage"
+          ? "⬇️ Disadvantage"
+          : "";
+    const critText = isCriticalSuccess
+      ? "Natural 20!"
+      : isCriticalFailure
+        ? "Natural 1!"
+        : "";
     const descParts = [critText, rollTypeLabel].filter(Boolean);
 
     const success = await sendDiscordRollWebhook({
@@ -2253,8 +2453,13 @@ export const attemptSpell = async ({
     );
     let total = d20Roll + totalModifier;
 
-    const spellModifierInfo = getModifierInfo(spellName, subject, selectedCharacter);
-    const spellModifierBreakdown = buildSpellModifierBreakdown(spellModifierInfo);
+    const spellModifierInfo = getModifierInfo(
+      spellName,
+      subject,
+      selectedCharacter,
+    );
+    const spellModifierBreakdown =
+      buildSpellModifierBreakdown(spellModifierInfo);
 
     const spellLevel = getSpellLevel(spellName, subject, spellsData);
     const goal = getSpellCastingDC(spellLevel);
@@ -3547,6 +3752,7 @@ export const rollFlexibleDicePool = async ({
       const groups = dicePool.map((g, i) => ({
         sides: g.sides,
         values: results[i].individualDiceResults?.keptDice || [],
+        discardedValues: results[i].individualDiceResults?.discardedDice || [],
       }));
       individualDiceResults = isSingleGroup
         ? { ...results[0].individualDiceResults, groups }
@@ -3554,7 +3760,9 @@ export const rollFlexibleDicePool = async ({
             keptDice: results.flatMap(
               (r) => r.individualDiceResults?.keptDice || [],
             ),
-            discardedDice: [],
+            discardedDice: results.flatMap(
+              (r) => r.individualDiceResults?.discardedDice || [],
+            ),
             groups,
           };
     } else {
@@ -3569,6 +3777,7 @@ export const rollFlexibleDicePool = async ({
       const groups = dicePool.map((g, i) => ({
         sides: g.sides,
         values: results[i].individualDiceResults?.keptDice || [],
+        discardedValues: [],
       }));
       individualDiceResults = {
         keptDice: allKeptDice,
