@@ -429,49 +429,49 @@ export const skillMap = {
 };
 
 export const allSkills = [
-  { name: "athletics", displayName: "Athletics", ability: "strength" },
   { name: "acrobatics", displayName: "Acrobatics", ability: "dexterity" },
-  {
-    name: "sleightOfHand",
-    displayName: "Sleight of Hand",
-    ability: "dexterity",
-  },
-  { name: "stealth", displayName: "Stealth", ability: "dexterity" },
+  { name: "athletics", displayName: "Athletics", ability: "strength" },
+  { name: "deception", displayName: "Deception", ability: "charisma" },
   { name: "herbology", displayName: "Herbology", ability: "intelligence" },
   {
     name: "historyOfMagic",
     displayName: "History of Magic",
     ability: "intelligence",
   },
+  { name: "insight", displayName: "Insight", ability: "wisdom" },
+  { name: "intimidation", displayName: "Intimidation", ability: "charisma" },
   {
     name: "investigation",
     displayName: "Investigation",
     ability: "intelligence",
   },
   {
+    name: "magicalCreatures",
+    displayName: "Magical Creatures",
+    ability: "wisdom",
+  },
+  {
     name: "magicalTheory",
     displayName: "Magical Theory",
     ability: "intelligence",
   },
+  { name: "medicine", displayName: "Medicine", ability: "wisdom" },
   {
     name: "muggleStudies",
     displayName: "Muggle Studies",
     ability: "intelligence",
   },
-  { name: "insight", displayName: "Insight", ability: "wisdom" },
-  {
-    name: "magicalCreatures",
-    displayName: "Magical Creatures",
-    ability: "wisdom",
-  },
-  { name: "medicine", displayName: "Medicine", ability: "wisdom" },
   { name: "perception", displayName: "Perception", ability: "wisdom" },
-  { name: "potionMaking", displayName: "Potion Making", ability: "wisdom" },
-  { name: "survival", displayName: "Survival", ability: "wisdom" },
-  { name: "deception", displayName: "Deception", ability: "charisma" },
-  { name: "intimidation", displayName: "Intimidation", ability: "charisma" },
   { name: "performance", displayName: "Performance", ability: "charisma" },
   { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
+  { name: "potionMaking", displayName: "Potion Making", ability: "wisdom" },
+  {
+    name: "sleightOfHand",
+    displayName: "Sleight of Hand",
+    ability: "dexterity",
+  },
+  { name: "stealth", displayName: "Stealth", ability: "dexterity" },
+  { name: "survival", displayName: "Survival", ability: "wisdom" },
 ];
 
 export const abilities = [
