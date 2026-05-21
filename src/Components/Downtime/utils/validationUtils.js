@@ -120,7 +120,10 @@ export const validateSpellActivities = (
 
           if (isAttemptActivity) {
             const hasBeenResearched = researchedSpells?.[spellName];
-            if (!hasBeenResearched) {
+            const hasPreviousAttempt =
+              (spellAttempts?.[spellName] || 0) > 0 ||
+              failedAttempts?.[spellName];
+            if (!hasBeenResearched && !hasPreviousAttempt) {
               return false;
             }
           }
@@ -149,12 +152,17 @@ export const validateSpellActivities = (
           }
 
           if (isAttemptActivity && !hasBeenResearched) {
-            alert(
-              `Activity ${
-                i + 1
-              }: ${spellName} must be researched before it can be attempted.`
-            );
-            return false;
+            const hasPreviousAttempt =
+              (spellAttempts?.[spellName] || 0) > 0 ||
+              failedAttempts?.[spellName];
+            if (!hasPreviousAttempt) {
+              alert(
+                `Activity ${
+                  i + 1
+                }: ${spellName} must be researched or previously attempted before it can be attempted.`
+              );
+              return false;
+            }
           }
 
           if (recentFailures >= 3) {
@@ -183,12 +191,17 @@ export const validateSpellActivities = (
           }
 
           if (isAttemptActivity && !hasBeenResearched) {
-            alert(
-              `Activity ${
-                i + 1
-              }: ${spellName} must be researched before it can be attempted.`
-            );
-            return false;
+            const hasPreviousAttempt =
+              (spellAttempts?.[spellName] || 0) > 0 ||
+              failedAttempts?.[spellName];
+            if (!hasPreviousAttempt) {
+              alert(
+                `Activity ${
+                  i + 1
+                }: ${spellName} must be researched or previously attempted before it can be attempted.`
+              );
+              return false;
+            }
           }
 
           if (recentFailures >= 3) {
