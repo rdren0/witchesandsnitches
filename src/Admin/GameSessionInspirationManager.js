@@ -257,7 +257,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     characterId,
     discordUserId,
     characterName,
-    gameSession
+    gameSession,
   ) => {
     const updateKey = `${characterId}-${discordUserId}`;
     setUpdating((prev) => new Set(prev).add(updateKey));
@@ -274,7 +274,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
           },
           {
             onConflict: "character_id,discord_user_id",
-          }
+          },
         );
 
       if (updateError) {
@@ -319,12 +319,12 @@ const GameSessionInspirationManager = ({ supabase }) => {
         prevSessions.map((session) => ({
           ...session,
           characters: session.characters.map((char) =>
-            char.id === characterId ? { ...char, hasInspiration: false } : char
+            char.id === characterId ? { ...char, hasInspiration: false } : char,
           ),
           withInspiration: session.characters.filter((char) =>
-            char.id === characterId ? false : char.hasInspiration
+            char.id === characterId ? false : char.hasInspiration,
           ).length,
-        }))
+        })),
       );
     } catch (err) {
       console.error("Error removing inspiration:", err);
@@ -355,12 +355,11 @@ const GameSessionInspirationManager = ({ supabase }) => {
           active,
           archived_at,
           image_url
-        `
+        `,
         )
         .eq("active", true)
         .order("game_session")
-        .order("name")
-        .limit(200);
+        .order("name");
 
       if (charactersError) {
         throw charactersError;
@@ -368,8 +367,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
 
       const { data: resources, error: resourcesError } = await supabase
         .from("character_resources")
-        .select("character_id, discord_user_id, inspiration")
-        .limit(200);
+        .select("character_id, discord_user_id, inspiration");
 
       if (resourcesError) {
         throw resourcesError;
@@ -426,7 +424,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
         .map((session) => ({
           ...session,
           characters: session.characters.sort((a, b) =>
-            a.name.localeCompare(b.name)
+            a.name.localeCompare(b.name),
           ),
         }))
         .sort((a, b) => {
@@ -496,7 +494,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     characterId,
     discordUserId,
     characterName,
-    gameSession
+    gameSession,
   ) => {
     const updateKey = `${characterId}-${discordUserId}`;
     setUpdating((prev) => new Set(prev).add(updateKey));
@@ -587,17 +585,17 @@ const GameSessionInspirationManager = ({ supabase }) => {
         prevSessions.map((session) => ({
           ...session,
           characters: session.characters.map((char) =>
-            char.id === characterId ? { ...char, hasInspiration: true } : char
+            char.id === characterId ? { ...char, hasInspiration: true } : char,
           ),
           withInspiration: session.characters.filter((char) =>
-            char.id === characterId ? true : char.hasInspiration
+            char.id === characterId ? true : char.hasInspiration,
           ).length,
-        }))
+        })),
       );
     } catch (err) {
       console.error("Error granting inspiration - Full error:", err);
       alert(
-        `Failed to grant inspiration: ${err.message || JSON.stringify(err)}`
+        `Failed to grant inspiration: ${err.message || JSON.stringify(err)}`,
       );
     } finally {
       setUpdating((prev) => {
@@ -697,14 +695,6 @@ const GameSessionInspirationManager = ({ supabase }) => {
                 </option>
               ))}
             </optgroup>
-
-            <option disabled>──────────</option>
-
-            {gameSessionGroups.development.map((session) => (
-              <option key={session} value={session}>
-                {session}
-              </option>
-            ))}
           </select>
         </div>
         <button onClick={loadGameSessionsData} style={styles.refreshButton}>
@@ -819,7 +809,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
                               character.id,
                               character.discord_user_id,
                               character.name,
-                              character.game_session
+                              character.game_session,
                             )
                           }
                           disabled={isUpdating}
@@ -842,7 +832,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
                               character.id,
                               character.discord_user_id,
                               character.name,
-                              character.game_session
+                              character.game_session,
                             )
                           }
                           disabled={isUpdating}
