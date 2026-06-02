@@ -149,6 +149,7 @@ const FlexibleDiceRoller = ({
   const [modifier, setModifier] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
+  const [hoveredSide, setHoveredSide] = useState(null);
 
   const setDieCount = (sides, delta) =>
     setPool((p) => ({ ...p, [sides]: Math.max(0, (p[sides] || 0) + delta) }));
@@ -214,17 +215,24 @@ const FlexibleDiceRoller = ({
   };
 
   // Shared die-tile styles
-  const tileBase = (active) => ({
+  const tileBase = (active, hovered) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     gap: "4px",
     padding: "8px 4px 6px",
-    border: `2px solid ${active ? theme.primary : theme.border}`,
+    border: `2px solid ${active || hovered ? theme.primary : theme.border}`,
     borderRadius: "10px",
-    backgroundColor: active ? theme.primary + "18" : theme.surface,
+    backgroundColor: active
+      ? theme.primary + "18"
+      : hovered
+        ? theme.primary + "12"
+        : theme.surface,
     transition: "all 0.15s ease",
     flex: 1,
+    cursor: "pointer",
+    transform: hovered && !active ? "translateY(-2px)" : "none",
+    boxShadow: hovered && !active ? `0 4px 12px ${theme.primary}30` : "none",
   });
 
   const countStyle = (active) => ({
@@ -389,10 +397,10 @@ const FlexibleDiceRoller = ({
                     return (
                       <div
                         key={sides}
-                        style={tileBase(active)}
-                        onClick={
-                          !active ? () => setDieCount(sides, 1) : undefined
-                        }
+                        style={tileBase(active, hoveredSide === sides)}
+                        onClick={() => setDieCount(sides, 1)}
+                        onMouseEnter={() => setHoveredSide(sides)}
+                        onMouseLeave={() => setHoveredSide(null)}
                       >
                         <div
                           style={{
