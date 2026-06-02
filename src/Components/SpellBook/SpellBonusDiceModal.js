@@ -23,8 +23,9 @@ export const SpellBonusDiceModal = ({
   }, [availableDice]);
 
   const [selectedDie, setSelectedDie] = useState(
-    availableDiceArray.length > 0 ? availableDiceArray[0] : null
+    availableDiceArray.length > 0 ? availableDiceArray[0] : null,
   );
+  const [hoveredDie, setHoveredDie] = useState(null);
 
   useEffect(() => {
     if (availableDiceArray.length > 0 && !selectedDie) {
@@ -248,34 +249,33 @@ export const SpellBonusDiceModal = ({
                 style={{
                   padding: "16px",
                   backgroundColor:
-                    selectedDie === die
-                      ? `${getDiceColor(die)}20`
-                      : getBackgroundColor(),
+                    hoveredDie === die
+                      ? `${getDiceColor(die)}25`
+                      : selectedDie === die
+                        ? `${getDiceColor(die)}20`
+                        : getBackgroundColor(),
                   border: `2px solid ${
-                    selectedDie === die ? getDiceColor(die) : getBorderColor()
+                    hoveredDie === die || selectedDie === die
+                      ? getDiceColor(die)
+                      : getBorderColor()
                   }`,
                   borderRadius: "8px",
                   cursor: "pointer",
-                  transition: "all 0.2s ease",
+                  transition: "all 0.18s ease",
                   minWidth: "100px",
                   maxWidth: "150px",
                   flex: "1 1 auto",
+                  transform:
+                    hoveredDie === die
+                      ? "scale(1.06) translateY(-3px)"
+                      : "scale(1) translateY(0)",
+                  boxShadow:
+                    hoveredDie === die
+                      ? `0 8px 20px ${getDiceColor(die)}50`
+                      : "none",
                 }}
-                onMouseEnter={(e) => {
-                  if (selectedDie !== die) {
-                    e.currentTarget.style.borderColor = getDiceColor(die);
-                    e.currentTarget.style.backgroundColor = `${getDiceColor(
-                      die
-                    )}10`;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedDie !== die) {
-                    e.currentTarget.style.borderColor = getBorderColor();
-                    e.currentTarget.style.backgroundColor =
-                      getBackgroundColor();
-                  }
-                }}
+                onMouseEnter={() => setHoveredDie(die)}
+                onMouseLeave={() => setHoveredDie(null)}
               >
                 <div
                   style={{
