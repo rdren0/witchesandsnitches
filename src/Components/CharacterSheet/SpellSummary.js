@@ -399,7 +399,7 @@ const SpellSummary = ({
       setFailedAttempts,
       updateSpellProgressSummary,
       supabase,
-      showBonusDiceModal: () => {},
+      showBonusDiceModal: ({ onClose }) => onClose?.(),
       hideBonusDiceModal: () => {},
       spellsData,
     });
