@@ -1,4 +1,3 @@
-import { skillMap } from "../../../../../SharedData";
 import { getFeatsSync } from "../../../../../hooks/useFeats";
 import { backgroundsData } from "../../../../../SharedData/backgroundsData";
 import { calculateTotalModifiers } from "../../../utils/characterUtils";
@@ -110,18 +109,6 @@ export const hasSkillExpertise = (character, skill) => {
   return expertiseSkills.includes(skill);
 };
 
-const convertSkillDisplayNameToInternalName = (displayName) => {
-  const reverseSkillMap = Object.entries(skillMap).reduce(
-    (acc, [key, value]) => {
-      acc[value] = key;
-      return acc;
-    },
-    {}
-  );
-
-  return reverseSkillMap[displayName] || displayName.toLowerCase();
-};
-
 export const parseBackgroundSkills = (character) => {
   const backgroundSkills = [];
 
@@ -132,10 +119,7 @@ export const parseBackgroundSkills = (character) => {
   );
 
   if (background?.skillProficiencies) {
-    const convertedSkills = background.skillProficiencies.map(
-      convertSkillDisplayNameToInternalName
-    );
-    backgroundSkills.push(...convertedSkills);
+    backgroundSkills.push(...background.skillProficiencies);
   }
 
   return backgroundSkills;
