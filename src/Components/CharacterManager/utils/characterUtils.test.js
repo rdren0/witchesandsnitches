@@ -517,8 +517,8 @@ describe("Character Utils - Feat Integration Tests", () => {
       } = require("../components/sections/Skills/skillsUtils");
       const backgroundSkills = parseBackgroundSkills(character);
 
-      expect(backgroundSkills).toContain("persuasion");
-      expect(backgroundSkills).toContain("historyOfMagic");
+      expect(backgroundSkills).toContain("Persuasion");
+      expect(backgroundSkills).toContain("History of Magic");
     });
 
     it("should return empty array for character without background", () => {
