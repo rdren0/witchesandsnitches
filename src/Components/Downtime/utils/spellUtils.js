@@ -237,11 +237,16 @@ export const updateSpellProgressOnSubmission = async (
 
 export const loadSpellProgress = async (selectedCharacter, user, supabase) => {
   try {
+    const characterDiscordId =
+      selectedCharacter.discord_user_id ||
+      selectedCharacter.discordUserId ||
+      user.user_metadata.provider_id;
+
     const { data, error } = await supabase
       .from("spell_progress_summary")
       .select("spell_name, successful_attempts, researched, has_failed_attempt")
       .eq("character_id", selectedCharacter.id)
-      .eq("discord_user_id", user.user_metadata.provider_id);
+      .eq("discord_user_id", characterDiscordId);
 
     if (error) {
       console.error("Error loading spell progress:", error);
