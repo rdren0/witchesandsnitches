@@ -151,20 +151,18 @@ const DowntimeWrapper = ({
 
         const { data: sheets, error } = await query
           .eq("is_draft", false)
-          .order("year", { ascending: true })
-          .order("semester", { ascending: true });
+          .order("year", { ascending: false })
+          .order("semester", { ascending: false });
 
         if (error) throw error;
 
         const sortedSheets = (sheets || []).sort((a, b) => {
           const yearA = parseInt(a.year) || 0;
           const yearB = parseInt(b.year) || 0;
-          if (yearA !== yearB) {
-            return yearA - yearB;
-          }
+          if (yearA !== yearB) return yearB - yearA;
           const semesterA = parseInt(a.semester) || 0;
           const semesterB = parseInt(b.semester) || 0;
-          return semesterA - semesterB;
+          return semesterB - semesterA;
         });
 
         setSubmittedSheets(sortedSheets);
@@ -174,7 +172,7 @@ const DowntimeWrapper = ({
         setLoading(false);
       }
     },
-    [selectedCharacter?.id, user?.id, supabase, isUserAdmin, adminMode]
+    [selectedCharacter?.id, user?.id, supabase, isUserAdmin, adminMode],
   );
 
   const loadDrafts = useCallback(
@@ -212,7 +210,7 @@ const DowntimeWrapper = ({
         setLoading(false);
       }
     },
-    [selectedCharacter?.id, user?.id, supabase, isUserAdmin, adminMode]
+    [selectedCharacter?.id, user?.id, supabase, isUserAdmin, adminMode],
   );
 
   const loadSheetForViewing = useCallback(
@@ -254,7 +252,7 @@ const DowntimeWrapper = ({
         setLoading(false);
       }
     },
-    [supabase, user?.id, isUserAdmin, adminMode]
+    [supabase, user?.id, isUserAdmin, adminMode],
   );
 
   const isYearSemesterSubmitted = useCallback(
@@ -263,10 +261,10 @@ const DowntimeWrapper = ({
         (sheet) =>
           sheet.year === year &&
           sheet.semester === semester &&
-          sheet.review_status !== "failure"
+          sheet.review_status !== "failure",
       );
     },
-    [submittedSheets]
+    [submittedSheets],
   );
 
   const getYearAvailability = useCallback(() => {
@@ -277,7 +275,7 @@ const DowntimeWrapper = ({
         .map((sheet) => sheet.semester);
 
       const availableSemesters = [1, 2].filter(
-        (sem) => !submittedSemesters.includes(sem)
+        (sem) => !submittedSemesters.includes(sem),
       );
 
       return {
@@ -305,11 +303,11 @@ const DowntimeWrapper = ({
 
   const yearAvailability = useMemo(
     () => getYearAvailability(),
-    [getYearAvailability]
+    [getYearAvailability],
   );
   const semesterAvailability = useMemo(
     () => getSemesterAvailability(),
-    [getSemesterAvailability]
+    [getSemesterAvailability],
   );
 
   const resetFormState = useCallback(() => {
@@ -381,7 +379,7 @@ const DowntimeWrapper = ({
         resetFormState();
       }
     },
-    [currentSheet, resetFormState]
+    [currentSheet, resetFormState],
   );
 
   const handleSemesterChange = useCallback(
@@ -393,7 +391,7 @@ const DowntimeWrapper = ({
         resetFormState();
       }
     },
-    [currentSheet, resetFormState]
+    [currentSheet, resetFormState],
   );
 
   const handleEditDraft = useCallback(
@@ -494,7 +492,7 @@ const DowntimeWrapper = ({
             adminNotes: "",
             result: null,
           },
-        }
+        },
       );
       setRollAssignments(normalizedAssignments);
 
@@ -508,7 +506,7 @@ const DowntimeWrapper = ({
       setDicePool,
       setRollAssignments,
       setActiveTab,
-    ]
+    ],
   );
 
   const handleDeleteDraft = useCallback(
@@ -535,7 +533,7 @@ const DowntimeWrapper = ({
           const useAdminAccess = isUserAdmin && adminMode;
           loadDrafts(
             useAdminAccess,
-            useAdminAccess ? selectedCharacter.id : null
+            useAdminAccess ? selectedCharacter.id : null,
           );
         }
 
@@ -643,7 +641,7 @@ const DowntimeWrapper = ({
       isUserAdmin,
       adminMode,
       selectedCharacter?.id,
-    ]
+    ],
   );
 
   const tabs = useMemo(
@@ -675,7 +673,7 @@ const DowntimeWrapper = ({
         badge: submittedSheets.length,
       },
     ],
-    [drafts.length, submittedSheets.length]
+    [drafts.length, submittedSheets.length],
   );
 
   useEffect(() => {
@@ -683,7 +681,7 @@ const DowntimeWrapper = ({
       const useAdminAccess = isUserAdmin && adminMode;
       loadSubmittedSheets(
         useAdminAccess,
-        useAdminAccess ? selectedCharacter.id : null
+        useAdminAccess ? selectedCharacter.id : null,
       );
       loadDrafts(useAdminAccess, useAdminAccess ? selectedCharacter.id : null);
     }
@@ -1049,7 +1047,7 @@ const DowntimeWrapper = ({
               const useAdminAccess = isUserAdmin && adminMode;
               loadDrafts(
                 useAdminAccess,
-                useAdminAccess ? selectedCharacter.id : null
+                useAdminAccess ? selectedCharacter.id : null,
               );
             }}
             style={styles.backButton}
@@ -1232,7 +1230,7 @@ const DowntimeWrapper = ({
               const useAdminAccess = isUserAdmin && adminMode;
               loadSubmittedSheets(
                 useAdminAccess,
-                useAdminAccess ? selectedCharacter.id : null
+                useAdminAccess ? selectedCharacter.id : null,
               );
             }}
             style={styles.backButton}
@@ -1269,34 +1267,101 @@ const DowntimeWrapper = ({
           </div>
         ) : (
           <div style={styles.listContainer}>
-            {submittedSheets.map((sheet) => (
-              <div key={sheet.id} style={styles.listItem}>
-                <div style={styles.listItemInfo}>
-                  <div style={styles.listItemTitle}>
-                    Year {sheet.year || sheet.school_year}, Semester{" "}
-                    {sheet.semester}
-                  </div>
-                  <div style={styles.listItemSubtitle}>
-                    Submitted: {new Date(sheet.submitted_at).toLocaleString()}
-                  </div>
-                  <div style={{ marginTop: "8px" }}>
-                    {getReviewStatusDisplay(sheet)}
-                  </div>
-                </div>
-                <div style={styles.listItemActions}>
-                  <button
-                    onClick={() =>
-                      loadSheetForViewing(sheet.id, isUserAdmin && adminMode)
-                    }
-                    style={styles.button}
-                    disabled={loading}
+            {(() => {
+              const seenYears = new Set();
+              submittedSheets.forEach((sheet) => {
+                seenYears.add(sheet.year || sheet.school_year);
+              });
+              const yearGroups = [...seenYears].sort(
+                (a, b) => parseInt(b) - parseInt(a),
+              );
+
+              return yearGroups.map((year) => {
+                const yearSheets = submittedSheets
+                  .filter((s) => (s.year || s.school_year) === year)
+                  .sort((a, b) => parseInt(a.semester) - parseInt(b.semester));
+
+                return (
+                  <div
+                    key={year}
+                    style={{
+                      marginTop: "16px",
+                      backgroundColor: theme.surface,
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                    }}
                   >
-                    <Eye size={14} />
-                    View
-                  </button>
-                </div>
-              </div>
-            ))}
+                    <div
+                      style={{
+                        padding: "10px 16px",
+                        backgroundColor: theme.primary + "22",
+                        borderBottom: `1px solid ${theme.border}`,
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        color: theme.primary,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Year {year}
+                    </div>
+
+                    <div
+                      style={{
+                        padding: "8px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      {yearSheets.map((sheet) => (
+                        <div
+                          key={sheet.id}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "10px 12px",
+                            backgroundColor: theme.background,
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <div style={styles.listItemInfo}>
+                            <div style={styles.listItemTitle}>
+                              Semester {sheet.semester}
+                            </div>
+                            <div style={styles.listItemSubtitle}>
+                              Submitted:{" "}
+                              {new Date(sheet.submitted_at).toLocaleString()}
+                            </div>
+                            <div style={{ marginTop: "6px" }}>
+                              {getReviewStatusDisplay(sheet)}
+                            </div>
+                          </div>
+                          <div style={styles.listItemActions}>
+                            <button
+                              onClick={() =>
+                                loadSheetForViewing(
+                                  sheet.id,
+                                  isUserAdmin && adminMode,
+                                )
+                              }
+                              style={styles.button}
+                              disabled={loading}
+                            >
+                              <Eye size={14} />
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         )}
       </div>
@@ -1412,7 +1477,7 @@ const DowntimeWrapper = ({
             adminNotes: "",
             result: null,
           },
-        }
+        },
       );
       setRollAssignments(normalizedAssignments);
 
@@ -1420,6 +1485,19 @@ const DowntimeWrapper = ({
       setViewingSheet(null);
       setViewMode("edit");
     };
+
+    const chronological = [...submittedSheets].sort((a, b) => {
+      const yA = parseInt(a.year || a.school_year) || 0;
+      const yB = parseInt(b.year || b.school_year) || 0;
+      if (yA !== yB) return yA - yB;
+      return (parseInt(a.semester) || 0) - (parseInt(b.semester) || 0);
+    });
+    const currentIdx = chronological.findIndex((s) => s.id === viewingSheet.id);
+    const prevSheet = currentIdx > 0 ? chronological[currentIdx - 1] : null;
+    const nextSheet =
+      currentIdx < chronological.length - 1
+        ? chronological[currentIdx + 1]
+        : null;
 
     return (
       <ViewingSheetForm
@@ -1431,10 +1509,31 @@ const DowntimeWrapper = ({
           setViewMode("list");
           setViewingSheet(null);
         }}
+        onPrev={
+          prevSheet
+            ? () => loadSheetForViewing(prevSheet.id, isUserAdmin && adminMode)
+            : null
+        }
+        onNext={
+          nextSheet
+            ? () => loadSheetForViewing(nextSheet.id, isUserAdmin && adminMode)
+            : null
+        }
+        prevLabel={
+          prevSheet
+            ? `Y${prevSheet.year || prevSheet.school_year} S${prevSheet.semester}`
+            : null
+        }
+        nextLabel={
+          nextSheet
+            ? `Y${nextSheet.year || nextSheet.school_year} S${nextSheet.semester}`
+            : null
+        }
         onUpdateAssignment={handleUpdateAssignment}
         onEditRejected={handleEditRejected}
         supabase={supabase}
         user={user}
+        submittedSheets={submittedSheets}
       />
     );
   };
@@ -1550,7 +1649,7 @@ const DowntimeWrapper = ({
                       onClick={() => {
                         if (
                           window.confirm(
-                            "Are you sure you want to cancel editing this draft? Any unsaved changes will be lost."
+                            "Are you sure you want to cancel editing this draft? Any unsaved changes will be lost.",
                           )
                         ) {
                           resetFormState();
@@ -1591,7 +1690,7 @@ const DowntimeWrapper = ({
                         onClick={() => {
                           if (
                             window.confirm(
-                              "Are you sure you want to cancel? Any unsaved changes will be lost."
+                              "Are you sure you want to cancel? Any unsaved changes will be lost.",
                             )
                           ) {
                             resetFormState();
@@ -1709,8 +1808,8 @@ const DowntimeWrapper = ({
                       {yearInfo.fullyCompleted
                         ? " (Completed)"
                         : yearInfo.hasSubmissions
-                        ? " (Partial)"
-                        : ""}
+                          ? " (Partial)"
+                          : ""}
                     </option>
                   ))}
                 </select>
