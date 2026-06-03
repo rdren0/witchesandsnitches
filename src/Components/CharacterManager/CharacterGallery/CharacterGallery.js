@@ -15,6 +15,7 @@ import {
   Tag,
   Plus,
   Edit3,
+  BookOpen,
 } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "./styles";
@@ -560,6 +561,13 @@ const NpcStoryPanel = ({ npcName, unlockedLevel, theme }) => {
     }
   }
 
+  // Default: most recent (highest) level open, the rest collapsed.
+  const [expanded, setExpanded] = useState(() => {
+    const top = levels.length ? levels[levels.length - 1].lvl : null;
+    return top ? { [top]: true } : {};
+  });
+  const [hovered, setHovered] = useState(null);
+
   if (levels.length === 0) {
     return (
       <div
@@ -575,103 +583,160 @@ const NpcStoryPanel = ({ npcName, unlockedLevel, theme }) => {
     );
   }
 
+  const toggle = (lvl) =>
+    setExpanded((prev) => ({ ...prev, [lvl]: !prev[lvl] }));
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
+        gap: "10px",
         marginBottom: "8px",
-        maxHeight: "360px",
+        maxHeight: "420px",
         overflowY: "auto",
         paddingRight: "4px",
       }}
     >
       {levels.map(({ lvl, data }) => {
-        const isRomance = data.romanceOnly === true;
+        // Level 5 is the romance tier (students only) — pink. Levels 1-4 use primary.
+        const isRomance = lvl === 5 || data.romanceOnly === true;
         const accent = isRomance ? "#ec4899" : theme.primary;
+        const open = !!expanded[lvl];
+        const isHovered = hovered === lvl;
+
         return (
           <div
             key={lvl}
             style={{
-              border: `1px solid ${accent}40`,
-              borderRadius: "8px",
-              overflow: "hidden",
+              border: `1px solid ${accent}${open ? "66" : "33"}`,
+              borderRadius: "12px",
               backgroundColor: theme.surface,
+              boxShadow: open ? `0 2px 10px ${accent}22` : "none",
+              transition: "box-shadow 0.15s ease, border-color 0.15s ease",
             }}
           >
-            <div
+            <button
+              type="button"
+              onClick={() => toggle(lvl)}
+              onMouseEnter={() => setHovered(lvl)}
+              onMouseLeave={() => setHovered(null)}
               style={{
-                padding: "6px 12px",
-                backgroundColor: accent + "18",
-                borderBottom: `1px solid ${accent}30`,
-                fontSize: "11px",
-                fontWeight: "700",
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-                color: accent,
+                width: "100%",
+                boxSizing: "border-box",
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "10px",
+                padding: "9px 12px",
+                cursor: "pointer",
+                border: "none",
+                textAlign: "left",
+                borderRadius: open ? "11px 11px 0 0" : "11px",
+                background: isHovered
+                  ? `linear-gradient(90deg, ${accent}28, ${accent}12)`
+                  : `linear-gradient(90deg, ${accent}1f, ${accent}0a)`,
+                transition: "background 0.15s ease",
               }}
             >
-              <span>{isRomance ? "💕" : "✦"}</span>
-              <span>
-                Level {lvl}
-                {isRomance ? " · Romance" : ""}
+              <span
+                style={{
+                  flexShrink: 0,
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  backgroundColor: accent,
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  fontWeight: "800",
+                }}
+              >
+                {isRomance ? (
+                  <Heart size={12} fill="#ffffff" color="#ffffff" />
+                ) : (
+                  lvl
+                )}
               </span>
-            </div>
-            <div style={{ padding: "10px 12px" }}>
-              {data.scene &&
-                data.scene.split(/\n{2,}/).map((para, i) => (
-                  <p
-                    key={i}
-                    style={{
-                      margin: "0 0 8px 0",
-                      fontSize: "13px",
-                      lineHeight: "1.6",
-                      color: theme.text,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {para}
-                  </p>
-                ))}
-              {data.info && (
-                <div
-                  style={{
-                    marginTop: data.scene ? "10px" : 0,
-                    paddingTop: data.scene ? "8px" : 0,
-                    borderTop: data.scene
-                      ? `1px solid ${theme.border}`
-                      : "none",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: "700",
-                      letterSpacing: "0.05em",
-                      textTransform: "uppercase",
-                      color: theme.textSecondary,
-                      marginBottom: "4px",
-                    }}
-                  >
-                    About {npcName}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      lineHeight: "1.55",
-                      color: theme.textSecondary,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {data.info}
-                  </div>
-                </div>
+              <span
+                style={{
+                  flex: 1,
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  letterSpacing: "0.03em",
+                  textTransform: "uppercase",
+                  color: accent,
+                }}
+              >
+                {isRomance ? `Level ${lvl} · Romance` : `Level ${lvl}`}
+              </span>
+              {open ? (
+                <ChevronUp size={16} color={accent} />
+              ) : (
+                <ChevronDown size={16} color={accent} />
               )}
-            </div>
+            </button>
+
+            {open && (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  borderTop: `1px solid ${accent}22`,
+                  borderRadius: "0 0 11px 11px",
+                }}
+              >
+                {data.scene &&
+                  data.scene.split(/\n{2,}/).map((para, i) => (
+                    <p
+                      key={i}
+                      style={{
+                        margin: "0 0 10px 0",
+                        fontSize: "13px",
+                        lineHeight: "1.7",
+                        color: theme.text,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {para}
+                    </p>
+                  ))}
+                {data.info && (
+                  <div
+                    style={{
+                      marginTop: data.scene ? "12px" : 0,
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: theme.surface,
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "700",
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        color: accent,
+                        marginBottom: "5px",
+                      }}
+                    >
+                      About {npcName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        lineHeight: "1.6",
+                        color: theme.textSecondary,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {data.info}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
@@ -705,22 +770,14 @@ const CharacterCard = ({
   const [connections, setConnections] = useState(npcNote?.connections || []);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("notes");
+  const [badgeHover, setBadgeHover] = useState(false);
 
   const unlockedLevel = npcUnlocks?.[character.name] || 0;
   const hasStory = unlockedLevel > 0;
-
-  const tabButtonStyle = (tabId) => ({
-    flex: 1,
-    padding: "5px 8px",
-    fontSize: "11px",
-    fontWeight: "600",
-    cursor: "pointer",
-    border: `1px solid ${activeTab === tabId ? theme.primary : theme.border}`,
-    borderRadius: "6px",
-    backgroundColor:
-      activeTab === tabId ? theme.primary + "18" : "transparent",
-    color: activeTab === tabId ? theme.primary : theme.textSecondary,
-  });
+  // Romance level (5) only exists for non-faculty NPCs; faculty cap at 4.
+  const maxHearts = NPC_DATA[character.name]?.[5] !== undefined ? 5 : 4;
+  // Pink accent once the romance level (5) is unlocked, primary otherwise.
+  const storyAccent = unlockedLevel >= 5 ? "#ec4899" : theme.primary;
 
   useEffect(() => {
     if (npcNote) {
@@ -813,8 +870,58 @@ const CharacterCard = ({
       (npcNote.connections && npcNote.connections.length > 0));
 
   return (
-    <div style={styles.characterCard}>
-      <div style={styles.imageContainer}>
+    <div style={{ ...styles.characterCard, position: "relative" }}>
+      <div
+        style={{
+          ...styles.imageContainer,
+          borderTopLeftRadius: "12px",
+          borderTopRightRadius: "12px",
+        }}
+      >
+        {hasStory && (
+          <button
+            type="button"
+            title={`Friendship level ${unlockedLevel} — view story`}
+            onClick={() => setActiveTab("story")}
+            onMouseEnter={() => setBadgeHover(true)}
+            onMouseLeave={() => setBadgeHover(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              left: "10px",
+              zIndex: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              padding: "5px 8px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              backgroundColor: badgeHover
+                ? "rgba(0, 0, 0, 0.72)"
+                : "rgba(0, 0, 0, 0.55)",
+              backdropFilter: "blur(2px)",
+              border: `1px solid ${storyAccent}`,
+              boxShadow: badgeHover
+                ? `0 0 0 2px ${storyAccent}, 0 3px 9px rgba(0, 0, 0, 0.45)`
+                : "0 2px 6px rgba(0, 0, 0, 0.35)",
+              transform: badgeHover ? "scale(1.08)" : "scale(1)",
+              transformOrigin: "top left",
+              transition: "all 0.15s ease",
+            }}
+          >
+            {Array.from({ length: maxHearts }).map((_, i) => {
+              const filled = i < unlockedLevel;
+              return (
+                <Heart
+                  key={i}
+                  size={14}
+                  fill={filled ? storyAccent : "none"}
+                  color={filled ? storyAccent : "rgba(255, 255, 255, 0.55)"}
+                />
+              );
+            })}
+          </button>
+        )}
         {character.src && !imageError ? (
           <div style={{ position: "relative", width: "100%", height: "100%" }}>
             {!imageLoaded && (
@@ -911,18 +1018,62 @@ const CharacterCard = ({
         )}
 
         {hasStory && (
-          <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "6px",
+              marginBottom: "12px",
+              padding: "3px",
+              borderRadius: "8px",
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             <button
               onClick={() => setActiveTab("notes")}
-              style={tabButtonStyle("notes")}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "5px",
+                padding: "6px 8px",
+                fontSize: "11px",
+                fontWeight: "700",
+                cursor: "pointer",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor:
+                  activeTab === "notes" ? theme.primary : "transparent",
+                color: activeTab === "notes" ? "#ffffff" : theme.textSecondary,
+                transition: "background-color 0.15s ease",
+              }}
             >
+              <Edit3 size={13} />
               Notes
             </button>
             <button
               onClick={() => setActiveTab("story")}
-              style={tabButtonStyle("story")}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "5px",
+                padding: "6px 8px",
+                fontSize: "11px",
+                fontWeight: "700",
+                cursor: "pointer",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor:
+                  activeTab === "story" ? storyAccent : "transparent",
+                color: activeTab === "story" ? "#ffffff" : theme.textSecondary,
+                transition: "background-color 0.15s ease",
+              }}
             >
-              Story ({unlockedLevel})
+              <BookOpen size={13} />
+              Downtime Interactions
             </button>
           </div>
         )}
@@ -1612,6 +1763,17 @@ export const CharacterGallery = ({
     acc[school][type].push(character);
     return acc;
   }, {});
+
+  // Surface NPCs the player has a friendship level with at the top of each
+  // category, highest level first. Array.sort is stable, so NPCs at the same
+  // level (including all the level-0 ones) keep their original order.
+  Object.values(charactersBySchool).forEach((typeMap) => {
+    Object.keys(typeMap).forEach((type) => {
+      typeMap[type] = [...typeMap[type]].sort(
+        (a, b) => (npcUnlocks[b.name] || 0) - (npcUnlocks[a.name] || 0)
+      );
+    });
+  });
 
   const searchResults = filteredCharacters.filter((character) => {
     if (!searchTerm.trim()) return false;

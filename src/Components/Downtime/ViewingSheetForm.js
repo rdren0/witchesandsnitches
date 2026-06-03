@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ArrowLeft, CheckCircle, CircleAlert, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, CircleAlert, XCircle, Heart } from "lucide-react";
 import { NPC_DATA } from "../../SharedData/npcData";
 import { useTheme } from "../../contexts/ThemeContext";
 import { allSkills } from "../../SharedData/data";
@@ -1722,7 +1722,11 @@ const ViewingSheetForm = ({
                         color: isRomanceLevel ? "#ec4899" : theme.success,
                       }}
                     >
-                      <span>{isRomanceLevel ? "💕" : "✦"}</span>
+                      <Heart
+                        size={14}
+                        fill={isRomanceLevel ? "#ec4899" : theme.success}
+                        color={isRomanceLevel ? "#ec4899" : theme.success}
+                      />
                       <span>
                         Relationship Level {npcLevel}
                         {isRomanceLevel ? " · Romance" : ""}

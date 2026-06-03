@@ -227,12 +227,12 @@ export const createCharacterGalleryStyles = (theme) => ({
   },
   charactersGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
     gap: "16px",
     padding: "16px 20px",
   },
   characterCard: {
-    backgroundColor: theme.surface,
+    backgroundColor: theme.background,
     borderRadius: "12px",
     border: `1px solid ${theme.border}`,
     overflow: "hidden",
