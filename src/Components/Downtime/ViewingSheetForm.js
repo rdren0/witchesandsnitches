@@ -1658,10 +1658,11 @@ const ViewingSheetForm = ({
               npcLevel != null
                 ? NPC_DATA[resolveNpcName(relationship.npcName)]?.[npcLevel]
                 : null;
-            const hasLevelContent =
-              npcLevelData &&
-              Object.keys(npcLevelData).filter((k) => k !== "romanceOnly")
-                .length > 0;
+            const isRomanceLevel =
+              npcLevelData?.romanceOnly === true;
+            const sceneText = npcLevelData?.scene || "";
+            const infoText = npcLevelData?.info || "";
+            const hasLevelContent = Boolean(sceneText || infoText);
 
             const npcHistory = buildNpcHistory(relationship.npcName);
 
@@ -1694,48 +1695,108 @@ const ViewingSheetForm = ({
                 {isSuccess && (
                   <div
                     style={{
-                      marginTop: "12px",
-                      padding: "10px 14px",
-                      backgroundColor: theme.success + "12",
-                      border: `1px solid ${theme.success}40`,
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                      color: theme.text,
+                      marginTop: "16px",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      border: `1px solid ${
+                        isRomanceLevel ? "#ec4899" : theme.success
+                      }40`,
+                      backgroundColor: theme.surface,
                     }}
                   >
                     <div
                       style={{
-                        fontWeight: "600",
-                        color: theme.success,
-                        marginBottom: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 16px",
+                        backgroundColor:
+                          (isRomanceLevel ? "#ec4899" : theme.success) + "18",
+                        borderBottom: `1px solid ${
+                          isRomanceLevel ? "#ec4899" : theme.success
+                        }30`,
+                        fontWeight: "700",
+                        fontSize: "13px",
+                        letterSpacing: "0.03em",
+                        textTransform: "uppercase",
+                        color: isRomanceLevel ? "#ec4899" : theme.success,
                       }}
                     >
-                      Relationship Level {npcLevel}
-                      {NPC_DATA[resolveNpcName(relationship.npcName)]?.[
-                        npcLevel
-                      ]?.romanceOnly
-                        ? " — Romance Path"
-                        : ""}
+                      <span>{isRomanceLevel ? "💕" : "✦"}</span>
+                      <span>
+                        Relationship Level {npcLevel}
+                        {isRomanceLevel ? " · Romance" : ""}
+                      </span>
                     </div>
-                    {hasLevelContent ? (
-                      Object.entries(npcLevelData)
-                        .filter(([k]) => k !== "romanceOnly")
-                        .map(([k, v]) => (
-                          <div key={k}>
-                            <span style={{ fontWeight: "500" }}>{k}:</span>{" "}
-                            {typeof v === "string" ? v : JSON.stringify(v)}
-                          </div>
-                        ))
-                    ) : (
-                      <div
-                        style={{
-                          color: theme.textSecondary,
-                          fontStyle: "italic",
-                        }}
-                      >
-                        Level {npcLevel} content coming soon.
-                      </div>
-                    )}
+
+                    <div style={{ padding: "14px 16px" }}>
+                      {hasLevelContent ? (
+                        <>
+                          {sceneText &&
+                            sceneText
+                              .split(/\n{2,}/)
+                              .map((para, i) => (
+                                <p
+                                  key={i}
+                                  style={{
+                                    margin: i === 0 ? "0 0 10px 0" : "0 0 10px 0",
+                                    fontSize: "14px",
+                                    lineHeight: "1.65",
+                                    color: theme.text,
+                                    whiteSpace: "pre-wrap",
+                                  }}
+                                >
+                                  {para}
+                                </p>
+                              ))}
+
+                          {infoText && (
+                            <div
+                              style={{
+                                marginTop: sceneText ? "14px" : 0,
+                                paddingTop: sceneText ? "12px" : 0,
+                                borderTop: sceneText
+                                  ? `1px solid ${theme.border}`
+                                  : "none",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  letterSpacing: "0.05em",
+                                  textTransform: "uppercase",
+                                  color: theme.textSecondary,
+                                  marginBottom: "6px",
+                                }}
+                              >
+                                About {relationship.npcName.trim()}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  lineHeight: "1.6",
+                                  color: theme.textSecondary,
+                                  whiteSpace: "pre-wrap",
+                                }}
+                              >
+                                {infoText}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div
+                          style={{
+                            color: theme.textSecondary,
+                            fontStyle: "italic",
+                            fontSize: "13px",
+                          }}
+                        >
+                          Level {npcLevel} content coming soon.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
