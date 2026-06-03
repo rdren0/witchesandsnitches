@@ -1290,3 +1290,39 @@ export const NPC_DATA = {
   "Professor Shari Augustine": { 1: {}, 2: {}, 3: {}, 4: {} },
   "Professor Wilner Toussaint": { 1: {}, 2: {}, 3: {}, 4: {} },
 };
+
+// Resolves a raw NPC name (possibly trimmed/first-name-only) to the canonical
+// NPC_DATA key. Handles trailing spaces and partials like "Olivia " -> "Olivia Law".
+export const resolveNpcName = (rawName) => {
+  if (!rawName) return null;
+  const trimmed = rawName.trim().toLowerCase();
+  if (!trimmed) return null;
+  const keys = Object.keys(NPC_DATA);
+  return (
+    keys.find((k) => k.toLowerCase() === trimmed) ||
+    keys.find((k) => k.toLowerCase().startsWith(trimmed)) ||
+    keys.find((k) => k.toLowerCase().includes(trimmed)) ||
+    null
+  );
+};
+
+// Builds a map of canonical NPC name -> highest unlocked relationship level
+// (count of approved, successful relationship interactions), capped at 5.
+// Only sheets approved by an admin (success / npc_override) count.
+export const buildNpcUnlocks = (sheets = []) => {
+  const isApproved = (s) =>
+    s.review_status === "success" || s.review_status === "npc_override";
+
+  const counts = {};
+  sheets.filter(isApproved).forEach((sheet) => {
+    const relationships = sheet.relationships || [];
+    const assignments = sheet.roll_assignments || {};
+    relationships.forEach((rel, idx) => {
+      if (assignments[`relationship${idx + 1}`]?.result !== "success") return;
+      const canonical = resolveNpcName(rel.npcName);
+      if (!canonical) return;
+      counts[canonical] = Math.min((counts[canonical] || 0) + 1, 5);
+    });
+  });
+  return counts;
+};
