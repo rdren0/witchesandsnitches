@@ -1733,7 +1733,7 @@ const ViewingSheetForm = ({
                           fontStyle: "italic",
                         }}
                       >
-                        {/* Level {npcLevel} content coming soon. */}
+                        Level {npcLevel} content coming soon.
                       </div>
                     )}
                   </div>
