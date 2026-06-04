@@ -173,15 +173,15 @@ const AdminDashboard = ({ supabase }) => {
           (char) =>
             char.game_session &&
             char.game_session.trim() !== "" &&
-            char.game_session.toLowerCase() !== "development"
+            char.game_session.toLowerCase() !== "development",
         ) || [];
 
       const uniqueUsers = new Set(
-        validCharacters.map((c) => c.discord_user_id)
+        validCharacters.map((c) => c.discord_user_id),
       );
 
       const uniqueSessions = new Set(
-        validCharacters.map((c) => c.game_session)
+        validCharacters.map((c) => c.game_session),
       );
 
       const { data: downtimeSheets } = await supabase
@@ -194,12 +194,18 @@ const AdminDashboard = ({ supabase }) => {
         downtimeSheets?.filter(
           (sheet) =>
             !sheet.is_draft &&
-            (!sheet.review_status || sheet.review_status === "pending")
+            (!sheet.review_status || sheet.review_status === "pending"),
         ).length || 0;
 
       const missingNpcCount =
         downtimeSheets?.filter((sheet) => {
-          if (sheet.is_draft || !sheet.review_status || sheet.review_status === "pending" || sheet.review_status === "npc_override") return false;
+          if (
+            sheet.is_draft ||
+            !sheet.review_status ||
+            sheet.review_status === "pending" ||
+            sheet.review_status === "npc_override"
+          )
+            return false;
           if (sheet.review_status === "partial") return true;
           const relationships = sheet.relationships;
           const rollAssignments = sheet.roll_assignments;
@@ -209,7 +215,12 @@ const AdminDashboard = ({ supabase }) => {
             if (!rel || !rel.npcName || rel.npcName.trim() === "") continue;
             const key = `relationship${i + 1}`;
             const assignment = rollAssignments[key];
-            if (!assignment || !assignment.adminNotes || assignment.adminNotes.trim() === "") return true;
+            if (
+              !assignment ||
+              !assignment.result ||
+              assignment.result === "pending"
+            )
+              return true;
           }
           return false;
         }).length || 0;

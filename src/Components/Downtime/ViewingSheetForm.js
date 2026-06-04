@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { ArrowLeft, CheckCircle, CircleAlert, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, CircleAlert, XCircle, Heart } from "lucide-react";
+import { NPC_DATA } from "../../SharedData/npcData";
 import { useTheme } from "../../contexts/ThemeContext";
 import { allSkills } from "../../SharedData/data";
 import { wandModifiers } from "../../SharedData/downtime";
@@ -18,13 +19,111 @@ import {
 } from "./downtimeHelpers";
 import { formatModifier } from "./utils/modifierUtils";
 
+const NpcProgressSlots = ({ npcName, npcHistory, viewingSheet }) => {
+  const { theme } = useTheme();
+
+  const canonical = npcName
+    ? (() => {
+        const trimmed = npcName.trim().toLowerCase();
+        const keys = Object.keys(NPC_DATA);
+        return (
+          keys.find((k) => k.toLowerCase() === trimmed) ||
+          keys.find((k) => k.toLowerCase().startsWith(trimmed)) ||
+          keys.find((k) => k.toLowerCase().includes(trimmed)) ||
+          null
+        );
+      })()
+    : null;
+
+  if (!canonical) return null;
+
+  const npcEntry = NPC_DATA[canonical];
+  const maxSlots = npcEntry[5] !== undefined ? 5 : 4;
+
+  const viewYear = parseInt(viewingSheet.year || viewingSheet.school_year) || 0;
+  const viewSem = parseInt(viewingSheet.semester) || 0;
+
+  const filledEntries = npcHistory.filter((entry) => {
+    const ey = parseInt(entry.year) || 0;
+    const es = parseInt(entry.semester) || 0;
+    return ey < viewYear || (ey === viewYear && es <= viewSem);
+  });
+
+  const filledCount = filledEntries.length;
+
+  return (
+    <div style={{ marginTop: "12px" }}>
+      <div
+        style={{
+          fontSize: "12px",
+          fontWeight: "600",
+          color: theme.textSecondary,
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          marginBottom: "8px",
+        }}
+      >
+        Relationship Progress
+      </div>
+      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        {Array.from({ length: maxSlots }, (_, i) => {
+          const slotLevel = i + 1;
+          const isFilled = slotLevel <= filledCount;
+          const entry = filledEntries[i];
+          const isCurrentSheet = entry?.sheetId === viewingSheet.id;
+          const isRomance = npcEntry[slotLevel]?.romanceOnly;
+
+          const filledColor = isCurrentSheet
+            ? theme.success
+            : isRomance
+              ? "#ec4899"
+              : theme.primary;
+
+          return (
+            <div
+              key={slotLevel}
+              title={
+                isFilled
+                  ? `Level ${slotLevel} — Year ${entry.year}, Semester ${entry.semester}`
+                  : `Level ${slotLevel}${isRomance ? " (Romance)" : ""}`
+              }
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                border: `2px solid ${isFilled ? filledColor : theme.border}`,
+                backgroundColor: isFilled ? filledColor + "30" : "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: "700",
+                color: isFilled ? filledColor : theme.border,
+                cursor: "default",
+                flexShrink: 0,
+              }}
+            >
+              {slotLevel}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const ViewingSheetForm = ({
   viewingSheet,
   selectedCharacter,
   onBack,
+  onPrev,
+  onNext,
+  prevLabel,
+  nextLabel,
   onEditRejected,
   onUpdateAssignment,
   user,
+  submittedSheets = [],
 }) => {
   const { theme } = useTheme();
 
@@ -253,7 +352,7 @@ const ViewingSheetForm = ({
         border: `1px dashed ${theme.border}`,
       },
     }),
-    [theme]
+    [theme],
   );
 
   const getViewingReviewStatus = (sheet, theme) => {
@@ -456,7 +555,7 @@ const ViewingSheetForm = ({
     dicePool,
     skillField,
     diceField,
-    label
+    label,
   ) => {
     const skill = assignment[skillField];
     const diceValue = dicePool?.[assignment[diceField]];
@@ -598,7 +697,7 @@ const ViewingSheetForm = ({
     dicePool,
     label = "Spell Roll",
     diceField = null,
-    spellName = null
+    spellName = null,
   ) => {
     let spellDiceIndex;
 
@@ -706,7 +805,7 @@ const ViewingSheetForm = ({
     dicePool,
     extraDiceAssignments,
     activityIndex,
-    label = "Extra Die Roll"
+    label = "Extra Die Roll",
   ) => {
     if (!assignment.extraDieUsed || !extraDiceAssignments) {
       return null;
@@ -755,7 +854,7 @@ const ViewingSheetForm = ({
           <div key="spell" style={styles.spellInfo}>
             <div style={styles.label}>Selected Spell:</div>
             <div style={styles.value}>{activity.selectedSpell}</div>
-          </div>
+          </div>,
         );
       } else {
         const hasFirstSpell =
@@ -770,7 +869,7 @@ const ViewingSheetForm = ({
             <div key="spell" style={styles.spellInfo}>
               <div style={styles.label}>Spell Activity:</div>
               <div style={styles.value}>No spell roll data found</div>
-            </div>
+            </div>,
           );
         }
       }
@@ -789,10 +888,10 @@ const ViewingSheetForm = ({
               ` (${formatModifier(
                 selectedCharacter.magicModifiers?.[
                   activity.selectedWandModifier
-                ] || 0
+                ] || 0,
               )})`}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -804,7 +903,7 @@ const ViewingSheetForm = ({
         <div key="class" style={styles.classInfo}>
           <div style={styles.label}>Selected Class:</div>
           <div style={styles.value}>{activity.selectedClass}</div>
-        </div>
+        </div>,
       );
     }
 
@@ -818,7 +917,7 @@ const ViewingSheetForm = ({
           <div style={styles.value}>
             {getSkillDisplayName(activity.selectedSkill)}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -828,7 +927,7 @@ const ViewingSheetForm = ({
     ) {
       const abilities = getAvailableAbilityScores(selectedCharacter);
       const selectedAbility = abilities.find(
-        (a) => a.name === activity.selectedAbilityScore
+        (a) => a.name === activity.selectedAbilityScore,
       );
 
       components.push(
@@ -840,7 +939,7 @@ const ViewingSheetForm = ({
               activity.selectedAbilityScore.charAt(0).toUpperCase() +
                 activity.selectedAbilityScore.slice(1)}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -848,26 +947,26 @@ const ViewingSheetForm = ({
       const nameField = activity.activity.toLowerCase().includes("potion")
         ? "potionName"
         : activity.activity.toLowerCase().includes("recipe")
-        ? "recipeName"
-        : activity.activity.toLowerCase().includes("plant")
-        ? "plantName"
-        : null;
+          ? "recipeName"
+          : activity.activity.toLowerCase().includes("plant")
+            ? "plantName"
+            : null;
 
       if (nameField && activity[nameField]) {
         const label =
           nameField === "potionName"
             ? "Potion Name"
             : nameField === "recipeName"
-            ? "Recipe Name"
-            : nameField === "plantName"
-            ? "Plant Name"
-            : "Name";
+              ? "Recipe Name"
+              : nameField === "plantName"
+                ? "Plant Name"
+                : "Name";
 
         components.push(
           <div key="name" style={styles.nameInfo}>
             <div style={styles.label}>{label}:</div>
             <div style={styles.value}>{activity[nameField]}</div>
-          </div>
+          </div>,
         );
       }
     }
@@ -880,7 +979,7 @@ const ViewingSheetForm = ({
             {assignment.jobType.charAt(0).toUpperCase() +
               assignment.jobType.slice(1)}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -892,7 +991,7 @@ const ViewingSheetForm = ({
             {assignment.familyType.charAt(0).toUpperCase() +
               assignment.familyType.slice(1)}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -917,7 +1016,7 @@ const ViewingSheetForm = ({
           <div>
             This activity required <strong>two separate dice rolls</strong>.
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -937,7 +1036,7 @@ const ViewingSheetForm = ({
             This activity involved <strong>spell research/casting</strong> with
             separate dice rolls for each spell.
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -967,11 +1066,86 @@ const ViewingSheetForm = ({
               </div>
             )}
           </div>
-        </div>
+        </div>,
       );
     }
 
     return notices;
+  };
+
+  const resolveNpcName = (rawName) => {
+    if (!rawName) return null;
+    const trimmed = rawName.trim().toLowerCase();
+    const keys = Object.keys(NPC_DATA);
+    const exact = keys.find((k) => k.toLowerCase() === trimmed);
+    if (exact) return exact;
+    const startsWith = keys.find((k) => k.toLowerCase().startsWith(trimmed));
+    if (startsWith) return startsWith;
+    const contains = keys.find((k) => k.toLowerCase().includes(trimmed));
+    return contains || null;
+  };
+
+  const isApprovedSheet = (sheet) =>
+    sheet.review_status === "success" || sheet.review_status === "npc_override";
+
+  const sheetYear = (sheet) => parseInt(sheet.year || sheet.school_year) || 0;
+
+  const sheetSem = (sheet) => parseInt(sheet.semester) || 0;
+
+  const buildNpcHistory = (npcName) => {
+    const canonical = resolveNpcName(npcName);
+    if (!canonical) return [];
+
+    const allSheets = [...submittedSheets]
+      .filter(isApprovedSheet)
+      .sort((a, b) => {
+        const yDiff = sheetYear(a) - sheetYear(b);
+        return yDiff !== 0 ? yDiff : sheetSem(a) - sheetSem(b);
+      });
+
+    const history = [];
+    allSheets.forEach((sheet) => {
+      const relationships = sheet.relationships || [];
+      const assignments = sheet.roll_assignments || {};
+      relationships.forEach((rel, idx) => {
+        if (resolveNpcName(rel.npcName) !== canonical) return;
+        const key = `relationship${idx + 1}`;
+        if (assignments[key]?.result === "success") {
+          history.push({
+            year: sheet.year || sheet.school_year,
+            semester: sheet.semester,
+            level: history.length + 1,
+            sheetId: sheet.id,
+          });
+        }
+      });
+    });
+
+    return history;
+  };
+
+  const getNpcLevelForThisSheet = (npcName) => {
+    const canonical = resolveNpcName(npcName);
+    if (!canonical) return 1;
+
+    const viewYear = sheetYear(viewingSheet);
+    const viewSem = sheetSem(viewingSheet);
+
+    let priorSuccesses = 0;
+    submittedSheets.filter(isApprovedSheet).forEach((sheet) => {
+      if (sheet.id === viewingSheet.id) return;
+      const y = sheetYear(sheet);
+      const s = sheetSem(sheet);
+      if (!(y < viewYear || (y === viewYear && s < viewSem))) return;
+      const relationships = sheet.relationships || [];
+      const assignments = sheet.roll_assignments || {};
+      relationships.forEach((rel, idx) => {
+        if (resolveNpcName(rel.npcName) !== canonical) return;
+        if (assignments[`relationship${idx + 1}`]?.result === "success")
+          priorSuccesses++;
+      });
+    });
+    return priorSuccesses + 1;
   };
 
   const renderAdminControls = (assignmentKey, assignment) => {
@@ -1032,14 +1206,21 @@ const ViewingSheetForm = ({
             {viewingSheet.character_name}
           </h2>
           <p style={{ color: theme.textSecondary, margin: 0 }}>
-            Year {viewingSheet.year}, Semester {viewingSheet.semester} •
-            Submitted:{" "}
+            Year {viewingSheet.year || viewingSheet.school_year}, Semester{" "}
+            {viewingSheet.semester} • Submitted:{" "}
             {new Date(
-              viewingSheet.submitted_at || viewingSheet.updated_at
+              viewingSheet.submitted_at || viewingSheet.updated_at,
             ).toLocaleDateString()}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           {viewingSheet.review_status === "failure" && (
             <button
               onClick={() => onEditRejected(viewingSheet)}
@@ -1056,6 +1237,42 @@ const ViewingSheetForm = ({
             <ArrowLeft size={16} />
             Back to List
           </button>
+
+          <button
+            onClick={onPrev}
+            disabled={!onPrev}
+            title={
+              prevLabel
+                ? `Previous: Year ${prevLabel.replace("Y", "").replace("S", ", Semester ")}`
+                : "No earlier sheet"
+            }
+            style={{
+              ...styles.backButton,
+              opacity: onPrev ? 1 : 0.35,
+              cursor: onPrev ? "pointer" : "not-allowed",
+              minWidth: "80px",
+            }}
+          >
+            ← {prevLabel ?? "—"}
+          </button>
+
+          <button
+            onClick={onNext}
+            disabled={!onNext}
+            title={
+              nextLabel
+                ? `Next: Year ${nextLabel.replace("Y", "").replace("S", ", Semester ")}`
+                : "No later sheet"
+            }
+            style={{
+              ...styles.backButton,
+              opacity: onNext ? 1 : 0.35,
+              cursor: onNext ? "pointer" : "not-allowed",
+              minWidth: "80px",
+            }}
+          >
+            {nextLabel ?? "—"} →
+          </button>
         </div>
       </div>
       {getViewingReviewStatus(viewingSheet, theme)}
@@ -1070,7 +1287,8 @@ const ViewingSheetForm = ({
           <div>
             <div style={styles.label}>Academic Period</div>
             <div style={styles.value}>
-              Year {viewingSheet.year}, Semester {viewingSheet.semester}
+              Year {viewingSheet.year || viewingSheet.school_year}, Semester{" "}
+              {viewingSheet.semester}
             </div>
           </div>
           <div>
@@ -1079,16 +1297,16 @@ const ViewingSheetForm = ({
               {viewingSheet.is_draft
                 ? "📝 Draft"
                 : viewingSheet.review_status === "success"
-                ? "✅ Approved"
-                : viewingSheet.review_status === "failure"
-                ? "❌ Rejected"
-                : viewingSheet.review_status === "partial"
-                ? "🔄 NPC Review Pending"
-                : viewingSheet.review_status === "npc_override"
-                ? "✅ Approved"
-                : viewingSheet.review_status === "pending"
-                ? "⏳ Pending Review"
-                : "✅ Submitted"}
+                  ? "✅ Approved"
+                  : viewingSheet.review_status === "failure"
+                    ? "❌ Rejected"
+                    : viewingSheet.review_status === "partial"
+                      ? "🔄 NPC Review Pending"
+                      : viewingSheet.review_status === "npc_override"
+                        ? "✅ Approved"
+                        : viewingSheet.review_status === "pending"
+                          ? "⏳ Pending Review"
+                          : "✅ Submitted"}
             </div>
           </div>
           {viewingSheet.selected_magic_school && (
@@ -1162,13 +1380,13 @@ const ViewingSheetForm = ({
 
             const isDualCheck = activityRequiresDualChecks(activity.activity);
             const requiresExtraDie = activityRequiresExtraDie(
-              activity.activity
+              activity.activity,
             );
 
             const getSpellNameForActivity = (
               activityIndex,
               spellSlot,
-              viewingSheet
+              viewingSheet,
             ) => {
               if (!viewingSheet?.selected_spells) return null;
 
@@ -1217,7 +1435,7 @@ const ViewingSheetForm = ({
                               dualSkills?.first
                                 ? ` (${getSkillDisplayName(dualSkills.first)})`
                                 : ""
-                            }`
+                            }`,
                           );
                         } else {
                           const diceValue =
@@ -1258,7 +1476,7 @@ const ViewingSheetForm = ({
                               dualSkills?.second
                                 ? ` (${getSkillDisplayName(dualSkills.second)})`
                                 : ""
-                            }`
+                            }`,
                           );
                         } else {
                           const diceValue =
@@ -1286,7 +1504,7 @@ const ViewingSheetForm = ({
                           getSpellNameForActivity(
                             index,
                             "first",
-                            viewingSheet
+                            viewingSheet,
                           ) || "First Spell";
 
                         return renderSpellRollInfo(
@@ -1295,7 +1513,7 @@ const ViewingSheetForm = ({
                           "First Spell Roll",
                           "firstSpellDice",
                           firstSpellName,
-                          activity
+                          activity,
                         );
                       })()}
                     {assignment.secondSpellDice !== null &&
@@ -1305,7 +1523,7 @@ const ViewingSheetForm = ({
                           getSpellNameForActivity(
                             index,
                             "second",
-                            viewingSheet
+                            viewingSheet,
                           ) || "Second Spell";
 
                         return renderSpellRollInfo(
@@ -1314,26 +1532,26 @@ const ViewingSheetForm = ({
                           "Second Spell Roll",
                           "secondSpellDice",
                           secondSpellName,
-                          activity
+                          activity,
                         );
                       })()}
                     {activityRequiresAbilitySelection(activity.activity)
                       ? renderAbilityScoreRollInfo(
                           activity,
                           assignment,
-                          viewingSheet.dice_pool
+                          viewingSheet.dice_pool,
                         )
                       : assignment.diceIndex !== null &&
-                        assignment.diceIndex !== undefined &&
-                        assignment.skill
-                      ? renderRollInfo(
-                          assignment,
-                          viewingSheet.dice_pool,
-                          "skill",
-                          "diceIndex",
-                          "Roll"
-                        )
-                      : null}
+                          assignment.diceIndex !== undefined &&
+                          assignment.skill
+                        ? renderRollInfo(
+                            assignment,
+                            viewingSheet.dice_pool,
+                            "skill",
+                            "diceIndex",
+                            "Roll",
+                          )
+                        : null}
                     {!assignment.firstSpellDice &&
                       !assignment.secondSpellDice && (
                         <>
@@ -1345,14 +1563,14 @@ const ViewingSheetForm = ({
                               viewingSheet.dice_pool,
                               "skill",
                               "diceIndex",
-                              "Skill Roll"
+                              "Skill Roll",
                             )}
                           {renderExtraDieRollInfo(
                             assignment,
                             viewingSheet.dice_pool,
                             viewingSheet.extra_dice_assignments,
                             index,
-                            "Extra Roll"
+                            "Extra Roll",
                           )}
                         </>
                       )}
@@ -1366,7 +1584,7 @@ const ViewingSheetForm = ({
                     return renderWandStatIncreaseInfo(
                       activity,
                       assignment,
-                      viewingSheet.dice_pool
+                      viewingSheet.dice_pool,
                     );
                   })()
                 ) : (
@@ -1378,14 +1596,14 @@ const ViewingSheetForm = ({
                     ? renderAbilityScoreRollInfo(
                         activity,
                         assignment,
-                        viewingSheet.dice_pool
+                        viewingSheet.dice_pool,
                       )
                     : renderRollInfo(
                         assignment,
                         viewingSheet.dice_pool,
                         "skill",
                         "diceIndex",
-                        "Roll Result"
+                        "Roll Result",
                       ))
                 )}
 
@@ -1432,6 +1650,22 @@ const ViewingSheetForm = ({
             const assignment =
               viewingSheet.roll_assignments?.[assignmentKey] || {};
 
+            const isSuccess = assignment.result === "success";
+            const npcLevel = isSuccess
+              ? getNpcLevelForThisSheet(relationship.npcName)
+              : null;
+            const npcLevelData =
+              npcLevel != null
+                ? NPC_DATA[resolveNpcName(relationship.npcName)]?.[npcLevel]
+                : null;
+            const isRomanceLevel =
+              npcLevelData?.romanceOnly === true;
+            const sceneText = npcLevelData?.scene || "";
+            const infoText = npcLevelData?.info || "";
+            const hasLevelContent = Boolean(sceneText || infoText);
+
+            const npcHistory = buildNpcHistory(relationship.npcName);
+
             return (
               <div key={index} style={styles.card}>
                 <div style={styles.cardTitle}>Relationship {index + 1}</div>
@@ -1446,7 +1680,7 @@ const ViewingSheetForm = ({
                   viewingSheet.dice_pool,
                   "skill",
                   "diceIndex",
-                  "Roll Result"
+                  "Roll Result",
                 )}
 
                 {relationship.notes && (
@@ -1457,6 +1691,124 @@ const ViewingSheetForm = ({
                 )}
 
                 {renderAdminControls(assignmentKey, assignment)}
+
+                {isSuccess && (
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      border: `1px solid ${
+                        isRomanceLevel ? "#ec4899" : theme.success
+                      }40`,
+                      backgroundColor: theme.surface,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 16px",
+                        backgroundColor:
+                          (isRomanceLevel ? "#ec4899" : theme.success) + "18",
+                        borderBottom: `1px solid ${
+                          isRomanceLevel ? "#ec4899" : theme.success
+                        }30`,
+                        fontWeight: "700",
+                        fontSize: "13px",
+                        letterSpacing: "0.03em",
+                        textTransform: "uppercase",
+                        color: isRomanceLevel ? "#ec4899" : theme.success,
+                      }}
+                    >
+                      <Heart
+                        size={14}
+                        fill={isRomanceLevel ? "#ec4899" : theme.success}
+                        color={isRomanceLevel ? "#ec4899" : theme.success}
+                      />
+                      <span>
+                        Relationship Level {npcLevel}
+                        {isRomanceLevel ? " · Romance" : ""}
+                      </span>
+                    </div>
+
+                    <div style={{ padding: "14px 16px" }}>
+                      {hasLevelContent ? (
+                        <>
+                          {sceneText &&
+                            sceneText
+                              .split(/\n{2,}/)
+                              .map((para, i) => (
+                                <p
+                                  key={i}
+                                  style={{
+                                    margin: i === 0 ? "0 0 10px 0" : "0 0 10px 0",
+                                    fontSize: "14px",
+                                    lineHeight: "1.65",
+                                    color: theme.text,
+                                    whiteSpace: "pre-wrap",
+                                  }}
+                                >
+                                  {para}
+                                </p>
+                              ))}
+
+                          {infoText && (
+                            <div
+                              style={{
+                                marginTop: sceneText ? "14px" : 0,
+                                paddingTop: sceneText ? "12px" : 0,
+                                borderTop: sceneText
+                                  ? `1px solid ${theme.border}`
+                                  : "none",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  letterSpacing: "0.05em",
+                                  textTransform: "uppercase",
+                                  color: theme.textSecondary,
+                                  marginBottom: "6px",
+                                }}
+                              >
+                                About {relationship.npcName.trim()}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  lineHeight: "1.6",
+                                  color: theme.textSecondary,
+                                  whiteSpace: "pre-wrap",
+                                }}
+                              >
+                                {infoText}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div
+                          style={{
+                            color: theme.textSecondary,
+                            fontStyle: "italic",
+                            fontSize: "13px",
+                          }}
+                        >
+                          Level {npcLevel} content coming soon.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <NpcProgressSlots
+                  npcName={relationship.npcName}
+                  npcHistory={npcHistory}
+                  viewingSheet={viewingSheet}
+                />
               </div>
             );
           })

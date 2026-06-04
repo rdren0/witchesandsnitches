@@ -15,11 +15,13 @@ import {
   Tag,
   Plus,
   Edit3,
+  BookOpen,
 } from "lucide-react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { getCharacterGalleryStyles } from "./styles";
 import { ALL_CHARACTERS } from "../../../SharedData/charactersData";
 import { filterNPCGalleryCharacters } from "../../../utils/characterFiltering";
+import { NPC_DATA, buildNpcUnlocks } from "../../../SharedData/npcData";
 
 const DEFAULT_TAGS = [
   "Study Buddy",
@@ -546,6 +548,277 @@ const ConnectionManager = ({
   );
 };
 
+const NpcStoryPanel = ({ npcName, unlockedLevel, theme }) => {
+  const npc = NPC_DATA[npcName];
+
+  // Include every unlocked level — even ones the DM hasn't written yet, which
+  // render as a placeholder box rather than being hidden.
+  const levels = [];
+  if (npc) {
+    for (let lvl = 1; lvl <= unlockedLevel; lvl++) {
+      levels.push({ lvl, data: npc[lvl] || {} });
+    }
+  }
+
+  // Default: most recent (highest) level open, the rest collapsed.
+  const [expanded, setExpanded] = useState(() => {
+    const top = levels.length ? levels[levels.length - 1].lvl : null;
+    return top ? { [top]: true } : {};
+  });
+  const [hovered, setHovered] = useState(null);
+
+  if (levels.length === 0) {
+    return (
+      <div
+        style={{
+          fontSize: "12px",
+          color: theme.textSecondary,
+          fontStyle: "italic",
+          padding: "8px 0",
+        }}
+      >
+        Story content coming soon.
+      </div>
+    );
+  }
+
+  const toggle = (lvl) =>
+    setExpanded((prev) => ({ ...prev, [lvl]: !prev[lvl] }));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        marginBottom: "8px",
+        maxHeight: "420px",
+        overflowY: "auto",
+        paddingRight: "4px",
+      }}
+    >
+      {levels.map(({ lvl, data }) => {
+        // Level 5 is the romance tier (students only) — pink. Levels 1-4 use primary.
+        const isRomance = lvl === 5 || data.romanceOnly === true;
+        const accent = isRomance ? "#ec4899" : theme.primary;
+        const open = !!expanded[lvl];
+        const isHovered = hovered === lvl;
+        const hasContent = !!(data.scene || data.info);
+
+        // Unwritten levels render as a plain, non-interactive box — no
+        // expand/collapse — so users aren't misled into thinking content is
+        // hidden behind a toggle.
+        if (!hasContent) {
+          return (
+            <div
+              key={lvl}
+              style={{
+                border: `1px dashed ${theme.border}`,
+                borderRadius: "12px",
+                backgroundColor: theme.background,
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    flexShrink: 0,
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    backgroundColor: theme.textSecondary,
+                    color: theme.surface,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "800",
+                  }}
+                >
+                  {isRomance ? (
+                    <Heart
+                      size={12}
+                      fill={theme.surface}
+                      color={theme.surface}
+                    />
+                  ) : (
+                    lvl
+                  )}
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    letterSpacing: "0.03em",
+                    textTransform: "uppercase",
+                    color: theme.textSecondary,
+                  }}
+                >
+                  {isRomance ? `Level ${lvl} · Romance` : `Level ${lvl}`}
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  lineHeight: "1.6",
+                  color: theme.textSecondary,
+                  fontStyle: "italic",
+                }}
+              >
+                This interaction hasn't been written or released by the DM yet.
+                Check back later!
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div
+            key={lvl}
+            style={{
+              border: `1px solid ${accent}${open ? "66" : "33"}`,
+              borderRadius: "12px",
+              backgroundColor: theme.surface,
+              boxShadow: open ? `0 2px 10px ${accent}22` : "none",
+              transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => toggle(lvl)}
+              onMouseEnter={() => setHovered(lvl)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "9px 12px",
+                cursor: "pointer",
+                border: "none",
+                textAlign: "left",
+                borderRadius: open ? "11px 11px 0 0" : "11px",
+                background: isHovered
+                  ? `linear-gradient(90deg, ${accent}28, ${accent}12)`
+                  : `linear-gradient(90deg, ${accent}1f, ${accent}0a)`,
+                transition: "background 0.15s ease",
+              }}
+            >
+              <span
+                style={{
+                  flexShrink: 0,
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  backgroundColor: accent,
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  fontWeight: "800",
+                }}
+              >
+                {isRomance ? (
+                  <Heart size={12} fill="#ffffff" color="#ffffff" />
+                ) : (
+                  lvl
+                )}
+              </span>
+              <span
+                style={{
+                  flex: 1,
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  letterSpacing: "0.03em",
+                  textTransform: "uppercase",
+                  color: accent,
+                }}
+              >
+                {isRomance ? `Level ${lvl} · Romance` : `Level ${lvl}`}
+              </span>
+              {open ? (
+                <ChevronUp size={16} color={accent} />
+              ) : (
+                <ChevronDown size={16} color={accent} />
+              )}
+            </button>
+
+            {open && (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  borderTop: `1px solid ${accent}22`,
+                  borderRadius: "0 0 11px 11px",
+                }}
+              >
+                {data.scene &&
+                  data.scene.split(/\n{2,}/).map((para, i) => (
+                    <p
+                      key={i}
+                      style={{
+                        margin: "0 0 10px 0",
+                        fontSize: "13px",
+                        lineHeight: "1.7",
+                        color: theme.text,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {para}
+                    </p>
+                  ))}
+                {data.info && (
+                  <div
+                    style={{
+                      marginTop: data.scene ? "12px" : 0,
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: theme.surface,
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "700",
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        color: accent,
+                        marginBottom: "5px",
+                      }}
+                    >
+                      About {npcName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        lineHeight: "1.6",
+                        color: theme.textSecondary,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {data.info}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const CharacterCard = ({
   character,
   theme,
@@ -556,6 +829,7 @@ const CharacterCard = ({
   supabase,
   discordUserId,
   characters,
+  npcUnlocks,
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -570,6 +844,15 @@ const CharacterCard = ({
   const [customTags, setCustomTags] = useState(npcNote?.custom_tags || []);
   const [connections, setConnections] = useState(npcNote?.connections || []);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("notes");
+  const [badgeHover, setBadgeHover] = useState(false);
+
+  const unlockedLevel = npcUnlocks?.[character.name] || 0;
+  const hasStory = unlockedLevel > 0;
+  // Romance level (5) only exists for non-faculty NPCs; faculty cap at 4.
+  const maxHearts = NPC_DATA[character.name]?.[5] !== undefined ? 5 : 4;
+  // Pink accent once the romance level (5) is unlocked, primary otherwise.
+  const storyAccent = unlockedLevel >= 5 ? "#ec4899" : theme.primary;
 
   useEffect(() => {
     if (npcNote) {
@@ -662,8 +945,64 @@ const CharacterCard = ({
       (npcNote.connections && npcNote.connections.length > 0));
 
   return (
-    <div style={styles.characterCard}>
-      <div style={styles.imageContainer}>
+    <div style={{ ...styles.characterCard, position: "relative" }}>
+      <div
+        style={{
+          ...styles.imageContainer,
+          borderTopLeftRadius: "12px",
+          borderTopRightRadius: "12px",
+        }}
+      >
+        {hasStory && (
+          <button
+            type="button"
+            title={
+              activeTab === "story"
+                ? "Back to notes"
+                : `Friendship level ${unlockedLevel} — view story`
+            }
+            onClick={() =>
+              setActiveTab(activeTab === "story" ? "notes" : "story")
+            }
+            onMouseEnter={() => setBadgeHover(true)}
+            onMouseLeave={() => setBadgeHover(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              left: "10px",
+              zIndex: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              padding: "5px 8px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              backgroundColor: badgeHover
+                ? "rgba(0, 0, 0, 0.72)"
+                : "rgba(0, 0, 0, 0.55)",
+              backdropFilter: "blur(2px)",
+              border: `1px solid ${storyAccent}`,
+              boxShadow: badgeHover
+                ? `0 0 0 2px ${storyAccent}, 0 3px 9px rgba(0, 0, 0, 0.45)`
+                : "0 2px 6px rgba(0, 0, 0, 0.35)",
+              transform: badgeHover ? "scale(1.08)" : "scale(1)",
+              transformOrigin: "top left",
+              transition: "all 0.15s ease",
+            }}
+          >
+            {Array.from({ length: maxHearts }).map((_, i) => {
+              const filled = i < unlockedLevel;
+              return (
+                <Heart
+                  key={i}
+                  size={14}
+                  fill={filled ? storyAccent : "none"}
+                  color={filled ? storyAccent : "rgba(255, 255, 255, 0.55)"}
+                />
+              );
+            })}
+          </button>
+        )}
         {character.src && !imageError ? (
           <div style={{ position: "relative", width: "100%", height: "100%" }}>
             {!imageLoaded && (
@@ -759,6 +1098,75 @@ const CharacterCard = ({
           </div>
         )}
 
+        {hasStory && (
+          <div
+            style={{
+              display: "flex",
+              gap: "6px",
+              marginBottom: "12px",
+              padding: "3px",
+              borderRadius: "8px",
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+            }}
+          >
+            <button
+              onClick={() => setActiveTab("notes")}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "5px",
+                padding: "6px 8px",
+                fontSize: "11px",
+                fontWeight: "700",
+                cursor: "pointer",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor:
+                  activeTab === "notes" ? theme.primary : "transparent",
+                color: activeTab === "notes" ? "#ffffff" : theme.textSecondary,
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              <Edit3 size={13} />
+              Notes
+            </button>
+            <button
+              onClick={() => setActiveTab("story")}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "5px",
+                padding: "6px 8px",
+                fontSize: "11px",
+                fontWeight: "700",
+                cursor: "pointer",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor:
+                  activeTab === "story" ? storyAccent : "transparent",
+                color: activeTab === "story" ? "#ffffff" : theme.textSecondary,
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              <BookOpen size={13} />
+              Downtime Interactions
+            </button>
+          </div>
+        )}
+
+        {hasStory && activeTab === "story" ? (
+          <NpcStoryPanel
+            npcName={character.name}
+            unlockedLevel={unlockedLevel}
+            theme={theme}
+          />
+        ) : (
+          <>
         {hasNote && !isEditingNote && (
           <div style={{ marginBottom: "8px" }}>
             <RelationshipBadge
@@ -1079,6 +1487,8 @@ const CharacterCard = ({
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -1097,6 +1507,7 @@ const TypeSection = ({
   supabase,
   discordUserId,
   allCharacters,
+  npcUnlocks,
 }) => {
   return (
     <div style={styles.typeSection}>
@@ -1139,6 +1550,7 @@ const TypeSection = ({
               supabase={supabase}
               discordUserId={discordUserId}
               characters={allCharacters}
+              npcUnlocks={npcUnlocks}
             />
           ))}
         </div>
@@ -1162,6 +1574,7 @@ const SchoolSection = ({
   supabase,
   discordUserId,
   allCharacters,
+  npcUnlocks,
 }) => {
   const totalCharacters = Object.values(schoolData).reduce(
     (sum, chars) => sum + chars.length,
@@ -1213,6 +1626,7 @@ const SchoolSection = ({
               supabase={supabase}
               discordUserId={discordUserId}
               allCharacters={allCharacters}
+              npcUnlocks={npcUnlocks}
             />
           ))}
         </div>
@@ -1271,6 +1685,7 @@ export const CharacterGallery = ({
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [npcNotes, setNpcNotes] = useState({});
+  const [npcUnlocks, setNpcUnlocks] = useState({});
 
   const discordUserId = adminMode
     ? selectedCharacter?.discord_user_id
@@ -1310,6 +1725,14 @@ export const CharacterGallery = ({
     }
   }, [selectedCharacter?.id, discordUserId]);
 
+  useEffect(() => {
+    if (selectedCharacter?.id && supabase) {
+      loadNpcUnlocks();
+    } else {
+      setNpcUnlocks({});
+    }
+  }, [selectedCharacter?.id]);
+
   const loadNpcNotes = async () => {
     try {
       const { data, error } = await supabase
@@ -1327,6 +1750,24 @@ export const CharacterGallery = ({
       setNpcNotes(notesMap);
     } catch (error) {
       console.error("Error loading NPC notes:", error);
+    }
+  };
+
+  const loadNpcUnlocks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("character_downtime")
+        .select("relationships, roll_assignments, review_status")
+        .eq("character_id", selectedCharacter.id)
+        .eq("archived", false)
+        .eq("is_draft", false);
+
+      if (error) throw error;
+
+      setNpcUnlocks(buildNpcUnlocks(data || []));
+    } catch (error) {
+      console.error("Error loading NPC downtime unlocks:", error);
+      setNpcUnlocks({});
     }
   };
 
@@ -1403,6 +1844,17 @@ export const CharacterGallery = ({
     acc[school][type].push(character);
     return acc;
   }, {});
+
+  // Surface NPCs the player has a friendship level with at the top of each
+  // category, highest level first. Array.sort is stable, so NPCs at the same
+  // level (including all the level-0 ones) keep their original order.
+  Object.values(charactersBySchool).forEach((typeMap) => {
+    Object.keys(typeMap).forEach((type) => {
+      typeMap[type] = [...typeMap[type]].sort(
+        (a, b) => (npcUnlocks[b.name] || 0) - (npcUnlocks[a.name] || 0)
+      );
+    });
+  });
 
   const searchResults = filteredCharacters.filter((character) => {
     if (!searchTerm.trim()) return false;
@@ -1510,6 +1962,7 @@ export const CharacterGallery = ({
                     supabase={supabase}
                     discordUserId={discordUserId}
                     characters={characters}
+                    npcUnlocks={npcUnlocks}
                   />
                 ))}
               </div>
@@ -1545,6 +1998,7 @@ export const CharacterGallery = ({
             supabase={supabase}
             discordUserId={discordUserId}
             allCharacters={characters}
+            npcUnlocks={npcUnlocks}
           />
         ))}
       </div>

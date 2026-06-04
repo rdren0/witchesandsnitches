@@ -4,7 +4,7 @@ export const calculateResearchDC = (
   playerYear,
   spellYear,
   spellName,
-  selectedCharacter
+  selectedCharacter,
 ) => {
   let baseDC = 8 + 2 * spellYear;
 
@@ -63,7 +63,7 @@ export const updateSpellProgressSummary = async (
   isResearch = false,
   selectedCharacter,
   user,
-  supabase
+  supabase,
 ) => {
   if (!selectedCharacter || !user?.user_metadata?.provider_id) return;
 
@@ -145,7 +145,7 @@ export const updateSpellProgressOnSubmission = async (
   selectedCharacter,
   user,
   supabase,
-  spellsData
+  spellsData,
 ) => {
   try {
     for (let i = 0; i < formData.activities.length; i++) {
@@ -191,7 +191,7 @@ export const updateSpellProgressOnSubmission = async (
         const modifier = getSpellModifier(
           spellName,
           spellData.subject,
-          selectedCharacter
+          selectedCharacter,
         );
         const total = diceValue + modifier;
 
@@ -203,7 +203,7 @@ export const updateSpellProgressOnSubmission = async (
             playerYear,
             spellYear,
             spellName,
-            selectedCharacter
+            selectedCharacter,
           );
           isSuccess = total >= dc;
         } else {
@@ -226,7 +226,7 @@ export const updateSpellProgressOnSubmission = async (
           isResearchActivity,
           selectedCharacter,
           user,
-          supabase
+          supabase,
         );
       }
     }
@@ -237,11 +237,16 @@ export const updateSpellProgressOnSubmission = async (
 
 export const loadSpellProgress = async (selectedCharacter, user, supabase) => {
   try {
+    const characterDiscordId =
+      selectedCharacter.discord_user_id ||
+      selectedCharacter.discordUserId ||
+      user.user_metadata.provider_id;
+
     const { data, error } = await supabase
       .from("spell_progress_summary")
       .select("spell_name, successful_attempts, researched, has_failed_attempt")
       .eq("character_id", selectedCharacter.id)
-      .eq("discord_user_id", user.user_metadata.provider_id);
+      .eq("discord_user_id", characterDiscordId);
 
     if (error) {
       console.error("Error loading spell progress:", error);
@@ -267,7 +272,7 @@ export const loadSpellProgress = async (selectedCharacter, user, supabase) => {
 export const updateMakeSpellProgress = async (
   activity,
   isSuccess,
-  isNaturalTwenty = false
+  isNaturalTwenty = false,
 ) => {
   const currentProgress = activity.currentSuccesses || 0;
 

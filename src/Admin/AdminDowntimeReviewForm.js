@@ -1125,7 +1125,8 @@ const AdminDowntimeReviewForm = React.memo(
             if (!rel || !rel.npcName || rel.npcName.trim() === "") continue;
             const key = `relationship${i + 1}`;
             const relReview = relationshipReviews[key];
-            if (!relReview || !relReview.adminNotes || relReview.adminNotes.trim() === "") {
+            // An NPC relationship is complete once a result is assigned.
+            if (!relReview || !relReview.result || relReview.result === "pending") {
               hasIncompleteNpc = true;
               break;
             }
@@ -1654,12 +1655,11 @@ const AdminDowntimeReviewForm = React.memo(
                 >
                   <option value="pending">Pending Review</option>
                   <option value="success">Success</option>
-                  <option value="partial">Partial Success</option>
                   <option value="failure">Failure</option>
                 </select>
 
                 <textarea
-                  placeholder="Admin notes for this relationship interaction..."
+                  placeholder="Optional admin notes for this relationship interaction..."
                   value={relationshipReviews[key]?.adminNotes || ""}
                   onChange={(e) =>
                     updateRelationshipReview(key, "adminNotes", e.target.value)
@@ -1766,8 +1766,8 @@ const AdminDowntimeReviewForm = React.memo(
                 </div>
                 <div style={styles.infoItem}>
                   <span style={styles.value}>
-                    Year {downtimeSheet.year} - Semester{" "}
-                    {downtimeSheet.semester}
+                    Year {downtimeSheet.year || downtimeSheet.school_year} -
+                    Semester {downtimeSheet.semester}
                   </span>
                 </div>
                 <div style={styles.infoItem}>
@@ -1997,7 +1997,7 @@ const AdminDowntimeReviewForm = React.memo(
                   if (!rel || !rel.npcName || rel.npcName.trim() === "") return false;
                   const key = `relationship${i + 1}`;
                   const relReview = relationshipReviews[key];
-                  return !relReview || !relReview.adminNotes || relReview.adminNotes.trim() === "";
+                  return !relReview || !relReview.result || relReview.result === "pending";
                 });
                 if (!hasIncomplete) return null;
                 return (
@@ -2013,10 +2013,10 @@ const AdminDowntimeReviewForm = React.memo(
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                       <AlertCircle size={16} />
                       {overridePartial
-                        ? "NPC notes are incomplete but override is active. Sheet will save as Approved (NPC Override)."
+                        ? "Some NPC interactions are unreviewed but override is active. Sheet will save as Approved (NPC Override)."
                         : isAlreadyPartial
-                        ? "This sheet has incomplete NPC interaction notes."
-                        : "NPC interaction notes are incomplete. This sheet will be saved as \"Partially Complete\"."}
+                        ? "This sheet has NPC interactions awaiting a result."
+                        : "Some NPC interactions still need a result assigned. This sheet will be saved as \"Partially Complete\"."}
                     </div>
                     <label style={{
                       display: "flex",
