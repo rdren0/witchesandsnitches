@@ -551,13 +551,12 @@ const ConnectionManager = ({
 const NpcStoryPanel = ({ npcName, unlockedLevel, theme }) => {
   const npc = NPC_DATA[npcName];
 
+  // Include every unlocked level — even ones the DM hasn't written yet, which
+  // render as a placeholder box rather than being hidden.
   const levels = [];
   if (npc) {
     for (let lvl = 1; lvl <= unlockedLevel; lvl++) {
-      const data = npc[lvl];
-      if (data && (data.scene || data.info)) {
-        levels.push({ lvl, data });
-      }
+      levels.push({ lvl, data: npc[lvl] || {} });
     }
   }
 
@@ -604,6 +603,82 @@ const NpcStoryPanel = ({ npcName, unlockedLevel, theme }) => {
         const accent = isRomance ? "#ec4899" : theme.primary;
         const open = !!expanded[lvl];
         const isHovered = hovered === lvl;
+        const hasContent = !!(data.scene || data.info);
+
+        // Unwritten levels render as a plain, non-interactive box — no
+        // expand/collapse — so users aren't misled into thinking content is
+        // hidden behind a toggle.
+        if (!hasContent) {
+          return (
+            <div
+              key={lvl}
+              style={{
+                border: `1px dashed ${theme.border}`,
+                borderRadius: "12px",
+                backgroundColor: theme.background,
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    flexShrink: 0,
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    backgroundColor: theme.textSecondary,
+                    color: theme.surface,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "800",
+                  }}
+                >
+                  {isRomance ? (
+                    <Heart
+                      size={12}
+                      fill={theme.surface}
+                      color={theme.surface}
+                    />
+                  ) : (
+                    lvl
+                  )}
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    letterSpacing: "0.03em",
+                    textTransform: "uppercase",
+                    color: theme.textSecondary,
+                  }}
+                >
+                  {isRomance ? `Level ${lvl} · Romance` : `Level ${lvl}`}
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  lineHeight: "1.6",
+                  color: theme.textSecondary,
+                  fontStyle: "italic",
+                }}
+              >
+                This interaction hasn't been written or released by the DM yet.
+                Check back later!
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div
@@ -881,8 +956,14 @@ const CharacterCard = ({
         {hasStory && (
           <button
             type="button"
-            title={`Friendship level ${unlockedLevel} — view story`}
-            onClick={() => setActiveTab("story")}
+            title={
+              activeTab === "story"
+                ? "Back to notes"
+                : `Friendship level ${unlockedLevel} — view story`
+            }
+            onClick={() =>
+              setActiveTab(activeTab === "story" ? "notes" : "story")
+            }
             onMouseEnter={() => setBadgeHover(true)}
             onMouseLeave={() => setBadgeHover(false)}
             style={{

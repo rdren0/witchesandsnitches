@@ -58,10 +58,12 @@ const AdminDowntimeManager = ({ supabase }) => {
 
       const key = `relationship${i + 1}`;
       const assignment = rollAssignments[key];
+      // An NPC relationship is considered reviewed once the admin assigns a
+      // result (success/partial/failure). Admin notes are no longer required.
       if (
         !assignment ||
-        !assignment.adminNotes ||
-        assignment.adminNotes.trim() === ""
+        !assignment.result ||
+        assignment.result === "pending"
       ) {
         return true;
       }
@@ -655,7 +657,7 @@ const AdminDowntimeManager = ({ supabase }) => {
                 size={14}
                 style={{ verticalAlign: "middle", marginRight: "4px" }}
               />
-              Missing NPC Data
+              Missing NPC Result
             </div>
           </div>
         )}
@@ -701,7 +703,7 @@ const AdminDowntimeManager = ({ supabase }) => {
           }}
           onClick={() => setActiveTab("missingNpc")}
         >
-          Missing NPC Data
+          Missing NPC Result
           <span
             style={{
               ...tabStyles.tabBadge,
@@ -827,7 +829,7 @@ const AdminDowntimeManager = ({ supabase }) => {
             {activeTab === "pending"
               ? "Pending & Rejected"
               : activeTab === "missingNpc"
-                ? "Missing NPC Data"
+                ? "Missing NPC Result"
                 : "Approved"}{" "}
             Sheets ({filteredSheets.length})
           </h2>
@@ -859,7 +861,7 @@ const AdminDowntimeManager = ({ supabase }) => {
                       </span>
                       {hasMissingNpcData(sheet) && (
                         <span
-                          title="Missing NPC notes data"
+                          title="Missing NPC Result"
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
