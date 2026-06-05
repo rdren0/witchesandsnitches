@@ -16,6 +16,7 @@ export const useAdmin = () => {
       setIsUserAdmin: () => {
         console.warn("setIsUserAdmin called outside of AdminProvider context");
       },
+      adminCheckComplete: true,
       allUsers: [],
       loadAllUsers: () => {
         console.warn("loadAllUsers called outside of AdminProvider context");
@@ -36,6 +37,7 @@ export const AdminProvider = ({ children, user }) => {
     }
   });
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const isCheckingAdminRef = React.useRef(false);
 
@@ -46,6 +48,7 @@ export const AdminProvider = ({ children, user }) => {
       if (!discordUserId) {
         setIsUserAdmin(false);
         setAdminModeState(false);
+        setAdminCheckComplete(true);
         isCheckingAdminRef.current = false;
         return;
       }
@@ -87,6 +90,7 @@ export const AdminProvider = ({ children, user }) => {
         }
       } finally {
         isCheckingAdminRef.current = false;
+        setAdminCheckComplete(true);
       }
     };
 
@@ -190,6 +194,7 @@ export const AdminProvider = ({ children, user }) => {
     setAdminMode,
     isUserAdmin,
     setIsUserAdmin,
+    adminCheckComplete,
     allUsers,
     loadAllUsers,
   };

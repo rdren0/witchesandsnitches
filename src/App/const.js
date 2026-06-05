@@ -2,6 +2,7 @@ export const gameSessionOptions = [
   "One-Shot",
   "Monday - Haunting",
   "Tuesday - Haunting",
+  "Wednesday - Haunting",
   "Thursday - Haunting",
   "Friday - Haunting",
   "Wednesday - Knights",
@@ -16,6 +17,7 @@ export const gameSessionGroups = {
   haunting: [
     "Monday - Haunting",
     "Tuesday - Haunting",
+    "Wednesday - Haunting",
     "Thursday - Haunting",
     "Friday - Haunting",
     "Saturday - Haunting",
@@ -34,8 +36,10 @@ export const DISCORD_WEBHOOKS = {
   "One-Shot": process.env.REACT_APP_DISCORD_WEBHOOK_ONE_SHOT,
   "Monday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_MONDAY_HAUNTING,
   "Tuesday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_TUESDAY_HAUNTING,
-  "Thursday - Haunting":
+  "Wednesday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
+  "Thursday - Haunting":
+    process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_HAUNTING,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
   "Saturday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_SATURDAY_HAUNTING,

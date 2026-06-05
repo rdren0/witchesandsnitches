@@ -335,8 +335,6 @@ function AppContent() {
                     customUsername={customUsername}
                     onCharacterSaved={() => setHasAttemptedLoad(false)}
                     supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
                   />
                 </ProtectedRoute>
               }
@@ -357,8 +355,6 @@ function AppContent() {
                       customUsername={customUsername}
                       onCharacterSaved={() => setHasAttemptedLoad(false)}
                       supabase={supabase}
-                      adminMode={adminMode}
-                      isUserAdmin={isUserAdmin}
                       mode={mode}
                     />
                   </ProtectedRoute>
@@ -379,8 +375,6 @@ function AppContent() {
                       customUsername={customUsername}
                       onCharacterSaved={() => setHasAttemptedLoad(false)}
                       supabase={supabase}
-                      adminMode={adminMode}
-                      isUserAdmin={isUserAdmin}
                       mode="edit"
                     />
                   </ProtectedRoute>
