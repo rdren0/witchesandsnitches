@@ -8,9 +8,14 @@ import {
   RefreshCw,
   BarChart3,
   Star,
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { gameSessionGroups } from "../App/const";
+import { characterService } from "../services/characterService";
 
 const SessionManagement = ({ supabase }) => {
   const { theme } = useTheme();
@@ -19,11 +24,29 @@ const SessionManagement = ({ supabase }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSession, setSelectedSession] = useState("all");
+  const [collapsedSessions, setCollapsedSessions] = useState(new Set());
+  const [expandedArchived, setExpandedArchived] = useState(new Set());
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [stats, setStats] = useState({
     totalCharacters: 0,
     activeUsers: 0,
     totalSessions: 0,
   });
+
+  const toggleSession = (name) =>
+    setCollapsedSessions((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+
+  const toggleArchived = (name) =>
+    setExpandedArchived((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
 
   const loadData = useCallback(async () => {
     try {
@@ -48,16 +71,16 @@ const SessionManagement = ({ supabase }) => {
           current_hit_dice,
           created_at,
           active,
+          archived_at,
           character_resources (
             inspiration,
             corruption_points
           )
         `
         )
-        .eq("active", true)
         .order("game_session")
         .order("name")
-        .limit(200); 
+        .limit(300);
 
       if (charactersError) {
         throw charactersError;
@@ -68,8 +91,18 @@ const SessionManagement = ({ supabase }) => {
       const sessionGroups = groupCharactersBySession(charactersData);
       setGameSessions(sessionGroups);
 
+      // Sessions with no active characters (everything archived) start collapsed.
+      setCollapsedSessions(
+        new Set(
+          sessionGroups
+            .filter((session) => session.characterCount === 0)
+            .map((session) => session.name)
+        )
+      );
+
       const validCharacters = charactersData.filter(
         (char) =>
+          char.active !== false &&
           char.game_session &&
           char.game_session.trim() !== "" &&
           char.game_session.toLowerCase() !== "development"
@@ -135,33 +168,43 @@ const SessionManagement = ({ supabase }) => {
           0,
         discord_user_id: character.discord_user_id,
         created_at: character.created_at,
+        isArchived: character.active === false,
       });
       return acc;
     }, {});
 
+    const byName = (a, b) => a.name.localeCompare(b.name);
+
     const sessions = Object.entries(grouped).map(
       ([sessionName, sessionCharacters]) => {
-        const sortedCharacters = sessionCharacters.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
+        const activeCharacters = sessionCharacters
+          .filter((char) => !char.isArchived)
+          .sort(byName);
+        const archivedCharacters = sessionCharacters
+          .filter((char) => char.isArchived)
+          .sort(byName);
 
         return {
           id: sessionName,
           name: sessionName,
-          characters: sortedCharacters,
-          characterCount: sessionCharacters.length,
-          lastActivity: sessionCharacters.reduce(
-            (latest, char) =>
-              new Date(char.created_at) > new Date(latest)
+          activeCharacters,
+          archivedCharacters,
+          characterCount: activeCharacters.length,
+          archivedCount: archivedCharacters.length,
+          firstCreated: sessionCharacters.reduce(
+            (earliest, char) =>
+              new Date(char.created_at) < new Date(earliest)
                 ? char.created_at
-                : latest,
+                : earliest,
             sessionCharacters[0]?.created_at
           ),
-          avgLevel: Math.round(
-            sessionCharacters.reduce((sum, char) => sum + char.level, 0) /
-              sessionCharacters.length
-          ),
-          totalInspiration: sessionCharacters.filter((char) => char.inspiration)
+          avgLevel: activeCharacters.length
+            ? Math.round(
+                activeCharacters.reduce((sum, char) => sum + char.level, 0) /
+                  activeCharacters.length
+              )
+            : 0,
+          totalInspiration: activeCharacters.filter((char) => char.inspiration)
             .length,
         };
       }
@@ -249,6 +292,29 @@ const SessionManagement = ({ supabase }) => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
+    const { type, character } = confirmAction;
+    setIsProcessing(true);
+    try {
+      if (type === "archive") {
+        await characterService.deleteCharacterAsAdmin(character.id);
+      } else {
+        await characterService.restoreCharacter(
+          character.id,
+          character.discord_user_id
+        );
+      }
+      setConfirmAction(null);
+      await loadData();
+    } catch (err) {
+      console.error(`Error during ${type}:`, err);
+      alert(`Failed to ${type} character: ${err.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const filteredSessions =
     selectedSession === "all"
@@ -343,19 +409,24 @@ const SessionManagement = ({ supabase }) => {
     },
     sessionGrid: {
       display: "flex",
-      flexWrap: "wrap",
+      flexDirection: "column",
       gap: "24px",
       marginTop: "20px",
-      justifyContent: "center",
-      alignItems: "flex-start",
     },
     sessionCard: {
+      width: "100%",
+      boxSizing: "border-box",
       backgroundColor: theme.surface,
       borderRadius: "12px",
       border: `2px solid ${theme.border}`,
       padding: "20px",
       transition: "all 0.2s ease",
       minHeight: "400px",
+    },
+    sessionCardArchived: {
+      opacity: 0.6,
+      borderStyle: "dashed",
+      backgroundColor: theme.background,
     },
     sessionHeader: {
       display: "flex",
@@ -402,7 +473,8 @@ const SessionManagement = ({ supabase }) => {
     },
     characterItem: {
       display: "grid",
-      gridTemplateColumns: "180px 30px 100px 120px 150px 220px 130px 1fr",
+      gridTemplateColumns:
+        "170px 40px 90px 110px 120px 160px 120px 60px 90px",
       alignItems: "center",
       padding: "10px 12px",
       backgroundColor: theme.background,
@@ -413,7 +485,8 @@ const SessionManagement = ({ supabase }) => {
     },
     characterHeader: {
       display: "grid",
-      gridTemplateColumns: "180px 30px 100px 120px 150px 220px 130px 1fr",
+      gridTemplateColumns:
+        "170px 40px 90px 110px 120px 160px 120px 60px 90px",
       alignItems: "center",
       padding: "8px 12px",
       backgroundColor: theme.primary + "15",
@@ -512,7 +585,198 @@ const SessionManagement = ({ supabase }) => {
       padding: "60px 20px",
       color: theme.textSecondary,
     },
+    archivedToggle: {
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      padding: "8px 12px",
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
+      backgroundColor: theme.background,
+      color: theme.textSecondary,
+      fontSize: "12px",
+      fontWeight: "600",
+      cursor: "pointer",
+      width: "100%",
+      justifyContent: "flex-start",
+    },
+    archiveButton: {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+      padding: "4px 8px",
+      borderRadius: "6px",
+      border: `1px solid ${theme.border}`,
+      backgroundColor: theme.surface,
+      color: theme.textSecondary,
+      fontSize: "11px",
+      fontWeight: "600",
+      cursor: "pointer",
+    },
+    restoreButton: {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+      padding: "4px 8px",
+      borderRadius: "6px",
+      border: "1px solid #10b981",
+      backgroundColor: "#10b98115",
+      color: "#10b981",
+      fontSize: "11px",
+      fontWeight: "600",
+      cursor: "pointer",
+    },
+    modalOverlay: {
+      position: "fixed",
+      inset: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000,
+      padding: "20px",
+    },
+    modalCard: {
+      backgroundColor: theme.surface,
+      borderRadius: "12px",
+      border: `2px solid ${theme.border}`,
+      padding: "24px",
+      maxWidth: "420px",
+      width: "100%",
+      boxShadow: "0 12px 32px rgba(0, 0, 0, 0.35)",
+    },
+    modalTitle: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      fontSize: "18px",
+      fontWeight: "bold",
+      color: theme.text,
+      marginBottom: "12px",
+    },
+    modalText: {
+      fontSize: "14px",
+      color: theme.textSecondary,
+      lineHeight: 1.5,
+      margin: "0 0 20px 0",
+    },
+    modalActions: {
+      display: "flex",
+      justifyContent: "flex-end",
+      gap: "12px",
+    },
+    modalCancel: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: `1px solid ${theme.border}`,
+      backgroundColor: theme.background,
+      color: theme.text,
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+    },
+    modalConfirm: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: "none",
+      backgroundColor: "#ef4444",
+      color: "white",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+    },
   };
+
+  const renderCharacterRow = (character, isArchived = false) => (
+    <div
+      key={character.id}
+      style={{
+        ...styles.characterItem,
+        ...(isArchived ? { opacity: 0.55 } : {}),
+      }}
+    >
+      <span style={styles.characterName}>{character.name}</span>
+      <span style={styles.characterLevel}>{character.level}</span>
+      <span style={styles.casting}>{character.castingStyle}</span>
+      <span
+        style={{
+          ...styles.characterHouse,
+          border: `1px solid ${getHouseColor(character.house)}`,
+        }}
+      >
+        {character.house === "No House" ? "—" : character.house}
+      </span>
+      <div style={styles.characterHP}>
+        <span style={{ fontSize: "10px", color: theme.text }}>
+          {character.hitPoints}/{character.maxHitPoints}
+        </span>
+        <div style={styles.hpBar}>
+          <div
+            style={{
+              ...styles.hpFill,
+              width: `${
+                (character.hitPoints / character.maxHitPoints) * 100
+              }%`,
+              backgroundColor: getHealthBarColor(
+                character.hitPoints,
+                character.maxHitPoints
+              ),
+            }}
+          />
+        </div>
+      </div>
+      <span style={styles.characterSubclass}>
+        {character.subclass === "No Subclass" ? "—" : character.subclass}
+      </span>
+      <span style={styles.characterBackground}>
+        {character.background === "No Background" ? "—" : character.background}
+      </span>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <Star
+          fill={character.inspiration ? "#f59e0b" : "transparent"}
+          color={character.inspiration ? "#f59e0b" : "white"}
+        />
+      </div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        {isArchived ? (
+          <button
+            onClick={() => setConfirmAction({ type: "restore", character })}
+            style={styles.restoreButton}
+            title={`Unarchive ${character.name}`}
+          >
+            <ArchiveRestore size={12} />
+            Unarchive
+          </button>
+        ) : (
+          <button
+            onClick={() => setConfirmAction({ type: "archive", character })}
+            style={styles.archiveButton}
+            title={`Archive ${character.name}`}
+          >
+            <Archive size={12} />
+            Archive
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderCharacterTable = (rows, archived = false) => (
+    <div style={styles.charactersList}>
+      <div style={styles.characterHeader}>
+        <span>Name</span>
+        <span style={{ textAlign: "center" }}>Lvl</span>
+        <span style={{ textAlign: "center" }}>Casting</span>
+        <span style={{ textAlign: "center" }}>House</span>
+        <span style={{ textAlign: "center" }}>HP</span>
+        <span style={{ textAlign: "center" }}>Subclass</span>
+        <span style={{ textAlign: "center" }}>Background</span>
+        <span style={{ textAlign: "center" }}>✨</span>
+        <span style={{ textAlign: "center" }}>Actions</span>
+      </div>
+      {rows.map((character) => renderCharacterRow(character, archived))}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -635,114 +899,190 @@ const SessionManagement = ({ supabase }) => {
         </div>
       ) : (
         <div style={styles.sessionGrid}>
-          {filteredSessions.map((session) => (
-            <div key={session.id} style={styles.sessionCard}>
-              <div style={styles.sessionHeader}>
-                <div>
-                  <div style={styles.sessionTitle}>{session.name}</div>
-                  <div style={styles.sessionStats}>
-                    <div style={styles.sessionStat}>
-                      <Users size={12} />
-                      {session.characterCount} chars
-                    </div>
-                    <div style={styles.sessionStat}>
-                      <BarChart3 size={12} />
-                      Avg Lv. {session.avgLevel}
-                    </div>
-                    <div style={styles.sessionStat}>
-                      <span style={{ color: "#f59e0b" }}>✨</span>
-                      {session.totalInspiration} inspired
-                    </div>
-                  </div>
-                </div>
-                <div style={styles.sessionMeta}>
-                  {session.lastActivity && (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
-                      <Calendar size={12} />
-                      {new Date(session.lastActivity).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-              </div>
+          {filteredSessions.map((session) => {
+            const isCollapsed = collapsedSessions.has(session.name);
+            const isArchivedOpen = expandedArchived.has(session.name);
+            const isFullyArchived =
+              session.characterCount === 0 && session.archivedCount > 0;
 
-              <div style={styles.charactersList}>
-                <div style={styles.characterHeader}>
-                  <span>Name</span>
-                  <span style={{ textAlign: "center" }}>Level</span>
-                  <span style={{ textAlign: "center" }}>Casting</span>
-                  <span style={{ textAlign: "center" }}>House</span>
-                  <span style={{ textAlign: "center" }}>HP</span>
-                  <span style={{ textAlign: "center" }}>Subclass</span>
-                  <span style={{ textAlign: "center" }}>Background</span>
-                  <span style={{ textAlign: "center" }}>✨Inspo✨</span>
-                </div>
-
-                {session.characters.map((character) => (
-                  <div key={character.id} style={styles.characterItem}>
-                    <span style={styles.characterName}>{character.name}</span>
-                    <span style={styles.characterLevel}>{character.level}</span>
-                    <span style={styles.casting}>{character.castingStyle}</span>
-                    <span
-                      style={{
-                        ...styles.characterHouse,
-                        border: `1px solid ${getHouseColor(character.house)}`,
-                      }}
-                    >
-                      {character.house === "No House" ? "—" : character.house}
-                    </span>
-                    <div style={styles.characterHP}>
-                      <span style={{ fontSize: "10px", color: theme.text }}>
-                        {character.hitPoints}/{character.maxHitPoints}
-                      </span>
-                      <div style={styles.hpBar}>
-                        <div
-                          style={{
-                            ...styles.hpFill,
-                            width: `${
-                              (character.hitPoints / character.maxHitPoints) *
-                              100
-                            }%`,
-                            backgroundColor: getHealthBarColor(
-                              character.hitPoints,
-                              character.maxHitPoints
-                            ),
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <span style={styles.characterSubclass}>
-                      {character.subclass === "No Subclass"
-                        ? "—"
-                        : character.subclass}
-                    </span>
-                    <span style={styles.characterBackground}>
-                      {character.background === "No Background"
-                        ? "—"
-                        : character.background}
-                    </span>
+            return (
+              <div
+                key={session.id}
+                style={{
+                  ...styles.sessionCard,
+                  ...(isCollapsed ? { minHeight: "auto" } : {}),
+                  ...(isFullyArchived ? styles.sessionCardArchived : {}),
+                }}
+              >
+                <div
+                  style={{
+                    ...styles.sessionHeader,
+                    cursor: "pointer",
+                    marginBottom: isCollapsed ? 0 : styles.sessionHeader.marginBottom,
+                    paddingBottom: isCollapsed
+                      ? 0
+                      : styles.sessionHeader.paddingBottom,
+                    borderBottom: isCollapsed
+                      ? "none"
+                      : styles.sessionHeader.borderBottom,
+                  }}
+                  onClick={() => toggleSession(session.name)}
+                >
+                  <div>
                     <div
                       style={{
-                        ...styles.inspirationIndicator,
+                        ...styles.sessionTitle,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                       }}
                     >
-                      <Star
-                        fill={character.inspiration ? "#f59e0b" : "transparent"}
-                        color={character.inspiration ? "#f59e0b" : "white"}
-                      />
+                      {isCollapsed ? (
+                        <ChevronRight size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                      {session.name}
+                    </div>
+                    <div style={styles.sessionStats}>
+                      <div style={styles.sessionStat}>
+                        <Users size={12} />
+                        {session.characterCount} chars
+                      </div>
+                      <div style={styles.sessionStat}>
+                        <BarChart3 size={12} />
+                        Avg Lv. {session.avgLevel}
+                      </div>
+                      <div style={styles.sessionStat}>
+                        <span style={{ color: "#f59e0b" }}>✨</span>
+                        {session.totalInspiration} inspired
+                      </div>
+                      {session.archivedCount > 0 && (
+                        <div style={styles.sessionStat}>
+                          <Archive size={12} />
+                          {session.archivedCount} archived
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                  <div style={styles.sessionMeta}>
+                    {session.firstCreated && (
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                        title="Earliest character created"
+                      >
+                        <Calendar size={12} />
+                        {new Date(session.firstCreated).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {!isCollapsed && (
+                  <>
+                    {session.activeCharacters.length > 0 ? (
+                      renderCharacterTable(session.activeCharacters)
+                    ) : (
+                      <div
+                        style={{ ...styles.emptyState, padding: "24px 20px" }}
+                      >
+                        <p>No active characters in this session.</p>
+                      </div>
+                    )}
+
+                    {session.archivedCount > 0 && (
+                      <div style={{ marginTop: "16px" }}>
+                        <button
+                          onClick={() => toggleArchived(session.name)}
+                          style={styles.archivedToggle}
+                        >
+                          {isArchivedOpen ? (
+                            <ChevronDown size={14} />
+                          ) : (
+                            <ChevronRight size={14} />
+                          )}
+                          <Archive size={14} />
+                          Archived ({session.archivedCount})
+                        </button>
+                        {isArchivedOpen && (
+                          <div style={{ marginTop: "8px" }}>
+                            {renderCharacterTable(
+                              session.archivedCharacters,
+                              true
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {confirmAction &&
+        (() => {
+          const isArchive = confirmAction.type === "archive";
+          const { character } = confirmAction;
+          return (
+            <div
+              style={styles.modalOverlay}
+              onClick={() => !isProcessing && setConfirmAction(null)}
+            >
+              <div
+                style={styles.modalCard}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={styles.modalTitle}>
+                  {isArchive ? (
+                    <Archive size={20} />
+                  ) : (
+                    <ArchiveRestore size={20} />
+                  )}
+                  {isArchive ? "Archive Character" : "Unarchive Character"}
+                </div>
+                <p style={styles.modalText}>
+                  {isArchive ? "Archive" : "Unarchive"}{" "}
+                  <strong>{character.name}</strong> (Lvl {character.level})?{" "}
+                  {isArchive
+                    ? "This removes them from the active roster for their session. You can restore archived characters later."
+                    : "This returns them to the active roster for their session."}
+                </p>
+                <div style={styles.modalActions}>
+                  <button
+                    onClick={() => setConfirmAction(null)}
+                    disabled={isProcessing}
+                    style={styles.modalCancel}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmAction}
+                    disabled={isProcessing}
+                    style={{
+                      ...styles.modalConfirm,
+                      ...(isArchive ? {} : { backgroundColor: "#10b981" }),
+                    }}
+                  >
+                    {isProcessing
+                      ? isArchive
+                        ? "Archiving..."
+                        : "Unarchiving..."
+                      : isArchive
+                        ? "Archive"
+                        : "Unarchive"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
     </div>
   );
 };

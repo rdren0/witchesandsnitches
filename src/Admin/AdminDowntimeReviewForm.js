@@ -12,6 +12,7 @@ import {
   activityRequiresAbilitySelection,
 } from "../Components/Downtime/downtimeHelpers";
 import { getSpellModifier } from "../Components/SpellBook/utils";
+import { calculateSpellAttemptDC } from "../Components/Downtime/utils/spellUtils";
 import {
   Check,
   X,
@@ -484,11 +485,7 @@ const AdminDowntimeReviewForm = React.memo(
 
     const calculateResearchDC = useCallback(
       (playerYear, spellYear, spellName) => {
-        let baseDC = 8 + 2 * spellYear;
-
-        if (spellYear > playerYear) {
-          baseDC += (spellYear - playerYear) * 2;
-        }
+        let baseDC = 10 + 2 * (spellYear - 1) + (spellYear - playerYear) * 2;
 
         const difficultSpells = [
           "Abscondi",
@@ -747,13 +744,7 @@ const AdminDowntimeReviewForm = React.memo(
             dc = calculateResearchDC(playerYear, spellYear, spellName);
             success = totalRoll >= dc;
           } else {
-            const playerYear = character.level || 1;
-            const spellYear = spellData.year || 1;
-            dc = 8 + 2 * spellYear;
-            if (spellYear > playerYear) {
-              dc += (spellYear - playerYear) * 2;
-            }
-            dc = Math.max(5, dc);
+            dc = calculateSpellAttemptDC(spellData);
             success = totalRoll >= dc;
           }
 

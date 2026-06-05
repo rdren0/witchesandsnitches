@@ -1995,11 +1995,7 @@ export const SubjectCard = ({
     spellName,
     selectedCharacter,
   ) => {
-    let baseDC = 8 + 2 * spellYear;
-
-    if (spellYear > playerYear) {
-      baseDC += (spellYear - playerYear) * 2;
-    }
+    let baseDC = 10 + 2 * (spellYear - 1) + (spellYear - playerYear) * 2;
 
     const difficultSpells = [
       "Abscondi",

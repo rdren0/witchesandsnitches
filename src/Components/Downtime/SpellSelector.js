@@ -3,6 +3,7 @@ import { X, Search, Lock } from "lucide-react";
 import { useSpells } from "../../hooks/useSpells";
 import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
+import { calculateSpellAttemptDC } from "./utils/spellUtils";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const SpellSelector = ({
@@ -82,35 +83,34 @@ const SpellSelector = ({
     (_, spellData) => {
       if (!spellData || !selectedCharacter) return 10;
 
+      if (!isResearch) {
+        return calculateSpellAttemptDC(spellData);
+      }
+
       const playerYear = selectedCharacter.year || 1;
       const spellYear = spellData.year || 1;
 
-      let baseDC = 8 + 2 * spellYear;
-      if (spellYear > playerYear) {
-        baseDC += (spellYear - playerYear) * 2;
-      }
+      let baseDC = 10 + 2 * (spellYear - 1) + (spellYear - playerYear) * 2;
 
-      if (isResearch) {
-        const difficultSpells = [
-          "Abscondi",
-          "Pellucidi Pellis",
-          "Sagittario",
-          "Confringo",
-          "Devicto",
-          "Stupefy",
-          "Petrificus Totalus",
-          "Protego",
-          "Protego Maxima",
-          "Finite Incantatem",
-          "Confundo",
-          "Bombarda",
-          "Episkey",
-          "Expelliarmus",
-          "Incarcerous",
-        ];
-        if (difficultSpells.includes(spellData.name)) {
-          baseDC += 3;
-        }
+      const difficultSpells = [
+        "Abscondi",
+        "Pellucidi Pellis",
+        "Sagittario",
+        "Confringo",
+        "Devicto",
+        "Stupefy",
+        "Petrificus Totalus",
+        "Protego",
+        "Protego Maxima",
+        "Finite Incantatem",
+        "Confundo",
+        "Bombarda",
+        "Episkey",
+        "Expelliarmus",
+        "Incarcerous",
+      ];
+      if (difficultSpells.includes(spellData.name)) {
+        baseDC += 3;
       }
 
       return Math.max(5, baseDC);
