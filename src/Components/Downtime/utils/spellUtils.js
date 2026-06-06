@@ -209,7 +209,8 @@ export const updateSpellProgressOnSubmission = async (
 
         let dc, isSuccess;
         if (isResearchActivity) {
-          const playerYear = selectedCharacter.year || 1;
+          const playerYear =
+            selectedCharacter.school_year || selectedCharacter.schoolYear || 1;
           const spellYear = spellData.year || 1;
           dc = calculateResearchDC(
             playerYear,

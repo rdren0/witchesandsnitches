@@ -87,7 +87,8 @@ const SpellSelector = ({
         return calculateSpellAttemptDC(spellData);
       }
 
-      const playerYear = selectedCharacter.year || 1;
+      const playerYear =
+        selectedCharacter.school_year || selectedCharacter.schoolYear || 1;
       const spellYear = spellData.year || 1;
 
       let baseDC = 10 + 2 * (spellYear - 1) + (spellYear - playerYear) * 2;
@@ -115,7 +116,7 @@ const SpellSelector = ({
 
       return Math.max(5, baseDC);
     },
-    [isResearch, selectedCharacter]
+    [isResearch, selectedCharacter],
   );
 
   const getSpellData = useCallback((spellName) => {
@@ -188,7 +189,7 @@ const SpellSelector = ({
       calculateSpellDC,
       isResearch,
       getHistoryOfMagicModifier,
-    ]
+    ],
   );
 
   const getSpellStatus = useCallback(
@@ -242,7 +243,7 @@ const SpellSelector = ({
         isRestricted,
       };
     },
-    [isResearch, isAttempt, spellAttempts, researchedSpells, failedAttempts]
+    [isResearch, isAttempt, spellAttempts, researchedSpells, failedAttempts],
   );
 
   const styles = {
@@ -915,10 +916,10 @@ const SpellSelector = ({
   const uniqueSubjects = useMemo(() => {
     const allSubjects = Object.keys(spellsData);
     const standardSubjects = allSubjects.filter((subject) =>
-      coreSubjects.includes(subject)
+      coreSubjects.includes(subject),
     );
     const specializedSubjects = allSubjects.filter(
-      (subject) => !coreSubjects.includes(subject)
+      (subject) => !coreSubjects.includes(subject),
     );
 
     return {
@@ -979,7 +980,7 @@ const SpellSelector = ({
       <div style={styles.container}>
         {renderSpellSelector(
           "first",
-          isResearch ? "Research Spell" : "First Spell"
+          isResearch ? "Research Spell" : "First Spell",
         )}
         {!isResearch && renderSpellSelector("second", "Second Spell")}
       </div>
@@ -1175,8 +1176,8 @@ const SpellSelector = ({
                                     backgroundColor: theme.success + "15",
                                   }
                                 : isHovered
-                                ? styles.spellCardHovered
-                                : {}),
+                                  ? styles.spellCardHovered
+                                  : {}),
                             }
                       }
                       onClick={() => handleSpellSelection(spell)}
@@ -1336,8 +1337,8 @@ const SpellSelector = ({
                     filterLevel !== "all"
                       ? "Try adjusting your filters or search terms."
                       : isResearch
-                      ? "No spells available for research."
-                      : "No spells available for attempts."}
+                        ? "No spells available for research."
+                        : "No spells available for attempts."}
                   </p>
                 </div>
               )}
