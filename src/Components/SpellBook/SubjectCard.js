@@ -2031,7 +2031,8 @@ export const SubjectCard = ({
       return;
     }
 
-    const playerYear = selectedCharacter.year || 1;
+    const playerYear =
+      selectedCharacter.school_year || selectedCharacter.schoolYear || 1;
     const spellYear = spellData.year || 1;
     const dc = calculateResearchDC(
       playerYear,
