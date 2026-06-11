@@ -152,10 +152,14 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         <ShieldAlert size={42} color={theme.primary} />
         <h1 style={{ marginTop: 12 }}>Download your characters</h1>
         <p style={{ color: theme.textSecondary, lineHeight: 1.6 }}>
-          Witches &amp; Snitches is being retired. Before it goes offline, you
-          can download a complete copy of all of your characters to keep
-          forever. Sign in with the Discord account you play on to get your
-          backup.
+          <strong style={{ color: theme.primary }}>
+            Heads up — this may be unexpected.
+          </strong>{" "}
+          I&apos;ve decided to step away from the campaign, and since I built
+          and hosted this character website myself, it will be going offline
+          soon. The campaign continues with your DM — but before the site
+          closes, sign in with the Discord account you play on to download a
+          complete copy of all your characters to keep.
         </p>
         <button style={primaryButton} onClick={onSignIn}>
           Sign in with Discord
@@ -170,8 +174,13 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
       <Download size={42} color={theme.primary} />
       <h1 style={{ marginTop: 12 }}>Download your characters</h1>
       <p style={{ color: theme.textSecondary, lineHeight: 1.6 }}>
-        Witches &amp; Snitches is being retired and will no longer be
-        accessible. So you don&apos;t lose anything, this page packages{" "}
+        <strong style={{ color: theme.primary }}>Welp...</strong> <br />
+        I&apos;ve decided to step away from the campaign, and since I built and
+        hosted this character website myself, it will soon go offline. The
+        campaign continues with your DM as usual — but before the site closes, I
+        want to make sure you keep everything. <br />
+        <br />
+        This page packages{" "}
         <strong style={{ color: theme.primary }}>
           every character on your account
         </strong>{" "}
@@ -181,10 +190,10 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         your active characters and one for your archived (inactive) ones.
       </p>
       <p style={{ color: theme.textSecondary, lineHeight: 1.6, fontSize: 14 }}>
-        Inside you&apos;ll find an easy-to-read{" "}
-        <strong>Excel spreadsheet</strong> and a printable <strong>PDF</strong>{" "}
-        for each character (plus a raw data file for safekeeping). A README in
-        the zip explains everything — no technical knowledge needed.
+        Inside you&apos;ll find an <strong>Excel spreadsheet</strong> and a
+        printable <strong>PDF</strong> for each character (plus a raw data file
+        for safekeeping). A README in the zip explains everything — no technical
+        knowledge needed.
       </p>
 
       {status === "working" && (

@@ -40,6 +40,11 @@ const imageSize = (blob) =>
 const README = `WITCHES & SNITCHES — YOUR CHARACTER BACKUP
 ==========================================
 
+NOTE: The player who built and hosted this character website is stepping away
+from the campaign, so the site will soon go offline. The Witches & Snitches
+campaign itself continues with your DM — this backup just makes sure you keep a
+copy of your characters.
+
 This archive contains everything the website had stored for your characters.
 
 FIRST: UNZIP THIS FILE
