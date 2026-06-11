@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:CI=\"false\"; npm run build 2>&1 | Select-String -Pattern \"Failed to compile|Compiled|exportFormatters|is defined but never used|main\\\\.[a-f0-9]+\\\\.js\" | Select-Object -First 15)",
+      "PowerShell($env:CI=\"false\"; npm run build 2>&1 | Select-String -Pattern \"Failed to compile|Compiled|exportFormatters|main\\\\.[a-f0-9]+\\\\.js\" | Select-Object -First 10)",
+      "PowerShell($env:CI=\"false\"; npm run build 2>&1 | Select-String -Pattern \"Failed to compile|Compiled|exportFormatters|main\\\\.[a-f0-9]+\\\\.js\" | Select-Object -First 8)"
+    ]
+  }
+}

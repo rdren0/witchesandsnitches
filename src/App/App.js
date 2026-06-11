@@ -41,7 +41,12 @@ import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import DisplayNamePrompt from "./DisplayNamePrompt";
-import { RULE_BOOK_URL } from "./const";
+import {
+  isExportOnlyMode,
+  setExportOnlyMode,
+  canToggleExportMode,
+} from "./const";
+import DataExport from "../Components/DataExport/DataExport";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 import RollHistoryDrawer from "../Components/FlexibleDiceRoller/RollHistoryDrawer";
 import "./App.css";
@@ -180,6 +185,7 @@ function AppContent() {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
   const location = useLocation();
+  const exportOnly = isExportOnlyMode();
   const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
 
   const {
@@ -308,7 +314,9 @@ function AppContent() {
         <ThemeCharacterSync selectedCharacter={selectedCharacter} />
 
         <header style={styles.appHeader}>
-          <Navigation characters={characters} user={user} />
+          {!exportOnly && (
+            <Navigation characters={characters} user={user} />
+          )}
           <AuthComponent
             user={user}
             customUsername={customUsername}
@@ -320,11 +328,26 @@ function AppContent() {
           />
         </header>
 
-        {location.pathname.startsWith("/character/") && (
+        {!exportOnly && location.pathname.startsWith("/character/") && (
           <CharacterSubNavigation />
         )}
 
         <main style={styles.tabContent}>
+          {exportOnly ? (
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <DataExport
+                    user={user}
+                    discordUserId={discordUserId}
+                    onSignIn={signInWithDiscord}
+                  />
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          ) : (
           <Routes>
             <Route
               path="/"
@@ -444,6 +467,7 @@ function AppContent() {
             <Route path="/help-resources" element={<HelpResources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          )}
         </main>
         <AdminPasswordModal
           isOpen={showPasswordModal}
@@ -457,40 +481,56 @@ function AppContent() {
           onSkip={handleNamePromptSkip}
           isLoading={isSubmittingName}
         />
-        <RollHistoryDrawer character={selectedCharacter} />
+        {!exportOnly && <RollHistoryDrawer character={selectedCharacter} />}
       </div>
-      <footer
-        style={{
-          marginTop: "auto",
-          paddingBottom: "10px",
-          backgroundColor: theme.surface,
-          color: theme.textSecondary,
-          borderTop: `1px solid ${theme.border}`,
-          fontSize: "14px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "0.25rem",
-          textAlign: "center",
-          flexShrink: 0,
-        }}
-      >
-        <div>
-          <a
-            href={RULE_BOOK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              textDecoration: "none",
-              color: theme.primary,
-              fontWeight: "700",
-            }}
-          >
-            <h3>View Rulebook</h3>
-          </a>
-          © {new Date().getFullYear()} <strong>Witches & Snitches</strong>
-        </div>
-      </footer>
+      {canToggleExportMode && (
+        <button
+          onClick={() => {
+            setExportOnlyMode(!exportOnly);
+            window.location.reload();
+          }}
+          title="Local dev only — toggles export-only lockdown mode"
+          style={{
+            position: "fixed",
+            bottom: 16,
+            right: 16,
+            zIndex: 9999,
+            padding: "8px 14px",
+            fontSize: 12,
+            fontWeight: 700,
+            borderRadius: 999,
+            border: `2px solid ${theme.border}`,
+            cursor: "pointer",
+            backgroundColor: exportOnly ? theme.warning : theme.surface,
+            color: theme.text,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+          }}
+        >
+          {exportOnly ? "Export-only: ON" : "Export-only: OFF"}
+        </button>
+      )}
+      {!exportOnly && (
+        <footer
+          style={{
+            marginTop: "auto",
+            paddingBottom: "10px",
+            backgroundColor: theme.surface,
+            color: theme.textSecondary,
+            borderTop: `1px solid ${theme.border}`,
+            fontSize: "14px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.25rem",
+            textAlign: "center",
+            flexShrink: 0,
+          }}
+        >
+          <div>
+            © {new Date().getFullYear()} <strong>Witches & Snitches</strong>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
