@@ -25,14 +25,13 @@ export const houseFeatures = {
     features: [
       {
         name: "Inspiring Presence OR Bravehearted",
-        description:
-          "Choose between inspiring allies when they fall or advantage on fear saves",
+        description: "Choose between Inspiring Presence or Bravehearted",
         isChoice: true,
         options: [
           {
             name: "Inspiring Presence",
             description:
-              "When in combat, your friends eagerly stand beside you as a beacon of courage and inspiration. Once per long rest, if an ally within 10 feet of you falls to 0 HP, you may use your reaction to defend them from danger. Using this ability ensures they will regain consciousness at 1 HP. An individual can only benefit from this effect once per day.",
+              "When in combat, your friends eagerly stand beside you as a beacon of courage and inspiration. Once per long rest, if an ally within 30 feet of you falls to 0 HP, you may shout their name causing them to steel their resolve. Using this ability ensures they will regain consciousness at 1 HP.",
           },
           {
             name: "Bravehearted",
@@ -61,12 +60,12 @@ export const houseFeatures = {
           {
             name: "Words of Encouragement",
             description:
-              "You may use your reaction to give an ally who can hear you, a d4 BONUS to the first attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only benefit from this effect once per round.",
+              "You may use your reaction to give an ally who can hear you, a d4 bonus to the first attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only benefit from this effect once per round.",
           },
           {
             name: "Neg D4",
             description:
-              "You may use your reaction to give a creature who can hear you, a d4 PENALTY to any attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only be penalized from this effect once per round.",
+              "You may use your reaction to give a creature who can hear you, a d4 penalty to any attack roll, ability check, or saving throw they make before the start of your next turn. You may use this ability a number of times per long rest equal to your Charisma modifier (minimum of 1). A target may only be penalized from this effect once per round.",
           },
         ],
       },
@@ -115,7 +114,7 @@ export const houseFeatures = {
       {
         name: "Compromising Information",
         description:
-          "Whenever you make a Charisma check related to using a person's secrets, you are considered proficient in the appropriate skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus.",
+          "You gain proficiency in two Charisma skills of your choice. When you make a Charisma check against a creature whose secret, fear, ambition, or leverage you know, you may treat a d20 roll of 9 or lower as a 10.",
         isChoice: false,
       },
       {
@@ -151,7 +150,7 @@ export const houseFeatures = {
       {
         name: "Cold Efficiency",
         description:
-          "You add the Bombarda spell to your list of known spells. You may cast it as a bonus action during any combat.",
+          "You add the Bombarda spell to your list of known spells. You may cast it as a bonus action during any combat. You can cast Bombarda this way a number of times equal to your proficiency bonus per long rest.",
         isChoice: false,
       },
       {
@@ -169,7 +168,7 @@ export const houseFeatures = {
       {
         name: "Lesser Animagus",
         description:
-          "You gain one Animagus form of your choice using the stat block of a bat, cat, crab, frog (toad), hawk, lizard, octopus, owl, poisonous snake, fish (quipper), rat, raven, sea horse, spider (Tarantula), or weasel. You gain this feature at 6th level.",
+          "You gain one Animagus form of your choice using the stat block of a bat, cat, crab, frog (toad), hawk, lizard, octopus, owl, poisonous snake, fish (quipper), rat, raven, sea horse, spider (Tarantula), or weasel.",
         isChoice: false,
       },
       {
@@ -193,7 +192,7 @@ export const houseFeatures = {
       {
         name: "Locked in Spells",
         description:
-          "Students of Mahoutokoro School start their Magical Education a year earlier than other schools, and as a result, you gain an advantage. You may choose 3 Charms spells, 3 DADA spells, and 2 Transfigurations spells from the First Year spell list to have one successful attempt.",
+          "Students of Mahoutokoro School start their Magical Education a year earlier than other schools, and as a result, you gain an advantage. You may choose 2 spells from subclass locked spell lists to have one successful attempt. Spells chosen this way can be up to level 2.",
         isChoice: false,
       },
     ],
@@ -205,7 +204,7 @@ export const houseFeatures = {
       {
         name: "Beast Finder",
         description:
-          "Castelobruxo School in Brazil has an intense focus on magics of the natural world and how to recognize and utilize them. You can use your action to spend one spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense Magical Creatures within 100 Feet of you. You may additionally make a Magical Creatures check to identify what kind of creatures you sensed. This feature doesn’t reveal the creatures’ location or number.",
+          "Castelobruxo School in Brazil has an intense focus on magics of the natural world and how to recognize and utilize them. You can use your action to focus your awareness on the region around you. For 1 minute, or longer if you choose to use your dedication, you can sense Magical Creatures within 100 Feet of you. You may additionally make a Magical Creatures check to identify what kind of creatures you sensed. This feature doesn’t reveal the creatures’ location or number.",
         isChoice: false,
       },
       {
@@ -223,13 +222,13 @@ export const houseFeatures = {
       {
         name: "Quick Brew",
         description:
-          "You gain Tool Proficiency with a Potioneer's Kit. When brewing potions outside of class, you gain two doses instead of one.",
+          "You gain Tool Proficiency with a Potioneer’s Kit. Additionally, Whenever you attempt to brew a potion outside of class, you gain two doses instead of one.",
         isChoice: false,
       },
       {
         name: "Improvised Brooms",
         description:
-          "Koldovstoretz has a reputation for its use of uprooted trees as brooms rather than what is traditional throughout the rest of the world, and you have been taught how to make these vehicles in a pinch. If you spend 10 minutes, you can make a DC 15 Spellcasting ability check to enchant any uprooted tree into a broom. Brooms created in this way can carry up to three medium sized creatures without being encumbered.",
+          "Koldovstoretz has a reputation for its use of uprooted trees as brooms rather than what is traditional throughout the rest of the world, and you have been taught how to make these vehicles in a pinch. If you spend 10 minutes, you can make a DC 15 Spellcasting ability check to enchant any uprooted tree into a broom. Brooms created in this way last for up to 8 hours and can carry up to three medium sized creatures without being encumbered. While riding a broom you have created, you have advantage on saving throws against spells.",
         isChoice: false,
       },
     ],
@@ -265,7 +264,7 @@ export const houseFeatures = {
       {
         name: "Contagious Valor",
         description:
-          " As an action, you unleash a battle cry infused with arcane energy. Up to ten other creatures of your choice within 60 feet of you that can hear you gain advantage on attack rolls and saving throws until the start of your next turn. Once you use this feature, you can’t use it again until you finish a long rest.",
+          "As an action, you unleash a battle cry infused with arcane energy. Up to ten other creatures of your choice within 60 feet of you that can hear you gain advantage on their first attack roll and saving throw until the start of your next turn. Once you use this feature, you can’t use it again until you finish a long rest.",
         isChoice: false,
       },
     ],
