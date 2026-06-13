@@ -22,6 +22,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { potions, qualityDCs } from "../../SharedData/potionsData";
 import { createPotionsStyles } from "./styles";
 import { findExistingPotion } from "../../services/potionConsolidationService";
+import { calculateFinalAbilityScores } from "../CharacterManager/utils/characterUtils";
 
 const PotionBrewingSystem = ({ character, supabase, user }) => {
   const { theme, selectedCharacter } = useTheme();
@@ -59,6 +60,11 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
   const currentCharacter = useMemo(() => {
     return character || selectedCharacter;
   }, [character, selectedCharacter]);
+
+  const effectiveAbilityScores = useMemo(() => {
+    if (!currentCharacter) return {};
+    return calculateFinalAbilityScores(currentCharacter);
+  }, [currentCharacter]);
 
   const hasHealingSubclass = useMemo(() => {
     return currentCharacter?.subclass === "Healing";
@@ -179,42 +185,41 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
 
     if (hasDarkArtsSubclass) {
       if (darkArtsSkillChoice === "charismaPersuasion") {
-        const charismaScore = currentCharacter.abilityScores?.charisma || 10;
+        const charismaScore = effectiveAbilityScores?.charisma || 10;
         const charismaModifier = Math.floor((charismaScore - 10) / 2);
         return charismaModifier + getDarkArtsSkillInfo.persuasion.bonus;
       } else if (darkArtsSkillChoice === "wisdomPerception") {
-        const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+        const wisdomScore = effectiveAbilityScores?.wisdom || 10;
         const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
         return wisdomModifier + getDarkArtsSkillInfo.perception.bonus;
       } else {
-        const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+        const wisdomScore = effectiveAbilityScores?.wisdom || 10;
         const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
         return wisdomModifier + potionMakingSkillBonus;
       }
     }
 
     if (!hasHealingSubclass) {
-      const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+      const wisdomScore = effectiveAbilityScores?.wisdom || 10;
       const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
       return wisdomModifier + potionMakingSkillBonus;
     }
 
     if (healingSkillChoice === "wisdomMedicine") {
-      const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+      const wisdomScore = effectiveAbilityScores?.wisdom || 10;
       const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
       const medicineSkillBonus = getMedicineSkillProficiencyInfo.bonus;
       const total = wisdomModifier + medicineSkillBonus;
 
       return total;
     } else if (healingSkillChoice === "intelligencePotionMaking") {
-      const intelligenceScore =
-        currentCharacter.abilityScores?.intelligence || 10;
+      const intelligenceScore = effectiveAbilityScores?.intelligence || 10;
       const intelligenceModifier = Math.floor((intelligenceScore - 10) / 2);
       const total = intelligenceModifier + potionMakingSkillBonus;
 
       return total;
     } else {
-      const wisdomScore = currentCharacter.abilityScores?.wisdom || 10;
+      const wisdomScore = effectiveAbilityScores?.wisdom || 10;
       const wisdomModifier = Math.floor((wisdomScore - 10) / 2);
       const total = wisdomModifier + potionMakingSkillBonus;
 
@@ -222,7 +227,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     }
   }, [
     currentCharacter?.level,
-    currentCharacter?.abilityScores,
+    effectiveAbilityScores,
     currentCharacter?.skillProficiencies,
     currentCharacter?.skillExpertise,
     hasHealingSubclass,
@@ -280,7 +285,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         return {
           abilityName: "Charisma",
           abilityModifier: Math.floor(
-            ((currentCharacter?.abilityScores?.charisma || 10) - 10) / 2
+            ((effectiveAbilityScores?.charisma || 10) - 10) / 2
           ),
           skillName: "Persuasion",
           skillInfo: getDarkArtsSkillInfo.persuasion,
@@ -289,7 +294,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         return {
           abilityName: "Wisdom",
           abilityModifier: Math.floor(
-            ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+            ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
           ),
           skillName: "Perception",
           skillInfo: getDarkArtsSkillInfo.perception,
@@ -298,7 +303,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
         return {
           abilityName: "Wisdom",
           abilityModifier: Math.floor(
-            ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+            ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
           ),
           skillName: "Potion Making",
           skillInfo: getSkillProficiencyInfo,
@@ -310,7 +315,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       return {
         abilityName: "Wisdom",
         abilityModifier: Math.floor(
-          ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+          ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
         ),
         skillName: "Potion Making",
         skillInfo: getSkillProficiencyInfo,
@@ -321,7 +326,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       return {
         abilityName: "Wisdom",
         abilityModifier: Math.floor(
-          ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+          ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
         ),
         skillName: "Medicine",
         skillInfo: getMedicineSkillProficiencyInfo,
@@ -330,7 +335,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       return {
         abilityName: "Intelligence",
         abilityModifier: Math.floor(
-          ((currentCharacter?.abilityScores?.intelligence || 10) - 10) / 2
+          ((effectiveAbilityScores?.intelligence || 10) - 10) / 2
         ),
         skillName: "Potion Making",
         skillInfo: getSkillProficiencyInfo,
@@ -339,7 +344,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       return {
         abilityName: "Wisdom",
         abilityModifier: Math.floor(
-          ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+          ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
         ),
         skillName: "Potion Making",
         skillInfo: getSkillProficiencyInfo,
@@ -350,7 +355,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     healingSkillChoice,
     hasDarkArtsSubclass,
     darkArtsSkillChoice,
-    currentCharacter?.abilityScores,
+    effectiveAbilityScores,
     getSkillProficiencyInfo,
     getMedicineSkillProficiencyInfo,
     getDarkArtsSkillInfo,
@@ -386,21 +391,19 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
                 <option value="wisdomPotionMaking">
                   Wisdom (Standard Potion Making) +{" "}
                   {Math.floor(
-                    ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+                    ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
                   ) + getSkillProficiencyInfo.bonus}
                 </option>
                 <option value="intelligencePotionMaking">
                   Intelligence (Potion Making) +{" "}
                   {Math.floor(
-                    ((currentCharacter?.abilityScores?.intelligence || 10) -
-                      10) /
-                      2
+                    ((effectiveAbilityScores?.intelligence || 10) - 10) / 2
                   ) + getSkillProficiencyInfo.bonus}
                 </option>
                 <option value="wisdomMedicine">
                   Wisdom (Medicine) +
                   {Math.floor(
-                    ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+                    ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
                   ) + getMedicineSkillProficiencyInfo.bonus}
                 </option>
               </select>
@@ -416,10 +419,10 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
     if (!hasDarkArtsSubclass) return null;
 
     const wisdomMod = Math.floor(
-      ((currentCharacter?.abilityScores?.wisdom || 10) - 10) / 2
+      ((effectiveAbilityScores?.wisdom || 10) - 10) / 2
     );
     const charismaMod = Math.floor(
-      ((currentCharacter?.abilityScores?.charisma || 10) - 10) / 2
+      ((effectiveAbilityScores?.charisma || 10) - 10) / 2
     );
 
     return (
