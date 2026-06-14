@@ -520,7 +520,7 @@ Solution:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is **proprietary**. The source is publicly viewable, but it is not open source — all rights are reserved. You may not use, copy, modify, deploy, or distribute the code without prior written permission. Forks are permitted only for the purpose of submitting contributions back via pull request. See the [LICENSE](LICENSE) file for the full terms.
 
 ## 📞 Contact
 
