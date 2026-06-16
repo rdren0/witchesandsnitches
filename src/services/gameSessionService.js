@@ -122,6 +122,21 @@ const archiveGameSession = async (id) => {
   return data;
 };
 
+const unarchiveGameSession = async (id) => {
+  const { data, error } = await supabase
+    .from("game_sessions")
+    .update({ archived: false, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to unarchive game session: ${error.message}`);
+  }
+
+  return data;
+};
+
 /** Marks a session's webhook as verified (or not) after a successful test. */
 const setGameSessionVerified = async (id, verified = true) => {
   const { data, error } = await supabase
@@ -194,6 +209,7 @@ export const gameSessionService = {
   updateGameSession,
   renameGameSession,
   archiveGameSession,
+  unarchiveGameSession,
   setGameSessionVerified,
   sendTestMessage,
   countCharactersInSession,
