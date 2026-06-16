@@ -3,6 +3,7 @@ import { X, Search, Lock } from "lucide-react";
 import { useSpells } from "../../hooks/useSpells";
 import { transformSpellsToNestedStructure } from "../../utils/spellsTransform";
 import { getSpellModifier, getModifierInfo } from "../SpellBook/utils";
+import { calculateSpellAttemptDC } from "./utils/spellUtils";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const SpellSelector = ({
@@ -82,40 +83,40 @@ const SpellSelector = ({
     (_, spellData) => {
       if (!spellData || !selectedCharacter) return 10;
 
-      const playerYear = selectedCharacter.year || 1;
-      const spellYear = spellData.year || 1;
-
-      let baseDC = 8 + 2 * spellYear;
-      if (spellYear > playerYear) {
-        baseDC += (spellYear - playerYear) * 2;
+      if (!isResearch) {
+        return calculateSpellAttemptDC(spellData);
       }
 
-      if (isResearch) {
-        const difficultSpells = [
-          "Abscondi",
-          "Pellucidi Pellis",
-          "Sagittario",
-          "Confringo",
-          "Devicto",
-          "Stupefy",
-          "Petrificus Totalus",
-          "Protego",
-          "Protego Maxima",
-          "Finite Incantatem",
-          "Confundo",
-          "Bombarda",
-          "Episkey",
-          "Expelliarmus",
-          "Incarcerous",
-        ];
-        if (difficultSpells.includes(spellData.name)) {
-          baseDC += 3;
-        }
+      const playerYear =
+        selectedCharacter.school_year || selectedCharacter.schoolYear || 1;
+      const spellYear = spellData.year || 1;
+
+      let baseDC = 10 + 2 * (spellYear - 1) + (spellYear - playerYear) * 2;
+
+      const difficultSpells = [
+        "Abscondi",
+        "Pellucidi Pellis",
+        "Sagittario",
+        "Confringo",
+        "Devicto",
+        "Stupefy",
+        "Petrificus Totalus",
+        "Protego",
+        "Protego Maxima",
+        "Finite Incantatem",
+        "Confundo",
+        "Bombarda",
+        "Episkey",
+        "Expelliarmus",
+        "Incarcerous",
+      ];
+      if (difficultSpells.includes(spellData.name)) {
+        baseDC += 3;
       }
 
       return Math.max(5, baseDC);
     },
-    [isResearch, selectedCharacter]
+    [isResearch, selectedCharacter],
   );
 
   const getSpellData = useCallback((spellName) => {
@@ -188,7 +189,7 @@ const SpellSelector = ({
       calculateSpellDC,
       isResearch,
       getHistoryOfMagicModifier,
-    ]
+    ],
   );
 
   const getSpellStatus = useCallback(
@@ -242,7 +243,7 @@ const SpellSelector = ({
         isRestricted,
       };
     },
-    [isResearch, isAttempt, spellAttempts, researchedSpells, failedAttempts]
+    [isResearch, isAttempt, spellAttempts, researchedSpells, failedAttempts],
   );
 
   const styles = {
@@ -915,10 +916,10 @@ const SpellSelector = ({
   const uniqueSubjects = useMemo(() => {
     const allSubjects = Object.keys(spellsData);
     const standardSubjects = allSubjects.filter((subject) =>
-      coreSubjects.includes(subject)
+      coreSubjects.includes(subject),
     );
     const specializedSubjects = allSubjects.filter(
-      (subject) => !coreSubjects.includes(subject)
+      (subject) => !coreSubjects.includes(subject),
     );
 
     return {
@@ -979,7 +980,7 @@ const SpellSelector = ({
       <div style={styles.container}>
         {renderSpellSelector(
           "first",
-          isResearch ? "Research Spell" : "First Spell"
+          isResearch ? "Research Spell" : "First Spell",
         )}
         {!isResearch && renderSpellSelector("second", "Second Spell")}
       </div>
@@ -1175,8 +1176,8 @@ const SpellSelector = ({
                                     backgroundColor: theme.success + "15",
                                   }
                                 : isHovered
-                                ? styles.spellCardHovered
-                                : {}),
+                                  ? styles.spellCardHovered
+                                  : {}),
                             }
                       }
                       onClick={() => handleSpellSelection(spell)}
@@ -1336,8 +1337,8 @@ const SpellSelector = ({
                     filterLevel !== "all"
                       ? "Try adjusting your filters or search terms."
                       : isResearch
-                      ? "No spells available for research."
-                      : "No spells available for attempts."}
+                        ? "No spells available for research."
+                        : "No spells available for attempts."}
                   </p>
                 </div>
               )}

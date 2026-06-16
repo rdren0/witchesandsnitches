@@ -403,23 +403,23 @@ export const NPC_DATA = {
   // ILVERMORNY — Faculty (no romance option)
   // ---------------------------------------------------------------------------
 
-  "Professor Sakari Anana": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Noreen Barbuscio": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Sumaira Bashir": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Mrs. Valentina Carrera": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Mrs. Wendy Drummond": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Darby Duncan": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Russell Hart": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Shantella Jackson": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Headmaster Osiris Kisio": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Amy Loo": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Mr. Lloyd McNab": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Korrie Melvin": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Calvin Muhoza": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Aciano Nyxi": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Trevor Rogers": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Andrew Siemens": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Mr. John Tolman": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Professor Sakari Anana": { 1: {}, 2: {}, 3: {} },
+  "Professor Noreen Barbuscio": { 1: {}, 2: {}, 3: {} },
+  "Professor Sumaira Bashir": { 1: {}, 2: {}, 3: {} },
+  "Mrs. Valentina Carrera": { 1: {}, 2: {}, 3: {} },
+  "Mrs. Wendy Drummond": { 1: {}, 2: {}, 3: {} },
+  "Professor Darby Duncan": { 1: {}, 2: {}, 3: {} },
+  "Professor Russell Hart": { 1: {}, 2: {}, 3: {} },
+  "Professor Shantella Jackson": { 1: {}, 2: {}, 3: {} },
+  "Headmaster Osiris Kisio": { 1: {}, 2: {}, 3: {} },
+  "Professor Amy Loo": { 1: {}, 2: {}, 3: {} },
+  "Mr. Lloyd McNab": { 1: {}, 2: {}, 3: {} },
+  "Professor Korrie Melvin": { 1: {}, 2: {}, 3: {} },
+  "Professor Calvin Muhoza": { 1: {}, 2: {}, 3: {} },
+  "Professor Aciano Nyxi": { 1: {}, 2: {}, 3: {} },
+  "Professor Trevor Rogers": { 1: {}, 2: {}, 3: {} },
+  "Professor Andrew Siemens": { 1: {}, 2: {}, 3: {} },
+  "Mr. John Tolman": { 1: {}, 2: {}, 3: {} },
 
   // ---------------------------------------------------------------------------
   // HOGWARTS — Classmates
@@ -1111,7 +1111,7 @@ export const NPC_DATA = {
     3: {},
     4: {},
   },
-  "Professor Binns": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Professor Binns": { 1: {}, 2: {}, 3: {} },
   "Professor Cox": {
     1: {
       scene: `The Hogwarts grounds are alive with the sounds of birds chirping and leaves rustling in the breeze. You spot Professor Cox near the edge of the Forbidden Forest, standing by a large stone monument. She notices you right away, and her face brightens.\n\n"Hey there! I was just getting some fresh air," she says cheerfully. "Care to join me for a quick walk? It's nice to step away from all the hustle and bustle inside, isn't it?"\n\nYou nod and step closer. "It's funny, isn't it? How different things feel out here, away from the castle? It's as if the world slows down just a little bit, giving you space to think."\n\nThere's an honesty to her words. "But you're different. I can tell that you're not the kind to get easily flustered. You take things one step at a time, and that's important. It's something I've always admired in my students."\n\nShe pauses. "You know, it's funny how often people underestimate the power of just being patient. There's a lot of strength in it. Sometimes the best thing you can do is wait for the right moment."\n\nShe turns to you again, her smile warm and encouraging. "And when that moment comes, you'll know. Trust me. You've got the kind of determination that'll take you places. And if you ever need someone to talk to, I'm here for you. I believe in you."`,
@@ -1136,9 +1136,9 @@ export const NPC_DATA = {
     },
     4: {},
   },
-  "Headmaster Dumbledore": { 1: {}, 2: {}, 3: {}, 4: {} },
-  Hagrid: { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Hasegawa": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Headmaster Dumbledore": { 1: {}, 2: {}, 3: {} },
+  Hagrid: { 1: {}, 2: {}, 3: {} },
+  "Professor Hasegawa": { 1: {}, 2: {}, 3: {} },
   "Madam Hooch": {
     1: {
       scene: `The Quidditch pitch stretches out before you, the golden hoops at either end gleaming faintly under the midday sun. The quiet of the grounds is broken only by the rhythmic whoosh of a broomstick cutting through the space above. High above, a blur of motion catches your eye—Madame Hooch, darting across the pitch on her broomstick with practiced precision, a Quaffle tucked securely under one arm.\n\nHer gray hair trails behind her as she executes a sharp barrel roll, leaning into the motion with perfect control. She throws the Quaffle through one of the center hoops, then spins into a tight spiral, catching the ball as it rebounds. Her movements are fluid and precise, demonstrating a level of skill that speaks to years of dedication.\n\nAfter a dramatic dive, she spots you standing at the edge of the pitch and adjusts her course, steering her broom toward you with a grin. As she approaches, she slows to hover a few feet away.\n\n"Not bad, eh?" she says, her golden eyes bright with a mix of pride and amusement. "Haven't played Chaser in years, but some things stick with you. Those moves? The old reverse slingshot and quick drop pass—favorites of mine back when I was your age."\n\nShe leans slightly on her broom, tilting her head as if evaluating you. "Always nice to have an audience, though. Flattering, really. And judging by that look on your face, you'd like to learn a few tricks yourself, wouldn't you?"\n\nHer grin widens, and she nods toward a small storage shed near the stands. "Well, grab yourself a practice broom from the closet over there. I'll give you a proper flying lesson, and maybe—just maybe—you'll manage not to fall off before we're done. Meet me above the pitch, and we'll see what you're made of!"\n\nWith that, she speeds off again, Quaffle in hand, circling the field in an elegant arc as she waits for you to join her.`,
@@ -1147,7 +1147,7 @@ export const NPC_DATA = {
     3: {},
     4: {},
   },
-  "Professor Janvier": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Professor Janvier": { 1: {}, 2: {}, 3: {} },
   "Professor Klein": {
     1: {
       scene: `The corridor hums with the usual energy of students transitioning between classes, but the sharp, commanding voice of Professor Klein cuts through the din like a whip. As you approach, you see her standing rigid, arms crossed, glaring at a group of third years who are scrambling to gather their belongings while apologizing profusely.\n\n"Nein! Enough of your excuses!" she barks, her German accent thick in her anger. "If I see this nonsense again, you will all have detention for a month! Verstanden?!"\n\nThe third years nod furiously, muttering hurried apologies as they bolt down the hall. As they round the corner, Klein mutters under her breath, "Kinder! So ein Quatsch," shaking her head in frustration. Her tone is sharp, but the faintest hint of amusement creeps into her expression.\n\nNoticing you, she exhales sharply and straightens her robes. "Ah, good timing," she says with a wry smile, her tone softer but still tinged with her no-nonsense demeanor. "Caught me dealing with the delinquents, did you? Third years—they think the castle is their playground. Not under my watch." She gestures vaguely. "So laut, so annoying. Typical."\n\nHer expression softens further, and a cheeky glint flashes in her eyes. "Ach, what can I say? They keep me on my toes. Keeps life interesting, ja? But enough about them." She looks at you appraisingly, her smile growing. "And what about you? Up to no good, I hope not?"\n\nBefore you can respond, the deep toll of the bell reverberates through the corridor. Klein sighs and adjusts the stack of papers she's carrying. "Ah, there it is. My next class waits for no one. Pflichten rufen—duty calls." She gives you a pointed look. "But I'll tell you what. Come by my office this evening. We'll have tea. Much better company than unruly third years, hm?"\n\nWith a small wave, she strides briskly down the corridor, her heels clicking against the stone floor.`,
@@ -1168,9 +1168,9 @@ export const NPC_DATA = {
     },
     4: {},
   },
-  "Professor Mackenzie": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor McGonagall": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Madam Pomphrey": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Professor Mackenzie": { 1: {}, 2: {}, 3: {} },
+  "Professor McGonagall": { 1: {}, 2: {}, 3: {} },
+  "Madam Pomphrey": { 1: {}, 2: {}, 3: {} },
   "Professor Riddle": {
     1: {
       scene: `You enter Professor Riddle's office, the door creaking softly behind you. He's seated at his desk, flipping through a book, but when he hears your footsteps, he looks up with a small, pleasant smile. "Ah, you've come about your essay," he says, his voice smooth and inviting. "Please, take a seat."\n\nHis office is comfortable—neatly organized, filled with the faint scent of parchment and polished wood. His calm demeanor puts you at ease almost immediately.\n\n"I see you've been working on your Defense Against the Dark Arts essay. The one about the effectiveness of Dark magic in defense," he says, leaning forward slightly. "It's a tricky topic, isn't it? A lot of students get hung up on the darker side of things."\n\nYou nod, sharing your frustration. Professor Riddle's expression is understanding. "It's completely normal to feel conflicted. Most people think of Dark magic as dangerous and harmful. But what people often overlook is that magic, in any form, is only as dangerous as the intentions behind it. Magic itself isn't inherently evil."\n\nHe hands you a worn book, pointing to a passage. "Many great witches and wizards have used Dark magic to defend their loved ones, their homes, even their lives. It isn't about the magic—it's about how you use it."\n\nHis words make sense in a way that feels logical and reasonable. "The essay isn't about choosing a side, it's about understanding. Don't be afraid to explore the complexities of Dark magic. Question it. See it for what it is—a tool that can be used in many ways."\n\nThere's a pause, and he smiles again, the expression kind and reassuring. "I'm confident that you'll be able to write a brilliant essay. If you need help again, don't hesitate to come by."\n\nAs you walk out, you can't shake the feeling that he's someone you could trust—a professor who genuinely cares about your success.`,
@@ -1183,7 +1183,7 @@ export const NPC_DATA = {
     },
     4: {},
   },
-  "Professor Shacklebolt": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Professor Shacklebolt": { 1: {}, 2: {}, 3: {} },
   "Professor Slughorn": {
     1: {
       scene: `The staff room is cozy yet formal. A long wooden table stretches through the center of the room. The faint scent of tea and old parchment hangs in the air, mingling with the aroma of the meal laid out on the table.\n\nProfessor Slughorn sits at the head of the table, his round face beaming as he gestures for you to join him. His emerald-green waistcoat stretches slightly as he leans back in his chair, waving a hand toward a steaming plate of roast chicken, potatoes, and bread rolls. "Come, come, have a seat! I took the liberty of having the house-elves prepare a little extra. They never disappoint, do they?"\n\nAs you settle into your seat, Slughorn doesn't waste a moment before launching into conversation. "I must tell you, I had the most delightful visit to Diagon Alley last week! Ran into old Clementina Fudge outside Flourish and Blotts—such a sharp wit on that woman, though she's still hung up on that duel she lost back in '42."\n\nHe chuckles, pausing only to take a sip of tea. "And, oh, you'll never guess who I bumped into at Madam Malkin's! Young Eldred Worple, still scribbling away at his vampire novels. He insisted on gifting me a signed copy of his latest—Moonlight in Moscow."\n\nYou open your mouth to speak, but Slughorn barrels on, waving a fork. "Speaking of talent, I saw Abraxas Malfoy at Gringotts! Now, there's a wizard who knows how to make an impression. We had a good chat about Lucius—such a bright boy, isn't he?"\n\nYou attempt to interject, but he cuts you off again. "And let me not forget Madam Primpernelle—met her at the apothecary! She said she might be willing to part with the recipe for her beautification potions, but only for the right price. Imagine the possibilities!"\n\nHe finally pauses to dab at his mouth with a napkin, beaming. "Ah, but listen to me, rambling on! I've kept you from your meal. Do eat, do eat! It's not every day we get a moment to chat like this, is it?"`,
@@ -1192,7 +1192,7 @@ export const NPC_DATA = {
     3: {},
     4: {},
   },
-  "Professor Tripe": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Professor Tripe": { 1: {}, 2: {}, 3: {} },
 
   // ---------------------------------------------------------------------------
   // JAGUARAS — Competitors
@@ -1294,12 +1294,12 @@ export const NPC_DATA = {
   // JAGUARAS — Faculty (no romance option)
   // ---------------------------------------------------------------------------
 
-  "Headmistress Ana Costa": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Larissa Almeida": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Shanice Allen": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Santiago Espinosa": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Shari Augustine": { 1: {}, 2: {}, 3: {}, 4: {} },
-  "Professor Wilner Toussaint": { 1: {}, 2: {}, 3: {}, 4: {} },
+  "Headmistress Ana Costa": { 1: {}, 2: {}, 3: {} },
+  "Professor Larissa Almeida": { 1: {}, 2: {}, 3: {} },
+  "Professor Shanice Allen": { 1: {}, 2: {}, 3: {} },
+  "Professor Santiago Espinosa": { 1: {}, 2: {}, 3: {} },
+  "Professor Shari Augustine": { 1: {}, 2: {}, 3: {} },
+  "Professor Wilner Toussaint": { 1: {}, 2: {}, 3: {} },
 };
 
 // Resolves a raw NPC name (possibly trimmed/first-name-only) to the canonical
@@ -1332,7 +1332,10 @@ export const buildNpcUnlocks = (sheets = []) => {
       if (assignments[`relationship${idx + 1}`]?.result !== "success") return;
       const canonical = resolveNpcName(rel.npcName);
       if (!canonical) return;
-      counts[canonical] = Math.min((counts[canonical] || 0) + 1, 5);
+      // Cap each NPC at the number of relationship levels it actually defines
+      // (faculty have 3, classmates 5), so faculty never exceed level 3.
+      const maxLevel = Object.keys(NPC_DATA[canonical] || {}).length || 5;
+      counts[canonical] = Math.min((counts[canonical] || 0) + 1, maxLevel);
     });
   });
   return counts;

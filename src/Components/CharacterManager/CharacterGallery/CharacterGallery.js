@@ -129,7 +129,7 @@ const TagSelector = ({ existingTags, onAddTag, theme }) => {
   const [customTag, setCustomTag] = useState("");
 
   const availableTags = DEFAULT_TAGS.filter(
-    (tag) => !existingTags.includes(tag)
+    (tag) => !existingTags.includes(tag),
   );
 
   const handleAddCustomTag = () => {
@@ -272,7 +272,7 @@ const ConnectionManager = ({
         .filter(
           (char) =>
             char.name.toLowerCase().includes(characterSearch.toLowerCase()) &&
-            !connections.some((conn) => conn.character_name === char.name)
+            !connections.some((conn) => conn.character_name === char.name),
         )
         .slice(0, 10)
     : [];
@@ -836,10 +836,10 @@ const CharacterCard = ({
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteText, setNoteText] = useState(npcNote?.notes || "");
   const [relationship, setRelationship] = useState(
-    npcNote?.relationship || "unknown"
+    npcNote?.relationship || "unknown",
   );
   const [lastInteraction, setLastInteraction] = useState(
-    npcNote?.last_interaction || ""
+    npcNote?.last_interaction || "",
   );
   const [customTags, setCustomTags] = useState(npcNote?.custom_tags || []);
   const [connections, setConnections] = useState(npcNote?.connections || []);
@@ -849,8 +849,10 @@ const CharacterCard = ({
 
   const unlockedLevel = npcUnlocks?.[character.name] || 0;
   const hasStory = unlockedLevel > 0;
-  // Romance level (5) only exists for non-faculty NPCs; faculty cap at 4.
-  const maxHearts = NPC_DATA[character.name]?.[5] !== undefined ? 5 : 4;
+  // Hearts shown follow the levels actually defined for the NPC: faculty cap
+  // at 3, classmates at 4, and romanceable classmates at 5 (the romance level).
+  const heartLevels = Object.keys(NPC_DATA[character.name] || {}).map(Number);
+  const maxHearts = heartLevels.length ? Math.max(...heartLevels) : 4;
   // Pink accent once the romance level (5) is unlocked, primary otherwise.
   const storyAccent = unlockedLevel >= 5 ? "#ec4899" : theme.primary;
 
@@ -1167,326 +1169,326 @@ const CharacterCard = ({
           />
         ) : (
           <>
-        {hasNote && !isEditingNote && (
-          <div style={{ marginBottom: "8px" }}>
-            <RelationshipBadge
-              relationship={npcNote.relationship}
-              theme={theme}
-            />
-            {npcNote.custom_tags && npcNote.custom_tags.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "4px",
-                  marginTop: "6px",
-                }}
-              >
-                {npcNote.custom_tags.map((tag, index) => (
-                  <CustomTag key={index} tag={tag} theme={theme} />
-                ))}
-              </div>
-            )}
-            {npcNote.connections && npcNote.connections.length > 0 && (
-              <div style={{ marginTop: "6px" }}>
-                <div
-                  style={{
-                    fontSize: "10px",
-                    color: theme.textSecondary,
-                    marginBottom: "4px",
-                    fontWeight: "600",
-                  }}
-                >
-                  CONNECTIONS:
-                </div>
-                {npcNote.connections.map((connection, index) => (
+            {hasNote && !isEditingNote && (
+              <div style={{ marginBottom: "8px" }}>
+                <RelationshipBadge
+                  relationship={npcNote.relationship}
+                  theme={theme}
+                />
+                {npcNote.custom_tags && npcNote.custom_tags.length > 0 && (
                   <div
-                    key={index}
                     style={{
-                      display: "inline-block",
-                      backgroundColor: theme.primary + "15",
-                      border: `1px solid ${theme.primary}40`,
-                      borderRadius: "8px",
-                      padding: "2px 6px",
-                      fontSize: "10px",
-                      color: theme.primary,
-                      marginRight: "4px",
-                      marginBottom: "2px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "4px",
+                      marginTop: "6px",
                     }}
                   >
-                    <strong>{connection.character_name}</strong>
-                    <span style={{ opacity: 0.8 }}>
-                      {" "}
-                      • {connection.relationship_type}
-                    </span>
+                    {npcNote.custom_tags.map((tag, index) => (
+                      <CustomTag key={index} tag={tag} theme={theme} />
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div style={{ marginTop: "8px" }}>
-          {!isEditingNote ? (
-            <div>
-              {hasNote ? (
-                <div style={{ marginBottom: "8px" }}>
-                  {npcNote.notes && (
+                )}
+                {npcNote.connections && npcNote.connections.length > 0 && (
+                  <div style={{ marginTop: "6px" }}>
                     <div
                       style={{
-                        fontSize: "12px",
-                        color: theme.text,
-                        backgroundColor: theme.surface,
-                        padding: "6px",
-                        borderRadius: "4px",
+                        fontSize: "10px",
+                        color: theme.textSecondary,
                         marginBottom: "4px",
-                        border: `1px solid ${theme.border}`,
+                        fontWeight: "600",
                       }}
                     >
-                      {npcNote.notes}
+                      CONNECTIONS:
                     </div>
-                  )}
-                  {npcNote.last_interaction && (
+                    {npcNote.connections.map((connection, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "inline-block",
+                          backgroundColor: theme.primary + "15",
+                          border: `1px solid ${theme.primary}40`,
+                          borderRadius: "8px",
+                          padding: "2px 6px",
+                          fontSize: "10px",
+                          color: theme.primary,
+                          marginRight: "4px",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        <strong>{connection.character_name}</strong>
+                        <span style={{ opacity: 0.8 }}>
+                          {" "}
+                          • {connection.relationship_type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ marginTop: "8px" }}>
+              {!isEditingNote ? (
+                <div>
+                  {hasNote ? (
+                    <div style={{ marginBottom: "8px" }}>
+                      {npcNote.notes && (
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: theme.text,
+                            backgroundColor: theme.surface,
+                            padding: "6px",
+                            borderRadius: "4px",
+                            marginBottom: "4px",
+                            border: `1px solid ${theme.border}`,
+                          }}
+                        >
+                          {npcNote.notes}
+                        </div>
+                      )}
+                      {npcNote.last_interaction && (
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: theme.textSecondary,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          Last seen: {npcNote.last_interaction}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div
                       style={{
                         fontSize: "11px",
                         color: theme.textSecondary,
                         fontStyle: "italic",
+                        marginBottom: "8px",
                       }}
                     >
-                      Last seen: {npcNote.last_interaction}
+                      No notes yet...
                     </div>
                   )}
+                  <button
+                    onClick={() => {
+                      setNoteText(npcNote?.notes || "");
+                      setRelationship(npcNote?.relationship || "unknown");
+                      setLastInteraction(npcNote?.last_interaction || "");
+                      setCustomTags(npcNote?.custom_tags || []);
+                      setConnections(npcNote?.connections || []);
+                      setIsEditingNote(true);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      backgroundColor: theme.primary,
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      width: "100%",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Edit3 size={12} />
+                    {hasNote ? "Edit Notes" : "Add Notes"}
+                  </button>
                 </div>
               ) : (
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: theme.textSecondary,
-                    fontStyle: "italic",
-                    marginBottom: "8px",
-                  }}
-                >
-                  No notes yet...
+                <div style={{ fontSize: "12px" }}>
+                  <div style={{ marginBottom: "8px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "10px",
+                        color: theme.textSecondary,
+                        marginBottom: "2px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Relationship:
+                    </label>
+                    <select
+                      value={relationship}
+                      onChange={(e) => setRelationship(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "4px",
+                        fontSize: "11px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "4px",
+                        backgroundColor: theme.surface,
+                        color: theme.text,
+                      }}
+                    >
+                      <option value="unknown">Unknown</option>
+                      <option value="friend">Friend</option>
+                      <option value="neutral">Neutral</option>
+                      <option value="suspicious">Suspicious</option>
+                      <option value="enemy">Enemy</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: "8px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "10px",
+                        color: theme.textSecondary,
+                        marginBottom: "2px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Custom Tags:
+                    </label>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "4px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {customTags.map((tag, index) => (
+                        <CustomTag
+                          key={index}
+                          tag={tag}
+                          theme={theme}
+                          removable={true}
+                          onRemove={() => handleRemoveTag(tag)}
+                        />
+                      ))}
+                    </div>
+                    <TagSelector
+                      existingTags={customTags}
+                      onAddTag={handleAddTag}
+                      theme={theme}
+                    />
+                  </div>
+
+                  <ConnectionManager
+                    connections={connections}
+                    onAddConnection={handleAddConnection}
+                    onRemoveConnection={handleRemoveConnection}
+                    theme={theme}
+                    characters={characters}
+                  />
+
+                  <div style={{ marginBottom: "8px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "10px",
+                        color: theme.textSecondary,
+                        marginBottom: "2px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Notes:
+                    </label>
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      placeholder="What does your character know about this person?"
+                      style={{
+                        width: "100%",
+                        minHeight: "60px",
+                        padding: "4px",
+                        fontSize: "11px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "4px",
+                        backgroundColor: theme.surface,
+                        color: theme.text,
+                        resize: "vertical",
+                        fontFamily: "inherit",
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: "8px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "10px",
+                        color: theme.textSecondary,
+                        marginBottom: "2px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Last Interaction:
+                    </label>
+                    <input
+                      type="text"
+                      value={lastInteraction}
+                      onChange={(e) => setLastInteraction(e.target.value)}
+                      placeholder="When/where did you last see them?"
+                      style={{
+                        width: "100%",
+                        padding: "4px",
+                        fontSize: "11px",
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: "4px",
+                        backgroundColor: theme.surface,
+                        color: theme.text,
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    <button
+                      onClick={handleSaveNote}
+                      disabled={isSaving}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        backgroundColor: theme.success || "#10b981",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: isSaving ? "not-allowed" : "pointer",
+                        opacity: isSaving ? 0.6 : 1,
+                      }}
+                    >
+                      <Save size={12} />
+                      {isSaving ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isSaving}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        backgroundColor: theme.textSecondary,
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: isSaving ? "not-allowed" : "pointer",
+                        opacity: isSaving ? 0.6 : 1,
+                      }}
+                    >
+                      <X size={12} />
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
-              <button
-                onClick={() => {
-                  setNoteText(npcNote?.notes || "");
-                  setRelationship(npcNote?.relationship || "unknown");
-                  setLastInteraction(npcNote?.last_interaction || "");
-                  setCustomTags(npcNote?.custom_tags || []);
-                  setConnections(npcNote?.connections || []);
-                  setIsEditingNote(true);
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: "4px 8px",
-                  fontSize: "11px",
-                  backgroundColor: theme.primary,
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  width: "100%",
-                  justifyContent: "center",
-                }}
-              >
-                <Edit3 size={12} />
-                {hasNote ? "Edit Notes" : "Add Notes"}
-              </button>
             </div>
-          ) : (
-            <div style={{ fontSize: "12px" }}>
-              <div style={{ marginBottom: "8px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "10px",
-                    color: theme.textSecondary,
-                    marginBottom: "2px",
-                    fontWeight: "500",
-                  }}
-                >
-                  Relationship:
-                </label>
-                <select
-                  value={relationship}
-                  onChange={(e) => setRelationship(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "4px",
-                    fontSize: "11px",
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "4px",
-                    backgroundColor: theme.surface,
-                    color: theme.text,
-                  }}
-                >
-                  <option value="unknown">Unknown</option>
-                  <option value="friend">Friend</option>
-                  <option value="neutral">Neutral</option>
-                  <option value="suspicious">Suspicious</option>
-                  <option value="enemy">Enemy</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "8px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "10px",
-                    color: theme.textSecondary,
-                    marginBottom: "2px",
-                    fontWeight: "500",
-                  }}
-                >
-                  Custom Tags:
-                </label>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "4px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {customTags.map((tag, index) => (
-                    <CustomTag
-                      key={index}
-                      tag={tag}
-                      theme={theme}
-                      removable={true}
-                      onRemove={() => handleRemoveTag(tag)}
-                    />
-                  ))}
-                </div>
-                <TagSelector
-                  existingTags={customTags}
-                  onAddTag={handleAddTag}
-                  theme={theme}
-                />
-              </div>
-
-              <ConnectionManager
-                connections={connections}
-                onAddConnection={handleAddConnection}
-                onRemoveConnection={handleRemoveConnection}
-                theme={theme}
-                characters={characters}
-              />
-
-              <div style={{ marginBottom: "8px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "10px",
-                    color: theme.textSecondary,
-                    marginBottom: "2px",
-                    fontWeight: "500",
-                  }}
-                >
-                  Notes:
-                </label>
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="What does your character know about this person?"
-                  style={{
-                    width: "100%",
-                    minHeight: "60px",
-                    padding: "4px",
-                    fontSize: "11px",
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "4px",
-                    backgroundColor: theme.surface,
-                    color: theme.text,
-                    resize: "vertical",
-                    fontFamily: "inherit",
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: "8px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "10px",
-                    color: theme.textSecondary,
-                    marginBottom: "2px",
-                    fontWeight: "500",
-                  }}
-                >
-                  Last Interaction:
-                </label>
-                <input
-                  type="text"
-                  value={lastInteraction}
-                  onChange={(e) => setLastInteraction(e.target.value)}
-                  placeholder="When/where did you last see them?"
-                  style={{
-                    width: "100%",
-                    padding: "4px",
-                    fontSize: "11px",
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: "4px",
-                    backgroundColor: theme.surface,
-                    color: theme.text,
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "4px" }}>
-                <button
-                  onClick={handleSaveNote}
-                  disabled={isSaving}
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "4px",
-                    padding: "4px 8px",
-                    fontSize: "11px",
-                    backgroundColor: theme.success || "#10b981",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: isSaving ? "not-allowed" : "pointer",
-                    opacity: isSaving ? 0.6 : 1,
-                  }}
-                >
-                  <Save size={12} />
-                  {isSaving ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "4px",
-                    padding: "4px 8px",
-                    fontSize: "11px",
-                    backgroundColor: theme.textSecondary,
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: isSaving ? "not-allowed" : "pointer",
-                    opacity: isSaving ? 0.6 : 1,
-                  }}
-                >
-                  <X size={12} />
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
           </>
         )}
       </div>
@@ -1578,7 +1580,7 @@ const SchoolSection = ({
 }) => {
   const totalCharacters = Object.values(schoolData).reduce(
     (sum, chars) => sum + chars.length,
-    0
+    0,
   );
 
   return (
@@ -1828,7 +1830,7 @@ export const CharacterGallery = ({
 
   const filteredCharacters = filterNPCGalleryCharacters(
     characters,
-    selectedCharacter?.gameSession
+    selectedCharacter?.gameSession,
   );
 
   const charactersBySchool = filteredCharacters.reduce((acc, character) => {
@@ -1851,7 +1853,7 @@ export const CharacterGallery = ({
   Object.values(charactersBySchool).forEach((typeMap) => {
     Object.keys(typeMap).forEach((type) => {
       typeMap[type] = [...typeMap[type]].sort(
-        (a, b) => (npcUnlocks[b.name] || 0) - (npcUnlocks[a.name] || 0)
+        (a, b) => (npcUnlocks[b.name] || 0) - (npcUnlocks[a.name] || 0),
       );
     });
   });

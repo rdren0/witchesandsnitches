@@ -1,16 +1,28 @@
 import { getSpellModifier } from "../../SpellBook/utils";
 
+// Spell level is stored as a label ("Cantrip", "1st Level" ... "9th Level").
+// Convert it to a number (cantrip = 0) for the casting DC.
+export const getSpellLevelNumber = (level) => {
+  if (typeof level === "number") return level;
+  if (!level) return 0;
+  if (/cantrip/i.test(level)) return 0;
+  const match = String(level).match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+// Attempting to cast a spell: DC is 10 + the spell's level (cantrip = 10).
+export const calculateSpellAttemptDC = (spellData) =>
+  10 + getSpellLevelNumber(spellData?.level);
+
 export const calculateResearchDC = (
   playerYear,
   spellYear,
   spellName,
   selectedCharacter,
 ) => {
-  let baseDC = 8 + 2 * spellYear;
-
-  if (spellYear > playerYear) {
-    baseDC += (spellYear - playerYear) * 2;
-  }
+  // History of Magic check: base 10 at year 1 (+2 per spell year), then +2 per
+  // year the spell is above the player's year and -2 per year below it.
+  let baseDC = 10 + 2 * (spellYear - 1) + (spellYear - playerYear) * 2;
 
   const difficultSpells = [
     "Abscondi",
@@ -197,7 +209,8 @@ export const updateSpellProgressOnSubmission = async (
 
         let dc, isSuccess;
         if (isResearchActivity) {
-          const playerYear = selectedCharacter.year || 1;
+          const playerYear =
+            selectedCharacter.school_year || selectedCharacter.schoolYear || 1;
           const spellYear = spellData.year || 1;
           dc = calculateResearchDC(
             playerYear,
@@ -207,13 +220,7 @@ export const updateSpellProgressOnSubmission = async (
           );
           isSuccess = total >= dc;
         } else {
-          const playerYear = selectedCharacter.year || 1;
-          const spellYear = spellData.year || 1;
-          dc = 8 + 2 * spellYear;
-          if (spellYear > playerYear) {
-            dc += (spellYear - playerYear) * 2;
-          }
-          dc = Math.max(5, dc);
+          dc = calculateSpellAttemptDC(spellData);
           isSuccess = total >= dc;
         }
 

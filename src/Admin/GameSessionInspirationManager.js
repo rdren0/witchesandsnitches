@@ -117,7 +117,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     },
     characterGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+      gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
       gap: "16px",
       padding: "20px",
     },
@@ -781,7 +781,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
                           </div>
                         </div>
                         <span style={styles.characterLevel}>
-                          Level {character.level}
+                          Lvl {character.level}
                         </span>
                       </div>
 
