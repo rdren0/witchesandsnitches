@@ -4,6 +4,7 @@ import {
   Plus,
   Pencil,
   Archive,
+  ArchiveRestore,
   ChevronDown,
   ChevronRight,
   AlertTriangle,
@@ -33,6 +34,7 @@ const GameSessionManager = ({ isOpen, onClose }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState(null);
   const [archiving, setArchiving] = useState(false);
+  const [unarchivingId, setUnarchivingId] = useState(null);
   const [actionError, setActionError] = useState("");
 
   const [testTarget, setTestTarget] = useState(null);
@@ -65,6 +67,19 @@ const GameSessionManager = ({ isOpen, onClose }) => {
       setActionError(err.message || "Failed to archive session.");
     } finally {
       setArchiving(false);
+    }
+  };
+
+  const handleUnarchive = async (session) => {
+    setUnarchivingId(session.id);
+    setActionError("");
+    try {
+      await gameSessionService.unarchiveGameSession(session.id);
+      await refresh();
+    } catch (err) {
+      setActionError(err.message || "Failed to unarchive session.");
+    } finally {
+      setUnarchivingId(null);
     }
   };
 
@@ -359,29 +374,33 @@ const GameSessionManager = ({ isOpen, onClose }) => {
         );
       })()}
       <div style={styles.rowActions}>
-        {isLocked(session) ? (
+        {isArchived ? (
+          <button
+            style={styles.iconButton}
+            onClick={() => handleUnarchive(session)}
+            disabled={unarchivingId === session.id}
+          >
+            <ArchiveRestore size={12} />
+            {unarchivingId === session.id ? "Restoring..." : "Unarchive"}
+          </button>
+        ) : isLocked(session) ? (
           <span style={styles.lockedHint}>
             <Lock size={12} />
           </span>
         ) : (
-          !isArchived && (
-            <>
-              <button
-                style={styles.iconButton}
-                onClick={() => openEdit(session)}
-              >
-                <Pencil size={12} />
-                Edit
-              </button>
-              <button
-                style={styles.dangerButton}
-                onClick={() => setArchiveTarget(session)}
-              >
-                <Archive size={12} />
-                Delete
-              </button>
-            </>
-          )
+          <>
+            <button style={styles.iconButton} onClick={() => openEdit(session)}>
+              <Pencil size={12} />
+              Edit
+            </button>
+            <button
+              style={styles.dangerButton}
+              onClick={() => setArchiveTarget(session)}
+            >
+              <Archive size={12} />
+              Delete
+            </button>
+          </>
         )}
       </div>
     </div>

@@ -19,7 +19,7 @@ import GameSessionManager from "./GameSessionManager";
 
 const SessionManagement = ({ supabase }) => {
   const { theme } = useTheme();
-  const { groupedSessions } = useGameSessions();
+  const { groupedSessions, activeSessions } = useGameSessions();
   const [characters, setCharacters] = useState([]);
   const [gameSessions, setGameSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -272,9 +272,16 @@ const SessionManagement = ({ supabase }) => {
 
   // Merge character-derived session cards with the configured sessions from the
   // DB so that sessions with no characters (or only archived ones) still show a
-  // collapsed "No active characters" card.
+  // collapsed "No active characters" card. Only sessions that still exist as an
+  // active (non-archived) game session are shown — cards for archived or deleted
+  // sessions are hidden even if characters still reference them by name.
   const allSessionCards = (() => {
-    const cardsByName = new Map(gameSessions.map((s) => [s.name, s]));
+    const activeSessionNames = new Set(activeSessions.map((s) => s.name));
+    const cardsByName = new Map(
+      gameSessions
+        .filter((s) => activeSessionNames.has(s.name))
+        .map((s) => [s.name, s])
+    );
     const configuredNames = [
       ...groupedSessions.haunting,
       ...groupedSessions.knights,
