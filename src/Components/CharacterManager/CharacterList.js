@@ -16,7 +16,7 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../utils/styles/masterStyles";
 import { characterService } from "../../services/characterService";
-import { gameSessionGroups } from "../../App/const";
+import { useGameSessions } from "../../contexts/GameSessionsContext";
 
 const CharacterList = ({
   user,
@@ -35,6 +35,7 @@ const CharacterList = ({
   refreshTrigger = 0,
 }) => {
   const { theme } = useTheme();
+  const { groupedSessions } = useGameSessions();
   const styles = createCharacterCreationStyles(theme);
 
   const [savedCharacters, setSavedCharacters] = useState([]);
@@ -67,11 +68,11 @@ const CharacterList = ({
 
     Object.entries(sessionCounts).forEach(([session, count]) => {
       const sessionData = { session, count };
-      if (gameSessionGroups.haunting.includes(session)) {
+      if (groupedSessions.haunting.includes(session)) {
         grouped.haunting.push(sessionData);
-      } else if (gameSessionGroups.knights.includes(session)) {
+      } else if (groupedSessions.knights.includes(session)) {
         grouped.knights.push(sessionData);
-      } else if (gameSessionGroups.development.includes(session)) {
+      } else if (groupedSessions.development.includes(session)) {
         grouped.development.push(sessionData);
       } else {
         grouped.other.push(sessionData);

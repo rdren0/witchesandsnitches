@@ -9,10 +9,11 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import AdminDowntimeReviewForm from "./AdminDowntimeReviewForm";
-import { gameSessionGroups } from "../App/const";
+import { useGameSessions } from "../contexts/GameSessionsContext";
 
 const AdminDowntimeManager = ({ supabase }) => {
   const { theme } = useTheme();
+  const { groupedSessions } = useGameSessions();
   const [downtimeSheets, setDowntimeSheets] = useState([]);
   const [filteredSheets, setFilteredSheets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -740,7 +741,7 @@ const AdminDowntimeManager = ({ supabase }) => {
               <option value="">All Sessions</option>
 
               <optgroup label="Haunting Sessions">
-                {gameSessionGroups.haunting.map((session) => (
+                {groupedSessions.haunting.map((session) => (
                   <option key={session} value={session}>
                     {session}
                   </option>
@@ -750,7 +751,7 @@ const AdminDowntimeManager = ({ supabase }) => {
               <option disabled>──────────</option>
 
               <optgroup label="Knights Sessions">
-                {gameSessionGroups.knights.map((session) => (
+                {groupedSessions.knights.map((session) => (
                   <option key={session} value={session}>
                     {session}
                   </option>
@@ -760,7 +761,7 @@ const AdminDowntimeManager = ({ supabase }) => {
               <option disabled>──────────</option>
 
               <optgroup label="Other Sessions">
-                {gameSessionGroups.other.map((session) => (
+                {groupedSessions.other.map((session) => (
                   <option key={session} value={session}>
                     {session}
                   </option>
@@ -769,7 +770,7 @@ const AdminDowntimeManager = ({ supabase }) => {
 
               <option disabled>──────────</option>
 
-              {gameSessionGroups.development.map((session) => (
+              {groupedSessions.development.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>

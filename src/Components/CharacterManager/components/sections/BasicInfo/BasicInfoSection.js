@@ -1,5 +1,7 @@
 import React from "react";
-import { gameSessionGroups } from "../../../../../App/const";
+import { AlertTriangle } from "lucide-react";
+import { useGameSessions } from "../../../../../contexts/GameSessionsContext";
+import { useAdmin } from "../../../../../contexts/AdminContext";
 import { useTheme } from "../../../../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../../../../utils/styles/masterStyles";
 import OptimizedImageUpload from "./OptimizedImageUpload";
@@ -15,6 +17,13 @@ const BasicInfoSection = ({
   supabase,
 }) => {
   const { theme } = useTheme();
+  const { categorizedSessions } = useGameSessions();
+  const { isUserAdmin } = useAdmin();
+
+  // Development sessions are admin-only.
+  const visibleSessions = isUserAdmin
+    ? categorizedSessions
+    : categorizedSessions.filter(({ category }) => category !== "development");
   const styles = createCharacterCreationStyles(theme);
 
   const handleInputChange = (field, value) => {
@@ -116,41 +125,20 @@ const BasicInfoSection = ({
           >
             <option value="">Select Game Session...</option>
 
-            <optgroup label="Haunting Sessions">
-              {gameSessionGroups.haunting.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </optgroup>
-
-            <option disabled>──────────</option>
-
-            <optgroup label="Knights Sessions">
-              {gameSessionGroups.knights.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </optgroup>
-
-            <option disabled>──────────</option>
-
-            <optgroup label="Other Sessions">
-              {gameSessionGroups.other.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </optgroup>
-
-            <option disabled>──────────</option>
-
-            {gameSessionGroups.development.map((session) => (
-              <option key={session} value={session}>
-                {session}
-              </option>
-            ))}
+            {visibleSessions.map(
+              ({ category, label, isCustom, sessions }, index) => (
+                <React.Fragment key={category}>
+                  {index > 0 && <option disabled>──────────────</option>}
+                  <optgroup label={isCustom ? label : `${label} Sessions`}>
+                    {sessions.map((session) => (
+                      <option key={session} value={session}>
+                        {session}
+                      </option>
+                    ))}
+                  </optgroup>
+                </React.Fragment>
+              )
+            )}
           </select>
           <div
             style={{
@@ -160,8 +148,35 @@ const BasicInfoSection = ({
               marginTop: "4px",
             }}
           >
-            Choose which campaign group your character will join
+            Choose which campaign group your character will join (optional)
           </div>
+          {!character.gameSession && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "8px",
+                marginTop: "8px",
+                padding: "10px 12px",
+                borderRadius: "6px",
+                backgroundColor: theme.background,
+                border: `1px solid ${theme.error}`,
+                color: theme.text,
+                fontSize: "12px",
+                lineHeight: 1.4,
+              }}
+            >
+              <AlertTriangle
+                size={16}
+                style={{ flexShrink: 0, marginTop: "1px" }}
+              />
+              <span>
+                Without a game session, this character's dice rolls won't be
+                sent to Discord. Once your character is ready and you plan to
+                play with them, you'll need to select a session.
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
