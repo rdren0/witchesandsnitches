@@ -37,6 +37,7 @@ import { AdminProvider, useAdmin } from "../contexts/AdminContext";
 import { SupabaseProvider } from "../contexts/SupabaseContext";
 import { FeatsProvider } from "../contexts/FeatsContext";
 import { SpellsProvider } from "../contexts/SpellsContext";
+import { GameSessionsProvider } from "../contexts/GameSessionsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
@@ -531,9 +532,11 @@ function AdminProviderWrapper() {
   return (
     <SpellsProvider>
       <FeatsProvider>
-        <AdminProvider user={user}>
-          <AppContent />
-        </AdminProvider>
+        <GameSessionsProvider>
+          <AdminProvider user={user}>
+            <AppContent />
+          </AdminProvider>
+        </GameSessionsProvider>
       </FeatsProvider>
     </SpellsProvider>
   );

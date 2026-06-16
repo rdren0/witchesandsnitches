@@ -50,10 +50,34 @@ export const DISCORD_WEBHOOKS = {
   FALLBACK: process.env.REACT_APP_DISCORD_WEBHOOK_FALLBACK,
 };
 
-export const getDiscordWebhook = (gameSession) =>
-  gameSession
-    ? (DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK)
-    : DISCORD_WEBHOOKS.FALLBACK;
+// Module-level cache of DB-backed game sessions, hydrated by GameSessionsProvider.
+// Lets the synchronous getDiscordWebhook() resolve webhooks from the database
+// while keeping all existing synchronous callers unchanged. Falls back to the
+// env-var DISCORD_WEBHOOKS map until the cache is populated (or when a session
+// has no webhook URL configured).
+let gameSessionWebhookCache = {};
+
+export const setGameSessionWebhookCache = (sessions = []) => {
+  gameSessionWebhookCache = sessions.reduce((acc, session) => {
+    if (session?.name) {
+      acc[session.name] = session.discord_webhook_url || null;
+    }
+    return acc;
+  }, {});
+};
+
+export const getDiscordWebhook = (gameSession) => {
+  if (!gameSession) return DISCORD_WEBHOOKS.FALLBACK;
+
+  if (
+    Object.prototype.hasOwnProperty.call(gameSessionWebhookCache, gameSession) &&
+    gameSessionWebhookCache[gameSession]
+  ) {
+    return gameSessionWebhookCache[gameSession];
+  }
+
+  return DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK;
+};
 
 export const LOCAL_HOST = "http://localhost:3000";
 export const WEBSITE = "https://witchesandsnitches.com";

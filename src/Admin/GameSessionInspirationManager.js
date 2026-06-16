@@ -10,10 +10,12 @@ import {
   User,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { getDiscordWebhook, gameSessionGroups } from "../App/const";
+import { getDiscordWebhook } from "../App/const";
+import { useGameSessions } from "../contexts/GameSessionsContext";
 
 const GameSessionInspirationManager = ({ supabase }) => {
   const { theme } = useTheme();
+  const { groupedSessions } = useGameSessions();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -466,10 +468,10 @@ const GameSessionInspirationManager = ({ supabase }) => {
           }
 
           const allSessionsOrdered = [
-            ...gameSessionGroups.haunting,
-            ...gameSessionGroups.knights,
-            ...gameSessionGroups.other,
-            ...gameSessionGroups.development,
+            ...groupedSessions.haunting,
+            ...groupedSessions.knights,
+            ...groupedSessions.other,
+            ...groupedSessions.development,
           ];
 
           const indexA = allSessionsOrdered.indexOf(a.name);
@@ -488,7 +490,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, groupedSessions]);
 
   const grantInspiration = async (
     characterId,
@@ -669,7 +671,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
             <option value="all">All Sessions</option>
 
             <optgroup label="Haunting Sessions">
-              {gameSessionGroups.haunting.map((session) => (
+              {groupedSessions.haunting.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
@@ -679,7 +681,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
             <option disabled>──────────</option>
 
             <optgroup label="Knights Sessions">
-              {gameSessionGroups.knights.map((session) => (
+              {groupedSessions.knights.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
@@ -689,7 +691,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
             <option disabled>──────────</option>
 
             <optgroup label="Other Sessions">
-              {gameSessionGroups.other.map((session) => (
+              {groupedSessions.other.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
