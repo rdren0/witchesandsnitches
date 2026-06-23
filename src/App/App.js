@@ -181,7 +181,7 @@ function AppContent() {
   const { theme } = useTheme();
   const styles = createAppStyles(theme);
   const location = useLocation();
-  const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
+  const { adminMode, setAdminMode, unlockAdminMode, isUserAdmin } = useAdmin();
 
   const {
     user,
@@ -237,8 +237,7 @@ function AppContent() {
     setIsVerifying(true);
     try {
       await characterService.verifyAdminPassword(discordUserId, password);
-      setIsUserAdmin(true);
-      setAdminMode(true);
+      unlockAdminMode();
       setShowPasswordModal(false);
     } catch (error) {
       console.error("❌ Password verification failed!");

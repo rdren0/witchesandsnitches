@@ -22,52 +22,50 @@ const AuthComponent = ({
   if (user) {
     return (
       <div style={styles.authSection}>
-        {isUserAdmin && (
-          <button
-            onClick={onAdminToggleClick}
-            style={{
-              ...styles.themeButton,
-              backgroundColor: adminMode ? theme.warning : theme.surface,
-              color: adminMode ? theme.secondary : theme.primary,
-              border: adminMode
-                ? `2px solid ${theme.accent}`
-                : `1px solid ${theme.border}`,
-              fontWeight: adminMode ? "bold" : "normal",
+        <button
+          onClick={onAdminToggleClick}
+          style={{
+            ...styles.themeButton,
+            backgroundColor: adminMode ? theme.warning : theme.surface,
+            color: adminMode ? theme.secondary : theme.primary,
+            border: adminMode
+              ? `2px solid ${theme.accent}`
+              : `1px solid ${theme.border}`,
+            fontWeight: adminMode ? "bold" : "normal",
 
-              transform: adminMode ? "scale(1.05)" : "scale(1)",
-              transition: "all 0.2s ease",
-              position: "relative",
-              textShadow: adminMode ? "0 1px 2px rgba(0, 0, 0, 0.3)" : "none",
-            }}
-            title={
-              isUserAdmin
-                ? adminMode
-                  ? "🔓 Admin Mode ACTIVE - Click to exit"
-                  : "🔒 Enter Admin Mode"
-                : "🔑 Unlock Admin Mode"
-            }
-          >
-            {adminMode ? (
-              <>
-                <Shield size={16} />
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-4px",
-                    right: "-4px",
-                    width: "6px",
-                    height: "6px",
-                    backgroundColor: theme.error,
-                    borderRadius: "50%",
-                    border: "1px solid white",
-                  }}
-                />
-              </>
-            ) : (
-              <Key size={16} />
-            )}
-          </button>
-        )}
+            transform: adminMode ? "scale(1.05)" : "scale(1)",
+            transition: "all 0.2s ease",
+            position: "relative",
+            textShadow: adminMode ? "0 1px 2px rgba(0, 0, 0, 0.3)" : "none",
+          }}
+          title={
+            isUserAdmin
+              ? adminMode
+                ? "🔓 Admin Mode ACTIVE - Click to exit"
+                : "🔒 Enter Admin Mode"
+              : "🔑 Unlock Admin Mode"
+          }
+        >
+          {adminMode ? (
+            <>
+              <Shield size={16} />
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-4px",
+                  right: "-4px",
+                  width: "6px",
+                  height: "6px",
+                  backgroundColor: theme.error,
+                  borderRadius: "50%",
+                  border: "1px solid white",
+                }}
+              />
+            </>
+          ) : (
+            <Key size={16} />
+          )}
+        </button>
 
         <button
           onClick={() => navigate("/theme-settings")}
