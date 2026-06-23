@@ -12,6 +12,9 @@ export const useAdmin = () => {
       setAdminMode: () => {
         console.warn("setAdminMode called outside of AdminProvider context");
       },
+      unlockAdminMode: () => {
+        console.warn("unlockAdminMode called outside of AdminProvider context");
+      },
       isUserAdmin: false,
       setIsUserAdmin: () => {
         console.warn("setIsUserAdmin called outside of AdminProvider context");
@@ -142,6 +145,17 @@ export const AdminProvider = ({ children, user }) => {
     }
   }, [isUserAdmin, adminMode]);
 
+  const unlockAdminMode = useCallback(() => {
+    setIsUserAdmin(true);
+    setAdminModeState(true);
+
+    try {
+      localStorage.setItem("adminMode", "true");
+    } catch (error) {
+      console.warn("Failed to save admin mode to local storage:", error);
+    }
+  }, []);
+
   const loadAllUsers = async () => {
     if (!isUserAdmin) {
       console.warn("loadAllUsers called but user is not admin");
@@ -192,6 +206,7 @@ export const AdminProvider = ({ children, user }) => {
   const value = {
     adminMode,
     setAdminMode,
+    unlockAdminMode,
     isUserAdmin,
     setIsUserAdmin,
     adminCheckComplete,
