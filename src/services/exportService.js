@@ -153,6 +153,15 @@ export const gatherUserData = async ({ user, discordUserId, onProgress }) => {
     CHARACTER_TABLES_ALT_KEY.forEach(([table]) => {
       related[table] = relatedByTable[table][character.id] || [];
     });
+
+    // The characters table has a legacy `corruption_points` column that the app
+    // no longer updates; the live value lives in character_resources and is what
+    // the sheet displays. Sync it so the exported raw data matches the sheet.
+    const liveCorruption = related.character_resources?.[0]?.corruption_points;
+    if (liveCorruption !== undefined && liveCorruption !== null) {
+      character.corruption_points = liveCorruption;
+    }
+
     return { character, related };
   });
 

@@ -259,6 +259,57 @@ const effectiveScores = (character) => {
 // Standard 5e proficiency bonus, matching CharacterSheet (ceil(level/4) + 1).
 const proficiencyBonus = (level) => Math.ceil((Number(level) || 1) / 4) + 1;
 
+// Spellcasting ability granted by casting style (accepts the bare and
+// "… Caster" forms), matching CharacterSheet.getSpellcastingAbility.
+const SPELLCASTING_ABILITY_BY_STYLE = {
+  Willpower: "charisma",
+  "Willpower Caster": "charisma",
+  Technique: "wisdom",
+  "Technique Caster": "wisdom",
+  Intellect: "intelligence",
+  "Intellect Caster": "intelligence",
+  Vigor: "constitution",
+  "Vigor Caster": "constitution",
+};
+
+const spellcastingAbility = (character) =>
+  SPELLCASTING_ABILITY_BY_STYLE[character.casting_style] || null;
+
+// Per-school casting modifier keys (as stored in magic_modifiers) and their
+// display labels, matching MagicModifiersSection.
+const MAGIC_SCHOOL_LABELS = [
+  ["divinations", "Divinations"],
+  ["transfiguration", "Transfiguration"],
+  ["charms", "Charms"],
+  ["healing", "Healing"],
+  ["jinxesHexesCurses", "Jinxes, Hexes & Curses"],
+];
+
+// Modifier of the character's spellcasting ability (using effective scores).
+const spellcastingAbilityMod = (character) => {
+  const ability = spellcastingAbility(character);
+  if (!ability) return null;
+  const score = effectiveScores(character)[ability] ?? 10;
+  return abilityModifier(score);
+};
+
+// Spell attack bonus: the override if one is set, otherwise proficiency bonus +
+// spellcasting modifier + the stored flat modifier. Mirrors
+// CharacterSheet.getSpellAttackBonus (feat-granted spell-attack bonuses aren't
+// included here, matching the rest of the export's feat-agnostic combat math).
+const spellAttackBonus = (character) => {
+  if (!spellcastingAbility(character)) return null;
+  const attack = isPlainObject(character.spell_attack)
+    ? character.spell_attack
+    : {};
+  if (attack.override !== null && attack.override !== undefined) {
+    return Number(attack.override);
+  }
+  const pb = proficiencyBonus(character.level);
+  const mod = spellcastingAbilityMod(character) || 0;
+  return pb + mod + (Number(attack.modifier) || 0);
+};
+
 // Saving-throw proficiencies granted by casting style (accepts both the bare
 // and "… Caster" forms the data uses). Feat-granted saves aren't included.
 const SAVE_PROFS_BY_STYLE = {
@@ -338,6 +389,43 @@ const collectFeats = (character) => {
     }
   });
   return [...new Set(feats.filter(Boolean))];
+};
+
+// Pull a human-readable label out of a single subclass choice, which may be a
+// bare string or an object ({ name } / { selectedChoice } / { choice }).
+const subclassChoiceLabel = (choice) => {
+  if (!choice) return null;
+  if (typeof choice === "string") return choice;
+  if (isPlainObject(choice)) {
+    return choice.name || choice.selectedChoice || choice.choice || null;
+  }
+  return String(choice);
+};
+
+// Subclass selections, stored on `subclass_choices` as an object keyed by level.
+// Each value is either an array of chosen options, a { mainChoice, subChoice }
+// pair (nested choice), or a single value. Returns [{ level, text }] in level
+// order, mirroring the in-app SubclassSection summary.
+const collectSubclassChoices = (character) => {
+  const choices = character.subclass_choices;
+  if (!isPlainObject(choices)) return [];
+  return Object.keys(choices)
+    .sort((a, b) => (Number(a) || 0) - (Number(b) || 0))
+    .map((level) => {
+      const value = choices[level];
+      let text = "";
+      if (Array.isArray(value)) {
+        text = value.map(subclassChoiceLabel).filter(Boolean).join(", ");
+      } else if (isPlainObject(value) && value.mainChoice) {
+        text = value.subChoice
+          ? `${value.mainChoice} (${value.subChoice})`
+          : value.mainChoice;
+      } else {
+        text = subclassChoiceLabel(value) || "";
+      }
+      return text ? { level, text } : null;
+    })
+    .filter(Boolean);
 };
 
 // Selected metamagic options. Stored as { "Quickened Spell": true, ... }.
@@ -542,6 +630,11 @@ export const buildCharacterWorkbook = (bundle) => {
       summary.row([label, displayValue(value)]);
     }
   });
+
+  // Subclass selections, one row per level (immediately after the Subclass row).
+  collectSubclassChoices(character).forEach((c) =>
+    summary.row([`Subclass — Level ${c.level} Choice`, c.text])
+  );
 
   // Ability scores — score, modifier, and saving-throw modifier.
   const abilityRows = computeAbilityRows(character);
@@ -839,6 +932,65 @@ export const buildCharacterPdf = (bundle, portrait) => {
     doc.setTextColor(20, 20, 20);
   };
 
+  // Draw a wrapping, zebra-striped table. `columns` is [{ title, width }] where
+  // width is a relative weight; `rows` is an array of cell-string arrays. The
+  // header row is repeated after a page break so the table stays readable.
+  const drawTable = (columns, rows) => {
+    const pad = 4;
+    const lineH = 11;
+    const weightTotal = columns.reduce((s, c) => s + c.width, 0);
+    const widths = columns.map((c) => (c.width / weightTotal) * maxW);
+    doc.setFontSize(9);
+
+    const renderHeader = () => {
+      ensureSpace(16);
+      doc.setFont("helvetica", "bold");
+      doc.setFillColor(75, 56, 105);
+      doc.rect(margin, y - 8, maxW, 15, "F");
+      doc.setTextColor(255, 255, 255);
+      let x = margin;
+      columns.forEach((c, i) => {
+        doc.text(String(c.title), x + pad, y);
+        x += widths[i];
+      });
+      y += 14;
+      doc.setTextColor(20, 20, 20);
+    };
+
+    renderHeader();
+    doc.setFont("helvetica", "normal");
+
+    rows.forEach((cells, r) => {
+      const wrapped = cells.map((cell, i) =>
+        String(cell ?? "") === ""
+          ? []
+          : doc.splitTextToSize(String(cell), widths[i] - pad * 2)
+      );
+      const rowLines = Math.max(1, ...wrapped.map((w) => w.length));
+      const rowH = rowLines * lineH + 4;
+
+      // Page break: start a fresh page and repeat the header.
+      if (y + rowH > pageH - margin) {
+        doc.addPage();
+        y = margin;
+        renderHeader();
+        doc.setFont("helvetica", "normal");
+      }
+
+      if (r % 2 === 1) {
+        doc.setFillColor(246, 243, 250);
+        doc.rect(margin, y - 8, maxW, rowH, "F");
+      }
+      let x = margin;
+      wrapped.forEach((w, i) => {
+        if (w.length) doc.text(w, x + pad, y);
+        x += widths[i];
+      });
+      y += rowH;
+    });
+    y += 6;
+  };
+
   // Portrait (top-right), if one was fetched. Scaled to fit a fixed box while
   // preserving aspect ratio.
   let imgBottom = margin;
@@ -895,6 +1047,9 @@ export const buildCharacterPdf = (bundle, portrait) => {
   // Basics
   heading("Basics");
   line("Subclass", character.subclass);
+  collectSubclassChoices(character).forEach((c) =>
+    line(`  Level ${c.level} Choice`, c.text)
+  );
   line("Innate Heritage", character.innate_heritage);
   line("Background", character.background);
   line("Wand", character.wand_type);
@@ -907,6 +1062,15 @@ export const buildCharacterPdf = (bundle, portrait) => {
   line("Temp HP", character.temp_hp);
   line("Armor Class", computeArmorClass(character));
   line("Initiative Ability", character.initiative_ability);
+  const castAbility = spellcastingAbility(character);
+  if (castAbility) {
+    line(
+      "Spellcasting Ability",
+      `${titleize(castAbility)} (${fmtMod(spellcastingAbilityMod(character))})`
+    );
+    const atk = spellAttackBonus(character);
+    if (atk !== null) line("Spell Attack Modifier", fmtMod(atk));
+  }
 
   // Ability scores — score, modifier, and saving-throw modifier.
   const abilityRows = computeAbilityRows(character);
@@ -943,6 +1107,27 @@ export const buildCharacterPdf = (bundle, portrait) => {
     paragraph(toolProfs);
   }
 
+  // Language proficiencies
+  const languages = formatList(character.language_proficiencies);
+  if (languages) {
+    heading("Languages");
+    paragraph(languages);
+  }
+
+  // Magic Modifiers — per-school casting modifiers.
+  if (isPlainObject(character.magic_modifiers)) {
+    const modRows = MAGIC_SCHOOL_LABELS.filter(
+      ([key]) => character.magic_modifiers[key] !== undefined &&
+        character.magic_modifiers[key] !== null
+    );
+    if (modRows.length) {
+      heading("Magic Modifiers");
+      modRows.forEach(([key, label]) =>
+        line(label, fmtMod(Number(character.magic_modifiers[key]) || 0))
+      );
+    }
+  }
+
   // Features & Feats
   const feats = collectFeats(character);
   if (feats.length) {
@@ -963,6 +1148,7 @@ export const buildCharacterPdf = (bundle, portrait) => {
     heading("Resources");
     if (res.inspiration !== undefined)
       line("Inspiration", res.inspiration ? "Yes" : "No");
+    line("Luck Points", res.luck);
     line("Sorcery Points", res.sorcery_points);
     line("Max Sorcery Points", res.max_sorcery_points);
     line("Corruption Points", res.corruption_points);
@@ -1053,6 +1239,31 @@ export const buildCharacterPdf = (bundle, portrait) => {
     });
   }
 
+  // Custom recipes (full detail)
+  const customRecipes = related.custom_recipes || [];
+  if (customRecipes.length) {
+    heading("Custom Recipes");
+    customRecipes.forEach((r) => {
+      subheading(r.name || "Recipe");
+      renderFields(r);
+    });
+  }
+
+  // Custom counters — the player's own trackers.
+  const customCounters = related.custom_counters || [];
+  if (customCounters.length) {
+    heading("Custom Counters");
+    bullets(
+      customCounters.map((c) => {
+        const value = c.current_value ?? c.value;
+        const max = c.max_value ?? c.max;
+        const range =
+          value != null ? ` — ${value}${max != null ? ` / ${max}` : ""}` : "";
+        return `${c.name || c.label || "Counter"}${range}`;
+      })
+    );
+  }
+
   // Spells — grouped into the four progress buckets.
   const spells = categorizeSpells(related.spell_progress_summary);
   const anySpells =
@@ -1062,28 +1273,28 @@ export const buildCharacterPdf = (bundle, portrait) => {
     spells.failedOnly.length;
   if (anySpells) {
     heading("Spells");
-    const critMastered = spells.mastered.filter((m) => m.crit);
-    const regularMastered = spells.mastered.filter((m) => !m.crit);
-    if (critMastered.length) {
-      subheading("Crit Mastered");
-      bullets(critMastered.map((m) => m.name), 10);
+    // One column per progress bucket; a trailing * marks a crit-mastered spell.
+    const masteredCol = spells.mastered.map(
+      (m) => `${m.name}${m.crit ? "*" : ""}`
+    );
+    const buckets = [
+      masteredCol,
+      spells.attemptedOnce,
+      spells.researched,
+      spells.failedOnly,
+    ];
+    const columns = [
+      { title: `Mastered (${masteredCol.length})`, width: 1 },
+      { title: `Attempted (${spells.attemptedOnce.length})`, width: 1 },
+      { title: `Researched (${spells.researched.length})`, width: 1 },
+      { title: `Failed (${spells.failedOnly.length})`, width: 1 },
+    ];
+    const maxLen = Math.max(0, ...buckets.map((b) => b.length));
+    const rows = [];
+    for (let i = 0; i < maxLen; i++) {
+      rows.push(buckets.map((b) => b[i] || ""));
     }
-    if (regularMastered.length) {
-      subheading("Mastered");
-      bullets(regularMastered.map((m) => m.name), 10);
-    }
-    if (spells.attemptedOnce.length) {
-      subheading("Attempted Once");
-      bullets(spells.attemptedOnce, 10);
-    }
-    if (spells.researched.length) {
-      subheading("Researched");
-      bullets(spells.researched, 10);
-    }
-    if (spells.failedOnly.length) {
-      subheading("Attempted but Failed");
-      bullets(spells.failedOnly, 10);
-    }
+    drawTable(columns, rows);
   }
 
   // Notes — placed above the downtime / NPC sections.
@@ -1096,14 +1307,50 @@ export const buildCharacterPdf = (bundle, portrait) => {
     });
   }
 
-  // NPC Notes — the player's own gallery notes about NPCs.
+  // NPC Notes — the player's own gallery notes about NPCs, one row per NPC.
   const npcNotes = related.character_npc_notes || [];
   if (npcNotes.length) {
     heading("NPC Notes");
-    npcNotes.forEach((note) => {
-      subheading(note.npc_name || "NPC");
-      renderFields(note);
-    });
+    const columns = [
+      { title: "Name", width: 2 },
+      { title: "Type", width: 1.4 },
+      { title: "School", width: 1.6 },
+      { title: "Relationship", width: 1.4 },
+      { title: "Tags", width: 1.6 },
+      { title: "Notes", width: 2.6 },
+    ];
+    const rows = npcNotes.map((n) => [
+      n.npc_name || "",
+      n.npc_type || "",
+      n.npc_school || "",
+      n.relationship ? titleize(n.relationship) : "",
+      Array.isArray(n.custom_tags) ? n.custom_tags.join(", ") : "",
+      n.notes || "",
+    ]);
+    drawTable(columns, rows);
+  }
+
+  // PC Notes — the player's notes about other player characters, one row each.
+  const pcNotes = related.character_pc_notes || [];
+  if (pcNotes.length) {
+    heading("PC Notes");
+    const columns = [
+      { title: "Name", width: 2 },
+      { title: "Clan", width: 1.6 },
+      { title: "School", width: 1.6 },
+      { title: "Relationship", width: 1.4 },
+      { title: "Tags", width: 1.6 },
+      { title: "Notes", width: 2.6 },
+    ];
+    const rows = pcNotes.map((p) => [
+      p.pc_name || "",
+      p.pc_clan || "",
+      p.pc_school || "",
+      p.relationship ? titleize(p.relationship) : "",
+      Array.isArray(p.custom_tags) ? p.custom_tags.join(", ") : "",
+      p.notes || "",
+    ]);
+    drawTable(columns, rows);
   }
 
   // Downtime — grouped by year, then semester, with activities + NPC results.

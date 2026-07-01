@@ -40,8 +40,8 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         return;
       }
 
-      // Active characters and archived (active === false) characters get their
-      // own separate zip so they download as two distinct files.
+      // Active and archived (active === false) characters go into separate
+      // "Active" / "Inactive" folders inside a single downloaded zip.
       const activeBundles = data.characters.filter(
         (b) => b.character.active !== false,
       );
@@ -50,35 +50,27 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
       );
       const stamp = new Date().toISOString().slice(0, 10);
 
-      const buildAndDownload = async (label, bundles) => {
-        if (!bundles.length) return 0;
-        const blob = await buildExportZip(
-          { ...data, characters: bundles },
-          (msg, frac) => {
-            setMessage(`${label} characters — ${msg}`);
-            if (typeof frac === "number") setProgress(frac);
-          },
-        );
-        triggerDownload(blob, `witches-and-snitches-${label}-${stamp}.zip`);
-        return bundles.length;
-      };
+      const groups = [
+        { folder: "Active", bundles: activeBundles },
+        { folder: "Inactive", bundles: archivedBundles },
+      ].filter((g) => g.bundles.length);
 
-      const nActive = await buildAndDownload("active", activeBundles);
-      // Brief pause so browsers reliably allow the second download.
-      if (nActive && archivedBundles.length) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-      }
-      const nArchived = await buildAndDownload("archived", archivedBundles);
+      const blob = await buildExportZip({ ...data, groups }, (msg, frac) => {
+        setMessage(msg);
+        if (typeof frac === "number") setProgress(frac);
+      });
+      triggerDownload(blob, `witches-and-snitches-characters-${stamp}.zip`);
 
+      const nActive = activeBundles.length;
+      const nArchived = archivedBundles.length;
       const parts = [];
       if (nActive) parts.push(`${nActive} active`);
       if (nArchived) parts.push(`${nArchived} archived`);
-      const zipCount = (nActive ? 1 : 0) + (nArchived ? 1 : 0);
       setStatus("done");
       setMessage(
         `Downloaded ${parts.join(" and ")} character${
           nActive + nArchived === 1 ? "" : "s"
-        } in ${zipCount} zip file${zipCount === 1 ? "" : "s"}.`,
+        } in one zip file (Active / Inactive folders inside).`,
       );
     } catch (err) {
       console.error("Export failed:", err);
@@ -114,6 +106,14 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
     marginTop: 8,
   };
 
+  // Body copy reads better left-aligned; the card only centers the icon,
+  // heading, button, and status text.
+  const bodyText = {
+    color: theme.textSecondary,
+    lineHeight: 1.6,
+    textAlign: "left",
+  };
+
   const helpBlurb = (
     <p
       style={{
@@ -123,6 +123,7 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         fontSize: 14,
         color: theme.textSecondary,
         lineHeight: 1.6,
+        textAlign: "left",
       }}
     >
       <MessageCircle
@@ -151,15 +152,14 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
       <div style={card}>
         <ShieldAlert size={42} color={theme.primary} />
         <h1 style={{ marginTop: 12 }}>Download your characters</h1>
-        <p style={{ color: theme.textSecondary, lineHeight: 1.6 }}>
+        <p style={bodyText}>
           <strong style={{ color: theme.primary }}>
             Heads up — this may be unexpected.
           </strong>{" "}
-          I&apos;ve decided to step away from the campaign, and since I built
-          and hosted this character website myself, it will be going offline
-          soon. The campaign continues with your DM — but before the site
-          closes, sign in with the Discord account you play on to download a
-          complete copy of all your characters to keep.
+          I&apos;ve decided to leave the campaign and have chosen to take this
+          character website down soon. Before it goes offline, sign in with the
+          Discord account you play on to download a complete copy of all your
+          characters to keep.
         </p>
         <button style={primaryButton} onClick={onSignIn}>
           Sign in with Discord
@@ -173,12 +173,11 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
     <div style={card}>
       <Download size={42} color={theme.primary} />
       <h1 style={{ marginTop: 12 }}>Download your characters</h1>
-      <p style={{ color: theme.textSecondary, lineHeight: 1.6 }}>
+      <p style={bodyText}>
         <strong style={{ color: theme.primary }}>Welp...</strong> <br />
-        I&apos;ve decided to step away from the campaign, and since I built and
-        hosted this character website myself, it will soon go offline. The
-        campaign continues with your DM as usual — but before the site closes, I
-        want to make sure you keep everything. <br />
+        I&apos;ve decided to leave the campaign and have chosen to take this
+        character website down soon. Before it goes offline, I wanted to make
+        sure you can keep everything you made here. <br />
         <br />
         This page packages{" "}
         <strong style={{ color: theme.primary }}>
@@ -186,10 +185,11 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         </strong>{" "}
         — sheets, inventory, spells, downtime, notes, money, and character art.
         You&apos;ll get{" "}
-        <strong style={{ color: theme.primary }}>two zip files</strong>: one for
-        your active characters and one for your archived (inactive) ones.
+        <strong style={{ color: theme.primary }}>one zip file</strong> with an{" "}
+        <strong>Active</strong> and an <strong>Inactive</strong> folder inside —
+        active characters in one, archived (inactive) ones in the other.
       </p>
-      <p style={{ color: theme.textSecondary, lineHeight: 1.6, fontSize: 14 }}>
+      <p style={{ ...bodyText, fontSize: 14 }}>
         Inside you&apos;ll find an <strong>Excel spreadsheet</strong> and a
         printable <strong>PDF</strong> for each character (plus a raw data file
         for safekeeping). A README in the zip explains everything — no technical
@@ -287,6 +287,7 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           fontSize: 12,
           color: theme.textSecondary,
           opacity: 0.8,
+          textAlign: "left",
         }}
       >
         Having trouble? Make sure you&apos;re signed in with the same Discord

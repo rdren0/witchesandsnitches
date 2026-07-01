@@ -40,10 +40,9 @@ const imageSize = (blob) =>
 const README = `WITCHES & SNITCHES — YOUR CHARACTER BACKUP
 ==========================================
 
-NOTE: The player who built and hosted this character website is stepping away
-from the campaign, so the site will soon go offline. The Witches & Snitches
-campaign itself continues with your DM — this backup just makes sure you keep a
-copy of your characters.
+NOTE: The player who built and hosted this character website has decided to
+leave the campaign and has chosen to take the site down soon. This backup makes
+sure you keep a complete copy of all your characters before it goes offline.
 
 This archive contains everything the website had stored for your characters.
 
@@ -73,11 +72,13 @@ OPENING THE FILES
     ignore it otherwise.
 
 Folder layout (after unzipping):
-  /<Character Name>/
+  /Active/<Character Name>/     ← your currently-active characters
       <Character Name>.xlsx   ← readable spreadsheet (open in Excel/Sheets)
       <Character Name>.pdf    ← printable character sheet
       <Character Name>.json   ← complete raw data
       portrait.<ext>          ← character art, if any
+  /Inactive/<Character Name>/   ← your archived (inactive) characters
+      (same files as above)
   account.json                ← your profile + owl mail
 
 Keep this zip somewhere safe. Nothing here depends on the website staying
@@ -88,7 +89,13 @@ online. Thanks for playing.
  * Build a downloadable ZIP Blob containing every character (xlsx + pdf + json +
  * portrait) plus account-level data and a README.
  *
- * @param {object} data            Result of gatherUserData().
+ * Characters may be organized into named groups (e.g. "Active" / "Inactive"),
+ * each becoming a top-level folder inside the zip. Pass `data.groups` as an
+ * array of `{ folder, bundles }`. If omitted, `data.characters` is placed flat
+ * at the zip root.
+ *
+ * @param {object} data            Result of gatherUserData(), optionally with
+ *                                 a `groups` array.
  * @param {function} [onProgress]  (message, fraction 0-1) => void
  * @returns {Promise<Blob>}
  */
@@ -99,70 +106,75 @@ export const buildExportZip = async (data, onProgress) => {
   zip.file("README.txt", README);
   zip.file("account.json", JSON.stringify(data.account, null, 2));
 
-  const usedNames = new Set();
-  const total = data.characters.length || 1;
+  const groups = data.groups || [{ folder: null, bundles: data.characters }];
+  const total = groups.reduce((n, g) => n + g.bundles.length, 0) || 1;
+  let processed = 0;
 
-  for (let i = 0; i < data.characters.length; i++) {
-    const bundle = data.characters[i];
-    const character = bundle.character;
+  for (const group of groups) {
+    const parent = group.folder ? zip.folder(group.folder) : zip;
+    const usedNames = new Set();
 
-    let folderName = safeName(character.name);
-    let suffix = 2;
-    while (usedNames.has(folderName.toLowerCase())) {
-      folderName = `${safeName(character.name)} (${suffix++})`;
-    }
-    usedNames.add(folderName.toLowerCase());
-    const folder = zip.folder(folderName);
+    for (let i = 0; i < group.bundles.length; i++) {
+      const bundle = group.bundles[i];
+      const character = bundle.character;
 
-    report(
-      `Packaging ${character.name || "character"} (${i + 1}/${data.characters.length})…`,
-      0.7 + (0.25 * i) / total
-    );
-
-    // Raw JSON — always works, fully loss-less.
-    folder.file(
-      `${folderName}.json`,
-      JSON.stringify(bundle, null, 2)
-    );
-
-    // Excel workbook
-    try {
-      folder.file(`${folderName}.xlsx`, buildCharacterWorkbook(bundle));
-    } catch (err) {
-      console.warn(`[export] Workbook failed for ${character.name}:`, err);
-    }
-
-    // Portrait image (best effort — may be blocked by CORS). Fetched before the
-    // PDF so it can be embedded on the page; also saved as a standalone file.
-    let portrait = null;
-    const imageUrl = character.image_url || character.imageUrl;
-    if (imageUrl) {
-      try {
-        const res = await fetch(imageUrl);
-        if (res.ok) {
-          const blob = await res.blob();
-          const ext = extFromUrl(imageUrl);
-          folder.file(`portrait.${ext}`, blob);
-          // jsPDF only embeds PNG/JPEG; skip embedding others (still saved above).
-          if (/^(png|jpe?g)$/.test(ext)) {
-            const dataUrl = await blobToDataUrl(blob);
-            const size = await imageSize(blob);
-            if (dataUrl) portrait = { dataUrl, ...(size || {}) };
-          }
-        }
-      } catch (err) {
-        console.warn(
-          `[export] Could not fetch portrait for ${character.name}:`,
-          err
-        );
+      let folderName = safeName(character.name);
+      let suffix = 2;
+      while (usedNames.has(folderName.toLowerCase())) {
+        folderName = `${safeName(character.name)} (${suffix++})`;
       }
-    }
+      usedNames.add(folderName.toLowerCase());
+      const folder = parent.folder(folderName);
 
-    // PDF sheet (with the portrait embedded when available)
-    try {
-      folder.file(`${folderName}.pdf`, buildCharacterPdf(bundle, portrait));
-    } catch (err) {
-      console.warn(`[export] PDF failed for ${character.name}:`, err);
+      report(
+        `Packaging ${character.name || "character"} (${processed + 1}/${total})…`,
+        0.7 + (0.25 * processed) / total
+      );
+
+      // Raw JSON — always works, fully loss-less.
+      folder.file(`${folderName}.json`, JSON.stringify(bundle, null, 2));
+
+      // Excel workbook
+      try {
+        folder.file(`${folderName}.xlsx`, buildCharacterWorkbook(bundle));
+      } catch (err) {
+        console.warn(`[export] Workbook failed for ${character.name}:`, err);
+      }
+
+      // Portrait image (best effort — may be blocked by CORS). Fetched before
+      // the PDF so it can be embedded on the page; also saved as a file.
+      let portrait = null;
+      const imageUrl = character.image_url || character.imageUrl;
+      if (imageUrl) {
+        try {
+          const res = await fetch(imageUrl);
+          if (res.ok) {
+            const blob = await res.blob();
+            const ext = extFromUrl(imageUrl);
+            folder.file(`portrait.${ext}`, blob);
+            // jsPDF only embeds PNG/JPEG; skip embedding others (still saved).
+            if (/^(png|jpe?g)$/.test(ext)) {
+              const dataUrl = await blobToDataUrl(blob);
+              const size = await imageSize(blob);
+              if (dataUrl) portrait = { dataUrl, ...(size || {}) };
+            }
+          }
+        } catch (err) {
+          console.warn(
+            `[export] Could not fetch portrait for ${character.name}:`,
+            err
+          );
+        }
+      }
+
+      // PDF sheet (with the portrait embedded when available)
+      try {
+        folder.file(`${folderName}.pdf`, buildCharacterPdf(bundle, portrait));
+      } catch (err) {
+        console.warn(`[export] PDF failed for ${character.name}:`, err);
+      }
+
+      processed++;
     }
   }
 
