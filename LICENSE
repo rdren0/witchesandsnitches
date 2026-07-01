@@ -1,10 +1,18 @@
-Witches and Snitches
+Witches and Snitches — Character Management Web Application
 
 Required Notice: Copyright (c) 2026 rdren0 (https://github.com/rdren0)
 
 This software is source-available, NOT open source and NOT public domain.
 The copyright is owned by the copyright holder and all rights are reserved
 except those expressly granted by the license below.
+
+SCOPE: This license covers only the source code of this web application (the
+"Software") authored by the copyright holder. It does NOT grant any rights in,
+and makes no claim of ownership over, the "Witches and Snitches" tabletop RPG
+game system, its rules, or any third-party content the Software may reference
+or interoperate with. Those remain the property of their respective owners.
+This project is an independent, fan-made tool and is not affiliated with or
+endorsed by the owners of any game system or the Harry Potter franchise.
 
 It is licensed under the PolyForm Noncommercial License 1.0.0. In short:
 you may view, use, modify, and share this software for NONCOMMERCIAL

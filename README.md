@@ -524,6 +524,8 @@ Copyright (c) 2026 rdren0. **All rights reserved.** The source is publicly viewa
 
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may view, use, modify, and share it for **noncommercial purposes only**, and you must keep the copyright notice with any copy. **Any commercial use requires a separate written agreement** with the copyright holder. See the [LICENSE](LICENSE) file for the full terms.
 
+**Scope:** This license covers only the source code of this web application. It makes **no claim of ownership** over the _Witches and Snitches_ tabletop RPG game system or its rules — this is an independent, fan-made tool, and the underlying game system remains the property of its respective owners.
+
 ## 📞 Contact
 
 - **Project Lead**: Rachael Drennan
