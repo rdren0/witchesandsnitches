@@ -520,7 +520,9 @@ Solution:
 
 ## 📄 License
 
-This project is **proprietary**. The source is publicly viewable, but it is not open source — all rights are reserved. You may not use, copy, modify, deploy, or distribute the code without prior written permission. Forks are permitted only for the purpose of submitting contributions back via pull request. See the [LICENSE](LICENSE) file for the full terms.
+Copyright (c) 2026 rdren0. **All rights reserved.** The source is publicly viewable but it is **not** open source and **not** public domain.
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may view, use, modify, and share it for **noncommercial purposes only**, and you must keep the copyright notice with any copy. **Any commercial use requires a separate written agreement** with the copyright holder. See the [LICENSE](LICENSE) file for the full terms.
 
 ## 📞 Contact
 
