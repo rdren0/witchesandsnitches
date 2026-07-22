@@ -10,14 +10,24 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { gatherUserData } from "../../services/exportService";
 import { buildExportZip, triggerDownload } from "./buildExportZip";
 
+// Discord accounts not eligible for self-service export.
+// Configured via REACT_APP_EXPORT_BLOCKED_IDS (comma-separated Discord user IDs).
+const BLOCKED_EXPORT_IDS = (process.env.REACT_APP_EXPORT_BLOCKED_IDS || "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+
 const DataExport = ({ user, discordUserId, onSignIn }) => {
   const { theme } = useTheme();
+  const isBlocked =
+    discordUserId && BLOCKED_EXPORT_IDS.includes(String(discordUserId));
   const [status, setStatus] = useState("idle"); // idle | working | done | error
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
 
   const handleExport = async () => {
+    if (isBlocked) return;
     setStatus("working");
     setError("");
     setProgress(0);
@@ -160,13 +170,27 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           project&apos;s code and removed the license and attribution that
           require it to stay noncommercial and credited, and around the same
           time I was removed from the community Discord without notice — so
-          I&apos;m taking this version down. Before it goes offline, sign in with
-          the Discord account you play on to download a complete copy of all your
-          characters to keep.
+          I&apos;m taking this version down. Before it goes offline, sign in
+          with the Discord account you play on to download a complete copy of
+          all your characters to keep.
         </p>
         <button style={primaryButton} onClick={onSignIn}>
           Sign in with Discord
         </button>
+        {helpBlurb}
+      </div>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <div style={card}>
+        <ShieldAlert size={42} color={theme.primary} />
+        <h1 style={{ marginTop: 12 }}>Export unavailable for this account</h1>
+        <p style={bodyText}>
+          Self-service character export isn&apos;t available for this account.
+          If you believe this is a mistake, reach out using the contact below.
+        </p>
         {helpBlurb}
       </div>
     );
@@ -181,11 +205,11 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         This site is going offline soon, and I want to make sure you keep
         everything you made here. To be transparent about why: another person
         copied this project&apos;s code and removed the license and attribution
-        that require it to stay noncommercial and credited. Around the same time,
-        I was removed from the community Discord without notice. Rather than leave
-        your characters on infrastructure I no longer control, I&apos;m taking
-        this version down and giving everyone a clean copy of their own data
-        first. <br />
+        that require it to stay noncommercial and credited. Around the same
+        time, I was removed from the community Discord without notice. Rather
+        than leave your characters on infrastructure I no longer control,
+        I&apos;m taking this version down and giving everyone a clean copy of
+        their own data first. <br />
         <br />
         This page packages{" "}
         <strong style={{ color: theme.primary }}>
