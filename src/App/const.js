@@ -2,6 +2,7 @@ export const gameSessionOptions = [
   "One-Shot",
   "Monday - Haunting",
   "Tuesday - Haunting",
+  "Wednesday - Haunting",
   "Thursday - Haunting",
   "Friday - Haunting",
   "Wednesday - Knights",
@@ -16,6 +17,7 @@ export const gameSessionGroups = {
   haunting: [
     "Monday - Haunting",
     "Tuesday - Haunting",
+    "Wednesday - Haunting",
     "Thursday - Haunting",
     "Friday - Haunting",
     "Saturday - Haunting",
@@ -34,8 +36,10 @@ export const DISCORD_WEBHOOKS = {
   "One-Shot": process.env.REACT_APP_DISCORD_WEBHOOK_ONE_SHOT,
   "Monday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_MONDAY_HAUNTING,
   "Tuesday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_TUESDAY_HAUNTING,
-  "Thursday - Haunting":
+  "Wednesday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_WEDNESDAY_HAUNTING,
+  "Thursday - Haunting":
+    process.env.REACT_APP_DISCORD_WEBHOOK_THURSDAY_HAUNTING,
   "Friday - Haunting": process.env.REACT_APP_DISCORD_WEBHOOK_FRIDAY_HAUNTING,
   "Saturday - Haunting":
     process.env.REACT_APP_DISCORD_WEBHOOK_SATURDAY_HAUNTING,
@@ -50,10 +54,34 @@ export const DISCORD_WEBHOOKS = {
   FALLBACK: process.env.REACT_APP_DISCORD_WEBHOOK_FALLBACK,
 };
 
-export const getDiscordWebhook = (gameSession) =>
-  gameSession
-    ? (DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK)
-    : DISCORD_WEBHOOKS.FALLBACK;
+// Module-level cache of DB-backed game sessions, hydrated by GameSessionsProvider.
+// Lets the synchronous getDiscordWebhook() resolve webhooks from the database
+// while keeping all existing synchronous callers unchanged. Falls back to the
+// env-var DISCORD_WEBHOOKS map until the cache is populated (or when a session
+// has no webhook URL configured).
+let gameSessionWebhookCache = {};
+
+export const setGameSessionWebhookCache = (sessions = []) => {
+  gameSessionWebhookCache = sessions.reduce((acc, session) => {
+    if (session?.name) {
+      acc[session.name] = session.discord_webhook_url || null;
+    }
+    return acc;
+  }, {});
+};
+
+export const getDiscordWebhook = (gameSession) => {
+  if (!gameSession) return DISCORD_WEBHOOKS.FALLBACK;
+
+  if (
+    Object.prototype.hasOwnProperty.call(gameSessionWebhookCache, gameSession) &&
+    gameSessionWebhookCache[gameSession]
+  ) {
+    return gameSessionWebhookCache[gameSession];
+  }
+
+  return DISCORD_WEBHOOKS[gameSession] ?? DISCORD_WEBHOOKS.FALLBACK;
+};
 
 // --- Export-only lockdown mode -------------------------------------------
 // When active, the site is locked to the data-export page only: players can

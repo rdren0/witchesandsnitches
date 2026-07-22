@@ -8,17 +8,25 @@ import {
   RefreshCw,
   BarChart3,
   Star,
+  ChevronDown,
+  ChevronRight,
+  Archive,
+  Settings,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
-import { gameSessionGroups } from "../App/const";
+import { useGameSessions } from "../contexts/GameSessionsContext";
+import GameSessionManager from "./GameSessionManager";
 
 const SessionManagement = ({ supabase }) => {
   const { theme } = useTheme();
+  const { groupedSessions, activeSessions } = useGameSessions();
   const [characters, setCharacters] = useState([]);
   const [gameSessions, setGameSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSession, setSelectedSession] = useState("all");
+  const [expandedArchived, setExpandedArchived] = useState(new Set());
+  const [showManager, setShowManager] = useState(false);
   const [stats, setStats] = useState({
     totalCharacters: 0,
     activeUsers: 0,
@@ -54,10 +62,9 @@ const SessionManagement = ({ supabase }) => {
           )
         `
         )
-        .eq("active", true)
         .order("game_session")
         .order("name")
-        .limit(200); 
+        .limit(400);
 
       if (charactersError) {
         throw charactersError;
@@ -68,8 +75,10 @@ const SessionManagement = ({ supabase }) => {
       const sessionGroups = groupCharactersBySession(charactersData);
       setGameSessions(sessionGroups);
 
+      // Stats reflect active characters only.
       const validCharacters = charactersData.filter(
         (char) =>
+          char.active &&
           char.game_session &&
           char.game_session.trim() !== "" &&
           char.game_session.toLowerCase() !== "development"
@@ -135,21 +144,35 @@ const SessionManagement = ({ supabase }) => {
           0,
         discord_user_id: character.discord_user_id,
         created_at: character.created_at,
+        active: character.active !== false,
       });
       return acc;
     }, {});
 
     const sessions = Object.entries(grouped).map(
       ([sessionName, sessionCharacters]) => {
-        const sortedCharacters = sessionCharacters.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
+        const sortByName = (a, b) => a.name.localeCompare(b.name);
+        const activeCharacters = sessionCharacters
+          .filter((char) => char.active)
+          .sort(sortByName);
+        const archivedCharacters = sessionCharacters
+          .filter((char) => !char.active)
+          .sort(sortByName);
+
+        const avgLevel = activeCharacters.length
+          ? Math.round(
+              activeCharacters.reduce((sum, char) => sum + char.level, 0) /
+                activeCharacters.length
+            )
+          : 0;
 
         return {
           id: sessionName,
           name: sessionName,
-          characters: sortedCharacters,
-          characterCount: sessionCharacters.length,
+          characters: activeCharacters,
+          archivedCharacters,
+          characterCount: activeCharacters.length,
+          archivedCount: archivedCharacters.length,
           lastActivity: sessionCharacters.reduce(
             (latest, char) =>
               new Date(char.created_at) > new Date(latest)
@@ -157,11 +180,8 @@ const SessionManagement = ({ supabase }) => {
                 : latest,
             sessionCharacters[0]?.created_at
           ),
-          avgLevel: Math.round(
-            sessionCharacters.reduce((sum, char) => sum + char.level, 0) /
-              sessionCharacters.length
-          ),
-          totalInspiration: sessionCharacters.filter((char) => char.inspiration)
+          avgLevel,
+          totalInspiration: activeCharacters.filter((char) => char.inspiration)
             .length,
         };
       }
@@ -250,10 +270,57 @@ const SessionManagement = ({ supabase }) => {
     loadData();
   }, [loadData]);
 
+  // Merge character-derived session cards with the configured sessions from the
+  // DB so that sessions with no characters (or only archived ones) still show a
+  // collapsed "No active characters" card. Only sessions that still exist as an
+  // active (non-archived) game session are shown — cards for archived or deleted
+  // sessions are hidden even if characters still reference them by name.
+  const allSessionCards = (() => {
+    const activeSessionNames = new Set(activeSessions.map((s) => s.name));
+    const cardsByName = new Map(
+      gameSessions
+        .filter((s) => activeSessionNames.has(s.name))
+        .map((s) => [s.name, s])
+    );
+    const configuredNames = [
+      ...groupedSessions.haunting,
+      ...groupedSessions.knights,
+      ...groupedSessions.other,
+    ];
+    configuredNames.forEach((name) => {
+      if (!cardsByName.has(name)) {
+        cardsByName.set(name, {
+          id: name,
+          name,
+          characters: [],
+          archivedCharacters: [],
+          characterCount: 0,
+          archivedCount: 0,
+          lastActivity: null,
+          avgLevel: 0,
+          totalInspiration: 0,
+        });
+      }
+    });
+    return sortSessionsByDayOfWeek(Array.from(cardsByName.values()));
+  })();
+
   const filteredSessions =
     selectedSession === "all"
-      ? gameSessions
-      : gameSessions.filter((session) => session.name === selectedSession);
+      ? allSessionCards
+      : allSessionCards.filter((session) => session.name === selectedSession);
+
+  const toggleSetMember = (setter, key) => {
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   const styles = {
     container: {
@@ -498,6 +565,59 @@ const SessionManagement = ({ supabase }) => {
       padding: "60px 20px",
       color: theme.textSecondary,
     },
+    noActiveCharacters: {
+      padding: "16px",
+      textAlign: "center",
+      color: theme.textSecondary,
+      fontSize: "14px",
+      fontStyle: "italic",
+    },
+    emptySessionWrap: {
+      flexBasis: "100%",
+      width: "100%",
+    },
+    emptySessionBar: {
+      display: "flex",
+      alignItems: "center",
+      gap: "16px",
+      padding: "12px 16px",
+      backgroundColor: theme.surface,
+      border: `1px solid ${theme.border}`,
+      borderRadius: "8px",
+    },
+    emptyBarTitle: {
+      fontSize: "16px",
+      fontWeight: "bold",
+      color: theme.text,
+    },
+    emptyBarSub: {
+      fontSize: "13px",
+      fontStyle: "italic",
+      color: theme.textSecondary,
+    },
+    archivedToggle: {
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      marginTop: "12px",
+      background: "none",
+      border: `1px solid ${theme.border}`,
+      borderRadius: "8px",
+      padding: "8px 12px",
+      color: theme.textSecondary,
+      fontSize: "13px",
+      fontWeight: 600,
+      cursor: "pointer",
+      width: "100%",
+      justifyContent: "center",
+    },
+    archivedList: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "6px",
+      marginTop: "8px",
+      opacity: 0.7,
+    },
     errorState: {
       textAlign: "center",
       padding: "40px 20px",
@@ -513,6 +633,69 @@ const SessionManagement = ({ supabase }) => {
       color: theme.textSecondary,
     },
   };
+
+  const renderCharacterRow = (character) => (
+    <div key={character.id} style={styles.characterItem}>
+      <span style={styles.characterName}>{character.name}</span>
+      <span style={styles.characterLevel}>{character.level}</span>
+      <span style={styles.casting}>{character.castingStyle}</span>
+      <span
+        style={{
+          ...styles.characterHouse,
+          border: `1px solid ${getHouseColor(character.house)}`,
+        }}
+      >
+        {character.house === "No House" ? "—" : character.house}
+      </span>
+      <div style={styles.characterHP}>
+        <span style={{ fontSize: "10px", color: theme.text }}>
+          {character.hitPoints}/{character.maxHitPoints}
+        </span>
+        <div style={styles.hpBar}>
+          <div
+            style={{
+              ...styles.hpFill,
+              width: `${
+                (character.hitPoints / character.maxHitPoints) * 100
+              }%`,
+              backgroundColor: getHealthBarColor(
+                character.hitPoints,
+                character.maxHitPoints
+              ),
+            }}
+          />
+        </div>
+      </div>
+      <span style={styles.characterSubclass}>
+        {character.subclass === "No Subclass" ? "—" : character.subclass}
+      </span>
+      <span style={styles.characterBackground}>
+        {character.background === "No Background" ? "—" : character.background}
+      </span>
+      <div style={{ ...styles.inspirationIndicator }}>
+        <Star
+          fill={character.inspiration ? "#f59e0b" : "transparent"}
+          color={character.inspiration ? "#f59e0b" : "white"}
+        />
+      </div>
+    </div>
+  );
+
+  const renderCharacterTable = (characters) => (
+    <div style={styles.charactersList}>
+      <div style={styles.characterHeader}>
+        <span>Name</span>
+        <span style={{ textAlign: "center" }}>Level</span>
+        <span style={{ textAlign: "center" }}>Casting</span>
+        <span style={{ textAlign: "center" }}>House</span>
+        <span style={{ textAlign: "center" }}>HP</span>
+        <span style={{ textAlign: "center" }}>Subclass</span>
+        <span style={{ textAlign: "center" }}>Background</span>
+        <span style={{ textAlign: "center" }}>✨Inspo✨</span>
+      </div>
+      {characters.map(renderCharacterRow)}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -568,7 +751,7 @@ const SessionManagement = ({ supabase }) => {
             <option value="all">All Sessions</option>
 
             <optgroup label="Haunting Sessions">
-              {gameSessionGroups.haunting.map((session) => (
+              {groupedSessions.haunting.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
@@ -578,7 +761,7 @@ const SessionManagement = ({ supabase }) => {
             <option disabled>──────────</option>
 
             <optgroup label="Knights Sessions">
-              {gameSessionGroups.knights.map((session) => (
+              {groupedSessions.knights.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
@@ -588,7 +771,7 @@ const SessionManagement = ({ supabase }) => {
             <option disabled>──────────</option>
 
             <optgroup label="Other Sessions">
-              {gameSessionGroups.other.map((session) => (
+              {groupedSessions.other.map((session) => (
                 <option key={session} value={session}>
                   {session}
                 </option>
@@ -597,16 +780,19 @@ const SessionManagement = ({ supabase }) => {
 
             <option disabled>──────────</option>
 
-            {gameSessionGroups.development.map((session) => (
+            {groupedSessions.development.map((session) => (
               <option key={session} value={session}>
                 {session}
               </option>
             ))}
           </select>
         </div>
-        <button onClick={loadData} style={styles.refreshButton}>
-          <RefreshCw size={16} />
-          Refresh Data
+        <button
+          onClick={() => setShowManager(true)}
+          style={styles.refreshButton}
+        >
+          <Settings size={16} />
+          Manage Sessions
         </button>
       </div>
 
@@ -635,8 +821,38 @@ const SessionManagement = ({ supabase }) => {
         </div>
       ) : (
         <div style={styles.sessionGrid}>
-          {filteredSessions.map((session) => (
-            <div key={session.id} style={styles.sessionCard}>
+          {filteredSessions.map((session) =>
+            session.characterCount === 0 ? (
+              <div key={session.id} style={styles.emptySessionWrap}>
+                <div style={styles.emptySessionBar}>
+                  <span style={styles.emptyBarTitle}>{session.name}</span>
+                  <span style={styles.emptyBarSub}>No active characters</span>
+                  {session.archivedCount > 0 && (
+                    <button
+                      style={{ ...styles.archivedToggle, marginTop: 0, marginLeft: "auto" }}
+                      onClick={() =>
+                        toggleSetMember(setExpandedArchived, session.id)
+                      }
+                    >
+                      {expandedArchived.has(session.id) ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                      <Archive size={14} />
+                      Archived characters ({session.archivedCount})
+                    </button>
+                  )}
+                </div>
+                {session.archivedCount > 0 &&
+                  expandedArchived.has(session.id) && (
+                    <div style={styles.archivedList}>
+                      {renderCharacterTable(session.archivedCharacters)}
+                    </div>
+                  )}
+              </div>
+            ) : (
+              <div key={session.id} style={styles.sessionCard}>
               <div style={styles.sessionHeader}>
                 <div>
                   <div style={styles.sessionTitle}>{session.name}</div>
@@ -671,78 +887,47 @@ const SessionManagement = ({ supabase }) => {
                 </div>
               </div>
 
-              <div style={styles.charactersList}>
-                <div style={styles.characterHeader}>
-                  <span>Name</span>
-                  <span style={{ textAlign: "center" }}>Level</span>
-                  <span style={{ textAlign: "center" }}>Casting</span>
-                  <span style={{ textAlign: "center" }}>House</span>
-                  <span style={{ textAlign: "center" }}>HP</span>
-                  <span style={{ textAlign: "center" }}>Subclass</span>
-                  <span style={{ textAlign: "center" }}>Background</span>
-                  <span style={{ textAlign: "center" }}>✨Inspo✨</span>
+              {session.characterCount > 0 ? (
+                renderCharacterTable(session.characters)
+              ) : (
+                <div style={styles.noActiveCharacters}>
+                  No active characters
                 </div>
+              )}
 
-                {session.characters.map((character) => (
-                  <div key={character.id} style={styles.characterItem}>
-                    <span style={styles.characterName}>{character.name}</span>
-                    <span style={styles.characterLevel}>{character.level}</span>
-                    <span style={styles.casting}>{character.castingStyle}</span>
-                    <span
-                      style={{
-                        ...styles.characterHouse,
-                        border: `1px solid ${getHouseColor(character.house)}`,
-                      }}
-                    >
-                      {character.house === "No House" ? "—" : character.house}
-                    </span>
-                    <div style={styles.characterHP}>
-                      <span style={{ fontSize: "10px", color: theme.text }}>
-                        {character.hitPoints}/{character.maxHitPoints}
-                      </span>
-                      <div style={styles.hpBar}>
-                        <div
-                          style={{
-                            ...styles.hpFill,
-                            width: `${
-                              (character.hitPoints / character.maxHitPoints) *
-                              100
-                            }%`,
-                            backgroundColor: getHealthBarColor(
-                              character.hitPoints,
-                              character.maxHitPoints
-                            ),
-                          }}
-                        />
-                      </div>
+              {session.archivedCount > 0 && (
+                <>
+                  <button
+                    style={styles.archivedToggle}
+                    onClick={() =>
+                      toggleSetMember(setExpandedArchived, session.id)
+                    }
+                  >
+                    {expandedArchived.has(session.id) ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                    <Archive size={14} />
+                    Archived characters ({session.archivedCount})
+                  </button>
+                  {expandedArchived.has(session.id) && (
+                    <div style={styles.archivedList}>
+                      {renderCharacterTable(session.archivedCharacters)}
                     </div>
-                    <span style={styles.characterSubclass}>
-                      {character.subclass === "No Subclass"
-                        ? "—"
-                        : character.subclass}
-                    </span>
-                    <span style={styles.characterBackground}>
-                      {character.background === "No Background"
-                        ? "—"
-                        : character.background}
-                    </span>
-                    <div
-                      style={{
-                        ...styles.inspirationIndicator,
-                      }}
-                    >
-                      <Star
-                        fill={character.inspiration ? "#f59e0b" : "transparent"}
-                        color={character.inspiration ? "#f59e0b" : "white"}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  )}
+                </>
+              )}
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
+
+      <GameSessionManager
+        isOpen={showManager}
+        onClose={() => setShowManager(false)}
+      />
     </div>
   );
 };

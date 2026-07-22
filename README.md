@@ -69,8 +69,8 @@ Witches & Snitches is a full-featured character management system for a Harry Po
 
 ### Frontend
 
-- **React** (v18.x) - UI framework
-- **React Router** (v6.x) - Client-side routing
+- **React** (v19.x) - UI framework
+- **React Router** (v7.x) - Client-side routing
 - **Lucide React** - Icon library
 - **CSS-in-JS** - Dynamic styling system
 
@@ -103,11 +103,11 @@ Witches & Snitches is a full-featured character management system for a Harry Po
 
 ### Prerequisites
 
-- Node.js (v16.x or higher)
-- npm or yarn
-- Supabase account
-- Discord application (for OAuth)
-- Discord webhook URL (for roll notifications)
+- Node.js (v18.x or higher — required by React 19)
+- npm (repo ships a `package-lock.json`)
+- Supabase account (PostgreSQL database + Auth)
+- Discord application configured as a Supabase Auth provider (for login)
+- One or more Discord webhook URLs (optional, for roll notifications)
 
 ### Setup Instructions
 
@@ -127,30 +127,60 @@ yarn install
 ```
 
 3. **Environment Configuration**
-   Create a `.env` file in the root directory:
-
-```env
-REACT_APP_SUPABASE_URL=your_supabase_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
-REACT_APP_DISCORD_CLIENT_ID=your_discord_client_id
-REACT_APP_DISCORD_REDIRECT_URI=http://localhost:3000/auth/callback
-REACT_APP_DISCORD_WEBHOOK_URL=your_discord_webhook_url
-REACT_APP_SENTRY_DSN=your_sentry_dsn
-```
-
-4. **Database Setup**
-   Run the Supabase migrations to set up your database schema:
+   Copy the example env file and fill in your values:
 
 ```bash
-# Database tables needed:
-# - characters
-# - spell_progress_summary
-# - downtime_sheets
-# - inventory_items
-# - character_notes
-# - users
-# - session_inspiration_tracking
+cp .env.example .env
 ```
+
+   Only the two Supabase variables are strictly required — the app throws on
+   startup without them (see [src/lib/supabase.js](src/lib/supabase.js)).
+   Everything else is optional for local development.
+
+```env
+# Required
+REACT_APP_SUPABASE_URL=https://your-project-ref.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_public_key
+
+# Optional
+REACT_APP_ADMIN_PASSWORD=            # gate for in-app admin tools
+REACT_APP_SENTRY_DSN=                # only used when NODE_ENV=production
+REACT_APP_DISCORD_WEBHOOK_DEVELOPMENT=   # + per-session webhooks, see .env.example
+REACT_APP_DISCORD_WEBHOOK_FALLBACK=
+```
+
+   See [.env.example](.env.example) for the complete list, including every
+   per-game-session Discord webhook variable.
+
+   > **Note:** Discord *login* is handled by Supabase Auth (Dashboard →
+   > Authentication → Providers → Discord), not by env vars in this app. There
+   > is no `REACT_APP_DISCORD_CLIENT_ID` / `REDIRECT_URI`.
+
+4. **Database Setup**
+   This app talks directly to Supabase using the anon key from the browser, so
+   you need a Supabase project with the full schema **and** its Row Level
+   Security policies.
+
+   The complete schema lives in [supabase/schema.sql](supabase/schema.sql) —
+   extensions, sequences, tables, views, foreign keys, functions, RLS policies,
+   and triggers, in dependency order. To bootstrap a fresh project:
+
+   - **Supabase Dashboard:** open the SQL Editor, paste the contents of
+     `supabase/schema.sql`, and run it. That's it — you get an empty, secured
+     database.
+   - **Or via the Supabase CLI:** `supabase db reset` (applies the SQL against
+     your linked project).
+
+   Then populate the **reference tables** yourself — they ship empty and the app
+   needs them:
+
+   - `spells` — the master spell list (spellbook is empty without it)
+   - `feats` — character feats
+   - `creatures` — bestiary
+   - `game_sessions` — the sessions dice rolls are routed to
+
+   Character/player data (`characters`, `inventory_items`, etc.) is created
+   through the app as you use it.
 
 5. **Start the development server**
 
@@ -302,10 +332,17 @@ The application integrates with Discord webhooks to send roll results to your Di
    - Name it (e.g., "Witches & Snitches Dice Bot")
    - Copy the webhook URL
 
-2. **Add webhook URL to environment**
+2. **Add webhook URL(s) to environment**
+
+   The app routes rolls to a different webhook per game session (see
+   [src/App/const.js](src/App/const.js)). Set the ones you need; `FALLBACK` is
+   used when a character's session has no dedicated webhook. For local dev,
+   `DEVELOPMENT` and/or `FALLBACK` are usually enough.
 
 ```env
-REACT_APP_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL
+REACT_APP_DISCORD_WEBHOOK_DEVELOPMENT=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL
+REACT_APP_DISCORD_WEBHOOK_FALLBACK=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL
+# ...plus per-session webhooks — see .env.example for the full list
 ```
 
 #### Roll Result Notifications
@@ -442,18 +479,21 @@ Sentry.captureException(error);
 ### Discord Webhook Service
 
 ```javascript
-import { sendDiscordRollWebhook } from "./utils/discordWebhook";
+import { sendDiscordRollWebhook } from "./Components/utils/discordWebhook";
 
-// Send roll result to Discord
+// Send roll result to Discord. The target webhook is resolved automatically
+// from the character's game session (see src/App/const.js) — you do not pass
+// a URL. Returns false if no webhook is configured for that session.
 await sendDiscordRollWebhook({
-  webhookUrl: discordWebhookUrl,
-  characterName: character.name,
+  character, // must include name + game_session (or gameSession)
   rollType: "ability",
-  rollValue: 15,
-  modifier: 3,
-  total: 18,
-  dc: 15,
-  success: true,
+  title: "🎲 Ability Check",
+  description: `**${character.name}** rolls Strength!`,
+  embedColor: 0x00ff00,
+  fields: [
+    { name: "Total", value: "18", inline: true },
+    { name: "DC", value: "15", inline: true },
+  ],
 });
 ```
 
@@ -520,7 +560,11 @@ Solution:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Copyright (c) 2026 rdren0. **All rights reserved.** The source is publicly viewable but it is **not** open source and **not** public domain.
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may view, use, modify, and share it for **noncommercial purposes only**, and you must keep the copyright notice with any copy. **Any commercial use requires a separate written agreement** with the copyright holder. See the [LICENSE](LICENSE) file for the full terms.
+
+**Scope:** This license covers only the source code of this web application. It makes **no claim of ownership** over the _Witches and Snitches_ tabletop RPG game system or its rules — this is an independent, fan-made tool, and the underlying game system remains the property of its respective owners.
 
 ## 📞 Contact
 

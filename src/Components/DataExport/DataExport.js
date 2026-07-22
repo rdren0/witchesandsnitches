@@ -157,6 +157,53 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
     </p>
   );
 
+  const legalNotice = (
+    <div
+      style={{
+        margin: "24px 0",
+        padding: "16px 18px",
+        border: `2px solid ${theme.error || "#c62828"}`,
+        borderRadius: 10,
+        backgroundColor: `${theme.error || "#c62828"}12`,
+        textAlign: "left",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          fontWeight: 700,
+          color: theme.error || "#c62828",
+          marginBottom: 8,
+        }}
+      >
+        <ShieldAlert size={18} />
+        Legal notice
+      </div>
+      <p
+        style={{
+          margin: 0,
+          fontSize: 13.5,
+          lineHeight: 1.6,
+          color: theme.textSecondary,
+        }}
+      >
+        This application&apos;s source code is the copyrighted work of its author
+        and is licensed under the{" "}
+        <strong>PolyForm Noncommercial License 1.0.0</strong>, which requires
+        that the copyright notice be preserved and prohibits commercial use.
+        Copying this code and removing that notice is{" "}
+        <strong>copyright infringement</strong> and may also violate 17 U.S.C.
+        § 1202 (removal of copyright-management information). A{" "}
+        <strong>DMCA takedown has been filed</strong>, and any further
+        unauthorized copying, deployment, or commercial use will be pursued to
+        the full extent available, including statutory damages and injunctive
+        relief.
+      </p>
+    </div>
+  );
+
   if (!user) {
     return (
       <div style={card}>
@@ -191,6 +238,7 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           Self-service character export isn&apos;t available for this account.
           If you believe this is a mistake, reach out using the contact below.
         </p>
+        {legalNotice}
         {helpBlurb}
       </div>
     );
@@ -222,50 +270,7 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         active characters in one, archived (inactive) ones in the other.
       </p>
 
-      <div
-        style={{
-          margin: "24px 0",
-          padding: "16px 18px",
-          border: `2px solid ${theme.error || "#c62828"}`,
-          borderRadius: 10,
-          backgroundColor: `${theme.error || "#c62828"}12`,
-          textAlign: "left",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontWeight: 700,
-            color: theme.error || "#c62828",
-            marginBottom: 8,
-          }}
-        >
-          <ShieldAlert size={18} />
-          Legal notice
-        </div>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 13.5,
-            lineHeight: 1.6,
-            color: theme.textSecondary,
-          }}
-        >
-          This application&apos;s source code is the copyrighted work of its
-          author and is licensed under the{" "}
-          <strong>PolyForm Noncommercial License 1.0.0</strong>, which requires
-          that the copyright notice be preserved and prohibits commercial use.
-          Copying this code and removing that notice is{" "}
-          <strong>copyright infringement</strong> and may also violate 17 U.S.C.
-          § 1202 (removal of copyright-management information). A{" "}
-          <strong>DMCA takedown has been filed</strong>, and any further
-          unauthorized copying, deployment, or commercial use will be pursued to
-          the full extent available, including statutory damages and injunctive
-          relief.
-        </p>
-      </div>
+      {legalNotice}
 
       <p style={{ ...bodyText, fontSize: 14 }}>
         Inside you&apos;ll find an <strong>Excel spreadsheet</strong> and a

@@ -105,7 +105,7 @@ export const castingStyleData = {
     hitPointsAtFirst: "6 + CON modifier",
     hitPointsPerLevel: "1d6 (or 4) + CON modifier",
     spellcastingAbility: "Wisdom",
-    baseAC: "10 + DEX modifier",
+    baseAC: "12 + DEX modifier",
     savingThrows: ["Dexterity", "Wisdom"],
     skills: [
       "Acrobatics",
@@ -118,6 +118,12 @@ export const castingStyleData = {
       "Stealth",
     ],
     keyFeatures: [
+      {
+        name: "Strategist",
+        level: 1,
+        description:
+          "Your keen eye gives you an advantage to avoiding being hit. Your AC equals 12 + your Dexterity modifier.",
+      },
       {
         name: "Exploit Weakness",
         level: 1,
@@ -144,7 +150,7 @@ export const castingStyleData = {
       },
     ],
     description:
-      "Masters of precision and technique, these casters excel at exploiting weaknesses and deflecting magical attacks.",
+      "Masters of technique, these casters excel at exploiting weaknesses and deflecting magical attacks.",
   },
   "Intellect Caster": {
     icon: Brain,
@@ -184,7 +190,7 @@ export const castingStyleData = {
         name: "Tactical Wit",
         level: 1,
         description:
-          "Your keen ability to assess tactical situations allows you to act quickly in battle. When calculating your Initiative you may use your Intelligence modifier rather than Dexterity (Whichever is higher). Additionally, you have learned to weave your magic to fortify yourself against harm. When you are hit by an attack or you fail a saving throw, you can use your reaction to gain a +2 bonus to your AC against that attack or a +4 bonus to that saving throw. When you use this feature, you can't cast spells other than cantrips until the end of your next turn.",
+          "Your keen ability to assess tactical situations allows you to act quickly in battle. When calculating your Initiative you may use your Intelligence modifier rather than Dexterity (Whichever is higher). Additionally, you have learned to weave your magic to fortify yourself against harm. When you are hit by an attack or you fail a saving throw, you can use your reaction to gain a +4 bonus to your AC against that attack or a +2 bonus to that saving throw. When you use this feature, you can't cast spells other than cantrips until the end of your next turn.",
       },
       {
         name: "Sharp Senses",
@@ -215,7 +221,7 @@ export const castingStyleData = {
     hitPointsAtFirst: "12 + CON modifier",
     hitPointsPerLevel: "1d12 (or 8) + CON modifier",
     spellcastingAbility: "Constitution",
-    baseAC: "8 + DEX modifier",
+    baseAC: "10 + DEX modifier",
     savingThrows: ["Constitution", "Strength"],
     skills: [
       "Athletics",
@@ -233,13 +239,19 @@ export const castingStyleData = {
         name: "Easy Target",
         level: 1,
         description:
-          "Your large, strong body makes you easy to see and easy to hit. Your AC equals 8 + your Dexterity Modifier",
+          "Your large, strong body makes you easy to see and easy to hit. Your AC equals 10 + your Dexterity Modifier",
       },
       {
         name: "Rated E for Everyone",
         level: 1,
         description:
           "Your unarmed strikes deal damage equal to 1d6 + your Strength mod. This damage increases by 1d6 when you reach certain levels: 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
+      },
+      {
+        name: "Intimidating Demeanor",
+        level: 1,
+        description:
+          "Your intimidating presence makes you hard to ignore. When you are within 5 feet of a creature, they have disadvantage on ranged attacks.",
       },
       {
         name: "Metamagic: Rage",
@@ -270,7 +282,7 @@ export const castingStyleData = {
     hitPointsAtFirst: "10 + CON modifier",
     hitPointsPerLevel: "1d10 (or 6) + CON modifier",
     spellcastingAbility: "Charisma",
-    baseAC: "15 + DEX modifier",
+    baseAC: "13 + DEX modifier",
     savingThrows: ["Constitution", "Charisma"],
     skills: [
       "Athletics",
@@ -288,7 +300,7 @@ export const castingStyleData = {
         name: "Sorcerous Resilience",
         level: 1,
         description:
-          "The accidental magic in your early childhood never stopped protecting you. Your AC equals 15 + your Dexterity modifier.",
+          "The accidental magic in your early childhood never stopped protecting you. Your AC equals 13 + your Dexterity modifier.",
       },
       {
         name: "Reckless Magic",
@@ -300,25 +312,13 @@ export const castingStyleData = {
         name: "Black Magic",
         level: 1,
         description:
-          "Once per turn, you can deal an extra 1d6 damage to one creature you hit with a cantrip if you have advantage on the attack roll. You don't need advantage if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll. Your Black Magic damage increases to 2d6 at 3rd level, 3d6 at 5th level, 4d6 at 7th, 5d6 at 9th, 6d6 at 11th, 7d6 at 13th, 8d6 at 15th, 9d6 at 17th, and 10d6 at 19th level.",
-      },
-      {
-        name: "Metamagic: Fierce Spell",
-        level: 3,
-        description:
-          "At 3rd level, when you cast a spell, you can spend 2 sorcery points to cast that spell as if it were cast using a spell slot one level higher than its original level, or 4 sorcery points to cast that spell two levels higher. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
-      },
-      {
-        name: "Metamagic: Resistant Spell",
-        level: 3,
-        description:
-          "At 3rd level, when you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+          "Once per turn, you can deal an extra 1d6 damage to one creature you hit with a cantrip or melee weapon attack if you have advantage on the attack roll.\n\nYou don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.\n\nYour Black Magic die increases to 2d6 at 3rd level, 3d6 at 5th level, 4d6 at 7th, 5d6 at 9th, 6d6 at 11th, 7d6 at 13th, 8d6 at 15th, 9d6 at 17th, and 10d6 at 19th",
       },
       {
         name: "Black Magic Specialization",
         level: 5,
         description:
-          "At 5th level, you may choose one of the following options to enhance your Black Magic: Ambush (advantage on attacks against creatures that haven't acted), Gambit (Black Magic works when within 5 feet with no other enemies nearby), Grudge (advantage against creatures that damaged you), Pique (advantage when at half hit points or less), or Hubris (advantage against creatures with fewer hit points than you).",
+          "At 5th level, you may choose one of the following options:",
         isChoice: true,
         choices: [
           {
@@ -329,7 +329,7 @@ export const castingStyleData = {
           {
             name: "Gambit",
             description:
-              "You don't need advantage on the attack roll to use your Black Magic against a creature if you are within 5 feet of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll.",
+              "You don't need advantage on the attack roll to use your Black Magic against a creature if you are within 5 feet of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll. All the other rules for Black Magic still apply to you.",
           },
           {
             name: "Grudge",
@@ -347,6 +347,18 @@ export const castingStyleData = {
               "You gain advantage on attack rolls against any creature that has fewer hit points than you.",
           },
         ],
+      },
+      {
+        name: "Metamagic: Fierce Spell",
+        level: 3,
+        description:
+          "At 3rd level, when you cast a spell, you can spend 2 sorcery points to cast that spell as if it were cast using a spell slot one level higher than its original level, or 4 sorcery points to cast that spell two levels higher. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
+      },
+      {
+        name: "Metamagic: Resistant Spell",
+        level: 3,
+        description:
+          "At 3rd level, when you cast a spell, you can spend 1 sorcery point per increased level to make your spell be treated by spell deflection, finite incantatem, reparifarge, or langlock as if your spell was cast using a spell slot higher than its original level, making your spell more resistant. The spell's higher level cannot exceed your highest available level of spell slots. This does not count against your number of Metamagic options.",
       },
       {
         name: "Signature Spells",
@@ -429,49 +441,49 @@ export const skillMap = {
 };
 
 export const allSkills = [
-  { name: "acrobatics", displayName: "Acrobatics", ability: "dexterity" },
   { name: "athletics", displayName: "Athletics", ability: "strength" },
-  { name: "deception", displayName: "Deception", ability: "charisma" },
-  { name: "herbology", displayName: "Herbology", ability: "intelligence" },
-  {
-    name: "historyOfMagic",
-    displayName: "History of Magic",
-    ability: "intelligence",
-  },
-  { name: "insight", displayName: "Insight", ability: "wisdom" },
-  { name: "intimidation", displayName: "Intimidation", ability: "charisma" },
-  {
-    name: "investigation",
-    displayName: "Investigation",
-    ability: "intelligence",
-  },
-  {
-    name: "magicalCreatures",
-    displayName: "Magical Creatures",
-    ability: "wisdom",
-  },
-  {
-    name: "magicalTheory",
-    displayName: "Magical Theory",
-    ability: "intelligence",
-  },
-  { name: "medicine", displayName: "Medicine", ability: "wisdom" },
-  {
-    name: "muggleStudies",
-    displayName: "Muggle Studies",
-    ability: "intelligence",
-  },
-  { name: "perception", displayName: "Perception", ability: "wisdom" },
-  { name: "performance", displayName: "Performance", ability: "charisma" },
-  { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
-  { name: "potionMaking", displayName: "Potion Making", ability: "wisdom" },
+  { name: "acrobatics", displayName: "Acrobatics", ability: "dexterity" },
   {
     name: "sleightOfHand",
     displayName: "Sleight of Hand",
     ability: "dexterity",
   },
   { name: "stealth", displayName: "Stealth", ability: "dexterity" },
+  { name: "herbology", displayName: "Herbology", ability: "intelligence" },
+  {
+    name: "historyOfMagic",
+    displayName: "History of Magic",
+    ability: "intelligence",
+  },
+  {
+    name: "investigation",
+    displayName: "Investigation",
+    ability: "intelligence",
+  },
+  {
+    name: "magicalTheory",
+    displayName: "Magical Theory",
+    ability: "intelligence",
+  },
+  {
+    name: "muggleStudies",
+    displayName: "Muggle Studies",
+    ability: "intelligence",
+  },
+  { name: "insight", displayName: "Insight", ability: "wisdom" },
+  {
+    name: "magicalCreatures",
+    displayName: "Magical Creatures",
+    ability: "wisdom",
+  },
+  { name: "medicine", displayName: "Medicine", ability: "wisdom" },
+  { name: "perception", displayName: "Perception", ability: "wisdom" },
+  { name: "potionMaking", displayName: "Potion Making", ability: "wisdom" },
   { name: "survival", displayName: "Survival", ability: "wisdom" },
+  { name: "deception", displayName: "Deception", ability: "charisma" },
+  { name: "intimidation", displayName: "Intimidation", ability: "charisma" },
+  { name: "performance", displayName: "Performance", ability: "charisma" },
+  { name: "persuasion", displayName: "Persuasion", ability: "charisma" },
 ];
 
 export const abilities = [

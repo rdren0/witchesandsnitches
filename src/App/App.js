@@ -37,6 +37,7 @@ import { AdminProvider, useAdmin } from "../contexts/AdminContext";
 import { SupabaseProvider } from "../contexts/SupabaseContext";
 import { FeatsProvider } from "../contexts/FeatsContext";
 import { SpellsProvider } from "../contexts/SpellsContext";
+import { GameSessionsProvider } from "../contexts/GameSessionsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
 import AdminPasswordModal from "../Admin/AdminPasswordModal";
@@ -186,7 +187,7 @@ function AppContent() {
   const styles = createAppStyles(theme);
   const location = useLocation();
   const exportOnly = isExportOnlyMode();
-  const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
+  const { adminMode, setAdminMode, unlockAdminMode, isUserAdmin } = useAdmin();
 
   const {
     user,
@@ -242,8 +243,7 @@ function AppContent() {
     setIsVerifying(true);
     try {
       await characterService.verifyAdminPassword(discordUserId, password);
-      setIsUserAdmin(true);
-      setAdminMode(true);
+      unlockAdminMode();
       setShowPasswordModal(false);
     } catch (error) {
       console.error("❌ Password verification failed!");
@@ -358,8 +358,6 @@ function AppContent() {
                     customUsername={customUsername}
                     onCharacterSaved={() => setHasAttemptedLoad(false)}
                     supabase={supabase}
-                    adminMode={adminMode}
-                    isUserAdmin={isUserAdmin}
                   />
                 </ProtectedRoute>
               }
@@ -380,8 +378,6 @@ function AppContent() {
                       customUsername={customUsername}
                       onCharacterSaved={() => setHasAttemptedLoad(false)}
                       supabase={supabase}
-                      adminMode={adminMode}
-                      isUserAdmin={isUserAdmin}
                       mode={mode}
                     />
                   </ProtectedRoute>
@@ -402,8 +398,6 @@ function AppContent() {
                       customUsername={customUsername}
                       onCharacterSaved={() => setHasAttemptedLoad(false)}
                       supabase={supabase}
-                      adminMode={adminMode}
-                      isUserAdmin={isUserAdmin}
                       mode="edit"
                     />
                   </ProtectedRoute>
@@ -571,9 +565,11 @@ function AdminProviderWrapper() {
   return (
     <SpellsProvider>
       <FeatsProvider>
-        <AdminProvider user={user}>
-          <AppContent />
-        </AdminProvider>
+        <GameSessionsProvider>
+          <AdminProvider user={user}>
+            <AppContent />
+          </AdminProvider>
+        </GameSessionsProvider>
       </FeatsProvider>
     </SpellsProvider>
   );
