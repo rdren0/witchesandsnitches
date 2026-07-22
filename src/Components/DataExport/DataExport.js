@@ -156,9 +156,12 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           <strong style={{ color: theme.primary }}>
             Heads up — this may be unexpected.
           </strong>{" "}
-          I&apos;ve decided to leave the campaign and have chosen to take this
-          character website down soon. Before it goes offline, sign in with the
-          Discord account you play on to download a complete copy of all your
+          This character site is going offline soon. Another person copied this
+          project&apos;s code and removed the license and attribution that
+          require it to stay noncommercial and credited, and around the same
+          time I was removed from the community Discord without notice — so
+          I&apos;m taking this version down. Before it goes offline, sign in with
+          the Discord account you play on to download a complete copy of all your
           characters to keep.
         </p>
         <button style={primaryButton} onClick={onSignIn}>
@@ -175,9 +178,14 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
       <h1 style={{ marginTop: 12 }}>Download your characters</h1>
       <p style={bodyText}>
         <strong style={{ color: theme.primary }}>Welp...</strong> <br />
-        I&apos;ve decided to leave the campaign and have chosen to take this
-        character website down soon. Before it goes offline, I wanted to make
-        sure you can keep everything you made here. <br />
+        This site is going offline soon, and I want to make sure you keep
+        everything you made here. To be transparent about why: another person
+        copied this project&apos;s code and removed the license and attribution
+        that require it to stay noncommercial and credited. Around the same time,
+        I was removed from the community Discord without notice. Rather than leave
+        your characters on infrastructure I no longer control, I&apos;m taking
+        this version down and giving everyone a clean copy of their own data
+        first. <br />
         <br />
         This page packages{" "}
         <strong style={{ color: theme.primary }}>
@@ -189,6 +197,52 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         <strong>Active</strong> and an <strong>Inactive</strong> folder inside —
         active characters in one, archived (inactive) ones in the other.
       </p>
+
+      <div
+        style={{
+          margin: "24px 0",
+          padding: "16px 18px",
+          border: `2px solid ${theme.error || "#c62828"}`,
+          borderRadius: 10,
+          backgroundColor: `${theme.error || "#c62828"}12`,
+          textAlign: "left",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontWeight: 700,
+            color: theme.error || "#c62828",
+            marginBottom: 8,
+          }}
+        >
+          <ShieldAlert size={18} />
+          Legal notice
+        </div>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 13.5,
+            lineHeight: 1.6,
+            color: theme.textSecondary,
+          }}
+        >
+          This application&apos;s source code is the copyrighted work of its
+          author and is licensed under the{" "}
+          <strong>PolyForm Noncommercial License 1.0.0</strong>, which requires
+          that the copyright notice be preserved and prohibits commercial use.
+          Copying this code and removing that notice is{" "}
+          <strong>copyright infringement</strong> and may also violate 17 U.S.C.
+          § 1202 (removal of copyright-management information). A{" "}
+          <strong>DMCA takedown has been filed</strong>, and any further
+          unauthorized copying, deployment, or commercial use will be pursued to
+          the full extent available, including statutory damages and injunctive
+          relief.
+        </p>
+      </div>
+
       <p style={{ ...bodyText, fontSize: 14 }}>
         Inside you&apos;ll find an <strong>Excel spreadsheet</strong> and a
         printable <strong>PDF</strong> for each character (plus a raw data file
