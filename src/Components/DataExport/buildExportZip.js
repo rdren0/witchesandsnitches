@@ -11,9 +11,8 @@ const safeName = (name) =>
 const README = `WITCHES & SNITCHES — YOUR CHARACTER BACKUP
 ==========================================
 
-NOTE: The player who built and hosted this character website has decided to
-leave the campaign and has chosen to take the site down soon. This backup makes
-sure you keep a complete copy of all your characters before it goes offline.
+NOTE: The original character website has been taken down. This backup makes
+sure you keep a complete copy of all your characters.
 
 FIRST: UNZIP THIS FILE
 ----------------------

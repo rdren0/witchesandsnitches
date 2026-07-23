@@ -166,14 +166,14 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           <strong style={{ color: theme.primary }}>
             Heads up — this may be unexpected.
           </strong>{" "}
-          This character site is going offline soon. Someone in the community
-          has been pushing to take this project&apos;s code and launch their own
-          version of it without my permission — the copy already circulating had
-          my license and credit removed — and I was removed from the community
-          Discord with no notice or reason. Rather than leave your characters on
-          something I no longer control, I&apos;m taking this version down.
-          Before it goes offline, sign in with the Discord account you play on to
-          download a complete copy of all your characters to keep.
+          The original character site has been taken down — this page is all
+          that&apos;s left, so you can still download a complete copy of
+          everything you made. I took it down because the game&apos;s DM had
+          another person copy this project&apos;s code to build a new site
+          without me, using work I made — the copy already circulating had my
+          license and credit removed — and I was removed from the community
+          Discord with no notice or reason. Sign in with the Discord account you
+          play on to download a complete copy of all your characters to keep.
         </p>
         <button style={primaryButton} onClick={onSignIn}>
           Sign in with Discord
@@ -203,22 +203,25 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
       <h1 style={{ marginTop: 12 }}>Download your characters</h1>
       <p style={bodyText}>
         <strong style={{ color: theme.primary }}>Welp...</strong> <br />
-        This site is going offline soon, and I want to make sure you keep
-        everything you made here. To be honest about why: someone in the
-        community has been pushing to take this project&apos;s code and stand up
-        their own version of it without my permission, the copy already
-        circulating had my license and credit stripped out, and I was removed
-        from the community Discord with no notice or reason. I&apos;m not
-        comfortable leaving your characters on something I no longer control — so
-        I&apos;m taking this version down and giving everyone a clean copy of
-        their own data first. <br />
+        The original site is gone now, and this downloader is all that&apos;s
+        left — I want to make sure you keep everything you made here. To be
+        honest about why I took it down: the game&apos;s DM had another person
+        copy this project&apos;s code to build a new site without me, using work
+        I made — the copy already circulating had my license and credit stripped
+        out — and I was removed from the community Discord with no notice or
+        reason.{" "}
+        <strong style={{ color: theme.primary }}>
+          All of this happened despite my promise to keep this website up and
+          running for you players.
+        </strong>{" "}
+        Rather than leave your characters on something I no longer control,
+        I&apos;m giving everyone a clean copy of their own data. <br />
         <br />
         This page packages{" "}
         <strong style={{ color: theme.primary }}>
           every character on your account
         </strong>{" "}
-        — sheets, inventory, spells, downtime, notes, and money. You&apos;ll
-        get{" "}
+        — sheets, inventory, spells, downtime, notes, and money. You&apos;ll get{" "}
         <strong style={{ color: theme.primary }}>one zip file</strong> with an{" "}
         <strong>Active</strong> and an <strong>Inactive</strong> folder inside —
         active characters in one, archived (inactive) ones in the other.
