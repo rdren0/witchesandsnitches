@@ -157,53 +157,6 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
     </p>
   );
 
-  const legalNotice = (
-    <div
-      style={{
-        margin: "24px 0",
-        padding: "16px 18px",
-        border: `2px solid ${theme.error || "#c62828"}`,
-        borderRadius: 10,
-        backgroundColor: `${theme.error || "#c62828"}12`,
-        textAlign: "left",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          fontWeight: 700,
-          color: theme.error || "#c62828",
-          marginBottom: 8,
-        }}
-      >
-        <ShieldAlert size={18} />
-        Legal notice
-      </div>
-      <p
-        style={{
-          margin: 0,
-          fontSize: 13.5,
-          lineHeight: 1.6,
-          color: theme.textSecondary,
-        }}
-      >
-        This application&apos;s source code is the copyrighted work of its author
-        and is licensed under the{" "}
-        <strong>PolyForm Noncommercial License 1.0.0</strong>, which requires
-        that the copyright notice be preserved and prohibits commercial use.
-        Copying this code and removing that notice is{" "}
-        <strong>copyright infringement</strong> and may also violate 17 U.S.C.
-        § 1202 (removal of copyright-management information). A{" "}
-        <strong>DMCA takedown has been filed</strong>, and any further
-        unauthorized copying, deployment, or commercial use will be pursued to
-        the full extent available, including statutory damages and injunctive
-        relief.
-      </p>
-    </div>
-  );
-
   if (!user) {
     return (
       <div style={card}>
@@ -213,13 +166,14 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           <strong style={{ color: theme.primary }}>
             Heads up — this may be unexpected.
           </strong>{" "}
-          This character site is going offline soon. Another person copied this
-          project&apos;s code and removed the license and attribution that
-          require it to stay noncommercial and credited, and around the same
-          time I was removed from the community Discord without notice — so
-          I&apos;m taking this version down. Before it goes offline, sign in
-          with the Discord account you play on to download a complete copy of
-          all your characters to keep.
+          This character site is going offline soon. Someone in the community
+          has been pushing to take this project&apos;s code and launch their own
+          version of it without my permission — the copy already circulating had
+          my license and credit removed — and I was removed from the community
+          Discord with no notice or reason. Rather than leave your characters on
+          something I no longer control, I&apos;m taking this version down.
+          Before it goes offline, sign in with the Discord account you play on to
+          download a complete copy of all your characters to keep.
         </p>
         <button style={primaryButton} onClick={onSignIn}>
           Sign in with Discord
@@ -238,7 +192,6 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
           Self-service character export isn&apos;t available for this account.
           If you believe this is a mistake, reach out using the contact below.
         </p>
-        {legalNotice}
         {helpBlurb}
       </div>
     );
@@ -251,11 +204,12 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
       <p style={bodyText}>
         <strong style={{ color: theme.primary }}>Welp...</strong> <br />
         This site is going offline soon, and I want to make sure you keep
-        everything you made here. To be transparent about why: another person
-        copied this project&apos;s code and removed the license and attribution
-        that require it to stay noncommercial and credited. Around the same
-        time, I was removed from the community Discord without notice. Rather
-        than leave your characters on infrastructure I no longer control,
+        everything you made here. To be honest about why: someone in the
+        community has been pushing to take this project&apos;s code and stand up
+        their own version of it without my permission, the copy already
+        circulating had my license and credit stripped out, and I was removed
+        from the community Discord with no notice or reason. I&apos;m not
+        comfortable leaving your characters on something I no longer control — so
         I&apos;m taking this version down and giving everyone a clean copy of
         their own data first. <br />
         <br />
@@ -263,19 +217,16 @@ const DataExport = ({ user, discordUserId, onSignIn }) => {
         <strong style={{ color: theme.primary }}>
           every character on your account
         </strong>{" "}
-        — sheets, inventory, spells, downtime, notes, money, and character art.
-        You&apos;ll get{" "}
+        — sheets, inventory, spells, downtime, notes, and money. You&apos;ll
+        get{" "}
         <strong style={{ color: theme.primary }}>one zip file</strong> with an{" "}
         <strong>Active</strong> and an <strong>Inactive</strong> folder inside —
         active characters in one, archived (inactive) ones in the other.
       </p>
 
-      {legalNotice}
-
       <p style={{ ...bodyText, fontSize: 14 }}>
-        Inside you&apos;ll find an <strong>Excel spreadsheet</strong> and a
-        printable <strong>PDF</strong> for each character (plus a raw data file
-        for safekeeping). A README in the zip explains everything — no technical
+        Inside you&apos;ll find an <strong>Excel spreadsheet</strong> for each
+        character. A README in the zip explains everything — no technical
         knowledge needed.
       </p>
 
