@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAdmin } from "../contexts/AdminContext";
 import { createAppStyles } from "../utils/styles/masterStyles";
+import { isExportOnlyMode } from "./const";
 import UsernameEditor from "./UsernameEditor";
 
 const AuthComponent = ({
@@ -18,10 +19,12 @@ const AuthComponent = ({
   const { isUserAdmin, adminMode } = useAdmin();
   const styles = createAppStyles(theme);
   const navigate = useNavigate();
+  const exportOnly = isExportOnlyMode();
 
   if (user) {
     return (
       <div style={styles.authSection}>
+        {!exportOnly && (
         <button
           onClick={onAdminToggleClick}
           style={{
@@ -66,14 +69,17 @@ const AuthComponent = ({
             <Key size={16} />
           )}
         </button>
+        )}
 
-        <button
-          onClick={() => navigate("/theme-settings")}
-          style={styles.themeButton}
-          title="Theme Settings"
-        >
-          <Palette size={16} color={theme.primary} />
-        </button>
+        {!exportOnly && (
+          <button
+            onClick={() => navigate("/theme-settings")}
+            style={styles.themeButton}
+            title="Theme Settings"
+          >
+            <Palette size={16} color={theme.primary} />
+          </button>
+        )}
 
         <div style={styles.userInfo}>
           {user.user_metadata?.avatar_url ? (
@@ -121,13 +127,15 @@ const AuthComponent = ({
 
   return (
     <div style={styles.authSection}>
-      <button
-        onClick={() => navigate("/theme-settings")}
-        style={styles.themeButton}
-        title="Theme Settings"
-      >
-        <Palette size={16} color={theme.primary} />
-      </button>
+      {!exportOnly && (
+        <button
+          onClick={() => navigate("/theme-settings")}
+          style={styles.themeButton}
+          title="Theme Settings"
+        >
+          <Palette size={16} color={theme.primary} />
+        </button>
+      )}
 
       <button
         onClick={onSignIn}
